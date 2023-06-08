@@ -5,6 +5,16 @@
 import numpy as np
 import biotite.sequence as seq
 import biotite.sequence.align as align
+import pytest
+
+
+def _create_frequency_permutation(k):
+    """
+    Convenience function to create FrequencyPermutation from *k* instead
+    of a `KmerAlphabet`
+    """
+    kmer_alph = align.KmerAlphabet(seq.NucleotideSequence.alphabet_unamb, k)
+    return align.FrequencyPermutation(kmer_alph, np.arange(len(kmer_alph)))
 
 
 def test_random_permutation_modulo():
@@ -86,3 +96,34 @@ def test_frequency_permutation():
     kmers_sorted_by_frequency = np.argsort(counts)
     assert permutation.permute(kmers_sorted_by_frequency).tolist() \
         == np.arange(len(kmer_alphabet), dtype=np.int64).tolist()
+
+
+@pytest.mark.parametrize(
+    "kmer_range, permutation", [
+        (np.iinfo(np.int64).max, align.RandomPermutation()),
+        (int(4**5), _create_frequency_permutation(5)),
+        (int(4**8), _create_frequency_permutation(8)),
+    ]
+)
+def test_min_max(kmer_range, permutation):
+    """
+    Test whether the permutation range (min and max) is set correctly,
+    by checking that no returned order value is outside that range,
+    and at least one of them is very close (controlled by a tolerance
+    parameter) to each end of the range.
+    """
+    TOLERANCE = 0.001
+    N_KMERS = 100_000
+
+    np.random.seed(0)
+    kmers = np.random.randint(kmer_range, size=N_KMERS, dtype=np.int64)
+    order = permutation.permute(kmers)
+
+    assert permutation.max > permutation.min
+    # No value should be outside range
+    assert np.all(order >= permutation.min)
+    assert np.all(order <= permutation.max)
+    # At least of value should be near end of range
+    permutation_range = permutation.max - permutation.min + 1
+    assert np.any(order <= permutation.min + permutation_range * TOLERANCE)
+    assert np.any(order >= permutation.max - permutation_range * TOLERANCE)

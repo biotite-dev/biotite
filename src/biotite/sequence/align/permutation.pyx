@@ -28,7 +28,27 @@ class Permutation(metaclass=abc.ABCMeta):
     That order is often the lexicographical order, which is known to
     yield suboptimal *k-mer* selection many cases
     :footcite:`Roberts2004`.
+
+    Attributes
+    ----------
+    min, max: int
+        The minimum and maximum value the permutated value
+        (i.e. the return value of :meth:`permute()`)
+        can take.
+        Must be overriden by subclasses.
     """
+
+
+    @property
+    @abc.abstractmethod
+    def min(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def max(self):
+        pass
+
 
     @abc.abstractmethod
     def permute(self, kmers):
@@ -72,6 +92,13 @@ class RandomPermutation(Permutation):
     However, note that LCGs in general do not provide perfect random
     behavior, but only *good-enough* values for this purpose.
 
+    Attributes
+    ----------
+    min, max: int
+        The minimum and maximum value the permutated value
+        (i.e. the return value of :meth:`permute()`)
+        can take.
+
     References
     ----------
 
@@ -106,6 +133,16 @@ class RandomPermutation(Permutation):
 
     LCG_A = 0xd1342543de82ef95
     LCG_C = 1
+
+
+    @property
+    def min(self):
+        return np.iinfo(np.int64).min
+
+    @property
+    def max(self):
+        return np.iinfo(np.int64).max
+
 
     def permute(self, kmers):
         kmers = kmers.astype(np.int64, copy=False)
@@ -142,6 +179,13 @@ class FrequencyPermutation(Permutation):
         *k-mer* in `kmer_alphabet` in the sequence database of interest.
         ``counts[c] = f``, where ``c`` is the *k-mer* code and ``f`` is
         the corresponding frequency.
+
+    Attributes
+    ----------
+    min, max: int
+        The minimum and maximum value the permutated value
+        (i.e. the return value of :meth:`permute()`)
+        can take.
 
     Notes
     -----
@@ -199,6 +243,20 @@ class FrequencyPermutation(Permutation):
         order = np.argsort(counts)
         # '_permutation_table' should perform the reverse mapping
         self._permutation_table = _invert_mapping(order)
+        self._kmer_alph = kmer_alphabet
+
+
+    @property
+    def min(self):
+        return 0
+
+    @property
+    def max(self):
+        return len(self._permutation_table) - 1
+
+    @property
+    def kmer_alphabet():
+        return self._kmer_alph
 
 
     def from_table(kmer_table):

@@ -18,10 +18,10 @@ import biotite.sequence.align as align
         [False, True]
     )
 )
-def test_minimize(seed, window, from_sequence, use_permutation):
+def test_minimizer(seed, window, from_sequence, use_permutation):
     """
     Compare the fast minimizer identification algorithm against
-    a trivial implementation based on randomized input.
+    a trivial implementation on randomized input.
     """
     K = 10
     LENGTH = 1000
@@ -33,7 +33,7 @@ def test_minimize(seed, window, from_sequence, use_permutation):
     kmers = kmer_alph.create_kmers(sequence.code)
 
     if use_permutation:
-        permutation = align.RandomPermutation(kmer_alph)
+        permutation = align.RandomPermutation()
         order = permutation.permute(kmers)
     else:
         permutation = None
@@ -58,3 +58,148 @@ def test_minimize(seed, window, from_sequence, use_permutation):
     
     assert test_minimizer_pos.tolist() == ref_minimizer_pos.tolist()
     assert test_minimizers.tolist() == ref_minimizers.tolist()
+
+
+@pytest.mark.parametrize(
+    "seed, s, offset, from_sequence, use_permutation",
+    itertools.product(
+        range(20),
+        [2, 3, 5, 7],
+        [(0,), (0, 1, 2), (0, -1), (-2, -1)],
+        [False, True],
+        [False, True]
+    ),
+    # Print tuples in name of test
+    ids=lambda x: str(x).replace(" ", "") if isinstance(x, tuple) else None
+)
+def test_syncmer(seed, s, offset, from_sequence, use_permutation):
+    """
+    Compare the fast syncmer identification algorithm against
+    a trivial implementation on randomized input.
+    """
+    K = 10
+    LENGTH = 1000
+
+    sequence = seq.NucleotideSequence(ambiguous=False)
+    alphabet = sequence.alphabet
+    np.random.seed(seed)
+    sequence.code = np.random.randint(len(alphabet), size=LENGTH)
+
+    kmers = align.KmerAlphabet(alphabet, K).create_kmers(sequence.code)
+    smers = align.KmerAlphabet(alphabet, s).create_kmers(sequence.code)
+
+    if use_permutation:
+        permutation = align.RandomPermutation()
+        order = permutation.permute(smers)
+    else:
+        permutation = None
+        order = smers
+    
+    # Use an inefficient but simple algorithm for comparison
+    ref_syncmer_pos = []
+    for i in range(len(kmers)):
+        window = K - s + 1
+        order_in_kmer = order[i : i + window]
+        min_smer_pos = np.argmin(order_in_kmer)
+        # Wraparound negative indices -> modulo operation
+        if np.isin(min_smer_pos, np.array(offset) % window):
+            ref_syncmer_pos.append(i)
+    ref_syncmer_pos = np.array(ref_syncmer_pos, dtype=int)
+    ref_syncmers = kmers[ref_syncmer_pos]
+
+    syncmer_rule = align.SyncmerRule(
+        sequence.alphabet, K, s, permutation, offset
+    )
+    if from_sequence:
+        test_syncmer_pos, test_syncmers = syncmer_rule.select(sequence)
+    else:
+        test_syncmer_pos, test_syncmers = syncmer_rule.select_from_kmers(kmers)
+
+    assert test_syncmer_pos.tolist() == ref_syncmer_pos.tolist()
+    assert test_syncmers.tolist() == ref_syncmers.tolist()
+
+
+def test_cached_syncmer():
+    """
+    Check if :class:`CachedSyncmerRule` gives the same results as
+    :class:`SyncmerRule` for randomized input.
+
+    This is not included :func:`test_syncmer()` as
+    :class:`CachedSyncmerRule` creation takes quite long and hence would
+    bloat the test run time due to the large parametrization matrix of
+    :func:`test_syncmer()`.
+    """
+    K = 5
+    S = 2
+    LENGTH = 1000
+
+    sequence = seq.NucleotideSequence(ambiguous=False)
+    np.random.seed(0)
+    sequence.code = np.random.randint(len(sequence.alphabet), size=LENGTH)
+
+    syncmer_rule = align.SyncmerRule(
+        sequence.alphabet, K, S
+    )
+    ref_syncmer_pos, ref_syncmers = syncmer_rule.select(sequence)
+
+    cached_syncmer_rule = align.CachedSyncmerRule(
+        sequence.alphabet, K, S
+    )
+    test_syncmer_pos, test_syncmers = cached_syncmer_rule.select(sequence)
+
+    assert test_syncmer_pos.tolist() == ref_syncmer_pos.tolist()
+    assert test_syncmers.tolist() == ref_syncmers.tolist()
+
+
+@pytest.mark.parametrize(
+    "offset, exception_type",
+    [
+        # Duplicate values
+        ((1, 1),    ValueError),
+        ((0, 2, 0), ValueError),
+        ((0, -10),  ValueError),
+        # Offset out of window range
+        ((-11,),    IndexError),
+        ((10,),     IndexError),
+    ]
+)
+def test_syncmer_invalid_offset(offset, exception_type):
+    """
+    Test whether known invalid offsets lead to the expected exception.
+    """
+    K = 11
+    S = 2
+    with pytest.raises(exception_type):
+        align.SyncmerRule(
+            # Any alphabet would work here
+            seq.NucleotideSequence.alphabet_unamb, K, S, offset=offset
+        )
+
+
+@pytest.mark.parametrize("use_permutation", [False, True])
+def test_mincode(use_permutation):
+    """
+    Simple test whether :class:`MincodeRule` selects *k-mers* below the
+    threshold value.
+    """
+    K = 5
+    COMPRESSION = 4
+
+    kmer_alph = align.KmerAlphabet(seq.NucleotideSequence.alphabet_unamb, K)
+    np.random.seed(0)
+    kmers = np.arange(len(kmer_alph))
+    
+    if use_permutation:
+        permutation = align.RandomPermutation()
+        permutation_range = permutation.max - permutation.min + 1
+        order = permutation.permute(kmers)
+    else:
+        permutation = None
+        permutation_range = len(kmer_alph)
+        order = kmers
+    
+    mincode_rule = align.MincodeRule(kmer_alph, COMPRESSION, permutation)
+
+    _, mincode_pos = mincode_rule.select_from_kmers(kmers)
+    threshold = permutation_range / COMPRESSION
+    assert mincode_pos.tolist() == np.where(order <= threshold)[0].tolist()

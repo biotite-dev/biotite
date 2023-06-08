@@ -4,11 +4,12 @@
 
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
-__all__ = ["MinimizerRule"]
+__all__ = ["MinimizerRule", "SyncmerRule", "CachedSyncmerRule", "MincodeRule"]
 
 cimport cython
 cimport numpy as np
 
+from numbers import Integral
 import numpy as np
 from .kmeralphabet import KmerAlphabet
 from ..alphabet import AlphabetError
@@ -41,6 +42,7 @@ class MinimizerRule:
     window : int
         The size of the rolling window, where the minimizers are
         searched in.
+        In other words this is the number of *k-mers* per window.
         The window size must be at least 2.
     permutation : Permutation
         If set, the *k-mer* order is permuted, i.e.
@@ -113,15 +115,14 @@ class MinimizerRule:
     ['EQV', 'ENC']
     """
 
-
     def __init__(self, kmer_alphabet, window, permutation=None):
         if window < 2:
-                raise ValueError("Window size must be at least 2")
+            raise ValueError("Window size must be at least 2")
         self._window = window
         self._kmer_alph = kmer_alphabet
         self._permutation = permutation
     
-    
+
     @property
     def kmer_alphabet(self):
         return self._kmer_alph
@@ -222,13 +223,234 @@ class MinimizerRule:
         return _minimize(
             kmers.astype(np.int64, copy=False),
             ordering.astype(np.int64, copy=False),
-            self._window
+            self._window,
+            include_duplicates=False
         )
+
+
+class SyncmerRule:
+
+    def __init__(self, alphabet, k, s, permutation=None, offset=(0,)):
+        if not s < k:
+            raise ValueError("s must be smaller than k")
+        self._window = k - s + 1
+        self._alphabet = alphabet
+        self._kmer_alph = KmerAlphabet(alphabet, k)
+        self._smer_alph = KmerAlphabet(alphabet, s)
+        
+        self._permutation = permutation
+
+        self._offset = np.asarray(offset, dtype=np.int64)
+        # Wrap around negative indices
+        self._offset = np.where(
+            self._offset < 0,
+            self._window + self._offset,
+            self._offset
+        )
+        if (self._offset >= self._window).any() or (self._offset < 0).any():
+            raise IndexError(
+                f"Offset is out of window range"
+            )
+        if len(np.unique(self._offset)) != len(self._offset):
+            raise ValueError("Offset must contain unique values")
+    
+
+    @property
+    def alphabet(self):
+        return self._alphabet
+
+    @property
+    def kmer_alphabet(self):
+        return self._kmer_alph
+    
+    @property
+    def smer_alphabet(self):
+        return self._smer_alph
+
+    @property
+    def permutation(self):
+        return self._permutation
+    
+
+    def select(self, sequence, bint alphabet_check=True):
+        if alphabet_check:
+            if not self._alphabet.extends(sequence.alphabet):
+                raise ValueError(
+                    "The sequence's alphabet does not fit the rule's alphabet"
+                )
+        kmers = self._kmer_alph.create_kmers(sequence.code)
+        smers = self._smer_alph.create_kmers(sequence.code)
+
+        if self._permutation is None:
+            ordering = smers
+        else:
+            ordering = self._permutation.permute(smers)
+            if len(ordering) != len(smers):
+                raise IndexError(
+                    f"The Permutation is defective, it gave {len(ordering)} "
+                    f"sort keys for {len(smers)} s-mers"
+                )
+
+        # The aboslute position of the minimum s-mer for each k-mer
+        min_pos, _ = _minimize(
+            smers,
+            ordering.astype(np.int64, copy=False),
+            self._window,
+            include_duplicates=True
+        )
+        # The position of the minimum s-mer relative to the start
+        # of the k-mer
+        relative_min_pos = min_pos - np.arange(len(kmers))
+        syncmer_pos = self._filter_syncmer_pos(relative_min_pos)
+        return syncmer_pos, kmers[syncmer_pos]
+    
+
+    def select_from_kmers(self, kmers):
+        """
+        The given `kmers` are not required to overlap.
+
+        Notes
+        -----
+        Since for *s-mer* creation, the *k-mers* need to be converted
+        back to symbol codes again and since the input *k-mers* are not
+        required to overlap, calling :meth:`select()` is much faster.
+        Howver, :meth:`select()` is only available, if a
+        :class:`Sequence` object is available.
+        """
+        cdef int64 i
+        
+        symbol_codes_for_each_kmer = self._kmer_alph.split(kmers)
+        
+        cdef int64[:] min_pos = np.zeros(
+            len(symbol_codes_for_each_kmer), dtype=np.int64
+        )
+        for i in range(symbol_codes_for_each_kmer.shape[0]):
+            smers = self._smer_alph.create_kmers(symbol_codes_for_each_kmer[i])
+            if self._permutation is None:
+                ordering = smers
+            else:
+                ordering = self._permutation.permute(smers)
+                if len(ordering) != len(smers):
+                    raise IndexError(
+                        f"The Permutation is defective, it gave {len(ordering)} "
+                        f"sort keys for {len(smers)} s-mers"
+                    )
+            min_pos[i] = np.argmin(ordering)
+        
+        syncmer_pos = self._filter_syncmer_pos(min_pos)
+        return syncmer_pos, kmers[syncmer_pos]
+    
+
+    def _filter_syncmer_pos(self, min_pos):
+        """
+        Get indices of *k-mers* that are syncmers, based on `min_pos`,
+        the position of the minimum *s-mer* in each *k-mer*.
+        Syncmers are k-mers whose the minimum s-mer is at (one of)
+        the given offet position(s).
+        """
+        syncmer_mask = None
+        for offset in self._offset:
+            # For the usual number of offsets, this 'loop'-appoach is
+            # faster than np.isin()
+            if syncmer_mask is None:
+                syncmer_mask = min_pos == offset
+            else:
+                syncmer_mask |= min_pos == offset
+        return np.where(syncmer_mask)[0]
+
+
+class CachedSyncmerRule(SyncmerRule):
+    
+    def __init__(self, alphabet, k, s, permutation=None, offset=(0,)):
+        super().__init__(alphabet, k, s, permutation, offset)
+        # Check for all possible *k-mers*, whether they are syncmers
+        all_kmers = np.arange(len(self.kmer_alphabet))
+        syncmer_indices, _ = super().select_from_kmers(all_kmers)
+        # Convert the index array into a boolean mask
+        self._syncmer_mask = np.zeros(len(self.kmer_alphabet), dtype=bool)
+        self._syncmer_mask[syncmer_indices] = True
+    
+
+    def select(self, sequence, bint alphabet_check=True):
+        if alphabet_check:
+            if not self.alphabet.extends(sequence.alphabet):
+                raise ValueError(
+                    "The sequence's alphabet does not fit the rule's alphabet"
+                )
+        kmers = self.kmer_alphabet.create_kmers(sequence.code)
+        return self.select_from_kmers(kmers)
+    
+
+    def select_from_kmers(self, kmers):
+        """
+        """
+        syncmer_pos = np.where(self._syncmer_mask[kmers])[0]
+        return syncmer_pos, kmers[syncmer_pos]
+
+
+class MincodeRule:
+
+    def __init__(self, kmer_alphabet, compression, permutation=None):
+        if compression < 1:
+            raise ValueError(
+                "Compression factor must be equal to or larger than 1"
+            )
+        self._compression = compression
+        self._kmer_alph = kmer_alphabet
+        self._permutation = permutation
+        if permutation is None:
+            permutation_range = len(kmer_alphabet)
+        else:
+            permutation_range = permutation.max - permutation.min + 1
+        self._threshold = permutation_range / compression
+    
+
+    @property
+    def kmer_alphabet(self):
+        return self._kmer_alph
+    
+    @property
+    def compression(self):
+        return self._compression
+
+    @property
+    def threshold(self):
+        return self._threshold
+
+    @property
+    def permutation(self):
+        return self._permutation
+    
+
+    def select(self, sequence, bint alphabet_check=True):
+        if alphabet_check:
+            if not self._kmer_alph.base_alphabet.extends(sequence.alphabet):
+                raise ValueError(
+                    "The sequence's alphabet does not fit the k-mer alphabet"
+                )
+        kmers = self._kmer_alph.create_kmers(sequence.code)
+        return self.select_from_kmers(kmers)
+    
+
+    def select_from_kmers(self, kmers):
+        if self._permutation is None:
+            ordering = kmers
+        else:
+            ordering = self._permutation.permute(kmers)
+            if len(ordering) != len(kmers):
+                raise IndexError(
+                    f"The Permutation is defective, it gave {len(ordering)} "
+                    f"sort keys for {len(kmers)} k-mers"
+                )
+
+        mincode_pos = ordering <= self._threshold
+        return mincode_pos, kmers[mincode_pos]
     
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def _minimize(int64[:] kmers, int64[:] ordering, uint32 window):
+def _minimize(int64[:] kmers, int64[:] ordering, uint32 window,
+              bint include_duplicates):
     """
     Implementation of the algorithm originally devised by
     Marcel van Herk.
@@ -276,15 +498,14 @@ def _minimize(int64[:] kmers, int64[:] ordering, uint32 window):
         else:
             combined_argcummin = reverse_argcummin
         
-        if combined_argcummin != prev_argcummin:
-            # A new minimizer is observed
-            # -> append it to return value
+        # If the same minimizer position was observed before, the
+        # duplicate is simply ignored, if 'include_duplicates' is false
+        if include_duplicates or combined_argcummin != prev_argcummin:
+            # Append minimizer to return value
             mininizer_pos[n_minimizers] = combined_argcummin
             minimizers[n_minimizers] = kmers[combined_argcummin]
             n_minimizers += 1
             prev_argcummin = combined_argcummin
-        # If the same minimizer position was observed before,
-        # the duplicate is simply ignored
 
     return (
         np.asarray(mininizer_pos)[:n_minimizers],
