@@ -16,7 +16,7 @@ __all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences",
            "get_alignment", "set_alignment"]
 
 
-def get_sequence(fasta_file, header=None):
+def get_sequence(fasta_file, seq_type=None, header=None):
     """
     Get a sequence from a :class:`FastaFile` instance.
 
@@ -28,6 +28,9 @@ def get_sequence(fasta_file, header=None):
     ----------
     fasta_file : FastaFile
         The :class:`FastaFile` to be accessed.
+    seq_type : Class, optional
+        The :class:`Sequence` subclass contained in the file. If not 
+        set, it is automatically detected.
     header : str, optional
         The header to get the sequence from. By default, the first
         sequence of the file is returned.
@@ -57,10 +60,10 @@ def get_sequence(fasta_file, header=None):
     # Determine the sequence type:
     # If NucleotideSequence can be created it is a DNA sequence,
     # otherwise protein sequence
-    return _convert_to_sequence(seq_str)
+    return _convert_to_sequence(seq_str, seq_type)
 
 
-def get_sequences(fasta_file):
+def get_sequences(fasta_file, seq_type=None):
     """
     Get dictionary from a :class:`FastaFile` instance,
     where headers are keys and sequences are values.
@@ -73,6 +76,9 @@ def get_sequences(fasta_file):
     ----------
     fasta_file : FastaFile
         The :class:`FastaFile` to be accessed.
+    seq_type : Class, optional
+        The :class:`Sequence` subclass contained in the file. If not 
+        set, it is automatically detected.
     
     Returns
     -------
@@ -90,7 +96,7 @@ def get_sequences(fasta_file):
     """
     seq_dict = OrderedDict()
     for header, seq_str in fasta_file.items():
-        seq_dict[header] = _convert_to_sequence(seq_str)
+        seq_dict[header] = _convert_to_sequence(seq_str, seq_type)
     return seq_dict
 
 
@@ -146,7 +152,7 @@ def set_sequences(fasta_file, sequence_dict, as_rna=False):
         fasta_file[header] = _convert_to_string(sequence, as_rna)
 
 
-def get_alignment(fasta_file, additional_gap_chars=("_",)):
+def get_alignment(fasta_file, seq_type=None, additional_gap_chars=("_",)):
     """
     Get an alignment from a :class:`FastaFile` instance.
     
@@ -154,6 +160,9 @@ def get_alignment(fasta_file, additional_gap_chars=("_",)):
     ----------
     fasta_file : FastaFile
         The :class:`FastaFile` to be accessed.
+    seq_type : Class, optional
+        The :class:`Sequence` subclass contained in the file. If not 
+        set, it is automatically detected
     additional_gap_chars : str, optional
         The characters to be treated as gaps.
     
@@ -168,7 +177,7 @@ def get_alignment(fasta_file, additional_gap_chars=("_",)):
         for i, seq_str in enumerate(seq_strings):
             seq_strings[i] = seq_str.replace(char, "-")
     # Remove gaps for creation of sequences
-    sequences = [_convert_to_sequence(seq_str.replace("-",""))
+    sequences = [_convert_to_sequence(seq_str.replace("-",""), seq_type)
                  for seq_str in seq_strings]
     trace = Alignment.trace_from_strings(seq_strings)
     return Alignment(sequences, trace, score=None)
@@ -199,7 +208,22 @@ def set_alignment(fasta_file, alignment, seq_names):
         fasta_file[seq_names[i]] = gapped_seq_strings[i]
 
 
-def _convert_to_sequence(seq_str):
+def _convert_to_sequence(seq_str, seq_type=None):
+    # Attempt to set manually selected sequence type
+    if seq_type is not None:
+        # Do preprocessing as done without manual selection
+        if seq_type == NucleotideSequence:
+            seq_str = seq_str.replace("U","T").replace("X","N")
+        elif seq_type == ProteinSequence:
+            if "U" in seq_str:
+                warnings.warn(
+                    "ProteinSequence objects do not support selenocysteine "
+                    "(U), occurrences were substituted by cysteine (C)"
+                )
+            seq_str.replace("U", "C")
+        # Return the converted sequence
+        return seq_type(seq_str)    
+
     # Biotite alphabets for nucleotide and proteins
     # do not accept lower case letters
     seq_str = seq_str.upper()
