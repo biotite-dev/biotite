@@ -316,7 +316,7 @@ class KmerAlphabet(Alphabet):
         
         Returns
         -------
-        codes : ndarray, dtype=np.int64, shape=(k,) or shape=(n,k)
+        codes : ndarray, dtype=np.uint64, shape=(k,) or shape=(n,k)
             The split symbol codes from the base alphabet.
 
         See also
@@ -357,8 +357,8 @@ class KmerAlphabet(Alphabet):
 
         cdef int64[:] radix_multiplier = self._radix_multiplier
 
-        cdef int64[:,:] split_codes = np.empty(
-            (codes.shape[0], self._k), dtype=np.int64
+        cdef uint64[:,:] split_codes = np.empty(
+            (codes.shape[0], self._k), dtype=np.uint64
         )
         
         cdef int k = self._k
