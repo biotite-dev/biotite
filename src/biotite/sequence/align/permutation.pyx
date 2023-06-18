@@ -18,12 +18,12 @@ ctypedef np.int64_t int64
 
 class Permutation(metaclass=abc.ABCMeta):
     """
-    Provides an order for *k-mers*, usually used by *k-mer* subset rules
-    such as :class:`MinimizerRule`.
+    Provides an order for *k-mers*, usually used by *k-mer* subset
+    selectors such as :class:`MinimizerSelector`.
     The method how such order is computed depends on the concrete
     subclass of this abstract base class.
 
-    Without a :class:`Permutation` subset rules usually resort to
+    Without a :class:`Permutation` subset selectors usually resort to
     the symbol order in the :class:`KmerAlphabet`.
     That order is often the lexicographical order, which is known to
     yield suboptimal *k-mer* selection many cases
@@ -192,8 +192,8 @@ class FrequencyPermutation(Permutation):
 
     In actual sequences some sequence patterns appear in high quantity.
     When selecting a subset of *k-mers*, e.g. via
-    :class:`MinimizerRule`, it is desireable to select the low-frequency
-    *informative* *k-mers* to avoid spurious matches.
+    :class:`MinimizerSelector`, it is desireable to select the
+    low-frequency *informative* *k-mers* to avoid spurious matches.
     To achieve such selection this class can be used.
 
     This class uses a table to look up the order.

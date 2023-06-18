@@ -72,9 +72,9 @@ def test_from_kmers(k, random_sequences):
     assert test_table == ref_table
 
 
-def test_from_kmer_subset(k, alphabet, random_sequences):
+def test_from_kmer_selection(k, alphabet, random_sequences):
     """
-    Test the :meth:`test_from_kmer_subset()` constructor, by checking
+    Test the :meth:`test_from_kmer_selection()` constructor, by checking
     for each stored k-mer position, whether it is found at that position
     in the sequences.
     """
@@ -93,7 +93,7 @@ def test_from_kmer_subset(k, alphabet, random_sequences):
         kmers[filtered_pos]
         for filtered_pos, kmers in zip(filtered_pos_arrays, kmer_arrays)
     ]
-    kmer_table = align.KmerTable.from_kmer_subset(
+    kmer_table = align.KmerTable.from_kmer_selection(
         kmer_alph, filtered_pos_arrays, filtered_kmer_arrays
     )
 
@@ -225,7 +225,7 @@ def test_match(k, random_sequences, use_similarity_rule):
     assert np.array_equal(test_matches.tolist(), ref_matches.tolist())
 
 
-def test_match_kmer_subset(k, random_sequences):
+def test_match_kmer_selection(k, random_sequences):
     """
     Same as :func:`test_match()` but with a subset of positions.
     """
@@ -253,7 +253,7 @@ def test_match_kmer_subset(k, random_sequences):
         ref_matches.append(matches)
     ref_matches = np.concatenate(ref_matches)
 
-    test_matches = table.match_kmer_subset(positions, kmers[positions])
+    test_matches = table.match_kmer_selection(positions, kmers[positions])
 
     assert np.array_equal(test_matches.tolist(), ref_matches.tolist())
 

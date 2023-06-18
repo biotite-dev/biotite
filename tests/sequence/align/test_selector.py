@@ -47,15 +47,17 @@ def test_minimizer(seed, window, from_sequence, use_permutation):
     # Remove duplicates
     ref_minimizer_pos = np.unique(ref_minimizer_pos)
     ref_minimizers = kmers[ref_minimizer_pos]
-    
-    minimizer_rule = align.MinimizerRule(kmer_alph, window, permutation)
+
+    minimizer_selector = align.MinimizerSelector(
+        kmer_alph, window, permutation
+    )
     if from_sequence:
         test_minimizer_pos, test_minimizers \
-            = minimizer_rule.select(sequence)
+            = minimizer_selector.select(sequence)
     else:
         test_minimizer_pos, test_minimizers \
-            = minimizer_rule.select_from_kmers(kmers)
-    
+            = minimizer_selector.select_from_kmers(kmers)
+
     assert test_minimizer_pos.tolist() == ref_minimizer_pos.tolist()
     assert test_minimizers.tolist() == ref_minimizers.tolist()
 
@@ -94,7 +96,7 @@ def test_syncmer(seed, s, offset, from_sequence, use_permutation):
     else:
         permutation = None
         order = smers
-    
+
     # Use an inefficient but simple algorithm for comparison
     ref_syncmer_pos = []
     for i in range(len(kmers)):
@@ -104,16 +106,18 @@ def test_syncmer(seed, s, offset, from_sequence, use_permutation):
         # Wraparound negative indices -> modulo operation
         if np.isin(min_smer_pos, np.array(offset) % window):
             ref_syncmer_pos.append(i)
-    ref_syncmer_pos = np.array(ref_syncmer_pos, dtype=int)
+    ref_syncmer_pos = np.array(ref_syncmer_pos, dtype=np.int64)
     ref_syncmers = kmers[ref_syncmer_pos]
 
-    syncmer_rule = align.SyncmerRule(
+    syncmer_selector = align.SyncmerSelector(
         sequence.alphabet, K, s, permutation, offset
     )
     if from_sequence:
-        test_syncmer_pos, test_syncmers = syncmer_rule.select(sequence)
+        test_syncmer_pos, test_syncmers \
+            = syncmer_selector.select(sequence)
     else:
-        test_syncmer_pos, test_syncmers = syncmer_rule.select_from_kmers(kmers)
+        test_syncmer_pos, test_syncmers \
+            = syncmer_selector.select_from_kmers(kmers)
 
     assert test_syncmer_pos.tolist() == ref_syncmer_pos.tolist()
     assert test_syncmers.tolist() == ref_syncmers.tolist()
@@ -121,13 +125,13 @@ def test_syncmer(seed, s, offset, from_sequence, use_permutation):
 
 def test_cached_syncmer():
     """
-    Check if :class:`CachedSyncmerRule` gives the same results as
-    :class:`SyncmerRule` for randomized input.
+    Check if :class:`CachedSyncmerSelector` gives the same results as
+    :class:`SyncmerSelector` for randomized input.
 
     This is not included :func:`test_syncmer()` as
-    :class:`CachedSyncmerRule` creation takes quite long and hence would
-    bloat the test run time due to the large parametrization matrix of
-    :func:`test_syncmer()`.
+    :class:`CachedSyncmerSelector` creation takes quite long and hence
+    would bloat the test run time due to the large parametrization
+    matrix of :func:`test_syncmer()`.
     """
     K = 5
     S = 2
@@ -137,15 +141,15 @@ def test_cached_syncmer():
     np.random.seed(0)
     sequence.code = np.random.randint(len(sequence.alphabet), size=LENGTH)
 
-    syncmer_rule = align.SyncmerRule(
+    syncmer_selector = align.SyncmerSelector(
         sequence.alphabet, K, S
     )
-    ref_syncmer_pos, ref_syncmers = syncmer_rule.select(sequence)
+    ref_syncmer_pos, ref_syncmers = syncmer_selector.select(sequence)
 
-    cached_syncmer_rule = align.CachedSyncmerRule(
+    cached_syncmer_selector = align.CachedSyncmerSelector(
         sequence.alphabet, K, S
     )
-    test_syncmer_pos, test_syncmers = cached_syncmer_rule.select(sequence)
+    test_syncmer_pos, test_syncmers = cached_syncmer_selector.select(sequence)
 
     assert test_syncmer_pos.tolist() == ref_syncmer_pos.tolist()
     assert test_syncmers.tolist() == ref_syncmers.tolist()
@@ -170,7 +174,7 @@ def test_syncmer_invalid_offset(offset, exception_type):
     K = 11
     S = 2
     with pytest.raises(exception_type):
-        align.SyncmerRule(
+        align.SyncmerSelector(
             # Any alphabet would work here
             seq.NucleotideSequence.alphabet_unamb, K, S, offset=offset
         )
@@ -179,27 +183,34 @@ def test_syncmer_invalid_offset(offset, exception_type):
 @pytest.mark.parametrize("use_permutation", [False, True])
 def test_mincode(use_permutation):
     """
-    Simple test whether :class:`MincodeRule` selects *k-mers* below the
-    threshold value.
+    Simple test whether :class:`MincodeSelector` selects *k-mers* below
+    the threshold value and whether the compression factor is correctly
+    used.
     """
     K = 5
     COMPRESSION = 4
 
     kmer_alph = align.KmerAlphabet(seq.NucleotideSequence.alphabet_unamb, K)
     np.random.seed(0)
-    kmers = np.arange(len(kmer_alph))
-    
+    kmers = np.arange(len(kmer_alph), dtype=np.int64)
+
     if use_permutation:
         permutation = align.RandomPermutation()
+        permutation_offset = permutation.min
         permutation_range = permutation.max - permutation.min + 1
         order = permutation.permute(kmers)
     else:
         permutation = None
+        permutation_offset = 0
         permutation_range = len(kmer_alph)
         order = kmers
-    
-    mincode_rule = align.MincodeRule(kmer_alph, COMPRESSION, permutation)
 
-    _, mincode_pos = mincode_rule.select_from_kmers(kmers)
-    threshold = permutation_range / COMPRESSION
-    assert mincode_pos.tolist() == np.where(order <= threshold)[0].tolist()
+    mincode_selector = align.MincodeSelector(
+        kmer_alph, COMPRESSION, permutation
+    )
+
+    _, mincode_pos = mincode_selector.select_from_kmers(kmers)
+    threshold = permutation_offset + permutation_range / COMPRESSION
+    assert mincode_pos.tolist() == np.where(order < threshold)[0].tolist()
+    assert len(mincode_pos) * COMPRESSION \
+        == pytest.approx(len(kmers), rel=0.02)

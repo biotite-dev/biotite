@@ -41,9 +41,9 @@ cdef class KmerTable:
           each *kmer* in the table.
         - :meth:`from_kmers()` is similar to :meth:`from_sequences()`
           but directly accepts *k-mers* as input instead of sequences.
-        - :meth:`from_kmer_subset()` takes a comnination of *k-mers*
+        - :meth:`from_kmer_selection()` takes a combination of *k-mers*
           and their positions in a sequence, which can be used to
-          apply subset rules, such as :class:`MinimizerRule`.
+          apply subset selectors, such as :class:`MinimizerSelector`.
         - :meth:`from_tables()` merges the entries from multiple
           :class:`KmerTable` objects into a new table.
         - :meth:`from_positions()` let's the user provide manual
@@ -512,15 +512,15 @@ cdef class KmerTable:
     
 
     @staticmethod
-    def from_kmer_subset(kmer_alphabet, positions, kmers, ref_ids=None):
+    def from_kmer_selection(kmer_alphabet, positions, kmers, ref_ids=None):
         """
-        from_kmer_subset(kmer_alphabet, positions, kmers, ref_ids=None)
+        from_kmer_selection(kmer_alphabet, positions, kmers, ref_ids=None)
         
         Create a :class:`KmerTable` by storing the positions of a
         filtered subset of input *k-mers*.
 
         This can be used to reduce the number of stored *k-mers* using
-        a *k-mer* subset rule such as :class:`MinimizerRule`.
+        a *k-mer* subset selector such as :class:`MinimizerSelector`.
 
         Parameters
         ----------
@@ -558,13 +558,13 @@ cdef class KmerTable:
 
         >>> sequence1 = ProteinSequence("THIS*IS*A*SEQVENCE")
         >>> kmer_alph = KmerAlphabet(sequence1.alphabet, k=3)
-        >>> minimizer = MinimizerRule(kmer_alph, window=4)
+        >>> minimizer = MinimizerSelector(kmer_alph, window=4)
         >>> minimizer_pos, minimizers = minimizer.select(sequence1)
-        >>> kmer_table = KmerTable.from_kmer_subset(
+        >>> kmer_table = KmerTable.from_kmer_selection(
         ...     kmer_alph, [minimizer_pos], [minimizers]
         ... )
 
-        Use the same :class:`MinimizerRule` to select the minimizers
+        Use the same :class:`MinimizerSelector` to select the minimizers
         from the query sequence and match them against the table.
         Although the amount of *k-mers* is reduced, matching is still
         guanrateed to work, if the two sequences share identity in the
@@ -572,7 +572,7 @@ cdef class KmerTable:
 
         >>> sequence2 = ProteinSequence("ANQTHER*SEQVENCE")
         >>> minimizer_pos, minimizers = minimizer.select(sequence2)
-        >>> matches = kmer_table.match_kmer_subset(minimizer_pos, minimizers)
+        >>> matches = kmer_table.match_kmer_selection(minimizer_pos, minimizers)
         >>> print(matches)
         [[ 9  0 11]
          [12  0 14]]
@@ -624,7 +624,7 @@ cdef class KmerTable:
         table._init_c_arrays()
 
         for pos, arr, ref_id in zip(positions, kmers, ref_ids):
-            table._add_kmer_subset(
+            table._add_kmer_selection(
                 pos.astype(np.uint32, copy=False), arr, ref_id
             )
         
@@ -696,7 +696,7 @@ cdef class KmerTable:
     @staticmethod
     def from_positions(kmer_alphabet, dict kmer_positions):
         """
-        from_positions(kmer_alphabet kmer_positions)
+        from_positions(kmer_alphabet, kmer_positions)
         
         Create a :class:`KmerTable` from *k-mer* reference IDs and
         positions.
@@ -1097,15 +1097,15 @@ cdef class KmerTable:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def match_kmer_subset(self, positions, kmers):
+    def match_kmer_selection(self, positions, kmers):
         """
-        match_kmer_subset(positions, kmers)
+        match_kmer_selection(positions, kmers)
 
         Find matches between the *k-mers* in this table with the given
-        input *k-mers*.
+        *k-mer* selection.
 
         It is intended to use this method to find matches in a table
-        that was created using :meth:`from_kmer_subset()`.
+        that was created using :meth:`from_kmer_selection()`.
 
         Parameters
         ----------
@@ -1135,13 +1135,13 @@ cdef class KmerTable:
 
         >>> sequence1 = ProteinSequence("THIS*IS*A*SEQVENCE")
         >>> kmer_alph = KmerAlphabet(sequence1.alphabet, k=3)
-        >>> minimizer = MinimizerRule(kmer_alph, window=4)
+        >>> minimizer = MinimizerSelector(kmer_alph, window=4)
         >>> minimizer_pos, minimizers = minimizer.select(sequence1)
-        >>> kmer_table = KmerTable.from_kmer_subset(
+        >>> kmer_table = KmerTable.from_kmer_selection(
         ...     kmer_alph, [minimizer_pos], [minimizers]
         ... )
 
-        Use the same :class:`MinimizerRule` to select the minimizers
+        Use the same :class:`MinimizerSelector` to select the minimizers
         from the query sequence and match them against the table.
         Although the amount of *k-mers* is reduced, matching is still
         guanrateed to work, if the two sequences share identity in the
@@ -1149,7 +1149,7 @@ cdef class KmerTable:
 
         >>> sequence2 = ProteinSequence("ANQTHER*SEQVENCE")
         >>> minimizer_pos, minimizers = minimizer.select(sequence2)
-        >>> matches = kmer_table.match_kmer_subset(minimizer_pos, minimizers)
+        >>> matches = kmer_table.match_kmer_selection(minimizer_pos, minimizers)
         >>> print(matches)
         [[ 9  0 11]
          [12  0 14]]
@@ -1677,7 +1677,7 @@ cdef class KmerTable:
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def _add_kmer_subset(self, uint32[:] positions, int64[:] kmers,
+    def _add_kmer_selection(self, uint32[:] positions, int64[:] kmers,
                          uint32 ref_id):
         """
         For each *k-mer* in `kmers` add the reference ID and the

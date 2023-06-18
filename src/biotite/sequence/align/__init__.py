@@ -43,5 +43,5 @@ from .matrix import *
 from .multiple import *
 from .pairwise import *
 from .permutation import *
+from .selector import *
 from .statistics import *
-from .subset import *
