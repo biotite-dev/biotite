@@ -220,7 +220,7 @@ def _convert_to_sequence(seq_str, seq_type=None):
                     "ProteinSequence objects do not support selenocysteine "
                     "(U), occurrences were substituted by cysteine (C)"
                 )
-            seq_str.replace("U", "C")
+            seq_str = seq_str.replace("U", "C")
         # Return the converted sequence
         return seq_type(seq_str)    
 
