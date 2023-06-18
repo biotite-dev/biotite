@@ -209,40 +209,40 @@ def set_alignment(fasta_file, alignment, seq_names):
 
 
 def _convert_to_sequence(seq_str, seq_type=None):
+
+    # Define preprocessing of preimplemented sequence types
+    process_protein_sequence = lambda x : x.upper().replace("U", "C")
+    process_nucleotide_sequence = (
+        lambda x : x.upper().replace("U","T").replace("X","N")
+    )
+
     # Attempt to set manually selected sequence type
     if seq_type is not None:
         # Do preprocessing as done without manual selection
         if seq_type == NucleotideSequence:
-            seq_str = seq_str.replace("U","T").replace("X","N")
+            seq_str = process_nucleotide_sequence(seq_str)
         elif seq_type == ProteinSequence:
             if "U" in seq_str:
                 warnings.warn(
                     "ProteinSequence objects do not support selenocysteine "
                     "(U), occurrences were substituted by cysteine (C)"
                 )
-            seq_str = seq_str.replace("U", "C")
+            seq_str = process_protein_sequence(seq_str)
         # Return the converted sequence
         return seq_type(seq_str)    
 
     # Biotite alphabets for nucleotide and proteins
-    # do not accept lower case letters
-    seq_str = seq_str.upper()
     try:
         # For nucleotides uracil is represented by thymine and
         # there is is only one letter for completely unknown nucleotides
-        return NucleotideSequence(seq_str.replace("U","T").replace("X","N"))
+        return NucleotideSequence(process_nucleotide_sequence(seq_str))
     except AlphabetError:
         pass
     try:
-        if "U" in seq_str:
-            warn = True
-            seq_str = seq_str.replace("U", "C")
-        else:
-            warn = False
-        prot_seq = ProteinSequence(seq_str)
+        prot_seq = ProteinSequence(process_protein_sequence(seq_str))
         # Raise Warning after conversion into 'ProteinSequence'
         # to wait for potential 'AlphabetError'
-        if warn:
+        if "U" in seq_str:
             warnings.warn(
                 "ProteinSequence objects do not support selenocysteine (U), "
                 "occurrences were substituted by cysteine (C)"
