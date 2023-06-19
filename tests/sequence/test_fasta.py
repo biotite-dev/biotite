@@ -39,10 +39,11 @@ def test_access_low_level():
     }
 
 
-def test_access_high_level():
+@pytest.mark.parametrize("seq_type", (None, seq.NucleotideSequence))
+def test_access_high_level(seq_type):
     path = os.path.join(data_dir("sequence"), "nuc.fasta")
     file = fasta.FastaFile.read(path)
-    sequences = fasta.get_sequences(file)
+    sequences = fasta.get_sequences(file, seq_type=seq_type)
     assert sequences == {
         "dna sequence" : seq.NucleotideSequence("ACGCTACGT", False),
         "another dna sequence" : seq.NucleotideSequence("A", False),
@@ -52,34 +53,72 @@ def test_access_high_level():
     }
 
 
-def test_sequence_conversion():
+@pytest.mark.parametrize(
+        "seq_type", (None, seq.NucleotideSequence, seq.ProteinSequence)
+)
+def test_sequence_conversion_ambiguous(seq_type):
     path = os.path.join(data_dir("sequence"), "nuc.fasta")
     file = fasta.FastaFile.read(path)
-    assert seq.NucleotideSequence("ACGCTACGT") == fasta.get_sequence(file)
+    sequence = "ACGCTACGT"
+
+    if seq_type is None:
+        # By default a nucleotide sequence is guessed
+        assert seq.NucleotideSequence(sequence) == fasta.get_sequence(
+            file, seq_type=None
+        )
+    else:
+        assert seq_type(sequence) == fasta.get_sequence(
+            file, seq_type=seq_type
+        )
     
     seq_dict = fasta.get_sequences(file)
     file2 = fasta.FastaFile()
     fasta.set_sequences(file2, seq_dict)
-    seq_dict2 = fasta.get_sequences(file2)
-    # Cannot compare dicts directly, since the original RNA sequence is
-    # now guessed as protein sequence
-    for seq1, seq2 in zip(seq_dict.values(), seq_dict2.values()):
-        assert str(seq1) == str(seq2)
+    seq_dict2 = fasta.get_sequences(file2, seq_type=seq_type)
+
+    if seq_type == seq.ProteinSequence:
+        # Cannot compare dicts directly as nucleotide sequence is automatically
+        #  guessed
+        assert seq_dict != seq_dict2
+        for seq1, seq2 in zip(seq_dict.values(), seq_dict2.values()):
+            assert str(seq1) == str(seq2)
+    else:
+        assert seq_dict == seq_dict2
     
-    file3 = fasta.FastaFile()
-    fasta.set_sequence(file3, seq.NucleotideSequence("AACCTTGG"))
-    assert file3["sequence"] == "AACCTTGG"
-    
+    if seq_type is not None:
+        sequence = "AACCTTGG"
+        file3 = fasta.FastaFile()
+        fasta.set_sequence(file3, seq_type(sequence))
+        assert file3["sequence"] == sequence
+
+
+@pytest.mark.parametrize(
+        "seq_type", (None, seq.NucleotideSequence, seq.ProteinSequence)
+)
+def test_sequence_conversion_protein(seq_type):
     path = os.path.join(data_dir("sequence"), "prot.fasta")
     file4 = fasta.FastaFile.read(path)
-    # Expect a warning for selenocysteine conversion
-    with pytest.warns(UserWarning):
-        assert seq.ProteinSequence("YAHCGFRTGS") == fasta.get_sequence(file4)
-    
+
+    if seq_type != seq.NucleotideSequence:
+        # Expect a warning for selenocysteine conversion
+        with pytest.warns(UserWarning):
+            assert seq.ProteinSequence("YAHCGFRTGS") == fasta.get_sequence(
+                file4, seq_type=seq_type
+            )
+    else:
+        # Manually forcing a NucleotideSequence should raise an error
+        with pytest.raises(seq.AlphabetError):
+            fasta.get_sequence(file4, seq_type=seq_type)
+
+
+@pytest.mark.parametrize(
+        "seq_type", (None, seq.NucleotideSequence, seq.ProteinSequence)
+)
+def test_sequence_conversion_invalid(seq_type):
     path = os.path.join(data_dir("sequence"), "invalid.fasta")
-    file5 = fasta.FastaFile.read(path)
+    file = fasta.FastaFile.read(path)
     with pytest.raises(ValueError):
-        seq.NucleotideSequence(fasta.get_sequence(file5))
+        seq.NucleotideSequence(fasta.get_sequence(file), seq_type=seq_type)
 
 
 def test_rna_conversion():
