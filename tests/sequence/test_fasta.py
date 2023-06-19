@@ -39,20 +39,18 @@ def test_access_low_level():
     }
 
 
-def test_access_high_level():
-    sequences_reference = {
+@pytest.mark.parametrize("seq_type", (None, seq.NucleotideSequence))
+def test_access_high_level(seq_type):
+    path = os.path.join(data_dir("sequence"), "nuc.fasta")
+    file = fasta.FastaFile.read(path)
+    sequences = fasta.get_sequences(file, seq_type=seq_type)
+    assert sequences == {
         "dna sequence" : seq.NucleotideSequence("ACGCTACGT", False),
         "another dna sequence" : seq.NucleotideSequence("A", False),
         "third dna sequence" : seq.NucleotideSequence("ACGT", False),
         "rna sequence" : seq.NucleotideSequence("ACGT", False),
         "ambiguous rna sequence" : seq.NucleotideSequence("ACGTNN", True),
     }
-    path = os.path.join(data_dir("sequence"), "nuc.fasta")
-    file = fasta.FastaFile.read(path)
-    sequences = fasta.get_sequences(file)
-    assert sequences == sequences_reference
-    sequences_manual = fasta.get_sequences(file, seq.NucleotideSequence)
-    assert sequences_manual == sequences_reference    
 
 
 def test_sequence_conversion():
