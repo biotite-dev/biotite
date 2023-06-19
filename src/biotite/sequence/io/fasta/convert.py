@@ -16,7 +16,7 @@ __all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences",
            "get_alignment", "set_alignment"]
 
 
-def get_sequence(fasta_file, seq_type=None, header=None):
+def get_sequence(fasta_file, header=None, seq_type=None):
     """
     Get a sequence from a :class:`FastaFile` instance.
 
@@ -28,13 +28,13 @@ def get_sequence(fasta_file, seq_type=None, header=None):
     ----------
     fasta_file : FastaFile
         The :class:`FastaFile` to be accessed.
+    header : str, optional
+        The header to get the sequence from. By default, the first
+        sequence of the file is returned.
     seq_type : Class, optional
         The :class:`Sequence` subclass contained in the file. If not 
         set, biotite will attempt to automatically detect whether a 
         nucleotide or protein sequence is present.
-    header : str, optional
-        The header to get the sequence from. By default, the first
-        sequence of the file is returned.
     
     Returns
     -------
@@ -154,7 +154,7 @@ def set_sequences(fasta_file, sequence_dict, as_rna=False):
         fasta_file[header] = _convert_to_string(sequence, as_rna)
 
 
-def get_alignment(fasta_file, seq_type=None, additional_gap_chars=("_",)):
+def get_alignment(fasta_file, additional_gap_chars=("_",), seq_type=None):
     """
     Get an alignment from a :class:`FastaFile` instance.
     
@@ -162,12 +162,12 @@ def get_alignment(fasta_file, seq_type=None, additional_gap_chars=("_",)):
     ----------
     fasta_file : FastaFile
         The :class:`FastaFile` to be accessed.
+    additional_gap_chars : str, optional
+        The characters to be treated as gaps.
     seq_type : Class, optional
         The :class:`Sequence` subclass contained in the file. If not 
         set, biotite will attempt to automatically detect whether a 
         nucleotide or protein sequence is present.
-    additional_gap_chars : str, optional
-        The characters to be treated as gaps.
     
     Returns
     -------
