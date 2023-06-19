@@ -58,7 +58,7 @@ def test_sequence_conversion():
     file = fasta.FastaFile.read(path)
     assert seq.NucleotideSequence("ACGCTACGT") == fasta.get_sequence(file)
     assert seq.NucleotideSequence("ACGCTACGT") == fasta.get_sequence(
-        file, seq.NucleotideSequence
+        file, seq_type=seq.NucleotideSequence
     )
     
     seq_dict = fasta.get_sequences(file)
