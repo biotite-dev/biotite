@@ -214,12 +214,17 @@ def set_alignment(fasta_file, alignment, seq_names):
 def _convert_to_sequence(seq_str, seq_type=None):
 
     # Define preprocessing of preimplemented sequence types
+
+    # Selenocysteine is not supported, replace with cysteine
     process_protein_sequence = lambda x : x.upper().replace("U", "C")
+    # For nucleotides uracil is represented by thymine and there is is only 
+    # one letter for completely unknown nucleotides
     process_nucleotide_sequence = (
         lambda x : x.upper().replace("U","T").replace("X","N")
     )
 
-    # Attempt to set manually selected sequence type
+    # Set manually selected sequence type
+
     if seq_type is not None:
         # Do preprocessing as done without manual selection
         if seq_type == NucleotideSequence:
@@ -234,10 +239,9 @@ def _convert_to_sequence(seq_str, seq_type=None):
         # Return the converted sequence
         return seq_type(seq_str)    
 
-    # Biotite alphabets for nucleotide and proteins
+    # Attempt to automatically determine sequence type
+
     try:
-        # For nucleotides uracil is represented by thymine and
-        # there is is only one letter for completely unknown nucleotides
         return NucleotideSequence(process_nucleotide_sequence(seq_str))
     except AlphabetError:
         pass
