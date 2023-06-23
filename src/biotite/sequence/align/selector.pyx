@@ -150,12 +150,14 @@ class MinimizerSelector:
             The sequence to find the minimizers in.
             Must be compatible with the given `kmer_alphabet`
         alphabet_check: bool, optional
-            If set to false, the compatibility between the alphabets
+            If set to false, the compatibility between the alphabet
+            of the sequence and the alphabet of the
+            :class:`MinimizerSelector`
             is not checked to gain additional performance.
         
         Returns
         -------
-        minimizers_indices : ndarray, dtype=np.uint32
+        minimizer_indices : ndarray, dtype=np.uint32
             The sequence indices where the minimizer *k-mers* start.
         minimizers : ndarray, dtype=np.int64
             The *k-mers* that are the selected minimizers, returned as
@@ -180,7 +182,7 @@ class MinimizerSelector:
         """
         select_from_kmers(kmers)
 
-        Select all overlapping *k-mers*.
+        Select minimizers for the given overlapping *k-mers*.
 
         Parameters
         ----------
@@ -189,13 +191,10 @@ class MinimizerSelector:
             minimizers in.
             The *k-mer* codes correspond to the *k-mers* encoded by the
             given `kmer_alphabet`.
-        alphabet_check: bool, optional
-            If set to false, the compatibility between the alphabets
-            is not checked to gain additional performance.
         
         Returns
         -------
-        minimizers_indices : ndarray, dtype=np.uint32
+        minimizer_indices : ndarray, dtype=np.uint32
             The indices in the input *k-mer* sequence where a minimizer
             appears.
         minimizers : ndarray, dtype=np.int64
@@ -374,6 +373,30 @@ class SyncmerSelector:
     
 
     def select(self, sequence, bint alphabet_check=True):
+        """
+        select(sequence, alphabet_check=True)
+
+        Obtain all overlapping *k-mers* from a sequence and select
+        the syncmers from them.
+
+        Parameters
+        ----------
+        sequence : Sequence
+            The sequence to find the syncmers in.
+            Must be compatible with the given `kmer_alphabet`
+        alphabet_check: bool, optional
+            If set to false, the compatibility between the alphabet
+            of the sequence and the alphabet of the
+            :class:`SyncmerSelector`
+            is not checked to gain additional performance.
+        
+        Returns
+        -------
+        syncmer_indices : ndarray, dtype=np.uint32
+            The sequence indices where the syncmers start.
+        syncmers : ndarray, dtype=np.int64
+            The corresponding *k-mer* codes of the syncmers.
+        """
         if alphabet_check:
             if not self._alphabet.extends(sequence.alphabet):
                 raise ValueError(
@@ -409,15 +432,31 @@ class SyncmerSelector:
 
     def select_from_kmers(self, kmers):
         """
-        The given `kmers` are not required to overlap.
+        select_from_kmers(kmers)
+
+        Select syncmers for the given *k-mers*.
+
+        The *k-mers* are not required to overlap.
+
+        Parameters
+        ----------
+        kmers : ndarray, dtype=np.int64
+            The *k-mer* codes to select the syncmers from.
+        
+        Returns
+        -------
+        syncmer_indices : ndarray, dtype=np.uint32
+            The sequence indices where the syncmers start.
+        syncmers : ndarray, dtype=np.int64
+            The corresponding *k-mer* codes of the syncmers.
 
         Notes
         -----
         Since for *s-mer* creation, the *k-mers* need to be converted
         back to symbol codes again and since the input *k-mers* are not
         required to overlap, calling :meth:`select()` is much faster.
-        Howver, :meth:`select()` is only available, if a
-        :class:`Sequence` object is available.
+        However, :meth:`select()` is only available for
+        :class:`Sequence` objects.
         """
         cdef int64 i
         
@@ -511,9 +550,8 @@ class CachedSyncmerSelector(SyncmerSelector):
     
     See also
     --------
-    CachedSyncmerSelector
-        A cached variant with faster syncmer selection at the cost of
-        increased initialization time.
+    SyncmerSelector
+        A standard variant for syncmer selection.
 
     Notes
     -----
@@ -530,20 +568,21 @@ class CachedSyncmerSelector(SyncmerSelector):
     Examples
     --------
 
-    sequence = NucleotideSequence("GGCAAGTGACA")
-    kmer_alph = KmerAlphabet(sequence.alphabet, k=5)
-    # The initialization can quite a long time for large *k-mer* alphabets...
-    closed_syncmer_selector = CachedSyncmerSelector(
-        sequence.alphabet,
-        # The same k as in the KmerAlphabet
-        k=5,
-        s=2,
-        # The offset determines that closed syncmers will be selected
-        offset=(0, -1)
-    )
-    # ...but the actual syncmer identification is very fast
-    syncmer_pos, syncmers = closed_syncmer_selector.select(sequence)
-    print(syncmers)
+    >>> sequence = NucleotideSequence("GGCAAGTGACA")
+    >>> kmer_alph = KmerAlphabet(sequence.alphabet, k=5)
+    >>> # The initialization can quite a long time for large *k-mer* alphabets...
+    >>> closed_syncmer_selector = CachedSyncmerSelector(
+    ...     sequence.alphabet,
+    ...     # The same k as in the KmerAlphabet
+    ...     k=5,
+    ...     s=2,
+    ...     # The offset determines that closed syncmers will be selected
+    ...     offset=(0, -1)
+    ... )
+    >>> # ...but the actual syncmer identification is very fast
+    >>> syncmer_pos, syncmers = closed_syncmer_selector.select(sequence)
+    >>> print(["".join(kmer_alph.decode(kmer)) for kmer in syncmers])
+    ['GGCAA', 'AAGTG', 'AGTGA', 'GTGAC']
     """
     
     def __init__(self, alphabet, k, s, permutation=None, offset=(0,)):
@@ -557,6 +596,30 @@ class CachedSyncmerSelector(SyncmerSelector):
     
 
     def select(self, sequence, bint alphabet_check=True):
+        """
+        select(sequence, alphabet_check=True)
+
+        Obtain all overlapping *k-mers* from a sequence and select
+        the syncmers from them.
+
+        Parameters
+        ----------
+        sequence : Sequence
+            The sequence to find the syncmers in.
+            Must be compatible with the given `kmer_alphabet`
+        alphabet_check: bool, optional
+            If set to false, the compatibility between the alphabet
+            of the sequence and the alphabet of the
+            :class:`CachedSyncmerSelector`
+            is not checked to gain additional performance.
+        
+        Returns
+        -------
+        syncmer_indices : ndarray, dtype=np.uint32
+            The sequence indices where the syncmers start.
+        syncmers : ndarray, dtype=np.int64
+            The corresponding *k-mer* codes of the syncmers.
+        """
         if alphabet_check:
             if not self.alphabet.extends(sequence.alphabet):
                 raise ValueError(
@@ -569,12 +632,93 @@ class CachedSyncmerSelector(SyncmerSelector):
 
     def select_from_kmers(self, kmers):
         """
+        select_from_kmers(kmers)
+
+        Select syncmers for the given *k-mers*.
+
+        The *k-mers* are not required to overlap.
+
+        Parameters
+        ----------
+        kmers : ndarray, dtype=np.int64
+            The *k-mer* codes to select the syncmers from.
+        
+        Returns
+        -------
+        syncmer_indices : ndarray, dtype=np.uint32
+            The sequence indices where the syncmers start.
+        syncmers : ndarray, dtype=np.int64
+            The corresponding *k-mer* codes of the syncmers.
         """
         syncmer_pos = np.where(self._syncmer_mask[kmers])[0]
         return syncmer_pos, kmers[syncmer_pos]
 
 
 class MincodeSelector:
+    r"""
+    MincodeSelector(self, kmer_alphabet, compression, permutation=None)
+
+    Selects the :math:`1/\text{compression}` *smallest* *k-mers* from
+    :class:`KmerAlphabet`. :footcite:`Edgar2021`
+    
+    '*Small*' refers to the lexicographical order, or alternatively a
+    custom order if `permutation` is given.
+    The *Mincode* approach tries to reduce the number of *k-mers* from a
+    sequence by the factor `compression`, while it still ensures that
+    a common set of *k-mers* are selected from similar sequences.
+
+    Parameters
+    ----------
+    kmer_alphabet : KmerAlphabet
+        The *k-mer* alphabet that defines the *k-mer* size and the type
+        of sequence this :class:`MincodeSelector` can be applied on.
+    compression : float
+        Defines the compression factor, i.e. the approximate fraction
+        of *k-mers* that will be sampled from a sequence.
+    permutation : Permutation
+        If set, the *k-mer* order is permuted, i.e.
+        the *k-mers* are selected based on the ordering of the sort keys
+        from :class:`Permutation.permute()`.
+        By default, the standard order of the :class:`KmerAlphabet` is
+        used.
+        This standard order is often the lexicographical order.
+    
+    Attributes
+    ----------
+    kmer_alphabet : KmerAlphabet
+        The *k-mer* alphabet.
+    compression : float
+        The compression factor.
+    threshold : float
+        Based on the compression factor and the range of (permuted)
+        *k-mer* values this threshold is calculated.
+        All *k-mers*, that are smaller than this value are selected.
+    permutation : Permutation
+        The permutation.
+    
+    References
+    ----------
+    
+    .. footbibliography::
+
+    Examples
+    --------
+
+    >>> kmer_alph = KmerAlphabet(NucleotideSequence.alphabet_unamb, k=2)
+    >>> kmers = np.arange(len(kmer_alph))
+    >>> print(["".join(kmer_alph.decode(kmer)) for kmer in kmers])
+    ['AA', 'AC', 'AG', 'AT', 'CA', 'CC', 'CG', 'CT', 'GA', 'GC', 'GG', 'GT', 'TA', 'TC', 'TG', 'TT']
+    >>> # Select 1/4 of *k-mers* based on lexicographical k-mer order
+    >>> selector = MincodeSelector(kmer_alph, 4)
+    >>> subset_pos, kmers_subset = selector.select_from_kmers(kmers)
+    >>> print(["".join(kmer_alph.decode(kmer)) for kmer in kmers_subset])
+    ['AA', 'AC', 'AG', 'AT']
+    >>> # Select 1/4 based on randomized k-mer order
+    >>> selector = MincodeSelector(kmer_alph, 4, permutation=RandomPermutation())
+    >>> subset_pos, kmers_subset = selector.select_from_kmers(kmers)
+    >>> print(["".join(kmer_alph.decode(kmer)) for kmer in kmers_subset])
+    ['AG', 'CT', 'GA', 'TC']
+    """
 
     def __init__(self, kmer_alphabet, compression, permutation=None):
         if compression < 1:
@@ -585,10 +729,12 @@ class MincodeSelector:
         self._kmer_alph = kmer_alphabet
         self._permutation = permutation
         if permutation is None:
+            permutation_offset = 0
             permutation_range = len(kmer_alphabet)
         else:
+            permutation_offset = permutation.min
             permutation_range = permutation.max - permutation.min + 1
-        self._threshold = permutation_range / compression
+        self._threshold = permutation_offset + permutation_range / compression
     
 
     @property
@@ -609,6 +755,30 @@ class MincodeSelector:
     
 
     def select(self, sequence, bint alphabet_check=True):
+        """
+        select(sequence, alphabet_check=True)
+
+        Obtain all overlapping *k-mers* from a sequence and select
+        the *Mincode k-mers* from them.
+
+        Parameters
+        ----------
+        sequence : Sequence
+            The sequence to find the *Mincode k-mers* in.
+            Must be compatible with the given `kmer_alphabet`
+        alphabet_check: bool, optional
+            If set to false, the compatibility between the alphabet
+            of the sequence and the alphabet of the
+            :class:`MincodeSelector`
+            is not checked to gain additional performance.
+        
+        Returns
+        -------
+        mincode_indices : ndarray, dtype=np.uint32
+            The sequence indices where the *Mincode k-mers* start.
+        mincode : ndarray, dtype=np.int64
+            The corresponding *Mincode k-mer* codes.
+        """
         if alphabet_check:
             if not self._kmer_alph.base_alphabet.extends(sequence.alphabet):
                 raise ValueError(
@@ -619,6 +789,25 @@ class MincodeSelector:
     
 
     def select_from_kmers(self, kmers):
+        """
+        select_from_kmers(kmers)
+
+        Select *Mincode k-mers*.
+
+        The given *k-mers* are not required to overlap.
+
+        Parameters
+        ----------
+        kmers : ndarray, dtype=np.int64
+            The *k-mer* codes to select the *Mincode k-mers* from.
+        
+        Returns
+        -------
+        mincode_indices : ndarray, dtype=np.uint32
+            The sequence indices where the *Mincode k-mers* start.
+        mincode : ndarray, dtype=np.int64
+            The corresponding *Mincode k-mer* codes.
+        """
         if self._permutation is None:
             ordering = kmers
         else:
@@ -629,7 +818,7 @@ class MincodeSelector:
                     f"sort keys for {len(kmers)} k-mers"
                 )
 
-        mincode_pos = ordering <= self._threshold
+        mincode_pos = ordering < self._threshold
         return mincode_pos, kmers[mincode_pos]
     
 

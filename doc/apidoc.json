@@ -130,12 +130,23 @@
             "get_pairwise_sequence_identity",
             "score"
         ],
-        "K-mers" : [
+        "k-mers" : [
             "KmerAlphabet",
             "KmerTable",
             "SimilarityRule",
             "ScoreThresholdRule"
-        ]
+        ],
+        "k-mer subset selections" : [
+            "MinimizerSelector",
+            "SyncmerSelector",
+            "CachedSyncmerSelector",
+            "MincodeSelector"
+        ],
+        "k-mer permutations" : [
+            "Permutation",
+            "RandomPermutation",
+            "FrequencyPermutation"
+        ],
     },
 
     "biotite.sequence.phylo" : {

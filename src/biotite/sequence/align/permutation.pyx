@@ -32,7 +32,7 @@ class Permutation(metaclass=abc.ABCMeta):
     Attributes
     ----------
     min, max: int
-        The minimum and maximum value the permutated value
+        The minimum and maximum value, the permutated value
         (i.e. the return value of :meth:`permute()`)
         can take.
         Must be overriden by subclasses.
@@ -95,7 +95,7 @@ class RandomPermutation(Permutation):
     Attributes
     ----------
     min, max: int
-        The minimum and maximum value the permutated value
+        The minimum and maximum value, the permutated value
         (i.e. the return value of :meth:`permute()`)
         can take.
 
@@ -183,7 +183,7 @@ class FrequencyPermutation(Permutation):
     Attributes
     ----------
     min, max: int
-        The minimum and maximum value the permutated value
+        The minimum and maximum value, the permutated value
         (i.e. the return value of :meth:`permute()`)
         can take.
 
