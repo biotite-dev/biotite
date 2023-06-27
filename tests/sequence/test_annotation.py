@@ -58,8 +58,15 @@ def test_annotated_sequence():
     annot_seq = AnnotatedSequence(annotation, sequence)
     assert annot_seq[2] == "T"
     assert annot_seq.sequence[2] == "G"
+    
+    # test slicing with only stop
     annot_seq2 = annot_seq[:16]
     assert annot_seq2.sequence == seq.NucleotideSequence("ATGGCGTACGATTAG")
+    
+    # test slicing with only start
+    annot_seq3 = annot_seq[16:]
+    assert annot_seq3.sequence == seq.NucleotideSequence("AAAAAAA")
+    
     assert annot_seq[feature1] == seq.NucleotideSequence("ATAT")
     assert annot_seq[feature2] == seq.NucleotideSequence("AAAAAAA")
     annot_seq[feature1] = seq.NucleotideSequence("CCCC")
