@@ -763,7 +763,8 @@ class AnnotatedSequence(Copyable):
                     )
                 seq_start = index.start - self._seqstart
             if index.stop is None:
-                index.start = len(self._sequence)
+                seq_stop = len(self._sequence)
+                index = slice(index.start, seq_stop, index.step)
             else:
                 seq_stop = index.stop - self._seqstart
             # New value for the sequence start, value is base position
@@ -804,7 +805,8 @@ class AnnotatedSequence(Copyable):
             else:
                 seq_start = index.start - self._seqstart
             if index.stop is None:
-                index.start = len(self._sequence)
+                seq_stop = len(self._sequence)
+                index = slice(index.start, seq_stop, index.step)
             else:
                 seq_stop = index.stop - self._seqstart
             # Item is a Sequence
