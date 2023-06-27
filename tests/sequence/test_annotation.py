@@ -62,10 +62,17 @@ def test_annotated_sequence():
     # test slicing with only stop
     annot_seq2 = annot_seq[:16]
     assert annot_seq2.sequence == seq.NucleotideSequence("ATGGCGTACGATTAG")
+    assert set([f.qual['note'] for f in annot_seq2.annotation]) == {'walker'}
     
     # test slicing with only start
     annot_seq3 = annot_seq[16:]
     assert annot_seq3.sequence == seq.NucleotideSequence("AAAAAAA")
+    assert set([f.qual['note'] for f in annot_seq3.annotation]) == {'poly-A'}
+    
+    # test slicing with start and stop
+    annot_seq4 = annot_seq[1:17]
+    assert annot_seq4.sequence == seq.NucleotideSequence("ATGGCGTACGATTAGA") # sequences are 1-indexed
+    assert set([f.qual['note'] for f in annot_seq4.annotation]) == {'walker', 'poly-A'}
     
     assert annot_seq[feature1] == seq.NucleotideSequence("ATAT")
     assert annot_seq[feature2] == seq.NucleotideSequence("AAAAAAA")
