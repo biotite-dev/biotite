@@ -163,5 +163,4 @@ def write_structure_to_ctab(atoms, default_bond_type=BondType.ANY):
 
 
 def _get_counts(counts_line):
-    elements = counts_line.split()
-    return int(elements[0]), int(elements[1])
+    return int(counts_line[0:3]), int(counts_line[3:6])

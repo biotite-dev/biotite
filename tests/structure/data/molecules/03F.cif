@@ -1,0 +1,354 @@
+data_03F
+#
+
+_chem_comp.id                                   03F
+_chem_comp.name                                 "(9Z)-N-[(2S,3R,4E)-1-(beta-D-glucopyranosyloxy)-3-hydroxyoctadec-4-en-2-yl]octadec-9-enamide"
+_chem_comp.type                                 NON-POLYMER
+_chem_comp.pdbx_type                            HETAIN
+_chem_comp.formula                              "C42 H79 N O8"
+_chem_comp.mon_nstd_parent_comp_id              ?
+_chem_comp.pdbx_synonyms                        "N-(9Z-octadecenoyl)-1--glucosyl-sphing-4-enine"
+_chem_comp.pdbx_formal_charge                   0
+_chem_comp.pdbx_initial_date                    2011-08-21
+_chem_comp.pdbx_modified_date                   2020-06-17
+_chem_comp.pdbx_ambiguous_flag                  N
+_chem_comp.pdbx_release_status                  REL
+_chem_comp.pdbx_replaced_by                     ?
+_chem_comp.pdbx_replaces                        ?
+_chem_comp.formula_weight                       726.079
+_chem_comp.one_letter_code                      ?
+_chem_comp.three_letter_code                    03F
+_chem_comp.pdbx_model_coordinates_details       ?
+_chem_comp.pdbx_model_coordinates_missing_flag  N
+_chem_comp.pdbx_ideal_coordinates_details       Corina
+_chem_comp.pdbx_ideal_coordinates_missing_flag  N
+_chem_comp.pdbx_model_coordinates_db_code       3S0K
+_chem_comp.pdbx_subcomponent_list               ?
+_chem_comp.pdbx_processing_site                 RCSB
+#   #
+loop_
+_chem_comp_atom.comp_id
+_chem_comp_atom.atom_id
+_chem_comp_atom.alt_atom_id
+_chem_comp_atom.type_symbol
+_chem_comp_atom.charge
+_chem_comp_atom.pdbx_align
+_chem_comp_atom.pdbx_aromatic_flag
+_chem_comp_atom.pdbx_leaving_atom_flag
+_chem_comp_atom.pdbx_stereo_config
+_chem_comp_atom.model_Cartn_x
+_chem_comp_atom.model_Cartn_y
+_chem_comp_atom.model_Cartn_z
+_chem_comp_atom.pdbx_model_Cartn_x_ideal
+_chem_comp_atom.pdbx_model_Cartn_y_ideal
+_chem_comp_atom.pdbx_model_Cartn_z_ideal
+_chem_comp_atom.pdbx_component_atom_id
+_chem_comp_atom.pdbx_component_comp_id
+_chem_comp_atom.pdbx_ordinal
+03F  C1    C1    C  0  1  N  N  N  32.170  23.298  -3.484  -3.597    3.707   0.561  C1    03F    1  
+03F  C2    C2    C  0  1  N  N  S  30.891  23.930  -3.976  -3.174    2.348  -0.002  C2    03F    2  
+03F  N2    N2    N  0  1  N  N  N  30.048  24.249  -2.798  -1.783    2.418  -0.455  N2    03F    3  
+03F  C3    C3    C  0  1  N  N  R  30.119  23.007  -4.889  -4.077    1.981  -1.181  C3    03F    4  
+03F  O3    O3    O  0  1  N  N  N  30.996  22.794  -6.015  -5.442    1.997  -0.759  O3    03F    5  
+03F  C4    C4    C  0  1  N  N  N  28.865  23.668  -5.428  -3.721    0.603  -1.677  C4    03F    6  
+03F  C5    C5    C  0  1  N  N  N  27.670  23.218  -5.158  -4.645   -0.322  -1.761  C5    03F    7  
+03F  C6    C6    C  0  1  N  N  N  26.440  23.938  -5.723  -4.288   -1.700  -2.257  C6    03F    8  
+03F  C7    C7    C  0  1  N  N  N  26.562  25.445  -6.007  -4.718   -2.741  -1.221  C7    03F    9  
+03F  C8    C8    C  0  1  N  N  N  25.172  26.102  -6.142  -4.356   -4.140  -1.724  C8    03F   10  
+03F  C9    C9    C  0  1  N  N  N  25.308  27.567  -6.591  -4.786   -5.181  -0.689  C9    03F   11  
+03F  C10   C10   C  0  1  N  N  N  24.137  28.505  -6.264  -4.424   -6.580  -1.192  C10   03F   12  
+03F  C11   C11   C  0  1  N  N  N  22.777  27.844  -6.149  -4.853   -7.621  -0.157  C11   03F   13  
+03F  C12   C12   C  0  1  N  N  N  21.519  28.561  -6.649  -4.492   -9.020  -0.660  C12   03F   14  
+03F  C13   C13   C  0  1  N  N  N  20.813  29.312  -5.523  -4.921  -10.061   0.375  C13   03F   15  
+03F  C14   C14   C  0  1  N  N  N  19.513  29.954  -6.004  -4.559  -11.460  -0.128  C14   03F   16  
+03F  C15   C15   C  0  1  N  N  N  18.498  30.025  -4.887  -4.989  -12.502   0.908  C15   03F   17  
+03F  C16   C16   C  0  1  N  N  N  17.129  30.493  -5.348  -4.627  -13.901   0.405  C16   03F   18  
+03F  C17   C17   C  0  1  N  N  N  16.162  30.503  -4.156  -5.057  -14.942   1.440  C17   03F   19  
+03F  C18   C18   C  0  1  N  N  N  15.382  29.205  -3.951  -4.695  -16.341   0.937  C18   03F   20  
+03F  C1A   C1A   C  0  1  N  N  R  32.805  21.906  -1.671  -3.983    5.987  -0.069  C1A   03F   21  
+03F  O1A   O1A   O  0  1  N  N  N  31.907  22.210  -2.677  -3.600    4.676  -0.489  O1A   03F   22  
+03F  C2A   C2A   C  0  1  N  N  R  32.160  20.945  -0.735  -3.833    6.963  -1.239  C2A   03F   23  
+03F  O2A   O2A   O  0  1  N  N  N  31.048  21.620  -0.084  -2.461    7.025  -1.636  O2A   03F   24  
+03F  C3A   C3A   C  0  1  N  N  S  33.140  20.497   0.312  -4.301    8.353  -0.797  C3A   03F   25  
+03F  O3A   O3A   O  0  1  N  N  N  32.585  19.448   1.108  -4.231    9.255  -1.904  O3A   03F   26  
+03F  C4A   C4A   C  0  1  N  N  S  34.462  20.002  -0.326  -5.747    8.259  -0.301  C4A   03F   27  
+03F  O4A   O4A   O  0  1  N  N  N  35.385  19.731   0.703  -6.171    9.536   0.181  O4A   03F   28  
+03F  O5A   O5A   O  0  1  N  N  N  36.732  21.615  -2.836  -7.331    6.221   2.427  O5A   03F   29  
+03F  C5M   C5M   C  0  1  N  N  R  34.932  21.057  -1.326  -5.824    7.233   0.833  C5M   03F   30  
+03F  C6A   C6A   C  0  1  N  N  N  36.229  20.615  -1.991  -7.275    7.089   1.294  C6A   03F   31  
+03F  O6A   O6A   O  0  1  N  N  N  33.938  21.337  -2.305  -5.345    5.971   0.364  O6A   03F   32  
+03F  CAA   CAA   C  0  1  N  N  N  29.552  25.557  -2.614  -0.778    2.223   0.422  CAA   03F   33  
+03F  OAA   OAA   O  0  1  N  N  N  29.806  26.531  -3.276  -1.026    1.989   1.586  OAA   03F   34  
+03F  CAB   CAB   C  0  1  N  N  N  28.579  25.826  -1.482   0.653    2.295  -0.044  CAB   03F   35  
+03F  CAC   CAC   C  0  1  N  N  N  27.166  25.964  -2.085   1.589    2.038   1.139  CAC   03F   36  
+03F  CAD   CAD   C  0  1  N  N  N  26.047  26.482  -1.119   3.042    2.112   0.666  CAD   03F   37  
+03F  CAE   CAE   C  0  1  N  N  N  24.713  26.722  -1.813   3.977    1.855   1.849  CAE   03F   38  
+03F  CAF   CAF   C  0  1  N  N  N  23.615  27.295  -0.986   5.430    1.928   1.376  CAF   03F   39  
+03F  CAG   CAG   C  0  1  N  N  N  22.375  27.728  -1.752   6.365    1.671   2.559  CAG   03F   40  
+03F  CAH   CAH   C  0  1  N  N  N  21.151  27.941  -0.872   7.819    1.745   2.086  CAH   03F   41  
+03F  CAI   CAI   C  0  1  N  N  N  19.951  28.194  -1.789   8.740    1.492   3.251  CAI   03F   42  
+03F  CAJ   CAJ   C  0  1  N  N  N  18.726  28.616  -1.437   9.674    0.578   3.161  CAJ   03F   43  
+03F  CAK   CAK   C  0  1  N  N  N  18.392  28.837  -0.032   9.929   -0.113   1.846  CAK   03F   44  
+03F  CAL   CAL   C  0  1  N  N  N  17.035  29.054   0.644  11.411    0.004   1.487  CAL   03F   45  
+03F  CAM   CAM   C  0  1  N  N  N  17.018  28.381   2.020  11.670   -0.697   0.152  CAM   03F   46  
+03F  CAN   CAN   C  0  1  N  N  N  15.929  28.909   2.928  13.152   -0.581  -0.207  CAN   03F   47  
+03F  CAO   CAO   C  0  1  N  N  N  15.955  28.361   4.350  13.410   -1.282  -1.542  CAO   03F   48  
+03F  CAP   CAP   C  0  1  N  N  N  15.609  29.456   5.340  14.893   -1.165  -1.901  CAP   03F   49  
+03F  CAQ   CAQ   C  0  1  N  N  N  15.376  28.979   6.765  15.151   -1.866  -3.236  CAQ   03F   50  
+03F  CAR   CAR   C  0  1  N  N  N  14.675  30.036   7.586  16.634   -1.749  -3.595  CAR   03F   51  
+03F  HO4A  HO4A  H  0  0  N  N  N  36.201  19.426   0.325  -6.143   10.236  -0.485  HO4A  03F   52  
+03F  H2    H2    H  0  1  N  N  N  31.148  24.834  -4.548  -3.266    1.589   0.776  H2    03F   53  
+03F  HO3A  HO3A  H  0  0  N  N  N  33.218  19.178   1.763  -3.343    9.357  -2.272  HO3A  03F   54  
+03F  HO2A  HO2A  H  0  0  N  N  N  30.623  21.021   0.519  -2.096    6.177  -1.923  HO2A  03F   55  
+03F  H3    H3    H  0  1  N  N  N  29.823  22.095  -4.350  -3.937    2.704  -1.985  H3    03F   56  
+03F  H4    H4    H  0  1  N  N  N  28.964  24.541  -6.057  -2.704    0.378  -1.962  H4    03F   57  
+03F  H10   H10   H  0  1  N  N  N  24.356  28.980  -5.296  -4.937   -6.771  -2.134  H10   03F   58  
+03F  H10A  H10A  H  0  0  N  N  N  24.075  29.249  -7.072  -3.347   -6.643  -1.346  H10A  03F   59  
+03F  H1    H1    H  0  1  N  N  N  32.737  24.043  -2.906  -4.597    3.629   0.987  H1    03F   60  
+03F  H11   H11   H  0  1  N  N  N  22.617  27.667  -5.075  -4.340   -7.430   0.785  H11   03F   61  
+03F  H1A   H1A   H  0  1  N  N  N  32.760  22.966  -4.351  -2.895    4.014   1.336  H1A   03F   62  
+03F  H11A  H11A  H  0  0  N  N  N  22.844  26.912  -6.729  -5.931   -7.558  -0.003  H11A  03F   63  
+03F  H1AA  H1AA  H  0  0  N  N  N  33.108  22.788  -1.088  -3.344    6.306   0.755  H1AA  03F   64  
+03F  H12   H12   H  0  1  N  N  N  20.827  27.813  -7.063  -5.005   -9.211  -1.602  H12   03F   65  
+03F  H12A  H12A  H  0  0  N  N  N  21.809  29.282  -7.427  -3.414   -9.084  -0.814  H12A  03F   66  
+03F  H1AR  H1AR  H  0  0  N  N  N  15.293  30.946   7.617  16.818   -2.249  -4.546  H1AR  03F   67  
+03F  H2A   H2A   H  0  1  N  N  N  31.811  20.064  -1.295  -4.440    6.622  -2.077  H2A   03F   68  
+03F  H13   H13   H  0  1  N  N  N  20.580  28.602  -4.716  -4.407   -9.870   1.318  H13   03F   69  
+03F  H13A  H13A  H  0  0  N  N  N  21.482  30.102  -5.151  -5.998   -9.998   0.529  H13A  03F   70  
+03F  H3A   H3A   H  0  1  N  N  N  33.356  21.368   0.948  -3.662    8.715   0.008  H3A   03F   71  
+03F  H14   H14   H  0  1  N  N  N  19.727  30.973  -6.358  -5.073  -11.652  -1.070  H14   03F   72  
+03F  H14A  H14A  H  0  0  N  N  N  19.099  29.351  -6.825  -3.482  -11.524  -0.282  H14A  03F   73  
+03F  H4A   H4A   H  0  1  N  N  N  34.336  19.063  -0.886  -6.394    7.946  -1.121  H4A   03F   74  
+03F  H15   H15   H  0  1  N  N  N  18.867  30.734  -4.131  -4.475  -12.311   1.850  H15   03F   75  
+03F  H5    H5    H  0  1  N  N  N  27.548  22.342  -4.539  -5.661   -0.097  -1.475  H5    03F   76  
+03F  H15A  H15A  H  0  0  N  N  N  18.390  29.019  -4.456  -6.066  -12.438   1.062  H15A  03F   77  
+03F  HO5A  HO5A  H  0  0  N  N  N  37.539  21.315  -3.237  -8.224    6.083   2.774  HO5A  03F   78  
+03F  H5M   H5M   H  0  1  N  N  N  35.115  21.987  -0.768  -5.208    7.568   1.668  H5M   03F   79  
+03F  H6    H6    H  0  1  N  N  N  25.633  23.817  -4.985  -4.802   -1.891  -3.199  H6    03F   80  
+03F  H16   H16   H  0  1  N  N  N  17.210  31.509  -5.763  -5.141  -14.092  -0.538  H16   03F   81  
+03F  H6A   H6A   H  0  1  N  N  N  26.198  23.452  -6.680  -3.211   -1.763  -2.411  H6A   03F   82  
+03F  H16A  H16A  H  0  0  N  N  N  16.750  29.809  -6.122  -3.550  -13.964   0.251  H16A  03F   83  
+03F  H7    H7    H  0  1  N  N  N  27.102  25.922  -5.176  -4.204   -2.550  -0.279  H7    03F   84  
+03F  H17   H17   H  0  1  N  N  N  16.753  30.685  -3.247  -4.543  -14.751   2.382  H17   03F   85  
+03F  H7A   H7A   H  0  1  N  N  N  27.116  25.587  -6.947  -5.795   -2.677  -1.067  H7A   03F   86  
+03F  H17A  H17A  H  0  0  N  N  N  15.432  31.309  -4.324  -6.134  -14.878   1.594  H17A  03F   87  
+03F  H8    H8    H  0  1  N  N  N  24.662  26.070  -5.168  -4.870   -4.331  -2.667  H8    03F   88  
+03F  H18   H18   H  0  1  N  N  N  16.086  28.377  -3.780  -5.001  -17.083   1.674  H18   03F   89  
+03F  H8A   H8A   H  0  1  N  N  N  24.584  25.549  -6.889  -3.279   -4.203  -1.878  H8A   03F   90  
+03F  H18A  H18A  H  0  0  N  N  N  14.720  29.308  -3.079  -5.208  -16.532  -0.005  H18A  03F   91  
+03F  H18B  H18B  H  0  0  N  N  N  14.779  28.995  -4.846  -3.618  -16.404   0.783  H18B  03F   92  
+03F  H9    H9    H  0  1  N  N  N  26.199  27.976  -6.092  -4.272   -4.990   0.253  H9    03F   93  
+03F  H9A   H9A   H  0  1  N  N  N  25.421  27.560  -7.685  -5.863   -5.118  -0.535  H9A   03F   94  
+03F  H6AA  H6AA  H  0  0  N  N  N  36.034  19.711  -2.586  -7.874    6.670   0.485  H6AA  03F   95  
+03F  H6AB  H6AB  H  0  0  N  N  N  36.974  20.400  -1.211  -7.669    8.068   1.566  H6AB  03F   96  
+03F  HAB   HAB   H  0  1  N  N  N  28.600  24.993  -0.764   0.824    1.541  -0.812  HAB   03F   97  
+03F  HABA  HABA  H  0  0  N  N  N  28.857  26.755  -0.962   0.852    3.284  -0.456  HABA  03F   98  
+03F  HAC   HAC   H  0  1  N  N  N  26.861  24.966  -2.433   1.418    2.793   1.907  HAC   03F   99  
+03F  HACA  HACA  H  0  0  N  N  N  27.235  26.679  -2.918   1.390    1.049   1.551  HACA  03F  100  
+03F  HAD   HAD   H  0  1  N  N  N  25.895  25.727  -0.334   3.212    1.357  -0.102  HAD   03F  101  
+03F  HADA  HADA  H  0  0  N  N  N  26.383  27.434  -0.683   3.240    3.101   0.254  HADA  03F  102  
+03F  HAE   HAE   H  0  1  N  N  N  24.363  25.747  -2.184   3.807    2.609   2.617  HAE   03F  103  
+03F  HAEA  HAEA  H  0  0  N  N  N  24.900  27.428  -2.635   3.779    0.865   2.261  HAEA  03F  104  
+03F  HAF   HAF   H  0  1  N  N  N  23.306  26.523  -0.266   5.601    1.174   0.608  HAF   03F  105  
+03F  HAFA  HAFA  H  0  0  N  N  N  24.015  28.183  -0.475   5.629    2.918   0.964  HAFA  03F  106  
+03F  HAG   HAG   H  0  1  N  N  N  22.601  28.679  -2.257   6.195    2.426   3.327  HAG   03F  107  
+03F  HAGA  HAGA  H  0  0  N  N  N  22.136  26.943  -2.484   6.167    0.682   2.971  HAGA  03F  108  
+03F  HAH   HAH   H  0  1  N  N  N  21.309  28.806  -0.211   7.989    0.990   1.317  HAH   03F  109  
+03F  HAHA  HAHA  H  0  0  N  N  N  20.971  27.048  -0.255   8.017    2.734   1.673  HAHA  03F  110  
+03F  HAI   HAI   H  0  1  N  N  N  20.108  28.012  -2.842   8.630    2.064   4.160  HAI   03F  111  
+03F  HAJ   HAJ   H  0  1  N  N  N  17.981  28.794  -2.199  10.262    0.319   4.030  HAJ   03F  112  
+03F  HAK   HAK   H  0  1  N  N  N  18.770  27.928   0.458   9.657   -1.165   1.930  HAK   03F  113  
+03F  HAKA  HAKA  H  0  0  N  N  N  18.940  29.760   0.210   9.328    0.356   1.067  HAKA  03F  114  
+03F  HAL   HAL   H  0  1  N  N  N  16.859  30.133   0.766  11.683    1.056   1.403  HAL   03F  115  
+03F  HALA  HALA  H  0  0  N  N  N  16.243  28.618   0.017  12.012   -0.465   2.266  HALA  03F  116  
+03F  HAM   HAM   H  0  1  N  N  N  17.989  28.563   2.504  11.398   -1.750   0.236  HAM   03F  117  
+03F  HAMA  HAMA  H  0  0  N  N  N  16.853  27.303   1.874  11.069   -0.228  -0.627  HAMA  03F  118  
+03F  HAN   HAN   H  0  1  N  N  N  16.045  30.001   2.989  13.424    0.472  -0.291  HAN   03F  119  
+03F  HN2   HN2   H  0  1  N  N  N  29.831  23.535  -2.132  -1.585    2.605  -1.386  HN2   03F  120  
+03F  HANA  HANA  H  0  0  N  N  N  14.961  28.636   2.482  13.753   -1.050   0.572  HANA  03F  121  
+03F  HAO   HAO   H  0  1  N  N  N  16.962  27.977   4.572  13.139   -2.334  -1.458  HAO   03F  122  
+03F  HAOA  HAOA  H  0  0  N  N  N  15.220  27.548   4.438  12.810   -0.812  -2.321  HAOA  03F  123  
+03F  HO3   HO3   H  0  1  N  N  N  30.575  22.216  -6.640  -5.623    1.437   0.008  HO3   03F  124  
+03F  HAP   HAP   H  0  1  N  N  N  16.447  30.168   5.358  15.165   -0.113  -1.985  HAP   03F  125  
+03F  HAPA  HAPA  H  0  0  N  N  N  14.684  29.940   4.994  15.494   -1.634  -1.122  HAPA  03F  126  
+03F  HAQ   HAQ   H  0  1  N  N  N  16.348  28.753   7.229  14.880   -2.919  -3.152  HAQ   03F  127  
+03F  HAQA  HAQA  H  0  0  N  N  N  14.751  28.074   6.740  14.551   -1.397  -4.015  HAQA  03F  128  
+03F  HAR   HAR   H  0  1  N  N  N  13.702  30.269   7.130  16.906   -0.697  -3.679  HAR   03F  129  
+03F  HARA  HARA  H  0  0  N  N  N  14.520  29.663   8.609  17.235   -2.219  -2.816  HARA  03F  130  
+#   #
+loop_
+_chem_comp_bond.comp_id
+_chem_comp_bond.atom_id_1
+_chem_comp_bond.atom_id_2
+_chem_comp_bond.value_order
+_chem_comp_bond.pdbx_aromatic_flag
+_chem_comp_bond.pdbx_stereo_config
+_chem_comp_bond.pdbx_ordinal
+03F  H1A   C1    SING  N  N    1  
+03F  C2    C1    SING  N  N    2  
+03F  C1    H1    SING  N  N    3  
+03F  C1    O1A   SING  N  N    4  
+03F  C3    C2    SING  N  N    5  
+03F  H2    C2    SING  N  N    6  
+03F  C2    N2    SING  N  N    7  
+03F  N2    CAA   SING  N  N    8  
+03F  N2    HN2   SING  N  N    9  
+03F  O3    C3    SING  N  N   10  
+03F  C4    C3    SING  N  N   11  
+03F  C3    H3    SING  N  N   12  
+03F  HO3   O3    SING  N  N   13  
+03F  H4    C4    SING  N  N   14  
+03F  C4    C5    DOUB  N  E   15  
+03F  C6    C5    SING  N  N   16  
+03F  C5    H5    SING  N  N   17  
+03F  H6A   C6    SING  N  N   18  
+03F  C7    C6    SING  N  N   19  
+03F  C6    H6    SING  N  N   20  
+03F  H7    C7    SING  N  N   21  
+03F  C8    C7    SING  N  N   22  
+03F  C7    H7A   SING  N  N   23  
+03F  H8A   C8    SING  N  N   24  
+03F  C9    C8    SING  N  N   25  
+03F  C8    H8    SING  N  N   26  
+03F  H9    C9    SING  N  N   27  
+03F  C9    C10   SING  N  N   28  
+03F  C9    H9A   SING  N  N   29  
+03F  H10   C10   SING  N  N   30  
+03F  C10   C11   SING  N  N   31  
+03F  C10   H10A  SING  N  N   32  
+03F  H11A  C11   SING  N  N   33  
+03F  C12   C11   SING  N  N   34  
+03F  C11   H11   SING  N  N   35  
+03F  H12A  C12   SING  N  N   36  
+03F  H12   C12   SING  N  N   37  
+03F  C12   C13   SING  N  N   38  
+03F  C14   C13   SING  N  N   39  
+03F  C13   H13   SING  N  N   40  
+03F  C13   H13A  SING  N  N   41  
+03F  H14   C14   SING  N  N   42  
+03F  H14A  C14   SING  N  N   43  
+03F  C14   C15   SING  N  N   44  
+03F  C16   C15   SING  N  N   45  
+03F  C15   H15A  SING  N  N   46  
+03F  C15   H15   SING  N  N   47  
+03F  H16   C16   SING  N  N   48  
+03F  H16A  C16   SING  N  N   49  
+03F  C16   C17   SING  N  N   50  
+03F  H17   C17   SING  N  N   51  
+03F  C17   C18   SING  N  N   52  
+03F  C17   H17A  SING  N  N   53  
+03F  H18A  C18   SING  N  N   54  
+03F  C18   H18B  SING  N  N   55  
+03F  C18   H18   SING  N  N   56  
+03F  O1A   C1A   SING  N  N   57  
+03F  O6A   C1A   SING  N  N   58  
+03F  C1A   H1AA  SING  N  N   59  
+03F  C1A   C2A   SING  N  N   60  
+03F  H2A   C2A   SING  N  N   61  
+03F  C2A   O2A   SING  N  N   62  
+03F  C2A   C3A   SING  N  N   63  
+03F  HO2A  O2A   SING  N  N   64  
+03F  C4A   C3A   SING  N  N   65  
+03F  C3A   H3A   SING  N  N   66  
+03F  C3A   O3A   SING  N  N   67  
+03F  HO3A  O3A   SING  N  N   68  
+03F  C5M   C4A   SING  N  N   69  
+03F  H4A   C4A   SING  N  N   70  
+03F  C4A   O4A   SING  N  N   71  
+03F  O4A   HO4A  SING  N  N   72  
+03F  HO5A  O5A   SING  N  N   73  
+03F  O5A   C6A   SING  N  N   74  
+03F  O6A   C5M   SING  N  N   75  
+03F  C6A   C5M   SING  N  N   76  
+03F  C5M   H5M   SING  N  N   77  
+03F  H6AA  C6A   SING  N  N   78  
+03F  C6A   H6AB  SING  N  N   79  
+03F  OAA   CAA   DOUB  N  N   80  
+03F  CAA   CAB   SING  N  N   81  
+03F  CAC   CAB   SING  N  N   82  
+03F  CAB   HAB   SING  N  N   83  
+03F  CAB   HABA  SING  N  N   84  
+03F  HACA  CAC   SING  N  N   85  
+03F  HAC   CAC   SING  N  N   86  
+03F  CAC   CAD   SING  N  N   87  
+03F  CAE   CAD   SING  N  N   88  
+03F  CAD   HAD   SING  N  N   89  
+03F  CAD   HADA  SING  N  N   90  
+03F  HAEA  CAE   SING  N  N   91  
+03F  HAE   CAE   SING  N  N   92  
+03F  CAE   CAF   SING  N  N   93  
+03F  CAG   CAF   SING  N  N   94  
+03F  CAF   HAF   SING  N  N   95  
+03F  CAF   HAFA  SING  N  N   96  
+03F  HAG   CAG   SING  N  N   97  
+03F  HAGA  CAG   SING  N  N   98  
+03F  CAG   CAH   SING  N  N   99  
+03F  CAI   CAH   SING  N  N  100  
+03F  CAH   HAHA  SING  N  N  101  
+03F  CAH   HAH   SING  N  N  102  
+03F  HAI   CAI   SING  N  N  103  
+03F  CAI   CAJ   DOUB  N  Z  104  
+03F  HAJ   CAJ   SING  N  N  105  
+03F  CAJ   CAK   SING  N  N  106  
+03F  CAK   HAK   SING  N  N  107  
+03F  CAK   HAKA  SING  N  N  108  
+03F  CAK   CAL   SING  N  N  109  
+03F  HAL   CAL   SING  N  N  110  
+03F  CAL   HALA  SING  N  N  111  
+03F  CAL   CAM   SING  N  N  112  
+03F  HAMA  CAM   SING  N  N  113  
+03F  CAM   HAM   SING  N  N  114  
+03F  CAM   CAN   SING  N  N  115  
+03F  HAN   CAN   SING  N  N  116  
+03F  CAN   HANA  SING  N  N  117  
+03F  CAN   CAO   SING  N  N  118  
+03F  CAO   HAOA  SING  N  N  119  
+03F  CAO   HAO   SING  N  N  120  
+03F  CAO   CAP   SING  N  N  121  
+03F  HAP   CAP   SING  N  N  122  
+03F  CAP   HAPA  SING  N  N  123  
+03F  CAP   CAQ   SING  N  N  124  
+03F  HAQA  CAQ   SING  N  N  125  
+03F  CAQ   HAQ   SING  N  N  126  
+03F  CAQ   CAR   SING  N  N  127  
+03F  HARA  CAR   SING  N  N  128  
+03F  CAR   H1AR  SING  N  N  129  
+03F  CAR   HAR   SING  N  N  130  
+#   #
+loop_
+_pdbx_chem_comp_descriptor.comp_id
+_pdbx_chem_comp_descriptor.type
+_pdbx_chem_comp_descriptor.program
+_pdbx_chem_comp_descriptor.program_version
+_pdbx_chem_comp_descriptor.descriptor
+03F  SMILES            ACDLabs               12.01  "O=C(NC(COC1OC(C(O)C(O)C1O)CO)C(O)/C=C/CCCCCCCCCCCCC)CCCCCCC\C=C/CCCCCCCC"  
+03F  InChI             InChI                 1.03   "InChI=1S/C42H79NO8/c1-3-5-7-9-11-13-15-17-18-20-22-24-26-28-30-32-38(46)43-35(34-50-42-41(49)40(48)39(47)37(33-44)51-42)36(45)31-29-27-25-23-21-19-16-14-12-10-8-6-4-2/h17-18,29,31,35-37,39-42,44-45,47-49H,3-16,19-28,30,32-34H2,1-2H3,(H,43,46)/b18-17-,31-29+/t35-,36+,37+,39+,40-,41+,42+/m0/s1"  
+03F  InChIKey          InChI                 1.03   MVGFIPNJBNBHNC-HVFXMTMESA-N  
+03F  SMILES_CANONICAL  CACTVS                3.370  "CCCCCCCCCCCCC/C=C/[C@@H](O)[C@H](CO[C@@H]1O[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O)NC(=O)CCCCCCC\C=C/CCCCCCCC"  
+03F  SMILES            CACTVS                3.370  "CCCCCCCCCCCCCC=C[CH](O)[CH](CO[CH]1O[CH](CO)[CH](O)[CH](O)[CH]1O)NC(=O)CCCCCCCC=CCCCCCCCC"  
+03F  SMILES_CANONICAL  "OpenEye OEToolkits"  1.7.2  "CCCCCCCCCCCCC/C=C/[C@H]([C@H](CO[C@H]1[C@@H]([C@H]([C@@H]([C@H](O1)CO)O)O)O)NC(=O)CCCCCCC/C=C\CCCCCCCC)O"  
+03F  SMILES            "OpenEye OEToolkits"  1.7.2  "CCCCCCCCCCCCCC=CC(C(COC1C(C(C(C(O1)CO)O)O)O)NC(=O)CCCCCCCC=CCCCCCCCC)O"  
+#   #
+loop_
+_pdbx_chem_comp_identifier.comp_id
+_pdbx_chem_comp_identifier.type
+_pdbx_chem_comp_identifier.program
+_pdbx_chem_comp_identifier.program_version
+_pdbx_chem_comp_identifier.identifier
+03F  "SYSTEMATIC NAME"  ACDLabs               12.01  "(9Z)-N-[(2S,3R,4E)-1-(beta-D-glucopyranosyloxy)-3-hydroxyoctadec-4-en-2-yl]octadec-9-enamide"  
+03F  "SYSTEMATIC NAME"  "OpenEye OEToolkits"  1.7.2  "(Z)-N-[(E,2S,3R)-1-[(2R,3R,4S,5S,6R)-6-(hydroxymethyl)-3,4,5-tris(oxidanyl)oxan-2-yl]oxy-3-oxidanyl-octadec-4-en-2-yl]octadec-9-enamide"  
+#   #
+loop_
+_pdbx_chem_comp_audit.comp_id
+_pdbx_chem_comp_audit.action_type
+_pdbx_chem_comp_audit.date
+_pdbx_chem_comp_audit.processing_site
+03F  "Create component"  2011-08-21  RCSB  
+03F  "Modify synonyms"   2020-06-05  PDBE  
+#
+_pdbx_chem_comp_synonyms.ordinal     1
+_pdbx_chem_comp_synonyms.comp_id     03F
+_pdbx_chem_comp_synonyms.name        "N-(9Z-octadecenoyl)-1--glucosyl-sphing-4-enine"
+_pdbx_chem_comp_synonyms.provenance  ?
+_pdbx_chem_comp_synonyms.type        ?
+##
