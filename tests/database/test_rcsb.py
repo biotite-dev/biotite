@@ -97,8 +97,8 @@ def test_search_basic():
             "reflns.d_resolution_high",
             False,
             {"less_or_equal": 0.6},
-            ["1EJG", "1I0T", "3NIR", "3P4J", "5D8V", "5NW3", "4JLJ", "2GLT",
-             "7ATG", "7R0H"]
+            ["1EJG", "1I0T", "3NIR", "3P4J", "5D8V", "5NW3", "4JLJ", "7ATG",
+             "7R0H"]
         ),
         (
             "rcsb_entry_info.deposited_model_count",
@@ -110,7 +110,7 @@ def test_search_basic():
             "rcsb_id",
             True,
             {"exact_match": "AIN"},
-            ["1OXR", "1TGM", "3IAZ", "3GCL", "6MQF", "2QQT", "4NSB"]
+            ["1OXR", "1TGM", "3IAZ", "3GCL", "6MQF", "2QQT", "4NSB", "8J3W"]
         ),
     ]
 )
@@ -359,6 +359,7 @@ def test_search_content_types():
             set([
                 ("5R32",),
                 ("5RDH", "5RBR"),
+                ("7G0Z", "7FXV")
             ])
         )
     ]

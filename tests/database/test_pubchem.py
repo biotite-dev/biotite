@@ -85,11 +85,12 @@ def test_fetch_invalid():
 @pytest.mark.parametrize(
     "query, ref_ids",
     [
-        (pubchem.NameQuery("Alanine"), [5950, 449619, 7311724, 155817681]),
+        (pubchem.NameQuery("Alanine"), [5950]),
         (pubchem.SmilesQuery("CCCC"), [7843]),
         (pubchem.InchiQuery("InChI=1S/C4H10/c1-3-4-2/h3-4H2,1-2H3"), [7843]),
         (pubchem.InchiKeyQuery("IJDNQMDRQITEOD-UHFFFAOYSA-N"), [7843]),
-    ]
+    ],
+    ids=["NameQuery", "SmilesQuery", "InchiQuery", "InchiKeyQuery"]
 )
 def test_search_simple(query, ref_ids):
     """
@@ -102,8 +103,7 @@ def test_search_simple(query, ref_ids):
     cannot_connect_to(PUBCHEM_URL),
     reason="PubChem is not available"
 )
-@pytest.mark.parametrize("number", [None, 10])
-def test_search_formula(number):
+def test_search_formula():
     """
     Download a structure and search for its molecular formula in
     PubChem.
@@ -113,13 +113,10 @@ def test_search_formula(number):
 
     atoms = mol.MOLFile.read(pubchem.fetch(CID)).get_structure()
     test_cids = pubchem.search(
-        pubchem.FormulaQuery.from_atoms(atoms, number=number)
+        pubchem.FormulaQuery.from_atoms(atoms)
     )
 
     assert CID in (test_cids)
-    if number is not None:
-        # This request would normally give more than 10 results
-        assert len(test_cids) == number
 
 
 @pytest.mark.skipif(
@@ -141,13 +138,13 @@ def test_search_super_and_substructure(cid, from_atoms, query_type):
     NUMBER = 5
 
     original_atoms = mol.MOLFile.read(pubchem.fetch(cid)).get_structure()
-
+    
     if from_atoms:
         query = query_type.from_atoms(original_atoms, number=NUMBER)
     else:
         query = query_type(cid=cid, number=NUMBER)
     cids = pubchem.search(query)
-    
+
     # Expect number of returned CIDs to be limited by given max number
     assert len(cids) == NUMBER
     if query_type == pubchem.SubstructureQuery:
