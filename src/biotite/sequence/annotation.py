@@ -446,13 +446,16 @@ class Annotation(Copyable):
 
     def __getitem__(self, index):
         if isinstance(index, slice):
-            i_first = index.start
             # If no start or stop index is given, include all
-            if i_first is None:
+            if index.start is None:
                 i_first = -sys.maxsize
-            i_last = index.stop -1
-            if i_last is None:
+            else:
+                i_first = index.start
+            if index.stop is None:
                 i_last = sys.maxsize
+            else:
+                i_last = index.stop - 1
+            
             sub_annot = Annotation()
             for feature in self:
                 locs_in_scope = []
