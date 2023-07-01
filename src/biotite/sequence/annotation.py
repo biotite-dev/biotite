@@ -809,7 +809,6 @@ class AnnotatedSequence(Copyable):
                 seq_start = index.start - self._seqstart
             if index.stop is None:
                 seq_stop = len(self._sequence)
-                index = slice(index.start, seq_stop, index.step)
             else:
                 seq_stop = index.stop - self._seqstart
             # Item is a Sequence
