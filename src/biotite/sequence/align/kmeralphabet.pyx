@@ -379,7 +379,7 @@ class KmerAlphabet(Alphabet):
 
         Get the length of the *k-mer* array, created by
         :meth:`create_kmers()`, if a sequence of size `length` would be
-        given given.
+        given.
 
         Parameters
         ----------

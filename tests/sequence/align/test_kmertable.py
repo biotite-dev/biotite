@@ -2,12 +2,35 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import functools
+import itertools
 import string
 import pickle
+from typing import Any
 import numpy as np
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
+
+
+class FixedBinnedKmerTable:
+    """
+    A wrapper around :class:`BinnedKmerTable` that conceals the `bins`
+    parameter.
+    This allows test functions to call static functions from
+    :class:`KmerTable` and :class:`FixedBinnedKmerTable` with the same
+    signature, avoiding if-else constructs.
+    """
+
+    def __init__(self, bins):
+        self._bins = bins
+    
+    def __getattr__(self, name):
+        attr = getattr(align.BinnedKmerTable, name)
+        if callable(attr):
+            return functools.partial(attr, self._bins)
+        else:
+            return attr
 
 
 @pytest.fixture
@@ -32,15 +55,27 @@ def random_sequences(k, alphabet):
     return sequences
 
 
-
-@pytest.mark.parametrize("spacing", [None, "10111011011", "1001111010101"])
-def test_from_sequences(k, random_sequences, spacing):
+@pytest.mark.parametrize(
+    "spacing, table_class",
+    itertools.product(
+        [None, "10111011011", "1001111010101"],
+        [
+            align.KmerTable,
+            # Choose number of bins, so that there is one test case
+            # with less bins than number of possible kmers ...
+            FixedBinnedKmerTable(1000),
+            # ... and one test case with more bins (perfect hashing)
+            FixedBinnedKmerTable(1000000)
+        ]
+    )
+)
+def test_from_sequences(k, random_sequences, spacing, table_class):
     """
     Test the :meth:`from_sequences()` constructor, by checking for each
     sequence position, if the position is in the C-array of the
     corresponding k-mer.
     """
-    table = align.KmerTable.from_sequences(
+    table = table_class.from_sequences(
         k, random_sequences, spacing=spacing
     )
     kmer_alph = align.KmerAlphabet(random_sequences[0].alphabet, k, spacing)
@@ -55,24 +90,39 @@ def test_from_sequences(k, random_sequences, spacing):
             assert np.array([i,j]) in table[kmer]
 
 
-
-def test_from_kmers(k, random_sequences):
+@pytest.mark.parametrize(
+    "table_class",
+    [
+        align.KmerTable,
+        FixedBinnedKmerTable(1000),
+        FixedBinnedKmerTable(1000000)
+    ]
+)
+def test_from_kmers(k, random_sequences, table_class):
     """
     Test the :meth:`from_kmers()` constructor, by comparing it with an
     equivalent table created with :meth:`from_sequences()`.
     """
-    ref_table = align.KmerTable.from_sequences(k, random_sequences)
+    ref_table = table_class.from_sequences(k, random_sequences)
     kmer_alph = ref_table.kmer_alphabet
 
     kmer_arrays = [
         kmer_alph.create_kmers(sequence.code) for sequence in random_sequences
     ]
-    test_table = align.KmerTable.from_kmers(kmer_alph, kmer_arrays)
+    test_table = table_class.from_kmers(kmer_alph, kmer_arrays)
     
     assert test_table == ref_table
 
 
-def test_from_kmer_selection(k, alphabet, random_sequences):
+@pytest.mark.parametrize(
+    "table_class",
+    [
+        align.KmerTable,
+        FixedBinnedKmerTable(1000),
+        FixedBinnedKmerTable(1000000)
+    ]
+)
+def test_from_kmer_selection(k, alphabet, random_sequences, table_class):
     """
     Test the :meth:`test_from_kmer_selection()` constructor, by checking
     for each stored k-mer position, whether it is found at that position
@@ -93,37 +143,43 @@ def test_from_kmer_selection(k, alphabet, random_sequences):
         kmers[filtered_pos]
         for filtered_pos, kmers in zip(filtered_pos_arrays, kmer_arrays)
     ]
-    kmer_table = align.KmerTable.from_kmer_selection(
+    kmer_table = table_class.from_kmer_selection(
         kmer_alph, filtered_pos_arrays, filtered_kmer_arrays
     )
 
     # The total number of k-mers in the table
     # should be the total number of input k-mers
-    assert np.sum(kmer_table.count()) \
+    assert np.sum(kmer_table.count(np.arange(len(kmer_alph)))) \
         == np.sum([len(kmers) for kmers in filtered_kmer_arrays])
     # Each k-mer in the table should be found
     # in the original k-mer sequences
-    for kmer in kmer_table.get_kmers():
-        positions = kmer_table[kmer]
-        for ref_id, pos in positions:
+    for kmer in range(len(kmer_alph)):
+        for ref_id, pos in kmer_table[kmer]:
             assert kmer_arrays[ref_id][pos] == kmer
 
 
-def test_from_tables(k, random_sequences):
+@pytest.mark.parametrize(
+    "table_class",
+    [
+        align.KmerTable,
+        FixedBinnedKmerTable(1000),
+        FixedBinnedKmerTable(1000000)
+    ]
+)
+def test_from_tables(k, random_sequences, table_class):
     """
     Test :meth:`from_tables()` constructor by comparing the merge of
     single tables with adding sequences directly into a single table.
     """
-    
-    ref_table = align.KmerTable.from_sequences(
+    ref_table = table_class.from_sequences(
         k, random_sequences, np.arange(len(random_sequences))
     )
 
     tables = [
-        align.KmerTable.from_sequences(k, [sequence], [i])
+        table_class.from_sequences(k, [sequence], [i])
         for i, sequence in enumerate(random_sequences)
     ]
-    test_table = align.KmerTable.from_tables(tables)
+    test_table = table_class.from_tables(tables)
     
     assert test_table == ref_table
 
@@ -143,8 +199,18 @@ def test_from_positions(k, random_sequences):
     assert test_table == ref_table
 
 
-@pytest.mark.parametrize("use_similarity_rule", [False, True])
-def test_match_table(use_similarity_rule):
+@pytest.mark.parametrize(
+    "table_class, use_similarity_rule",
+    itertools.product(
+        [
+            align.KmerTable,
+            FixedBinnedKmerTable(1000),
+            FixedBinnedKmerTable(10000000)
+        ],
+        [False, True]
+    )
+)
+def test_match_table(table_class, use_similarity_rule):
     """
     Test the :meth:`match_table()` method based on a known example.
     
@@ -160,8 +226,8 @@ def test_match_table(use_similarity_rule):
 
     rule = _identity_rule(alphabet) if use_similarity_rule else None
     
-    table1 = align.KmerTable.from_sequences(4, [sequence1])
-    table2 = align.KmerTable.from_sequences(4, [sequence2])
+    table1 = table_class.from_sequences(4, [sequence1])
+    table2 = table_class.from_sequences(4, [sequence2])
 
     ref_matches = set([
         (0,  9),
@@ -191,8 +257,18 @@ def test_match_table(use_similarity_rule):
     assert test_matches == ref_matches
 
 
-@pytest.mark.parametrize("use_similarity_rule", [False, True])
-def test_match(k, random_sequences, use_similarity_rule):
+@pytest.mark.parametrize(
+    "table_class, use_similarity_rule",
+    itertools.product(
+        [
+            align.KmerTable,
+            FixedBinnedKmerTable(1000),
+            FixedBinnedKmerTable(1000000)
+        ],
+        [False, True]
+    )
+)
+def test_match(k, random_sequences, table_class, use_similarity_rule):
     """
     Test the :meth:`match()` method compared to a manual,
     inefficient approach using indexing.
@@ -202,7 +278,7 @@ def test_match(k, random_sequences, use_similarity_rule):
     """
     query_sequence = random_sequences[0]
     table_sequences = random_sequences[1:]   
-    table = align.KmerTable.from_sequences(k, table_sequences)
+    table = table_class.from_sequences(k, table_sequences)
     
     kmers = table.kmer_alphabet.create_kmers(query_sequence.code)
     ref_matches = []
@@ -225,7 +301,15 @@ def test_match(k, random_sequences, use_similarity_rule):
     assert np.array_equal(test_matches.tolist(), ref_matches.tolist())
 
 
-def test_match_kmer_selection(k, random_sequences):
+@pytest.mark.parametrize(
+    "table_class",
+    [
+        align.KmerTable,
+        FixedBinnedKmerTable(1000),
+        FixedBinnedKmerTable(1000000)
+    ]
+)
+def test_match_kmer_selection(k, random_sequences, table_class):
     """
     Same as :func:`test_match()` but with a subset of positions.
     """
@@ -233,7 +317,7 @@ def test_match_kmer_selection(k, random_sequences):
 
     query_sequence = random_sequences[0]
     table_sequences = random_sequences[1:]   
-    table = align.KmerTable.from_sequences(k, table_sequences)
+    table = table_class.from_sequences(k, table_sequences)
     
     kmers = table.kmer_alphabet.create_kmers(query_sequence.code)
     np.random.seed(0)
@@ -258,8 +342,18 @@ def test_match_kmer_selection(k, random_sequences):
     assert np.array_equal(test_matches.tolist(), ref_matches.tolist())
 
 
-@pytest.mark.parametrize("use_mask", [False, True])
-def test_match_equivalence(k, random_sequences, use_mask):
+@pytest.mark.parametrize(
+    "table_class, use_mask",
+    itertools.product(
+        [
+            align.KmerTable,
+            FixedBinnedKmerTable(1000),
+            FixedBinnedKmerTable(1000000)
+        ],
+        [False, True]
+    )
+)
+def test_match_equivalence(k, random_sequences, table_class, use_mask):
     """
     Check if both, the :meth:`match()` and meth:`match_table()`
     method, find the same matches.
@@ -279,12 +373,12 @@ def test_match_equivalence(k, random_sequences, use_mask):
     query_mask = removal_masks[0]
     table_masks = removal_masks[1:]
     
-    table = align.KmerTable.from_sequences(
+    table = table_class.from_sequences(
         k, table_sequences, ignore_masks=table_masks
     )
     
     # 42 -> Dummy value that is distinct from all reference indices
-    ref_table = align.KmerTable.from_sequences(
+    ref_table = table_class.from_sequences(
         k, [query_sequence], [42], ignore_masks=[query_mask]
     )
     ref_matches = table.match_table(ref_table)
@@ -346,15 +440,23 @@ def test_masking(k, input_mask, ref_output_mask):
     assert test_output_mask.tolist() == ref_output_mask.tolist()
 
 
-@pytest.mark.parametrize("selected_kmers", [False, True])
-def test_count(k, random_sequences, selected_kmers):
+@pytest.mark.parametrize(
+    "table_class, selected_kmers",
+    [
+        (align.KmerTable, False),
+        (align.KmerTable, True),
+        (FixedBinnedKmerTable(1000), True),
+        (FixedBinnedKmerTable(1000000), True),
+    ]
+)
+def test_count(k, random_sequences, table_class, selected_kmers):
     """
     Test :meth:`count()` against an inefficient solution using a list
     comprehension.
     """
     N_KMERS = 100
     
-    table = align.KmerTable.from_sequences(
+    table = table_class.from_sequences(
         k, random_sequences
     )
 
@@ -375,7 +477,7 @@ def test_count(k, random_sequences, selected_kmers):
 def test_get_kmers():
     """
     Test whether the correct used *k-mers* are returned by
-    :meth:`get_kmer()`, by constructing a table with exactly one
+    :meth:`get_kmers()`, by constructing a table with exactly one
     appearance for each *k-mer* in a random list of *k-mers*.
     """
     np.random.seed(0)
@@ -396,13 +498,21 @@ def test_get_kmers():
     assert test_kmers.tolist() == ref_kmers.tolist()
 
 
-def test_pickle(alphabet, k, random_sequences):
+@pytest.mark.parametrize(
+    "table_class",
+    [
+        align.KmerTable,
+        FixedBinnedKmerTable(1000),
+        FixedBinnedKmerTable(1000000)
+    ]
+)
+def test_pickle(k, random_sequences, table_class):
     """
     Test support of the pickle protocol by pickling and unpickling
     a :class:`KmerTable` and checking if the object is still equal to
     the original one.
     """
-    ref_table = align.KmerTable.from_sequences(k, random_sequences)
+    ref_table = table_class.from_sequences(k, random_sequences)
     
     test_table = pickle.loads(pickle.dumps(ref_table))
 

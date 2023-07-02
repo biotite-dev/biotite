@@ -255,7 +255,7 @@ class FrequencyPermutation(Permutation):
         return len(self._permutation_table) - 1
 
     @property
-    def kmer_alphabet():
+    def kmer_alphabet(self):
         return self._kmer_alph
 
 
