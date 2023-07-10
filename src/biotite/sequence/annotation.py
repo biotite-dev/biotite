@@ -446,13 +446,16 @@ class Annotation(Copyable):
 
     def __getitem__(self, index):
         if isinstance(index, slice):
-            i_first = index.start
             # If no start or stop index is given, include all
-            if i_first is None:
+            if index.start is None:
                 i_first = -sys.maxsize
-            i_last = index.stop -1
-            if i_last is None:
+            else:
+                i_first = index.start
+            if index.stop is None:
                 i_last = sys.maxsize
+            else:
+                i_last = index.stop - 1
+            
             sub_annot = Annotation()
             for feature in self:
                 locs_in_scope = []
@@ -763,7 +766,8 @@ class AnnotatedSequence(Copyable):
                     )
                 seq_start = index.start - self._seqstart
             if index.stop is None:
-                index.start = len(self._sequence)
+                seq_stop = len(self._sequence)
+                index = slice(index.start, seq_stop, index.step)
             else:
                 seq_stop = index.stop - self._seqstart
             # New value for the sequence start, value is base position
@@ -804,7 +808,7 @@ class AnnotatedSequence(Copyable):
             else:
                 seq_start = index.start - self._seqstart
             if index.stop is None:
-                index.start = len(self._sequence)
+                seq_stop = len(self._sequence)
             else:
                 seq_stop = index.stop - self._seqstart
             # Item is a Sequence
