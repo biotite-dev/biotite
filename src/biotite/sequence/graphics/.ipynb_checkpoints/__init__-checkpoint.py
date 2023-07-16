@@ -31,4 +31,3 @@ from .dendrogram import *
 from .features import *
 from .plasmid import *
 from .logo import *
-from .signalarray import *
