@@ -55,3 +55,6 @@ biotite.egg-info
 
 # Ignore fuse_hidden files on Linux systems
 *.fuse_hidden*
+
+# Ignore temp files created via Jupyter
+**/.ipynb_checkpoints/
