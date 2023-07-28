@@ -20,7 +20,7 @@ from .celllist import CellList
 
 
 def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
-        periodic=False):
+        periodic=False, use_cell_list=None):
     r"""
     Compute the radial distribution function *g(r)* (RDF) for one or
     multiple given central positions based on a given system of
@@ -73,6 +73,14 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         *(m,3,3)* if atoms is an :class:`AtomArrayStack`, respectively.
     periodic : bool, optional
         Defines if periodic boundary conditions are taken into account.
+    use_cell_list : bool, optional
+        Whether to use a :class:`CellList` for RDF calculation or not.
+        A :class:`CellList` requires constant time to obtain proximate 
+        atoms for each center, while otherwise linear time is required.
+        However, the creation of a :class:`CellList` has a significant
+        overhead if there are only a few considered centers.
+        By default a :class:`CellList` is not used if `center` is
+        smaller than 100 elements.
 
     Returns
     -------
@@ -190,28 +198,43 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     # Make histogram of quared distances to save computation time
     # of sqrt calculation
     sq_edges = edges**2
-    threshold_dist = edges[-1]
-    cell_size = threshold_dist
-    disp = []
-    for i in range(atoms.stack_depth()):
-        # Use cell list to efficiently preselect atoms that are in range
-        # of the desired bin range
-        cell_list = CellList(atom_coord[i], cell_size, periodic, box[i])
-        # 'cell_radius=1' is used in 'get_atoms_in_cells()'
-        # This is enough to find all atoms that are in the given
-        # interval (and more), since the size of each cell is as large
-        # as the last edge of the bins
-        near_atom_mask = cell_list.get_atoms_in_cells(center[i], as_mask=True)
-        # Calculate distances of each center to preselected atoms
-        # for each center
-        for j in range(center.shape[1]):
-            dist_box = box[i] if periodic else None
-            # Calculate squared distances
-            disp.append(displacement(
-                center[i,j], atom_coord[i, near_atom_mask[j]], box=dist_box
-            ))
-    # Make one array from multiple arrays with different length
-    disp = np.concatenate(disp)
+    
+    if use_cell_list is None:
+        if len(center) < 100:
+            use_cell_list = True
+        else:
+            use_cell_list = False
+
+    if use_cell_list:
+        threshold_dist = edges[-1]
+        cell_size = threshold_dist
+        disp = []
+        for i in range(atoms.stack_depth()):
+            # Use cell list to efficiently preselect atoms that are in range
+            # of the desired bin range
+            cell_list = CellList(atom_coord[i], cell_size, periodic, box[i])
+            # 'cell_radius=1' is used in 'get_atoms_in_cells()'
+            # This is enough to find all atoms that are in the given
+            # interval (and more), since the size of each cell is as large
+            # as the last edge of the bins
+            near_atom_mask = cell_list.get_atoms_in_cells(center[i], as_mask=True)
+            # Calculate distances of each center to preselected atoms
+            # for each center
+            for j in range(center.shape[1]):
+                dist_box = box[i] if periodic else None
+                # Calculate squared distances
+                disp.append(displacement(
+                    center[i,j], atom_coord[i, near_atom_mask[j]], box=dist_box
+                ))
+        # Make one array from multiple arrays with different length
+        disp = np.concatenate(disp)
+    else:
+        dist_box = box if periodic else None
+        disp = np.concatenate([
+            displacement(center[:, i ,np.newaxis], atom_coord, box=dist_box)
+            for i in range(center.shape[1])
+        ], axis=1)
+    
     sq_distances = vector_dot(disp, disp)
     hist, _ = np.histogram(sq_distances, bins=sq_edges)
 
