@@ -7,8 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["SymbolPlotter", "LetterPlotter", "LetterSimilarityPlotter",
            "LetterTypePlotter","ArrayPlotter",
            "plot_alignment", "plot_alignment_similarity_based",
-           "plot_alignment_type_based","plot_alignment_array",
-           "get_cmap", "get_colorbar"]
+           "plot_alignment_type_based","plot_alignment_array"]
 
 import abc
 import numpy as np
@@ -348,21 +347,18 @@ class LetterTypePlotter(LetterPlotter):
     
 class ArrayPlotter(LetterPlotter):
     '''
-    This SymbolPlotter maps data from epitope scannings on arrays 
-    of overlapping peptides, onto proteins represented as sequencece aligment.
-    Symbols are visualized as characters on a colored background box. The 
-    color of a given box represent the recognition signal of the respective 
-    20-mer peptide ending at that residue. The intensity of the color is 
-    proportional to the fluorescence intensity recorded on the peptide array
-    Fluorescence values are proportional to antibody recognition on 
-    the peptide array.
+    This SymbolPlotter quantitatively decorates sequences alignments, with molecular
+    recognition data obtaine from microarrays. Symbols are visualized as characters 
+    on a colored background box. The color of a given box represents the recognition 
+    signal. The intensity of the color, is proportional to the strenght of the 
+    recognition.
     
     Parameters
     ----------
     axes : Axes
         A Matplotlib axes, that is used as plotting area.
     fl_score : numpy.ndarray 
-        The ndarray to map fluorescence values to score residues.
+        The ndarray to map recognition values to score residues.
         By default the normalized score is 1 for maximun recognition
         and 0 for non-recognition(no color).
     color_symbols : bool, optional
@@ -424,12 +420,15 @@ class ArrayPlotter(LetterPlotter):
             signal = fl_score[column_i, seq_i]
         return signal
 
+    # getter for cmap:
+    def get_cmap(self):
+        return self._cmap
 
-            
+           
     def plot_symbol(self, bbox, alignment, column_i, seq_i):
         '''
         This method is optimized to draw the symbols of an alignment while
-        mapping the epitope scanning data throughout the entire sequence 
+        mapping the molecular recognition data throughout the entire sequence 
         alignment.
         '''
         from matplotlib.patches import Rectangle
@@ -1045,95 +1044,7 @@ def plot_alignment_array(axes, alignment, symbols_per_line=50,
         spacing=spacing, symbol_spacing=symbol_spacing
     )  
     
-    
-def get_cmap(axes, signal_map):
-    '''
-    Access the Colormap atribute of an ArrayPlotter instantiated: 
-    ArrayPlotter(axes, signal_map). 
-    ----------
-    axes: Axes
-        A Matplotlib axes to plot the Colormap
-    signal_map: numpy.ndarray
-        A numpy.ndarray that maps peptide signal score to the corresponding 
-        position of the score residue on the sequence alignment
-  
-    Returns
-    ----------
-    A matplotlib.colors.Colormap object, used to convert data from the signal_map
-    to the RGBA colors 
-    '''
-    ax = axes
-    smap = signal_map
-    plotter = ArrayPlotter(ax, smap)
-    return plotter._cmap
-
-
-def get_colorbar(axes, array1, array2, colormap, transform ='linear',  orient =None,
-                title=None):
-    '''
-    Generate the a Colorbar object according to the specified scaling of the data
-    ----------
-    axes: Axes
-        A Matplotlib axes were the Colorbar will reside
-    array1: pandas.DataFrame
-        A dataframe that contains the peptide array scan data(antigen-1) with the desired
-        trasnfomation method
-    array2: pandas.DataFrame
-        A dataframe that contains the peptide array scan data(antigen-2) with the desired
-        trasnfomation method
-    transform: str. Optional
-        One of: 'linear', 'sqrt', 'cubic', 'log'(Default: 'linear').Instantiate subclasses
-        of matplotlib.cm.ScalarMappable to scale the colors on the desired transformation
-    orient: 'vertical' or 'horizontal'
-        Orientation of the Colorbar
-    title: str
-        The label on the Colorbar's long axis
-    
-    Returns
-    ----------
-    A matplotlib.Colorbar instance. Draw a colorbar in an existing axes
-    '''
-    import matplotlib as mpl
-    
-    df1 = array1
-    df2 = array2
-    cmp = colormap
-    method = transform
-    ax = axes
-    orientation = orient
-    label = title
-    
-    # custom Formtatter for tick labels on the colorbar
-    def fmt(x, pos):
-        a, b = '{:.1e}'.format(x).split('e')
-        b = int(b)
-        return r'${}\cdot10^{{{}}}$'.format(a, b)
-    
-    if method == 'linear':
-        vmiA = df1['comb_signal'].min()
-        vmiB = df2['comb_signal'].min()
-        vmxA = df1['comb_signal'].max()
-        vmxB = df2['comb_signal'].max()
-        # Colormap normalization:
-        norm = mpl.colors.PowerNorm(gamma = 1.0, 
-                                    vmin = min(vmiA,vmiB), vmax = max(vmxA,vmxB))
-
-    elif method == 'cubic':
-        vmiA = df1['comb_signal'].min()
-        vmiB = df2['comb_signal'].min()
-        vmxA = df1['comb_signal'].max()
-        vmxB = df2['comb_signal'].max()
-        # Colormap normalization:
-        norm = mpl.colors.PowerNorm(gamma = 0.33, 
-                                    vmin = min(vmiA,vmiB), vmax = max(vmxA,vmxB))
-
-        
-    fig = mpl.pyplot.figure()        
-    return fig.colorbar(mpl.cm.ScalarMappable(norm = norm, cmap = cmp),
-                 cax = ax, orientation = orientation, label = label,
-                 format = mpl.ticker.FuncFormatter(fmt))
-    
-    
+       
 def _get_last_valid_index(alignment, column_i, seq_i):
     """
     Find the last trace value that belongs to a valid sequence index

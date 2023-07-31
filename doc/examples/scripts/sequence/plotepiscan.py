@@ -313,14 +313,16 @@ def signal_map(gapped_seq1, gapped_seq2,):
 
 score = signal_map(gapd_s1, gapd_s2)
 
-
 ########################################################################
 # Sequence alignment decorated with MAb recognition regions 
 # --------------------------------
 
 # Now we can plot the sequence alignment using an :class:`ArrayPloter` 
 # instance that higlights sequence recognition regions at the positions 
-# of the respective score residue per alignment column
+# of the respective score residue per alignment column.
+# To easily interpret the intensity-decorated alignment we will add a 
+# colorbar scaled accordingly. The scale matches the transformation 
+# applied to the recognition signal recorded on the score ndarray.
 
 import biotite.sequence.graphics as graphics
 
@@ -331,11 +333,61 @@ graphics.plot_alignment_array(
     show_numbers = True, symbols_per_line = 120,
     show_line_position = True) 
 
-# add a 2nd axes and a colorbar
+# Add the axes where the colorbar will reside:
 ax2 = fig.add_axes([0.1,-0.005, 0.8, 0.03])
 ax2.set_frame_on(False)
-cmp = graphics.get_cmap(ax2, score)
-cbar = graphics.get_colorbar(ax2, dfa, dfb, cmp, transform = 'cubic', 
+
+# Access the colormap of the relevant instace of ArrayPlotter: 
+colormap = graphics.ArrayPlotter(ax2, score).get_cmap()
+
+# Lets build a fucntion to create a custom colorbar object. We will 
+# specify the dataframes corresponding to the two antigens screened in 
+# this example, the colormap, and the transformation to be 
+# represented with the colorbar.
+def draw_colorbar(axes, array1, array2, colormap, transform ='linear', 
+                 orient =None, title=None):
+    
+    import matplotlib as mpl
+    
+    df1 = array1
+    df2 = array2
+    cmp = colormap
+    method = transform
+    ax = axes
+    orientation = orient
+    label = title
+    
+    # custom Formtatter for tick labels on the colorbar
+    def fmt(x, pos):
+        a, b = '{:.1e}'.format(x).split('e')
+        b = int(b)
+        return r'${}\cdot10^{{{}}}$'.format(a, b)
+    
+    if method == 'linear':
+        vmiA = df1['comb_signal'].min()
+        vmiB = df2['comb_signal'].min()
+        vmxA = df1['comb_signal'].max()
+        vmxB = df2['comb_signal'].max()
+        # Colormap normalization:
+        norm = mpl.colors.PowerNorm(gamma = 1.0, 
+                                    vmin = min(vmiA,vmiB), vmax = max(vmxA,vmxB))
+
+    elif method == 'cubic':
+        vmiA = df1['comb_signal'].min()
+        vmiB = df2['comb_signal'].min()
+        vmxA = df1['comb_signal'].max()
+        vmxB = df2['comb_signal'].max()
+        # Colormap normalization:
+        norm = mpl.colors.PowerNorm(gamma = 0.33, 
+                                    vmin = min(vmiA,vmiB), vmax = max(vmxA,vmxB))
+        
+    fig = mpl.pyplot.figure()        
+    return fig.colorbar(mpl.cm.ScalarMappable(norm = norm, cmap = cmp),
+                 cax = ax, orientation = orientation, label = label,
+                 format = mpl.ticker.FuncFormatter(fmt))
+
+# Draw the colorbar 
+cbar = draw_colorbar(ax2, dfa, dfb, colormap, transform = 'cubic', 
                        orient = 'horizontal', 
                        title = 'Fluorescence Intensity [AU]')
 plt.show()
