@@ -1,6 +1,6 @@
 """
 Plot epitope mapping data onto protein sequence alignments
-============================================
+==========================================================
 
 Peptide arrays of overlapping sequences can be used to identify
 the epitope of antibodies on a protein antigen at amino acid level.
@@ -13,7 +13,7 @@ antibody(MAb) against two arrays of overlaping peptides.
 The files containing peptide array data can be downloaded
 :download:`here </examples/download/FCR3_10ug.csv>`
 and 
-:download:`here </examples/download/NF54_10ug.csv>`
+:download:`here </examples/download/NF54_10ug.csv>`.
 The antigens screened, span the extracellular domain of VAR2CSA, a
 virulence factor of *Plasmodiun falciparum* for the strains FCR3
 (residues 1-2659) and NF54 (residues 1-2652). The sequence of 
@@ -55,7 +55,7 @@ print(A)
 
 ########################################################################
 # Epitope mapping data 
-# --------------------------------
+# --------------------
 #
 # This study used arrays of overlaping peptides to achive high acurracy
 # in mapping the epitope. Both FCR3 and NF54 arrays, consisted of 
@@ -66,19 +66,19 @@ print(A)
 # scores of each peptide in the arrays. We used a 
 # color code from red to white for high to low intensity, respectively. 
 # The background color of the symbols on the aligment corresponds to the 
-# score for the 20th amino acid peptide that ends at that residue.
+# score for the 20th amino acid at the end of the peptide.
 #
-# Lets create function that maps the peptide score to the 20th residue of 
-# the peptide:
+# Lets create a function that maps the peptide score to the 20th residue 
+# of the peptide:
 
 import pandas as pd
 
-def read_scan(filename, pep_len = 20, score_res = 20):
+def read_scan(filename, pep_len=20, score_res=20):
     if not type(pep_len) is int: 
-        raise TypeError("pep_len : only integers are allowed ")
+        raise TypeError("pep_len : only integers are allowed")
     elif not type(score_res) is int:
-         raise TypeError("score_res : only integers are allowed ")
-    elif pep_len<score_res:
+         raise TypeError("score_res : only integers are allowed")
+    elif pep_len < score_res:
         raise Exception("score_res can't be higher than pep_len")
         
     elif pep_len != 20 or score_res != 20:    
@@ -114,22 +114,22 @@ ag1_scan.head(5)
 # from the geometric mean between replicates that do not deviate wildly.
 # If the average deviation between replicates is high, one can assumme 
 # that experimental errors should result in a lower score at a given spot.
-# Is easy to immagine that imperfections on the printing of the spot, 
-# will rather decrease and not increase, the antibody recognition. In 
-# which case the the peptide signal is better represented determined 
+# It is easy to imagine that imperfections on the printing of the spot, 
+# will rather decrease and not increase, the antibody recognition, in 
+# which case the the peptide signal is better represented 
 # by the higher score replicate.
-
+#
 # Now lets write a function to combine the scores adding the flexibility 
 # to choose cases for those criterias exposed above. We will flag with 
 # 0 or 1 every peptide entry on the arrays: 1 if the deviation between 
 # replicates is higher than 40%, otherwise 0.
 
-def combine_scores(dataframe, combine = 'max', flag_noisy= True):
+def combine_scores(dataframe, combine='max', flag_noisy=True):
     df= dataframe
-    #mean
+    # mean
     df['ave'] = df.iloc[:,[1,2]].mean(axis = 1) 
-    #mean deviation
-    df['avedev'] = ((df.r1 - df.ave).abs() + (df.r2 - df.ave).abs())/2
+    # mean deviation
+    df['avedev'] = ((df.r1 - df.ave).abs() + (df.r2 - df.ave).abs()) / 2
     # percent deviation between replicates
     df['dev_ratio'] = df.apply(lambda x:0 
                                if x.avedev==0 else x.avedev/x.ave, axis=1)
@@ -147,7 +147,7 @@ def combine_scores(dataframe, combine = 'max', flag_noisy= True):
                               if x.dev_ratio <= 0.4 else 1, axis=1)
     return df
 
-# Make the corresponding signal equals the replicate with the higest 
+# Make the corresponding signal equal the replicate with the higest 
 # score value.
 dfa = combine_scores(ag1_scan, combine = 'max', flag_noisy = True)
 dfb = combine_scores(ag2_scan, combine = 'max', flag_noisy = True)
@@ -163,7 +163,7 @@ import numpy as np
 
 def data_transform(dataframe, threshold=0):
     df = dataframe
-# Option to set a "threshold" for the signal scores. 
+    # Option to set a "threshold" for the signal scores. 
     t = threshold
 
     df['cubic'] = df.apply(lambda x: np.cbrt(max(0, x.comb_signal-t)),
@@ -176,12 +176,11 @@ data_transform(dfa, threshold = 0)
 data_transform(dfb, threshold = 0)
 dfa.head(5)
 ########################################################################
-# Convert a list of score residues from the epitope scan data to an 
-# alignment-like gapped sequences
-# --------------------------------
+# Convert score residues from the epitope scan to alignment-like gapped sequences
+# -------------------------------------------------------------------------------
 
 # So far, we have the peptide score data combined, normalized, and mapped
-# to an score residue for each peptide. 
+# to a residue for each peptide. 
 # Next, using the alignment trace as a template, we will match the signal
 # intensities associated to the score residues, to the position of each 
 # symbol on the alignment, considering the gaps.
@@ -274,7 +273,7 @@ def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
                             c=c+1
                             break
 
-# For terminal gaps
+    # For terminal gaps
     if len(gapped) < len(template) and template[len(gapped)+1]== None:            
         gapped_tail=[]
         for n in range(len(template)-len(gapped)):
@@ -294,8 +293,8 @@ gapd_s2 = gapped_seq(dfb, traceB, 20, 2)
 len(gapd_s1) == len(gapd_s2)
 
 ########################################################################
-# Create a signal_map(ndarray) 
-# --------------------------------
+# Create a signal map
+# -------------------
 
 # Here we build a numpy.ndarray to map the signal scores and corresponding 
 # position of the score residue on the sequence alignment.
@@ -315,8 +314,8 @@ score = signal_map(gapd_s1, gapd_s2)
 
 ########################################################################
 # Sequence alignment decorated with MAb recognition regions 
-# --------------------------------
-
+# ---------------------------------------------------------
+#
 # Now we can plot the sequence alignment using an :class:`ArrayPloter` 
 # instance that higlights sequence recognition regions at the positions 
 # of the respective score residue per alignment column.
@@ -340,10 +339,12 @@ ax2.set_frame_on(False)
 # Access the colormap of the relevant instace of ArrayPlotter: 
 colormap = graphics.ArrayPlotter(ax2, score).get_cmap()
 
+########################################################################
 # Lets build a fucntion to create a custom colorbar object. We will 
 # specify the dataframes corresponding to the two antigens screened in 
 # this example, the colormap, and the transformation to be 
 # represented with the colorbar.
+
 def draw_colorbar(axes, array1, array2, colormap, transform ='linear', 
                  orient =None, title=None):
     

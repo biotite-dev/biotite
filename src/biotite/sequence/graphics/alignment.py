@@ -347,8 +347,8 @@ class LetterTypePlotter(LetterPlotter):
     
 class ArrayPlotter(LetterPlotter):
     '''
-    This SymbolPlotter quantitatively decorates sequences alignments, with molecular
-    recognition data obtaine from microarrays. Symbols are visualized as characters 
+    This :class:`SymbolPlotter` quantitatively decorates sequences alignments, with molecular
+    recognition data obtained from e.g. microarrays. Symbols are visualized as characters 
     on a colored background box. The color of a given box represents the recognition 
     signal. The intensity of the color, is proportional to the strenght of the 
     recognition.
@@ -359,8 +359,8 @@ class ArrayPlotter(LetterPlotter):
         A Matplotlib axes, that is used as plotting area.
     fl_score : numpy.ndarray 
         The ndarray to map recognition values to score residues.
-        By default the normalized score is 1 for maximun recognition
-        and 0 for non-recognition(no color).
+        By default, the normalized score is 1 for maximum recognition
+        and 0 for non-recognition (no color).
     color_symbols : bool, optional
         If true, the symbols themselves are colored.
         If false, the symbols are black, and the boxes behind the
@@ -369,42 +369,19 @@ class ArrayPlotter(LetterPlotter):
         Font size of the sequence symbols.
     font_param : dict, optional
         Additional parameters that is given to the
-        matplotlib.Text instance of each symbol.
+        :class:`matplotlib.Text` instance of each symbol.
     
     '''
     def __init__(self, axes, fl_score, color_symbols=False,
                  font_size=None, font_param=None):
 
         super().__init__(axes, color_symbols, font_size, font_param)
-        if fl_score is not None:
-            self.fl_score = fl_score 
-        else:
-            self.fl_score = None        
+        self.fl_score = fl_score       
         self._cmap = self._generate_colormap(colors["dimorange"],
                                              self._color_symbols) 
              
                              
     def get_color(self, alignment, column_i, seq_i):
-        '''
-        Get the color of a symbol at a specified position in the
-        alignment.
-        The symbol is specified as position in the alignment's trace
-        (trace[pos_i, seq_i]).
-
-        Parameters
-        ----------
-        alignment : Alignment
-            The respective alignment.
-        column_i : int
-            The position index in the trace.
-        seq_i : int
-            The sequence index in the trace.
-        Returns
-        -------
-        color : object
-            A *Matplotlib* compatible color used for the background
-            or at the specifed position
-            '''
         index1 = alignment.trace[column_i, seq_i]
         if index1 == -1:
             spot_signal = 0
@@ -420,7 +397,6 @@ class ArrayPlotter(LetterPlotter):
             signal = fl_score[column_i, seq_i]
         return signal
 
-    # getter for cmap:
     def get_cmap(self):
         return self._cmap
 
@@ -438,7 +414,7 @@ class ArrayPlotter(LetterPlotter):
         if trace[column_i, seq_i] != -1:
             key1 = alignment.sequences[1][trace[column_i, 1]]
             key2 = alignment.sequences[0][trace[column_i, 0]]
-            if key1==key2:
+            if key1 == key2:
                 if seq_i == 1:
                     symbol = "*"
                 else:
@@ -469,13 +445,17 @@ class ArrayPlotter(LetterPlotter):
         color = to_rgb(color)
         if to_black: 
             cmap_val = np.stack(
-                [np.interp(np.linspace(0, 1, 100), [0, 1], [color[i], 0])
-                     for i in range(len(color))]
+                [
+                    np.interp(np.linspace(0, 1, 100), [0, 1], [color[i], 0])
+                    for i in range(len(color))
+                ]
             ).transpose()
         else:
             cmap_val = np.stack(
-                [np.interp(np.linspace(0, 1, 100), [0, 1], [1, color[i]])
-                    for i in range(len(color))]
+                [
+                    np.interp(np.linspace(0, 1, 100), [0, 1], [1, color[i]])
+                    for i in range(len(color))
+                ]
             ).transpose()
         return ListedColormap(cmap_val)        
 
@@ -946,7 +926,7 @@ def plot_alignment_array(axes, alignment, symbols_per_line=50,
                                     symbol_size=None, symbol_param=None):
 
     '''
-    Plots a pairwise sequence alignment using an ArrayPloter instance.
+    Plots a pairwise sequence alignment using an :class:`ArrayPloter instance.
     Higlights sequence recognition regions at the positions of the respective 
     score residue per alignment column.
     
@@ -1006,7 +986,7 @@ def plot_alignment_array(axes, alignment, symbols_per_line=50,
     fl_score : numpy.ndarray 
         The ndarray to map fluorescence values to score residues.
         By default the normalized score is 1 for maximun recognition
-        and 0 for non-recognition(no color).
+        and 0 for non-recognition (no color).
     color_symbols : bool, optional
         If true, the symbols themselves are colored.
         If false, the symbols are black, and the boxes behind the
@@ -1019,6 +999,7 @@ def plot_alignment_array(axes, alignment, symbols_per_line=50,
     symbol_spacing : int, optional
         А space is placed between each number of elements desired
         by variable.
+    
     Notes
     -----
     A '*' represents a sequence match on the alignment 
