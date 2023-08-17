@@ -13,7 +13,7 @@ import requests
 from .check import assert_valid_response
 
 
-_fetch_url = "https://alphafold.com/api/prediction/"
+_fetch_url = "https://alphafold.com/api/prediction"
 
 
 def fetch(ids, target_path=None, format="pdb", overwrite=False, verbose=False):
@@ -90,14 +90,16 @@ def fetch(ids, target_path=None, format="pdb", overwrite=False, verbose=False):
                 or not isfile(file) \
                 or getsize(file) == 0 \
                 or overwrite:
-            if format in ["pdb", "cif", "bcif"]:
+            if format in ["pdb", "cif"]:
                 metadata_response = requests.get(f"{_fetch_url}/{id}")
-                metadata_json = metadata_response.json()[0]  
+                assert_valid_response(metadata_response.status_code)
+                metadata_json = metadata_response.json()[0]
+                print(metadata_json) 
                 # a list of length 1 is always returned 
                 file_url = metadata_json[f"{format}Url"]
                 file_response = requests.get(file_url)
+                assert_valid_response(file_response.status_code)
                 content = file_response.text
-                assert_valid_response(r.status_code)
             else:
                 raise ValueError(f"Format '{format}' is not supported")
             if file is None:
