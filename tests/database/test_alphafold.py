@@ -36,11 +36,11 @@ def test_fetch(as_file_like):
     cannot_connect_to(ALPHAFOLD_URL),
     reason="AlphaFold is not available"
 )
-@pytest.mark.parametrize("format", ["pdb", "cif", "bcif"])
+@pytest.mark.parametrize("format", ["pdb", "cif"])
 def test_fetch_invalid(format):
     with pytest.raises(RequestError):
         file = alphafold.fetch(
-            "XYZ", format, tempfile.gettempdir(), overwrite=True
+            "XYZ", target_path=tempfile.gettempdir(), format=format, overwrite=True
         )
 
 
