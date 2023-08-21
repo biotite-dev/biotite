@@ -6,7 +6,8 @@ import itertools
 import tempfile
 import pytest
 import biotite.database.alphafold as alphafold
-import biotite.structure.io.pdb as pdb 
+import biotite.structure.io.pdb as pdb
+import biotite.structure.io.pdbx as pdbx
 from biotite.database import RequestError
 from ..util import cannot_connect_to
 
@@ -42,5 +43,28 @@ def test_fetch_invalid(format):
         file = alphafold.fetch(
             "XYZ", target_path=tempfile.gettempdir(), format=format, overwrite=True
         )
+
+
+@pytest.mark.skipif(
+    cannot_connect_to(ALPHAFOLD_URL),
+    reason="AlphaFold is not available"
+)
+@pytest.mark.parametrize("format", ["pdb", "cif"])
+def test_fetch_multiple(format):
+        acc = ["P12345", "P12345"]
+        files = alphafold.fetch(
+            acc, target_path=tempfile.gettempdir(), format=format, overwrite=True
+        )
+        print(files)
+        for file in files:
+            if format == "pdb":
+                pdb_file = pdb.PDBFile.read(file)
+                structure = pdb_file.get_structure()
+                assert len(structure) > 0 
+            elif format == "cif":
+                cif_file = pdbx.PDBxFile.read(file) 
+                assert "citation_author" in cif_file.keys()
+
+
 
 
