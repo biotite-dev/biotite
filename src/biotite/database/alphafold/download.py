@@ -94,7 +94,6 @@ def fetch(ids, target_path=None, format="pdb", overwrite=False, verbose=False):
                 metadata_response = requests.get(f"{_fetch_url}/{id}")
                 assert_valid_response(metadata_response.status_code)
                 metadata_json = metadata_response.json()[0]
-                print(metadata_json) 
                 # a list of length 1 is always returned 
                 file_url = metadata_json[f"{format}Url"]
                 file_response = requests.get(file_url)
