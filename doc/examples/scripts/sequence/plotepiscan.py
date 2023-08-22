@@ -2,14 +2,19 @@
 Plot epitope mapping data onto protein sequence alignments
 ==========================================================
 
-Peptide arrays of overlapping sequences can be used to identify
-the epitope of antibodies on a protein antigen at amino acid level.
-Scannings for molecular recognition using peptide arrays, 
+Peptide arrays can be used as a high-throughput platform for screening
+biological interactions. Typical screenings, involve the immobilization 
+of diverse peptides on a solid surface to study their interactions with 
+various target molecules. Specifically, arrays of peptides with overlapping
+sequences can be used to identify the epitope of antibodies on a protein
+antigen at amino acid level.
+
+General scannings for molecular recognition using peptide arrays, 
 are particlularly useful for epitope identification on monoclonal 
 antibodies. This example visualizes the data from two epitope mapping 
 studies, using a color coded sequence alignment representation
 of the antigens screened. The scannings interrogated a monoclonal 
-antibody(MAb) against two arrays of overlaping peptides.
+antibody(MAb) against two arrays of overlaping peptides :footcite:`Iyamu2023`:.
 The files containing peptide array data can be downloaded
 :download:`here </examples/download/FCR3_10ug.csv>`
 and 
@@ -193,7 +198,10 @@ traceB = align.get_symbols(A)[1]
 # tuple: ('aa_symbol': signal_plot).
 # List elements match the position and sequence of the symbols in the 
 # alignment 'A'. Gaps are represented by 'None'.
-def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):    
+def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
+    """
+    
+    """
     template = seq_trace
     df = dataframe
     step = overlap_step        
@@ -393,3 +401,7 @@ cbar = draw_colorbar(ax2, dfa, dfb, colormap, transform = 'cubic',
                        title = 'Fluorescence Intensity [AU]')
 plt.show()
 
+# References
+# ----------
+#
+# .. footbibliography::

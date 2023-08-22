@@ -358,7 +358,7 @@ class ArrayPlotter(LetterPlotter):
     axes : Axes
         A Matplotlib axes, that is used as plotting area.
     fl_score : numpy.ndarray 
-        The ndarray to map recognition values to score residues.
+        The ndarray to store recognition values corresponding to the score residues.
         By default, the normalized score is 1 for maximum recognition
         and 0 for non-recognition (no color).
     color_symbols : bool, optional
@@ -392,7 +392,7 @@ class ArrayPlotter(LetterPlotter):
 
     def _get_signal(self, fl_score, column_i, seq_i):
         if fl_score is None:
-            signal = 0.01
+            signal = 0.0
         else:
             signal = fl_score[column_i, seq_i]
         return signal
@@ -402,11 +402,6 @@ class ArrayPlotter(LetterPlotter):
 
            
     def plot_symbol(self, bbox, alignment, column_i, seq_i):
-        '''
-        This method is optimized to draw the symbols of an alignment while
-        mapping the molecular recognition data throughout the entire sequence 
-        alignment.
-        '''
         from matplotlib.patches import Rectangle
 
         trace = alignment.trace
@@ -915,15 +910,12 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
         spacing=spacing, symbol_spacing=symbol_spacing
     )
 
-def plot_alignment_array(axes, alignment, symbols_per_line=50,
-                                    show_numbers=False, number_size=None,
-                                    number_functions=None,
-                                    labels=None, label_size=None,
-                                    show_line_position=False,
-                                    spacing=1,
-                                    color=None, cmap=None, fl_score= None,
-                                    color_symbols=False, symbol_spacing=None,
-                                    symbol_size=None, symbol_param=None):
+def plot_alignment_array(axes, alignment, fl_score, symbols_per_line=50,
+                         show_numbers=False, number_size=None,
+                         number_functions=None, labels=None, label_size=None,
+                         show_line_position=False, spacing=1, color=None, 
+                         cmap=None, color_symbols=False, symbol_spacing=None,
+                         symbol_size=None, symbol_param=None):
 
     '''
     Plots a pairwise sequence alignment using an :class:`ArrayPloter instance.
@@ -1014,7 +1006,6 @@ def plot_alignment_array(axes, alignment, symbols_per_line=50,
     if color is not None or cmap is not None:
         symbol_plotter.set_color(color=color, cmap=cmap)
         
-    from biotite.sequence.graphics import plot_alignment
     plot_alignment(
         axes=axes, alignment=alignment, symbol_plotter=symbol_plotter,
         symbols_per_line=symbols_per_line,
