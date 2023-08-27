@@ -8,10 +8,9 @@ __all__ = ["align_ungapped", "align_optimal"]
 
 cimport cython
 cimport numpy as np
-from .tracetable cimport follow_trace, get_trace_linear, get_trace_affine
+from .tracetable cimport follow_trace, get_trace_linear, get_trace_affine, \
+                         TraceDirectionLinear, TraceDirectionAffine
 
-from .matrix import SubstitutionMatrix
-from ..sequence import Sequence
 from .alignment import Alignment
 import numpy as np
 
@@ -33,23 +32,6 @@ ctypedef fused CodeType2:
     uint16
     uint32
     uint64
-
-
-# See tracetable.pyx for more information
-DEF MATCH    = 1
-DEF GAP_LEFT = 2
-DEF GAP_TOP  = 4
-DEF MATCH_TO_MATCH       = 1
-DEF GAP_LEFT_TO_MATCH    = 2
-DEF GAP_TOP_TO_MATCH     = 4
-DEF MATCH_TO_GAP_LEFT    = 8
-DEF GAP_LEFT_TO_GAP_LEFT = 16
-DEF MATCH_TO_GAP_TOP     = 32
-DEF GAP_TOP_TO_GAP_TOP   = 64
-DEF NO_STATE       = 0
-DEF MATCH_STATE    = 1
-DEF GAP_LEFT_STATE = 2
-DEF GAP_TOP_STATE  = 3
 
 
 def align_ungapped(seq1, seq2, matrix, score_only=False):
@@ -267,10 +249,10 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
             else:
                 g1_table[0, 1:] = np.zeros(len(seq2))
                 g2_table[1:, 0] = np.zeros(len(seq1))
-            trace_table[0,  1] = MATCH_TO_GAP_LEFT
-            trace_table[0, 2:] = GAP_LEFT_TO_GAP_LEFT
-            trace_table[1,  0] = MATCH_TO_GAP_TOP
-            trace_table[2: ,0] = GAP_TOP_TO_GAP_TOP
+            trace_table[0,  1] = TraceDirectionAffine.MATCH_TO_GAP_LEFT
+            trace_table[0, 2:] = TraceDirectionAffine.GAP_LEFT_TO_GAP_LEFT
+            trace_table[1,  0] = TraceDirectionAffine.MATCH_TO_GAP_TOP
+            trace_table[2: ,0] = TraceDirectionAffine.GAP_TOP_TO_GAP_TOP
         else:
             g1_table[0, 1:] = np.zeros(len(seq2))
             g2_table[1:, 0] = np.zeros(len(seq1))
@@ -289,8 +271,8 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
                 # -> Penalties in first row/column
                 score_table[:,0] = np.arange(len(seq1)+1) * gap_penalty
                 score_table[0,:] = np.arange(len(seq2)+1) * gap_penalty
-            trace_table[1:,0] = GAP_TOP
-            trace_table[0,1:] = GAP_LEFT
+            trace_table[1:,0] = TraceDirectionLinear.GAP_TOP
+            trace_table[0,1:] = TraceDirectionLinear.GAP_LEFT
         _fill_align_table(code1, code2, matrix.score_matrix(), trace_table,
                           score_table, gap_penalty, terminal_penalty, local)
     
@@ -575,20 +557,26 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                     # End trace in specific table
                     # by filtering out the respective bits
                     trace &= ~(
-                        MATCH_TO_MATCH |
-                        GAP_LEFT_TO_MATCH |
-                        GAP_TOP_TO_MATCH
+                        TraceDirectionAffine.MATCH_TO_MATCH |
+                        TraceDirectionAffine.GAP_LEFT_TO_MATCH |
+                        TraceDirectionAffine.GAP_TOP_TO_MATCH
                     )
                     # m_table[i,j] remains 0
                 else:
                     m_table[i,j] = m_score
                 if g1_score <= 0:
-                    trace &= ~(MATCH_TO_GAP_LEFT | GAP_LEFT_TO_GAP_LEFT)
+                    trace &= ~(
+                        TraceDirectionAffine.MATCH_TO_GAP_LEFT |
+                        TraceDirectionAffine.GAP_LEFT_TO_GAP_LEFT
+                    )
                     # g1_table[i,j] remains negative infinity
                 else:
                     g1_table[i,j] = g1_score
                 if g2_score <= 0:
-                    trace &= ~(MATCH_TO_GAP_TOP | GAP_TOP_TO_GAP_TOP)
+                    trace &= ~(
+                        TraceDirectionAffine.MATCH_TO_GAP_TOP |
+                        TraceDirectionAffine.GAP_TOP_TO_GAP_TOP
+                    )
                     # g2_table[i,j] remains negative infinity
                 else:
                     g2_table[i,j] = g2_score
