@@ -165,7 +165,6 @@ def test_rdf_box():
         rdf(stack[:, 0], stack, box=box)
 
     # Reshape (3,3) boxes to (1,3,3) to match stacked input AtomArrays
-    print(type(stack[0]))
     rdf(stack[0, 0], stack[0], box=box)
 
 
