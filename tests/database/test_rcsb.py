@@ -18,6 +18,8 @@ from ..util import cannot_connect_to, data_dir
 
 
 RCSB_URL = "https://www.rcsb.org/"
+# Search term that should only find the entry 1L2Y
+TC5B_TERM = "Miniprotein Construct TC5b"
 
 
 @pytest.mark.skipif(
@@ -59,7 +61,7 @@ def test_fetch_invalid(format):
 
 
 def test_search_basic():
-    query = rcsb.BasicQuery("tc5b")
+    query = rcsb.BasicQuery(TC5B_TERM)
     assert rcsb.search(query) == ["1L2Y"]
     assert rcsb.count(query) == 1
 
@@ -71,7 +73,8 @@ def test_search_basic():
             "pdbx_serial_crystallography_sample_delivery_injection.preparation",
             False,
             {},
-            ["6IG7", "6IG6", "7JRI", "7JR5", "7QX4", "7QX5", "7QX6", "7QX7"]
+            ["6IG7", "6IG6", "7JRI", "7JR5", "7QX4", "7QX5", "7QX6", "7QX7",
+             "8A2O", "8A2P"]
         ),
         (
             "audit_author.name",
@@ -91,7 +94,7 @@ def test_search_basic():
             "struct.title",
             False,
             {"contains_words": "tc5b"},
-            ["1L2Y"]
+            ["1L2Y", "8ANH", "8ANM", "8ANG", "8ANI"]
         ),
         (
             "reflns.d_resolution_high",
@@ -213,7 +216,7 @@ def test_search_composite():
     reason="RCSB PDB is not available"
 )
 def test_search_return_type(return_type, expected):
-    query = rcsb.BasicQuery("tc5b")
+    query = rcsb.BasicQuery(TC5B_TERM)
     assert rcsb.search(query, return_type) == expected
     assert rcsb.count(query, return_type) == len(expected)
 
