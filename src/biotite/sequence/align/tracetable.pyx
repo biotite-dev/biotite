@@ -17,39 +17,6 @@ cimport numpy as np
 
 import numpy as np
 
-# A trace table saves the directions a cell came from
-# A "1" in the corresponding bit in the trace table means
-# the cell came from this direction
-# Values for linear gap penalty (one score table)
-#     bit 1 -> 1  -> diagonal -> alignment of symbols
-#     bit 2 -> 2  -> left     -> gap in first sequence
-#     bit 3 -> 4  -> top      -> gap in second sequence
-# Values for affine gap penalty (three score tables)
-#     bit 1 -> 1  -> match - match transition
-#     bit 2 -> 2  -> seq 1 gap - match transition
-#     bit 3 -> 4  -> seq 2 gap - match transition
-#     bit 4 -> 8  -> match - seq 1 gap transition
-#     bit 5 -> 16 -> seq 1 gap - seq 1 gap transition
-#     bit 6 -> 32 -> match - seq 2 gap transition
-#     bit 7 -> 64 -> seq 2 gap - seq 2 gap transition
-DEF MATCH    = 1
-DEF GAP_LEFT = 2
-DEF GAP_TOP  = 4
-DEF MATCH_TO_MATCH       = 1
-DEF GAP_LEFT_TO_MATCH    = 2
-DEF GAP_TOP_TO_MATCH     = 4
-DEF MATCH_TO_GAP_LEFT    = 8
-DEF GAP_LEFT_TO_GAP_LEFT = 16
-DEF MATCH_TO_GAP_TOP     = 32
-DEF GAP_TOP_TO_GAP_TOP   = 64
-
-
-# The state specifies the table the traceback is currently in
-DEF NO_STATE       = 0 # For linear gap penalty
-DEF MATCH_STATE    = 1
-DEF GAP_LEFT_STATE = 2
-DEF GAP_TOP_STATE  = 3
-
 
 cdef inline np.uint8_t get_trace_linear(np.int32_t match_score,
                                         np.int32_t gap_left_score,
@@ -61,33 +28,46 @@ cdef inline np.uint8_t get_trace_linear(np.int32_t match_score,
     """
     if match_score > gap_left_score:
         if match_score > gap_top_score:
-            trace = MATCH
+            trace = TraceDirectionLinear.MATCH
             max_score[0] = match_score
         elif match_score == gap_top_score:
-            trace = MATCH | GAP_TOP
+            trace = (
+                TraceDirectionLinear.MATCH |
+                TraceDirectionLinear.GAP_TOP
+            )
             max_score[0] = match_score
         else:
-            trace = GAP_TOP
+            trace = TraceDirectionLinear.GAP_TOP
             max_score[0] = gap_top_score
     elif match_score == gap_left_score:
         if match_score > gap_top_score:
-            trace = MATCH | GAP_LEFT
+            trace = (
+                TraceDirectionLinear.MATCH |
+                TraceDirectionLinear.GAP_LEFT
+            )
             max_score[0] = match_score
         elif match_score == gap_top_score:
-            trace = MATCH | GAP_LEFT | GAP_TOP
+            trace = (
+                TraceDirectionLinear.MATCH |
+                TraceDirectionLinear.GAP_LEFT |
+                TraceDirectionLinear.GAP_TOP
+            )
             max_score[0] = match_score
         else:
-            trace = GAP_TOP
+            trace = TraceDirectionLinear.GAP_TOP
             max_score[0] = gap_top_score
     else:
         if gap_left_score > gap_top_score:
-            trace = GAP_LEFT
+            trace = TraceDirectionLinear.GAP_LEFT
             max_score[0] = gap_left_score
         elif gap_left_score == gap_top_score:
-            trace = GAP_LEFT | GAP_TOP
+            trace = (
+                TraceDirectionLinear.GAP_LEFT |
+                TraceDirectionLinear.GAP_TOP
+            )
             max_score[0] = gap_left_score
         else:
-            trace = GAP_TOP
+            trace = TraceDirectionLinear.GAP_TOP
             max_score[0] = gap_top_score
     
     return trace
@@ -110,55 +90,74 @@ cdef inline np.uint8_t get_trace_affine(np.int32_t match_to_match_score,
     # Match Table
     if match_to_match_score > gap_left_to_match_score:
         if match_to_match_score > gap_top_to_match_score:
-            trace = MATCH_TO_MATCH
+            trace = TraceDirectionAffine.MATCH_TO_MATCH
             max_match_score[0] = match_to_match_score
         elif match_to_match_score == gap_top_to_match_score:
-            trace = MATCH_TO_MATCH | GAP_TOP_TO_MATCH
+            trace = (
+                TraceDirectionAffine.MATCH_TO_MATCH |
+                TraceDirectionAffine.GAP_TOP_TO_MATCH
+            )
             max_match_score[0] = match_to_match_score
         else:
-            trace = GAP_TOP_TO_MATCH
+            trace = TraceDirectionAffine.GAP_TOP_TO_MATCH
             max_match_score[0] = gap_top_to_match_score
     elif match_to_match_score == gap_left_to_match_score:
         if match_to_match_score > gap_top_to_match_score:
-            trace = MATCH_TO_MATCH | GAP_LEFT_TO_MATCH
+            trace = (
+                TraceDirectionAffine.MATCH_TO_MATCH | 
+                TraceDirectionAffine.GAP_LEFT_TO_MATCH
+            )
             max_match_score[0] = match_to_match_score
         elif match_to_match_score == gap_top_to_match_score:
-            trace = MATCH_TO_MATCH | GAP_LEFT_TO_MATCH | GAP_TOP_TO_MATCH
+            trace = (
+                TraceDirectionAffine.MATCH_TO_MATCH |
+                TraceDirectionAffine.GAP_LEFT_TO_MATCH |
+                TraceDirectionAffine.GAP_TOP_TO_MATCH
+            )
             max_match_score[0] = match_to_match_score
         else:
-            trace = GAP_TOP_TO_MATCH
+            trace = TraceDirectionAffine.GAP_TOP_TO_MATCH
             max_match_score[0] = gap_top_to_match_score
     else:
         if gap_left_to_match_score > gap_top_to_match_score:
-            trace = GAP_LEFT_TO_MATCH
+            trace = TraceDirectionAffine.GAP_LEFT_TO_MATCH
             max_match_score[0] = gap_left_to_match_score
         elif gap_left_to_match_score == gap_top_to_match_score:
-            trace = GAP_LEFT_TO_MATCH | GAP_TOP_TO_MATCH
+            trace = (
+                TraceDirectionAffine.GAP_LEFT_TO_MATCH |
+                TraceDirectionAffine.GAP_TOP_TO_MATCH
+            )
             max_match_score[0] = gap_left_to_match_score
         else:
-            trace = GAP_TOP_TO_MATCH
+            trace = TraceDirectionAffine.GAP_TOP_TO_MATCH
             max_match_score[0] = gap_top_to_match_score
     
     # 'Gap left' table
     if match_to_gap_left_score > gap_left_to_gap_left_score:
-        trace |= MATCH_TO_GAP_LEFT
+        trace |= TraceDirectionAffine.MATCH_TO_GAP_LEFT
         max_gap_left_score[0] = match_to_gap_left_score
     elif match_to_gap_left_score < gap_left_to_gap_left_score:
-        trace |= GAP_LEFT_TO_GAP_LEFT
+        trace |= TraceDirectionAffine.GAP_LEFT_TO_GAP_LEFT
         max_gap_left_score[0] = gap_left_to_gap_left_score
     else:
-        trace |= MATCH_TO_GAP_LEFT | GAP_LEFT_TO_GAP_LEFT
+        trace |= (
+            TraceDirectionAffine.MATCH_TO_GAP_LEFT |
+            TraceDirectionAffine.GAP_LEFT_TO_GAP_LEFT
+        )
         max_gap_left_score[0] = match_to_gap_left_score
     
     # 'Gap right' table
     if match_to_gap_top_score > gap_top_to_gap_top_score:
-        trace |= MATCH_TO_GAP_TOP
+        trace |= TraceDirectionAffine.MATCH_TO_GAP_TOP
         max_gap_top_score[0] = match_to_gap_top_score
     elif match_to_gap_top_score < gap_top_to_gap_top_score:
-        trace |= GAP_TOP_TO_GAP_TOP
+        trace |= TraceDirectionAffine.GAP_TOP_TO_GAP_TOP
         max_gap_top_score[0] = gap_top_to_gap_top_score
     else:
-        trace |= MATCH_TO_GAP_TOP | GAP_TOP_TO_GAP_TOP
+        trace |= (
+            TraceDirectionAffine.MATCH_TO_GAP_TOP |
+            TraceDirectionAffine.GAP_TOP_TO_GAP_TOP
+        )
         max_gap_top_score[0] = gap_top_to_gap_top_score
     
     return trace
@@ -224,7 +223,7 @@ cdef int follow_trace(np.uint8_t[:,:] trace_table,
     cdef int i_match, i_gap_left, i_gap_top
     cdef int j_match, j_gap_left, j_gap_top
     
-    if state == NO_STATE:
+    if state == TraceState.NO_STATE:
         # Linear gap penalty
         # Trace table has a 0 -> no trace direction -> break loop
         # The '0'-cell itself is also not included in the traceback
@@ -247,11 +246,11 @@ cdef int follow_trace(np.uint8_t[:,:] trace_table,
             # Traces may split
             next_indices = []
             trace_value = trace_table[i,j]
-            if trace_value & MATCH:
+            if trace_value & TraceDirectionLinear.MATCH:
                 next_indices.append((i_match, j_match))
-            if trace_value & GAP_LEFT:
+            if trace_value & TraceDirectionLinear.GAP_LEFT:
                 next_indices.append((i_gap_left, j_gap_left))
-            if trace_value & GAP_TOP:
+            if trace_value & TraceDirectionLinear.GAP_TOP:
                 next_indices.append((i_gap_top, j_gap_top))
             # Trace branching
             # -> Recursive call of _follow_trace() for indices[1:]
@@ -271,9 +270,23 @@ cdef int follow_trace(np.uint8_t[:,:] trace_table,
         # Affine gap penalty
         # -> check only for the current state whether the trace ends
         while (
-            (state == MATCH_STATE    and trace_table[i,j] & (MATCH_TO_MATCH | GAP_LEFT_TO_MATCH | GAP_TOP_TO_MATCH) != 0) or
-            (state == GAP_LEFT_STATE and trace_table[i,j] & (MATCH_TO_GAP_LEFT | GAP_LEFT_TO_GAP_LEFT) != 0) or
-            (state == GAP_TOP_STATE  and trace_table[i,j] & (MATCH_TO_GAP_TOP | GAP_TOP_TO_GAP_TOP) != 0)
+            (
+                state == TraceState.MATCH_STATE and trace_table[i,j] & (
+                    TraceDirectionAffine.MATCH_TO_MATCH |
+                    TraceDirectionAffine.GAP_LEFT_TO_MATCH |
+                    TraceDirectionAffine.GAP_TOP_TO_MATCH
+                ) != 0
+            ) or (
+                state == TraceState.GAP_LEFT_STATE and trace_table[i,j] & (
+                    TraceDirectionAffine.MATCH_TO_GAP_LEFT |
+                    TraceDirectionAffine.GAP_LEFT_TO_GAP_LEFT
+                ) != 0
+            ) or (
+                state == TraceState.GAP_TOP_STATE and trace_table[i,j] & (
+                    TraceDirectionAffine.MATCH_TO_GAP_TOP |
+                    TraceDirectionAffine.GAP_TOP_TO_GAP_TOP
+                ) != 0
+            )
         ):
             if banded:
                 seq_i = i - 1
@@ -295,35 +308,45 @@ cdef int follow_trace(np.uint8_t[:,:] trace_table,
 
             # Get value of trace corresponding to current state
             # = table trace is currently in
-            if state == MATCH_STATE:
-                trace_value = trace_table[i,j] & (MATCH_TO_MATCH | GAP_LEFT_TO_MATCH | GAP_TOP_TO_MATCH)
-            elif state == GAP_LEFT_STATE:
-                trace_value = trace_table[i,j] & (MATCH_TO_GAP_LEFT | GAP_LEFT_TO_GAP_LEFT)
-            else: # state == GAP_TOP_STATE:
-                trace_value = trace_table[i,j] & (MATCH_TO_GAP_TOP | GAP_TOP_TO_GAP_TOP)
+            if state == TraceState.MATCH_STATE:
+                trace_value = trace_table[i,j] & (
+                    TraceDirectionAffine.MATCH_TO_MATCH |
+                    TraceDirectionAffine.GAP_LEFT_TO_MATCH |
+                    TraceDirectionAffine.GAP_TOP_TO_MATCH
+                )
+            elif state == TraceState.GAP_LEFT_STATE:
+                trace_value = trace_table[i,j] & (
+                    TraceDirectionAffine.MATCH_TO_GAP_LEFT |
+                    TraceDirectionAffine.GAP_LEFT_TO_GAP_LEFT
+                )
+            else: # state == TraceState.GAP_TOP_STATE:
+                trace_value = trace_table[i,j] & (
+                    TraceDirectionAffine.MATCH_TO_GAP_TOP |
+                    TraceDirectionAffine.GAP_TOP_TO_GAP_TOP
+                )
             
             # Determine indices and state of next trace step
-            if trace_value & MATCH_TO_MATCH:
+            if trace_value & TraceDirectionAffine.MATCH_TO_MATCH:
                 next_indices.append((i_match, j_match))
-                next_states.append(MATCH_STATE)
-            if trace_value & GAP_LEFT_TO_MATCH:
+                next_states.append(TraceState.MATCH_STATE)
+            if trace_value & TraceDirectionAffine.GAP_LEFT_TO_MATCH:
                 next_indices.append((i_match, j_match))
-                next_states.append(GAP_LEFT_STATE)
-            if trace_value & GAP_TOP_TO_MATCH:
+                next_states.append(TraceState.GAP_LEFT_STATE)
+            if trace_value & TraceDirectionAffine.GAP_TOP_TO_MATCH:
                 next_indices.append((i_match, j_match))
-                next_states.append(GAP_TOP_STATE)
-            if trace_value & MATCH_TO_GAP_LEFT:
+                next_states.append(TraceState.GAP_TOP_STATE)
+            if trace_value & TraceDirectionAffine.MATCH_TO_GAP_LEFT:
                 next_indices.append((i_gap_left, j_gap_left))
-                next_states.append(MATCH_STATE)
-            if trace_value & GAP_LEFT_TO_GAP_LEFT:
+                next_states.append(TraceState.MATCH_STATE)
+            if trace_value & TraceDirectionAffine.GAP_LEFT_TO_GAP_LEFT:
                 next_indices.append((i_gap_left, j_gap_left))
-                next_states.append(GAP_LEFT_STATE)
-            if trace_value & MATCH_TO_GAP_TOP:
+                next_states.append(TraceState.GAP_LEFT_STATE)
+            if trace_value & TraceDirectionAffine.MATCH_TO_GAP_TOP:
                 next_indices.append((i_gap_top, j_gap_top))
-                next_states.append(MATCH_STATE)
-            if trace_value & GAP_TOP_TO_GAP_TOP:
+                next_states.append(TraceState.MATCH_STATE)
+            if trace_value & TraceDirectionAffine.GAP_TOP_TO_GAP_TOP:
                 next_indices.append((i_gap_top, j_gap_top))
-                next_states.append(GAP_TOP_STATE)
+                next_states.append(TraceState.GAP_TOP_STATE)
             # Trace branching
             # -> Recursive call of _follow_trace() for indices[1:]
             for k in range(1, len(next_indices)):
