@@ -145,14 +145,16 @@ def test_rdf_box():
     """ Test correct use of simulation boxes """
     stack = load_structure(TEST_FILE)
     box = vectors_from_unitcell(1, 1, 1, 90, 90, 90)
-    box = np.repeat(box[np.newaxis, :, :], len(stack), axis=0)
+    box_stack = np.repeat(box[np.newaxis, :, :], len(stack), axis=0)
 
     # Use box attribute of stack
     rdf(stack[:, 0], stack)
+    # Test proper stacking of single AtomArrays -> Use box attribute
+    rdf(stack[0, 0], stack[0])
 
     # Use box attribute and dont fail because stack has no box
     stack.box = None
-    rdf(stack[:, 0], stack, box=box)
+    rdf(stack[:, 0], stack, box=box_stack)
 
     # Fail if no box is present
     with pytest.raises(ValueError):
@@ -160,7 +162,10 @@ def test_rdf_box():
 
     # Fail if box is of wrong size
     with pytest.raises(ValueError):
-        rdf(stack[:, 0], stack, box=box[0])
+        rdf(stack[:, 0], stack, box=box)
+
+    # Reshape (3,3) boxes to (1,3,3) to match stacked input AtomArrays
+    rdf(stack[0, 0], stack[0], box=box)
 
 
 def test_rdf_normalized():
