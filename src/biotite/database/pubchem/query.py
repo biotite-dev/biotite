@@ -628,11 +628,11 @@ class SubstructureQuery(SuperOrSubstructureQuery):
 
     >>> # CID of alanine
     >>> print(search(SubstructureQuery(cid=5950, number=5)))
-    [5950, 602, 71080, 3081884, 449619]
+    [5950, 602, 71080, 3081884, 65370]
     >>> # AtomArray of alanine
     >>> atom_array = residue("ALA")
     >>> print(search(SubstructureQuery.from_atoms(atom_array, number=5)))
-    [5950, 602, 71080, 3081884, 449619]
+    [5950, 602, 71080, 3081884, 65370]
     """
 
     def search_type(self):
