@@ -84,7 +84,7 @@ class NameQuery(Query):
     --------
 
     >>> print(search(NameQuery("Alanine")))
-    [5950]
+    [5950, 602, 71080]
     """
 
     def __init__(self, name):
@@ -801,7 +801,7 @@ def search(query, throttle_threshold=0.5, return_throttle_status=False):
     --------
 
     >>> print(search(NameQuery("Alanine")))
-    [5950]
+    [5950, 602, 71080]
     """
     # Use POST to be compatible with the larger payloads
     # of structure searches
