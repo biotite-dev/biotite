@@ -44,14 +44,14 @@ fasta_file = fasta.FastaFile.read(array_seq_path)
 # Parse protein sequences of FCR3 and NF54
 for name, sequence in fasta_file.items():
     if "AAQ73926" in name:
-        FCR3_seq = seq.ProteinSequence(sequence)
+        fcr3_seq = seq.ProteinSequence(sequence)
     elif "EWC87419" in name:
-        NF54_seq = seq.ProteinSequence(sequence)
+        nf54_seq = seq.ProteinSequence(sequence)
 
 # Get BLOSUM62 matrix
 matrix = align.SubstitutionMatrix.std_protein_matrix()
 # Perform pairwise sequence alignment
-alignments = align.align_optimal(FCR3_seq, NF54_seq, matrix,
+alignments = align.align_optimal(fcr3_seq, nf54_seq, matrix,
                                  gap_penalty = (-10, -1), 
                                  terminal_penalty = False)
 
@@ -98,11 +98,11 @@ def read_scan(filename, pep_len=20, score_res=20):
     return df
 
 # Load epitope scan data
-FCR3_file_path  = "../../download/FCR3_10ug.csv"
-NF54_file_path  = "../../download/NF54_10ug.csv"
+fcr3_file_path  = "../../download/FCR3_10ug.csv"
+nf54_file_path  = "../../download/NF54_10ug.csv"
 
 # Define the score residues on the arrays
-files = [FCR3_file_path, NF54_file_path]
+files = [fcr3_file_path, nf54_file_path]
 d = 0
 for f in files:
     if f == files[0]:
@@ -159,7 +159,7 @@ dfb = combine_scores(ag2_scan, combine = 'max', flag_noisy = True)
 dfa.head(5)
 
 ########################################################################
-# Many molecular recognition screening champaings e.g. epitope mapping 
+# Many molecular recognition screening campaings e.g. epitope mapping 
 # screenings follow a long-tailed data distribution. To properly 
 # represent such distribution one can normalize the date using linear or
 # non-linear transformations on the combined score data.
@@ -191,8 +191,8 @@ dfa.head(5)
 # symbol on the alignment, considering the gaps.
 
 # Get the trace for each sequence on the alignment: 
-traceA = align.get_symbols(A)[0]
-traceB = align.get_symbols(A)[1]
+trace_a = align.get_symbols(alignment)[0]
+trace_b = align.get_symbols(alignment)[1]
 
 # The function *gapped_sec()* returns a list of tuples.
 # tuple: ('aa_symbol': signal_plot).
@@ -292,10 +292,10 @@ def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
 
 # Let's build the list of tuples with gapped sequences
 # FCR3 array, overlap_step: 1 (pep = 20-mer with 19 overlap)
-gapd_s1 = gapped_seq(dfa, traceA, 20, 1)
+gapd_s1 = gapped_seq(dfa, trace_a, 20, 1)
 
 # NF54 array, overlap_step: 2 (pep = 20-mer with 18 overlap)
-gapd_s2 = gapped_seq(dfb, traceB, 20, 2) 
+gapd_s2 = gapped_seq(dfb, trace_b, 20, 2) 
 
 # Checkpoint. Both lists of tuples must have the same length.
 len(gapd_s1) == len(gapd_s2)
