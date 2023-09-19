@@ -200,7 +200,28 @@ trace_b = align.get_symbols(alignment)[1]
 # alignment 'A'. Gaps are represented by 'None'.
 def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
     """
-    
+    Generate a gapped sequence that relates peptide score data signal with a 
+    template alignment trace. The function returns a list of tuples representing 
+    the gapped sequence, where each tuple consists of a residue and its associated 
+    signal value. 
+
+    Parameters
+    ----------
+    dataframe : DataFrame 
+        A *Pandas* dataframe containing columns for each peptide score data, 
+        and its designated score residue.
+    seq_trace : list 
+        The sequence trace obtained from the alignment.
+    p_len : int 
+        The length of each overlapping peptide.
+    overlap_step : int, optional
+        The step size for overlapping peptides.Default is 1.
+
+    Note:
+    -----
+    The 'gapped' sequence may be shorter than the aligment trace if the alignment results 
+    in gaps at either end. Any remaining elements in the trace with 'None' values are 
+    filled with tuples: ('None', 0).
     """
     template = seq_trace
     df = dataframe
