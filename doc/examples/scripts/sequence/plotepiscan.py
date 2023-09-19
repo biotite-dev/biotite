@@ -30,10 +30,12 @@ First, we generate a sequence aligment of the two VAR2CSA strains:
 
 # Code source: Daniel Ferrer-Vinals
 # License: BSD 3 clause
-
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+import pandas as pd
 import biotite.sequence as seq
 import biotite.sequence.align as align
+import biotite.sequence.graphics as graphics
 import biotite.sequence.io.fasta as fasta
 
 # Path to the data files
@@ -75,8 +77,6 @@ print(alignment)
 #
 # Lets create a function that maps the peptide score to the 20th residue 
 # of the peptide:
-
-import pandas as pd
 
 def read_scan(filename, pep_len=20, score_res=20):
     if not type(pep_len) is int: 
@@ -352,8 +352,6 @@ score = signal_map(gapd_s1, gapd_s2)
 # colorbar scaled accordingly. The scale matches the transformation 
 # applied to the recognition signal recorded on the score ndarray.
 
-import biotite.sequence.graphics as graphics
-
 fig = plt.figure(figsize=(20, 16))
 ax = fig.add_subplot(111)
 graphics.plot_alignment_array(
@@ -375,10 +373,7 @@ colormap = graphics.ArrayPlotter(ax2, score).get_cmap()
 # represented with the colorbar.
 
 def draw_colorbar(axes, array1, array2, colormap, transform ='linear', 
-                 orient =None, title=None):
-    
-    import matplotlib as mpl
-    
+                 orient =None, title=None):    
     df1 = array1
     df2 = array2
     cmp = colormap
