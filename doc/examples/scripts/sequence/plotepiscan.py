@@ -3,23 +3,23 @@ Plot epitope mapping data onto protein sequence alignments
 ==========================================================
 
 Peptide arrays can be used as a high-throughput platform for screening
-biological interactions. Typical screenings, involve the immobilization 
+biological interactions. Typical screenings involve the immobilization 
 of diverse peptides on a solid surface to study their interactions with 
 various target molecules. Specifically, arrays of peptides with overlapping
 sequences can be used to identify the epitope of antibodies on a protein
 antigen at amino acid level.
 
-General scannings for molecular recognition using peptide arrays, 
+General scannings for molecular recognition using peptide arrays
 are particlularly useful for epitope identification on monoclonal 
 antibodies. This example visualizes the data from two epitope mapping 
 studies, using a color coded sequence alignment representation
 of the antigens screened. The scannings interrogated a monoclonal 
-antibody(MAb) against two arrays of overlaping peptides :footcite:`Iyamu2023`:.
+antibody (MAb) against two arrays of overlaping peptides :footcite:`Iyamu2023`.
 The files containing peptide array data can be downloaded
 :download:`here </examples/download/FCR3_10ug.csv>`
 and 
 :download:`here </examples/download/NF54_10ug.csv>`.
-The antigens screened, span the extracellular domain of VAR2CSA, a
+The antigens screened span the extracellular domain of VAR2CSA, a
 virulence factor of *Plasmodiun falciparum* for the strains FCR3
 (residues 1-2659) and NF54 (residues 1-2652). The sequence of 
 the two domains can be downloaded
@@ -55,8 +55,8 @@ alignments = align.align_optimal(FCR3_seq, NF54_seq, matrix,
                                  gap_penalty = (-10, -1), 
                                  terminal_penalty = False)
 
-A = alignments[0]
-print(A)
+alignment = alignments[0]
+print(alignment)
 
 ########################################################################
 # Epitope mapping data 
@@ -65,7 +65,7 @@ print(A)
 # This study used arrays of overlaping peptides to achive high acurracy
 # in mapping the epitope. Both FCR3 and NF54 arrays, consisted of 
 # 20-mer peptides with an overlap of 19 and 18 amino acids respectively.
-# Arbritary units (AU) of fluorescence intensity quantified the antibody
+# Arbitrary units (AU) of fluorescence intensity quantified the antibody
 # recognition for each peptide. 
 # Our goal is to decorate the aligment, with the fluorescence intensity 
 # scores of each peptide in the arrays. We used a 
@@ -183,7 +183,7 @@ dfa.head(5)
 ########################################################################
 # Convert score residues from the epitope scan to alignment-like gapped sequences
 # -------------------------------------------------------------------------------
-
+#
 # So far, we have the peptide score data combined, normalized, and mapped
 # to a residue for each peptide. 
 # Next, using the alignment trace as a template, we will match the signal
@@ -290,7 +290,7 @@ def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
    
     return gapped
 
-# Lets build the list of tuples with gapped sequences
+# Let's build the list of tuples with gapped sequences
 # FCR3 array, overlap_step: 1 (pep = 20-mer with 19 overlap)
 gapd_s1 = gapped_seq(dfa, traceA, 20, 1)
 
@@ -348,7 +348,7 @@ ax2.set_frame_on(False)
 colormap = graphics.ArrayPlotter(ax2, score).get_cmap()
 
 ########################################################################
-# Lets build a fucntion to create a custom colorbar object. We will 
+# Let's build a fucntion to create a custom colorbar object. We will 
 # specify the dataframes corresponding to the two antigens screened in 
 # this example, the colormap, and the transformation to be 
 # represented with the colorbar.
@@ -401,6 +401,7 @@ cbar = draw_colorbar(ax2, dfa, dfb, colormap, transform = 'cubic',
                        title = 'Fluorescence Intensity [AU]')
 plt.show()
 
+########################################################################
 # References
 # ----------
 #

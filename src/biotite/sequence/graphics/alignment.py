@@ -918,7 +918,8 @@ def plot_alignment_array(axes, alignment, fl_score, symbols_per_line=50,
                          symbol_size=None, symbol_param=None):
 
     '''
-    Plots a pairwise sequence alignment using an :class:`ArrayPloter instance.
+    Plots a pairwise sequence alignment using an :class:`ArrayPlotter instance.
+    
     Higlights sequence recognition regions at the positions of the respective 
     score residue per alignment column.
     
