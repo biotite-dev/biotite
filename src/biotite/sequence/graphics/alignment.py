@@ -914,7 +914,7 @@ def plot_alignment_array(axes, alignment, fl_score, symbols_per_line=50,
                          show_numbers=False, number_size=None,
                          number_functions=None, labels=None, label_size=None,
                          show_line_position=False, spacing=1, color=None, 
-                         cmap=None, color_symbols=False, symbol_spacing=None,
+                         cmap=None, symbol_spacing=None,
                          symbol_size=None, symbol_param=None):
 
     '''
@@ -929,6 +929,10 @@ def plot_alignment_array(axes, alignment, fl_score, symbols_per_line=50,
         A Matplotlib axes, that is used as plotting area.
     alignment : Alignment
         The pairwise sequence alignment to be plotted.
+    fl_score : numpy.ndarray 
+        The ndarray to map fluorescence values to score residues.
+        By default the normalized score is 1 for maximun recognition
+        and 0 for non-recognition (no color).
     symbol_plotter : SymbolPlotter
         Instance of ArrayPlotter. Defines how the symbols are drawn
         in the alignment.
@@ -976,14 +980,6 @@ def plot_alignment_array(axes, alignment, fl_score, symbols_per_line=50,
         The boxes (or symbols, if `color_symbols` is set) are
         colored based on the normalized intensity value on the
         given *Matplotlib* Colormap.
-    fl_score : numpy.ndarray 
-        The ndarray to map fluorescence values to score residues.
-        By default the normalized score is 1 for maximun recognition
-        and 0 for non-recognition (no color).
-    color_symbols : bool, optional
-        If true, the symbols themselves are colored.
-        If false, the symbols are black, and the boxes behind the
-        symbols are colored.
     symbol_size : float, optional
         Font size of the sequence symbols.
     symbol_param : dict
@@ -1001,7 +997,7 @@ def plot_alignment_array(axes, alignment, fl_score, symbols_per_line=50,
     '''
     symbol_plotter = ArrayPlotter(
         axes, fl_score = fl_score, font_size = symbol_size, font_param = symbol_param,
-        color_symbols = color_symbols
+#        color_symbols = color_symbols
     )
     
     if color is not None or cmap is not None:

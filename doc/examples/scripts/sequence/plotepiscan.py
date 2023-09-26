@@ -325,9 +325,32 @@ len(gapd_s1) == len(gapd_s2)
 # Create a signal map
 # -------------------
 
-# Here we build a numpy.ndarray to map the signal scores and corresponding 
-# position of the score residue on the sequence alignment.
+# Now we will generate an object mapping the signal scores from two gapped 
+# sequences.
+
 def signal_map(gapped_seq1, gapped_seq2,):
+    """
+    Generate a mapping of signal scores from two gapped sequences.
+
+    This function takes two gapped sequences, `gapped_seq1` and `gapped_seq2`, 
+    where each sequence is represented as a list of tuples, with the first element
+    being an amino acid symbol and the second element being a signal score. 
+    It extracts the signal scores from each sequence and creates a 2D array with two
+    columns, where the first column contains signal scores from `gapped_seq1` and the 
+    second column contains signal scores from `gapped_seq2`.
+
+    Parameters:
+    -----------
+    gapped_seq1: list
+        The first gapped sequence.
+    gapped_seq2: list 
+        The second gapped sequence.
+
+    Returns:
+    --------
+    numpy.ndarray: A 2D numpy array with two columns containing signal scores
+                   extracted from `gapped_seq1` and `gapped_seq2`, respectively.
+    """
     gapd_s1 = gapped_seq1
     gapd_s2 = gapped_seq2
     fl_score = np.zeros((len(gapd_s1),2))
@@ -352,12 +375,17 @@ score = signal_map(gapd_s1, gapd_s2)
 # colorbar scaled accordingly. The scale matches the transformation 
 # applied to the recognition signal recorded on the score ndarray.
 
-fig = plt.figure(figsize=(20, 16))
+# Let's build a fucntion to create a custom colorbar object. We will 
+# specify the dataframes corresponding to the two antigens screened in 
+# this example, the colormap, and the transformation to be 
+# represented with the colorbar.
+
+fig = plt.figure(figsize=(8.0, 15))
 ax = fig.add_subplot(111)
 graphics.plot_alignment_array(
-    ax, alignments[0], fl_score = score, labels = ["FCR3", "NF54"],
-    show_numbers = True, symbols_per_line = 120,
-    show_line_position = True) 
+    ax, alignments[0], fl_score=score, labels=["FCR3", "NF54"],
+    show_numbers=True, symbols_per_line=80,
+    show_line_position=True, label_size=10, number_size=10, symbol_size=6) 
 
 # Add the axes where the colorbar will reside:
 ax2 = fig.add_axes([0.1,-0.005, 0.8, 0.03])
@@ -365,12 +393,6 @@ ax2.set_frame_on(False)
 
 # Access the colormap of the relevant instace of ArrayPlotter: 
 colormap = graphics.ArrayPlotter(ax2, score).get_cmap()
-
-########################################################################
-# Let's build a fucntion to create a custom colorbar object. We will 
-# specify the dataframes corresponding to the two antigens screened in 
-# this example, the colormap, and the transformation to be 
-# represented with the colorbar.
 
 def draw_colorbar(axes, array1, array2, colormap, transform ='linear', 
                  orient =None, title=None):    
@@ -415,8 +437,12 @@ def draw_colorbar(axes, array1, array2, colormap, transform ='linear',
 cbar = draw_colorbar(ax2, dfa, dfb, colormap, transform = 'cubic', 
                        orient = 'horizontal', 
                        title = 'Fluorescence Intensity [AU]')
-plt.show()
 
+# To improve readability we tilt the ticklabels on the colorbar
+labls = cbar.ax.get_xticklabels()
+plt.setp(labls, rotation=45, horizontalalignment='center')
+
+plt.show()
 ########################################################################
 # References
 # ----------
