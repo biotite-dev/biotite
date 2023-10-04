@@ -180,7 +180,7 @@ def data_transform(dataframe, threshold=0):
 data_transform(dfa, threshold = 0)
 data_transform(dfb, threshold = 0)
 dfa.head(5)
-########################################################################
+#################################################################################
 # Convert score residues from the epitope scan to alignment-like gapped sequences
 # -------------------------------------------------------------------------------
 #
@@ -194,10 +194,6 @@ dfa.head(5)
 trace_a = align.get_symbols(alignment)[0]
 trace_b = align.get_symbols(alignment)[1]
 
-# The function *gapped_sec()* returns a list of tuples.
-# tuple: ('aa_symbol': signal_plot).
-# List elements match the position and sequence of the symbols in the 
-# alignment 'A'. Gaps are represented by 'None'.
 def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
     """
     Generate a gapped sequence that relates peptide score data signal with a 
@@ -311,17 +307,17 @@ def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
    
     return gapped
 
-# Let's build the list of tuples with gapped sequences
+# Let's use gapped_seq() to build the gapped sequences
 # FCR3 array, overlap_step: 1 (pep = 20-mer with 19 overlap)
 gapd_s1 = gapped_seq(dfa, trace_a, 20, 1)
 
 # NF54 array, overlap_step: 2 (pep = 20-mer with 18 overlap)
 gapd_s2 = gapped_seq(dfb, trace_b, 20, 2) 
 
-# Checkpoint. Both lists of tuples must have the same length.
+# Checkpoint. Both gapped sequences must have the same length.
 len(gapd_s1) == len(gapd_s2)
 
-########################################################################
+##########################################################################
 # Create a signal map
 # -------------------
 #
