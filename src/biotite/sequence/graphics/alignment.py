@@ -977,7 +977,7 @@ def plot_alignment_array(axes, alignment, fl_score, symbols_per_line=50,
     color : tuple or str, optional
         A *Matplotlib* compatible color.
     cmap : Colormap or str, optional
-        The boxes (or symbols, if `color_symbols` is set) are
+        The boxes are
         colored based on the normalized intensity value on the
         given *Matplotlib* Colormap.
     symbol_size : float, optional
@@ -997,7 +997,6 @@ def plot_alignment_array(axes, alignment, fl_score, symbols_per_line=50,
     '''
     symbol_plotter = ArrayPlotter(
         axes, fl_score = fl_score, font_size = symbol_size, font_param = symbol_param,
-#        color_symbols = color_symbols
     )
     
     if color is not None or cmap is not None:

@@ -324,7 +324,7 @@ len(gapd_s1) == len(gapd_s2)
 ########################################################################
 # Create a signal map
 # -------------------
-
+#
 # Now we will generate an object mapping the signal scores from two gapped 
 # sequences.
 
@@ -368,14 +368,14 @@ score = signal_map(gapd_s1, gapd_s2)
 # Sequence alignment decorated with MAb recognition regions 
 # ---------------------------------------------------------
 #
-# Now we can plot the sequence alignment using an :class:`ArrayPloter` 
+# Now we can plot the sequence alignment using an :class:`ArrayPlotter` 
 # instance that higlights sequence recognition regions at the positions 
 # of the respective score residue per alignment column.
 # To easily interpret the intensity-decorated alignment we will add a 
 # colorbar scaled accordingly. The scale matches the transformation 
 # applied to the recognition signal recorded on the score ndarray.
-
-# Let's build a fucntion to create a custom colorbar object. We will 
+#
+# Let's build a function to create a custom colorbar object. We will 
 # specify the dataframes corresponding to the two antigens screened in 
 # this example, the colormap, and the transformation to be 
 # represented with the colorbar.
@@ -439,8 +439,8 @@ cbar = draw_colorbar(ax2, dfa, dfb, colormap, transform = 'cubic',
                        title = 'Fluorescence Intensity [AU]')
 
 # To improve readability we tilt the ticklabels on the colorbar
-labls = cbar.ax.get_xticklabels()
-plt.setp(labls, rotation=45, horizontalalignment='center')
+labels = cbar.ax.get_xticklabels()
+plt.setp(labels, rotation=45, horizontalalignment='center')
 
 plt.show()
 ########################################################################
