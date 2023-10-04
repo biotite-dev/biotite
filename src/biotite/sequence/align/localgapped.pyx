@@ -34,7 +34,7 @@ ctypedef fused CodeType2:
     uint64
 
 
-DEF INIT_SIZE = 100
+cdef int INIT_SIZE = 100
 
 
 def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,

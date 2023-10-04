@@ -17,7 +17,8 @@ cdef int _ASCII_LAST_LETTER_UPPER = 90
 cdef int _ASCII_LAST_LETTER_LOWER = 122
 
 
-def encode_hybrid36(int number, int length):
+@cython.cpow(True)
+def encode_hybrid36(int number, unsigned int length):
     """
     Encode an integer value into a hyrbid-36 string representation.
     
@@ -77,7 +78,9 @@ def encode_hybrid36(int number, int length):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef str _encode_base36(int number, int length, int ascii_letter_offset):
+@cython.cpow(True)
+cdef str _encode_base36(int number, unsigned int length,
+                        unsigned int ascii_letter_offset):
     """
     Encode an integer value into a base-36 string representation.
     
@@ -124,6 +127,7 @@ cdef str _encode_base36(int number, int length, int ascii_letter_offset):
     return char_array.decode("ascii")
 
 
+@cython.cpow(True)
 def decode_hybrid36(str string):
     """
     Convert a hybrid-36 string into a integer value.
@@ -139,7 +143,7 @@ def decode_hybrid36(str string):
         The integer value represented by the hybrid-36 string.
     """
     cdef int base_value
-    cdef int length
+    cdef unsigned int length
     
     try:
         return int(string)
@@ -184,7 +188,7 @@ def decode_hybrid36(str string):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef int _decode_base36(const unsigned char[:] char_array_v,
-                        int ascii_letter_offset):
+                        unsigned int ascii_letter_offset):
     """
     Convert a base-36 string into a integer value.
     

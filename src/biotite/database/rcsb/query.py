@@ -139,7 +139,7 @@ class BasicQuery(SingleQuery):
     
     >>> query = BasicQuery("tc5b")
     >>> print(search(query))
-    ['1L2Y']
+    ['1L2Y', '8ANM', '8ANH', '8ANG', '8ANI']
     """
     def __init__(self, term):
         super().__init__()

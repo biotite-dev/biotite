@@ -84,7 +84,7 @@ class NameQuery(Query):
     --------
 
     >>> print(search(NameQuery("Alanine")))
-    [5950]
+    [5950, 602, 71080]
     """
 
     def __init__(self, name):
@@ -628,11 +628,11 @@ class SubstructureQuery(SuperOrSubstructureQuery):
 
     >>> # CID of alanine
     >>> print(search(SubstructureQuery(cid=5950, number=5)))
-    [5950, 602, 71080, 3081884, 449619]
+    [5950, 602, 71080, 3081884, 65370]
     >>> # AtomArray of alanine
     >>> atom_array = residue("ALA")
     >>> print(search(SubstructureQuery.from_atoms(atom_array, number=5)))
-    [5950, 602, 71080, 3081884, 449619]
+    [5950, 602, 71080, 3081884, 65370]
     """
 
     def search_type(self):
@@ -801,7 +801,7 @@ def search(query, throttle_threshold=0.5, return_throttle_status=False):
     --------
 
     >>> print(search(NameQuery("Alanine")))
-    [5950]
+    [5950, 602, 71080]
     """
     # Use POST to be compatible with the larger payloads
     # of structure searches

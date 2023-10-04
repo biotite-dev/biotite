@@ -8,7 +8,8 @@ __all__ = ["align_banded"]
 
 cimport cython
 cimport numpy as np
-from .tracetable cimport follow_trace, get_trace_linear, get_trace_affine
+from .tracetable cimport follow_trace, get_trace_linear, get_trace_affine, \
+                         TraceDirectionAffine, TraceState
 
 from .matrix import SubstitutionMatrix
 from ..sequence import Sequence
@@ -33,23 +34,6 @@ ctypedef fused CodeType2:
     uint16
     uint32
     uint64
-
-
-# See tracetable.pyx for more information
-DEF MATCH    = 1
-DEF GAP_LEFT = 2
-DEF GAP_TOP  = 4
-DEF MATCH_TO_MATCH       = 1
-DEF GAP_LEFT_TO_MATCH    = 2
-DEF GAP_TOP_TO_MATCH     = 4
-DEF MATCH_TO_GAP_LEFT    = 8
-DEF GAP_LEFT_TO_GAP_LEFT = 16
-DEF MATCH_TO_GAP_TOP     = 32
-DEF GAP_TOP_TO_GAP_TOP   = 64
-DEF NO_STATE       = 0
-DEF MATCH_STATE    = 1
-DEF GAP_LEFT_STATE = 2
-DEF GAP_TOP_STATE  = 3
 
 
 def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
@@ -322,13 +306,8 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     # Lists of trace starting indices
     i_list = np.zeros(0, dtype=int)
     j_list = np.zeros(0, dtype=int)
-    # List of start states
+    # `state_list` lists of start states
     # State specifies the table the trace starts in
-    # 0 -> linear gap penalty, only one table
-    # 1 -> m
-    # 2 -> g1
-    # 3 -> g2
-    state_list = np.zeros(0, dtype=int)
     if local:
         # The start point is the maximal score in the table
         # Multiple starting points possible,
@@ -341,19 +320,24 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
             # less than in the match table
             max_score = np.max(m_table)
             i_list, j_list = np.where((m_table == max_score))
-            state_list = np.append(state_list, np.full(len(i_list), 1))
+            state_list = np.full(
+                len(i_list), TraceState.MATCH_STATE, dtype=int
+            )
         else:
             max_score = np.max(score_table)
             i_list, j_list = np.where((score_table == max_score))
             # State is always 0 for linear gap penalty
             # since there is only one table
-            state_list = np.zeros(len(i_list), dtype=int)
+            state_list = np.full(
+                len(i_list), TraceState.NO_STATE, dtype=int
+            )
     else:
         # Get all allowed trace start indices
         possible_i_start, possible_j_start = get_global_trace_starts(
             len(seq1), len(seq2), lower_diag, upper_diag
         )
         if affine_penalty:
+            state_list = np.zeros(0, dtype=int)
             m_scores  =  m_table[possible_i_start, possible_j_start]
             g1_scores = g1_table[possible_i_start, possible_j_start]
             g2_scores = g2_table[possible_i_start, possible_j_start]
@@ -367,7 +351,8 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
                 j_list = np.append(j_list, possible_j_start[best_indices])
                 state_list = np.append(
                     state_list,
-                    np.full(len(best_indices), MATCH_STATE, dtype=int)
+                    np.full(len(best_indices),
+                    TraceState.MATCH_STATE, dtype=int)
                 )
             if g1_max_score == max_score:
                 best_indices = np.where(g1_scores == max_score)[0]
@@ -375,7 +360,8 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
                 j_list = np.append(j_list, possible_j_start[best_indices])
                 state_list = np.append(
                     state_list,
-                    np.full(len(best_indices), GAP_LEFT_STATE, dtype=int)
+                    np.full(len(best_indices),
+                    TraceState.GAP_LEFT_STATE, dtype=int)
                 )
             if g2_max_score == max_score:
                 best_indices = np.where(g2_scores == max_score)[0]
@@ -383,7 +369,8 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
                 j_list = np.append(j_list, possible_j_start[best_indices])
                 state_list = np.append(
                     state_list,
-                    np.full(len(best_indices), GAP_TOP_STATE, dtype=int)
+                    np.full(len(best_indices),
+                    TraceState.GAP_TOP_STATE, dtype=int)
                 )
         else:
             # Choose the trace start index with the highest score
@@ -393,7 +380,9 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
             best_indices = np.where(scores == max_score)
             i_list = possible_i_start[best_indices]
             j_list = possible_j_start[best_indices]
-            state_list = np.zeros(len(i_list), dtype=int)
+            state_list = np.full(
+                len(i_list), TraceState.NO_STATE, dtype=int
+            )
     
     # Follow the traces specified in state and indices lists
     cdef int curr_trace_count
@@ -602,20 +591,26 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                     # End trace in specific table
                     # by filtering out the respective bits
                     trace &= ~(
-                        MATCH_TO_MATCH |
-                        GAP_LEFT_TO_MATCH |
-                        GAP_TOP_TO_MATCH
+                        TraceDirectionAffine.MATCH_TO_MATCH |
+                        TraceDirectionAffine.GAP_LEFT_TO_MATCH |
+                        TraceDirectionAffine.GAP_TOP_TO_MATCH
                     )
                     # m_table[i,j] remains 0
                 else:
                     m_table[i,j] = m_score
                 if g1_score <= 0:
-                    trace &= ~(MATCH_TO_GAP_LEFT | GAP_LEFT_TO_GAP_LEFT)
+                    trace &= ~(
+                        TraceDirectionAffine.MATCH_TO_GAP_LEFT | 
+                        TraceDirectionAffine.GAP_LEFT_TO_GAP_LEFT
+                    )
                     # g1_table[i,j] remains negative infinity
                 else:
                     g1_table[i,j] = g1_score
                 if g2_score <= 0:
-                    trace &= ~(MATCH_TO_GAP_TOP | GAP_TOP_TO_GAP_TOP)
+                    trace &= ~(
+                        TraceDirectionAffine.MATCH_TO_GAP_TOP |
+                        TraceDirectionAffine.GAP_TOP_TO_GAP_TOP
+                    )
                     # g2_table[i,j] remains negative infinity
                 else:
                     g2_table[i,j] = g2_score

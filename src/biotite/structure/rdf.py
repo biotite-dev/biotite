@@ -167,12 +167,14 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         atoms = atoms[..., selection]
     
     atom_coord = atoms.coord
-
+    
     if box is None:
         if atoms.box is None:
             raise ValueError("A box must be supplied")
         else:
             box = atoms.box
+    elif box.ndim == 2 and atoms.stack_depth() == 1:
+        box = box[np.newaxis, :, :]
     
     center = coord(center)
     if center.ndim == 1:

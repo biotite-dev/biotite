@@ -21,7 +21,7 @@ dependencies:
   - networkx >=2.0
   - pydot >=1.4
   - msgpack-python >=0.5.6
-  - cython >=0.29
+  - cython >=3.0
   - mdtraj >=1.9.3
   - matplotlib >=3.3
   - pytest >=5.2
