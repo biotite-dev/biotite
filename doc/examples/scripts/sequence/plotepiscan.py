@@ -384,7 +384,7 @@ graphics.plot_alignment_array(
     show_line_position=True, label_size=10, number_size=10, symbol_size=6) 
 
 # Add the axes where the colorbar will reside:
-ax2 = fig.add_axes([0.1,-0.005, 0.8, 0.03])
+ax2 = fig.add_axes([0.13, 0.07, 0.8, 0.01]) 
 ax2.set_frame_on(False)
 
 # Access the colormap of the relevant instace of ArrayPlotter: 

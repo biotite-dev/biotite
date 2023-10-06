@@ -998,10 +998,7 @@ def plot_alignment_array(axes, alignment, fl_score, symbols_per_line=50,
     symbol_plotter = ArrayPlotter(
         axes, fl_score = fl_score, font_size = symbol_size, font_param = symbol_param,
     )
-    
-    if color is not None or cmap is not None:
-        symbol_plotter.set_color(color=color, cmap=cmap)
-        
+            
     plot_alignment(
         axes=axes, alignment=alignment, symbol_plotter=symbol_plotter,
         symbols_per_line=symbols_per_line,
