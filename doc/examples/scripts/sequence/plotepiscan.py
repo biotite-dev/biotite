@@ -5,9 +5,9 @@ Plot epitope mapping data onto protein sequence alignments
 Peptide arrays can be used as a high-throughput platform for screening
 biological interactions. Typical screenings involve the immobilization 
 of diverse peptides on a solid surface to study their interactions with 
-various target molecules. Specifically, arrays of peptides with overlapping
-sequences can be used to identify the epitope of antibodies on a protein
-antigen at amino acid level.
+various target molecules. Specifically, arrays of peptides with 
+overlapping sequences can be used to identify the epitope of antibodies 
+on a protein antigen at amino acid level.
 
 General scannings for molecular recognition using peptide arrays
 are particlularly useful for epitope identification on monoclonal 
@@ -32,6 +32,7 @@ First, we generate a sequence aligment of the two VAR2CSA strains:
 # License: BSD 3 clause
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import biotite.sequence as seq
 import biotite.sequence.align as align
@@ -138,7 +139,7 @@ def combine_scores(dataframe, combine='max', flag_noisy=True):
     # percent deviation between replicates
     df['dev_ratio'] = df.apply(lambda x:0 
                                if x.avedev==0 else x.avedev/x.ave, axis=1)
-    
+   
     # signal value:
     if combine == 'max':
         df['comb_signal'] = df.apply(lambda x:max(x.r1, x.r2) 
@@ -164,8 +165,6 @@ dfa.head(5)
 # represent such distribution one can normalize the date using linear or
 # non-linear transformations on the combined score data.
 
-import numpy as np
-
 def data_transform(dataframe, threshold=0):
     df = dataframe
     # Option to set a "threshold" for the signal scores. 
@@ -177,8 +176,8 @@ def data_transform(dataframe, threshold=0):
                                      axis=1)     
 
 # Normalize, using the power law with cubic exponent. No threshold
-data_transform(dfa, threshold = 0)
-data_transform(dfb, threshold = 0)
+data_transform(dfa, threshold=0)
+data_transform(dfb, threshold=0)
 dfa.head(5)
 #################################################################################
 # Convert score residues from the epitope scan to alignment-like gapped sequences
@@ -327,12 +326,12 @@ len(gapd_s1) == len(gapd_s2)
 def signal_map(gapped_seq1, gapped_seq2,):
     """
     Generate a mapping of signal scores from two gapped sequences.
-
-    This function takes two gapped sequences, `gapped_seq1` and `gapped_seq2`, 
-    where each sequence is represented as a list of tuples, with the first element
-    being an amino acid symbol and the second element being a signal score. 
-    It extracts the signal scores from each sequence and creates a 2D array with two
-    columns, where the first column contains signal scores from `gapped_seq1` and the 
+    This function takes two gapped sequences, `gapped_seq1` and
+    `gapped_seq2`. Each sequence is represented as a list of tuples, 
+    with the first element being an amino acid symbol and the second 
+    element being a signal score. It extracts the signal scores from 
+    each sequence and creates a 2D array with two columns, where the 
+    first column contains signal scores from `gapped_seq1` and the 
     second column contains signal scores from `gapped_seq2`.
 
     Parameters:
@@ -344,8 +343,9 @@ def signal_map(gapped_seq1, gapped_seq2,):
 
     Returns:
     --------
-    numpy.ndarray: A 2D numpy array with two columns containing signal scores
-                   extracted from `gapped_seq1` and `gapped_seq2`, respectively.
+    numpy.ndarray: A 2D numpy array with two columns containing signal 
+                   scores extracted from `gapped_seq1` and `gapped_seq2`
+                   respectively.
     """
     gapd_s1 = gapped_seq1
     gapd_s2 = gapped_seq2
@@ -356,7 +356,6 @@ def signal_map(gapped_seq1, gapped_seq2,):
         fl_score[v1,1] = gapd_s2[v1][1]
         
     return fl_score
-
 
 score = signal_map(gapd_s1, gapd_s2)
 
@@ -381,7 +380,8 @@ ax = fig.add_subplot(111)
 graphics.plot_alignment_array(
     ax, alignments[0], fl_score=score, labels=["FCR3", "NF54"],
     show_numbers=True, symbols_per_line=80,
-    show_line_position=True, label_size=10, number_size=10, symbol_size=6) 
+    show_line_position=True, label_size=10, 
+    number_size=10, symbol_size=6) 
 
 # Add the axes where the colorbar will reside:
 ax2 = fig.add_axes([0.13, 0.07, 0.8, 0.01]) 
@@ -390,12 +390,11 @@ ax2.set_frame_on(False)
 # Access the colormap of the relevant instace of ArrayPlotter: 
 colormap = graphics.ArrayPlotter(ax2, score).get_cmap()
 
-def draw_colorbar(axes, array1, array2, colormap, transform ='linear', 
-                 orient =None, title=None):    
+def draw_colorbar(axes, array1, array2, colormap, 
+                 orient=None, title=None):    
     df1 = array1
     df2 = array2
     cmp = colormap
-    method = transform
     ax = axes
     orientation = orient
     label = title
@@ -405,39 +404,29 @@ def draw_colorbar(axes, array1, array2, colormap, transform ='linear',
         a, b = '{:.1e}'.format(x).split('e')
         b = int(b)
         return r'${}\cdot10^{{{}}}$'.format(a, b)
-    
-    if method == 'linear':
-        vmiA = df1['comb_signal'].min()
-        vmiB = df2['comb_signal'].min()
-        vmxA = df1['comb_signal'].max()
-        vmxB = df2['comb_signal'].max()
-        # Colormap normalization:
-        norm = mpl.colors.PowerNorm(gamma = 1.0, 
-                                    vmin = min(vmiA,vmiB), vmax = max(vmxA,vmxB))
 
-    elif method == 'cubic':
-        vmiA = df1['comb_signal'].min()
-        vmiB = df2['comb_signal'].min()
-        vmxA = df1['comb_signal'].max()
-        vmxB = df2['comb_signal'].max()
-        # Colormap normalization:
-        norm = mpl.colors.PowerNorm(gamma = 0.33, 
-                                    vmin = min(vmiA,vmiB), vmax = max(vmxA,vmxB))
+    vmiA = df1['comb_signal'].min()
+    vmiB = df2['comb_signal'].min()
+    vmxA = df1['comb_signal'].max()
+    vmxB = df2['comb_signal'].max()
+    
+   # The normalization of this colormap needs to be consistent with the 
+   # data trasnformtion used earlier on this example. The "cubic" law:
+    norm = mpl.colors.PowerNorm(gamma=0.33, vmin=min(vmiA,vmiB), 
+                                vmax=max(vmxA,vmxB))
         
     fig = mpl.pyplot.figure()        
-    return fig.colorbar(mpl.cm.ScalarMappable(norm = norm, cmap = cmp),
-                 cax = ax, orientation = orientation, label = label,
-                 format = mpl.ticker.FuncFormatter(fmt))
+    return fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmp),
+                 cax=ax, orientation=orientation, label=label,
+                 format=mpl.ticker.FuncFormatter(fmt))
 
 # Draw the colorbar 
-cbar = draw_colorbar(ax2, dfa, dfb, colormap, transform = 'cubic', 
-                       orient = 'horizontal', 
-                       title = 'Fluorescence Intensity [AU]')
+cbar = draw_colorbar(ax2, dfa, dfb, colormap, orient='horizontal', 
+                       title='Fluorescence Intensity [AU]')
 
 # To improve readability we tilt the ticklabels on the colorbar
 labels = cbar.ax.get_xticklabels()
 plt.setp(labels, rotation=45, horizontalalignment='center')
-
 plt.show()
 ########################################################################
 # References
