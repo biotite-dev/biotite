@@ -45,15 +45,15 @@ def get_model_count(file):
     """
     return file["numModels"]
 
-    
+
 def get_structure(file, model=None, altloc="first",
                   extra_fields=[], include_bonds=False):
     """
     get_structure(file, model=None, altloc=[], extra_fields=[],
                   include_bonds=False)
-    
+
     Get an :class:`AtomArray` or :class:`AtomArrayStack` from the MMTF file.
-    
+
     Parameters
     ----------
     file : MMTFFile
@@ -86,12 +86,12 @@ def get_structure(file, model=None, altloc="first",
         If set to true, a :class:`BondList` will be created for the
         resulting :class:`AtomArray` containing the bond information
         from the file.
-    
+
     Returns
     -------
     array : AtomArray or AtomArrayStack
         The return type depends on the `model` parameter.
-    
+
     Examples
     --------
 
@@ -105,7 +105,7 @@ def get_structure(file, model=None, altloc="first",
     38 304
     """
     cdef int i, j, m
-    
+
 
     # Obtain (and potentially decode) required arrays/values from file
     cdef int atom_count = file["numAtoms"]
@@ -130,7 +130,7 @@ def get_structure(file, model=None, altloc="first",
     cdef np.ndarray inscode
     all_altloc_ids = file.get("altLocList")
     inscode = file.get("insCodeList")
-    
+
 
     # Create arrays from 'groupList' list of dictionaries
     cdef list group_list = file["groupList"]
@@ -142,8 +142,8 @@ def get_structure(file, model=None, altloc="first",
     for i in range(len(group_list)):
         atoms_per_res[i] = len(group_list[i]["atomNameList"])
     cdef int32 max_atoms_per_res = np.max(atoms_per_res)
-    #Create the arrays
-    cdef np.ndarray res_names = np.zeros(len(group_list), dtype="U3")
+    # Create the arrays
+    cdef np.ndarray res_names = np.zeros(len(group_list), dtype="U5")
     cdef np.ndarray hetero_res = np.zeros(len(group_list), dtype=bool)
     cdef np.ndarray atom_names = np.zeros((len(group_list), max_atoms_per_res),
                                           dtype="U6")
@@ -159,7 +159,7 @@ def get_structure(file, model=None, altloc="first",
         atom_names[i, :atoms_per_res[i]] = residue["atomNameList"]
         elements[i, :atoms_per_res[i]] = residue["elementList"]
         charges[i, :atoms_per_res[i]] = residue["formalChargeList"]
-    
+
 
     # Create the atom array (stack)
     cdef int depth, length
@@ -167,8 +167,8 @@ def get_structure(file, model=None, altloc="first",
     cdef bint extra_charge
     cdef np.ndarray altloc_ids
     cdef np.ndarray inscode_array
-    
-    
+
+
     if model == None:
         lengths = _get_model_lengths(res_type_i, chains_per_model,
                                      res_per_chain, atoms_per_res)
@@ -181,8 +181,8 @@ def get_structure(file, model=None, altloc="first",
         length = lengths[0]
 
         depth = model_count
-        
-        
+
+
         array = AtomArrayStack(depth, length)
         array.coord = np.stack(
             [x_coord,
@@ -190,13 +190,13 @@ def get_structure(file, model=None, altloc="first",
              z_coord],
              axis=1
         ).reshape(depth, length, 3)
-        
+
         # Create altloc array for the final filtering
         if all_altloc_ids is not None:
             altloc_ids = all_altloc_ids[:length]
         else:
             altloc_ids = None
-        
+
         extra_charge = False
         if "ins_code" in extra_fields:
             extra_inscode = True
@@ -210,19 +210,19 @@ def get_structure(file, model=None, altloc="first",
             array.set_annotation("b_factor", b_factor[:length])
         if "occupancy" in extra_fields:
             array.set_annotation("occupancy", occupancy[:length])
-        
+
         _fill_annotations(1, array, extra_charge,
                           chain_names, chains_per_model, res_per_chain,
                           res_type_i, res_ids, inscode, atoms_per_res,
                           res_names, hetero_res, atom_names, elements, charges)
-        
+
         if include_bonds:
             array.bonds = _create_bond_list(
                 1, file["bondAtomList"], file["bondOrderList"],
                 0, length, file["numAtoms"], group_list, res_type_i,
                 atoms_per_res, res_per_chain, chains_per_model
             )
-    
+
 
     else:
         lengths = _get_model_lengths(res_type_i, chains_per_model,
@@ -242,18 +242,18 @@ def get_structure(file, model=None, altloc="first",
         # for the specified model
         start_i = np.sum(lengths[:model-1])
         stop_i = start_i + length
-        
+
         array = AtomArray(length)
         array.coord[:,0] = x_coord[start_i : stop_i]
         array.coord[:,1] = y_coord[start_i : stop_i]
         array.coord[:,2] = z_coord[start_i : stop_i]
-        
+
         # Create altloc array for the final filtering
         if all_altloc_ids is not None:
             altloc_ids = np.array(all_altloc_ids[start_i : stop_i], dtype="U1")
         else:
             altloc_ids = None
-        
+
         extra_charge = False
         if "charge" in extra_fields:
             extra_charge = True
@@ -264,19 +264,19 @@ def get_structure(file, model=None, altloc="first",
             array.set_annotation("b_factor", b_factor[start_i : stop_i])
         if "occupancy" in extra_fields:
             array.set_annotation("occupancy", occupancy[start_i : stop_i])
-        
+
         _fill_annotations(model, array, extra_charge,
                           chain_names, chains_per_model, res_per_chain,
                           res_type_i, res_ids, inscode, atoms_per_res,
                           res_names, hetero_res, atom_names, elements, charges)
-        
+
         if include_bonds:
             array.bonds = _create_bond_list(
                 model, file["bondAtomList"], file["bondOrderList"],
                 start_i, stop_i, file["numAtoms"], group_list, res_type_i,
                 atoms_per_res, res_per_chain, chains_per_model
             )
-    
+
     # Get box
     if "unitCell" in file:
         a_len, b_len, c_len, alpha, beta, gamma = file["unitCell"]
@@ -293,8 +293,8 @@ def get_structure(file, model=None, altloc="first",
         else:
             # AtomArray
             array.box = box
-    
-    
+
+
     # Filter altloc IDs and return
     if altloc_ids is None:
         return array
@@ -343,7 +343,7 @@ def _get_model_lengths(int32[:] res_type_i,
             model_i += 1
     return np.asarray(model_lengths)
 
-    
+
 def _fill_annotations(int model, array,
                       bint extra_charge,
                       np.ndarray chain_names,
@@ -388,7 +388,7 @@ def _fill_annotations(int model, array,
     # is equal to the total number of residues
     for res_i in range(res_type_i.shape[0]):
         # Wait for the data of the given model
-        if model_i == model-1: 
+        if model_i == model-1:
             chain_id_for_chain = chain_names[chain_i]
             res_id_for_res = res_ids[res_i]
             if res_inscodes is not None:
@@ -408,12 +408,12 @@ def _fill_annotations(int model, array,
                 if extra_charge:
                     charge[atom_i] = charges[type_i][atom_index_in_res]
                 atom_i += 1
-        
+
         elif model_i > model-1:
             # The given model has already been parsed
             # -> parsing is finished
             break
-        
+
         res_count_in_chain += 1
         if res_count_in_chain == res_per_chain[chain_i]:
             # Chain is full -> Bump chain index and reset residue count
@@ -466,14 +466,14 @@ def _create_bond_list(int model, np.ndarray bonds, np.ndarray bond_types,
     # is equal to the total number of residues
     for res_i in range(res_type_i.shape[0]):
         # Wait for the data of the given model
-        if model_i == model-1: 
+        if model_i == model-1:
             type_i = res_type_i[res_i]
             bond_list_per_res = BondList(
                 atoms_per_res[type_i],
                 intra_bonds[type_i, :bonds_per_res[type_i]]
             )
             intra_bond_list += bond_list_per_res
-        
+
         elif model_i > model-1:
             # The given model has already been parsed
             # -> parsing is finished
@@ -489,7 +489,7 @@ def _create_bond_list(int model, np.ndarray bonds, np.ndarray bond_types,
             # Model is full -> Bump model index and reset chain count
             chain_count_in_model = 0
             model_i += 1
-    
+
     # Add inter-residue bonds to BondList
     cdef np.ndarray inter_bonds = np.zeros((len(bond_types), 3),
                                            dtype=np.uint32)

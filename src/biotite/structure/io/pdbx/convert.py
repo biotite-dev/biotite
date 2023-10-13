@@ -364,7 +364,7 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
                 ["" if elt in [".", "?"] else elt for elt in annot]
             ),
         ),
-        "res_name": (f"{prefix}_comp_id", f"{alt_prefix}_comp_id", "U3", None),
+        "res_name": (f"{prefix}_comp_id", f"{alt_prefix}_comp_id", "U5", None),
         "hetero": ("group_PDB", None, None, lambda annot: annot == "HETATM"),
         "atom_name": (
             f"{prefix}_atom_id",

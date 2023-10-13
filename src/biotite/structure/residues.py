@@ -23,10 +23,10 @@ def get_residue_starts(array, add_exclusive_stop=False):
     """
     Get indices for an atom array, each indicating the beginning of
     a residue.
-    
+
     A new residue starts, either when the chain ID, residue ID,
     insertion code or residue name changes from one to the next atom.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
@@ -35,12 +35,12 @@ def get_residue_starts(array, add_exclusive_stop=False):
         If true, the exclusive stop of the input atom array, i.e.
         ``array.array_length()``, is added to the returned array of
         start indices as last element.
-        
+
     Returns
     -------
     starts : ndarray, dtype=int
         The start indices of residues in `array`.
-    
+
     Notes
     -----
     This method is internally used by all other residue-related
@@ -64,17 +64,17 @@ def get_residue_starts(array, add_exclusive_stop=False):
 
     # If any of these annotation arrays change, a new residue starts
     residue_change_mask = (
-        chain_id_changes | 
+        chain_id_changes |
         res_id_changes |
-        ins_code_changes | 
+        ins_code_changes |
         res_name_changes
     )
-    
+
     # Convert mask to indices
     # Add 1, to shift the indices from the end of a residue
     # to the start of a new residue
     residue_starts = np.where(residue_change_mask)[0] +1
-    
+
     # The first residue is not included yet -> Insert '[0]'
     if add_exclusive_stop:
         return np.concatenate(([0], residue_starts, [array.array_length()]))
@@ -86,7 +86,7 @@ def apply_residue_wise(array, data, function, axis=None):
     """
     Apply a function to intervals of data, where each interval
     corresponds to one residue.
-    
+
     The function takes an atom array (stack) and an data array
     (`ndarray`) of the same length. The function iterates through the
     residue IDs of the atom array (stack) and identifies intervals of
@@ -94,8 +94,8 @@ def apply_residue_wise(array, data, function, axis=None):
     partitioned into the same intervals, and each interval (also an
     :class:`ndarray`) is put as parameter into `function`. Each return value is
     stored as element in the resulting :class:`ndarray`, therefore each element
-    corresponds to one residue. 
-    
+    corresponds to one residue.
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
@@ -109,19 +109,19 @@ def apply_residue_wise(array, data, function, axis=None):
         must return a value with the same shape and data type.
     axis : int, optional
         This value is given to the `axis` parameter of `function`.
-        
+
     Returns
     -------
     processed_data : ndarray
         Residue-wise evaluation of `data` by `function`. The size of the
         first dimension of this array is equal to the amount of
         residues.
-        
+
     Examples
     --------
     Calculate residue-wise SASA from atom-wise SASA of a 20 residue
     peptide.
-    
+
     >>> sasa_per_atom = sasa(atom_array)
     >>> print(len(sasa_per_atom))
     304
@@ -134,7 +134,7 @@ def apply_residue_wise(array, data, function, axis=None):
       47.811 172.035]
 
     Calculate the centroids of each residue for the same peptide.
-        
+
     >>> print(len(atom_array))
     304
     >>> centroids = apply_residue_wise(atom_array, atom_array.coord,
@@ -173,11 +173,11 @@ def spread_residue_wise(array, input_data):
 
     Each value in the residue-wise input is assigned to all atoms of
     this residue:
-    
+
     ``output_data[i] = input_data[j]``,
     *i* is incremented from atom to atom,
     *j* is incremented every residue change.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
@@ -185,18 +185,18 @@ def spread_residue_wise(array, input_data):
     input_data : ndarray
         The data to be spread. The length of axis=0 must be equal to
         the amount of different residue IDs in `array`.
-        
+
     Returns
     -------
     output_data : ndarray
         Residue-wise spread `input_data`. Length is the same as
         `array_length()` of `array`.
-        
+
     Examples
     --------
     Spread secondary structure annotation to every atom of a 20 residue
     peptide (with 304 atoms).
-    
+
         >>> sse = annotate_sse(atom_array, "A")
         >>> print(len(sse))
         20
@@ -242,19 +242,19 @@ def get_residue_masks(array, indices):
         These indices indicate the atoms to get the corresponding
         residues for.
         Negative indices are not allowed.
-    
+
     Returns
     -------
     residues_masks : ndarray, dtype=bool, shape=(k,n)
         Multiple boolean masks, one for each given index in `indices`.
         Each array masks the atoms that belong to the same residue as
         the atom at the given index.
-    
+
     See also
     --------
     get_residue_starts_for
     get_residue_positions
-    
+
     Examples
     --------
 
@@ -321,18 +321,18 @@ def get_residue_starts_for(array, indices):
         These indices point to the atoms to get the corresponding
         residue starts for.
         Negative indices are not allowed.
-    
+
     Returns
     -------
     start_indices : ndarray, dtype=int, shape=(k,)
         The indices that point to the residue starts for the input
         `indices`.
-    
+
     See also
     --------
     get_residue_masks
     get_residue_positions
-    
+
     Examples
     --------
 
@@ -369,12 +369,12 @@ def get_residue_positions(array, indices):
         These indices point to the atoms to get the corresponding
         residue positions for.
         Negative indices are not allowed.
-    
+
     Returns
     -------
     start_indices : ndarray, dtype=int, shape=(k,)
         The indices that point to the position of the residues.
-    
+
     See also
     --------
     get_residue_masks
@@ -402,26 +402,26 @@ def get_residue_positions(array, indices):
 def get_residues(array):
     """
     Get the residue IDs and names of an atom array (stack).
-    
+
     The residues are listed in the same order they occur in the array
     (stack).
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The atom array (stack) to determine the residues from.
-        
+
     Returns
     -------
     ids : ndarray, dtype=int
         List of residue IDs.
-    names : ndarray, dtype="U3"
+    names : ndarray, dtype="U5"
         List of residue names.
-        
+
     Examples
     --------
     Get the residue names of a 20 residue peptide.
-    
+
     >>> print(atom_array.res_name)
     ['ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN' 'ASN'
      'ASN' 'ASN' 'ASN' 'ASN' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU' 'LEU'
@@ -461,16 +461,16 @@ def get_residues(array):
 def get_residue_count(array):
     """
     Get the amount of residues in an atom array (stack).
-    
+
     The count is determined from the `res_id` and `chain_id` annotation.
     Each time the residue ID or chain ID changes,
     the count is incremented. Special rules apply to hetero residues.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The atom array (stack) to determine the residues from.
-        
+
     Returns
     -------
     count : int
@@ -482,17 +482,17 @@ def get_residue_count(array):
 def residue_iter(array):
     """
     Iterate over all residues in an atom array (stack).
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The atom array (stack) to iterate over.
-        
+
     Yields
     ------
     residue : AtomArray or AtomArrayStack
         A single residue of the input `array`.
-    
+
     Examples
     --------
 

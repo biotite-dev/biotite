@@ -15,7 +15,12 @@ from ..util import data_dir
 
 
 @pytest.mark.parametrize(
-    "path", glob.glob(join(data_dir("structure"), "*.cif"))
+    "path",
+    [
+        path for path in glob.glob(join(data_dir("structure"), "*.cif"))
+        # Skip this PDB ID as it contains 5-character residue names
+        if "7fgz" not in path
+    ]
 )
 def test_array_conversion(path):
     pdbx_file = pdbx.PDBxFile.read(path)
@@ -27,7 +32,7 @@ def test_array_conversion(path):
     pdbqt_file = pdbqt.PDBQTFile()
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        # Ignore warnings about atoms not parametrized 
+        # Ignore warnings about atoms not parametrized
         mask = pdbqt.set_structure(pdbqt_file, ref_structure)
     ref_structure = ref_structure[mask]
     temp = TemporaryFile("r+")
