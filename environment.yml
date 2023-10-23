@@ -37,3 +37,4 @@ dependencies:
   - autodock-vina
   - viennarna >=2.5.0
   - tantan
+  - pandas >=1.5.2

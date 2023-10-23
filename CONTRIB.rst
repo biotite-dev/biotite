@@ -12,3 +12,4 @@ CONTRIBUTORS
 - Ivan Reveguk <https://github.com/edikedik>
 - Jan H. Krumbach <https://github.com/JHKru>
 - Danny P. Farrell <https://github.com/danpf>
+- Daniel Ferrer Vinals <https://github.com/ferrervi>
