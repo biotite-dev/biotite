@@ -105,7 +105,7 @@ length_ax.set_yscale("log")
 
 score_ax.hist(
     [np.mean(score_array) for score_array in score_arrays],
-    bins=N_BINS, color="gray", 
+    bins=N_BINS, color="gray",
 )
 score_ax.set_xlim(0, 30)
 score_ax.set_xlabel("Phred score")
@@ -339,7 +339,9 @@ def map_sequence(read, diag):
             max_number = 1
         )[0]
 
-with ProcessPoolExecutor() as executor:
+# Each process can be quite memory consuming
+# -> Cap to two processes to make it work on low-RAM commodity hardware
+with ProcessPoolExecutor(max_workers=2) as executor:
     alignments = list(executor.map(
         map_sequence, compl_reads, correct_diagonals, chunksize=1000
     ))
@@ -479,7 +481,7 @@ deletion_number = np.zeros(len(orig_genome), dtype=int)
 for alignment, score_array in zip(correct_alignments, correct_score_arrays):
     if alignment is not None:
         trace = alignment.trace
-        
+
         no_gap_trace = trace[(trace[:,0] != -1) & (trace[:,1] != -1)]
         # Get the sequence code for the aligned read symbols
         seq_code = alignment.sequences[0].code[no_gap_trace[:,0]]
@@ -491,11 +493,11 @@ for alignment, score_array in zip(correct_alignments, correct_score_arrays):
         # positions taken from the alignment trace
         phred_sum[no_gap_trace[:,1], seq_code] \
             += score_array[no_gap_trace[:,0]]
-        
+
         sequencing_depth[
             trace[0,1] : trace[-1,1]
         ] += 1
-        
+
         read_gap_trace = trace[trace[:,0] == -1]
         deletion_number[read_gap_trace[:,1]] += 1
 
