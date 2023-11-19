@@ -84,12 +84,12 @@ class NameQuery(Query):
     --------
 
     >>> print(search(NameQuery("Alanine")))
-    [5950, 602, 71080]
+    [5950, 449619, 7311724, 155817681]
     """
 
     def __init__(self, name):
         self._name = name
-    
+
     def get_input_url_path(self):
         return "compound/name"
 
@@ -107,7 +107,7 @@ class SmilesQuery(Query):
     ----------
     smiles : str
         The *SMILES* string.
-    
+
     Examples
     --------
 
@@ -117,7 +117,7 @@ class SmilesQuery(Query):
 
     def __init__(self, smiles):
         self._smiles = smiles
-    
+
     def get_input_url_path(self):
         return "compound/smiles"
 
@@ -134,7 +134,7 @@ class InchiQuery(Query):
     ----------
     inchi : str
         The *InChI* string.
-    
+
     Examples
     --------
 
@@ -144,7 +144,7 @@ class InchiQuery(Query):
 
     def __init__(self, inchi):
         self._inchi = inchi
-    
+
     def get_input_url_path(self):
         return "compound/inchi"
 
@@ -161,7 +161,7 @@ class InchiKeyQuery(Query):
     ----------
     inchi_key : str
         The *InChI* key.
-    
+
     Examples
     --------
 
@@ -171,7 +171,7 @@ class InchiKeyQuery(Query):
 
     def __init__(self, inchi_key):
         self._inchi_key = inchi_key
-    
+
     def get_input_url_path(self):
         return "compound/inchikey"
 
@@ -199,7 +199,7 @@ class FormulaQuery(Query):
         The maximum number of matches that this query may return.
         By default, the *PubChem* default value is used, which can be
         considered unlimited.
-    
+
     Examples
     --------
 
@@ -214,7 +214,7 @@ class FormulaQuery(Query):
         self._formula = formula
         self._allow_other_elements = allow_other_elements
         self._number = number
-    
+
     @staticmethod
     def from_atoms(atoms, allow_other_elements=False, number=None):
         """
@@ -247,7 +247,7 @@ class FormulaQuery(Query):
         for element in sorted_elements:
             formula += _format_element(element, element_counter[element])
         return FormulaQuery(formula, allow_other_elements, number)
-    
+
     def get_input_url_path(self):
         # The 'fastformula' service seems not to accept the formula
         # in the parameter section of the request
@@ -287,7 +287,7 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
     sdf : str, optional
         A query structure as SDF formatted string.
         Usually :meth:`from_atoms()` is used to create the SDF from an
-        :class:`AtomArray`. 
+        :class:`AtomArray`.
     cid : int, optional
         The query structure given as CID.
     number : int, optional
@@ -351,7 +351,7 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
             sdf = "\r\n".join(mol_file.lines) + "\r\n$$$$\r\n",
             **kwargs
         )
-    
+
     def get_input_url_path(self):
         input_string =  f"compound/{self.search_type()}/{self._query_key}"
         if self._query_key == "cid":
@@ -384,7 +384,7 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
             return {"sdf": self._query_val}
         else:
             return {}
-    
+
     @abc.abstractmethod
     def search_type(self):
         """
@@ -434,7 +434,7 @@ class SuperOrSubstructureQuery(StructureQuery, metaclass=abc.ABCMeta):
     sdf : str, optional
         A query structure as SDF formatted string.
         Usually :meth:`from_atoms()` is used to create the SDF from an
-        :class:`AtomArray`. 
+        :class:`AtomArray`.
     cid : int, optional
         The query structure given as CID.
     number : int, optional
@@ -463,7 +463,7 @@ class SuperOrSubstructureQuery(StructureQuery, metaclass=abc.ABCMeta):
     stereo : {'ignore', 'exact', 'relative', 'nonconflicting'}, optional
         How to handle stereo.
         (Default: 'ignore')
-    
+
     Notes
     -----
     Optional parameter descriptions are taken from the *PubChem* REST
@@ -488,7 +488,7 @@ class SuperOrSubstructureQuery(StructureQuery, metaclass=abc.ABCMeta):
                 self._options[option] = value
                 del kwargs[option]
         super().__init__(**kwargs)
-    
+
     def search_options(self):
         return self._options
 
@@ -514,7 +514,7 @@ class SuperstructureQuery(SuperOrSubstructureQuery):
     sdf : str, optional
         A query structure as SDF formatted string.
         Usually :meth:`from_atoms()` is used to create the SDF from an
-        :class:`AtomArray`. 
+        :class:`AtomArray`.
     cid : int, optional
         The query structure given as CID.
     number : int, optional
@@ -543,7 +543,7 @@ class SuperstructureQuery(SuperOrSubstructureQuery):
     stereo : {'ignore', 'exact', 'relative', 'nonconflicting'}, optional
         How to handle stereo.
         (Default: 'ignore')
-    
+
     Notes
     -----
     Optional parameter descriptions are taken from the *PubChem* REST
@@ -587,7 +587,7 @@ class SubstructureQuery(SuperOrSubstructureQuery):
     sdf : str, optional
         A query structure as SDF formatted string.
         Usually :meth:`from_atoms()` is used to create the SDF from an
-        :class:`AtomArray`. 
+        :class:`AtomArray`.
     cid : int, optional
         The query structure given as CID.
     number : int, optional
@@ -616,7 +616,7 @@ class SubstructureQuery(SuperOrSubstructureQuery):
     stereo : {'ignore', 'exact', 'relative', 'nonconflicting'}, optional
         How to handle stereo.
         (Default: 'ignore')
-    
+
     Notes
     -----
     Optional parameter descriptions are taken from the *PubChem* REST
@@ -666,14 +666,14 @@ class SimilarityQuery(StructureQuery):
     sdf : str, optional
         A query structure as SDF formatted string.
         Usually :meth:`from_atoms()` is used to create the SDF from an
-        :class:`AtomArray`. 
+        :class:`AtomArray`.
     cid : int, optional
         The query structure given as CID.
     number : int, optional
         The maximum number of matches that this query may return.
         By default, the *PubChem* default value is used, which can
         be considered unlimited.
-    
+
     Notes
     -----
     The conformation based similarity measure uses *shape-Tanimoto* and
@@ -681,7 +681,7 @@ class SimilarityQuery(StructureQuery):
 
     References
     ----------
-    
+
     .. footbibliography::
 
     Examples
@@ -700,11 +700,11 @@ class SimilarityQuery(StructureQuery):
         self._threshold = threshold
         self._conformation_based = conformation_based
         super().__init__(**kwargs)
-    
+
     def search_type(self):
         dim = "3d" if self._conformation_based else "2d"
         return f"fastsimilarity_{dim}"
-    
+
     def search_options(self):
         return {"threshold" : int(round(self._threshold * 100))}
 
@@ -730,14 +730,14 @@ class IdentityQuery(StructureQuery):
     sdf : str, optional
         A query structure as SDF formatted string.
         Usually :meth:`from_atoms()` is used to create the SDF from an
-        :class:`AtomArray`. 
+        :class:`AtomArray`.
     cid : int, optional
         The query structure given as CID.
     number : int, optional
         The maximum number of matches that this query may return.
         By default, the *PubChem* default value is used, which can
         be considered unlimited.
-    
+
     Examples
     --------
 
@@ -753,10 +753,10 @@ class IdentityQuery(StructureQuery):
     def __init__(self, identity_type="same_stereo_isotope", **kwargs):
         self._identity_type = identity_type
         super().__init__(**kwargs)
-    
+
     def search_type(self):
         return "fastidentity"
-    
+
     def get_params(self):
         # Use 'get_params()' instead of 'search_options()', since the
         # parameter 'identity_type' in the REST API is *snake case*
@@ -764,7 +764,7 @@ class IdentityQuery(StructureQuery):
         params = super().get_params()
         params["identity_type"] = self._identity_type
         return params
-    
+
 
 
 
@@ -772,9 +772,9 @@ def search(query, throttle_threshold=0.5, return_throttle_status=False):
     """
     Get all CIDs that meet the given query requirements,
     via the PubChem REST API.
-    
+
     This function requires an internet connection.
-    
+
     Parameters
     ----------
     query : Query
@@ -787,7 +787,7 @@ def search(query, throttle_threshold=0.5, return_throttle_status=False):
         If ``None`` is given, the execution is never halted.
     return_throttle_status : float, optional
         If set to true, the :class:`ThrottleStatus` is also returned.
-    
+
     Returns
     -------
     ids : list of int
@@ -796,12 +796,12 @@ def search(query, throttle_threshold=0.5, return_throttle_status=False):
         The :class:`ThrottleStatus` obtained from the server response.
         This can be used for custom request throttling, for example.
         Only returned, if `return_throttle_status` is set to true.
-    
+
     Examples
     --------
 
     >>> print(search(NameQuery("Alanine")))
-    [5950, 602, 71080]
+    [5950, 449619, 7311724, 155817681]
     """
     # Use POST to be compatible with the larger payloads
     # of structure searches

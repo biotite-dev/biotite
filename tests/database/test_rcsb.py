@@ -176,7 +176,7 @@ def test_search_motif():
     MOTIF = "C-x(2,4)-C-x(3)-[LIVMFYWC]-x(8)-H-x(3,5)-H."
     query = rcsb.MotifQuery(MOTIF, "prosite", "protein")
     test_count = rcsb.count(query)
-    assert test_count == pytest.approx(580, rel=0.1)
+    assert test_count == pytest.approx(639, rel=0.1)
 
 
 @pytest.mark.skipif(
@@ -257,12 +257,12 @@ def test_search_sort(as_sorting_object):
     else:
         sort_by = "reflns.d_resolution_high"
     entries = rcsb.search(query, sort_by=sort_by)
-    
+
     resolutions = []
     for pdb_id in entries[:5]:
         pdbx_file = pdbx.PDBxFile.read(rcsb.fetch(pdb_id, "pdbx"))
         resolutions.append(float(pdbx_file["reflns"]["d_resolution_high"]))
-    
+
     if as_sorting_object:
         # In the tested case the Sorting object uses ascending order
         assert resolutions == list(sorted(resolutions))
@@ -392,7 +392,7 @@ def test_search_grouping(grouping, resolution_threshold, return_type,
         group_by=grouping, return_groups=False
     )
     test_count = rcsb.count(query, return_type, group_by=grouping)
-    
+
     # List is not hashable
     assert set([tuple(group) for group in test_groups]) == ref_groups
     assert set(test_representatives) == set([group[0] for group in ref_groups])
