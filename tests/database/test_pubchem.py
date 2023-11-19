@@ -57,7 +57,7 @@ def test_fetch_structural_formula(as_structural_formula):
         2244, as_structural_formula=as_structural_formula
     ))
     atoms = mol_file.get_structure()
-    
+
     if as_structural_formula:
         assert np.all(atoms.coord[:, 2] == 0)
     else:
@@ -85,7 +85,7 @@ def test_fetch_invalid():
 @pytest.mark.parametrize(
     "query, ref_ids",
     [
-        (pubchem.NameQuery("Alanine"), [71080, 602, 5950]),
+        (pubchem.NameQuery("Alanine"), [155817681, 449619, 7311724, 5950]),
         (pubchem.SmilesQuery("CCCC"), [7843]),
         (pubchem.InchiQuery("InChI=1S/C4H10/c1-3-4-2/h3-4H2,1-2H3"), [7843]),
         (pubchem.InchiKeyQuery("IJDNQMDRQITEOD-UHFFFAOYSA-N"), [7843]),
@@ -138,7 +138,7 @@ def test_search_super_and_substructure(cid, from_atoms, query_type):
     NUMBER = 5
 
     original_atoms = mol.MOLFile.read(pubchem.fetch(cid)).get_structure()
-    
+
     if from_atoms:
         query = query_type.from_atoms(original_atoms, number=NUMBER)
     else:
@@ -148,7 +148,7 @@ def test_search_super_and_substructure(cid, from_atoms, query_type):
     # Expect number of returned CIDs to be limited by given max number
     assert len(cids) == NUMBER
     if query_type == pubchem.SubstructureQuery:
-        # Expect that the input itself is the top hit 
+        # Expect that the input itself is the top hit
         assert cid in cids
 
     for result_cid in cids:
