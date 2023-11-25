@@ -146,7 +146,7 @@
             "Permutation",
             "RandomPermutation",
             "FrequencyPermutation"
-        ],
+        ]
     },
 
     "biotite.sequence.phylo" : {
