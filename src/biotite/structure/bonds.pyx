@@ -73,7 +73,7 @@ class BondType(IntEnum):
     def without_aromaticity(self):
         """
         Remove aromaticity from the bond type.
-        
+
         :attr:`BondType.AROMATIC_{ORDER}` is converted into
         :attr:`BondType.{ORDER}`.
 
@@ -101,7 +101,7 @@ class BondType(IntEnum):
 class BondList(Copyable):
     """
     __init__(atom_count, bonds=None)
-    
+
     A bond list stores indices of atoms
     (usually of an :class:`AtomArray` or :class:`AtomArrayStack`)
     that form chemical bonds together with the type (or order) of the
@@ -134,7 +134,7 @@ class BondList(Copyable):
     The atom indices of the second :class:`BondList` are increased by
     the atom count of the first :class:`BondList` and then both
     :class:`BondList` objects are merged.
-    
+
     Parameters
     ----------
     atom_count : int
@@ -150,7 +150,7 @@ class BondList(Copyable):
         If an *n x 3* array is provided, the additional column
         specifies a :class:`BondType` instead of :attr:`BondType.ANY`.
         By default, the created :class:`BondList` is empty.
-    
+
     Notes
     -----
     When initially providing the bonds as :class:`ndarray`, the input is
@@ -159,7 +159,7 @@ class BondList(Copyable):
     column.
     If a bond appears multiple times with different bond types, the
     first bond takes precedence.
-    
+
     Examples
     --------
 
@@ -181,7 +181,7 @@ class BondList(Copyable):
     >>> print(bond_list)
     [[0 2 0]
      [0 3 0]]
-    
+
     :class:`BondList` objects can be associated to an :class:`AtomArray`
     or :class:`AtomArrayStack`.
     The following snippet shows this for a benzene molecule:
@@ -227,7 +227,7 @@ class BondList(Copyable):
     BondType.SINGLE bond between C4 and H4
     BondType.SINGLE bond between C5 and H5
     BondType.SINGLE bond between C6 and H6
-    
+
     Obtain the bonded atoms for the :math:`C_1`:
 
     >>> bonds, types = benzene.bonds.get_bonds(0)
@@ -260,7 +260,7 @@ class BondList(Copyable):
 
     def __init__(self, uint32 atom_count, np.ndarray bonds=None):
         self._atom_count = atom_count
-        
+
         if bonds is not None and len(bonds) > 0:
             if bonds.ndim != 2:
                 raise ValueError("Expected a 2D-ndarray for input bonds")
@@ -299,7 +299,7 @@ class BondList(Copyable):
                 )
             self._remove_redundant_bonds()
             self._max_bonds_per_atom = self._get_max_bonds_per_atom()
-        
+
         else:
             # Create empty bond list
             self._bonds = np.zeros((0, 3), dtype=np.uint32)
@@ -310,19 +310,19 @@ class BondList(Copyable):
         # unnecessary removal of redundant atoms
         # and calculation of maximum bonds per atom
         return BondList(self._atom_count)
-    
+
     def __copy_fill__(self, clone):
         # The bonds are added here
         clone._bonds = self._bonds.copy()
         clone._max_bonds_per_atom = self._max_bonds_per_atom
-    
+
     def offset_indices(self, int offset):
         """
         offset_indices(offset)
-        
+
         Increase all atom indices in the :class:`BondList` by the given
         offset.
-        
+
         Implicitly this increases the atom count.
 
         Parameters
@@ -330,7 +330,7 @@ class BondList(Copyable):
         offset : int
             The atom indices are increased by this value.
             Must be positive.
-        
+
         Examples
         --------
 
@@ -349,11 +349,11 @@ class BondList(Copyable):
             raise ValueError("Offest must be positive")
         self._bonds[:,:2] += offset
         self._atom_count += offset
-    
+
     def as_array(self):
         """
         as_array()
-        
+
         Obtain a copy of the internal :class:`ndarray`.
 
         Returns
@@ -366,11 +366,11 @@ class BondList(Copyable):
             The third column stores the :class:`BondType`.
         """
         return self._bonds.copy()
-    
+
     def as_set(self):
         """
         as_set()
-        
+
         Obtain a set representation of the :class:`BondList`.
 
         Returns
@@ -390,11 +390,11 @@ class BondList(Copyable):
                 (all_bonds_v[i,0], all_bonds_v[i,1], all_bonds_v[i,2])
             )
         return bond_set
-    
+
     def as_graph(self):
         """
         as_graph()
-        
+
         Obtain a graph representation of the :class:`BondList`.
 
         Returns
@@ -404,7 +404,7 @@ class BondList(Copyable):
             The atom indices are nodes, the bonds are edges.
             Each edge has a ``"bond_type"`` attribute containing the
             :class:`BondType`.
-        
+
         Examples
         --------
 
@@ -433,11 +433,11 @@ class BondList(Copyable):
             )
         g.add_edges_from(edges)
         return g
-    
+
     def remove_aromaticity(self):
         """
         Remove aromaticity from the bond types.
-        
+
         :attr:`BondType.AROMATIC_{ORDER}` is converted into
         :attr:`BondType.{ORDER}`.
 
@@ -456,17 +456,17 @@ class BondList(Copyable):
         bonds = self._bonds
         difference = BondType.AROMATIC_SINGLE - BondType.SINGLE
         bonds[bonds[:, 2] >= BondType.AROMATIC_SINGLE, 2] -= difference
-    
+
     def remove_bond_order(self):
         """
         Convert all bonds to :attr:`BondType.ANY`.
         """
         self._bonds[:,2] = BondType.ANY
-    
+
     def get_atom_count(self):
         """
         get_atom_count()
-        
+
         Get the atom count.
 
         Returns
@@ -479,7 +479,7 @@ class BondList(Copyable):
     def get_bond_count(self):
         """
         get_bond_count()
-        
+
         Get the amount of bonds.
 
         Returns
@@ -489,7 +489,7 @@ class BondList(Copyable):
             internal :class:`ndarray` containing the bonds.
         """
         return len(self._bonds)
-    
+
     def get_bonds(self, int32 atom_index):
         """
         get_bonds(atom_index)
@@ -501,7 +501,7 @@ class BondList(Copyable):
         ----------
         atom_index : int
             The index of the atom to get the bonds for.
-        
+
         Returns
         -------
         bonds : np.ndarray, dtype=np.uint32, shape=(k,)
@@ -511,7 +511,7 @@ class BondList(Copyable):
             instances.
             This array specifies the type (or order) of the bonds to
             the connected atoms.
-        
+
         Examples
         --------
 
@@ -546,21 +546,21 @@ class BondList(Copyable):
                 bonds_v[j] = all_bonds_v[i,0]
                 bond_types_v[j] = all_bonds_v[i,2]
                 j += 1
-        
+
         # Trim to correct size
         bonds = bonds[:j]
         bond_types = bond_types[:j]
 
         return bonds, bond_types
-    
-    
+
+
     def get_all_bonds(self):
         """
         get_all_bonds()
 
         For each atom index, give the indices of the atoms bonded to
         this atom as well as the corresponding bond types.
-        
+
         Returns
         -------
         bonds : np.ndarray, dtype=np.uint32, shape=(n,k)
@@ -581,7 +581,7 @@ class BondList(Copyable):
             This array specifies the bond type (or order) corresponding
             to the returned `bonds`.
             It uses the same ``-1``-padding.
-        
+
         Examples
         --------
 
@@ -668,7 +668,7 @@ class BondList(Copyable):
         # Track the number of already found bonds for each given index
         cdef np.ndarray lengths = np.zeros(self._atom_count, dtype=np.uint32)
         cdef uint32[:] lengths_v = lengths
-        
+
         for i in range(all_bonds_v.shape[0]):
             atom_index_i = all_bonds_v[i,0]
             atom_index_j = all_bonds_v[i,1]
@@ -685,17 +685,17 @@ class BondList(Copyable):
             lengths_v[atom_index_j] += 1
 
         return bonds, bond_types
-    
+
 
     def adjacency_matrix(self):
         r"""
         adjacency_matrix(bond_list)
-        
+
         Represent this :class:`BondList` as adjacency matrix.
 
         The adjacency matrix is a quadratic matrix with boolean values
         according to
-        
+
         .. math::
 
             M_{i,j} =
@@ -708,7 +708,7 @@ class BondList(Copyable):
         -------
         matrix : ndarray, dtype=bool, shape=(n,n)
             The created adjacency matrix.
-        
+
         Examples
         --------
 
@@ -740,12 +740,12 @@ class BondList(Copyable):
     def bond_type_matrix(self):
         r"""
         adjacency_matrix(bond_list)
-        
+
         Represent this :class:`BondList` as a matrix depicting the bond
         type.
 
         The matrix is a quadratic matrix:
-        
+
         .. math::
 
             M_{i,j} =
@@ -758,7 +758,7 @@ class BondList(Copyable):
         -------
         matrix : ndarray, dtype=bool, shape=(n,n)
             The created bond type matrix.
-        
+
         Examples
         --------
 
@@ -791,7 +791,7 @@ class BondList(Copyable):
                  bond_type=BondType.ANY):
         """
         add_bond(atom_index1, atom_index2, bond_type=BondType.ANY)
-        
+
         Add a bond to the :class:`BondList`.
 
         If the bond is already existent, only the bond type is updated.
@@ -809,7 +809,7 @@ class BondList(Copyable):
         cdef uint32 index1 = _to_positive_index(atom_index1, self._atom_count)
         cdef uint32 index2 = _to_positive_index(atom_index2, self._atom_count)
         _sort(&index1, &index2)
-        
+
         cdef int i
         cdef uint32[:,:] all_bonds_v = self._bonds
         # Check if bond is already existent in list
@@ -835,7 +835,7 @@ class BondList(Copyable):
     def remove_bond(self, int32 atom_index1, int32 atom_index2):
         """
         remove_bond(atom_index1, atom_index2)
-        
+
         Remove a bond from the :class:`BondList`.
 
         If the bond is not existent in the :class:`BondList`, nothing happens.
@@ -848,7 +848,7 @@ class BondList(Copyable):
         cdef uint32 index1 = _to_positive_index(atom_index1, self._atom_count)
         cdef uint32 index2 = _to_positive_index(atom_index2, self._atom_count)
         _sort(&index1, &index2)
-        
+
         # Find the bond in bond list
         cdef int i
         cdef uint32[:,:] all_bonds_v = self._bonds
@@ -862,7 +862,7 @@ class BondList(Copyable):
         # Since this value is only used for pessimistic array allocation
         # in 'get_bonds()', the slightly larger memory usage is a better
         # option than the repetitive call of _get_max_bonds_per_atom()
-    
+
     def remove_bonds_to(self, int32 atom_index):
         """
         remove_bonds_to(self, atom_index)
@@ -877,7 +877,7 @@ class BondList(Copyable):
 
         """
         cdef uint32 index = _to_positive_index(atom_index, self._atom_count)
-        
+
         cdef np.ndarray mask = np.ones(len(self._bonds), dtype=np.uint8)
         cdef uint8[:] mask_v = mask
 
@@ -895,7 +895,7 @@ class BondList(Copyable):
     def remove_bonds(self, bond_list):
         """
         remove_bonds(bond_list)
-        
+
         Remove multiple bonds from the :class:`BondList`.
 
         All bonds present in `bond_list` are removed from this instance.
@@ -909,7 +909,7 @@ class BondList(Copyable):
             The bonds in `bond_list` are removed from this instance.
         """
         cdef int i=0, j=0
-        
+
         # All bonds in the own BondList
         cdef uint32[:,:] all_bonds_v = self._bonds
         # The bonds that should be removed
@@ -921,7 +921,7 @@ class BondList(Copyable):
                 if      all_bonds_v[i,0] == rem_bonds_v[j,0] \
                     and all_bonds_v[i,1] == rem_bonds_v[j,1]:
                         mask_v[i] = False
-        
+
         # Remove the bonds
         self._bonds = self._bonds[mask.astype(bool, copy=False)]
         # The maximum bonds per atom is not recalculated
@@ -930,7 +930,7 @@ class BondList(Copyable):
     def merge(self, bond_list):
         """
         merge(bond_list)
-        
+
         Merge another :class:`BondList` with this instance into a new
         object.
         If a bond appears in both :class:`BondList`'s, the
@@ -944,17 +944,16 @@ class BondList(Copyable):
         ----------
         bond_list : BondList
             This bond list is merged with this instance.
-        
+
         Returns
         -------
         bond_list : BondList
             The merged :class:`BondList`.
-        
+
         Notes
         -----
+        This is not equal to using the `+` operator.
 
-        This is not equal to using '+' operator.
-        
         Examples
         --------
 
@@ -968,10 +967,10 @@ class BondList(Copyable):
          [1 2 0]
          [2 3 0]
          [3 4 0]]
-        
+
         The BondList given as parameter takes precedence:
 
-        # Specifiy bond type to see where a bond is taken from
+        >>> # Specifiy bond type to see where a bond is taken from
         >>> bond_list1 = BondList(4, np.array([
         ...     (0, 1, BondType.SINGLE),
         ...     (1, 2, BondType.SINGLE)
@@ -986,13 +985,13 @@ class BondList(Copyable):
          [1 2 1]
          [2 3 2]]
         """
-        return BondList( 
-            max(self._atom_count, bond_list._atom_count), 
+        return BondList(
+            max(self._atom_count, bond_list._atom_count),
             np.concatenate(
-                [bond_list.as_array(), self.as_array()], 
+                [bond_list.as_array(), self.as_array()],
                 axis=0
-            ) 
-        ) 
+            )
+        )
 
     def __add__(self, bond_list):
         cdef np.ndarray merged_bonds \
@@ -1023,7 +1022,7 @@ class BondList(Copyable):
         ## Variables for integer arrays
         cdef int32[:] index_v, inverse_index
         cdef int32 new_index1, new_index2
-        
+
         ## Variables for boolean mask
         # Boolean mask representation of the index
         cdef np.ndarray mask
@@ -1031,11 +1030,11 @@ class BondList(Copyable):
         # Boolean mask for removal of bonds
         cdef np.ndarray offsets
         cdef uint32[:] offsets_v
-        
+
         if isinstance(index, numbers.Integral):
             ## Handle single index
             return self.get_bonds(index)
-        
+
         elif isinstance(index, np.ndarray) \
             and np.issubdtype(index.dtype, np.integer):
                 ## Handle index array
@@ -1066,7 +1065,7 @@ class BondList(Copyable):
                         # At least one atom in bond is not included
                         # -> remove bond
                         removal_filter_v[i] = False
-                
+
                 copy._bonds = copy._bonds[
                     removal_filter.astype(bool, copy=False)
                 ]
@@ -1118,23 +1117,23 @@ class BondList(Copyable):
             copy._atom_count = len(np.nonzero(mask)[0])
             copy._max_bonds_per_atom = copy._get_max_bonds_per_atom()
             return copy
-    
+
     def __iter__(self):
         raise TypeError("'BondList' object is not iterable")
-    
+
     def __str__(self):
         return str(self.as_array())
-    
+
     def __eq__(self, item):
         if not isinstance(item, BondList):
             return False
         return (self._atom_count == item._atom_count and
                 self.as_set() == item.as_set())
-    
+
     def __contains__(self, item):
         if not isinstance(item, tuple) and len(tuple) != 2:
             raise TypeError("Expected a tuple of atom indices")
-        
+
         cdef int i=0
 
         cdef uint32 match_index1, match_index2
@@ -1148,14 +1147,14 @@ class BondList(Copyable):
             match_index2 = all_bonds_v[i,1]
             if atom_index1 == match_index1 and atom_index2 == match_index2:
                 return True
-        
+
         return False
-        
+
 
     def _get_max_bonds_per_atom(self):
         if self._atom_count == 0:
             return 0
-        
+
         cdef int i
         cdef uint32[:,:] all_bonds_v = self._bonds
         # Create an array that counts number of occurences of each index
@@ -1167,7 +1166,7 @@ class BondList(Copyable):
             index_count_v[all_bonds_v[i,0]] += 1
             index_count_v[all_bonds_v[i,1]] += 1
         return np.max(index_count_v)
-    
+
     def _remove_redundant_bonds(self):
         cdef int j
         cdef uint32[:,:] all_bonds_v = self._bonds
@@ -1190,7 +1189,7 @@ class BondList(Copyable):
         cdef uint32 i1, i2
         cdef uint32* array_ptr
         cdef int length
-        
+
         try:
             for j in range(all_bonds_v.shape[0]):
                 i1 = all_bonds_v[j,0]
@@ -1212,12 +1211,12 @@ class BondList(Copyable):
                     array_ptr[length-1] = i2
                     ptrs_v[i1] = <ptr>array_ptr
                     array_len_v[i1] = length
-        
+
         finally:
             # Free pointers
             for i in range(ptrs_v.shape[0]):
                 free(<int*>ptrs_v[i])
-        
+
         # Eventually remove redundant bonds
         self._bonds = self._bonds[redundancy_filter.astype(bool, copy=False)]
 
@@ -1309,7 +1308,7 @@ def _invert_index(IndexType[:] index_v, uint32 length):
             # This is currently not supported
             raise NotImplementedError(
                 f"Duplicate indices are not supported, "
-                f"but index {index_val} appeared multiple times" 
+                f"but index {index_val} appeared multiple times"
             )
         inverse_index_v[index_val] = i
 
@@ -1387,11 +1386,11 @@ _DEFAULT_DISTANCE_RANGE = {
     ("SI", "SE") : (2.359 - 2*0.012,  2.359 + 2*0.012),
 }
 
-def connect_via_distances(atoms, dict distance_range=None, atom_mask=None, 
+def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
                           bint inter_residue=True,
                           default_bond_type=BondType.ANY, bint periodic=False):
     """
-    connect_via_distances(atoms, distance_range=None, atom_mask=None, 
+    connect_via_distances(atoms, distance_range=None, atom_mask=None,
                           inter_residue=True, default_bond_type=BondType.ANY,
                           periodic=False)
 
@@ -1399,12 +1398,12 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
     pairwise atom distances.
 
     A :attr:`BondType.ANY`, bond is created for two atoms within the
-    same residue, if the distance between them is within the expected 
+    same residue, if the distance between them is within the expected
     bond distance range.
     Bonds between two adjacent residues are created for the atoms
     expected to connect these residues, i.e. ``'C'`` and ``'N'`` for
     peptides and ``"O3'"`` and ``'P'`` for nucleotides.
-    
+
     Parameters
     ----------
     atoms : AtomArray
@@ -1437,7 +1436,7 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
     -------
     BondList
         The created bond list.
-    
+
     See also
     --------
     connect_via_residue_names
@@ -1452,7 +1451,7 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
 
     References
     ----------
-    
+
     .. footbibliography::
     """
     from .atoms import AtomArray
@@ -1500,7 +1499,7 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
     for i in range(len(residue_starts)-1):
         curr_start_i = residue_starts[i]
         next_start_i = residue_starts[i+1]
-        
+
         elements_in_res = elements[curr_start_i : next_start_i]
         coord_in_res = coord[curr_start_i : next_start_i]
         # Matrix containing all pairwise atom distances in the residue
@@ -1530,7 +1529,7 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
                     ))
 
     bond_list = BondList(atoms.array_length(), np.array(bonds))
-    
+
     if inter_residue:
         inter_bonds = _connect_inter_residue(atoms, residue_starts)
         if default_bond_type == BondType.ANY:
@@ -1554,7 +1553,7 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
     Bonds between two adjacent residues are created for the atoms
     expected to connect these residues, i.e. ``'C'`` and ``'N'`` for
     peptides and ``"O3'"`` and ``'P'`` for nucleotides.
-    
+
     Parameters
     ----------
     atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
@@ -1565,14 +1564,14 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
         If true, connections between consecutive amino acids and
         nucleotides are also added.
 
-    
+
     Returns
     -------
     BondList
         The created bond list.
         No bonds are added for residues that are not found in
         ``components.cif``.
-    
+
     See also
     --------
     connect_via_distances
@@ -1627,9 +1626,9 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
                 curr_start_i + atom_indices2[0],
                 bond_type
             ))
-             
+
     bond_list = BondList(atoms.array_length(), np.array(bonds))
-    
+
     if inter_residue:
         inter_bonds = _connect_inter_residue(atoms, residue_starts)
         return bond_list.merge(inter_bonds)
@@ -1645,7 +1644,7 @@ def _connect_inter_residue(atoms, residue_starts):
     """
     Create a :class:`BondList` containing the bonds between adjacent
     amino acid or nucleotide residues.
-    
+
     Parameters
     ----------
     atoms : AtomArray or AtomArrayStack
@@ -1653,14 +1652,14 @@ def _connect_inter_residue(atoms, residue_starts):
     residue_starts : ndarray, dtype=int
         Return value of
         ``get_residue_starts(atoms, add_exclusive_stop=True)``.
-    
+
     Returns
     -------
     BondList
         A bond list containing all inter residue bonds.
     """
     from .info.misc import link_type
-    
+
     cdef list bonds = []
     cdef int i
     cdef np.ndarray atom_names = atoms.atom_name
@@ -1670,7 +1669,7 @@ def _connect_inter_residue(atoms, residue_starts):
     cdef int curr_start_i, next_start_i, after_next_start_i
     cdef str curr_connect_atom_name, next_connect_atom_name
     cdef np.ndarray curr_connect_indices, next_connect_indices
-    
+
     # Iterate over all starts excluding:
     #   - the last residue and
     #   - exclusive end index of 'atoms'
@@ -1686,11 +1685,11 @@ def _connect_inter_residue(atoms, residue_starts):
         # have consecutive residue IDs
         if res_ids[next_start_i] != res_ids[curr_start_i] + 1:
             continue
-        
+
         # Get link type for this residue from RCSB components.cif
         curr_link = link_type(res_names[curr_start_i])
         next_link = link_type(res_names[next_start_i])
-        
+
         if curr_link in _PEPTIDE_LINKS and next_link in _PEPTIDE_LINKS:
             curr_connect_atom_name = "C"
             next_connect_atom_name = "N"
@@ -1701,7 +1700,7 @@ def _connect_inter_residue(atoms, residue_starts):
             # Create no bond if the connection types of consecutive
             # residues are not compatible
             continue
-        
+
         # Index in atom array for atom name in current residue
         # Addition of 'curr_start_i' is necessary, as only a slice of
         # 'atom_names' is taken, beginning at 'curr_start_i'
@@ -1709,7 +1708,7 @@ def _connect_inter_residue(atoms, residue_starts):
             atom_names[curr_start_i : next_start_i]
             == curr_connect_atom_name
         )[0]
-        # Index in atom array for atom name in next residue 
+        # Index in atom array for atom name in next residue
         next_connect_indices = next_start_i + np.where(
             atom_names[next_start_i : after_next_start_i]
             == next_connect_atom_name
@@ -1724,7 +1723,7 @@ def _connect_inter_residue(atoms, residue_starts):
             next_connect_indices[0],
             BondType.SINGLE
         ))
-        
+
     return BondList(atoms.array_length(), np.array(bonds, dtype=np.uint32))
 
 
@@ -1742,7 +1741,7 @@ def find_connected(bond_list, uint32 root, bint as_mask=False):
     Effectively, this means that all atoms are *connected* to `root`,
     that are in the same molecule as `root`.
     Per definition `root` is also *connected* to itself.
-    
+
     Parameters
     ----------
     bond_list : BondList
@@ -1754,7 +1753,7 @@ def find_connected(bond_list, uint32 root, bint as_mask=False):
         mask.
         By default, the connected atom indices are returned as integer
         array.
-    
+
     Returns
     -------
     connected : ndarray, dtype=int or ndarray, dtype=bool
@@ -1762,7 +1761,7 @@ def find_connected(bond_list, uint32 root, bint as_mask=False):
         connected atoms.
         In case of a boolean mask: ``connected[i] == True``, if the atom
         with index ``i`` is connected.
-    
+
     Examples
     --------
     Consider a system with 4 atoms, where only the last atom is not
@@ -1787,7 +1786,7 @@ def find_connected(bond_list, uint32 root, bint as_mask=False):
             f"Root atom index {root} is out of bounds for bond list "
             f"representing {bond_list.get_atom_count()} atoms"
         )
-    
+
     cdef uint8[:] is_connected_mask = np.zeros(
         bond_list.get_atom_count(), dtype=np.uint8
     )
@@ -1809,7 +1808,7 @@ cdef _find_connected(bond_list,
         # -> exit condition
         return
     is_connected_mask[index] = True
-    
+
     cdef int32 j
     cdef int32 connected_index
     for j in range(all_bonds.shape[1]):
@@ -1841,13 +1840,13 @@ def find_rotatable_bonds(bonds):
     ----------
     bonds : BondList
         The bonds to find the rotatable bonds in.
-    
+
     Returns
     -------
     rotatable_bonds : BondList
         The subset of the input `bonds` that contains only rotatable
         bonds.
-    
+
     Examples
     --------
 

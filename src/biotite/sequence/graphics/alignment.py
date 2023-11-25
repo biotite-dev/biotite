@@ -344,20 +344,20 @@ class LetterTypePlotter(LetterPlotter):
         code = alignment.sequences[seq_i].code[index]
         return self._colors[code]
 
-    
+
 class ArrayPlotter(LetterPlotter):
     '''
     This :class:`SymbolPlotter` quantitatively decorates sequences alignments, with molecular
-    recognition data obtained from e.g. microarrays. Symbols are visualized as characters 
-    on a colored background box. The color of a given box represents the recognition 
-    signal. The intensity of the color, is proportional to the strenght of the 
+    recognition data obtained from e.g. microarrays. Symbols are visualized as characters
+    on a colored background box. The color of a given box represents the recognition
+    signal. The intensity of the color, is proportional to the strenght of the
     recognition.
-    
+
     Parameters
     ----------
     axes : Axes
         A Matplotlib axes, that is used as plotting area.
-    fl_score : numpy.ndarray 
+    fl_score : numpy.ndarray
         The ndarray to store recognition values corresponding to the score residues.
         By default, the normalized score is 1 for maximum recognition
         and 0 for non-recognition (no color).
@@ -370,17 +370,17 @@ class ArrayPlotter(LetterPlotter):
     font_param : dict, optional
         Additional parameters that is given to the
         :class:`matplotlib.Text` instance of each symbol.
-    
+
     '''
     def __init__(self, axes, fl_score, color_symbols=False,
                  font_size=None, font_param=None):
 
         super().__init__(axes, color_symbols, font_size, font_param)
-        self.fl_score = fl_score       
+        self.fl_score = fl_score
         self._cmap = self._generate_colormap(colors["dimorange"],
-                                             self._color_symbols) 
-             
-                             
+                                             self._color_symbols)
+
+
     def get_color(self, alignment, column_i, seq_i):
         index1 = alignment.trace[column_i, seq_i]
         if index1 == -1:
@@ -400,7 +400,7 @@ class ArrayPlotter(LetterPlotter):
     def get_cmap(self):
         return self._cmap
 
-           
+
     def plot_symbol(self, bbox, alignment, column_i, seq_i):
         from matplotlib.patches import Rectangle
 
@@ -431,14 +431,14 @@ class ArrayPlotter(LetterPlotter):
             box.set_color("None")
             text.set_color(color)
         else:
-            box.set_color(color) 
-        
+            box.set_color(color)
+
     @staticmethod
-    def _generate_colormap(color, to_black): 
+    def _generate_colormap(color, to_black):
         from matplotlib.colors import ListedColormap, to_rgb
 
         color = to_rgb(color)
-        if to_black: 
+        if to_black:
             cmap_val = np.stack(
                 [
                     np.interp(np.linspace(0, 1, 100), [0, 1], [color[i], 0])
@@ -452,9 +452,9 @@ class ArrayPlotter(LetterPlotter):
                     for i in range(len(color))
                 ]
             ).transpose()
-        return ListedColormap(cmap_val)        
+        return ListedColormap(cmap_val)
 
-    
+
 def plot_alignment(axes, alignment, symbol_plotter, symbols_per_line=50,
                    show_numbers=False, number_size=None, number_functions=None,
                    labels=None, label_size=None,
@@ -913,31 +913,32 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
 def plot_alignment_array(axes, alignment, fl_score, symbols_per_line=50,
                          show_numbers=False, number_size=None,
                          number_functions=None, labels=None, label_size=None,
-                         show_line_position=False, spacing=1, color=None, 
+                         show_line_position=False, spacing=1, color=None,
                          cmap=None, symbol_spacing=None,
                          symbol_size=None, symbol_param=None):
 
     '''
-    Plots a pairwise sequence alignment using an :class:`ArrayPlotter instance.
-    
-    Higlights sequence recognition regions at the positions of the respective 
+    Plot a pairwise sequence alignment using an :class:`ArrayPlotter`
+    instance.
+
+    Highlights sequence recognition regions at the positions of the respective
     score residue per alignment column.
-    
+
     Parameters
     ----------
     axes : Axes
         A Matplotlib axes, that is used as plotting area.
     alignment : Alignment
         The pairwise sequence alignment to be plotted.
-    fl_score : numpy.ndarray 
-        The ndarray to map fluorescence values to score residues.
-        By default the normalized score is 1 for maximun recognition
+    fl_score : ndarray
+        The array to map fluorescence values to score residues.
+        By default the normalized score is 1 for maximum recognition
         and 0 for non-recognition (no color).
     symbol_plotter : SymbolPlotter
         Instance of ArrayPlotter. Defines how the symbols are drawn
         in the alignment.
     symbols_per_line : int, optional
-        The amount of alignment columns that are diplayed per line.
+        The amount of alignment columns that are displayed per line.
     show_numbers : bool, optional
         If true, the sequence position of the symbols in the last
         alignment column of a line is shown on the right side of the
@@ -986,19 +987,19 @@ def plot_alignment_array(axes, alignment, fl_score, symbols_per_line=50,
         Additional parameters that is given to the
         :class:`matplotlib.Text` instance of each symbol.
     symbol_spacing : int, optional
-        А space is placed between each number of elements desired
+        A space is placed between each number of elements desired
         by variable.
-    
+
     Notes
     -----
-    A '*' represents a sequence match on the alignment 
-    A '-' represents a sequence gap on the alignment 
+    A '*' represents a sequence match on the alignment
+    A '-' represents a sequence gap on the alignment
 
     '''
     symbol_plotter = ArrayPlotter(
         axes, fl_score = fl_score, font_size = symbol_size, font_param = symbol_param,
     )
-            
+
     plot_alignment(
         axes=axes, alignment=alignment, symbol_plotter=symbol_plotter,
         symbols_per_line=symbols_per_line,
@@ -1007,9 +1008,9 @@ def plot_alignment_array(axes, alignment, fl_score, symbols_per_line=50,
         labels=labels, label_size=label_size,
         show_line_position=show_line_position,
         spacing=spacing, symbol_spacing=symbol_spacing
-    )  
-    
-       
+    )
+
+
 def _get_last_valid_index(alignment, column_i, seq_i):
     """
     Find the last trace value that belongs to a valid sequence index
