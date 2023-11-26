@@ -46,13 +46,10 @@ terms of base-call error probability :math:`P` :footcite:`Cock2010`:
 # License: BSD 3 clause
 
 import itertools
-import warnings
 import tempfile
 from concurrent.futures import ProcessPoolExecutor
-from os.path import isfile, join
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 from matplotlib.lines import Line2D
 from matplotlib.colors import LinearSegmentedColormap
 import biotite
@@ -735,7 +732,7 @@ for row in range(1 + len(alignment) // SYMBOLS_PER_LINE):
     seq_stop  = alignment.trace[col_stop-1,  1] + 1
     n_sequences = len(alignment.sequences)
     y_base = (n_sequences + SPACING) * row + n_sequences
-    
+
     for feature_name, (first, last) in FEATURES.items():
         # Zero based sequence indexing
         start = first-1
@@ -753,10 +750,10 @@ for row in range(1 + len(alignment) // SYMBOLS_PER_LINE):
                 color="black", linewidth=2
             )
             ax.text(
-                x_mean, y_text, feature_name, 
+                x_mean, y_text, feature_name,
                 fontsize=8, va="top", ha="center"
             )
-# Increase y-limit to include the feature indicators in the last line 
+# Increase y-limit to include the feature indicators in the last line
 ax.set_ylim(y_text, 0)
 fig.tight_layout()
 
