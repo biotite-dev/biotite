@@ -7,10 +7,10 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["FastaDumpApp", "FastqDumpApp"]
 
 import abc
+from os.path import join
 from subprocess import Popen, SubprocessError, PIPE, TimeoutExpired
 import glob
-from tempfile import gettempprefix, NamedTemporaryFile
-from ..localapp import cleanup_tempfile
+from tempfile import TemporaryDirectory
 from ..application import Application, AppState, AppStateError, \
                           requires_state
 from ...sequence.seqtypes import NucleotideSequence
@@ -54,13 +54,11 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
         self._prefetch_path = prefetch_path
         self._fasterq_dump_path = fasterq_dump_path
         self._uid = uid
+        self._sra_dir = TemporaryDirectory(suffix="_sra")
         if output_path_prefix is None:
-            self._prefix = gettempprefix()
+            self._prefix = join(self._sra_dir.name, self._uid)
         else:
             self._prefix = output_path_prefix
-        self._sra_file = NamedTemporaryFile(
-            "w", suffix=".sra", delete=False
-        )
         self._prefetch_process = None
         self._fasterq_dump_process = None
 
@@ -94,10 +92,14 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
 
 
     def run(self):
+        # Prefetch into a temp directory with file name equaling UID
+        # This ensures that the ID in the header is not the temp prefix
+        sra_file_name = join(self._sra_dir.name, self._uid)
         command = (
-            f"{self._prefetch_path} -q -o {self._sra_file.name} {self._uid}; "
+            f"{self._prefetch_path} -q -O {self._sra_dir.name} "
+            f"{self.get_prefetch_options()} {self._uid}; "
             f"{self._fasterq_dump_path} -q -o {self._prefix}.fastq "
-            f"{self.get_fastq_dump_options()} {self._sra_file.name}"
+            f"{self.get_fastq_dump_options()} {sra_file_name}"
         )
         self._process = Popen(
             command, stdout=PIPE, stderr=PIPE, shell=True, encoding="UTF-8"
@@ -120,8 +122,8 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
         if exit_code != 0:
             err_msg = self._stderr.replace("\n", " ")
             raise SubprocessError(
-                f"'{self._bin_path}' returned with exit code {exit_code}: "
-                f"{err_msg}"
+                f"'prefetch' or 'fasterq-dump' returned with exit code "
+                f"{exit_code}: {err_msg}"
             )
 
         self._file_names = (
@@ -130,6 +132,8 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
             # For entries with multiple reads per spot
             glob.glob(self._prefix + "_*.fastq")
         )
+        print(self._prefix)
+        print(self._file_names)
         # Only load FASTQ files into memory when needed
         self._fastq_files = None
 
@@ -142,8 +146,23 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
     def clean_up(self):
         if self.get_app_state() == AppState.CANCELLED:
             self._process.kill()
-        cleanup_tempfile(self._sra_file)
+        # Directory with temp files does not need to be deleted,
+        # as temp dir is automatically deleted upon object destruction
 
+
+    @requires_state(AppState.CREATED)
+    def get_prefetch_options(self):
+        """
+        Get additional options for the `prefetch` call.
+
+        PROTECTED: Override when inheriting.
+
+        Returns
+        -------
+        options: str
+            The additional options.
+        """
+        return ""
 
     @requires_state(AppState.CREATED)
     def get_fastq_dump_options(self):
@@ -155,7 +174,7 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
         Returns
         -------
         options: str
-            The additional options
+            The additional options.
         """
         return ""
 
@@ -357,6 +376,14 @@ class FastaDumpApp(_DumpApp):
             uid, output_path_prefix, prefetch_path, fasterq_dump_path
         )
         self._fasta_files = None
+
+
+    @requires_state(AppState.CREATED)
+    def get_prefetch_options(self):
+        return
+        # TODO: Use '--eliminate-quals'
+        # when https://github.com/ncbi/sra-tools/issues/883 is resolved
+        # return "--eliminate-quals"
 
 
     @requires_state(AppState.CREATED)
