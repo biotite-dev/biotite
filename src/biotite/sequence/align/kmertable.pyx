@@ -2024,6 +2024,73 @@ cdef class BinnedKmerTable:
 
         return np.asarray(counts)
 
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def get_kmers(self):
+        """
+        Get the *k-mer* codes for all *k-mers* that have at least one
+        position in the table.
+
+        Returns
+        -------
+        kmers : ndarray, shape=(n,), dtype=np.int64
+            The *k-mer* codes.
+
+        Notes
+        -----
+        As each bin need to be inspected for the actual *k-mer* entries,
+        this method requires far more computation time than its
+        :class:`KmerTable` equivalent.
+
+        Examples
+        --------
+
+        >>> bins = 100
+        >>> sequence = ProteinSequence("BIQTITE")
+        >>> table = BinnedKmerTable.from_sequences(bins, 3, [sequence], ref_ids=[100])
+        >>> print(table)
+        IQT: (100, 1)
+        ITE: (100, 4)
+        QTI: (100, 2)
+        TIT: (100, 3)
+        BIQ: (100, 0)
+        >>> kmer_codes = table.get_kmers()
+        >>> print(kmer_codes)
+        [ 4360  4419  7879  9400 11701]
+        >>> for code in kmer_codes:
+        ...     print(table[code])
+        [[100   1]]
+        [[100   4]]
+        [[100   2]]
+        [[100   3]]
+        [[100   0]]
+        """
+        cdef int64 bin
+        cdef int64 kmer
+        cdef int64 length
+        cdef uint32* bin_ptr
+        cdef uint32* array_stop
+        cdef ptr[:] ptr_array = self._ptr_array
+
+        cdef cpp_set[int64] kmer_set
+
+        for bin in range(ptr_array.shape[0]):
+            bin_ptr = <uint32*> (ptr_array[bin])
+            if bin_ptr != NULL:
+                length = (<int64*>bin_ptr)[0]
+                array_stop = bin_ptr + length
+                bin_ptr += 2
+                while bin_ptr < array_stop:
+                    kmer = (<int64*>bin_ptr)[0]
+                    kmer_set.insert(kmer)
+                    bin_ptr += EntrySize.BINNED
+
+        cdef int64[:] kmers = np.zeros(kmer_set.size(), dtype=np.int64)
+        cdef int64 i = 0
+        for kmer in kmer_set:
+            kmers[i] = kmer
+            i += 1
+        return np.sort(np.asarray(kmers))
 
     @cython.cdivision(True)
     @cython.boundscheck(False)
