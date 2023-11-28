@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+# distutils: language = c++
+
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 __all__ = ["KmerTable", "BinnedKmerTable"]
@@ -9,9 +11,9 @@ __all__ = ["KmerTable", "BinnedKmerTable"]
 cimport cython
 cimport numpy as np
 from cpython.mem cimport PyMem_Malloc as malloc
-from cpython.mem cimport PyMem_Realloc as realloc
 from cpython.mem cimport PyMem_Free as free
 from libc.string cimport memcpy
+from libcpp.set cimport set as cpp_set
 
 import numpy as np
 from ..alphabet import LetterAlphabet, common_alphabet, AlphabetError
@@ -98,6 +100,10 @@ cdef class KmerTable:
         created.
     k : int
         The length of the *k-mers*.
+
+    See also
+    --------
+    BinnedKmerTable
 
     Notes
     -----
@@ -222,7 +228,7 @@ cdef class KmerTable:
     # location in that sequence where the respective k-mer appears
     # The memory layout of each C-array is as following:
     #
-    # (Array length) (RefIndex 0) (Position 0) (RefIndex 1) (Position 1) ...
+    # (Array length)  (RefID 0)   (Position 0)  (RefID 1)   (Position 1) ...
     # -----int64----|---uint32---|---uint32---|---uint32---|---uint32---
     #
     # The array length is based on 32 bit units.
@@ -1297,7 +1303,7 @@ cdef class KmerTable:
 
         cdef int64 i = 0
         for kmer in range(ptr_array.shape[0]):
-            if <uint32*>ptr_array[kmer] != NULL:
+            if <uint32*> (ptr_array[kmer]) != NULL:
                 kmers[i] = kmer
                 i += 1
 
@@ -1368,18 +1374,7 @@ cdef class KmerTable:
 
 
     def __str__(self):
-        lines = []
-        for kmer in self.get_kmers():
-            symbols = self._kmer_alph.decode(kmer)
-            if isinstance(self._kmer_alph.base_alphabet, LetterAlphabet):
-                symbols = "".join(symbols)
-            else:
-                symbols = str(tuple(symbols))
-            line = symbols + ": " + ", ".join(
-                [str(tuple(pos)) for pos in self[kmer]]
-            )
-            lines.append(line)
-        return "\n".join(lines)
+        return _to_string(self)
 
 
     def __getnewargs_ex__(self):
@@ -1527,10 +1522,140 @@ cdef class KmerTable:
 
 cdef class BinnedKmerTable:
     """
+    This class represents a *k-mer* index table.
+    In contrast to :class:`KmerTable` it does store each unique *k-mer*
+    in a separate bin, but limits the number of bins instead.
+    Hence, different *k-mer* may be stored in the same bin, like in a
+    hash table.
+    This approach makes indexing with large :class:`KmerAlphabet`s
+    feasible for the memory.
+
+    Otherwise, the API for creating a :class`BinnedKmerTable` and
+    matching to it is analogous to :class:`KmerTable`, with the
+    additional mandatory `bins` parameter.
+
+    Attributes
+    ----------
+    kmer_alphabet : KmerAlphabet
+        The internal :class:`KmerAlphabet`, that is used to
+        encode all overlapping *k-mers* of an input sequence.
+    alphabet : Alphabet
+        The base alphabet, from which this :class:`BinnedKmerTable` was
+        created.
+    k : int
+        The length of the *k-mers*.
+    bins : int
+        The number of bins, the *k-mers* are divided into.
+
+    See also
+    --------
+    KmerTable
+
     Notes
     -----
+
+    *Memory consumption*
+
+    For efficient mapping, a :class:`BinnedKmerTable` contains a pointer
+    array, that contains one 64-bit pointer for each bin.
+    If there is at least one position for a bin, the corresponding
+    pointer points to a C-array that contains
+
+        1. The length of the C-array *(int64)*
+        2. The *k-mers* *(int64)*
+        3. The reference ID for each *k-mer* *(uint32)*
+        4. The sequence position for each *k-mer* *(uint32)*
+
+    As bins are used, the memory requirements are limited to the number
+    of bins instead of scaling with the :class:`KmerAlphabet` size.
+    If each bin is used, the required memory space :math:`S` in byte is
+
+    .. math::
+
+        S = 16B + 16L
+
+    where :math:`B` is the number of bins and :math:`L` is the summed
+    length of all sequences added to the table.
+
+    *Multiprocessing*
+
+    :class:`BinnedKmerTable` objects can be used in multi-processed
+    setups:
+    Adding a large database of sequences to a table can be sped up by
+    splitting the database into smaller chunks and create a separate
+    table for each chunk in separate processes.
+    Eventually, the tables can be merged to one large table using
+    :meth:`from_tables()`.
+
+    Since :class:`BinnedKmerTable` supports the *pickle* protocol,
+    the matching step can also be divided into multiple processes, if
+    multiple sequences need to be matched.
+
+    *Storage on hard drive*
+
+    The most time efficient way to read/write a :class:`BinnedKmerTable`
+    is the *pickle* format.
+
+    *Indexing and iteration*
+
     Due to the higher complexity in the *k-mer* lookup compared to
     :class:`KmerTable`, this class is still indexable but not iterable.
+
+    Examples
+    --------
+
+    Create a *2-mer* index table for some nucleotide sequences:
+
+    >>> table = BinnedKmerTable.from_sequences(
+    ...     bins = 5,
+    ...     k = 2,
+    ...     sequences = [NucleotideSequence("TTATA"), NucleotideSequence("CTAG")],
+    ...     ref_ids = [0, 1]
+    ... )
+
+    Display the contents of the table as
+    (reference ID, sequence position) tuples:
+
+    >>> print(table)
+    AG: (1, 2)
+    AT: (0, 2)
+    CT: (1, 0)
+    TA: (0, 1), (0, 3), (1, 1)
+    TT: (0, 0)
+
+    Find matches of the table with a sequence:
+
+    >>> query = NucleotideSequence("TAG")
+    >>> matches = table.match(query)
+    >>> for query_pos, table_ref_id, table_pos in matches:
+    ...     print("Query sequence position:", query_pos)
+    ...     print("Table reference ID:  ", table_ref_id)
+    ...     print("Table sequence position:", table_pos)
+    ...     print()
+    Query sequence position: 0
+    Table reference ID: 0
+    Table sequence position: 1
+    <BLANKLINE>
+    Query sequence position: 0
+    Table reference ID: 0
+    Table sequence position: 3
+    <BLANKLINE>
+    Query sequence position: 0
+    Table reference ID: 1
+    Table sequence position: 1
+    <BLANKLINE>
+    Query sequence position: 1
+    Table reference ID: 1
+    Table sequence position: 2
+    <BLANKLINE>
+
+    Get all reference IDs and positions for a given *k-mer*:
+
+    >>> kmer_code = table.kmer_alphabet.encode("TA")
+    >>> print(table[kmer_code])
+    [[0 1]
+     [0 3]
+     [1 1]]
     """
 
     cdef object _kmer_alph
@@ -1544,7 +1669,7 @@ cdef class BinnedKmerTable:
     # and the location in that sequence where that k-mer appears
     # The memory layout of each C-array is as following:
     #
-    # (Array length) (k-mer 0) (RefIndex 0) (Position 0) (k-mer 1) ...
+    # (Array length) (k-mer 0)  (RefID 0)   (Position 0) (k-mer 1) ...
     # -----int64----|--int64--|---uint32---|---uint32---|--int64--
     #
     # The array length is based on 32 bit units.
@@ -1587,6 +1712,95 @@ cdef class BinnedKmerTable:
     @staticmethod
     def from_sequences(bins, k, sequences, ref_ids=None, ignore_masks=None,
                        alphabet=None, spacing=None):
+        """
+        from_sequences(bins, k, sequences, ref_ids=None,
+                       ignore_masks=None, alphabet=None, spacing=None)
+
+        Create a :class:`BinnedKmerTable` by storing the positions of
+        all overlapping *k-mers* from the input `sequences`.
+
+        Parameters
+        ----------
+        bins : int
+            The number of bins, the *k-mers* are divided into.
+        k : int
+            The length of the *k-mers*.
+        sequences : sized iterable object of Sequence, length=m
+            The sequences to get the *k-mer* positions from.
+            These sequences must have equal alphabets, or one of these
+            sequences must have an alphabet that extends the alphabets
+            of all other sequences.
+        ref_ids : sized iterable object of int, length=m, optional
+            The reference IDs for the given sequences.
+            These are used to identify the corresponding sequence for a
+            *k-mer* match.
+            By default the IDs are counted from *0* to *m*.
+        ignore_masks : sized iterable object of (ndarray, dtype=bool), length=m, optional
+            Sequence positions to ignore.
+            *k-mers* that involve these sequence positions are not added
+            to the table.
+            This is used e.g. to skip repeat regions.
+            If provided, the list must contain one boolean mask
+            (or ``None``) for each sequence, and each bolean mask must
+            have the same length as the sequence.
+            By default, no sequence position is ignored.
+        alphabet : Alphabet, optional
+            The alphabet to use for this table.
+            It must extend the alphabets of the input `sequences`.
+            By default, an appropriate alphabet is inferred from the
+            input `sequences`.
+            This option is usually used for compatibility with another
+            sequence/table in the matching step.
+        spacing : None or str or list or ndarray, dtype=int, shape=(k,)
+            If provided, spaced *k-mers* are used instead of continuous
+            ones.
+            The value contains the *informative* positions relative to
+            the start of the *k-mer*, also called the *model*.
+            The number of *informative* positions must equal *k*.
+            Refer to :class:`KmerAlphabet` for more details.
+
+        See also
+        --------
+        from_kmers : The same functionality based on already created *k-mers*
+
+        Returns
+        -------
+        table : BinnedKmerTable
+            The newly created table.
+
+        Examples
+        --------
+
+        >>> sequences = [NucleotideSequence("TTATA"), NucleotideSequence("CTAG")]
+        >>> bins = 5
+        >>> table = BinnedKmerTable.from_sequences(
+        ...     bins, 2, sequences, ref_ids=[100, 101]
+        ... )
+        >>> print(table)
+        AG: (101, 2)
+        AT: (100, 2)
+        CT: (101, 0)
+        TA: (100, 1), (100, 3), (101, 1)
+        TT: (100, 0)
+
+        Give an explicit compatible alphabet:
+
+        >>> table = BinnedKmerTable.from_sequences(
+        ...     bins, 2, sequences, ref_ids=[100, 101],
+        ...     alphabet=NucleotideSequence.ambiguous_alphabet()
+        ... )
+
+        Ignore all ``N`` in a sequence:
+
+        >>> sequence = NucleotideSequence("ACCNTANNG")
+        >>> table = BinnedKmerTable.from_sequences(
+        ...     bins, 2, [sequence], ignore_masks=[sequence.symbols == "N"]
+        ... )
+        >>> print(table)
+        AC: (0, 0)
+        CC: (0, 1)
+        TA: (0, 4)
+        """
         ref_ids = _compute_ref_ids(ref_ids, sequences)
         ignore_masks = _compute_masks(ignore_masks, sequences)
         alphabet = _compute_alphabet(
@@ -1624,6 +1838,69 @@ cdef class BinnedKmerTable:
 
     @staticmethod
     def from_kmers(bins, kmer_alphabet, kmers, ref_ids=None, masks=None):
+        """
+        from_kmers(bins, kmer_alphabet, kmers, ref_ids=None, masks=None)
+
+        Create a :class:`BinnedKmerTable` by storing the positions of
+        all input *k-mers*.
+
+        Parameters
+        ----------
+        bins : int
+            The number of bins, the *k-mers* are divided into.
+        kmer_alphabet : KmerAlphabet
+            The :class:`KmerAlphabet` to use for the new table.
+            Should be the same alphabet that was used to calculate the
+            input *kmers*.
+        kmers : sized iterable object of (ndarray, dtype=np.int64), length=m
+            List where each array contains the *k-mer* codes from a
+            sequence.
+            For each array the index of the *k-mer* code in the array
+            is stored in the table as sequence position.
+        ref_ids : sized iterable object of int, length=m, optional
+            The reference IDs for the sequences.
+            These are used to identify the corresponding sequence for a
+            *k-mer* match.
+            By default the IDs are counted from *0* to *m*.
+        masks : sized iterable object of (ndarray, dtype=bool), length=m, optional
+            A *k-mer* code at a position, where the corresponding mask
+            is false, is not added to the table.
+            By default, all positions are added.
+
+        See also
+        --------
+        from_sequences : The same functionality based on undecomposed sequences
+
+        Returns
+        -------
+        table : BinnedKmerTable
+            The newly created table.
+
+        Examples
+        --------
+
+        >>> sequences = [ProteinSequence("BIQTITE"), ProteinSequence("NIQBITE")]
+        >>> kmer_alphabet = KmerAlphabet(ProteinSequence.alphabet, 3)
+        >>> kmer_codes = [kmer_alphabet.create_kmers(s.code) for s in sequences]
+        >>> for code in kmer_codes:
+        ...     print(code)
+        [11701  4360  7879  9400  4419]
+        [ 6517  4364  7975 11704  4419]
+        >>> bins = 100
+        >>> table = BinnedKmerTable.from_kmers(
+        ...     bins, kmer_alphabet, kmer_codes
+        ... )
+        >>> print(table)
+        IQT: (0, 1)
+        IQB: (1, 1)
+        ITE: (0, 4), (1, 4)
+        NIQ: (1, 0)
+        QTI: (0, 2)
+        QBI: (1, 2)
+        TIT: (0, 3)
+        BIQ: (0, 0)
+        BIT: (1, 3)
+        """
         _check_kmer_alphabet(kmer_alphabet)
         _check_multiple_kmer_bounds(kmers, kmer_alphabet)
 
@@ -1656,6 +1933,90 @@ cdef class BinnedKmerTable:
     @staticmethod
     def from_kmer_selection(bins, kmer_alphabet, positions, kmers,
                             ref_ids=None):
+        """
+        from_kmer_selection(bins, kmer_alphabet, positions, kmers,
+                            ref_ids=None)
+
+        Create a :class:`BinnedKmerTable` by storing the positions of a
+        filtered subset of input *k-mers*.
+
+        This can be used to reduce the number of stored *k-mers* using
+        a *k-mer* subset selector such as :class:`MinimizerSelector`.
+
+        Parameters
+        ----------
+        bins : int
+            The number of bins, the *k-mers* are divided into.
+        kmer_alphabet : KmerAlphabet
+            The :class:`KmerAlphabet` to use for the new table.
+            Should be the same alphabet that was used to calculate the
+            input *kmers*.
+        positions : sized iterable object of (ndarray, shape=(n,), dtype=uint32), length=m
+            List where each array contains the sequence positions of
+            the filtered subset of *k-mers* given in `kmers`.
+            The list may contain multiple elements for multiple
+            sequences.
+        kmers : sized iterable object of (ndarray, shape=(n,), dtype=np.int64), length=m
+            List where each array contains the filtered subset of
+            *k-mer* codes from a sequence.
+            For each array the index of the *k-mer* code in the array,
+            is stored in the table as sequence position.
+            The list may contain multiple elements for multiple
+            sequences.
+        ref_ids : sized iterable object of int, length=m, optional
+            The reference IDs for the sequences.
+            These are used to identify the corresponding sequence for a
+            *k-mer* match.
+            By default the IDs are counted from *0* to *m*.
+
+        Returns
+        -------
+        table : BinnedKmerTable
+            The newly created table.
+
+        Examples
+        --------
+
+        Reduce the size of sequence data in the table using minimizers:
+
+        >>> sequence1 = ProteinSequence("THIS*IS*A*SEQVENCE")
+        >>> kmer_alph = KmerAlphabet(sequence1.alphabet, k=3)
+        >>> minimizer = MinimizerSelector(kmer_alph, window=4)
+        >>> minimizer_pos, minimizers = minimizer.select(sequence1)
+        >>> bins = 100
+        >>> kmer_table = BinnedKmerTable.from_kmer_selection(
+        ...     bins, kmer_alph, [minimizer_pos], [minimizers]
+        ... )
+
+        Use the same :class:`MinimizerSelector` to select the minimizers
+        from the query sequence and match them against the table.
+        Although the amount of *k-mers* is reduced, matching is still
+        guanrateed to work, if the two sequences share identity in the
+        given window:
+
+        >>> sequence2 = ProteinSequence("ANQTHER*SEQVENCE")
+        >>> minimizer_pos, minimizers = minimizer.select(sequence2)
+        >>> matches = kmer_table.match_kmer_selection(minimizer_pos, minimizers)
+        >>> print(matches)
+        [[ 9  0 11]
+         [12  0 14]]
+        >>> for query_pos, _, db_pos in matches:
+        ...     print(sequence1)
+        ...     print(" " * (db_pos-1) + "^" * kmer_table.k)
+        ...     print(sequence2)
+        ...     print(" " * (query_pos-1) + "^" * kmer_table.k)
+        ...     print()
+        THIS*IS*A*SEQVENCE
+          ^^^
+        ANQTHER*SEQVENCE
+                ^^^
+        <BLANKLINE>
+        THIS*IS*A*SEQVENCE
+                    ^^^
+        ANQTHER*SEQVENCE
+                ^^^
+        <BLANKLINE>
+        """
         _check_kmer_alphabet(kmer_alphabet)
         _check_multiple_kmer_bounds(kmers, kmer_alphabet)
         _check_position_shape(positions, kmers)
@@ -1678,13 +2039,52 @@ cdef class BinnedKmerTable:
 
 
     @staticmethod
-    def from_tables(bins, tables):
+    def from_tables(tables):
+        """
+        from_tables(tables)
+
+        Create a :class:`BinnedKmerTable` by merging the *k-mer*
+        positions from existing `tables`.
+
+        Parameters
+        ----------
+        bins : int
+            The number of bins, the *k-mers* are divided into.
+        tables : iterable object of BinnedKmerTable
+            The tables to be merged.
+            All tables must have equal number of bins and equal
+            :class:`KmerAlphabet` objects, i.e. the same *k* and equal
+            base alphabets.
+
+        Returns
+        -------
+        table : BinnedKmerTable
+            The newly created table.
+
+        Examples
+        --------
+
+        >>> bins = 5
+        >>> table1 = BinnedKmerTable.from_sequences(
+        ...     bins, 2, [NucleotideSequence("TTATA")], ref_ids=[100]
+        ... )
+        >>> table2 = BinnedKmerTable.from_sequences(
+        ...     bins, 2, [NucleotideSequence("CTAG")], ref_ids=[101]
+        ... )
+        >>> merged_table = BinnedKmerTable.from_tables([table1, table2])
+        >>> print(merged_table)
+        AG: (101, 2)
+        AT: (100, 2)
+        CT: (101, 0)
+        TA: (100, 1), (100, 3), (101, 1)
+        TT: (100, 0)
+        """
         cdef BinnedKmerTable table
 
         _check_same_kmer_alphabet(tables)
         _check_same_bins(tables)
 
-        merged_table = BinnedKmerTable(bins, tables[0].kmer_alphabet)
+        merged_table = BinnedKmerTable(tables[0].bins, tables[0].kmer_alphabet)
 
         # Sum the number of appearances of each k-mer from the tables
         for table in tables:
@@ -1705,6 +2105,73 @@ cdef class BinnedKmerTable:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def match_table(self, BinnedKmerTable table, similarity_rule=None):
+        """
+        match_table(table, similarity_rule=None)
+
+        Find matches between the *k-mers* in this table with the
+        *k-mers* in another `table`.
+
+        This means that for each *k-mer* the cartesian product between
+        the positions in both tables is added to the matches.
+
+        Parameters
+        ----------
+        table : BinnedKmerTable
+            The table to be matched.
+            Both tables must have equal :class:`KmerAlphabet` objects,
+            i.e. the same *k* and equal base alphabets.
+        similarity_rule : SimilarityRule, optional
+            If this parameter is given, not only exact *k-mer* matches
+            are considered, but also similar ones according to the given
+            :class:`SimilarityRule`.
+
+        Returns
+        -------
+        matches : ndarray, shape=(n,4), dtype=np.uint32
+            The *k-mer* matches.
+            Each row contains one match. Each match has the following
+            columns:
+
+                0. The reference ID of the matched sequence in the other
+                   table
+                1. The sequence position of the matched sequence in the
+                   other table
+                2. The reference ID of the matched sequence in this
+                   table
+                3. The sequence position of the matched sequence in this
+                   table
+
+        Notes
+        -----
+
+        There is no guaranteed order of the reference IDs or
+        sequence positions in the returned matches.
+
+        Examples
+        --------
+
+        >>> bins = 100
+        >>> sequence1 = ProteinSequence("BIQTITE")
+        >>> table1 = BinnedKmerTable.from_sequences(bins, 3, [sequence1], ref_ids=[100])
+        >>> print(table1)
+        IQT: (100, 1)
+        ITE: (100, 4)
+        QTI: (100, 2)
+        TIT: (100, 3)
+        BIQ: (100, 0)
+        >>> sequence2 = ProteinSequence("TITANITE")
+        >>> table2 = BinnedKmerTable.from_sequences(bins, 3, [sequence2], ref_ids=[101])
+        >>> print(table2)
+        ANI: (101, 3)
+        ITA: (101, 1)
+        ITE: (101, 5)
+        NIT: (101, 4)
+        TAN: (101, 2)
+        TIT: (101, 0)
+        >>> print(table1.match_table(table2))
+        [[101   0 100   3]
+         [101   5 100   4]]
+        """
         cdef int INIT_SIZE = 1
 
         cdef int64 bin, sim_bin
@@ -1800,6 +2267,64 @@ cdef class BinnedKmerTable:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def match(self, sequence, similarity_rule=None, ignore_mask=None):
+        """
+        match(sequence, similarity_rule=None, ignore_mask=None)
+
+        Find matches between the *k-mers* in this table with all
+        overlapping *k-mers* in the given `sequence`.
+        *k* is determined by the table.
+
+        Parameters
+        ----------
+        sequence : Sequence
+            The sequence to be matched.
+            The table's base alphabet must extend the alphabet of the
+            sequence.
+        similarity_rule : SimilarityRule, optional
+            If this parameter is given, not only exact *k-mer* matches
+            are considered, but also similar ones according to the given
+            :class:`SimilarityRule`.
+        ignore_mask : ndarray, dtype=bool, optional
+            Boolean mask of sequence positions to ignore.
+            *k-mers* that involve these sequence positions are not added
+            to the table.
+            This is used e.g. to skip repeat regions.
+            By default, no sequence position is ignored.
+
+        Returns
+        -------
+        matches : ndarray, shape=(n,3), dtype=np.uint32
+            The *k-mer* matches.
+            Each row contains one match. Each match has the following
+            columns:
+
+                0. The sequence position in the input sequence
+                1. The reference ID of the matched sequence in the table
+                2. The sequence position of the matched sequence in the
+                   table
+
+        Notes
+        -----
+
+        The matches are ordered by the first column.
+
+        Examples
+        --------
+
+        >>> bins = 100
+        >>> sequence1 = ProteinSequence("BIQTITE")
+        >>> table = BinnedKmerTable.from_sequences(bins, 3, [sequence1], ref_ids=[100])
+        >>> print(table)
+        IQT: (100, 1)
+        ITE: (100, 4)
+        QTI: (100, 2)
+        TIT: (100, 3)
+        BIQ: (100, 0)
+        >>> sequence2 = ProteinSequence("TITANITE")
+        >>> print(table.match(sequence2))
+        [[  0 100   3]
+         [  5 100   4]]
+        """
         cdef int INIT_SIZE = 1
 
         cdef int64 bin
@@ -1918,6 +2443,79 @@ cdef class BinnedKmerTable:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def match_kmer_selection(self, positions, kmers):
+        """
+        match_kmer_selection(positions, kmers)
+
+        Find matches between the *k-mers* in this table with the given
+        *k-mer* selection.
+
+        It is intended to use this method to find matches in a table
+        that was created using :meth:`from_kmer_selection()`.
+
+        Parameters
+        ----------
+        positions : ndarray, shape=(n,), dtype=uint32
+            Sequence positions of the filtered subset of *k-mers* given
+            in `kmers`.
+        kmers : ndarray, shape=(n,), dtype=np.int64
+            Filtered subset of *k-mer* codes to match against.
+
+        Returns
+        -------
+        matches : ndarray, shape=(n,3), dtype=np.uint32
+            The *k-mer* matches.
+            Each row contains one *k-mer* match.
+            Each match has the following columns:
+
+                0. The sequence position of the input *k-mer*, taken
+                   from `positions`
+                1. The reference ID of the matched sequence in the table
+                2. The sequence position of the matched *k-mer* in the
+                   table
+
+        Examples
+        --------
+
+        Reduce the size of sequence data in the table using minimizers:
+
+        >>> bins = 100
+        >>> sequence1 = ProteinSequence("THIS*IS*A*SEQVENCE")
+        >>> kmer_alph = KmerAlphabet(sequence1.alphabet, k=3)
+        >>> minimizer = MinimizerSelector(kmer_alph, window=4)
+        >>> minimizer_pos, minimizers = minimizer.select(sequence1)
+        >>> kmer_table = BinnedKmerTable.from_kmer_selection(
+        ...     bins, kmer_alph, [minimizer_pos], [minimizers]
+        ... )
+
+        Use the same :class:`MinimizerSelector` to select the minimizers
+        from the query sequence and match them against the table.
+        Although the amount of *k-mers* is reduced, matching is still
+        guanrateed to work, if the two sequences share identity in the
+        given window:
+
+        >>> sequence2 = ProteinSequence("ANQTHER*SEQVENCE")
+        >>> minimizer_pos, minimizers = minimizer.select(sequence2)
+        >>> matches = kmer_table.match_kmer_selection(minimizer_pos, minimizers)
+        >>> print(matches)
+        [[ 9  0 11]
+         [12  0 14]]
+        >>> for query_pos, _, db_pos in matches:
+        ...     print(sequence1)
+        ...     print(" " * (db_pos-1) + "^" * kmer_table.k)
+        ...     print(sequence2)
+        ...     print(" " * (query_pos-1) + "^" * kmer_table.k)
+        ...     print()
+        THIS*IS*A*SEQVENCE
+          ^^^
+        ANQTHER*SEQVENCE
+                ^^^
+        <BLANKLINE>
+        THIS*IS*A*SEQVENCE
+                    ^^^
+        ANQTHER*SEQVENCE
+                ^^^
+        <BLANKLINE>
+        """
         cdef int INIT_SIZE = 1
 
         cdef int64 i
@@ -1989,11 +2587,47 @@ cdef class BinnedKmerTable:
     @cython.wraparound(False)
     def count(self, kmers):
         """
+        count(kmers=None)
+
+        Count the number of occurences for each *k-mer* in the table.
+
+        Parameters
+        ----------
+        kmers : ndarray, dtype=np.int64, optional
+            The count is returned for these *k-mer* codes.
+            By default all *k-mers* are counted in ascending order, i.e.
+            ``count_for_kmer = counts[kmer]``.
+
+        Returns
+        -------
+        counts : ndarray, dtype=np.int64, optional
+            The counts for each given *k-mer*.
+
         Notes
         -----
-        Es each bin need to be inspected for the actual *k-mer* entries,
+        As each bin need to be inspected for the actual *k-mer* entries,
         this method requires far more computation time than its
         :class:`KmerTable` equivalent.
+
+        Examples
+        --------
+        >>> table = BinnedKmerTable.from_sequences(
+        ...     bins = 5,
+        ...     k = 2,
+        ...     sequences = [NucleotideSequence("TTATA"), NucleotideSequence("CTAG")],
+        ...     ref_ids = [0, 1]
+        ... )
+        >>> print(table)
+        AG: (1, 2)
+        AT: (0, 2)
+        CT: (1, 0)
+        TA: (0, 1), (0, 3), (1, 1)
+        TT: (0, 0)
+
+        Count two selected *k-mers*:
+
+        >>> print(table.count(table.kmer_alphabet.encode_multiple(["TA", "AG"])))
+        [3 1]
         """
         cdef int64 i
 
@@ -2023,6 +2657,7 @@ cdef class BinnedKmerTable:
                     bin_ptr += EntrySize.BINNED
 
         return np.asarray(counts)
+
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -2092,6 +2727,7 @@ cdef class BinnedKmerTable:
             i += 1
         return np.sort(np.asarray(kmers))
 
+
     @cython.cdivision(True)
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -2146,6 +2782,10 @@ cdef class BinnedKmerTable:
         if self._bins != other._bins:
             return False
         return _equal_c_arrays(self._ptr_array, other._ptr_array)
+
+
+    def __str__(self):
+        return _to_string(self)
 
 
     def __getnewargs_ex__(self):
@@ -2344,6 +2984,10 @@ def _init_c_arrays(ptr[:] ptr_array, int64 element_size):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def _equal_c_arrays(ptr[:] self_ptr_array, ptr[:] other_ptr_array):
+    """
+    Check if two pointer arrays are equal, i.e. they point to C-arrays
+    with equal elements.
+    """
     cdef int64 bin
     cdef int64 i
     cdef int64 self_length, other_length
@@ -2374,6 +3018,13 @@ def _equal_c_arrays(ptr[:] self_ptr_array, ptr[:] other_ptr_array):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def _append_entries(ptr[:] trg_ptr_array, ptr[:] src_ptr_array):
+    """
+    Append the elements in all C-arrays of the source pointer array to
+    the corresponding C-arrays of the target pointer array.
+
+    Expect that the target C-arrays are already initialized to
+    sufficient capacity.
+    """
     cdef int64 bin
     cdef int64 self_length, other_length, new_length
     cdef uint32* self_kmer_ptr
@@ -2473,34 +3124,39 @@ cdef np.ndarray expand(np.ndarray array):
 
 
 def _prepare_mask(kmer_alphabet, ignore_mask, seq_length):
-        if ignore_mask is None:
-            kmer_mask = np.ones(
-                kmer_alphabet.kmer_array_length(seq_length), dtype=np.uint8
+    """
+    Convert an ignore mask into a positive mask.
+    Multiple formats (boolean mask, pointer array, None) are supported
+    for the input.
+    """
+    if ignore_mask is None:
+        kmer_mask = np.ones(
+            kmer_alphabet.kmer_array_length(seq_length), dtype=np.uint8
+        )
+    else:
+        if not isinstance(ignore_mask, np.ndarray):
+            raise TypeError(
+                f"The given mask is a '{type(ignore_mask).__name__}', "
+                f"but an ndarray was expected"
             )
-        else:
-            if not isinstance(ignore_mask, np.ndarray):
-                raise TypeError(
-                    f"The given mask is a '{type(ignore_mask).__name__}', "
-                    f"but an ndarray was expected"
-                )
-            if ignore_mask.dtype != np.dtype(bool):
-                raise ValueError("Expected a boolean mask")
-            if len(ignore_mask) != seq_length:
-                raise IndexError(
-                    f"ignore mask has length {len(ignore_mask)}, "
-                    f"but the length of the sequence is {seq_length}"
-                )
-            kmer_mask = _to_kmer_mask(
-                np.frombuffer(
-                    ignore_mask.astype(bool, copy=False), dtype=np.uint8
-                ),
-                kmer_alphabet
+        if ignore_mask.dtype != np.dtype(bool):
+            raise ValueError("Expected a boolean mask")
+        if len(ignore_mask) != seq_length:
+            raise IndexError(
+                f"ignore mask has length {len(ignore_mask)}, "
+                f"but the length of the sequence is {seq_length}"
             )
-        return kmer_mask
+        kmer_mask = _to_kmer_mask(
+            np.frombuffer(
+                ignore_mask.astype(bool, copy=False), dtype=np.uint8
+            ),
+            kmer_alphabet
+        )
+    return kmer_mask
 
 
-#@cython.boundscheck(False)
-#@cython.wraparound(False)
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def _to_kmer_mask(uint8[:] mask not None, kmer_alphabet):
     """
     Transform a sequence ignore mask into a *k-mer* mask.
@@ -2568,7 +3224,6 @@ def _check_position_shape(position_arrays, kmer_arrays):
                 f"{len(positions)} positions"
                 f"for {len(kmers)} k-mers were given at index {i}"
             )
-
 
 
 def _check_same_kmer_alphabet(tables):
@@ -2685,3 +3340,18 @@ def _compute_alphabet(given_alphabet, sequence_alphabets):
                     "alphabet of the given sequences"
                 )
         return given_alphabet
+
+
+def _to_string(table):
+    lines = []
+    for kmer in table.get_kmers():
+        symbols = table.kmer_alphabet.decode(kmer)
+        if isinstance(table.alphabet, LetterAlphabet):
+            symbols = "".join(symbols)
+        else:
+            symbols = str(tuple(symbols))
+        line = symbols + ": " + ", ".join(
+            [str(tuple(pos)) for pos in table[kmer]]
+        )
+        lines.append(line)
+    return "\n".join(lines)
