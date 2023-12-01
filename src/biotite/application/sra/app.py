@@ -132,8 +132,6 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
             # For entries with multiple reads per spot
             glob.glob(self._prefix + "_*.fastq")
         )
-        print(self._prefix)
-        print(self._file_names)
         # Only load FASTQ files into memory when needed
         self._fastq_files = None
 
