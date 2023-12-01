@@ -32,9 +32,12 @@ import biotite.application.sra as sra
 FIG_SIZE = (8.0, 6.0)
 
 
+app = sra.FastqDumpApp("ERR266411")
+app.start()
+app.join()
 # Each run can have multiple reads per spot
 # by selecting index 0 we take only the first read for every spot
-sequences_and_scores = sra.FastqDumpApp.fetch("ERR266411")[0]
+sequences_and_scores = app.get_sequences_and_scores()[0]
 sequence_codes = np.stack([
     sequence.code for sequence, _ in sequences_and_scores.values()
 ])
@@ -102,7 +105,7 @@ fig.tight_layout()
 
 ########################################################################
 # This is a typical distribution.
-# 
+#
 # Now we want to see the appearance of each base over the length of the
 # sequence reads.
 # In a random library one would expect, that :math:`p(A) \approx p(T)`
@@ -209,7 +212,7 @@ fig, ax = plt.subplots(figsize=FIG_SIZE)
 ax.bar(
     np.arange(0, len(duplication_level_freq)),
     duplication_level_freq,
-    width=0.6, 
+    width=0.6,
     color=biotite.colors["dimorange"]
 )
 ax.set_xlim(0.5, len(duplication_level_freq) + 0.5)
@@ -217,6 +220,8 @@ ax.xaxis.set_major_locator(ticker.MaxNLocator(10))
 ax.set_xlabel("Number of duplications")
 ax.set_ylabel("Sequence percentage (%)")
 fig.tight_layout()
+
+plt.show()
 
 ########################################################################
 # The dataset has quite an unusual repetition profile:
