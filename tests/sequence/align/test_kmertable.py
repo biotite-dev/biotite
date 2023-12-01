@@ -13,24 +13,34 @@ import biotite.sequence as seq
 import biotite.sequence.align as align
 
 
-class FixedBinnedKmerTable:
+class FixedBucketKmerTable:
     """
-    A wrapper around :class:`BinnedKmerTable` that conceals the `bins`
-    parameter.
+    A wrapper around :class:`BucketKmerTable` with a fixed number of
+    buckets.
     This allows test functions to call static functions from
     :class:`KmerTable` and :class:`FixedBinnedKmerTable` with the same
     signature, avoiding if-else constructs.
     """
 
-    def __init__(self, bins):
-        self._bins = bins
+    def __init__(self, n_buckets):
+        self._n_buckets = n_buckets
 
     def __getattr__(self, name):
-        attr = getattr(align.BinnedKmerTable, name)
-        if callable(attr):
-            return functools.partial(attr, self._bins)
+        attr = getattr(align.BucketKmerTable, name)
+        if attr.__name__ in [
+            "from_sequences", "from_kmers", "from_kmer_selection"
+        ]:
+            return functools.partial(attr, n_buckets=self._n_buckets)
         else:
             return attr
+
+    def __repr__(self):
+        return f"BucketKmerTable({self._n_buckets})"
+
+
+def idfn(val):
+    if isinstance(val, FixedBucketKmerTable):
+        return repr(val)
 
 
 @pytest.fixture
@@ -61,13 +71,14 @@ def random_sequences(k, alphabet):
         [None, "10111011011", "1001111010101"],
         [
             align.KmerTable,
-            # Choose number of bins, so that there is one test case
-            # with less bins than number of possible kmers ...
-            FixedBinnedKmerTable(1000),
-            # ... and one test case with more bins (perfect hashing)
-            FixedBinnedKmerTable(1000000)
+            # Choose number of buckets, so that there is one test case
+            # with less buckets than number of possible kmers ...
+            FixedBucketKmerTable(1000),
+            # ... and one test case with more buckets (perfect hashing)
+            FixedBucketKmerTable(1000000)
         ]
-    )
+    ),
+    ids = idfn
 )
 def test_from_sequences(k, random_sequences, spacing, table_class):
     """
@@ -94,9 +105,10 @@ def test_from_sequences(k, random_sequences, spacing, table_class):
     "table_class",
     [
         align.KmerTable,
-        FixedBinnedKmerTable(1000),
-        FixedBinnedKmerTable(1000000)
-    ]
+        FixedBucketKmerTable(1000),
+        FixedBucketKmerTable(1000000)
+    ],
+    ids = idfn
 )
 def test_from_kmers(k, random_sequences, table_class):
     """
@@ -118,9 +130,10 @@ def test_from_kmers(k, random_sequences, table_class):
     "table_class",
     [
         align.KmerTable,
-        FixedBinnedKmerTable(1000),
-        FixedBinnedKmerTable(1000000)
-    ]
+        FixedBucketKmerTable(1000),
+        FixedBucketKmerTable(1000000)
+    ],
+    ids = idfn
 )
 def test_from_kmer_selection(k, alphabet, random_sequences, table_class):
     """
@@ -162,9 +175,10 @@ def test_from_kmer_selection(k, alphabet, random_sequences, table_class):
     "table_class",
     [
         align.KmerTable,
-        FixedBinnedKmerTable(1000),
-        FixedBinnedKmerTable(1000000)
-    ]
+        FixedBucketKmerTable(1000),
+        FixedBucketKmerTable(1000000)
+    ],
+    ids = idfn
 )
 def test_from_tables(k, random_sequences, table_class):
     """
@@ -204,11 +218,12 @@ def test_from_positions(k, random_sequences):
     itertools.product(
         [
             align.KmerTable,
-            FixedBinnedKmerTable(1000),
-            FixedBinnedKmerTable(10000000)
+            FixedBucketKmerTable(1000),
+            FixedBucketKmerTable(10000000)
         ],
         [False, True]
-    )
+    ),
+    ids = idfn
 )
 def test_match_table(table_class, use_similarity_rule):
     """
@@ -262,11 +277,12 @@ def test_match_table(table_class, use_similarity_rule):
     itertools.product(
         [
             align.KmerTable,
-            FixedBinnedKmerTable(1000),
-            FixedBinnedKmerTable(1000000)
+            FixedBucketKmerTable(1000),
+            FixedBucketKmerTable(1000000)
         ],
         [False, True]
-    )
+    ),
+    ids = idfn
 )
 def test_match(k, random_sequences, table_class, use_similarity_rule):
     """
@@ -305,9 +321,10 @@ def test_match(k, random_sequences, table_class, use_similarity_rule):
     "table_class",
     [
         align.KmerTable,
-        FixedBinnedKmerTable(1000),
-        FixedBinnedKmerTable(1000000)
-    ]
+        FixedBucketKmerTable(1000),
+        FixedBucketKmerTable(1000000)
+    ],
+    ids = idfn
 )
 def test_match_kmer_selection(k, random_sequences, table_class):
     """
@@ -347,11 +364,12 @@ def test_match_kmer_selection(k, random_sequences, table_class):
     itertools.product(
         [
             align.KmerTable,
-            FixedBinnedKmerTable(1000),
-            FixedBinnedKmerTable(1000000)
+            FixedBucketKmerTable(1000),
+            FixedBucketKmerTable(1000000)
         ],
         [False, True]
-    )
+    ),
+    ids = idfn
 )
 def test_match_equivalence(k, random_sequences, table_class, use_mask):
     """
@@ -413,7 +431,8 @@ def test_match_equivalence(k, random_sequences, table_class, use_mask):
             [1,0,0,0,0,1,0,0,0,0,0,1,0,0],
             [0,1,0,0,0,0,1,1,0,0,0]
         ),
-    ]
+    ],
+    ids = idfn
 )
 def test_masking(k, input_mask, ref_output_mask):
     """
@@ -445,9 +464,10 @@ def test_masking(k, input_mask, ref_output_mask):
     [
         (align.KmerTable, False),
         (align.KmerTable, True),
-        (FixedBinnedKmerTable(1000), True),
-        (FixedBinnedKmerTable(1000000), True),
-    ]
+        (FixedBucketKmerTable(1000), True),
+        (FixedBucketKmerTable(1000000), True),
+    ],
+    ids = idfn
 )
 def test_count(k, random_sequences, table_class, selected_kmers):
     """
@@ -478,9 +498,10 @@ def test_count(k, random_sequences, table_class, selected_kmers):
     "table_class",
     [
         align.KmerTable,
-        FixedBinnedKmerTable(1000),
-        FixedBinnedKmerTable(1000000)
-    ]
+        FixedBucketKmerTable(1000),
+        FixedBucketKmerTable(1000000)
+    ],
+    ids = idfn
 )
 def test_get_kmers(table_class):
     """
@@ -507,9 +528,10 @@ def test_get_kmers(table_class):
     "table_class",
     [
         align.KmerTable,
-        FixedBinnedKmerTable(1000),
-        FixedBinnedKmerTable(1000000)
-    ]
+        FixedBucketKmerTable(1000),
+        FixedBucketKmerTable(1000000)
+    ],
+    ids = idfn
 )
 def test_pickle(k, random_sequences, table_class):
     """
@@ -522,6 +544,28 @@ def test_pickle(k, random_sequences, table_class):
     test_table = pickle.loads(pickle.dumps(ref_table))
 
     assert test_table == ref_table
+
+
+@pytest.mark.parametrize(
+    "n_kmers, load_factor",
+    itertools.product(
+        [1_000, 100_000, 10_000_000, 1_000_000_000],
+        [0.2, 1.0, 2.0]
+    )
+)
+def test_bucket_number(n_kmers, load_factor):
+    """
+    Check if the number of buckets is always maximum five percent larger
+    than the load factor corrected number of *k-mers*.
+    Use larger bucket numbers for this to ensure there even exists a
+    prime within the deviation threshold
+    """
+    min_n_buckets = int(n_kmers / load_factor)
+    test_n_buckets = align.bucket_number(n_kmers, load_factor)
+
+
+    assert test_n_buckets >= min_n_buckets
+    assert test_n_buckets <= min_n_buckets * 1.05
 
 
 def _identity_rule(alphabet):

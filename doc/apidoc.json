@@ -133,8 +133,10 @@
         "k-mers" : [
             "KmerAlphabet",
             "KmerTable",
+            "BucketKmerTable",
             "SimilarityRule",
-            "ScoreThresholdRule"
+            "ScoreThresholdRule",
+            "bucket_number"
         ],
         "k-mer subset selections" : [
             "MinimizerSelector",

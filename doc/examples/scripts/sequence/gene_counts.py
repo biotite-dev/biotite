@@ -46,9 +46,6 @@ QUALITY_THRESHOLD = 30
 K = 15
 # Window length of minimizers
 WINDOW = 10
-# Number of bins in k-mer table
-# A larger number increases memory requirements, but decreases run time
-BINS = 10_000_000
 # Band width for banded gapped alignment
 BAND_WIDTH = 10
 # Number of highest expressed genes to display
@@ -166,12 +163,12 @@ for symbol in gene_symbols[:20]:
 # This assumption only holds, if sequencing is conducted with high
 # fidelity.
 # For fast matching the minimizers of all cDNA sequences are indexed
-# into a :class:`BinnedKmerTable`, the memory-efficient twin of the
+# into a :class:`BucketKmerTable`, the memory-efficient twin of the
 # :class:`KmerTable`:
 # While a `:class:`KmerTable` would require $4^k \approx$ 1 billion
-# bins, the class:`BinnedKmerTable` limits the number of bins, but
-# requires a bit more computation time for its construction and
-# matching.
+# buckets (one for each k-mer), the class:`BucketKmerTable` limits the
+# number of buckets, but requires a bit more computation time for its
+# construction and matching.
 
 base_alph = seq.NucleotideSequence.alphabet_unamb
 kmer_alph = align.KmerAlphabet(base_alph, K)
@@ -179,8 +176,8 @@ min_selector = align.MinimizerSelector(
     kmer_alph, WINDOW, align.RandomPermutation()
 )
 
-kmer_table = align.BinnedKmerTable.from_kmer_selection(
-    BINS, kmer_alph,
+kmer_table = align.BucketKmerTable.from_kmer_selection(
+    kmer_alph,
     *zip(*[min_selector.select(sequence) for sequence in sequences])
 )
 
@@ -264,7 +261,7 @@ print(alignment)
 ########################################################################
 # For the thousands of reads that need to be mapped here, it is
 # reasonable to divide the work into multiple processes.
-# As the :class:`BinnedKmerTable` needs to be copied to each of the
+# As the :class:`BucketKmerTable` needs to be copied to each of the
 # spawned processes, a long startup time can be expected.
 # However, for the large number of reads which can be then processed in
 # parallel, it is still worth it.

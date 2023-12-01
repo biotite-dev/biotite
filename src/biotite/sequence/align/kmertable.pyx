@@ -6,7 +6,7 @@
 
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
-__all__ = ["KmerTable", "BinnedKmerTable"]
+__all__ = ["KmerTable", "BucketKmerTable"]
 
 cimport cython
 cimport numpy as np
@@ -18,6 +18,7 @@ from libcpp.set cimport set as cpp_set
 import numpy as np
 from ..alphabet import LetterAlphabet, common_alphabet, AlphabetError
 from .kmeralphabet import KmerAlphabet
+from .buckets import bucket_number
 
 
 ctypedef np.int32_t int32
@@ -29,12 +30,12 @@ ctypedef np.uint64_t ptr
 
 cdef enum EntrySize:
     # The size (number of 32 bit elements) for each entry in C-arrays
-    # of KmerTable and BinnedKmerTable, respectively
+    # of KmerTable and BucketKmerTable, respectively
     #
     # Size: reference ID (int32) + sequence pos (int32)
-    UNBINNED = 2
+    NO_BUCKETS = 2
     # Size: k-mer (int64) + reference ID (int32) + sequence pos (int32)
-    BINNED = 4
+    BUCKETS = 4
 
 
 cdef class KmerTable:
@@ -103,7 +104,7 @@ cdef class KmerTable:
 
     See also
     --------
-    BinnedKmerTable
+    BucketKmerTable
 
     Notes
     -----
@@ -368,13 +369,13 @@ cdef class KmerTable:
         ]
 
         # Count the number of appearances of each k-mer and store the
-        # result in the pointer array, that is now used a count array
+        # result in the pointer array, that is now used as count array
         for kmers, mask in zip(kmers_list, masks):
             table._count_masked_kmers(kmers, mask)
 
         # Transfrom count array into pointer array with C-array of
         # appropriate size
-        _init_c_arrays(table._ptr_array, EntrySize.UNBINNED)
+        _init_c_arrays(table._ptr_array, EntrySize.NO_BUCKETS)
 
         # Fill the C-arrays with the k-mer positions
         for kmers, ref_id, mask in zip(kmers_list, ref_ids, masks):
@@ -466,7 +467,7 @@ cdef class KmerTable:
         for arr, mask in zip(kmers, masks):
             table._count_masked_kmers(arr, mask)
 
-        _init_c_arrays(table._ptr_array, EntrySize.UNBINNED)
+        _init_c_arrays(table._ptr_array, EntrySize.NO_BUCKETS)
 
         for arr, ref_id, mask in zip(kmers, ref_ids, masks):
             table._add_kmers(arr, ref_id, mask)
@@ -567,7 +568,7 @@ cdef class KmerTable:
         for arr in kmers:
             table._count_kmers(arr)
 
-        _init_c_arrays(table._ptr_array, EntrySize.UNBINNED)
+        _init_c_arrays(table._ptr_array, EntrySize.NO_BUCKETS)
 
         for pos, arr, ref_id in zip(positions, kmers, ref_ids):
             table._add_kmer_selection(
@@ -629,10 +630,10 @@ cdef class KmerTable:
             # required to count the number of positions for each *k-mer*
             _count_table_entries(
                 merged_table._ptr_array, table._ptr_array,
-                EntrySize.UNBINNED
+                EntrySize.NO_BUCKETS
             )
 
-        _init_c_arrays(merged_table._ptr_array, EntrySize.UNBINNED)
+        _init_c_arrays(merged_table._ptr_array, EntrySize.NO_BUCKETS)
 
         for table in tables:
             _append_entries(merged_table._ptr_array, table._ptr_array)
@@ -1466,7 +1467,7 @@ cdef class KmerTable:
                 current_size = (<int64*> kmer_ptr)[0]
                 kmer_ptr[current_size    ] = ref_id
                 kmer_ptr[current_size + 1] = seq_pos
-                (<int64*> kmer_ptr)[0] = current_size + EntrySize.UNBINNED
+                (<int64*> kmer_ptr)[0] = current_size + EntrySize.NO_BUCKETS
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -1502,7 +1503,7 @@ cdef class KmerTable:
             current_size = (<int64*> kmer_ptr)[0]
             kmer_ptr[current_size    ] = ref_id
             kmer_ptr[current_size + 1] = seq_pos
-            (<int64*> kmer_ptr)[0] = current_size + EntrySize.UNBINNED
+            (<int64*> kmer_ptr)[0] = current_size + EntrySize.NO_BUCKETS
 
 
     cdef inline bint _is_initialized(self):
@@ -1520,19 +1521,19 @@ cdef class KmerTable:
 
 
 
-cdef class BinnedKmerTable:
+cdef class BucketKmerTable:
     """
     This class represents a *k-mer* index table.
     In contrast to :class:`KmerTable` it does store each unique *k-mer*
-    in a separate bin, but limits the number of bins instead.
-    Hence, different *k-mer* may be stored in the same bin, like in a
+    in a separate C-array, but limits the number of C-arrays instead
+    to a number of buckets.
+    Hence, different *k-mer* may be stored in the same bucket, like in a
     hash table.
     This approach makes indexing with large :class:`KmerAlphabet`s
     feasible for the memory.
 
-    Otherwise, the API for creating a :class`BinnedKmerTable` and
-    matching to it is analogous to :class:`KmerTable`, with the
-    additional mandatory `bins` parameter.
+    Otherwise, the API for creating a :class`BucketKmerTable` and
+    matching to it is analogous to :class:`KmerTable`.
 
     Attributes
     ----------
@@ -1540,12 +1541,12 @@ cdef class BinnedKmerTable:
         The internal :class:`KmerAlphabet`, that is used to
         encode all overlapping *k-mers* of an input sequence.
     alphabet : Alphabet
-        The base alphabet, from which this :class:`BinnedKmerTable` was
+        The base alphabet, from which this :class:`BucketKmerTable` was
         created.
     k : int
         The length of the *k-mers*.
-    bins : int
-        The number of bins, the *k-mers* are divided into.
+    n_buckets : int
+        The number of buckets, the *k-mers* are divided into.
 
     See also
     --------
@@ -1556,9 +1557,9 @@ cdef class BinnedKmerTable:
 
     *Memory consumption*
 
-    For efficient mapping, a :class:`BinnedKmerTable` contains a pointer
-    array, that contains one 64-bit pointer for each bin.
-    If there is at least one position for a bin, the corresponding
+    For efficient mapping, a :class:`BucketKmerTable` contains a pointer
+    array, that contains one 64-bit pointer for each bucket.
+    If there is at least one position for a bucket, the corresponding
     pointer points to a C-array that contains
 
         1. The length of the C-array *(int64)*
@@ -1566,20 +1567,31 @@ cdef class BinnedKmerTable:
         3. The reference ID for each *k-mer* *(uint32)*
         4. The sequence position for each *k-mer* *(uint32)*
 
-    As bins are used, the memory requirements are limited to the number
-    of bins instead of scaling with the :class:`KmerAlphabet` size.
-    If each bin is used, the required memory space :math:`S` in byte is
+    As buckets are used, the memory requirements are limited to the number
+    of buckets instead of scaling with the :class:`KmerAlphabet` size.
+    If each bucket is used, the required memory space :math:`S` in byte
+    is
 
     .. math::
 
         S = 16B + 16L
 
-    where :math:`B` is the number of bins and :math:`L` is the summed
+    where :math:`B` is the number of buckets and :math:`L` is the summed
     length of all sequences added to the table.
+
+    *Buckets*
+
+    The ratio :math:`L/B` is called *load_factor*.
+    By default :class:`BucketKmerTable` uses a load factor of
+    approximately 0.8 to ensure efficient *k-mer* matching.
+    The number fo buckets can be adjusted by setting the
+    `n_buckets` parameters on :class:`BucketKmerTable` creation.
+    It is recommended to use :func:`bucket_number()` to compute an
+    appropriate number of buckets.
 
     *Multiprocessing*
 
-    :class:`BinnedKmerTable` objects can be used in multi-processed
+    :class:`BucketKmerTable` objects can be used in multi-processed
     setups:
     Adding a large database of sequences to a table can be sped up by
     splitting the database into smaller chunks and create a separate
@@ -1587,13 +1599,13 @@ cdef class BinnedKmerTable:
     Eventually, the tables can be merged to one large table using
     :meth:`from_tables()`.
 
-    Since :class:`BinnedKmerTable` supports the *pickle* protocol,
+    Since :class:`BucketKmerTable` supports the *pickle* protocol,
     the matching step can also be divided into multiple processes, if
     multiple sequences need to be matched.
 
     *Storage on hard drive*
 
-    The most time efficient way to read/write a :class:`BinnedKmerTable`
+    The most time efficient way to read/write a :class:`BucketKmerTable`
     is the *pickle* format.
 
     *Indexing and iteration*
@@ -1606,8 +1618,7 @@ cdef class BinnedKmerTable:
 
     Create a *2-mer* index table for some nucleotide sequences:
 
-    >>> table = BinnedKmerTable.from_sequences(
-    ...     bins = 5,
+    >>> table = BucketKmerTable.from_sequences(
     ...     k = 2,
     ...     sequences = [NucleotideSequence("TTATA"), NucleotideSequence("CTAG")],
     ...     ref_ids = [0, 1]
@@ -1660,10 +1671,10 @@ cdef class BinnedKmerTable:
 
     cdef object _kmer_alph
     cdef int _k
-    cdef int64 _bins
+    cdef int64 _n_buckets
 
     # The pointer array is the core of the index table:
-    # It maps each possible k-mer bin (represented by its code) to a
+    # It maps each possible k-mer bucket (represented by its code) to a
     # C-array of indices.
     # Each entry in a C-array contains the k-mer code, a reference ID
     # and the location in that sequence where that k-mer appears
@@ -1673,12 +1684,12 @@ cdef class BinnedKmerTable:
     # -----int64----|--int64--|---uint32---|---uint32---|--int64--
     #
     # The array length is based on 32 bit units.
-    # If there is no entry for a k-mer bin, the respective pointer is
+    # If there is no entry for a k-mer bucket, the respective pointer is
     # NULL.
     cdef ptr[:] _ptr_array
 
 
-    def __cinit__(self, bins, kmer_alphabet):
+    def __cinit__(self, n_buckets, kmer_alphabet):
         # This check is necessary for proper memory management
         # of the allocated arrays
         if self._is_initialized():
@@ -1686,11 +1697,11 @@ cdef class BinnedKmerTable:
 
         self._kmer_alph = kmer_alphabet
         self._k = kmer_alphabet.k
-        if len(self._kmer_alph) < bins:
-            self._bins = len(self._kmer_alph)
+        if len(self._kmer_alph) < n_buckets:
+            self._n_buckets = len(self._kmer_alph)
         else:
-            self._bins = bins
-        self._ptr_array = np.zeros(self._bins, dtype=np.uint64)
+            self._n_buckets = n_buckets
+        self._ptr_array = np.zeros(self._n_buckets, dtype=np.uint64)
 
 
     @property
@@ -1706,23 +1717,21 @@ cdef class BinnedKmerTable:
         return self._k
 
     @property
-    def bins(self):
-        return self._bins
+    def n_buckets(self):
+        return self._n_buckets
 
     @staticmethod
-    def from_sequences(bins, k, sequences, ref_ids=None, ignore_masks=None,
-                       alphabet=None, spacing=None):
+    def from_sequences(k, sequences, ref_ids=None, ignore_masks=None,
+                       alphabet=None, spacing=None, n_buckets=None):
         """
-        from_sequences(bins, k, sequences, ref_ids=None,
-                       ignore_masks=None, alphabet=None, spacing=None)
+        from_sequences(k, sequences, ref_ids=None, ignore_masks=None,
+                       alphabet=None, spacing=None, n_buckets=None)
 
-        Create a :class:`BinnedKmerTable` by storing the positions of
+        Create a :class:`BucketKmerTable` by storing the positions of
         all overlapping *k-mers* from the input `sequences`.
 
         Parameters
         ----------
-        bins : int
-            The number of bins, the *k-mers* are divided into.
         k : int
             The length of the *k-mers*.
         sequences : sized iterable object of Sequence, length=m
@@ -1758,6 +1767,12 @@ cdef class BinnedKmerTable:
             the start of the *k-mer*, also called the *model*.
             The number of *informative* positions must equal *k*.
             Refer to :class:`KmerAlphabet` for more details.
+        n_buckets : int, optional
+            Set the number of buckets in the table, e.g. to use a
+            different load factor.
+            It is recommended to use :func:`bucket_number()` for this
+            purpose.
+            By default, a load factor of approximately 0.8 is used.
 
         See also
         --------
@@ -1765,16 +1780,15 @@ cdef class BinnedKmerTable:
 
         Returns
         -------
-        table : BinnedKmerTable
+        table : BucketKmerTable
             The newly created table.
 
         Examples
         --------
 
         >>> sequences = [NucleotideSequence("TTATA"), NucleotideSequence("CTAG")]
-        >>> bins = 5
-        >>> table = BinnedKmerTable.from_sequences(
-        ...     bins, 2, sequences, ref_ids=[100, 101]
+        >>> table = BucketKmerTable.from_sequences(
+        ...     2, sequences, ref_ids=[100, 101]
         ... )
         >>> print(table)
         AG: (101, 2)
@@ -1785,16 +1799,16 @@ cdef class BinnedKmerTable:
 
         Give an explicit compatible alphabet:
 
-        >>> table = BinnedKmerTable.from_sequences(
-        ...     bins, 2, sequences, ref_ids=[100, 101],
+        >>> table = BucketKmerTable.from_sequences(
+        ...     2, sequences, ref_ids=[100, 101],
         ...     alphabet=NucleotideSequence.ambiguous_alphabet()
         ... )
 
         Ignore all ``N`` in a sequence:
 
         >>> sequence = NucleotideSequence("ACCNTANNG")
-        >>> table = BinnedKmerTable.from_sequences(
-        ...     bins, 2, [sequence], ignore_masks=[sequence.symbols == "N"]
+        >>> table = BucketKmerTable.from_sequences(
+        ...     2, [sequence], ignore_masks=[sequence.symbols == "N"]
         ... )
         >>> print(table)
         AC: (0, 0)
@@ -1806,28 +1820,33 @@ cdef class BinnedKmerTable:
         alphabet = _compute_alphabet(
             alphabet, (sequence.alphabet for sequence in sequences)
         )
-
-        table = BinnedKmerTable(bins, KmerAlphabet(alphabet, k, spacing))
+        kmer_alphabet = KmerAlphabet(alphabet, k, spacing)
 
         # Calculate k-mers
         kmers_list = [
-            table._kmer_alph.create_kmers(sequence.code)
+            kmer_alphabet.create_kmers(sequence.code)
             for sequence in sequences
         ]
 
+        if n_buckets is None:
+            n_kmers = np.sum([len(kmers) for kmers in kmers_list])
+            n_buckets = bucket_number(n_kmers)
+
+        table = BucketKmerTable(n_buckets, kmer_alphabet)
+
         masks = [
-            _prepare_mask(table._kmer_alph, ignore_mask, len(sequence))
+            _prepare_mask(kmer_alphabet, ignore_mask, len(sequence))
             for sequence, ignore_mask in zip(sequences, ignore_masks)
         ]
 
         # Count the number of appearances of each k-mer and store the
-        # result in the pointer array, that is now used a count array
+        # result in the pointer array, that is now used as count array
         for kmers, mask in zip(kmers_list, masks):
             table._count_masked_kmers(kmers, mask)
 
         # Transfrom count array into pointer array with C-array of
         # appropriate size
-        _init_c_arrays(table._ptr_array, EntrySize.BINNED)
+        _init_c_arrays(table._ptr_array, EntrySize.BUCKETS)
 
         # Fill the C-arrays with the k-mer positions
         for kmers, ref_id, mask in zip(kmers_list, ref_ids, masks):
@@ -1837,17 +1856,17 @@ cdef class BinnedKmerTable:
 
 
     @staticmethod
-    def from_kmers(bins, kmer_alphabet, kmers, ref_ids=None, masks=None):
+    def from_kmers(kmer_alphabet, kmers, ref_ids=None, masks=None,
+                   n_buckets=None):
         """
-        from_kmers(bins, kmer_alphabet, kmers, ref_ids=None, masks=None)
+        from_kmers(kmer_alphabet, kmers, ref_ids=None, masks=None,
+                   n_buckets=None)
 
-        Create a :class:`BinnedKmerTable` by storing the positions of
+        Create a :class:`BucketKmerTable` by storing the positions of
         all input *k-mers*.
 
         Parameters
         ----------
-        bins : int
-            The number of bins, the *k-mers* are divided into.
         kmer_alphabet : KmerAlphabet
             The :class:`KmerAlphabet` to use for the new table.
             Should be the same alphabet that was used to calculate the
@@ -1866,6 +1885,12 @@ cdef class BinnedKmerTable:
             A *k-mer* code at a position, where the corresponding mask
             is false, is not added to the table.
             By default, all positions are added.
+        n_buckets : int, optional
+            Set the number of buckets in the table, e.g. to use a
+            different load factor.
+            It is recommended to use :func:`bucket_number()` for this
+            purpose.
+            By default, a load factor of approximately 0.8 is used.
 
         See also
         --------
@@ -1873,7 +1898,7 @@ cdef class BinnedKmerTable:
 
         Returns
         -------
-        table : BinnedKmerTable
+        table : BucketKmerTable
             The newly created table.
 
         Examples
@@ -1886,10 +1911,7 @@ cdef class BinnedKmerTable:
         ...     print(code)
         [11701  4360  7879  9400  4419]
         [ 6517  4364  7975 11704  4419]
-        >>> bins = 100
-        >>> table = BinnedKmerTable.from_kmers(
-        ...     bins, kmer_alphabet, kmer_codes
-        ... )
+        >>> table = BucketKmerTable.from_kmers(kmer_alphabet, kmer_codes)
         >>> print(table)
         IQT: (0, 1)
         IQB: (1, 1)
@@ -1907,7 +1929,11 @@ cdef class BinnedKmerTable:
         ref_ids = _compute_ref_ids(ref_ids, kmers)
         masks = _compute_masks(masks, kmers)
 
-        table = BinnedKmerTable(bins, kmer_alphabet)
+        if n_buckets is None:
+            n_kmers = np.sum([len(e) for e in kmers])
+            n_buckets = bucket_number(n_kmers)
+
+        table = BucketKmerTable(n_buckets, kmer_alphabet)
 
         masks = [
             np.ones(len(arr), dtype=np.uint8) if mask is None
@@ -1922,7 +1948,7 @@ cdef class BinnedKmerTable:
         for arr, mask in zip(kmers, masks):
             table._count_masked_kmers(arr, mask)
 
-        _init_c_arrays(table._ptr_array, EntrySize.BINNED)
+        _init_c_arrays(table._ptr_array, EntrySize.BUCKETS)
 
         for arr, ref_id, mask in zip(kmers, ref_ids, masks):
             table._add_kmers(arr, ref_id, mask)
@@ -1931,13 +1957,13 @@ cdef class BinnedKmerTable:
 
 
     @staticmethod
-    def from_kmer_selection(bins, kmer_alphabet, positions, kmers,
-                            ref_ids=None):
+    def from_kmer_selection(kmer_alphabet, positions, kmers, ref_ids=None,
+                            n_buckets=None):
         """
-        from_kmer_selection(bins, kmer_alphabet, positions, kmers,
-                            ref_ids=None)
+        from_kmer_selection(kmer_alphabet, positions, kmers, ref_ids=None,
+                            n_buckets=None)
 
-        Create a :class:`BinnedKmerTable` by storing the positions of a
+        Create a :class:`BucketKmerTable` by storing the positions of a
         filtered subset of input *k-mers*.
 
         This can be used to reduce the number of stored *k-mers* using
@@ -1945,8 +1971,6 @@ cdef class BinnedKmerTable:
 
         Parameters
         ----------
-        bins : int
-            The number of bins, the *k-mers* are divided into.
         kmer_alphabet : KmerAlphabet
             The :class:`KmerAlphabet` to use for the new table.
             Should be the same alphabet that was used to calculate the
@@ -1968,10 +1992,16 @@ cdef class BinnedKmerTable:
             These are used to identify the corresponding sequence for a
             *k-mer* match.
             By default the IDs are counted from *0* to *m*.
+        n_buckets : int, optional
+            Set the number of buckets in the table, e.g. to use a
+            different load factor.
+            It is recommended to use :func:`bucket_number()` for this
+            purpose.
+            By default, a load factor of approximately 0.8 is used.
 
         Returns
         -------
-        table : BinnedKmerTable
+        table : BucketKmerTable
             The newly created table.
 
         Examples
@@ -1983,9 +2013,8 @@ cdef class BinnedKmerTable:
         >>> kmer_alph = KmerAlphabet(sequence1.alphabet, k=3)
         >>> minimizer = MinimizerSelector(kmer_alph, window=4)
         >>> minimizer_pos, minimizers = minimizer.select(sequence1)
-        >>> bins = 100
-        >>> kmer_table = BinnedKmerTable.from_kmer_selection(
-        ...     bins, kmer_alph, [minimizer_pos], [minimizers]
+        >>> kmer_table = BucketKmerTable.from_kmer_selection(
+        ...     kmer_alph, [minimizer_pos], [minimizers]
         ... )
 
         Use the same :class:`MinimizerSelector` to select the minimizers
@@ -2023,12 +2052,16 @@ cdef class BinnedKmerTable:
 
         ref_ids = _compute_ref_ids(ref_ids, kmers)
 
-        table = BinnedKmerTable(bins, kmer_alphabet)
+        if n_buckets is None:
+            n_kmers = np.sum([len(e) for e in kmers])
+            n_buckets = bucket_number(n_kmers)
+
+        table = BucketKmerTable(n_buckets, kmer_alphabet)
 
         for arr in kmers:
             table._count_kmers(arr)
 
-        _init_c_arrays(table._ptr_array, EntrySize.BINNED)
+        _init_c_arrays(table._ptr_array, EntrySize.BUCKETS)
 
         for pos, arr, ref_id in zip(positions, kmers, ref_ids):
             table._add_kmer_selection(
@@ -2043,35 +2076,39 @@ cdef class BinnedKmerTable:
         """
         from_tables(tables)
 
-        Create a :class:`BinnedKmerTable` by merging the *k-mer*
+        Create a :class:`BucketKmerTable` by merging the *k-mer*
         positions from existing `tables`.
 
         Parameters
         ----------
-        bins : int
-            The number of bins, the *k-mers* are divided into.
-        tables : iterable object of BinnedKmerTable
+        tables : iterable object of BucketKmerTable
             The tables to be merged.
-            All tables must have equal number of bins and equal
+            All tables must have equal number of buckets and equal
             :class:`KmerAlphabet` objects, i.e. the same *k* and equal
             base alphabets.
 
         Returns
         -------
-        table : BinnedKmerTable
+        table : BucketKmerTable
             The newly created table.
 
         Examples
         --------
+        To ensure that all tables have the same number of buckets,
+        `n_buckets` need to be set on table creation.
 
-        >>> bins = 5
-        >>> table1 = BinnedKmerTable.from_sequences(
-        ...     bins, 2, [NucleotideSequence("TTATA")], ref_ids=[100]
+        >>> # The sequence length is not exactly the length of resulting k-mers,
+        >>> # but it is close enough for bucket computation
+        >>> n_buckets = bucket_number(len("TTATA") + len("CTAG"))
+        >>> table1 = BucketKmerTable.from_sequences(
+        ...     2, [NucleotideSequence("TTATA")], ref_ids=[100],
+        ...     n_buckets=n_buckets
         ... )
-        >>> table2 = BinnedKmerTable.from_sequences(
-        ...     bins, 2, [NucleotideSequence("CTAG")], ref_ids=[101]
+        >>> table2 = BucketKmerTable.from_sequences(
+        ...     2, [NucleotideSequence("CTAG")], ref_ids=[101],
+        ...     n_buckets=n_buckets
         ... )
-        >>> merged_table = BinnedKmerTable.from_tables([table1, table2])
+        >>> merged_table = BucketKmerTable.from_tables([table1, table2])
         >>> print(merged_table)
         AG: (101, 2)
         AT: (100, 2)
@@ -2079,21 +2116,24 @@ cdef class BinnedKmerTable:
         TA: (100, 1), (100, 3), (101, 1)
         TT: (100, 0)
         """
-        cdef BinnedKmerTable table
+        cdef BucketKmerTable table
 
         _check_same_kmer_alphabet(tables)
-        _check_same_bins(tables)
+        _check_same_buckets(tables)
 
-        merged_table = BinnedKmerTable(tables[0].bins, tables[0].kmer_alphabet)
+        merged_table = BucketKmerTable(
+            tables[0].n_buckets,
+            tables[0].kmer_alphabet
+        )
 
         # Sum the number of appearances of each k-mer from the tables
         for table in tables:
             _count_table_entries(
                 merged_table._ptr_array, table._ptr_array,
-                EntrySize.BINNED
+                EntrySize.BUCKETS
             )
 
-        _init_c_arrays(merged_table._ptr_array, EntrySize.BINNED)
+        _init_c_arrays(merged_table._ptr_array, EntrySize.BUCKETS)
 
         for table in tables:
             _append_entries(merged_table._ptr_array, table._ptr_array)
@@ -2104,7 +2144,7 @@ cdef class BinnedKmerTable:
     @cython.cdivision(True)
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def match_table(self, BinnedKmerTable table, similarity_rule=None):
+    def match_table(self, BucketKmerTable table, similarity_rule=None):
         """
         match_table(table, similarity_rule=None)
 
@@ -2116,10 +2156,11 @@ cdef class BinnedKmerTable:
 
         Parameters
         ----------
-        table : BinnedKmerTable
+        table : BucketKmerTable
             The table to be matched.
-            Both tables must have equal :class:`KmerAlphabet` objects,
-            i.e. the same *k* and equal base alphabets.
+            Both tables must have equal number of buckets and equal
+            :class:`KmerAlphabet` objects, i.e. the same *k* and equal
+            base alphabets.
         similarity_rule : SimilarityRule, optional
             If this parameter is given, not only exact *k-mer* matches
             are considered, but also similar ones according to the given
@@ -2144,15 +2185,20 @@ cdef class BinnedKmerTable:
         Notes
         -----
 
+
         There is no guaranteed order of the reference IDs or
         sequence positions in the returned matches.
 
         Examples
         --------
+        To ensure that both tables have the same number of buckets,
+        `n_buckets` need to be set on table creation.
 
-        >>> bins = 100
+        >>> # The sequence length is not exactly the length of resulting k-mers,
+        >>> # but it is close enouggh for bucket computation
+        >>> n_buckets = bucket_number(max(len("BIQTITE"), len("TITANITE")))
         >>> sequence1 = ProteinSequence("BIQTITE")
-        >>> table1 = BinnedKmerTable.from_sequences(bins, 3, [sequence1], ref_ids=[100])
+        >>> table1 = BucketKmerTable.from_sequences(3, [sequence1], ref_ids=[100])
         >>> print(table1)
         IQT: (100, 1)
         ITE: (100, 4)
@@ -2160,7 +2206,7 @@ cdef class BinnedKmerTable:
         TIT: (100, 3)
         BIQ: (100, 0)
         >>> sequence2 = ProteinSequence("TITANITE")
-        >>> table2 = BinnedKmerTable.from_sequences(bins, 3, [sequence2], ref_ids=[101])
+        >>> table2 = BucketKmerTable.from_sequences(3, [sequence2], ref_ids=[101])
         >>> print(table2)
         ANI: (101, 3)
         ITA: (101, 1)
@@ -2174,13 +2220,13 @@ cdef class BinnedKmerTable:
         """
         cdef int INIT_SIZE = 1
 
-        cdef int64 bin, sim_bin
+        cdef int64 bucket, sim_bucket
         cdef int64 self_kmer, other_kmer, sim_kmer
         cdef int64 match_i
         cdef int64 i, j, l
         cdef int64 self_length, other_length
-        cdef uint32* self_bin_ptr
-        cdef uint32* other_bin_ptr
+        cdef uint32* self_bucket_ptr
+        cdef uint32* other_bucket_ptr
 
         # This variable will only be used if a similarity rule exists
         cdef int64[:] similar_kmers
@@ -2191,7 +2237,7 @@ cdef class BinnedKmerTable:
         cdef ptr[:] other_ptr_array = table._ptr_array
 
         _check_same_kmer_alphabet((self, table))
-        _check_same_bins((self, table))
+        _check_same_buckets((self, table))
 
         # This array will store the match positions
         # As the final number of matches is unknown, a list-like
@@ -2201,39 +2247,39 @@ cdef class BinnedKmerTable:
         cdef int64[:,:] matches = np.empty((INIT_SIZE, 4), dtype=np.int64)
         match_i = 0
         if similarity_rule is None:
-            for bin in range(self_ptr_array.shape[0]):
-                self_bin_ptr = <uint32*>self_ptr_array[bin]
-                other_bin_ptr = <uint32*>other_ptr_array[bin]
-                if self_bin_ptr != NULL and other_bin_ptr != NULL:
-                    # This bin exists for both tables
-                    other_length = (<int64*>other_bin_ptr)[0]
-                    self_length  = (<int64*>self_bin_ptr )[0]
+            for bucket in range(self_ptr_array.shape[0]):
+                self_bucket_ptr = <uint32*>self_ptr_array[bucket]
+                other_bucket_ptr = <uint32*>other_ptr_array[bucket]
+                if self_bucket_ptr != NULL and other_bucket_ptr != NULL:
+                    # This bucket exists for both tables
+                    other_length = (<int64*>other_bucket_ptr)[0]
+                    self_length  = (<int64*>self_bucket_ptr )[0]
                     for i in range(2, other_length, 4):
                         # Hacky syntax to achieve casting to int64*
                         # after offset is applied
-                        other_kmer = (<int64*>(other_bin_ptr + i))[0]
+                        other_kmer = (<int64*>(other_bucket_ptr + i))[0]
                         for j in range(2, self_length, 4):
-                            self_kmer = (<int64*>(self_bin_ptr + j))[0]
+                            self_kmer = (<int64*>(self_bucket_ptr + j))[0]
                             if self_kmer == other_kmer:
                                 # The k-mers are not only in the same
-                                # bin, but they are actually equal
+                                # bucket, but they are actually equal
                                 if match_i >= matches.shape[0]:
                                     # The 'matches' array is full
                                     # -> double its size
                                     matches = expand(np.asarray(matches))
-                                matches[match_i, 0] = other_bin_ptr[i+2]
-                                matches[match_i, 1] = other_bin_ptr[i+3]
-                                matches[match_i, 2] = self_bin_ptr[j+2]
-                                matches[match_i, 3] = self_bin_ptr[j+3]
+                                matches[match_i, 0] = other_bucket_ptr[i+2]
+                                matches[match_i, 1] = other_bucket_ptr[i+3]
+                                matches[match_i, 2] = self_bucket_ptr[j+2]
+                                matches[match_i, 3] = self_bucket_ptr[j+3]
                                 match_i += 1
 
         else:
-            for bin in range(self_ptr_array.shape[0]):
-                other_bin_ptr = <uint32*>other_ptr_array[bin]
-                if other_bin_ptr != NULL:
-                    other_length = (<int64*>other_bin_ptr)[0]
+            for bucket in range(self_ptr_array.shape[0]):
+                other_bucket_ptr = <uint32*>other_ptr_array[bucket]
+                if other_bucket_ptr != NULL:
+                    other_length = (<int64*>other_bucket_ptr)[0]
                     for i in range(2, other_length, 4):
-                        other_kmer = (<int64*>(other_bin_ptr + i))[0]
+                        other_kmer = (<int64*>(other_bucket_ptr + i))[0]
                         # If a similarity rule exists, iterate not only over
                         # the exact k-mer, but over all k-mers similar to
                         # the current k-mer
@@ -2242,21 +2288,21 @@ cdef class BinnedKmerTable:
                         )
                         for l in range(similar_kmers.shape[0]):
                             sim_kmer = similar_kmers[l]
-                            sim_bin = sim_kmer % self._bins
-                            self_bin_ptr = <uint32*>self_ptr_array[sim_bin]
-                            if self_bin_ptr != NULL:
-                                self_length  = (<int64*>self_bin_ptr)[0]
+                            sim_bucket = sim_kmer % self._n_buckets
+                            self_bucket_ptr = <uint32*>self_ptr_array[sim_bucket]
+                            if self_bucket_ptr != NULL:
+                                self_length  = (<int64*>self_bucket_ptr)[0]
                                 for j in range(2, self_length, 4):
-                                    self_kmer = (<int64*>(self_bin_ptr + j))[0]
+                                    self_kmer = (<int64*>(self_bucket_ptr + j))[0]
                                     if self_kmer == sim_kmer:
                                         if match_i >= matches.shape[0]:
                                             # The 'matches' array is full
                                             # -> double its size
                                             matches = expand(np.asarray(matches))
-                                        matches[match_i, 0] = other_bin_ptr[i+2]
-                                        matches[match_i, 1] = other_bin_ptr[i+3]
-                                        matches[match_i, 2] = self_bin_ptr[j+2]
-                                        matches[match_i, 3] = self_bin_ptr[j+3]
+                                        matches[match_i, 0] = other_bucket_ptr[i+2]
+                                        matches[match_i, 1] = other_bucket_ptr[i+3]
+                                        matches[match_i, 2] = self_bucket_ptr[j+2]
+                                        matches[match_i, 3] = self_bucket_ptr[j+3]
                                         match_i += 1
 
         # Trim to correct size and return
@@ -2311,9 +2357,8 @@ cdef class BinnedKmerTable:
         Examples
         --------
 
-        >>> bins = 100
         >>> sequence1 = ProteinSequence("BIQTITE")
-        >>> table = BinnedKmerTable.from_sequences(bins, 3, [sequence1], ref_ids=[100])
+        >>> table = BucketKmerTable.from_sequences(3, [sequence1], ref_ids=[100])
         >>> print(table)
         IQT: (100, 1)
         ITE: (100, 4)
@@ -2327,12 +2372,12 @@ cdef class BinnedKmerTable:
         """
         cdef int INIT_SIZE = 1
 
-        cdef int64 bin
+        cdef int64 bucket
         cdef int64 self_kmer, other_kmer, sim_kmer
         cdef int64 match_i
         cdef int64 i, l
         cdef int64 length
-        cdef uint32* bin_ptr
+        cdef uint32* bucket_ptr
         cdef uint32* array_stop
 
         # This variable will only be used if a similarity rule exists
@@ -2366,31 +2411,31 @@ cdef class BinnedKmerTable:
             for i in range(kmers.shape[0]):
                 if kmer_mask[i]:
                     other_kmer = kmers[i]
-                    bin = other_kmer % self._bins
-                    bin_ptr = <uint32*>ptr_array[bin]
-                    if bin_ptr != NULL:
-                        # There is at least one entry in this bin
-                        length = (<int64*>bin_ptr)[0]
-                        array_stop = bin_ptr + length
-                        bin_ptr += 2
-                        while bin_ptr < array_stop:
-                            self_kmer = (<int64*>bin_ptr)[0]
+                    bucket = other_kmer % self._n_buckets
+                    bucket_ptr = <uint32*>ptr_array[bucket]
+                    if bucket_ptr != NULL:
+                        # There is at least one entry in this bucket
+                        length = (<int64*>bucket_ptr)[0]
+                        array_stop = bucket_ptr + length
+                        bucket_ptr += 2
+                        while bucket_ptr < array_stop:
+                            self_kmer = (<int64*>bucket_ptr)[0]
                             if self_kmer == other_kmer:
                                 # The k-mers are not only in the same
-                                # bin, but they are actually equal
+                                # bucket, but they are actually equal
                                 if match_i >= matches.shape[0]:
                                     # The 'matches' array is full
                                     # -> double its size
                                     matches = expand(np.asarray(matches))
                                 matches[match_i, 0] = i
-                                bin_ptr += 2
-                                matches[match_i, 1] = bin_ptr[0]
-                                bin_ptr += 1
-                                matches[match_i, 2] = bin_ptr[0]
-                                bin_ptr += 1
+                                bucket_ptr += 2
+                                matches[match_i, 1] = bucket_ptr[0]
+                                bucket_ptr += 1
+                                matches[match_i, 2] = bucket_ptr[0]
+                                bucket_ptr += 1
                                 match_i += 1
                             else:
-                                bin_ptr += EntrySize.BINNED
+                                bucket_ptr += EntrySize.BUCKETS
 
         else:
             for i in range(kmers.shape[0]):
@@ -2404,36 +2449,36 @@ cdef class BinnedKmerTable:
                     )
                     for l in range(similar_kmers.shape[0]):
                         sim_kmer = similar_kmers[l]
-                        bin = sim_kmer % self._bins
+                        bucket = sim_kmer % self._n_buckets
                         # Actual copy of the code from the other
                         # if-branch:
                         # It cannot be put properly in a cdef-function,
                         # as every function call would perform reference
                         # count changes and would decrease performance
-                        bin_ptr = <uint32*>ptr_array[bin]
-                        if bin_ptr != NULL:
-                            # There is at least one entry in this bin
-                            length = (<int64*>bin_ptr)[0]
-                            array_stop = bin_ptr + length
-                            bin_ptr += 2
-                            while bin_ptr < array_stop:
-                                self_kmer = (<int64*>bin_ptr)[0]
+                        bucket_ptr = <uint32*>ptr_array[bucket]
+                        if bucket_ptr != NULL:
+                            # There is at least one entry in this bucket
+                            length = (<int64*>bucket_ptr)[0]
+                            array_stop = bucket_ptr + length
+                            bucket_ptr += 2
+                            while bucket_ptr < array_stop:
+                                self_kmer = (<int64*>bucket_ptr)[0]
                                 if self_kmer == sim_kmer:
                                     # The k-mers are not only in the same
-                                    # bin, but they are actually equal
+                                    # bucket, but they are actually equal
                                     if match_i >= matches.shape[0]:
                                         # The 'matches' array is full
                                         # -> double its size
                                         matches = expand(np.asarray(matches))
                                     matches[match_i, 0] = i
-                                    bin_ptr += 2
-                                    matches[match_i, 1] = bin_ptr[0]
-                                    bin_ptr += 1
-                                    matches[match_i, 2] = bin_ptr[0]
-                                    bin_ptr += 1
+                                    bucket_ptr += 2
+                                    matches[match_i, 1] = bucket_ptr[0]
+                                    bucket_ptr += 1
+                                    matches[match_i, 2] = bucket_ptr[0]
+                                    bucket_ptr += 1
                                     match_i += 1
                                 else:
-                                    bin_ptr += EntrySize.BINNED
+                                    bucket_ptr += EntrySize.BUCKETS
 
         # Trim to correct size and return
         return np.asarray(matches[:match_i])
@@ -2478,13 +2523,12 @@ cdef class BinnedKmerTable:
 
         Reduce the size of sequence data in the table using minimizers:
 
-        >>> bins = 100
         >>> sequence1 = ProteinSequence("THIS*IS*A*SEQVENCE")
         >>> kmer_alph = KmerAlphabet(sequence1.alphabet, k=3)
         >>> minimizer = MinimizerSelector(kmer_alph, window=4)
         >>> minimizer_pos, minimizers = minimizer.select(sequence1)
-        >>> kmer_table = BinnedKmerTable.from_kmer_selection(
-        ...     bins, kmer_alph, [minimizer_pos], [minimizers]
+        >>> kmer_table = BucketKmerTable.from_kmer_selection(
+        ...     kmer_alph, [minimizer_pos], [minimizers]
         ... )
 
         Use the same :class:`MinimizerSelector` to select the minimizers
@@ -2520,12 +2564,12 @@ cdef class BinnedKmerTable:
 
         cdef int64 i
 
-        cdef int64 bin
+        cdef int64 bucket
         cdef int64 self_kmer, other_kmer
         cdef int64 match_i
         cdef int64 seq_pos
         cdef int64 length
-        cdef uint32* bin_ptr
+        cdef uint32* bucket_ptr
         cdef uint32* array_stop
 
         # Store in new variable
@@ -2552,31 +2596,31 @@ cdef class BinnedKmerTable:
         for i in range(kmer_array.shape[0]):
             other_kmer = kmer_array[i]
             seq_pos = pos_array[i]
-            bin = other_kmer % self._bins
-            bin_ptr = <uint32*>ptr_array[bin]
-            if bin_ptr != NULL:
-                # There is at least one entry in this bin
-                length = (<int64*>bin_ptr)[0]
-                array_stop = bin_ptr + length
-                bin_ptr += 2
-                while bin_ptr < array_stop:
-                    self_kmer = (<int64*>bin_ptr)[0]
+            bucket = other_kmer % self._n_buckets
+            bucket_ptr = <uint32*>ptr_array[bucket]
+            if bucket_ptr != NULL:
+                # There is at least one entry in this bucket
+                length = (<int64*>bucket_ptr)[0]
+                array_stop = bucket_ptr + length
+                bucket_ptr += 2
+                while bucket_ptr < array_stop:
+                    self_kmer = (<int64*>bucket_ptr)[0]
                     if self_kmer == other_kmer:
                         # The k-mers are not only in the same
-                        # bin, but they are actually equal
+                        # bucket, but they are actually equal
                         if match_i >= matches.shape[0]:
                             # The 'matches' array is full
                             # -> double its size
                             matches = expand(np.asarray(matches))
                         matches[match_i, 0] = seq_pos
-                        bin_ptr += 2
-                        matches[match_i, 1] = bin_ptr[0]
-                        bin_ptr += 1
-                        matches[match_i, 2] = bin_ptr[0]
-                        bin_ptr += 1
+                        bucket_ptr += 2
+                        matches[match_i, 1] = bucket_ptr[0]
+                        bucket_ptr += 1
+                        matches[match_i, 2] = bucket_ptr[0]
+                        bucket_ptr += 1
                         match_i += 1
                     else:
-                        bin_ptr += EntrySize.BINNED
+                        bucket_ptr += EntrySize.BUCKETS
 
         # Trim to correct size and return
         return np.asarray(matches[:match_i])
@@ -2605,14 +2649,13 @@ cdef class BinnedKmerTable:
 
         Notes
         -----
-        As each bin need to be inspected for the actual *k-mer* entries,
-        this method requires far more computation time than its
+        As each bucket need to be inspected for the actual *k-mer*
+        entries, this method requires far more computation time than its
         :class:`KmerTable` equivalent.
 
         Examples
         --------
-        >>> table = BinnedKmerTable.from_sequences(
-        ...     bins = 5,
+        >>> table = BucketKmerTable.from_sequences(
         ...     k = 2,
         ...     sequences = [NucleotideSequence("TTATA"), NucleotideSequence("CTAG")],
         ...     ref_ids = [0, 1]
@@ -2631,10 +2674,10 @@ cdef class BinnedKmerTable:
         """
         cdef int64 i
 
-        cdef int64 bin
+        cdef int64 bucket
         cdef int64 kmer, self_kmer
         cdef int64 length
-        cdef uint32* bin_ptr
+        cdef uint32* bucket_ptr
         cdef uint32* array_stop
         cdef ptr[:] ptr_array = self._ptr_array
 
@@ -2644,17 +2687,17 @@ cdef class BinnedKmerTable:
 
         for i in range(kmer_array.shape[0]):
             kmer = kmer_array[i]
-            bin = kmer % self._bins
-            bin_ptr = <uint32*> (ptr_array[bin])
-            if bin_ptr != NULL:
-                length = (<int64*>bin_ptr)[0]
-                array_stop = bin_ptr + length
-                bin_ptr += 2
-                while bin_ptr < array_stop:
-                    self_kmer = (<int64*>bin_ptr)[0]
+            bucket = kmer % self._n_buckets
+            bucket_ptr = <uint32*> (ptr_array[bucket])
+            if bucket_ptr != NULL:
+                length = (<int64*>bucket_ptr)[0]
+                array_stop = bucket_ptr + length
+                bucket_ptr += 2
+                while bucket_ptr < array_stop:
+                    self_kmer = (<int64*>bucket_ptr)[0]
                     if self_kmer == kmer:
                         counts[i] += 1
-                    bin_ptr += EntrySize.BINNED
+                    bucket_ptr += EntrySize.BUCKETS
 
         return np.asarray(counts)
 
@@ -2673,16 +2716,15 @@ cdef class BinnedKmerTable:
 
         Notes
         -----
-        As each bin need to be inspected for the actual *k-mer* entries,
-        this method requires far more computation time than its
+        As each bucket need to be inspected for the actual *k-mer*
+        entries, this method requires far more computation time than its
         :class:`KmerTable` equivalent.
 
         Examples
         --------
 
-        >>> bins = 100
         >>> sequence = ProteinSequence("BIQTITE")
-        >>> table = BinnedKmerTable.from_sequences(bins, 3, [sequence], ref_ids=[100])
+        >>> table = BucketKmerTable.from_sequences(3, [sequence], ref_ids=[100])
         >>> print(table)
         IQT: (100, 1)
         ITE: (100, 4)
@@ -2700,25 +2742,25 @@ cdef class BinnedKmerTable:
         [[100   3]]
         [[100   0]]
         """
-        cdef int64 bin
+        cdef int64 bucket
         cdef int64 kmer
         cdef int64 length
-        cdef uint32* bin_ptr
+        cdef uint32* bucket_ptr
         cdef uint32* array_stop
         cdef ptr[:] ptr_array = self._ptr_array
 
         cdef cpp_set[int64] kmer_set
 
-        for bin in range(ptr_array.shape[0]):
-            bin_ptr = <uint32*> (ptr_array[bin])
-            if bin_ptr != NULL:
-                length = (<int64*>bin_ptr)[0]
-                array_stop = bin_ptr + length
-                bin_ptr += 2
-                while bin_ptr < array_stop:
-                    kmer = (<int64*>bin_ptr)[0]
+        for bucket in range(ptr_array.shape[0]):
+            bucket_ptr = <uint32*> (ptr_array[bucket])
+            if bucket_ptr != NULL:
+                length = (<int64*>bucket_ptr)[0]
+                array_stop = bucket_ptr + length
+                bucket_ptr += 2
+                while bucket_ptr < array_stop:
+                    kmer = (<int64*>bucket_ptr)[0]
                     kmer_set.insert(kmer)
-                    bin_ptr += EntrySize.BINNED
+                    bucket_ptr += EntrySize.BUCKETS
 
         cdef int64[:] kmers = np.zeros(kmer_set.size(), dtype=np.int64)
         cdef int64 i = 0
@@ -2735,7 +2777,7 @@ cdef class BinnedKmerTable:
         cdef int64 i, j
         cdef int64 self_kmer
         cdef int64 length
-        cdef uint32* bin_ptr
+        cdef uint32* bucket_ptr
         cdef uint32[:,:] positions
 
         if kmer >= len(self):
@@ -2744,20 +2786,20 @@ cdef class BinnedKmerTable:
                 f"for the given KmerAlphabet"
             )
 
-        bin_ptr = <uint32*>self._ptr_array[kmer % self._bins]
-        if bin_ptr == NULL:
+        bucket_ptr = <uint32*>self._ptr_array[kmer % self._n_buckets]
+        if bucket_ptr == NULL:
             return np.zeros((0, 2), dtype=np.uint32)
         else:
-            length = (<int64*>bin_ptr)[0]
+            length = (<int64*>bucket_ptr)[0]
             # Pessimistic array allocation:
-            # All k-mer positions in bin belong to the requested k-mer
+            # All k-mer positions in bucket belong to the requested k-mer
             positions = np.empty(((length - 2) // 4, 2), dtype=np.uint32)
             i = 0
             for j in range(2, length, 4):
-                self_kmer = bin_ptr[j]
+                self_kmer = bucket_ptr[j]
                 if self_kmer == kmer:
-                    positions[i,0] = bin_ptr[j+2]
-                    positions[i,1] = bin_ptr[j+3]
+                    positions[i,0] = bucket_ptr[j+2]
+                    positions[i,1] = bucket_ptr[j+3]
                     i += 1
             # Trim to correct size
             return np.asarray(positions)[:i]
@@ -2770,16 +2812,16 @@ cdef class BinnedKmerTable:
     def __eq__(self, item):
         if item is self:
             return True
-        if type(item) != BinnedKmerTable:
+        if type(item) != BucketKmerTable:
             return False
 
         # Introduce static typing to access statically typed fields
-        cdef BinnedKmerTable other = item
+        cdef BucketKmerTable other = item
         if self._kmer_alph.base_alphabet != other._kmer_alph.base_alphabet:
             return False
         if self._k != other._k:
             return False
-        if self._bins != other._bins:
+        if self._n_buckets != other._n_buckets:
             return False
         return _equal_c_arrays(self._ptr_array, other._ptr_array)
 
@@ -2789,14 +2831,14 @@ cdef class BinnedKmerTable:
 
 
     def __getnewargs_ex__(self):
-        return (self._bins, self._kmer_alph), {}
+        return (self._n_buckets, self._kmer_alph), {}
 
 
     def __getstate__(self):
-        cdef int64[:] relevant_bins = np.where(
+        cdef int64[:] relevant_buckets = np.where(
             np.asarray(self._ptr_array) != 0
         )[0]
-        return _pickle_c_arrays(self._ptr_array, relevant_bins)
+        return _pickle_c_arrays(self._ptr_array, relevant_buckets)
 
 
 
@@ -2822,8 +2864,8 @@ cdef class BinnedKmerTable:
 
         for seq_pos in range(kmers.shape[0]):
             kmer = kmers[seq_pos]
-            # Pool all k-mers that should go into the same bin
-            count_array[kmer % self._bins] += 1
+            # Pool all k-mers that should go into the same bucket
+            count_array[kmer % self._n_buckets] += 1
 
     @cython.cdivision(True)
     @cython.boundscheck(False)
@@ -2837,8 +2879,8 @@ cdef class BinnedKmerTable:
         for seq_pos in range(kmers.shape[0]):
             if mask[seq_pos]:
                 kmer = kmers[seq_pos]
-                # Pool all k-mers that should go into the same bin
-                count_array[kmer % self._bins] += 1
+                # Pool all k-mers that should go into the same bucket
+                count_array[kmer % self._n_buckets] += 1
 
 
     @cython.cdivision(True)
@@ -2848,7 +2890,7 @@ cdef class BinnedKmerTable:
         cdef uint32 seq_pos
         cdef int64 current_size
         cdef int64 kmer
-        cdef uint32* bin_ptr
+        cdef uint32* bucket_ptr
         cdef uint32* kmer_val_ptr
 
         # Store in new variable
@@ -2864,15 +2906,15 @@ cdef class BinnedKmerTable:
         for seq_pos in range(kmers.shape[0]):
             if mask[seq_pos]:
                 kmer = kmers[seq_pos]
-                bin_ptr = <uint32*> ptr_array[kmer % self._bins]
+                bucket_ptr = <uint32*> ptr_array[kmer % self._n_buckets]
 
                 # Append k-mer, reference ID and position
-                current_size = (<int64*> bin_ptr)[0]
-                kmer_val_ptr = &bin_ptr[current_size]
+                current_size = (<int64*> bucket_ptr)[0]
+                kmer_val_ptr = &bucket_ptr[current_size]
                 (<int64*> kmer_val_ptr)[0] = kmer
-                bin_ptr[current_size + 2] = ref_id
-                bin_ptr[current_size + 3] = seq_pos
-                (<int64*> bin_ptr)[0] = current_size + EntrySize.BINNED
+                bucket_ptr[current_size + 2] = ref_id
+                bucket_ptr[current_size + 3] = seq_pos
+                (<int64*> bucket_ptr)[0] = current_size + EntrySize.BUCKETS
 
 
     @cython.cdivision(True)
@@ -2884,7 +2926,7 @@ cdef class BinnedKmerTable:
         cdef uint32 seq_pos
         cdef int64 current_size
         cdef int64 kmer
-        cdef uint32* bin_ptr
+        cdef uint32* bucket_ptr
         cdef uint32* kmer_val_ptr
 
         if positions.shape[0] != kmers.shape[0]:
@@ -2900,15 +2942,15 @@ cdef class BinnedKmerTable:
         for i in range(positions.shape[0]):
             kmer = kmers[i]
             seq_pos = positions[i]
-            bin_ptr = <uint32*> ptr_array[kmer % self._bins]
+            bucket_ptr = <uint32*> ptr_array[kmer % self._n_buckets]
 
             # Append k-mer reference ID and position
-            current_size = (<int64*> bin_ptr)[0]
-            kmer_val_ptr = &bin_ptr[current_size]
+            current_size = (<int64*> bucket_ptr)[0]
+            kmer_val_ptr = &bucket_ptr[current_size]
             (<int64*> kmer_val_ptr)[0] = kmer
-            bin_ptr[current_size + 2] = ref_id
-            bin_ptr[current_size + 3] = seq_pos
-            (<int64*> bin_ptr)[0] = current_size + EntrySize.BINNED
+            bucket_ptr[current_size + 2] = ref_id
+            bucket_ptr[current_size + 3] = seq_pos
+            (<int64*> bucket_ptr)[0] = current_size + EntrySize.BUCKETS
 
 
     cdef inline bint _is_initialized(self):
@@ -2923,27 +2965,28 @@ cdef class BinnedKmerTable:
 
 
 
+@cython.cdivision(True)
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def _count_table_entries(ptr[:] count_array, ptr[:] ptr_array,
                          int64 element_size):
     """
-    For each bin, count the number of elements in `ptr_array` and add
+    For each bucket, count the number of elements in `ptr_array` and add
     the count to the counts in `count_array`.
     The element size gives the number of 32 bit elements per entry.
     """
     cdef int64 length
     cdef int64 count
-    cdef int64 bin
-    cdef uint32* bin_ptr
+    cdef int64 bucket
+    cdef uint32* bucket_ptr
 
-    for bin in range(count_array.shape[0]):
-        bin_ptr = <uint32*> (ptr_array[bin])
-        if bin_ptr != NULL:
+    for bucket in range(count_array.shape[0]):
+        bucket_ptr = <uint32*> (ptr_array[bucket])
+        if bucket_ptr != NULL:
             # First 64 bits are length of C-array
-            length = (<int64*>bin_ptr)[0]
+            length = (<int64*>bucket_ptr)[0]
             count = (length - 2) // element_size
-            count_array[bin] += count
+            count_array[bucket] += count
 
 
 @cython.boundscheck(False)
@@ -2959,26 +3002,26 @@ def _init_c_arrays(ptr[:] ptr_array, int64 element_size):
     of the C-array (an ``int64``) measured in number of ``int32``
     elements.
     """
-    cdef int64 bin
+    cdef int64 bucket
     cdef int64 count
-    cdef uint32* bin_ptr
+    cdef uint32* bucket_ptr
 
-    for bin in range(ptr_array.shape[0]):
-        # Before the C-array for a bin initialized, the element in the
-        # pointer array contains the number of elements the C-array
+    for bucket in range(ptr_array.shape[0]):
+        # Before the C-array for a bucket initialized, the element in
+        # the pointer array contains the number of elements the C-array
         # should hold
-        count = ptr_array[bin]
+        count = ptr_array[bucket]
         if count != 0:
             # Array size + n x element size
-            bin_ptr = <uint32*>malloc(
+            bucket_ptr = <uint32*>malloc(
                 (2 + count * element_size) * sizeof(uint32)
             )
-            if not bin_ptr:
+            if not bucket_ptr:
                 raise MemoryError()
             # The initial size is 2,
             # which is the size of the array size value (int64)
-            (<int64*> bin_ptr)[0] = 2
-            ptr_array[bin] = <ptr>bin_ptr
+            (<int64*> bucket_ptr)[0] = 2
+            ptr_array[bucket] = <ptr>bucket_ptr
 
 
 @cython.boundscheck(False)
@@ -2988,27 +3031,27 @@ def _equal_c_arrays(ptr[:] self_ptr_array, ptr[:] other_ptr_array):
     Check if two pointer arrays are equal, i.e. they point to C-arrays
     with equal elements.
     """
-    cdef int64 bin
+    cdef int64 bucket
     cdef int64 i
     cdef int64 self_length, other_length
-    cdef uint32* self_bin_ptr
-    cdef uint32* other_bin_ptr
+    cdef uint32* self_bucket_ptr
+    cdef uint32* other_bucket_ptr
 
-    for bin in range(self_ptr_array.shape[0]):
-        self_bin_ptr = <uint32*>self_ptr_array[bin]
-        other_bin_ptr = <uint32*>other_ptr_array[bin]
-        if self_bin_ptr != NULL or other_bin_ptr != NULL:
-            if self_bin_ptr == NULL or other_bin_ptr == NULL:
-                # One of the tables has entries for this bin
+    for bucket in range(self_ptr_array.shape[0]):
+        self_bucket_ptr = <uint32*>self_ptr_array[bucket]
+        other_bucket_ptr = <uint32*>other_ptr_array[bucket]
+        if self_bucket_ptr != NULL or other_bucket_ptr != NULL:
+            if self_bucket_ptr == NULL or other_bucket_ptr == NULL:
+                # One of the tables has entries for this bucket
                 # while the other one has not
                 return False
-            # This bin exists in both tables
-            self_length  = (<int64*>self_bin_ptr )[0]
-            other_length = (<int64*>other_bin_ptr)[0]
+            # This bucket exists in both tables
+            self_length  = (<int64*>self_bucket_ptr )[0]
+            other_length = (<int64*>other_bucket_ptr)[0]
             if self_length != other_length:
                 return False
             for i in range(2, self_length):
-                if self_bin_ptr[i] != other_bin_ptr[i]:
+                if self_bucket_ptr[i] != other_bucket_ptr[i]:
                     return False
 
     # If none of the previous checks failed, both objects are equal
@@ -3025,18 +3068,18 @@ def _append_entries(ptr[:] trg_ptr_array, ptr[:] src_ptr_array):
     Expect that the target C-arrays are already initialized to
     sufficient capacity.
     """
-    cdef int64 bin
+    cdef int64 bucket
     cdef int64 self_length, other_length, new_length
     cdef uint32* self_kmer_ptr
     cdef uint32* other_kmer_ptr
 
-    for bin in range(trg_ptr_array.shape[0]):
-        self_kmer_ptr = <uint32*>trg_ptr_array[bin]
-        other_kmer_ptr = <uint32*>src_ptr_array[bin]
+    for bucket in range(trg_ptr_array.shape[0]):
+        self_kmer_ptr = <uint32*>trg_ptr_array[bucket]
+        other_kmer_ptr = <uint32*>src_ptr_array[bucket]
         if other_kmer_ptr != NULL:
             self_length  = (<int64*>self_kmer_ptr)[0]
             other_length = (<int64*>other_kmer_ptr)[0]
-            # New new C-array needs the combined space of both
+            # New new C-array needs the combucketed space of both
             # arrays, but only one length value
             new_length = self_length + other_length - 2
             (<int64*>self_kmer_ptr)[0] = new_length
@@ -3053,27 +3096,27 @@ def _append_entries(ptr[:] trg_ptr_array, ptr[:] src_ptr_array):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def _pickle_c_arrays(ptr[:] ptr_array, int64[:] relevant_bins):
+def _pickle_c_arrays(ptr[:] ptr_array, int64[:] relevant_buckets):
     """
-    Pickle the `relevant_bins` (i.e. the bins that actualy point to an
-    array) of the `ptr_array` into a list of bytes.
+    Pickle the `relevant_buckets` (i.e. the buckets that actualy point
+    to an array) of the `ptr_array` into a list of bytes.
     """
     cdef int64 i
-    cdef int64 bin
+    cdef int64 bucket
     cdef int64 length
-    cdef uint32* bin_ptr
+    cdef uint32* bucket_ptr
 
-    cdef list pickled_arrays = [b""] * relevant_bins.shape[0]
+    cdef list pickled_arrays = [b""] * relevant_buckets.shape[0]
 
-    for i in range(relevant_bins.shape[0]):
-        bin = relevant_bins[i]
-        bin_ptr = <uint32*>ptr_array[bin]
-        length = (<int64*>bin_ptr)[0]
+    for i in range(relevant_buckets.shape[0]):
+        bucket = relevant_buckets[i]
+        bucket_ptr = <uint32*>ptr_array[bucket]
+        length = (<int64*>bucket_ptr)[0]
         # Get directly the bytes coding for each C-array
         pickled_arrays[i] \
-            = <bytes>(<char*>bin_ptr)[:sizeof(uint32) * length]
+            = <bytes>(<char*>bucket_ptr)[:sizeof(uint32) * length]
 
-    return np.asarray(relevant_bins), pickled_arrays
+    return np.asarray(relevant_buckets), pickled_arrays
 
 
 @cython.boundscheck(False)
@@ -3083,27 +3126,27 @@ def _unpickle_c_arrays(ptr[:] ptr_array, state):
     Unpickle the pickled `state` into the given `ptr_array`.
     """
     cdef int64 i
-    cdef int64 bin
+    cdef int64 bucket
     cdef int64 byte_length
-    cdef uint32* bin_ptr
+    cdef uint32* bucket_ptr
     cdef bytes pickled_bytes
 
-    cdef int64[:] relevant_bins = state[0]
+    cdef int64[:] relevant_buckets = state[0]
     cdef list pickled_pointers = state[1]
 
-    for i in range(relevant_bins.shape[0]):
-        bin = relevant_bins[i]
-        if bin < 0 or bin >= ptr_array.shape[0]:
-            raise ValueError("Invalid bin found while unpickling")
+    for i in range(relevant_buckets.shape[0]):
+        bucket = relevant_buckets[i]
+        if bucket < 0 or bucket >= ptr_array.shape[0]:
+            raise ValueError("Invalid bucket found while unpickling")
         pickled_bytes = pickled_pointers[i]
         byte_length = len(pickled_bytes)
         if byte_length != 0:
-            bin_ptr = <uint32*>malloc(byte_length)
-            if not bin_ptr:
+            bucket_ptr = <uint32*>malloc(byte_length)
+            if not bucket_ptr:
                 raise MemoryError
             # Convert bytes back into C-array
-            memcpy(bin_ptr, <char*>pickled_bytes, byte_length)
-            ptr_array[bin] = <ptr>bin_ptr
+            memcpy(bucket_ptr, <char*>pickled_bytes, byte_length)
+            ptr_array[bucket] = <ptr>bucket_ptr
 
 
 cdef inline void _deallocate_ptrs(ptr[:] ptrs):
@@ -3239,15 +3282,15 @@ def _check_same_kmer_alphabet(tables):
             )
 
 
-def _check_same_bins(tables):
+def _check_same_buckets(tables):
     """
-    Check if the bin sizes of all tables are equal.
+    Check if the bucket sizes of all tables are equal.
     """
-    ref_bins = tables[0].bins
-    for bins in (table.bins for table in tables):
-        if not bins == ref_bins:
+    ref_n_buckets = tables[0].n_buckets
+    for buckets in (table.n_buckets for table in tables):
+        if not buckets == ref_n_buckets:
             raise ValueError(
-                "The number of bins of the tables are not equal "
+                "The number of buckets of the tables are not equal "
                 "to each other"
             )
 

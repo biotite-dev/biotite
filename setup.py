@@ -69,8 +69,12 @@ setup(
     
     # Including additional data
     package_data = {
-        # Substitution matrices
-        "biotite.sequence.align"    : ["matrix_data/*.mat"],
+        "biotite.sequence.align"    : [
+            # Substitution matrices
+            "matrix_data/*.mat",
+            # Prime hash table sizes
+            "primes.txt"
+        ],
         # Color schmemes
         "biotite.sequence.graphics" : ["color_schemes/*.json"],
         # Codon tables
