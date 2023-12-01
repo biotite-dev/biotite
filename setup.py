@@ -39,17 +39,21 @@ try:
     )
 except ValueError:
     # This is a source distribution and the directory already contains
-    # only C files
+    # only C/C++ files
     pass
 
 
 def get_extensions():
     ext_sources = []
-    for dirpath, dirnames, filenames in os.walk(normpath("src/biotite")):
-        for filename in fnmatch.filter(filenames, '*.c'):
+    for dirpath, _, filenames in os.walk(normpath("src/biotite")):
+        for filename in (
+            fnmatch.filter(filenames, "*.c") +
+            fnmatch.filter(filenames, "*.cpp")
+        ):
             ext_sources.append(os.path.join(dirpath, filename))
     ext_names = [source
                  .replace("src"+normpath("/"), "")
+                 .replace(".cpp", "")
                  .replace(".c", "")
                  .replace(normpath("/"), ".")
                  for source in ext_sources]
@@ -64,9 +68,9 @@ setup(
     zip_safe = False,
     packages = find_packages("src"),
     package_dir = {"" : "src"},
-    
+
     ext_modules = get_extensions(),
-    
+
     # Including additional data
     package_data = {
         "biotite.sequence.align"    : [
@@ -87,4 +91,3 @@ setup(
 
 # Return to original directory
 os.chdir(original_wd)
-
