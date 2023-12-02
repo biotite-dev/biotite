@@ -26,7 +26,7 @@ The aligning functions are usually C-accelerated, reducing the
 computation time substantially.
 
 This subpackage also contains functionality for finding *k-mer* matches
-between two sequences, allowing fast heuristic pairwise alignments. 
+between two sequences, allowing fast heuristic pairwise alignments.
 """
 
 __name__ = "biotite.sequence.align"
@@ -34,6 +34,7 @@ __author__ = "Patrick Kunzmann"
 
 from .alignment import *
 from .banded import *
+from .buckets import *
 from .kmeralphabet import *
 from .kmertable import *
 from .kmersimilarity import *
@@ -42,4 +43,6 @@ from .localungapped import *
 from .matrix import *
 from .multiple import *
 from .pairwise import *
+from .permutation import *
+from .selector import *
 from .statistics import *

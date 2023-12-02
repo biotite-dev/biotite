@@ -21,7 +21,8 @@ UNIPROT_URL = "https://www.uniprot.org/"
 PUBCHEM_URL = "https://pubchem.ncbi.nlm.nih.gov/"
 
 
-@pytest.mark.parametrize("package_name, context_package_names", [
+# Keep test parameters in separate variable to generate IDs from them
+TEST_PARAMETERS = [
     pytest.param(
         "biotite",
         []
@@ -206,7 +207,14 @@ PUBCHEM_URL = "https://pubchem.ncbi.nlm.nih.gov/"
             is_not_installed("vina"), reason="Software is not installed"
         )
     ),
-])
+]
+
+
+@pytest.mark.parametrize(
+    "package_name, context_package_names",
+    TEST_PARAMETERS,
+    ids=[param.values[0] for param in TEST_PARAMETERS]
+)
 def test_doctest(package_name, context_package_names):
     """
     Run all doctest strings in all Biotite subpackages.

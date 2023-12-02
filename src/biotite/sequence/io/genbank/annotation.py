@@ -25,7 +25,7 @@ def get_annotation(gb_file, include_only=None):
     """
     Get the sequence annotation from the *FEATURES* field of a
     GenBank file.
-    
+
     Parameters
     ----------
     gb_file : GenBankFile
@@ -33,7 +33,7 @@ def get_annotation(gb_file, include_only=None):
     include_only : iterable object of str, optional
         List of names of feature keys, which should included
         in the annotation. By default all features are included.
-    
+
     Returns
     -------
     annotation : Annotation
@@ -45,11 +45,11 @@ def get_annotation(gb_file, include_only=None):
     if len(fields) > 1:
         raise InvalidFileError("File has multiple 'FEATURES' fields")
     lines, _ = fields[0]
-    
+
 
     ### Parse all lines to create an index of features,
     # i.e. pairs of the feature key
-    # and the text belonging to the respective feature 
+    # and the text belonging to the respective feature
     feature_list = []
     feature_key = None
     feature_value = ""
@@ -65,7 +65,7 @@ def get_annotation(gb_file, include_only=None):
         feature_value += line[_QUAL_START:] + " "
     # Store last feature key and value (loop already exited)
     feature_list.append((feature_key, feature_value))
-    
+
 
     ### Process only relevant features and put them into an Annotation
     annotation = Annotation()
@@ -74,7 +74,7 @@ def get_annotation(gb_file, include_only=None):
     for key, val in feature_list:
         if include_only is None or key in include_only:
             qual_dict = {}
-            
+
             # Split feature definition into parts
             # e.g.
             #
@@ -138,9 +138,9 @@ def get_annotation(gb_file, include_only=None):
                     _set_qual(qual_dict, qual_key, qual_val)
                     qual_key = None
                     qual_val = None
-            
+
             annotation.add_feature(Feature(key, locs, qual_dict))
-    
+
     return annotation
 
 
@@ -149,11 +149,11 @@ def _parse_locs(loc_str):
     if loc_str.startswith(("join", "order")):
         str_list = loc_str[loc_str.index("(")+1:loc_str.rindex(")")].split(",")
         for s in str_list:
-            locs.extend(_parse_locs(s))
+            locs.extend(_parse_locs(s.strip()))
     elif loc_str.startswith("complement"):
         compl_str = loc_str[loc_str.index("(")+1:loc_str.rindex(")")]
         compl_locs = [
-            Location(loc.first, loc.last, Location.Strand.REVERSE, loc.defect) 
+            Location(loc.first, loc.last, Location.Strand.REVERSE, loc.defect)
             for loc in _parse_locs(compl_str)
         ]
         locs.extend(compl_locs)
@@ -219,7 +219,7 @@ def _set_qual(qual_dict, key, val):
 def set_annotation(gb_file, annotation):
     """
     Set the *FEATURES* field of a GenBank file with an annotation.
-    
+
     Parameters
     ----------
     gb_file : GenBankFile

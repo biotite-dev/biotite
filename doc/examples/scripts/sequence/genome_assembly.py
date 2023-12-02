@@ -46,13 +46,10 @@ terms of base-call error probability :math:`P` :footcite:`Cock2010`:
 # License: BSD 3 clause
 
 import itertools
-import warnings
 import tempfile
 from concurrent.futures import ProcessPoolExecutor
-from os.path import isfile, join
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 from matplotlib.lines import Line2D
 from matplotlib.colors import LinearSegmentedColormap
 import biotite
@@ -105,7 +102,7 @@ length_ax.set_yscale("log")
 
 score_ax.hist(
     [np.mean(score_array) for score_array in score_arrays],
-    bins=N_BINS, color="gray", 
+    bins=N_BINS, color="gray",
 )
 score_ax.set_xlim(0, 30)
 score_ax.set_xlabel("Phred score")
@@ -339,7 +336,9 @@ def map_sequence(read, diag):
             max_number = 1
         )[0]
 
-with ProcessPoolExecutor() as executor:
+# Each process can be quite memory consuming
+# -> Cap to two processes to make it work on low-RAM commodity hardware
+with ProcessPoolExecutor(max_workers=2) as executor:
     alignments = list(executor.map(
         map_sequence, compl_reads, correct_diagonals, chunksize=1000
     ))
@@ -479,7 +478,7 @@ deletion_number = np.zeros(len(orig_genome), dtype=int)
 for alignment, score_array in zip(correct_alignments, correct_score_arrays):
     if alignment is not None:
         trace = alignment.trace
-        
+
         no_gap_trace = trace[(trace[:,0] != -1) & (trace[:,1] != -1)]
         # Get the sequence code for the aligned read symbols
         seq_code = alignment.sequences[0].code[no_gap_trace[:,0]]
@@ -491,11 +490,11 @@ for alignment, score_array in zip(correct_alignments, correct_score_arrays):
         # positions taken from the alignment trace
         phred_sum[no_gap_trace[:,1], seq_code] \
             += score_array[no_gap_trace[:,0]]
-        
+
         sequencing_depth[
             trace[0,1] : trace[-1,1]
         ] += 1
-        
+
         read_gap_trace = trace[trace[:,0] == -1]
         deletion_number[read_gap_trace[:,1]] += 1
 
@@ -733,7 +732,7 @@ for row in range(1 + len(alignment) // SYMBOLS_PER_LINE):
     seq_stop  = alignment.trace[col_stop-1,  1] + 1
     n_sequences = len(alignment.sequences)
     y_base = (n_sequences + SPACING) * row + n_sequences
-    
+
     for feature_name, (first, last) in FEATURES.items():
         # Zero based sequence indexing
         start = first-1
@@ -751,10 +750,10 @@ for row in range(1 + len(alignment) // SYMBOLS_PER_LINE):
                 color="black", linewidth=2
             )
             ax.text(
-                x_mean, y_text, feature_name, 
+                x_mean, y_text, feature_name,
                 fontsize=8, va="top", ha="center"
             )
-# Increase y-limit to include the feature indicators in the last line 
+# Increase y-limit to include the feature indicators in the last line
 ax.set_ylim(y_text, 0)
 fig.tight_layout()
 

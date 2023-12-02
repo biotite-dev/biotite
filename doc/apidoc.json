@@ -130,11 +130,24 @@
             "get_pairwise_sequence_identity",
             "score"
         ],
-        "K-mers" : [
+        "k-mers" : [
             "KmerAlphabet",
             "KmerTable",
+            "BucketKmerTable",
             "SimilarityRule",
-            "ScoreThresholdRule"
+            "ScoreThresholdRule",
+            "bucket_number"
+        ],
+        "k-mer subset selections" : [
+            "MinimizerSelector",
+            "SyncmerSelector",
+            "CachedSyncmerSelector",
+            "MincodeSelector"
+        ],
+        "k-mer permutations" : [
+            "Permutation",
+            "RandomPermutation",
+            "FrequencyPermutation"
         ]
     },
 

@@ -36,7 +36,8 @@ class KmerAlphabet(Alphabet):
     
     It's primary use is its :meth:`create_kmers()` method, that iterates
     over all overlapping *k-mers* in a :class:`Sequence` and encodes
-    each one into its corresponding *k-mer* symbol code.
+    each one into its corresponding *k-mer* symbol code
+    (*k-mer* code in short).
     This functionality is prominently used by a :class:`KmerTable` to
     find *k-mer* matches between two sequences.
 
@@ -315,7 +316,7 @@ class KmerAlphabet(Alphabet):
         
         Returns
         -------
-        codes : ndarray, dtype=np.int64, shape=(k,) or shape=(n,k)
+        codes : ndarray, dtype=np.uint64, shape=(k,) or shape=(n,k)
             The split symbol codes from the base alphabet.
 
         See also
@@ -356,8 +357,8 @@ class KmerAlphabet(Alphabet):
 
         cdef int64[:] radix_multiplier = self._radix_multiplier
 
-        cdef int64[:,:] split_codes = np.empty(
-            (codes.shape[0], self._k), dtype=np.int64
+        cdef uint64[:,:] split_codes = np.empty(
+            (codes.shape[0], self._k), dtype=np.uint64
         )
         
         cdef int k = self._k
@@ -378,7 +379,7 @@ class KmerAlphabet(Alphabet):
 
         Get the length of the *k-mer* array, created by
         :meth:`create_kmers()`, if a sequence of size `length` would be
-        given given.
+        given.
 
         Parameters
         ----------
