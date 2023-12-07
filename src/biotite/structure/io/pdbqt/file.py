@@ -8,7 +8,6 @@ __all__ = ["PDBQTFile"]
 
 import warnings
 import numpy as np
-import networkx as nx
 from ....file import TextFile, InvalidFileError
 from ...error import BadStructureError
 from ...atoms import AtomArray, AtomArrayStack
@@ -26,17 +25,17 @@ PARAMETRIZED_ELEMENTS = [
 class PDBQTFile(TextFile):
     """
     This class represents an *AutoDock* PDBQT file.
-    
+
     This class only provides rudimentary support for reading/writing
     the pure atom information.
 
     EXPERIMENTAL: Future API changes are probable.
-    
+
     Examples
     --------
-    
+
     Write biotin as flexible ligand into a PDBQT file:
-    
+
     >>> import os.path
     >>> ligand = residue("BTN")
     >>> file = PDBQTFile()
@@ -58,7 +57,7 @@ class PDBQTFile(TextFile):
     HET         0  BTN H4     H        -2.451   -0.038   -2.252
     >>> print(file)
     ROOT
-    HETATM    1 C11  BTN     0       5.089  -0.280   0.173  1.00  0.00     0.258 C 
+    HETATM    1 C11  BTN     0       5.089  -0.280   0.173  1.00  0.00     0.258 C
     HETATM    2 O11  BTN     0       4.956  -1.473   0.030  1.00  0.00    -0.264 OA
     ENDROOT
     BRANCH   1   3
@@ -66,23 +65,23 @@ class PDBQTFile(TextFile):
     HETATM   17 HO2  BTN     0       7.034  -0.391   0.517  1.00  0.00     0.221 HD
     ENDBRANCH   1   3
     BRANCH   1   4
-    HETATM    4 C10  BTN     0       3.896   0.631   0.039  1.00  0.00     0.105 C 
+    HETATM    4 C10  BTN     0       3.896   0.631   0.039  1.00  0.00     0.105 C
     BRANCH   4   5
-    HETATM    5 C9   BTN     0       2.651  -0.200  -0.276  1.00  0.00     0.010 C 
+    HETATM    5 C9   BTN     0       2.651  -0.200  -0.276  1.00  0.00     0.010 C
     BRANCH   5   6
-    HETATM    6 C8   BTN     0       1.440   0.725  -0.412  1.00  0.00     0.002 C 
+    HETATM    6 C8   BTN     0       1.440   0.725  -0.412  1.00  0.00     0.002 C
     BRANCH   6   7
-    HETATM    7 C7   BTN     0       0.196  -0.106  -0.727  1.00  0.00     0.016 C 
+    HETATM    7 C7   BTN     0       0.196  -0.106  -0.727  1.00  0.00     0.016 C
     BRANCH   7   8
-    HETATM    8 C2   BTN     0      -1.015   0.819  -0.863  1.00  0.00     0.065 C 
+    HETATM    8 C2   BTN     0      -1.015   0.819  -0.863  1.00  0.00     0.065 C
     HETATM    9 S1   BTN     0      -1.419   1.604   0.751  1.00  0.00    -0.154 SA
-    HETATM   10 C6   BTN     0      -3.205   1.827   0.371  1.00  0.00     0.090 C 
-    HETATM   11 C5   BTN     0      -3.530   0.581  -0.476  1.00  0.00     0.091 C 
+    HETATM   10 C6   BTN     0      -3.205   1.827   0.371  1.00  0.00     0.090 C
+    HETATM   11 C5   BTN     0      -3.530   0.581  -0.476  1.00  0.00     0.091 C
     HETATM   12 N1   BTN     0      -3.970  -0.507   0.412  1.00  0.00    -0.239 NA
-    HETATM   13 C3   BTN     0      -3.141  -1.549   0.271  1.00  0.00     0.272 C 
+    HETATM   13 C3   BTN     0      -3.141  -1.549   0.271  1.00  0.00     0.272 C
     HETATM   14 O3   BTN     0      -3.271  -2.589   0.888  1.00  0.00    -0.259 OA
     HETATM   15 N2   BTN     0      -2.154  -1.343  -0.612  1.00  0.00    -0.239 NA
-    HETATM   16 C4   BTN     0      -2.289   0.010  -1.175  1.00  0.00     0.093 C 
+    HETATM   16 C4   BTN     0      -2.289   0.010  -1.175  1.00  0.00     0.093 C
     HETATM   18 HN1  BTN     0      -4.738  -0.474   1.004  1.00  0.00     0.132 HD
     HETATM   19 HN2  BTN     0      -1.462  -1.982  -0.843  1.00  0.00     0.132 HD
     ENDBRANCH   7   8
@@ -97,7 +96,7 @@ class PDBQTFile(TextFile):
     def get_remarks(self, model=None):
         """
         Get the content of ``REMARKS`` lines.
-        
+
         Parameters
         ----------
         model : int, optional
@@ -128,7 +127,7 @@ class PDBQTFile(TextFile):
         # In these cases model starting index is set to 0
         if len(model_start_i) == 0:
             model_start_i = np.array([0])
-        
+
         if model is None:
             # Add exclusive end of file
             model_start_i = np.concatenate((model_start_i, [len(self.lines)]))
@@ -144,7 +143,7 @@ class PDBQTFile(TextFile):
                     "\n".join([self.lines[i][7:] for i in model_remark_line_i])
                 )
             return remarks
-        
+
         else:
             last_model = len(model_start_i)
             if model == 0:
@@ -163,7 +162,7 @@ class PDBQTFile(TextFile):
                     f"the given model {model} does not exist"
                 )
             remark_line_i = remark_line_i[line_filter]
-            
+
             # Do not include 'REMARK ' itself -> begin from pos 8
             return "\n".join([self.lines[i][7:] for i in remark_line_i])
 
@@ -172,7 +171,7 @@ class PDBQTFile(TextFile):
         """
         Get an :class:`AtomArray` or :class:`AtomArrayStack` from the
         PDBQT file.
-        
+
         Parameters
         ----------
         model : int, optional
@@ -184,7 +183,7 @@ class PDBQTFile(TextFile):
             If this parameter is omitted, an :class:`AtomArrayStack`
             containing all models will be returned, even if the
             structure contains only one model.
-        
+
         Returns
         -------
         array : AtomArray or AtomArrayStack
@@ -202,7 +201,7 @@ class PDBQTFile(TextFile):
         # In these cases model starting index is set to 0
         if len(model_start_i) == 0:
             model_start_i = np.array([0])
-        
+
         if model is None:
             depth = len(model_start_i)
             length = self._get_model_length(model_start_i, atom_line_i)
@@ -216,7 +215,7 @@ class PDBQTFile(TextFile):
                 annot_i = atom_line_i[atom_line_i < model_start_i[1]]
             # Line indices for coordinate determination
             coord_i = atom_line_i
-        
+
         else:
             last_model = len(model_start_i)
             if model == 0:
@@ -236,7 +235,7 @@ class PDBQTFile(TextFile):
                 )
             annot_i = coord_i = atom_line_i[line_filter]
             array = AtomArray(len(coord_i))
-        
+
         # Save atom IDs for later sorting into the original atom order
         atom_id  = np.zeros(array.array_length(), int)
 
@@ -253,7 +252,7 @@ class PDBQTFile(TextFile):
         # i is index in array, line_i is line index
         for i, line_i in enumerate(annot_i):
             line = self.lines[line_i]
-            
+
             atom_id[i] = int(line[6:11])
             chain_id[i] = line[21].strip()
             res_id[i] = int(line[22:26])
@@ -262,7 +261,7 @@ class PDBQTFile(TextFile):
             hetero[i] = (False if line[0:4] == "ATOM" else True)
             atom_name[i] = line[12:16].strip()
             element[i] = line[76:78].strip()
-        
+
         # Add annotation arrays to atom array (stack)
         array.chain_id = chain_id
         array.res_id = res_id
@@ -271,7 +270,7 @@ class PDBQTFile(TextFile):
         array.hetero = hetero
         array.atom_name = atom_name
         array.element = element
-        
+
         # Fill in coordinates
         if isinstance(array, AtomArray):
             for i, line_i in enumerate(coord_i):
@@ -279,7 +278,7 @@ class PDBQTFile(TextFile):
                 array.coord[i,0] = float(line[30:38])
                 array.coord[i,1] = float(line[38:46])
                 array.coord[i,2] = float(line[46:54])
-                
+
         elif isinstance(array, AtomArrayStack):
             m = 0
             i = 0
@@ -292,18 +291,18 @@ class PDBQTFile(TextFile):
                 array.coord[m,i,1] = float(line[38:46])
                 array.coord[m,i,2] = float(line[46:54])
                 i += 1
-        
+
         # Sort into the original atom order
         array = array[..., np.argsort(atom_id)]
 
         return array
-    
+
 
     def set_structure(self, atoms, charges=None, atom_types=None,
                       rotatable_bonds=None, root=None, include_torsdof=True):
         """
         Write an :class:`AtomArray` into the PDBQT file.
-        
+
         Parameters
         ----------
         atoms : AtomArray, shape=(n,)
@@ -325,7 +324,7 @@ class PDBQTFile(TextFile):
                   be written.
                 - ``'rigid'`` - The molecule is handled as rigid ligand:
                   Only a ``ROOT`` line will be written.
-                - ``'all'`` - The molecule is handled as flexible 
+                - ``'all'`` - The molecule is handled as flexible
                   ligand:
                   A ``ROOT`` line will be written and all rotatable
                   bonds are included using ``BRANCH`` and ``ENDBRANCH``
@@ -335,7 +334,7 @@ class PDBQTFile(TextFile):
                   A ``ROOT`` line will be written and all bonds in the
                   given :class:`BondList` are considered flexible via
                   ``BRANCH`` and ``ENDBRANCH`` lines.
-            
+
         root : int, optional
             Specifies the index of the atom following the ``ROOT`` line.
             Setting the root atom is useful for specifying the *anchor*
@@ -347,7 +346,7 @@ class PDBQTFile(TextFile):
             By default, a ``TORSDOF`` (torsional degrees of freedom)
             record is written at the end of the file.
             By setting this parameter to false, the record is omitted.
-        
+
         Returns
         -------
         mask : ndarray, shape=(n,), dtype=bool
@@ -355,19 +354,34 @@ class PDBQTFile(TextFile):
             ``atoms``, that was removed due to being a nonpolar
             hydrogen.
         """
+        # Check if AtomArray is suitable for PDBQT
+        max_atoms, max_residues = 99999, 9999
+        if atoms.array_length() > max_atoms:
+            warnings.warn(f"More then {max_atoms:,} atoms per model")
+        if (atoms.res_id > max_residues).any():
+            warnings.warn(f"Residue IDs exceed {max_residues:,}")
+        if np.isnan(atoms.coord).any():
+            raise BadStructureError("Coordinates contain 'NaN' values")
+        if any([len(name) > 1 for name in atoms.chain_id]):
+            raise BadStructureError("Some chain IDs exceed 1 character")
+        if any([len(name) > 3 for name in atoms.res_name]):
+            raise BadStructureError("Some residue names exceed 3 characters")
+        if any([len(name) > 4 for name in atoms.atom_name]):
+            raise BadStructureError("Some atom names exceed 4 characters")
+
         if charges is None:
             charges = partial_charges(atoms)
             charges[np.isnan(charges)] = 0
         else:
             if np.isnan(charges).any():
                 raise ValueError("Input charges contain NaN values")
-        
+
         # Get AutoDock atom types and remove nonpolar hydrogen atoms
         atoms, charges, types, mask = convert_atoms(atoms, charges)
         # Overwrite calculated atom types with input atom types
         if atom_types is not None:
             types = atom_types[mask]
-        
+
         if rotatable_bonds is None:
             # No rotatable bonds -> the BondList contains no bonds
             rotatable_bonds = BondList(atoms.bonds.get_atom_count())
@@ -387,7 +401,7 @@ class PDBQTFile(TextFile):
                 len(mask), np.asarray(rotatable_bonds)
             )[mask]
             use_root = True
-        
+
         if root is None:
             root_index = 0
         else:
@@ -407,7 +421,7 @@ class PDBQTFile(TextFile):
             # as the root is probably a terminal atom
             for atom, bond_type in zip(*atoms.bonds.get_bonds(root_index)):
                 rotatable_bonds.add_bond(root_index, atom, bond_type)
-        
+
         # Break rotatable bonds
         # for simple branch determination in '_write_atoms()'
         atoms.bonds.remove_bonds(rotatable_bonds)
@@ -435,7 +449,7 @@ class PDBQTFile(TextFile):
             self.lines.append(f"TORSDOF {len(rotatable_bonds)}")
 
         return mask
-    
+
 
     def _write_atoms(self, atoms, charges, types,
                      atom_id, hetero, occupancy, b_factor,
@@ -459,7 +473,7 @@ class PDBQTFile(TextFile):
             # No rotatable bonds
             # -> all atom are in root i.e. this branch
             this_branch_indices = np.arange(atoms.array_length())
-        
+
         if is_root:
             self.lines.append("ROOT")
         for i in this_branch_indices:
@@ -491,7 +505,7 @@ class PDBQTFile(TextFile):
                 continue
 
             # Create a new branch for each rotatable bond,
-            # that connects to an atom of this branch 
+            # that connects to an atom of this branch
             if i in this_branch_indices:
                 this_br_i = i
                 new_br_i = j
@@ -501,7 +515,7 @@ class PDBQTFile(TextFile):
             else:
                 # Rotatable bond does not start from this branch
                 continue
-            
+
             # Mark rotatable bond as visited as otherwise branches would
             # be created back and forth over the same rotatable bond and
             # this method would never terminate
@@ -521,7 +535,7 @@ class PDBQTFile(TextFile):
             self.lines.append(
                 f"ENDBRANCH {atom_id[this_br_i]:>3d} {atom_id[new_br_i]:>3d}"
             )
-    
+
 
     def _get_model_length(self, model_start_i, atom_line_i):
         """
@@ -557,7 +571,7 @@ def convert_atoms(atoms, charges):
         The atoms to be converted.
     charges : ndarray, dtype=float
         Partial charges for the atoms.
-    
+
     Returns
     -------
     converted_atoms : AtomArray
@@ -619,8 +633,8 @@ def convert_atoms(atoms, charges):
             warnings.warn(
                 f"Element {element} is not paramtrized, "
                 f"using parameters for hydrogen instead"
-            ) 
+            )
             atom_types[i] = "H"
-    
+
     mask = ~hydrogen_removal_mask
     return atoms[mask], charges[mask], atom_types[mask], mask

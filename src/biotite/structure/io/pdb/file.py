@@ -52,23 +52,23 @@ _gamma = slice(47, 54)
 class PDBFile(TextFile):
     r"""
     This class represents a PDB file.
-    
+
     The usage of PDBxFile is encouraged in favor of this class.
-    
+
     This class only provides support for reading/writing the pure atom
     information (*ATOM*, *HETATM*, *MODEL* and *ENDMDL* records). *TER*
     records cannot be written.
     Additionally, *REMARK* records can be read
-    
+
     See also
     --------
     PDBxFile
-    
+
     Examples
     --------
     Load a `\\*.pdb` file, modify the structure and save the new
     structure into a new file:
-    
+
     >>> import os.path
     >>> file = PDBFile.read(os.path.join(path_to_structures, "1l2y.pdb"))
     >>> array_stack = file.get_structure()
@@ -85,7 +85,7 @@ class PDBFile(TextFile):
         file.lines = [line.ljust(80) for line in file.lines]
         file._index_models_and_atoms()
         return file
-    
+
 
     def get_remark(self, number):
         r"""
@@ -96,7 +96,7 @@ class PDBFile(TextFile):
         ----------
         number : int
             The *REMARK* number, i.e. the `XXX` in ``REMARK XXX``.
-        
+
         Returns
         -------
         remark_lines : None or list of str
@@ -115,11 +115,11 @@ class PDBFile(TextFile):
         >>> file = PDBFile.read(os.path.join(path_to_structures, "1l2y.pdb"))
         >>> remarks = file.get_remark(900)
         >>> print("\n".join(remarks))
-        RELATED ENTRIES                                                      
-        RELATED ID: 5292   RELATED DB: BMRB                                  
-        BMRB 5292 IS CHEMICAL SHIFTS FOR TC5B IN BUFFER AND BUFFER           
-        CONTAINING 30 VOL-% TFE.                                             
-        RELATED ID: 1JRJ   RELATED DB: PDB                                   
+        RELATED ENTRIES
+        RELATED ID: 5292   RELATED DB: BMRB
+        BMRB 5292 IS CHEMICAL SHIFTS FOR TC5B IN BUFFER AND BUFFER
+        CONTAINING 30 VOL-% TFE.
+        RELATED ID: 1JRJ   RELATED DB: PDB
         1JRJ IS AN ANALAGOUS C-TERMINAL STRUCTURE.
         >>> nonexistent_remark = file.get_remark(999)
         >>> print(nonexistent_remark)
@@ -131,7 +131,7 @@ class PDBFile(TextFile):
         number = int(number)
         if number < 0 or number > 999:
             raise ValueError("The number must be in range 0-999")
-        
+
         remark_string = f"REMARK {number:>3d}"
         # Find lines and omit ``REMARK XXX `` part
         remark_lines = [
@@ -155,12 +155,12 @@ class PDBFile(TextFile):
             The number of models.
         """
         return len(self._model_start_i)
-    
+
 
     def get_coord(self, model=None):
         """
         Get only the coordinates from the PDB file.
-        
+
         Parameters
         ----------
         model : int, optional
@@ -172,13 +172,13 @@ class PDBFile(TextFile):
             If this parameter is omitted, an 3D coordinate array
             containing all models will be returned, even if
             the structure contains only one model.
-        
+
         Returns
         -------
         coord : ndarray, shape=(m,n,3) or shape=(n,3), dtype=float
             The coordinates read from the ATOM and HETATM records of the
             file.
-        
+
         Notes
         -----
         Note that :func:`get_coord()` may output more coordinates than
@@ -186,18 +186,18 @@ class PDBFile(TextFile):
         :func:`get_structure()` call has.
         The reason for this is, that :func:`get_structure()` filters
         *altloc* IDs, while `get_coord()` does not.
-        
+
         Examples
         --------
         Read an :class:`AtomArrayStack` from multiple PDB files, where
         each PDB file contains the same atoms but different positions.
         This is an efficient approach when a trajectory is spread into
         multiple PDB files, as done e.g. by the *Rosetta* modeling
-        software. 
+        software.
 
         For the purpose of this example, the PDB files are created from
         an existing :class:`AtomArrayStack`.
-        
+
         >>> import os.path
         >>> from tempfile import gettempdir
         >>> file_names = []
@@ -251,7 +251,7 @@ class PDBFile(TextFile):
                 coord[m,i,2] = float(line[_coord_z])
                 i += 1
             return coord
-        
+
         else:
             coord_i = self._get_atom_record_indices_for_model(model)
             coord = np.zeros((len(coord_i), 3), dtype=np.float32)
@@ -261,12 +261,12 @@ class PDBFile(TextFile):
                 coord[i,1] = float(line[_coord_y])
                 coord[i,2] = float(line[_coord_z])
             return coord
-    
+
 
     def get_b_factor(self, model=None):
         """
         Get only the B-factors from the PDB file.
-        
+
         Parameters
         ----------
         model : int, optional
@@ -278,13 +278,13 @@ class PDBFile(TextFile):
             If this parameter is omitted, an 2D B-factor array
             containing all models will be returned, even if
             the structure contains only one model.
-        
+
         Returns
         -------
         b_factor : ndarray, shape=(m,n) or shape=(n,), dtype=float
             The B-factors read from the ATOM and HETATM records of the
             file.
-        
+
         Notes
         -----
         Note that :func:`get_b_factor()` may output more B-factors
@@ -311,7 +311,7 @@ class PDBFile(TextFile):
                 b_factor[m,i] = float(line[_temp_f])
                 i += 1
             return b_factor
-        
+
         else:
             b_factor_i = self._get_atom_record_indices_for_model(model)
             b_factor = np.zeros(len(b_factor_i), dtype=np.float32)
@@ -325,10 +325,10 @@ class PDBFile(TextFile):
                       include_bonds=False):
         """
         Get an :class:`AtomArray` or :class:`AtomArrayStack` from the PDB file.
-        
+
         This function parses standard base-10 PDB files as well as
         hybrid-36 PDB.
-        
+
         Parameters
         ----------
         model : int, optional
@@ -365,7 +365,7 @@ class PDBFile(TextFile):
             (e.g. especially inter-residue bonds),
             have :attr:`BondType.ANY`, since the PDB format itself does
             not support bond orders.
-        
+
         Returns
         -------
         array : AtomArray or AtomArrayStack
@@ -380,11 +380,11 @@ class PDBFile(TextFile):
             annot_i = self._get_atom_record_indices_for_model(1)
             # Record indices for coordinate determination
             coord_i = self._atom_line_i
-        
+
         else:
             annot_i = coord_i = self._get_atom_record_indices_for_model(model)
             array = AtomArray(len(coord_i))
-        
+
         # Create mandatory and optional annotation arrays
         chain_id  = np.zeros(array.array_length(), array.chain_id.dtype)
         res_id    = np.zeros(array.array_length(), array.res_id.dtype)
@@ -416,10 +416,10 @@ class PDBFile(TextFile):
             if line[_charge][0] in "+-":
                 charge_raw[i] = line[_charge]
             else:
-                charge_raw[i] = line[_charge][::-1] 
+                charge_raw[i] = line[_charge][::-1]
             occupancy[i] = float(line[_occupancy].strip())
             b_factor[i] = float(line[_temp_f].strip())
-        
+
         if include_bonds or \
             (extra_fields is not None and "atom_id" in extra_fields):
                 # The atom IDs are only required in these two cases
@@ -429,7 +429,7 @@ class PDBFile(TextFile):
                 )
         else:
             atom_id = None
-        
+
         # Add annotation arrays to atom array (stack)
         array.chain_id = chain_id
         array.res_id = res_id
@@ -441,7 +441,7 @@ class PDBFile(TextFile):
 
         for field in (extra_fields if extra_fields is not None else []):
             if field == "atom_id":
-                # Copy is necessary to avoid double masking in 
+                # Copy is necessary to avoid double masking in
                 # later altloc ID filtering
                 array.set_annotation("atom_id", atom_id.copy())
             elif field == "charge":
@@ -468,7 +468,7 @@ class PDBFile(TextFile):
             warnings.warn(
                 "{} elements were guessed from atom_name.".format(rep_num)
             )
-        
+
         # Fill in coordinates
         if isinstance(array, AtomArray):
             for i, line_i in enumerate(coord_i):
@@ -476,7 +476,7 @@ class PDBFile(TextFile):
                 array.coord[i, 0] = float(line[_coord_x])
                 array.coord[i, 1] = float(line[_coord_y])
                 array.coord[i, 2] = float(line[_coord_z])
-                
+
         elif isinstance(array, AtomArrayStack):
             m = 0
             i = 0
@@ -518,7 +518,7 @@ class PDBFile(TextFile):
                     array.box = np.repeat(
                         box[np.newaxis, ...], array.stack_depth(), axis=0
                     )
-                break  
+                break
 
         # Filter altloc IDs
         if altloc == "occupancy":
@@ -535,13 +535,13 @@ class PDBFile(TextFile):
             array.set_annotation("altloc_id", altloc_id)
         else:
             raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
-        
+
         # Read bonds
         if include_bonds:
             bond_list = self._get_bonds(atom_id)
             bond_list = bond_list.merge(connect_via_residue_names(array))
             array.bonds = bond_list
-        
+
         return array
 
 
@@ -549,13 +549,13 @@ class PDBFile(TextFile):
         """
         Set the :class:`AtomArray` or :class:`AtomArrayStack` for the
         file.
-        
+
         This makes also use of the optional annotation arrays
         ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
         If the atom array (stack) contains the annotation ``'atom_id'``,
         these values will be used for atom numbering instead of
         continuous numbering.
-        
+
         Parameters
         ----------
         array : AtomArray or AtomArrayStack
@@ -565,7 +565,7 @@ class PDBFile(TextFile):
         hybrid36: bool, optional
             Defines wether the file should be written in hybrid-36
             format.
-        
+
         Notes
         -----
         If `array` has an associated :class:`BondList`, ``CONECT``
@@ -608,13 +608,13 @@ class PDBFile(TextFile):
         if (array.res_id > max_residues).any():
             warnings.warn(f"Residue IDs exceed {max_residues:,}")
         if np.isnan(array.coord).any():
-            raise ValueError("Coordinates contain 'NaN' values")
+            raise BadStructureError("Coordinates contain 'NaN' values")
         if any([len(name) > 1 for name in array.chain_id]):
-            raise ValueError("Some chain IDs exceed 1 character")
+            raise BadStructureError("Some chain IDs exceed 1 character")
         if any([len(name) > 3 for name in array.res_name]):
-            raise ValueError("Some residue names exceed 3 characters")
+            raise BadStructureError("Some residue names exceed 3 characters")
         if any([len(name) > 4 for name in array.atom_name]):
-            raise ValueError("Some atom names exceed 4 characters")
+            raise BadStructureError("Some atom names exceed 4 characters")
 
         if hybrid36:
             pdb_atom_id = np.char.array(
@@ -638,7 +638,7 @@ class PDBFile(TextFile):
                 ((array.res_id - 1) % 9999) + 1,
                 array.res_id
             ).astype(str))
-        
+
         names = np.char.array(
             [f" {atm}" if len(elem) == 1 and len(atm) < 4 else atm
              for atm, elem in zip(array.atom_name, array.element)]
@@ -666,7 +666,7 @@ class PDBFile(TextFile):
         coords = array.coord
         if coords.ndim == 2:
             coords = coords[np.newaxis, ...]
-        
+
         self.lines = []
         # Prepend a single CRYST1 record if we have box information
         if array.box is not None:
@@ -693,7 +693,7 @@ class PDBFile(TextFile):
             )
             if is_stack:
                 self.lines.append("ENDMDL")
-        
+
         # Add CONECT records if bonds are present
         if array.bonds is not None:
             # Only non-water hetero records and connections between
@@ -709,9 +709,9 @@ class PDBFile(TextFile):
             self._set_bonds(
                 BondList(array.array_length(), bond_array), pdb_atom_id
             )
-        
+
         self._index_models_and_atoms()
-    
+
 
     def list_assemblies(self):
         """
@@ -726,7 +726,7 @@ class PDBFile(TextFile):
         -------
         assemblies : list of str
             A list that contains the available assembly IDs.
-        
+
         Examples
         --------
         >>> import os.path
@@ -741,11 +741,11 @@ class PDBFile(TextFile):
                 "File does not contain assembly information (REMARK 300)"
             )
         return [
-            assembly_id.strip() 
+            assembly_id.strip()
             for assembly_id in remark_lines[0][12:].split(",")
         ]
-        
-    
+
+
     def get_assembly(self, assembly_id=None, model=None, altloc="first",
                      extra_fields=[], include_bonds=False):
         """
@@ -801,7 +801,7 @@ class PDBFile(TextFile):
         assembly : AtomArray or AtomArrayStack
             The assembly.
             The return type depends on the `model` parameter.
-        
+
         Examples
         --------
 
@@ -869,7 +869,7 @@ class PDBFile(TextFile):
                 if line.startswith("APPLY THE FOLLOWING TO CHAINS:") or \
                    line.startswith("                   AND CHAINS:"):
                         affected_chain_ids += [
-                            chain_id.strip() 
+                            chain_id.strip()
                             for chain_id in line[30:].split(",")
                         ]
                 else:
@@ -900,7 +900,7 @@ class PDBFile(TextFile):
                 assembly += sub_assembly
 
         return assembly
-    
+
 
     def get_symmetry_mates(self, model=None, altloc="first",
                            extra_fields=[], include_bonds=False):
@@ -956,13 +956,13 @@ class PDBFile(TextFile):
         symmetry_mates : AtomArray or AtomArrayStack
             All atoms within a single unit cell.
             The return type depends on the `model` parameter.
-        
+
         Notes
         -----
         To expand the structure beyond a single unit cell, use
         :func:`repeat_box()` with the return value as its
         input.
-        
+
         Examples
         --------
 
@@ -993,7 +993,7 @@ class PDBFile(TextFile):
         return _apply_transformations(
             structure, rotations, translations
         )
-    
+
 
 
 
@@ -1014,7 +1014,7 @@ class PDBFile(TextFile):
                     # Single model
                     self._model_start_i = np.array([0])
                     break
-        
+
         # Line indices with ATOM or HETATM records
         self._atom_line_i = np.array(
             [
@@ -1075,7 +1075,7 @@ class PDBFile(TextFile):
     def _get_bonds(self, atom_ids):
         conect_lines = [line for line in self.lines
                         if line.startswith("CONECT")]
-        
+
         # Mapping from atom ids to indices in an AtomArray
         atom_id_to_index = np.zeros(atom_ids[-1]+1, dtype=int)
         try:
@@ -1097,7 +1097,7 @@ class PDBFile(TextFile):
                     # String is empty -> no further IDs
                     break
                 bonds.append((center_id, id))
-        
+
         # The length of the 'atom_ids' array
         # is equal to the length of the AtomArray
         return BondList(len(atom_ids), np.array(bonds, dtype=np.uint32))
@@ -1158,10 +1158,10 @@ def _parse_transformations(lines):
         component_i += 1
         if component_i == 3:
             # All (x,y,z) components were parsed
-            # -> head to the next transformation 
+            # -> head to the next transformation
             transformation_i += 1
             component_i = 0
-    
+
     return rotations, translations
 
 
