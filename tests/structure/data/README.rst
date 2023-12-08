@@ -20,3 +20,4 @@ Test structures
 5EIL: Structure contains a non-canonical amino acid on each chain
 4P5J: Structure contains a non-canonical nucleotide
 1CCR: Multi-model structure with the first model ID not beeing 1
+7FGZ: Contains 5-character residue name '7ZTVU'
