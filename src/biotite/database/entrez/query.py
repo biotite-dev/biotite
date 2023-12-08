@@ -11,6 +11,7 @@ import abc
 from xml.etree import ElementTree
 from .check import check_for_errors
 from .dbnames import sanitize_database_name
+from ..error import RequestError
 
 
 _base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
@@ -26,21 +27,21 @@ class Query(metaclass=abc.ABCMeta):
     """
     def __init__(self):
         pass
-    
+
     @abc.abstractmethod
     def __str__(self):
         pass
-    
+
     def __or__(self, operand):
         if not isinstance(operand, Query):
             operand = SimpleQuery(operand)
         return CompositeQuery("OR", self, operand)
-    
+
     def __and__(self, operand):
         if not isinstance(operand, Query):
             operand = SimpleQuery(operand)
         return CompositeQuery("AND", self, operand)
-    
+
     def __xor__(self, operand):
         if not isinstance(operand, Query):
             operand = SimpleQuery(operand)
@@ -51,21 +52,21 @@ class CompositeQuery(Query):
     """
     A representation of an composite query
     for the NCBI Entrez search service.
-    
+
     A composite query is a combination of two other queries,
     combined either with an 'AND', 'OR' or 'NOT' operator.
 
     Usually the user does not create instances of this class directly,
     but :class:`Query` instances are combined with
     ``|`` (OR), ``&`` (AND) or ``^`` (NOT).
-    
+
     Parameters
     ----------
     operator: str, {"AND", "OR", "NOT"}
         The combination operator.
     queries : iterable object of SimpleQuery
         The queries to be combined.
-    
+
     Examples
     --------
 
@@ -76,16 +77,16 @@ class CompositeQuery(Query):
     >>> print(query)
     ("Escherichia coli"[Organism]) AND (90:100[Sequence Length])
     """
-    
+
     def __init__(self, operator, query1, query2):
         super().__init__()
         self._op = operator
         self._q1 = query1
         self._q2 = query2
-    
+
     def __str__(self):
         return "({:}) {:} ({:})".format(str(self._q1), self._op, self._q2)
-        
+
 
 
 class SimpleQuery(Query):
@@ -96,7 +97,7 @@ class SimpleQuery(Query):
 
     A list of available search fields with description can be found
     `here <https://www.ncbi.nlm.nih.gov/books/NBK49540/>`_.
-    
+
     Parameters
     ----------
     term: str
@@ -108,10 +109,10 @@ class SimpleQuery(Query):
         `here <https://www.ncbi.nlm.nih.gov/books/NBK49540/>`_.
         By default the field is omitted and all fields are searched in
         for the term, implicitly.
-    
+
     Examples
     --------
-    
+
     >>> query = SimpleQuery("Escherichia coli")
     >>> print(query)
     "Escherichia coli"
@@ -152,7 +153,7 @@ class SimpleQuery(Query):
             term = f'"{term}"'
         self._term = term
         self._field = field
-    
+
     def __str__(self):
         string = self._term
         if self._field is not None:
@@ -164,9 +165,9 @@ def search(query, db_name, number=20):
     r"""
     Get all PDB IDs that meet the given query requirements,
     via the NCBI ESearch service.
-    
+
     This function requires an internet connection.
-    
+
     Parameters
     ----------
     query : Query
@@ -175,13 +176,13 @@ def search(query, db_name, number=20):
         E-utility or common database name.
     number : Query
         The maximum number of UIDs that are obtained.
-    
+
     Returns
     -------
     ids : list of str
         A list of strings containing all NCBI UIDs (accession number)
         that meet the query requirements.
-    
+
     Warnings
     --------
     Even if you give valid input to this function, in rare cases the
@@ -194,7 +195,7 @@ def search(query, db_name, number=20):
     -----
     A list of available search fields with description can be found
     `here <https://www.ncbi.nlm.nih.gov/books/NBK49540/>`_.
-    
+
     Examples
     --------
     >>> query = SimpleQuery("Escherichia coli", "Organism") & \
@@ -202,7 +203,7 @@ def search(query, db_name, number=20):
     >>> ids = search(query, "nuccore", number=5)
     >>> print(ids)
     ['...', '...', '...', '...', '...']
-    """ 
+    """
     r = requests.get(
         (_base_url + _search_url).format(
             sanitize_database_name(db_name),
@@ -212,8 +213,12 @@ def search(query, db_name, number=20):
     )
     xml_response = r.text
     check_for_errors(xml_response)
-    root = ElementTree.fromstring(xml_response)
+    try:
+        root = ElementTree.fromstring(xml_response)
+    except ElementTree.ParseError:
+        if len(xml_response) > 100:
+            xml_response = xml_response[:100] + "..."
+        raise RequestError(f"Invalid server response: {xml_response}")
     xpath = ".//IdList/Id"
     uids = [element.text for element in root.findall(xpath)]
     return uids
-    
