@@ -1529,10 +1529,10 @@ cdef class BucketKmerTable:
     to a number of buckets.
     Hence, different *k-mer* may be stored in the same bucket, like in a
     hash table.
-    This approach makes indexing with large :class:`KmerAlphabet`s
-    feasible for the memory.
+    This approach makes *k-mer* indices with large *k-mer* alphabets
+    fit into memory.
 
-    Otherwise, the API for creating a :class`BucketKmerTable` and
+    Otherwise, the API for creating a :class:`BucketKmerTable` and
     matching to it is analogous to :class:`KmerTable`.
 
     Attributes

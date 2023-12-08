@@ -21,7 +21,7 @@ env:
     --ignore={project}//tests//structure//test_trajectory.py
     --ignore={project}//tests//sequence//align//test_statistics.py
     --ignore={project}//tests//application
-    --ignore={project}//tests//database 
+    --ignore={project}//tests//database
     --ignore={project}//tests//test_doctest.py
     --ignore={project}//tests//test_modname.py
   CIBW_DEPENDENCY_VERSIONS: "pinned"
@@ -90,8 +90,9 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
+          name: release
           path: ./wheelhouse/*.whl
-  
+
 
   test-interfaces:
     name: Test interfaces to databases and applications
@@ -126,7 +127,7 @@ jobs:
           tests//test_modname.py
           tests//database
           tests//application
-  
+
 
   test-muscle5:
     name: Test interface to Muscle 5
@@ -166,19 +167,69 @@ jobs:
       run: pipx run build --sdist
     - uses: actions/upload-artifact@v3
       with:
-        path: dist/*.tar.gz
+        name: release
+        path: dist//*.tar.gz
+
+
+  make-docs:
+    name: Build documentation
+
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        environment-file: environment.yml
+        miniforge-variant: Mambaforge
+    - name: Build distribution
+      run: pip wheel --no-deps -w dist .
+    - name: Install distribution
+      run: pip install .//dist//*.whl
+    - name: Build base documentation
+      run: sphinx-build -D plot_gallery=0 doc build//doc
+    - name: Build tutorial and gallery
+      if: >
+        (
+          github.event_name == 'release' &&
+          github.event.action == 'published'
+        )
+        || github.event_name == 'workflow_dispatch'
+      run: sphinx-build doc build//doc
+    - name: Zip documentation
+      run: |
+          cd build
+          zip -r ..//dist//doc.zip doc
+          cd ..
+    - uses: actions/upload-artifact@v3
+      with:
+        name: release
+        path: dist//doc.zip
+    # Put docs also into separate artifact to allow quicker download of docs
+    - uses: actions/upload-artifact@v3
+      with:
+        name: documentation
+        path: dist//doc.zip
 
 
   upload:
     name: Upload to GitHub Releases & PyPI
     permissions:
       contents: write
-    needs: [test-and-build, make-sdist, test-interfaces, test-muscle5]
+    needs:
+    - test-and-build
+    - make-sdist
+    - make-docs
+    - test-interfaces
+    - test-muscle5
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v3
       with:
-        name: artifact
+        name: release
         path: dist
     - name: List distributions to be uploaded
       run: ls dist
