@@ -1,7 +1,6 @@
 import os.path
 import os
 import codeop
-import logging
 import copy
 from importlib.util import module_from_spec, spec_from_loader
 from sphinx.util.logging import getLogger
@@ -10,10 +9,12 @@ import sphinx_gallery.gen_rst as genrst
 from sphinx_gallery.gen_gallery import DEFAULT_GALLERY_CONF
 import sphinx_gallery.scrapers as scrapers
 import sphinx_gallery.py_source_parser as parser
-import biotite
+from key import set_ncbi_api_key_from_env
 
 
 def create_tutorial(src_dir, target_dir):
+    set_ncbi_api_key_from_env()
+
     logger = getLogger('sphinx-gallery')
     logger.info("generating tutorial...", color="white")
     with open(os.path.join(src_dir, "scripts"), "r") as file:
@@ -24,7 +25,7 @@ def create_tutorial(src_dir, target_dir):
     )
     for script in iterator:
         _create_tutorial_section(script, src_dir, target_dir)
-    
+
     # Create index
     # String for enumeration of tutorial pages
     include_string = "\n\n".join(
@@ -109,14 +110,14 @@ def _create_tutorial_section(fname, src_dir, target_dir):
 
         else:
             content_rst += block_content + "\n\n"
-    
+
     with open(os.path.join(target_dir, f"{base_image_name}.rst"), "w") as file:
         file.write(content_rst)
-    
+
     # Write checksum of file to avoid unnecessary rerun
     with open(md5_file, "w") as file:
         file.write(genrst.get_md5sum(src_file))
-    
+
 
 def _md5sum_is_current(src_file, md5_file):
     if not os.path.exists(md5_file):

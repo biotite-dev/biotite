@@ -143,7 +143,7 @@ When using *Biotite* internal imports, always use relative imports. Otherwise
 
 .. Type annotations
    ^^^^^^^^^^^^^^^^
-   
+
    *Biotite* obligatorily uses type annotations (:PEP:`484`) for its public API.
    This enables static type checkers (e.g. *mypy*) to detect programming errors
    at compile time.
@@ -163,7 +163,7 @@ folder.
 *Biotite* uses *Sphinx* for building its documentation and therefore the
 documentation is based on *reStructuredText* files.
 The line length of these ``*.rst`` files is also limited to
-79 characters, with the exceptions already mentioned above. 
+79 characters, with the exceptions already mentioned above.
 
 Contributing examples
 ^^^^^^^^^^^^^^^^^^^^^
@@ -351,6 +351,11 @@ In order to omit building the tutorial and gallery, type
 
 instead.
 
+Building the tutorial and the gallery may raise a ``RequestError`` due to
+a hight number of requests to the NCBI Entrez database.
+This can be fixed by exporting the ``NCBI_API_KEY`` environment variable,
+containing an
+`NCBI API key <https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/>`_.
 
 
 Required packages
@@ -358,7 +363,7 @@ Required packages
 
 The following packages are required for the complete build process
 including the creation of the entire documentation:
-   
+
    - *numpy*
    - *scipy*
    - *networkx*
@@ -403,7 +408,7 @@ or offer objects that build up on these ones.
 
 There can be good reasons why one could choose to publish code as extension
 package instead of contributing it directly to the *Biotite* project:
-   
+
    - Independent development
    - An incompatible license
    - The code's use cases are too specialized

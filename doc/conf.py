@@ -33,6 +33,7 @@ import viewcode
 import tutorial
 import scraper
 import bibliography
+import key
 
 
 # Reset matplotlib params
@@ -134,7 +135,7 @@ html_theme_options = {
     "github_type"   : "star",
     "page_width"    : "1200px",
     "fixed_sidebar" : "true",
-    
+
     "sidebar_link_underscore" : "#FFFFFF",
     "link"                    : "#006B99",
 }
@@ -147,7 +148,7 @@ sphinx_gallery_conf = {
     "filename_pattern"          : "^((?!_noexec).)*$",
     "ignore_pattern"            : "(.*ignore\.py)|(.*pymol\.py)",
     "backreferences_dir"        : None,
-    "download_all_examples" : False,
+    "download_all_examples"     : False,
     # Never report run time
     "min_reported_time"         : sys.maxsize,
     "default_thumb_file"        : join(
@@ -161,6 +162,8 @@ sphinx_gallery_conf = {
     "matplotlib_animations"     : True,
     "backreferences_dir"        : "examples/backreferences",
     "doc_module"                : ("biotite",),
+    # Set the NCBI API key
+    "reset_modules"             : (key.set_ncbi_api_key_from_env,),
 }
 
 

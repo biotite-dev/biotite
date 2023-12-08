@@ -178,6 +178,8 @@ jobs:
     defaults:
       run:
         shell: bash -l {0}
+    env:
+      NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
 
     steps:
     - uses: actions/checkout@v3
