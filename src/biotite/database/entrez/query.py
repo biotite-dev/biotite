@@ -12,13 +12,10 @@ from xml.etree import ElementTree
 from .check import check_for_errors
 from .dbnames import sanitize_database_name
 from ..error import RequestError
+from .key import get_api_key
 
 
-_base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
-
-_search_url = ("esearch.fcgi?db={:}"
-              "&term={:}"
-              "&retmax={:}")
+_search_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 
 class Query(metaclass=abc.ABCMeta):
     """
@@ -204,13 +201,15 @@ def search(query, db_name, number=20):
     >>> print(ids)
     ['...', '...', '...', '...', '...']
     """
-    r = requests.get(
-        (_base_url + _search_url).format(
-            sanitize_database_name(db_name),
-            str(query),
-            str(number)
-        )
-    )
+    param_dict = {
+        "db": sanitize_database_name(db_name),
+        "term": str(query),
+        "retmax": str(number),
+    }
+    api_key = get_api_key()
+    if api_key is not None:
+        param_dict["api_key"] = api_key
+    r = requests.get(_search_url, params=param_dict)
     xml_response = r.text
     check_for_errors(xml_response)
     try:
