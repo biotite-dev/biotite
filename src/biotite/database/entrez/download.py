@@ -13,6 +13,7 @@ import io
 import requests
 from .check import check_for_errors
 from .dbnames import sanitize_database_name
+from .key import get_api_key
 from ..error import RequestError
 
 
@@ -23,15 +24,15 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
           ret_mode="text", overwrite=False, verbose=False):
     """
     Download files from the NCBI Entrez database in various formats.
-    
+
     The data for each UID will be fetched into a separate file.
-    
+
     A list of valid database, retrieval type and mode combinations can
     be found under
     `<https://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.T._valid_values_of__retmode_and/?report=objectonly>`_
-    
+
     This function requires an internet connection.
-    
+
     Parameters
     ----------
     uids : str or iterable object of str
@@ -58,7 +59,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     verbose: bool, optional
         If true, the function will output the download progress.
         (Default: False)
-    
+
     Returns
     -------
     files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
@@ -68,7 +69,7 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
         object) was given, a list of strings is returned.
         If `target_path` is ``None``, the file contents are stored in
         either `StringIO` or `BytesIO` objects.
-    
+
     Warnings
     --------
     Even if you give valid input to this function, in rare cases the
@@ -76,14 +77,14 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
     In these cases the request should be retried.
     When the issue occurs repeatedly, the error is probably in your
     input.
-    
+
     See also
     --------
     fetch_single_file
-    
+
     Examples
     --------
-    
+
     >>> import os.path
     >>> files = fetch(["1L2Y_A","3O5R_A"], path_to_directory, suffix="fa",
     ...               db_name="protein", ret_type="fasta")
@@ -122,6 +123,9 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
                     "tool" : "Biotite",
                     "mail" : "padix.key@gmail.com"
                 }
+                api_key = get_api_key()
+                if api_key is not None:
+                    param_dict["api_key"] = api_key
                 r = requests.get(_fetch_url, params=param_dict)
                 content = r.text
                 check_for_errors(content)
@@ -147,7 +151,7 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
     """
     Almost the same as :func:`fetch()`, but the data for the given UIDs
     will be stored in a single file.
-    
+
     Parameters
     ----------
     uids : iterable object of str
@@ -164,14 +168,14 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
     overwrite : bool, optional
         If false, the file is only downloaded, if no file with the same
         name already exists.
-    
+
     Returns
     -------
     file : str or StringIO or BytesIO
         The file name of the downloaded file.
         If `file_name` is ``None``, the file content is stored in
         either a `StringIO` or a `BytesIO` object.
-    
+
     Warnings
     --------
     Even if you give valid input to this function, in rare cases the
@@ -179,7 +183,7 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
     In these cases the request should be retried.
     When the issue occurs repeatedly, the error is probably in your
     input.
-    
+
     See also
     --------
     fetch
@@ -203,6 +207,9 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
         "tool" : "Biotite",
         "mail" : "padix.key@gmail.com"
     }
+    api_key = get_api_key()
+    if api_key is not None:
+        param_dict["api_key"] = api_key
     r = requests.get(_fetch_url, params=param_dict)
     content = r.text
     check_for_errors(content)

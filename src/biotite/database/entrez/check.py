@@ -6,6 +6,7 @@ __name__ = "biotite.database.entrez"
 __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
 __all__ = ["check_for_errors"]
 
+import json
 from ..error import RequestError
 
 
@@ -29,17 +30,27 @@ _error_messages = [
 def check_for_errors(message):
     """
     Check for common error messages in NCBI Entrez database responses.
-    
+
     Parameters
     ----------
     message : str
-        The message received from NCBI Entrez. 
-    
+        The message received from NCBI Entrez.
+
     Raises
     ------
     RequestError
         If the message contains an error message.
     """
+    # Server can respond short JSON error messages
+    if len(message) < 500:
+        try:
+            message_json = json.loads(message)
+            if "error" in message_json:
+                raise RequestError(message_json["error"])
+        except json.decoder.JSONDecodeError:
+            # It is not a JSON message
+            pass
+
     # Error always appear at the end of message
     message_end = message[-200:]
     # Seemingly arbitrary '+' characters are in NCBI error messages

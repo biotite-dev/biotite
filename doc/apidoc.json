@@ -34,6 +34,10 @@
             "search",
             "fetch",
             "fetch_single_file"
+        ],
+        "API keys" : [
+            "set_api_key",
+            "get_api_key"
         ]
     },
 
