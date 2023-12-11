@@ -152,6 +152,11 @@
             "Permutation",
             "RandomPermutation",
             "FrequencyPermutation"
+        ],
+        "CIGAR strings" : [
+            "CigarOp",
+            "read_alignment_from_cigar",
+            "write_alignment_to_cigar"
         ]
     },
 

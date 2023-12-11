@@ -35,6 +35,7 @@ __author__ = "Patrick Kunzmann"
 from .alignment import *
 from .banded import *
 from .buckets import *
+from .cigar import *
 from .kmeralphabet import *
 from .kmertable import *
 from .kmersimilarity import *
