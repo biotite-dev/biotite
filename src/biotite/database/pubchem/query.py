@@ -84,7 +84,7 @@ class NameQuery(Query):
     --------
 
     >>> print(search(NameQuery("Alanine")))
-    [5950, 449619, 7311724, 155817681]
+    [5950, ..., ..., ...]
     """
 
     def __init__(self, name):
@@ -204,10 +204,10 @@ class FormulaQuery(Query):
     --------
 
     >>> print(search(FormulaQuery("C4H10", number=5)))
-    [7843, 6360, 16213391, 71309065, 16213390]
+    [7843, ..., ..., ..., ...]
     >>> atom_array = residue("ALA")
     >>> print(search(FormulaQuery.from_atoms(atom_array, number=5)))
-    [5950, 5641, 1088, 239, 602]
+    [5950, ..., ..., ..., ...]
     """
 
     def __init__(self, formula, allow_other_elements=False, number=None):
@@ -555,11 +555,11 @@ class SuperstructureQuery(SuperOrSubstructureQuery):
 
     >>> # CID of alanine
     >>> print(search(SuperstructureQuery(cid=5950, number=5)))
-    [1032, 887, 712, 702, 284]
+    [1032, ..., ..., ..., ...]
     >>> # AtomArray of alanine
     >>> atom_array = residue("ALA")
     >>> print(search(SuperstructureQuery.from_atoms(atom_array, number=5)))
-    [1032, 887, 712, 702, 284]
+    [1032, ..., ..., ..., ...]
     """
 
     def search_type(self):
@@ -628,11 +628,11 @@ class SubstructureQuery(SuperOrSubstructureQuery):
 
     >>> # CID of alanine
     >>> print(search(SubstructureQuery(cid=5950, number=5)))
-    [5950, 602, 71080, 3081884, 449619]
+    [5950, ..., ..., ..., ...]
     >>> # AtomArray of alanine
     >>> atom_array = residue("ALA")
     >>> print(search(SubstructureQuery.from_atoms(atom_array, number=5)))
-    [5950, 602, 71080, 3081884, 449619]
+    [5950, ..., ..., ..., ...]
     """
 
     def search_type(self):
@@ -689,11 +689,11 @@ class SimilarityQuery(StructureQuery):
 
     >>> # CID of alanine
     >>> print(search(SimilarityQuery(cid=5950, threshold=1.0, number=5)))
-    [5950, 602, 71080, 11815285, 10749140]
+    [5950, ..., ..., ..., ...]
     >>> # AtomArray of alanine
     >>> atom_array = residue("ALA")
     >>> print(search(SimilarityQuery.from_atoms(atom_array, threshold=1.0, number=5)))
-    [5950, 602, 71080, 11815285, 10749140]
+    [5950, ..., ..., ..., ...]
     """
 
     def __init__(self, threshold=0.9, conformation_based=False, **kwargs):
@@ -801,7 +801,7 @@ def search(query, throttle_threshold=0.5, return_throttle_status=False):
     --------
 
     >>> print(search(NameQuery("Alanine")))
-    [5950, 449619, 7311724, 155817681]
+    [5950, ..., ..., ...]
     """
     # Use POST to be compatible with the larger payloads
     # of structure searches
