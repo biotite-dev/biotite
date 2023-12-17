@@ -61,7 +61,7 @@ for residue_name, residue_id in zip(residue_names, residue_ids):
 base_pairs = struc.base_pairs(nucleotides)
 pseudoknot_order = struc.pseudoknots(base_pairs)[0]
 
-# Draw the arcs between basepairs
+# Draw the arcs between base pairs
 for (base1, base2), order in zip(base_pairs, pseudoknot_order):
     arc_center = (
         np.mean((nucleotides.res_id[base1],nucleotides.res_id[base2])), 1.5
@@ -80,7 +80,7 @@ for (base1, base2), order in zip(base_pairs, pseudoknot_order):
     else:
         linestyle = ":"
     arc = Arc(
-        arc_center, arc_diameter, arc_diameter, 180, theta1=180, theta2=0,
+        arc_center, arc_diameter, arc_diameter, theta1=0, theta2=180,
         color=color, linewidth=1.5, linestyle=linestyle
     )
     ax.add_patch(arc)

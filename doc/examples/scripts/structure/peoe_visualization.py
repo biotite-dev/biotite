@@ -77,7 +77,7 @@ ball_sizes = np.array(
 
 # Gradient of ray strength
 # The ray size is proportional to the absolute charge value
-ray_full_sizes = ball_sizes + np.abs(charges) * RAY_SCALE   
+ray_full_sizes = ball_sizes + np.abs(charges) * RAY_SCALE
 ray_sizes = np.array([
     np.linspace(ray_full_sizes[i], ball_sizes[i], N_RAY_STEPS, endpoint=False)
     for i in range(molecule.array_length())
@@ -104,7 +104,7 @@ for atom in molecule:
         ha="center", va="center", zorder=100
     )
 
-# Plots the rays
+# Plot the rays
 for i in range(N_RAY_STEPS):
     ax.scatter(
         *molecule.coord.T, s=ray_sizes[i]**2, c=colors,
@@ -112,10 +112,13 @@ for i in range(N_RAY_STEPS):
     )
 
 # Plot the colorbar
-color_bar = fig.colorbar(ScalarMappable(
-    norm=Normalize(vmin=-max_charge, vmax=max_charge),
-    cmap=color_map
-))
+color_bar = fig.colorbar(
+    ScalarMappable(
+        norm=Normalize(vmin=-max_charge, vmax=max_charge),
+        cmap=color_map
+    ),
+    ax=ax
+)
 color_bar.set_label("Partial charge (e)", color="white")
 color_bar.ax.yaxis.set_tick_params(color="white")
 color_bar.outline.set_edgecolor("white")

@@ -35,7 +35,7 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
     Instead of having the font size fixed in 'pt', the size of the text
     scales to the specied width/height and adapts to changes in the
     plot's width/height.
-    The scaling can be proportional or non-proportional, depending 
+    The scaling can be proportional or non-proportional, depending
     the `mode`.
 
     Parameters
@@ -75,7 +75,7 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
     This behavior is not equal for all initial font sizes (in 'pt'),
     the boundaries for an initial size of 1 'pt' seem to be most exact.
     """
-    from matplotlib.transforms import Bbox
+    from matplotlib.transforms import Bbox, Affine2D
     from matplotlib.patheffects import AbstractPathEffect
 
     class TextScaler(AbstractPathEffect):
@@ -98,7 +98,7 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
                 raise
             bbox = text.get_window_extent(renderer)
             bbox = Bbox(ax.transData.inverted().transform(bbox))
-            
+
             if self._mode == "proportional":
                 if self._width is None:
                     # Proportional scaling based on height
@@ -122,9 +122,9 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
                 scale = min(scale_x, scale_y)
                 scale_x, scale_y = scale, scale
 
-            affine = affine.identity().scale(scale_x, scale_y) + affine
+            affine = Affine2D().scale(scale_x, scale_y) + affine
             renderer.draw_path(gc, tpath, affine, rgbFace)
-    
+
     if mode in ["unlocked", "minimum", "maximum"]:
         if width is None or height is None:
             raise TypeError(
@@ -146,8 +146,6 @@ try:
     # Only create this class when matplotlib is installed
     from matplotlib.transforms import Bbox
     from matplotlib.patches import FancyArrow
-    from matplotlib.patheffects import AbstractPathEffect
-    import matplotlib.pyplot as plt
 
     class AdaptiveFancyArrow(FancyArrow):
         """
@@ -178,7 +176,7 @@ try:
             Other parameters that are used in the constructor of
             `FancyArrow`.
         """
-        
+
         def __init__(self, x, y, dx, dy,
                      tail_width, head_width, head_ratio, draw_head=True,
                      shape="full", **kwargs):
@@ -219,7 +217,7 @@ try:
                 # only draw the arrow head with reduced length
                 head_length = arrow_length
             if not self._draw_head:
-                head_length = 0 
+                head_length = 0
 
             # Renew the arrow's properties
             super().__init__(
@@ -231,7 +229,7 @@ try:
             )
             self.set_clip_path(self.axes.patch)
             super().draw(renderer)
-        
+
         # Override to replace docstring
         # Removes warning:
         # unknown document: /tutorials/intermediate/constrainedlayout_guide
@@ -245,7 +243,7 @@ try:
             return super().set_in_layout(in_layout)
 
 except ImportError:
-    
+
     # Dummy class that propagates a meaningful error,
     # i.e. that Matplotlib is not installed
     class AdaptiveFancyArrow():
