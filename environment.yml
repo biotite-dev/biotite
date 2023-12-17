@@ -11,30 +11,36 @@ channels:
 
 dependencies:
   - python =3.10
-  - setuptools >=30.0
-  - pip >=10.0
-  - wheel >=0.30
-  - requests >=2.12
-  - numpy >=1.15
-  - scipy >=1.8.0
-  - scikit-learn >=0.18
-  - networkx >=2.0
-  - pydot >=1.4
-  - msgpack-python >=0.5.6
+  # Package building
   - cython >=3.0
+  - pip >=10.0
+  - setuptools >=30.0
+  - wheel >=0.30
+  # Biotite dependencies
+  - msgpack-python >=0.5.6
+  - networkx >=2.0
+  - numpy >=1.15
+  - requests >=2.12
+  # Testing
   - mdtraj >=1.9.3
-  - matplotlib >=3.3
   - pytest >=5.2
-  - sphinx >=5.0
-  - sphinx-gallery =0.11.1
-  - sphinxcontrib-bibtex >=2.3
-  - numpydoc >=0.8
-  - dssp
+  # Interfaced software in biotite.application
+  - autodock-vina
   - clustalo
+  - dssp
   - mafft
   - muscle =3
   - sra-tools
-  - autodock-vina
-  - viennarna >=2.5.0
   - tantan
+  - viennarna >=2.5.0
+  # Documentation building
+  - matplotlib >=3.3
+  - numpydoc >=0.8
+  - sphinx >=5.0
+  - sphinxcontrib-bibtex >=2.3
+  - sphinx-gallery =0.11.1
+  # Extra packages used in example gallery
   - pandas >=1.5.2
+  - pydot >=1.4
+  - scikit-learn >=0.18
+  - scipy >=1.8.0
