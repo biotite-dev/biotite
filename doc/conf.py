@@ -164,6 +164,7 @@ sphinx_gallery_conf = {
     "doc_module"                : ("biotite",),
     # Set the NCBI API key
     "reset_modules"             : (key.set_ncbi_api_key_from_env,),
+    "remove_config_comments": True,
 }
 
 

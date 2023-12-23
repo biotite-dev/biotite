@@ -42,8 +42,8 @@ N_CA_C_ANGLE = 110
 # Reference peptide bond atom coordinates taken from 1l2y:
 # CA, C, N, O, H
 peptide_coord = np.array([
-    [-8.608, 3.135, -1.618], 
-    [-7.117, 2.964, -1.897],  
+    [-8.608, 3.135, -1.618],
+    [-7.117, 2.964, -1.897],
     [-6.379, 4.031, -2.228],
     [-6.634, 1.849, -1.758],
     [-6.821, 4.923, -2.394]
@@ -95,7 +95,7 @@ def append_residue(chain, residue):
         return residue
 
     last_res_id = chain.res_id[-1]
-    
+
     # Remove atoms removed by peptide bond
     chain = chain[
         (chain.res_id != last_res_id) |
@@ -125,8 +125,8 @@ N_CA_C_ANGLE = 110
 # Reference peptide bond atom coordinates taken from 1l2y:
 # CA, C, N, O, H
 peptide_coord = np.array([
-    [-8.608, 3.135, -1.618], 
-    [-7.117, 2.964, -1.897],  
+    [-8.608, 3.135, -1.618],
+    [-7.117, 2.964, -1.897],
     [-6.379, 4.031, -2.228],
     [-6.634, 1.849, -1.758],
     [-6.821, 4.923, -2.394]
@@ -178,7 +178,7 @@ def append_residue(chain, residue):
         return residue
 
     last_res_id = chain.res_id[-1]
-    
+
     # Remove atoms removed by peptide bond
     chain = chain[
         (chain.res_id != last_res_id) |
@@ -217,14 +217,14 @@ def assemble_peptide(sequence):
     chain = struc.AtomArray(0)
     for i, res_name in enumerate(res_names):
         residue = info.residue(res_name)
-        
-        # Superimpose residue to corresponding backbone coordinates 
+
+        # Superimpose residue to corresponding backbone coordinates
         _, transformation = struc.superimpose(
             backbone_coord[3*i : 3*i + 3],
             residue.coord[np.isin(residue.atom_name, ["N", "CA", "C"])]
         )
         residue = struc.superimpose_apply(residue, transformation)
-        
+
         chain = append_residue(chain, residue)
 
         if i != 0:
@@ -253,5 +253,6 @@ chain = assemble_peptide(sequence)
 out_file = NamedTemporaryFile(suffix=".mmtf", delete=False)
 strucio.save_structure(out_file.name, chain)
 # Visualization with PyMOL...
+# sphinx_gallery_pymol_image
 
 out_file.close()

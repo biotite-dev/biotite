@@ -75,5 +75,6 @@ biological_unit = biological_unit[biological_unit.atom_name == "CA"]
 temp = NamedTemporaryFile(suffix=".cif")
 strucio.save_structure(temp.name, biological_unit)
 # Visualization with PyMOL...
+# sphinx_gallery_pymol_image
 
 temp.close()
