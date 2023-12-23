@@ -10,6 +10,9 @@ body, div.sphinxsidebar input{
 div.body > .section {
     text-align: justify;
 }
+dt {
+    text-align: left;
+}
 p.caption {
     font-size: 0.8em;
 }
@@ -21,7 +24,7 @@ div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
     font-weight: 300;
 }
 a {
-    border: none !important;    
+    border: none !important;
 }
 a.toc-backref {
     color: #3E4349;
