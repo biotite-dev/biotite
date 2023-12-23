@@ -22,7 +22,7 @@ This package bundles popular tasks in computational molecular biology
 into a uniform *Python* library.
 It can handle a major part of the typical workflow
 for sequence and biomolecular structure data:
-   
+
    - Searching and fetching data from biological databases
    - Reading and writing popular sequence/structure file formats
    - Analyzing and editing sequence/structure data
@@ -40,11 +40,13 @@ As a result the user can skip writing code for basic functionality (like
 file parsers) and can focus on what their code makes unique - from
 small analysis scripts to entire bioinformatics software packages.
 
-If you use *Biotite* in a scientific publication, please cite:
+If you use *Biotite* in a scientific publication, please cite one of the
+following articles:
 
 .. bibliography::
 
    Kunzmann2018
+   Kunzmann2023
 
 ----
 
@@ -134,7 +136,7 @@ databases, including the arguably most important ones: the *RCSB PDB* and the
 .. toctree::
    :maxdepth: 1
    :hidden:
-   
+
    install
    tutorial/target/index
    apidoc/index
