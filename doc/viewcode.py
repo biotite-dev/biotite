@@ -10,11 +10,11 @@ lines at GitHub.
 __author__ = "Patrick Kunzmann"
 __all__ = ["linkcode_resolve"]
 
-import sys
 from importlib import import_module
 from os.path import dirname, join, isdir, splitext
 from os import listdir
 import inspect
+import biotite
 
 
 def _index_attributes(package_name, src_path):
@@ -203,9 +203,10 @@ _attribute_index, _cython_line_index = _index_attributes(
 )
 
 
-
-
 def linkcode_resolve(domain, info):
+    version = biotite.__version__
+    base_url = f"https://github.com/biotite-dev/biotite/blob/v{version}/src/"
+
     if domain != "py":
         return None
 
@@ -215,19 +216,23 @@ def linkcode_resolve(domain, info):
         module_name, is_cython = _attribute_index[(package_name, attr_name)]
     except KeyError:
         # The attribute is not defined within Biotite
-        # It may be e.g. in inherited method from an external source
+        # It may be e.g. an inherited method from an external source
         return None
 
     if is_cython:
         if (package_name, attr_name) in _cython_line_index:
             first, last = _cython_line_index[(package_name, attr_name)]
-            return f"https://github.com/biotite-dev/biotite/blob/master/src/" \
-                   f"{module_name.replace('.', '/')}.pyx#L{first}-L{last}"
+            return (
+                base_url +
+                f"{module_name.replace('.', '/')}.pyx#L{first}-L{last}"
+            )
         else:
             # In case the attribute is not found
             # by the Cython code analyzer
-            return f"https://github.com/biotite-dev/biotite/blob/master/src/" \
-                   f"{module_name.replace('.', '/')}.pyx"
+            return (
+                base_url +
+                f"{module_name.replace('.', '/')}.pyx"
+            )
 
     else:
         module = import_module(module_name)
@@ -246,5 +251,7 @@ def linkcode_resolve(domain, info):
         source_lines, first = inspect.getsourcelines(obj)
         last = first + len(source_lines) - 1
 
-        return f"https://github.com/biotite-dev/biotite/blob/master/src/" \
-               f"{module_name.replace('.', '/')}.py#L{first}-L{last}"
+        return (
+            base_url +
+            f"{module_name.replace('.', '/')}.py#L{first}-L{last}"
+        )
