@@ -305,8 +305,13 @@ with multiprocessing.Pool(processes=N_PROCESS) as p:
 # displayed.
 # The alignment itself is also discarded here, but note that it could
 # also be used in downstream analysis.
+#
 # Read alignments are typically stored in file formats like SAM/BAM
 # :footcite:`Li2009`.
+# The package `pysam <https://pysam.readthedocs.io/en/latest/>`_
+# provides an interface to these formats.
+# To convert an alignment into a CIGAR string, the function
+# :func:`write_alignment_to_cigar()` can be used.
 
 counts = np.zeros(len(sequences), dtype=int)
 for gene_index, alignment in mapping_results:
