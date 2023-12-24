@@ -22,12 +22,15 @@ import matplotlib
 
 import biotite
 
-doc_path = dirname(realpath(__file__))
-package_path = join(dirname(doc_path), "src")
+
+BIOTITE_DOMAIN = "www.biotite-python.org"
+DOC_PATH = dirname(realpath(__file__))
+PACKAGE_PATH = join(dirname(DOC_PATH), "src")
+
 
 # Include biotite/doc in PYTHONPATH
 # in order to import modules for API doc generation etc.
-sys.path.insert(0, doc_path)
+sys.path.insert(0, DOC_PATH)
 import apidoc
 import viewcode
 import tutorial
@@ -40,7 +43,7 @@ import key
 matplotlib.rcdefaults()
 
 # Creation of API documentation
-apidoc.create_api_doc(package_path, join(doc_path, "apidoc"))
+apidoc.create_api_doc(PACKAGE_PATH, join(DOC_PATH, "apidoc"))
 
 # Creation of tutorial *.rst files from Python script
 if not "plot_gallery=0" in sys.argv:
@@ -71,21 +74,24 @@ warnings.filterwarnings(
             "so cannot show the figure."
 )
 
-extensions = ["sphinx.ext.autodoc",
-              "sphinx.ext.autosummary",
-              "sphinx.ext.doctest",
-              "sphinx.ext.mathjax",
-              "sphinx.ext.linkcode",
-              "sphinxcontrib.bibtex",
-              "sphinx_gallery.gen_gallery",
-              "numpydoc"]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.doctest",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.linkcode",
+    "sphinxcontrib.bibtex",
+    "sphinx_gallery.gen_gallery",
+    "sphinx_design",
+    "numpydoc",
+]
 
 templates_path = ["templates"]
 source_suffix = [".rst"]
 master_doc = "index"
 
 project = "Biotite"
-copyright = "2017-2020, the Biotite contributors"
+copyright = "The Biotite contributors"
 version = biotite.__version__
 release = biotite.__version__
 
@@ -111,33 +117,55 @@ bibtex_default_style = "ieee"
 
 #### HTML ####
 
-html_theme = "alabaster"
+html_theme = "pydata_sphinx_theme"
+
 html_static_path = ["static"]
 html_css_files = [
     "biotite.css",
     "fonts.css"
 ]
+html_title = "Biotite"
+html_logo = "static/assets/general/biotite_logo_navbar.png"
 html_favicon = "static/assets/general/biotite_icon_32p.png"
-htmlhelp_basename = "BiotiteDoc"
-html_sidebars = {"**": ["about.html",
-                        "navigation.html",
-                        "searchbox.html",
-                        "buttons.html"]}
+html_baseurl = f"https://{BIOTITE_DOMAIN}/latest/"
 html_theme_options = {
-    "description"   : "A comprehensive library for " \
-                      "computational molecular biology",
-    "logo"          : "assets/general/biotite_logo_s.png",
-    "logo_name"     : "false",
-    "github_user"   : "biotite-dev",
-    "github_repo"   : "biotite",
-    "github_banner" : "true",
-    "github_button" : "true",
-    "github_type"   : "star",
-    "page_width"    : "1200px",
-    "fixed_sidebar" : "true",
-
-    "sidebar_link_underscore" : "#FFFFFF",
-    "link"                    : "#006B99",
+    "header_links_before_dropdown": 7,
+    "pygment_light_style": "friendly",
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/biotite-dev/biotite",
+            "icon": "fa-brands fa-github",
+            "type": "fontawesome",
+        },
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/biotite/",
+            "icon": "fa-solid fa-box-open",
+            "type": "fontawesome",
+        },
+        {
+            "name": "News",
+            "url": "https://biotite.bsky.social",
+            "icon": "fa-brands fa-bluesky",
+            "type": "fontawesome",
+        }
+   ],
+   "use_edit_page_button": True,
+   "show_prev_next": False,
+}
+html_sidebars = {
+    # No primary sidebar for these pages
+    "extensions": [],
+    "install": [],
+    "contribute": [],
+    "logo": [],
+}
+html_context = {
+    "github_user": "biotite-dev",
+    "github_repo": "biotite",
+    "github_version": "master",
+    "doc_path": "doc",
 }
 
 sphinx_gallery_conf = {
@@ -152,7 +180,7 @@ sphinx_gallery_conf = {
     # Never report run time
     "min_reported_time"         : sys.maxsize,
     "default_thumb_file"        : join(
-        doc_path, "static/assets/general/biotite_icon_thumb.png"
+        DOC_PATH, "static/assets/general/biotite_icon_thumb.png"
     ),
     "image_scrapers"            : (
         "matplotlib",

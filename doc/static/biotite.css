@@ -1,64 +1,13 @@
-div.body {
-    max-width: 850px  !important;
-}
-
-
-
-body, div.sphinxsidebar input{
-    font-family: "Fira Sans", "Helvetica", "Sans-Serif";
-}
-div.body > .section {
-    text-align: justify;
-}
-dt {
-    text-align: left;
-}
-p.caption {
-    font-size: 0.8em;
-}
-h1, h2, h3, h4, h5, h6, p.sidebar-title {
-    text-align: start !important;
-    font-family: "Crete Round", "Sans-Serif" !important;
-}
-div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
-    font-weight: 300;
-}
-a {
-    border: none !important;
-}
-a.toc-backref {
-    color: #3E4349;
-    text-decoration-line: none
-}
-div.body p, div.body dd, div.body ul li {
-    list-style-type: square;
-}
-hr.docutils {
-    border: none;
-    border-bottom: 1px solid #656768;
-    margin-top: 2em;
-}
-.toctree-wrapper ul, ol {
-    margin: 0px 0 10px 0px;
-    margin-bottom: 2em;
-}
-div.body div.sphinx-sidebar li, div.body .toctree-wrapper li {
-    list-style-type: none;
-}
-.toctree-wrapper li.toctree-l2 {
-    font-weight: normal;
-    margin: 0;
-    padding: 0;
-}
-.toctree-wrapper li.toctree-l1 {
-    margin-bottom: 1em;
-    font-weight: bold;
+html {
+    --pst-font-family-base: "Fira Sans", "Helvetica", "Sans-Serif";
+    --pst-font-family-heading: "Crete Round", "Sans-Serif";
+    --pst-font-weight-heading: 300;
 }
 
 
 /* Separation between methods in the API reference */
 .py.method, .py.attribute{
-    border-top: 1px solid #cccccc;
+    border-top: 1px solid #888888;
     padding-top: 30px;
     padding-bottom: 30px;
 }
@@ -66,12 +15,6 @@ div.body div.sphinx-sidebar li, div.body .toctree-wrapper li {
 
 .sphx-glr-multi-img{
     max-width: 99% !important;
-}
-
-.sphx-glr-thumbcontainer {
-    font-size: 0.9em !important;
-    width: 200px !important;
-    height: 200px !important;
 }
 
 div.sphx-glr-download {

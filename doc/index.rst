@@ -50,8 +50,8 @@ following articles:
 
 ----
 
-**Sequence** subpackage
------------------------
+Analyze sequence data
+---------------------
 This subpackage contains functionality for working with sequence information
 of any kind.
 The package contains by default sequence types for nucleotides and proteins,
@@ -74,8 +74,8 @@ representations, ranging from sequence alignments to feature maps.
 
 ----
 
-**Structure** subpackage
-------------------------
+Explore biomolecular 3D structures
+----------------------------------
 This subpackage enables handling of 3D structures of biomolecules.
 Simplified, a structure is represented by a list of atoms and their properties,
 based on `ndarray` objects.
@@ -96,8 +96,8 @@ accessible surface area calculation, structure superimposition and more.
 
 ----
 
-**Application** subpackage
---------------------------
+Integrate popular software seamlessly
+-------------------------------------
 This subpackage provides interfaces for external software, in case *Biotite*'s
 integrated functionality is not sufficient for your tasks.
 These interfaces range from locally installed software (e.g. MSA software) to
@@ -117,8 +117,8 @@ It is basically very similar to using normal *Python* functions.
 
 ----
 
-**Database** subpackage
------------------------
+Search and download data from biological databases
+--------------------------------------------------
 This subpackage is all about searching and downloading data from biological
 databases, including the arguably most important ones: the *RCSB PDB* and the
 *NCBI Entrez* database.
@@ -144,4 +144,6 @@ databases, including the arguably most important ones: the *RCSB PDB* and the
    extensions
    contribute
    logo
+
+
 

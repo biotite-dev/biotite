@@ -34,10 +34,12 @@ dependencies:
   - tantan
   - viennarna >=2.5.0
   # Documentation building
+  - pydata-sphinx-theme =0.15
   - matplotlib >=3.3
   - numpydoc >=0.8
   - sphinx >=5.0
   - sphinxcontrib-bibtex >=2.3
+  - sphinx-design >=0.5
   - sphinx-gallery =0.15.0
   # Extra packages used in example gallery
   - pandas >=1.5.2
