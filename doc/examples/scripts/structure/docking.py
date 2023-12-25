@@ -99,11 +99,11 @@ ref_ligand = ref_ligand[np.isin(ref_ligand.atom_name, docked_ligand.atom_name)]
 ref_ligand = ref_ligand[info.standardize_order(ref_ligand)]
 
 # Calculate the RMSD of the docked models to the correct binding mode
-# No superimposition prior to RMSD calculation, as we want to see 
+# No superimposition prior to RMSD calculation, as we want to see
 # conformation differences with respect to the binding pocket
 rmsd = struc.rmsd(ref_ligand, docked_ligand)
 
-# Evaluate correlation between RMSD and binding energies 
+# Evaluate correlation between RMSD and binding energies
 correlation, p_value = spearmanr(energies, rmsd)
 
 figure, ax = plt.subplots(figsize=(8.0, 6.0))
@@ -133,7 +133,7 @@ plt.show()
 # with the lowest RMSD in this case.
 # The docked conformation is shown as ball-and-stick model, the original
 # experimentally determined biotin conformation is shown in transparent
-# blue. 
+# blue.
 
 
 # Get the best fitting model,
@@ -146,5 +146,6 @@ docked_ligand = docked_ligand[np.argmin(rmsd)]
 ref_ligand = ref_ligand[ref_ligand.element!= "H"]
 docked_ligand = docked_ligand[docked_ligand.element!= "H"]
 
-# sphinx_gallery_thumbnail_number = 2
 # Visualization with PyMOL...
+# sphinx_gallery_thumbnail_number = 2
+# sphinx_gallery_pymol_image

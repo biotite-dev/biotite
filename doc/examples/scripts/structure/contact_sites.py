@@ -7,7 +7,7 @@ in contact with its corresponding DNA operator.
 *In contact* is defined as a pairwise atom distance below a given
 threshold (in this case 4.0 Å).
 
-The identified contact residues are highlighted as sticks. 
+The identified contact residues are highlighted as sticks.
 """
 
 # Code source: Patrick Kunzmann
@@ -78,3 +78,4 @@ for res_id in common_ids:
     print(res_name.capitalize() + str(res_id))
 
 # Visualization with PyMOL...
+# sphinx_gallery_pymol_image

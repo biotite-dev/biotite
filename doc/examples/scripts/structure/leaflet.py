@@ -54,7 +54,7 @@ def find_leaflets(structure, head_atom_mask,
     periodic : bool, optional,
         If true, periodic boundary conditions are considered.
         This requires that `structure` has an associated `box`.
-    
+
     Returns
     -------
     leaflets : ndarray, dtype=bool, shape=(m,n)
@@ -62,7 +62,7 @@ def find_leaflets(structure, head_atom_mask,
         Each masks indicates which atoms of the input `structure`
         are in the leaflet.
     """
-    
+
     cell_list = struc.CellList(
         structure, cell_size=cutoff_distance, selection=head_atom_mask,
         periodic=periodic
@@ -75,7 +75,7 @@ def find_leaflets(structure, head_atom_mask,
                      # This also removes all entries
                      # for atoms not in 'head_atom_mask'
                      if len(c) > 1]
-    
+
     # 'leaflets' contains indices to head atoms
     # Broadcast each head atom index to all atoms in its corresponding
     # residue
@@ -112,5 +112,6 @@ for chain_id, leaflet_mask in zip(("A", "B"), leaflets):
 temp = NamedTemporaryFile(suffix=".pdb")
 strucio.save_structure(temp.name, structure)
 # Visualization with PyMOL...
+# sphinx_gallery_pymol_image
 
 temp.close()

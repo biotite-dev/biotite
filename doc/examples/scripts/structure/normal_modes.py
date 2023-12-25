@@ -85,7 +85,7 @@ mode_vectors = vectors[MODE].reshape((-1, 3))
 # Rescale, so that the largest vector has the length 'MAX_AMPLITUDE'
 vector_lenghts = np.sqrt(np.sum(mode_vectors**2, axis=-1))
 scale = MAX_AMPLITUDE / np.max(vector_lenghts)
-mode_vectors *= scale 
+mode_vectors *= scale
 
 
 # Stepwise application of eigenvectors as smooth sine oscillation
@@ -111,6 +111,6 @@ oscillating_structure = struc.from_template(protein_chain, oscillation)
 # Save as PDB for rendering a video with PyMOL
 temp = NamedTemporaryFile(suffix=".pdb")
 strucio.save_structure(temp.name, oscillating_structure)
-# biotite_static_image = normal_modes.gif
+# sphinx_gallery_static_image = "normal_modes.gif"
 
 temp.close()
