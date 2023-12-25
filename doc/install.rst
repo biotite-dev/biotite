@@ -13,6 +13,7 @@ Requirements
    - **numpy**
    - **requests**
    - **msgpack**
+   - **networkx**
 
 If you are a Linux user, you should be able to install these packages simply
 via *pip* (Tip: Use ``--only-binary :all:`` to ensure precompiled versions are
@@ -24,7 +25,7 @@ aforementioned packages.
 
 Some functions require some extra packages:
 
-   - **mdtraj** - Required for trajetory file I/O operations.
+   - **mdtraj** - Required for trajectory file I/O operations.
    - **matplotlib** - Required for plotting purposes.
 
 
