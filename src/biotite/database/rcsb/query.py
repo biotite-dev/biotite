@@ -32,7 +32,7 @@ _scope_to_target = {
 class Query(metaclass=abc.ABCMeta):
     """
     A representation of a JSON query for the RCSB search API.
-    
+
     This is the abstract base class for all queries.
     """
     @abc.abstractmethod
@@ -62,7 +62,7 @@ class Query(metaclass=abc.ABCMeta):
 class SingleQuery(Query, metaclass=abc.ABCMeta):
     """
     A terminal query node for the RCSB search API.
-    
+
     Multiple :class:`SingleQuery` objects can be combined to
     :class:`CompositeQuery`objects using the ``|`` and ``&`` operators.
 
@@ -77,7 +77,7 @@ class SingleQuery(Query, metaclass=abc.ABCMeta):
 class CompositeQuery(Query):
     """
     A group query node for the RCSB search API.
-    
+
     A composite query is an combination of other queries, combined
     either with the `'and'` or `'or'` operator.
     Usually, a :class:`CompositeQuery` will not be created by calling
@@ -98,11 +98,11 @@ class CompositeQuery(Query):
                 f"Operator must be 'or' or 'and', not '{operator}'"
             )
         self._operator = operator
-    
+
     def get_content(self):
         """
         A dictionary representation of the query.
-        This dictionary is the content of the ``'query'`` key in the 
+        This dictionary is the content of the ``'query'`` key in the
         JSON query.
 
         Returns
@@ -133,13 +133,13 @@ class BasicQuery(SingleQuery):
         The matching is not case-sensitive.
         Logic combinations of terms is described
         `here <https://search.rcsb.org/#basic-queries>`_.
-    
+
     Examples
     --------
-    
+
     >>> query = BasicQuery("tc5b")
-    >>> print(search(query))
-    ['1L2Y', '8ANM', '8ANH', '8ANG', '8ANI']
+    >>> print(sorted(search(query)))
+    ['1L2Y', '8ANG', '8ANH', '8ANI', '8ANM']
     """
     def __init__(self, term):
         super().__init__()
@@ -207,7 +207,7 @@ class FieldQuery(SingleQuery):
 
     Examples
     --------
-    
+
     >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
     >>> print(sorted(search(query)))
     ['1EJG', '1I0T', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG', '7R0H']
@@ -218,7 +218,7 @@ class FieldQuery(SingleQuery):
         self._field = field
         self._mol_definition = molecular_definition
         self._case_sensitive = case_sensitive
-        
+
         if len(kwargs) > 1:
             raise TypeError("Only one operator must be given")
         elif len(kwargs) == 1:
@@ -228,7 +228,7 @@ class FieldQuery(SingleQuery):
             # No operator is given
             self._operator = "exists"
             self._value = None
-        
+
         if self._operator not in [
             "exact_match",
             "contains_words", "contains_phrase",
@@ -241,7 +241,7 @@ class FieldQuery(SingleQuery):
                 f"Constructor got an unexpected keyword argument "
                 f"'{self._operator}'"
             )
-        
+
         # Convert dates into ISO 8601
         if isinstance(self._value, datetime):
              self._value = _to_isoformat(self._value)
@@ -250,7 +250,7 @@ class FieldQuery(SingleQuery):
                 _to_isoformat(val) if isinstance(val, datetime) else val
                 for val in self._value
             ]
-        
+
         # Create dictionary for 'range' operator
         if self._operator == "range":
             self._value = {
@@ -266,7 +266,7 @@ class FieldQuery(SingleQuery):
                 "to": self._value[1],
                 "include_upper": True
             }
-        
+
         # Rename operators to names used in API
         if self._operator == "is_in":
             # 'in' is not an available parameter name in Python
@@ -326,7 +326,7 @@ class SequenceQuery(SingleQuery):
 
     Examples
     --------
-    
+
     >>> sequence = "NLYIQWLKDGGPSSGRPPPS"
     >>> query = SequenceQuery(sequence, scope="protein", min_identity=0.8)
     >>> print(sorted(search(query)))
@@ -338,12 +338,12 @@ class SequenceQuery(SingleQuery):
         self._target = _scope_to_target.get(scope.lower())
         if self._target is None:
             raise ValueError(f"'{scope}' is an invalid scope")
-        
+
         if isinstance(sequence, NucleotideSequence) and scope.lower() == "rna":
             self._sequence = str(sequence).replace("T", "U")
         else:
             self._sequence = str(sequence)
-        
+
         self._min_identity = min_identity
         self._max_expect_value = max_expect_value
 
@@ -371,10 +371,10 @@ class MotifQuery(SingleQuery):
         The type of the pattern.
     scope : {'protein', 'dna', 'rna'}
         The type of molecule to find.
-    
+
     Examples
     --------
-    
+
     >>> query = MotifQuery(
     ...     "C-x(2,4)-C-x(3)-[LIVMFYWC]-x(8)-H-x(3,5)-H.",
     ...     "prosite",
@@ -416,7 +416,7 @@ class StructureQuery(SingleQuery):
     strict : bool, optional
         If true, structure comparison is strict, otherwise it is
         relaxed.
-    
+
     Examples
     --------
 
@@ -442,7 +442,7 @@ class StructureQuery(SingleQuery):
                 "entry_id": pdb_id,
                 "asym_id": chain
             }
-        
+
         self._operator = "strict_shape_match" if strict \
                          else "relaxed_shape_match"
 
@@ -462,7 +462,7 @@ class Sorting:
     def __init__(self, field, descending=True):
         self._field = field
         self._descending = descending
-    
+
     @property
     def field(self):
         return self._field
@@ -470,7 +470,7 @@ class Sorting:
     @property
     def descending(self):
         return self._descending
-    
+
     def get_content(self):
         """
         Get the sorting content, i.e. the data belonging to the
@@ -497,7 +497,7 @@ class Sorting:
 
 class Grouping(metaclass=abc.ABCMeta):
     """
-    A representation of the JSON grouping options of the RCSB search 
+    A representation of the JSON grouping options of the RCSB search
     API.
 
     Parameters
@@ -521,7 +521,7 @@ class Grouping(metaclass=abc.ABCMeta):
             self._sorting = sort_by
         else:
             self._sorting = Sorting(sort_by)
-    
+
     @abc.abstractmethod
     def get_content(self):
         """
@@ -542,7 +542,7 @@ class Grouping(metaclass=abc.ABCMeta):
             return {"ranking_criteria_type" : self._sorting.get_content()}
         else:
             return {}
-    
+
     @abc.abstractmethod
     def is_compatible_return_type(self, return_type):
         """
@@ -555,7 +555,7 @@ class Grouping(metaclass=abc.ABCMeta):
         ----------
         return_type : str
             The ``return_type`` attribute to be checked.
-        
+
         Returns
         -------
         is_compatible : bool
@@ -593,7 +593,7 @@ class DepositGrouping(Grouping):
         content = super().get_content()
         content["aggregation_method"] = "matching_deposit_group_id"
         return content
-    
+
     def is_compatible_return_type(self, return_type):
         return return_type == "entry"
 
@@ -640,7 +640,7 @@ class IdentityGrouping(Grouping):
         content["aggregation_method"] = "sequence_identity"
         content["similarity_cutoff"] = self._similarity_cutoff
         return content
-    
+
     def is_compatible_return_type(self, return_type):
         return return_type == "polymer_entity"
 
@@ -672,7 +672,7 @@ class UniprotGrouping(Grouping):
         content = super().get_content()
         content["aggregation_method"] = "matching_uniprot_accession"
         return content
-    
+
     def is_compatible_return_type(self, return_type):
         return return_type == "polymer_entity"
 
@@ -685,9 +685,9 @@ def count(query, return_type="entry", group_by=None,
     """
     Count PDB entries that meet the given query requirements,
     via the RCSB search API.
-    
+
     This function requires an internet connection.
-    
+
     Parameters
     ----------
     query : Query
@@ -719,17 +719,17 @@ def count(query, return_type="entry", group_by=None,
     count : int
         The total number of PDB IDs (or groups) that would be returned
         by calling :func:`search()` using the same parameters.
-    
+
     Notes
     -----
     If `group_by` is set, the number of results may be lower than in an
     ungrouped query, as grouping is not applicable to all structures.
     For example a DNA structure has no associated *Uniprot* accession
     and hence is omitted by :class:`UniprotGrouping`.
-    
+
     Examples
     --------
-    
+
     >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
     >>> print(count(query))
     9
@@ -742,9 +742,9 @@ def count(query, return_type="entry", group_by=None,
     )
 
     query_dict["request_options"]["return_counts"] = True
-    
+
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
-    
+
     if r.status_code == 200:
         if group_by is None:
             return r.json()["total_count"]
@@ -766,9 +766,9 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
     """
     Get all PDB IDs that meet the given query requirements,
     via the RCSB search API.
-    
+
     This function requires an internet connection.
-    
+
     Parameters
     ----------
     query : Query
@@ -786,7 +786,7 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
           of non-polymeric entities is returned (e.g. ``'XXXX_1'``).
         - ``'polymer_instance'``: The PDB ID appended with chain ID
           (more exactly ``'asym_id'``) is returned (e.g. ``'XXXX.A'``).
-    
+
     range : tuple(int, int), optional
         If this parameter is specified, only PDB IDs in this range
         are selected from all matching PDB IDs and returned
@@ -832,7 +832,7 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
         returned.
         This dictionary maps group identifiers to a list of all PDB IDs
         belonging to this group.
-    
+
     Notes
     -----
     If `group_by` is set, the number of results may be lower than in an
@@ -846,7 +846,7 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
 
     Examples
     --------
-    
+
     >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
     >>> print(sorted(search(query)))
     ['1EJG', '1I0T', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG', '7R0H']
@@ -894,7 +894,7 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
         }
 
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
-    
+
     if r.status_code == 200:
         if group_by is None or not return_groups:
             return [result["identifier"] for result in r.json()["result_set"]]
@@ -926,9 +926,9 @@ def _initialize_query_dict(query, return_type, group_by, content_types):
         "polymer_entity", "non_polymer_entity",
     ]:
         raise ValueError(f"'{return_type}' is an invalid return type")
-    
+
     request_options = {}
-    
+
     if len(content_types) == 0:
         raise ValueError("At least one content type must be specified")
     for content_type in content_types:
