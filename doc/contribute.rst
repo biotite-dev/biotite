@@ -188,7 +188,7 @@ corresponding code block:
 
 .. code-block:: python
 
-   # biotite_static_image = <name_of_the_image>.png
+   # sphinx_gallery_static_image = <name_of_the_image>.png
 
 The image file must be stored in the same directory as the example script.
 
@@ -203,10 +203,10 @@ The visualization is initiated by adding the comment line
 
 .. code-block:: python
 
-   # Visualization with PyMOL..
+   # sphinx_gallery_ammolite_script = <name_of_the_script>.py
 
 in the code block where you want show the visualization.
-Then the visualization script ``<example_name>_pymol.py`` is executed, which
+Then the visualization script ``<name_of_the_script>.py`` is executed, which
 can use the global variables from the example script and the special
 ``__image_destination__`` variable.
 ``__image_destination__`` is a string representing the path to the output image

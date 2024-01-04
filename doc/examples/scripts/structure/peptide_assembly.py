@@ -253,6 +253,6 @@ chain = assemble_peptide(sequence)
 out_file = NamedTemporaryFile(suffix=".mmtf", delete=False)
 strucio.save_structure(out_file.name, chain)
 # Visualization with PyMOL...
-# sphinx_gallery_pymol_image
+# sphinx_gallery_ammolite_script = "peptide_assembly_pymol.py"
 
 out_file.close()

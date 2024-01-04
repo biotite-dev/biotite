@@ -112,6 +112,6 @@ for chain_id, leaflet_mask in zip(("A", "B"), leaflets):
 temp = NamedTemporaryFile(suffix=".pdb")
 strucio.save_structure(temp.name, structure)
 # Visualization with PyMOL...
-# sphinx_gallery_pymol_image
+# sphinx_gallery_ammolite_script = "leaflet_pymol.py"
 
 temp.close()
