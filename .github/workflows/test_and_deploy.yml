@@ -192,7 +192,7 @@ jobs:
     - name: Install distribution
       run: pip install .//dist//*.whl
     - name: Build base documentation
-      run: sphinx-build -D plot_gallery=0 doc build//doc
+      run: sphinx-build -a -D plot_gallery=0 doc build//doc
     - name: Build tutorial and gallery
       if: >
         (
@@ -200,7 +200,7 @@ jobs:
           github.event.action == 'published'
         )
         || github.event_name == 'workflow_dispatch'
-      run: sphinx-build doc build//doc
+      run: sphinx-build -a doc build//doc
     - name: Zip documentation
       run: |
           cd build

@@ -148,4 +148,4 @@ docked_ligand = docked_ligand[docked_ligand.element!= "H"]
 
 # Visualization with PyMOL...
 # sphinx_gallery_thumbnail_number = 2
-# sphinx_gallery_pymol_image
+# sphinx_gallery_ammolite_script = "docking_pymol.py"

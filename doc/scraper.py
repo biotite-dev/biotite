@@ -1,4 +1,3 @@
-from glob import glob
 import shutil
 import copy
 import sys
@@ -10,7 +9,7 @@ from sphinx.errors import ExtensionError
 
 
 STATIC_IMAGE_COMMAND = "static_image"
-PYMOL_IMAGE_COMMAND = "pymol_image"
+PYMOL_IMAGE_COMMAND = "ammolite_script"
 
 
 def static_image_scraper(block, block_vars, gallery_conf):
@@ -51,7 +50,8 @@ def pymol_scraper(block, block_vars, gallery_conf):
     if PYMOL_IMAGE_COMMAND not in block_conf:
         return figure_rst([], gallery_conf['src_dir'])
 
-    pymol_script_path = splitext(block_vars["src_file"])[0] + "_pymol.py"
+    script_dir = dirname(block_vars["src_file"])
+    pymol_script_path = join(script_dir, block_conf[PYMOL_IMAGE_COMMAND])
     # The rendered image will be created in the same directory as
     # the example script
     # -> the image will be included in version control

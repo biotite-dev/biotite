@@ -78,4 +78,4 @@ for res_id in common_ids:
     print(res_name.capitalize() + str(res_id))
 
 # Visualization with PyMOL...
-# sphinx_gallery_pymol_image
+# sphinx_gallery_ammolite_script = "contact_sites_pymol.py"
