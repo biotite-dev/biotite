@@ -208,23 +208,17 @@ jobs:
           cd ..
     - uses: actions/upload-artifact@v3
       with:
-        name: release
-        path: dist//doc.zip
-    # Put docs also into separate artifact to allow quicker download of docs
-    - uses: actions/upload-artifact@v3
-      with:
         name: documentation
         path: dist//doc.zip
 
 
-  upload:
-    name: Upload to GitHub Releases & PyPI
+  upload-package:
+    name: Upload package to GitHub Releases & PyPI
     permissions:
       contents: write
     needs:
     - test-and-build
     - make-sdist
-    - make-docs
     - test-interfaces
     - test-muscle5
     runs-on: ubuntu-latest
@@ -245,3 +239,22 @@ jobs:
       if: github.event_name == 'release' && github.event.action == 'published'
       with:
         password: ${{ secrets.PYPI_TOKEN }}
+
+  
+  upload-docs:
+    name: Upload documentation to GitHub Releases
+    permissions:
+      contents: write
+    needs:
+    - make-docs
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: release
+        path: dist
+    - uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+      if: github.event_name == 'release' && github.event.action == 'published'
+      with:
+        files: dist//doc.zip
+
