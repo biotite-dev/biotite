@@ -1,7 +1,7 @@
 __name__ = "fastpdb"
 __author__ = "Patrick Kunzmann"
 __all__ = ["PDBFile"]
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 import os
 import numpy as np
@@ -16,7 +16,7 @@ class PDBFile(BiotitePDBFile):
     def __init__(self):
         super().__init__()
         self._pdb_file = RustPDBFile([])
-    
+
     @staticmethod
     def read(file):
         pdb_file = PDBFile()
@@ -30,15 +30,15 @@ class PDBFile(BiotitePDBFile):
             if not is_text(file):
                 raise TypeError("A file opened in 'text' mode is required")
             pdb_file._pdb_file = RustPDBFile(file.read().splitlines())
-    
-        # Synchronize with PDB file representation in Rust            
+
+        # Synchronize with PDB file representation in Rust
         pdb_file.lines = pdb_file._pdb_file.lines
         pdb_file._index_models_and_atoms()
         return pdb_file
-    
+
     def get_model_count(self):
         return self._pdb_file.get_model_count()
-    
+
     def get_remark(self, number):
         return self._pdb_file.parse_remark(int(number))
 
@@ -48,11 +48,11 @@ class PDBFile(BiotitePDBFile):
         else:
             coord = self._pdb_file.parse_coord_single_model(model)
         return coord
-    
+
     def get_structure(self, model=None, altloc="first", extra_fields=None, include_bonds=False):
         """
         Get an :class:`AtomArray` or :class:`AtomArrayStack` from the PDB file.
-        
+
         Parameters
         ----------
         model : int, optional
@@ -86,7 +86,7 @@ class PDBFile(BiotitePDBFile):
             from the file.
             All bonds have :attr:`BondType.ANY`, since the PDB format
             does not support bond orders.
-        
+
         Returns
         -------
         array : AtomArray or AtomArrayStack
@@ -108,7 +108,7 @@ class PDBFile(BiotitePDBFile):
         if altloc == "occupancy":
             include_occupancy = True
 
-        
+
         if model is None:
             coord = self._pdb_file.parse_coord_multi_model()
             annotations = self._pdb_file.parse_annotations(
@@ -135,7 +135,7 @@ class PDBFile(BiotitePDBFile):
         atom_name = np.frombuffer(atom_name, dtype="U6")
         element   = np.frombuffer(element,   dtype="U2")
         altloc_id = np.frombuffer(altloc_id, dtype="U1")
-        
+
         if coord.ndim == 3:
             atoms = struc.AtomArrayStack(coord.shape[0], coord.shape[1])
             atoms.coord = coord
@@ -150,10 +150,10 @@ class PDBFile(BiotitePDBFile):
         atoms.hetero    = hetero
         atoms.atom_name = atom_name
         atoms.element   = element
-        
+
         for field in (extra_fields if extra_fields is not None else []):
             if field == "atom_id":
-                # Copy is necessary to avoid double masking in 
+                # Copy is necessary to avoid double masking in
                 # later altloc ID filtering
                 atoms.set_annotation("atom_id", atom_id.copy())
             elif field == "charge":
@@ -165,7 +165,7 @@ class PDBFile(BiotitePDBFile):
             else:
                 raise ValueError(f"Unknown extra field: {field}")
 
-        
+
         box = self._pdb_file.parse_box()
         if box is None:
             atoms.box = None
@@ -181,7 +181,7 @@ class PDBFile(BiotitePDBFile):
                 atoms.box = np.repeat(
                     box[np.newaxis, ...], atoms.stack_depth(), axis=0
                 )
-        
+
 
         # Filter altloc IDs
         if altloc == "occupancy":
@@ -198,7 +198,7 @@ class PDBFile(BiotitePDBFile):
             atoms.set_annotation("altloc_id", altloc_id)
         else:
             raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
-        
+
 
         if include_bonds:
             bond_list = struc.BondList(
@@ -209,26 +209,26 @@ class PDBFile(BiotitePDBFile):
 
 
         return atoms
-    
+
 
     def set_structure(self, atoms):
         """
         Set the :class:`AtomArray` or :class:`AtomArrayStack` for the
         file.
-        
+
         This makes also use of the optional annotation arrays
         ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
         If the atom array (stack) contains the annotation ``'atom_id'``,
         these values will be used for atom numbering instead of
         continuous numbering.
-        
+
         Parameters
         ----------
         array : AtomArray or AtomArrayStack
             The array or stack to be saved into this file. If a stack
             is given, each array in the stack is saved as separate
             model.
-        
+
         Notes
         -----
         If `array` has an associated :class:`BondList`, ``CONECT``
@@ -250,8 +250,8 @@ class PDBFile(BiotitePDBFile):
                 len_a, len_b, len_c,
                 np.rad2deg(alpha), np.rad2deg(beta), np.rad2deg(gamma)
             )
-        
-        
+
+
         # Write 'ATOM' and 'MODEL' records
         # Convert Unicode arrays into uint32 arrays for usage in Rust
         chain_id  = np.frombuffer(atoms.chain_id,  dtype=np.uint32).reshape(-1, 4)
@@ -259,7 +259,7 @@ class PDBFile(BiotitePDBFile):
         res_name  = np.frombuffer(atoms.res_name,  dtype=np.uint32).reshape(-1, 3)
         atom_name = np.frombuffer(atoms.atom_name, dtype=np.uint32).reshape(-1, 6)
         element   = np.frombuffer(atoms.element,   dtype=np.uint32).reshape(-1, 2)
-        
+
         categories = atoms.get_annotation_categories()
         atom_id   = atoms.atom_id   if "atom_id"   in categories else None
         b_factor  = atoms.b_factor  if "b_factor"  in categories else None
@@ -278,17 +278,17 @@ class PDBFile(BiotitePDBFile):
             occupancy = occupancy.astype(np.float64, copy=False)
         if charge is not None:
             charge = charge.astype(np.int64, copy=False)
-        
+
         # Treat a single model as multi-model structure
         if coord.ndim == 2:
             coord = coord[np.newaxis, :, :]
-        
+
         self._pdb_file.write_models(
             coord, chain_id, res_id, ins_code,
             res_name, hetero, atom_name, element,
             atom_id, b_factor, occupancy, charge
         )
-       
+
         # Write 'CONECT' records
         if atoms.bonds is not None:
             # Only non-water hetero records and connections between
@@ -311,10 +311,10 @@ class PDBFile(BiotitePDBFile):
                 bonds.astype(np.int32, copy=False), atom_id
             )
 
-        # Synchronize with PDB file representation in Rust            
+        # Synchronize with PDB file representation in Rust
         self.lines = self._pdb_file.lines
         self._index_models_and_atoms()
-    
+
 
     def _index_models_and_atoms(self):
         self._pdb_file.index_models_and_atoms()
