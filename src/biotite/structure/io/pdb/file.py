@@ -510,7 +510,7 @@ class PDBFile(TextFile):
                     warnings.warn(
                         "File contains invalid 'CRYST1' record, box is ignored"
                     )
-                    box = None
+                    break
 
                 if isinstance(array, AtomArray):
                     array.box = box
