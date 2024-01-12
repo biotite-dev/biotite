@@ -131,7 +131,7 @@ class PDBFile(BiotitePDBFile):
         # Interpret uint32 arrays as unicode arrays
         chain_id  = np.frombuffer(chain_id,  dtype="U4")
         ins_code  = np.frombuffer(ins_code,  dtype="U1")
-        res_name  = np.frombuffer(res_name,  dtype="U3")
+        res_name  = np.frombuffer(res_name,  dtype="U5")
         atom_name = np.frombuffer(atom_name, dtype="U6")
         element   = np.frombuffer(element,   dtype="U2")
         altloc_id = np.frombuffer(altloc_id, dtype="U1")
@@ -256,7 +256,7 @@ class PDBFile(BiotitePDBFile):
         # Convert Unicode arrays into uint32 arrays for usage in Rust
         chain_id  = np.frombuffer(atoms.chain_id,  dtype=np.uint32).reshape(-1, 4)
         ins_code  = np.frombuffer(atoms.ins_code,  dtype=np.uint32).reshape(-1, 1)
-        res_name  = np.frombuffer(atoms.res_name,  dtype=np.uint32).reshape(-1, 3)
+        res_name  = np.frombuffer(atoms.res_name,  dtype=np.uint32).reshape(-1, 5)
         atom_name = np.frombuffer(atoms.atom_name, dtype=np.uint32).reshape(-1, 6)
         element   = np.frombuffer(atoms.element,   dtype=np.uint32).reshape(-1, 2)
 

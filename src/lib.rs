@@ -43,7 +43,7 @@ struct PDBFile {
 
 #[pymethods]
 impl PDBFile {
-    
+
     /// Create an new [`PDBFile`].
     /// The lines of text are given to `lines`.
     /// An empty `Vec` represents and empty PDB file.
@@ -99,7 +99,7 @@ impl PDBFile {
         })
     }
 
-    
+
     /// Get the number of models contained in the file.
     fn get_model_count(&self) -> usize {
         self.model_start_i.len()
@@ -180,7 +180,7 @@ impl PDBFile {
     /// Unicode *NumPy* arrays are represented by 2D *NumPy* arrays with
     /// `uint32` *dtype*.
     /// The returned tuple contains the following annotations in the given order:
-    /// 
+    ///
     /// - `chain_id`
     /// - `res_id`
     /// - `ins_code`
@@ -211,16 +211,16 @@ impl PDBFile {
                                                            Option<Py<PyArray<f64,  Ix1>>>,
                                                            Option<Py<PyArray<i64,  Ix1>>>)> {
         let atom_line_i: Vec<usize> = self.get_atom_indices(model)?;
-        
+
         let mut chain_id:  Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 4));
         let mut res_id:    Array<i64,  Ix1> = Array::zeros(atom_line_i.len());
         let mut ins_code:  Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 1));
-        let mut res_name:  Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 3));
+        let mut res_name:  Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 5));
         let mut hetero:    Array<bool, Ix1> = Array::default(atom_line_i.len());
         let mut atom_name: Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 6));
         let mut element:   Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 2));
         let mut altloc_id: Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 1));
-        
+
         let mut atom_id: Array<i64, Ix1>;
         if include_atom_id {
             atom_id = Array::zeros(atom_line_i.len());
@@ -250,7 +250,7 @@ impl PDBFile {
         else {
             charge = Array::zeros(0);
         }
-        
+
         // Iterate over ATOM and HETATM records to write annotation arrays
         for (atom_i, line_i) in atom_line_i.iter().enumerate() {
             let line = &self.lines[*line_i];
@@ -293,7 +293,7 @@ impl PDBFile {
                 }
             }
         }
-        
+
         Python::with_gil(|py| {
             Ok((
                 PyArray::from_array(py, &chain_id ).to_owned(),
@@ -326,7 +326,7 @@ impl PDBFile {
                 atom_id_to_index.insert(*id, i as u32);
             }
         });
-        
+
         // Cannot preemptively determine number of bonds
         // -> Memory allocation for all bonds is not possible
         // -> No benefit in finding 'CONECT' record lines prior to iteration
@@ -409,11 +409,11 @@ impl PDBFile {
             // This procedure aims to increase the performance is repetitive formatting is omitted
             let mut prefix: Vec<String> = Vec::new();
             let mut suffix: Vec<String> = Vec::new();
-            
+
             for i in 0..coord.shape()[1] {
                 let element_i = parse_string_from_array(&element, i)?;
                 let atom_name_i = parse_string_from_array(&atom_name, i)?;
-                
+
                 prefix.push(format!(
                     "{:6}{:>5} {:4} {:>3} {:1}{:>4}{:1}   ",
                     if hetero[i] { "HETATM" } else { "ATOM" },
@@ -449,7 +449,7 @@ impl PDBFile {
                 if is_multi_model {
                     self.lines.push(format!("MODEL {:>8}", model_i+1));
                 }
-                for atom_i in 0..coord.shape()[1] { 
+                for atom_i in 0..coord.shape()[1] {
                     let coord_string = format!(
                         "{:>8.3}{:>8.3}{:>8.3}",
                         coord[[model_i, atom_i, 0]],
@@ -471,13 +471,13 @@ impl PDBFile {
     /// array containing indices pointing to bonded atoms in the `AtomArray`.
     /// The `atom_id` annotation array is required to map the atom IDs in `CONECT` records
     /// to atom indices.
-    fn write_bonds(&mut self, 
+    fn write_bonds(&mut self,
                    bonds: Py<PyArray<i32, Ix2>>,
                    atom_id: Py<PyArray<i64, Ix1>>) -> PyResult<()> {
         Python::with_gil(|py| {
             let bonds = bonds.as_ref(py).to_owned_array();
             let atom_id = atom_id.as_ref(py).to_owned_array();
-        
+
             for (center_i, bonded_indices) in bonds.outer_iter().enumerate() {
                 let mut n_added: usize = 0;
                 let mut line: String = String::new();
@@ -552,7 +552,7 @@ impl PDBFile {
                 }
                 Ok(CoordArray::Single(coord))
             },
-            
+
             None => {
                 let length = self.get_model_length()?;
                 let mut coord = Array::zeros((self.atom_line_i.len(), 3));
@@ -591,7 +591,7 @@ impl PDBFile {
                 self.model_start_i.len(), model
             )));
         }
-        
+
         // Get the start and stop line index for this model index
         let (model_start, model_stop) = match model_i.cmp(&(self.model_start_i.len() as isize - 1)){
             Ordering::Less => (
@@ -600,13 +600,13 @@ impl PDBFile {
             ),
             // Last model -> Model reaches to end of file
             Ordering::Equal => (
-                self.model_start_i[model_i as usize], 
+                self.model_start_i[model_i as usize],
                 self.lines.len()
             ),
             // This case was excluded above
             _ => panic!("This branch should not be reached")
         };
-        
+
         // Get the atom records within these line boundaries
         Ok(
             self.atom_line_i.iter().copied()
@@ -614,7 +614,7 @@ impl PDBFile {
                 .collect()
         )
     }
-    
+
 
     /// Get the number of atoms in each model of the PDB file.
     /// A `PyErr` is returned if the number of atoms per model differ from each other.
@@ -635,7 +635,7 @@ impl PDBFile {
                 )); }
             };
         }
-    
+
         match length {
             None => panic!("Length cannot be 'None'"),
             Some(l) => Ok(l)
