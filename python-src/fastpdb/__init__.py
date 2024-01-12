@@ -4,6 +4,7 @@ __all__ = ["PDBFile"]
 __version__ = "1.3.0"
 
 import os
+import warnings
 import numpy as np
 from biotite.file import is_text
 import biotite.structure as struc
@@ -166,10 +167,13 @@ class PDBFile(BiotitePDBFile):
                 raise ValueError(f"Unknown extra field: {field}")
 
 
-        box = self._pdb_file.parse_box()
-        if box is None:
-            atoms.box = None
-        else:
+        try:
+            box = self._pdb_file.parse_box()
+        except:
+            warnings.warn(
+                "File contains invalid 'CRYST1' record, box is ignored"
+            )
+        if box is not None:
             len_a, len_b, len_c, alpha, beta, gamma = box
             box = struc.vectors_from_unitcell(
                 len_a, len_b, len_c,
