@@ -31,7 +31,7 @@ jobs:
             toolchain: stable
             override: true
       - name: Install dependencies
-        run: pip install "maturin>=0.14,<0.15" "oldest-supported-numpy" pytest
+        run: pip install "maturin==1.4" "oldest-supported-numpy" pytest
       - name: Build wheel
         run: maturin build --release -i python -o dist
       - name: Install wheel
@@ -55,7 +55,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: pip install "maturin>=0.14,<0.15" pytest
+        run: pip install "maturin==1.4" pytest
       - name: Build source distribution
         run: maturin sdist -o dist
       - name: Install source distribution

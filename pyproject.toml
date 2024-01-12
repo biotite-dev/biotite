@@ -38,7 +38,7 @@ python-source = "python-src"
 
 [build-system]
 requires = [
-    "maturin>=0.14,<0.15",
+    "maturin==1.4",
     "oldest-supported-numpy"
 ]
 build-backend = "maturin"
