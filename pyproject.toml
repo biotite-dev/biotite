@@ -25,7 +25,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 dependencies = [
-  "biotite >= 0.37"
+  "biotite >= 0.39"
 ]
 
 [project.urls]
