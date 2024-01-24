@@ -71,9 +71,9 @@ trajectory = struc.remove_pbc(trajectory)
 # For this purpose we take the RMSD of a frame compared to the initial
 # model as measure. In order to calculate the RMSD we must
 # superimpose all models onto a reference, in this case we also choose
-# the initial structure. 
+# the initial structure.
 
-trajectory, transform = struc.superimpose(trajectory[0], trajectory)
+trajectory, _ = struc.superimpose(trajectory[0], trajectory)
 rmsd = struc.rmsd(trajectory[0], trajectory)
 
 figure = plt.figure(figsize=(6,3))
@@ -90,7 +90,7 @@ figure.tight_layout()
 # As we can see the simulation seems to converge already early in the
 # simulation.
 # After a about 200 ps the RMSD stays in a range of approx. 1 - 2 Å.
-# 
+#
 # In order to futher evaluate the unfolding of our enzyme in the
 # course of simulation, we calculate and plot the radius of gyration
 # (a measure for the protein radius).
@@ -110,7 +110,7 @@ figure.tight_layout()
 # From this perspective, the protein seems really stable.
 # The radius does merely fluctuate in a range of approximately 0.3 Å
 # during the entire simulation.
-# 
+#
 # Let's have a look at single amino acids:
 # Which residues fluctuate most?
 # For answering this question we calculate the RMSF
@@ -120,7 +120,7 @@ figure.tight_layout()
 # each residue.
 # Usually the average model is taken as reference
 # (compared to the starting model for RMSD).
-# 
+#
 # Since side chain atoms fluctuate quite a lot, they are not suitable
 # for evaluation of the residue flexibility. Therefore, we consider only
 # CA atoms.

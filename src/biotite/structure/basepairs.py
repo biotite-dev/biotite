@@ -15,7 +15,7 @@ import numpy as np
 import warnings
 from enum import IntEnum
 from .atoms import Atom, array
-from .superimpose import superimpose, superimpose_apply
+from .superimpose import superimpose
 from .filter import filter_nucleotides
 from .celllist import CellList
 from .hbond import hbond
@@ -386,7 +386,7 @@ def base_pairs_edge(atom_array, base_pairs):
 
     References
     ----------
-    
+
     .. footbibliography::
     """
     # Result-``ndarray`` matches the dimensions of the input array
@@ -537,7 +537,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
 
     References
     ----------
-    
+
     .. footbibliography::
     """
     results = np.zeros(len(base_pairs), dtype='uint8')
@@ -679,7 +679,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
 
     References
     ----------
-    
+
     .. footbibliography::
     """
     # Get the stacking candidates according to a cutoff distance, where
@@ -846,7 +846,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     References
     ----------
-    
+
     .. footbibliography::
     """
 
@@ -1190,12 +1190,7 @@ def _match_base(nucleotide, min_atoms_per_base):
 
     # Match the selected std_base to the base.
     _, transformation = superimpose(nucleotide_matched, std_base_matched)
-
-    # Transform the vectors
-    trans1, rot, trans2 = transformation
-    vectors += trans1
-    vectors  = np.dot(rot, vectors.T).T
-    vectors += trans2
+    vectors = transformation.apply(vectors)
     # Normalize the base-normal-vector
     vectors[1,:] = vectors[1,:]-vectors[0,:]
     norm_vector(vectors[1,:])
@@ -1255,7 +1250,7 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
 
     References
     ----------
-    
+
     .. footbibliography::
     """
     # Check if the residue is a 'standard' nucleotide

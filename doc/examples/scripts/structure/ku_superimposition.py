@@ -47,7 +47,7 @@ ku_superimposed, transformation = struc.superimpose(
 )
 # We do not want the cropped structures
 # -> apply superimposition on original structures
-ku_superimposed = struc.superimpose_apply(ku, transformation)
+ku_superimposed = transformation.apply(ku)
 # Write PDBx files as input for PyMOL
 cif_file = pdbx.PDBxFile()
 pdbx.set_structure(cif_file, ku_dna, data_block="ku_dna")
