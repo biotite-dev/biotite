@@ -6,12 +6,67 @@ import glob
 import itertools
 from os.path import join
 import numpy as np
+from numpy import sin, cos
 import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
-import biotite.database.rcsb as rcsb
 import biotite.structure as struc
 from ..util import data_dir
+
+
+@pytest.mark.parametrize(
+    "seed, multi_model", itertools.product(
+        range(10),
+        [False, True]
+    )
+)
+def test_restoration(seed, multi_model):
+    """
+    Check if randomly relocated coordinates can be restored to their
+    original position by superimposition.
+    """
+    N_MODELS = 10
+    N_COORD = 100
+
+    np.random.seed(seed)
+    if multi_model:
+        ref_coord = np.random.rand(N_MODELS, N_COORD, 3)
+    else:
+        ref_coord = np.random.rand(N_COORD, 3)
+    ref_coord = _transform_random_affine(ref_coord)
+
+    # Try to restore original coordinates after random relocation
+    test_coord = _transform_random_affine(ref_coord)
+    test_coord, _ = struc.superimpose(ref_coord, test_coord)
+
+    assert test_coord.flatten().tolist() \
+        == pytest.approx(ref_coord.flatten().tolist(), abs=1e-6)
+
+
+def test_rotation_matrix():
+    """
+    Create randomly generated coordinates *a* and rotate them via a
+    rotation matrix to obtain new coordinates *b*.
+    ``superimpose(b, a)`` should give the rotation matrix.
+    """
+    N_COORD = 100
+
+    # A rotation matrix that rotates 90 degrees around the z-axis
+    ref_rotation = np.array([
+        [0, -1,  0],
+        [1,  0,  0],
+        [0,  0,  1]
+    ])
+
+    np.random.seed(0)
+    original_coord = np.random.rand(N_COORD, 3)
+    # Rotate about 90 degrees around z-axis
+    rotated_coord = struc.rotate(original_coord, angles=(0, 0, np.pi/2))
+    _, transform = struc.superimpose(rotated_coord, original_coord)
+    test_rotation = transform.rotation
+
+    assert test_rotation.flatten().tolist() \
+        == pytest.approx(ref_rotation.flatten().tolist(), abs=1e-6)
 
 
 @pytest.mark.parametrize(
@@ -28,11 +83,11 @@ def test_superimposition_array(path, coord_only):
     almost perfect match.
     """
     fixed = strucio.load_structure(path, model=1)
-    
+
     mobile = fixed.copy()
     mobile = struc.rotate(mobile, (1,2,3))
     mobile = struc.translate(mobile, (1,2,3))
-    
+
     if coord_only:
         fixed = fixed.coord
         mobile = mobile.coord
@@ -40,13 +95,13 @@ def test_superimposition_array(path, coord_only):
     fitted, transformation = struc.superimpose(
         fixed, mobile
     )
-    
+
     if coord_only:
         assert isinstance(fitted, np.ndarray)
     assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=6e-4)
-    
+
     fitted = struc.superimpose_apply(mobile, transformation)
-    
+
     if coord_only:
         assert isinstance(fitted, np.ndarray)
     assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=6e-4)
@@ -67,9 +122,9 @@ def test_superimposition_stack(ca_only):
         mask = (mobile.atom_name == "CA")
     else:
         mask = None
-    
+
     fitted, _ = struc.superimpose(fixed, mobile, mask)
-    
+
     if ca_only:
         # The superimpositions are better for most cases than the
         # superimpositions in the structure file
@@ -100,7 +155,7 @@ def test_masked_superimposition(seed):
     np.random.seed(seed)
     mask = np.full(fixed.array_length(), False)
     mask[np.random.randint(fixed.array_length())] = True
-    
+
     # The distance between the atom in both models should not be
     # already 0 prior to superimposition
     assert struc.distance(fixed[mask], mobile[mask])[0] \
@@ -109,12 +164,12 @@ def test_masked_superimposition(seed):
     fitted, transformation = struc.superimpose(
         fixed, mobile, mask
     )
-    
+
     assert struc.distance(fixed[mask], fitted[mask])[0] \
         == pytest.approx(0, abs=5e-4)
-    
+
     fitted = struc.superimpose_apply(mobile, transformation)
-    
+
     struc.distance(fixed[mask], fitted[mask])[0] \
         == pytest.approx(0, abs=5e-4)
 
@@ -131,15 +186,21 @@ def test_input_shapes(single_model, single_atom):
     path = join(data_dir("structure"), "1l2y.mmtf")
     stack = strucio.load_structure(path)
     fixed = stack[0]
-    
+
     mobile = stack
     if single_model:
         mobile = mobile[:1, :]
     if single_atom:
         mobile = mobile[:, :1]
         fixed = fixed[:1]
-    
+
     fitted, _ = struc.superimpose(fixed, mobile)
 
     assert type(fitted) == type(mobile)
     assert fitted.coord.shape == mobile.coord.shape
+
+
+def _transform_random_affine(coord):
+    coord = struc.translate(coord, np.random.rand(3))
+    coord = struc.rotate(coord, np.random.uniform(low=0, high=2*np.pi, size=3))
+    return coord
