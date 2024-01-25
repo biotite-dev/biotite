@@ -3,7 +3,7 @@ Going 3D - The Structure subpackage
 ===================================
 
 .. currentmodule:: biotite.structure
-   
+
 :mod:`biotite.structure` is a *Biotite* subpackage for handling
 molecular structures.
 This subpackage enables efficient and easy handling of protein structure
@@ -22,13 +22,13 @@ for multiple models, where each model contains the same atoms but
 differs in the atom coordinates.
 Both, :class:`AtomArray` and :class:`AtomArrayStack`, store the
 attributes in `NumPy` arrays. This approach has multiple advantages:
-    
+
     - Convenient selection of atoms in a structure
       by using *NumPy* style indexing
     - Fast calculations on structures using C-accelerated
       :class:`ndarray` operations
     - Simple implementation of custom calculations
-    
+
 Based on the implementation using :class:`ndarray` objects, this package
 also contains functions for structure analysis and manipulation.
 
@@ -68,7 +68,7 @@ atom3 = struc.Atom([0,0,2], chain_id="A", res_id=1, res_name="GLY",
 # In most cases you won't work with :class:`Atom` instances and in even
 # fewer cases :class:`Atom` instances are created as it is done in the
 # above example.
-# 
+#
 # If you want to work with an entire molecular structure, containing an
 # arbitrary amount of atoms, you have to use so called atom arrays.
 # An atom array can be seen as an array of atom instances
@@ -124,7 +124,7 @@ print(array)
 #    The latter example is incorrect, as it creates a subarray of the
 #    initial :class:`AtomArray` (discussed later) and then tries to
 #    replace the annotation array with the new value.
-# 
+#
 # If you want to add further annotation categories to an array, you have
 # to call the :func:`add_annotation()` or :func:`set_annotation()`
 # method at first. After that you can access the new annotation array
@@ -159,7 +159,7 @@ print(stack)
 ########################################################################
 # Loading structures from file
 # ----------------------------
-# 
+#
 # Usually structures are not built from scratch, but they are read from
 # a file.
 # Probably the most popular structure file format is the *PDB* format.
@@ -169,7 +169,7 @@ print(stack)
 # elucidated via NMR.
 # Thus, the corresponding PDB file consists of multiple (namely 38)
 # models, each showing another conformation.
-# 
+#
 # .. currentmodule:: biotite.structure.io.pdb
 #
 # At first we load the structure from a PDB file via the class
@@ -211,9 +211,9 @@ temp_file.close()
 # restrictions.
 # Furthermore, much more additional information is stored in these
 # files.
-# 
+#
 # .. currentmodule:: biotite.structure.io.pdbx
-# 
+#
 # In contrast to PDB files, *Biotite* can read the entire content of
 # PDBx/mmCIF files, which can be accessed in a dictionary like manner.
 # At first, we read the file similarily to before, but this time we
@@ -265,7 +265,7 @@ pdbx.set_structure(cif_file, tc5b)
 # single model.
 # If you would like to have an :class:`AtomArray` instead, you have to
 # specifiy the :obj:`model` parameter.
-# 
+#
 # .. currentmodule:: biotite.structure.io.mmtf
 #
 # If you want to parse a large batch of structure files or you have to
@@ -335,7 +335,7 @@ print(mmtf_file["groupIdList"])
 
 ########################################################################
 # .. currentmodule:: biotite.structure.io.npz
-# 
+#
 # An alternative file format for storing and loading atom arrays and
 # stacks even faster, is the *NPZ* format.
 # The big disadvantage is that the format is *Biotite*-exclusive:
@@ -357,9 +357,9 @@ reloaded_array = file.get_structure()
 ########################################################################
 # There are also some other supported file formats.
 # For a full list, have a look at :mod:`biotite.structure.io`.
-# 
+#
 # .. currentmodule:: biotite.structure.io
-# 
+#
 # Since programmers are usually lazy and do not want to write more code
 # than necessary, there are two convenient function for loading and
 # saving atom arrays or stacks, unifying the forementioned file formats:
@@ -383,7 +383,7 @@ temp_file.close()
 ########################################################################
 # Reading trajectory files
 # ^^^^^^^^^^^^^^^^^^^^^^^^
-# 
+#
 # If the package *MDtraj* is installed, *Biotite* provides a read/write
 # interface for different trajectory file formats.
 # All supported trajectory formats have in common, that they store
@@ -438,7 +438,7 @@ temp_xtc_file.close()
 ########################################################################
 # Array indexing and filtering
 # ----------------------------
-# 
+#
 # .. currentmodule:: biotite.structure
 #
 # Atom arrays and stacks can be indexed in a similar way a
@@ -533,7 +533,7 @@ print(backbone.atom_name)
 ########################################################################
 # If you would like to know which atoms are in proximity to specific
 # coordinates, have a look at the :class:`CellList` class.
-# 
+#
 # .. warning:: For annotation editing Since :class:`AnnotatedSequence` objects use base position
 #    indices and :class:`Sequence` objects use array position indices,
 #    you will get different results for ``annot_seq[n:m].sequence`` and
@@ -541,12 +541,12 @@ print(backbone.atom_name)
 #
 # Representing bonds
 # ------------------
-# 
+#
 # Up to now we only looked into atom arrays whose atoms are merely
 # described by its coordinates and annotations.
 # But there is more: Chemical bonds can be described, too, using a
 # :class:`BondList`!
-# 
+#
 # Consider the following case: Your atom array contains four atoms:
 # *N*, *CA*, *C* and *CB*. *CA* is a central atom that is connected to
 # *N*, *C* and *CB*.
@@ -555,7 +555,7 @@ print(backbone.atom_name)
 # in a corresponding atom array.
 # The pairs indicate which atoms share a bond.
 # Additionally, it is required to specify the number of atoms in the
-# atom array. 
+# atom array.
 
 from tempfile import gettempdir
 import biotite.structure as struc
@@ -614,17 +614,17 @@ print(sub_array.atom_name[sub_bond_list.as_array()[:, :2]])
 ########################################################################
 # As you see, the the bonds involving the *C* (only a single one) are
 # removed and the remaining indices are shifted.
-# 
+#
 # Connecting atoms and bonds
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
-# 
+#
 # We do not have to index the atom array and the bond list
 # separately.
 # For convenience reasons you can associate a :class:`BondList` to an
 # :class:`AtomArray` via the ``bonds`` attribute.
 # If no :class:`BondList` is associated, ``bonds`` is ``None``.
 # Every time the atom array is indexed, the index is also applied to the
-# associated bond list. 
+# associated bond list.
 # The same behavior applies to concatenations, by the way.
 
 array.bonds = bond_list
@@ -634,7 +634,7 @@ print(sub_array.atom_name[sub_array.bonds.as_array()[:, :2]])
 
 ########################################################################
 # Note, that some functionalities in *Biotite* even require that the
-# input structure has an associated :class:`BondList`. 
+# input structure has an associated :class:`BondList`.
 #
 # Reading and writing bonds
 # ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -720,7 +720,7 @@ print(cell)
 ########################################################################
 # An atom array can have an associated box, which is used in functions,
 # that consider periodic boundary conditions.
-# Atom array stacks require a *(m,3,3)*-shaped :class:`ndarray`, 
+# Atom array stacks require a *(m,3,3)*-shaped :class:`ndarray`,
 # that contains the box vectors for each model.
 # The box is accessed via the `box` attribute, which is ``None`` by
 # default.
@@ -785,10 +785,10 @@ print(structure[structure.res_id == 1])
 ########################################################################
 # For a complete list of transformation functions have a look in the
 # :doc:`API reference </apidoc/biotite.structure>`.
-# 
+#
 # Structure analysis
 # ------------------
-# 
+#
 # This package would be almost useless, if there wasn't some means to
 # analyze your structures.
 # Therefore, *Biotite* offers a bunch of functions for this purpose,
@@ -797,15 +797,15 @@ print(structure[structure.res_id == 1])
 # secondary structure.
 # The following section will introduce you to some of these functions,
 # which should be applied to that good old structure of *TC5b*.
-# 
+#
 # The examples shown in this section are only a small glimpse into the
 # *structure* analysis toolset.
 # Have a look into the :doc:`API reference </apidoc/biotite.structure>`
 # for more information.
-# 
+#
 # Geometry measures
 # ^^^^^^^^^^^^^^^^^
-# 
+#
 # Let's start with measuring some simple geometric characteristics,
 # for example atom distances of CA atoms.
 
@@ -845,7 +845,7 @@ print(struc.distance(array[:-1], array[1:]))
 # Like some other functions in :mod:`biotite.structure`, we are able to
 # pick any combination of an atom, atom array or stack. Alternatively
 # :class:`ndarray` objects containing the coordinates can be provided.
-# 
+#
 # Furthermore, we can measure bond angles and dihedral angles.
 
 # Calculate angle between first 3 CA atoms in first frame
@@ -863,7 +863,7 @@ print("Dihedral angle:", struc.dihedral(array[0],array[1],array[2],array[4]))
 #    distance/angle should be calculated.
 #    Both variants can be setup to consider periodic boundary conditions
 #    by setting the `box` or `periodic` parameter, respectively.
-# 
+#
 # In some cases one is interested in the dihedral angles of the peptide
 # backbone, :math:`\phi`, :math:`\psi` and :math:`\omega`.
 # In the following code snippet we measure these angles and create a
@@ -884,7 +884,7 @@ plt.ylabel("$\psi$")
 ########################################################################
 # Comparing structures
 # ^^^^^^^^^^^^^^^^^^^^
-# 
+#
 # Now we want to calculate a measure of flexibility for each residue in
 # *TC5b*. The *root mean square fluctuation* (RMSF) is a good value for
 # that.
@@ -900,7 +900,7 @@ stack = strucio.load_structure(file_path)
 # We consider only CA atoms
 stack = stack[:, stack.atom_name == "CA"]
 # Superimposing all models of the structure onto the first model
-stack, transformation_tuple = struc.superimpose(stack[0], stack)
+stack, transformation = struc.superimpose(stack[0], stack)
 print("RMSD for each model to first model:")
 print(struc.rmsd(stack[0], stack))
 # Calculate the RMSF relative to the average of all models
@@ -914,10 +914,10 @@ plt.ylabel("RMSF")
 
 ########################################################################
 # As you can see, both terminal residues are most flexible.
-# 
+#
 # Calculating accessible surface area
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# 
+#
 # Another interesting value for a protein structure is the
 # *solvent accessible surface area* (SASA) that indicates whether an
 # atom or residue is on the protein surface or buried inside the
@@ -926,7 +926,7 @@ plt.ylabel("RMSF")
 # atom.
 # Then we sum up the values for each residue, to get the
 # residue-wise SASA.
-# 
+#
 # Besides other parameters, you can choose between different
 # Van-der-Waals radii sets:
 # *Prot0r*, the default set, is a set that defines radii for
@@ -953,7 +953,7 @@ plt.ylabel("SASA")
 ########################################################################
 # Secondary structure determination
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# 
+#
 # *Biotite* can also be used to assign
 # *secondary structure elements* (SSE) to a structure with the
 # :func:`annotate_sse()` function.

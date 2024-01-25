@@ -223,7 +223,7 @@ def assemble_peptide(sequence):
             backbone_coord[3*i : 3*i + 3],
             residue.coord[np.isin(residue.atom_name, ["N", "CA", "C"])]
         )
-        residue = struc.superimpose_apply(residue, transformation)
+        residue = transformation.apply(residue)
 
         chain = append_residue(chain, residue)
 
@@ -241,9 +241,7 @@ def assemble_peptide(sequence):
                 chain.coord[[ca_i, c_i, n_i]],
                 peptide_coord[:3]
             )
-            chain.coord[[o_i, h_i]] = struc.superimpose_apply(
-                peptide_coord[3:], transformation
-            )
+            chain.coord[[o_i, h_i]] = transformation.apply(peptide_coord[3:])
     return chain
 
 
