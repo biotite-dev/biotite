@@ -14,4 +14,4 @@ __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 
 from .convert import *
-from .file import *
+from .cif import *
