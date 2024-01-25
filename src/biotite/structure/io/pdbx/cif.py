@@ -292,7 +292,7 @@ class PDBxFile(TextFile, MutableMapping):
         """
         Set the content of a category.
 
-        If the category is already exisiting, all lines corresponding
+        If the category is already existing, all lines corresponding
         to the category are replaced. Otherwise a new category is
         created and the lines are appended at the end of the data block.
 
