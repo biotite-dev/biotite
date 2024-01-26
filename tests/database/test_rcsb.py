@@ -28,7 +28,7 @@ TC5B_TERM = "Miniprotein Construct TC5b"
 )
 @pytest.mark.parametrize(
     "format, as_file_like",
-    itertools.product(["pdb", "cif", "mmtf", "fasta"], [False, True])
+    itertools.product(["pdb", "cif", "bcif", "mmtf", "fasta"], [False, True])
 )
 def test_fetch(format, as_file_like):
     path = None if as_file_like else tempfile.gettempdir()
@@ -38,6 +38,9 @@ def test_fetch(format, as_file_like):
         pdb.get_structure(file)
     elif format == "pdbx":
         file = pdbx.PDBxFile.read(file_path_or_obj)
+        pdbx.get_structure(file)
+    elif format == "bcif":
+        file = pdbx.BinaryCIFFile.read(file_path_or_obj)
         pdbx.get_structure(file)
     elif format == "mmtf":
         file = mmtf.MMTFFile.read(file_path_or_obj)
@@ -52,10 +55,10 @@ def test_fetch(format, as_file_like):
     cannot_connect_to(RCSB_URL),
     reason="RCSB PDB is not available"
 )
-@pytest.mark.parametrize("format", ["pdb", "cif", "mmtf", "fasta"])
+@pytest.mark.parametrize("format", ["pdb", "cif", "bcif", "mmtf", "fasta"])
 def test_fetch_invalid(format):
     with pytest.raises(RequestError):
-        file = rcsb.fetch(
+        rcsb.fetch(
             "xxxx", format, tempfile.gettempdir(), overwrite=True
         )
 
