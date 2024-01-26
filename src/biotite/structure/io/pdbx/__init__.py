@@ -3,15 +3,19 @@
 # information.
 
 """
-This subpackage provides support for the the modern PDBx/mmCIF file
-format. The :class:`PDBxFile` class provides dictionary-like access to
-every field in PDBx/mmCIF files.
-Additional utility functions allow conversion of these dictionaries to
-:class:`AtomArray` and :class:`AtomArrayStack` objects and vice versa.
+This subpackage provides support for the the modern PDBx file format.
+The :class:`PDBxFile` class provides dictionary-like access to
+every field in text-based *mmCIF* files.
+:class:`BinaryCIFFile` provides analogous functionality for the
+*BinaryCIF* format.
+Additional utility functions allow reading and writing structures
+from/to these files.
 """
 
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 
 from .convert import *
+from .bcif import *
 from .cif import *
+from .encoding import *
