@@ -479,7 +479,7 @@ def filter_first_altloc(atoms, altloc_ids):
                 1      CB               4.000    5.000    6.000
     """
     # Filter all atoms without altloc code
-    altloc_filter = np.in1d(altloc_ids, [".", "?", " ", ""])
+    altloc_filter = np.isin(altloc_ids, [".", "?", " ", ""])
 
     # And filter all atoms for each residue with the first altloc ID
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
@@ -556,7 +556,7 @@ def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
                 1      CB               6.000    5.000    4.000
     """
     # Filter all atoms without altloc code
-    altloc_filter = np.in1d(altloc_ids, [".", "?", " ", ""])
+    altloc_filter = np.isin(altloc_ids, [".", "?", " ", ""])
 
     # And filter all atoms for each residue with the highest sum of
     # occupancies
