@@ -334,27 +334,6 @@ mmtf_file.set_array(
 print(mmtf_file["groupIdList"])
 
 ########################################################################
-# .. currentmodule:: biotite.structure.io.npz
-#
-# An alternative file format for storing and loading atom arrays and
-# stacks even faster, is the *NPZ* format.
-# The big disadvantage is that the format is *Biotite*-exclusive:
-# No other software will be able to read these files.
-# These are simple binary files, that are used to store *NumPy* arrays.
-# In case of atom arrays and stacks, the annotation arrays and
-# coordinates are written/read to/from *npz* files via the
-# :class:`NpzFile` class.
-# Since no expensive data conversion has to be performed,
-# this format is the fastest way to save and load atom arrays and
-# stacks.
-
-import biotite.structure.io.npz as npz
-
-file = npz.NpzFile()
-file.set_structure(array)
-reloaded_array = file.get_structure()
-
-########################################################################
 # There are also some other supported file formats.
 # For a full list, have a look at :mod:`biotite.structure.io`.
 #
