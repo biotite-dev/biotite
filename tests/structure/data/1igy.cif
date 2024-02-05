@@ -3,14 +3,16 @@ data_1IGY
 _entry.id   1IGY 
 # 
 _audit_conform.dict_name       mmcif_pdbx.dic 
-_audit_conform.dict_version    5.329 
+_audit_conform.dict_version    5.375 
 _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx.dic 
 # 
 loop_
 _database_2.database_id 
 _database_2.database_code 
-PDB   1IGY         
-WWPDB D_1000174158 
+_database_2.pdbx_database_accession 
+_database_2.pdbx_DOI 
+PDB   1IGY         pdb_00001igy 10.2210/pdb1igy/pdb 
+WWPDB D_1000174158 ?            ?                   
 # 
 _pdbx_database_status.status_code                     REL 
 _pdbx_database_status.entry_id                        1IGY 
@@ -1023,33 +1025,44 @@ _chem_comp.name
 _chem_comp.pdbx_synonyms 
 _chem_comp.formula 
 _chem_comp.formula_weight 
-ALA 'L-peptide linking'           y ALANINE                                   ?                        'C3 H7 N O2'     89.093  
-ARG 'L-peptide linking'           y ARGININE                                  ?                        'C6 H15 N4 O2 1' 175.209 
-ASN 'L-peptide linking'           y ASPARAGINE                                ?                        'C4 H8 N2 O3'    132.118 
-ASP 'L-peptide linking'           y 'ASPARTIC ACID'                           ?                        'C4 H7 N O4'     133.103 
-BMA 'D-saccharide, beta linking'  . beta-D-mannopyranose                      ?                        'C6 H12 O6'      180.156 
-CYS 'L-peptide linking'           y CYSTEINE                                  ?                        'C3 H7 N O2 S'   121.158 
-FUC 'L-saccharide, alpha linking' . alpha-L-fucopyranose                      ?                        'C6 H12 O5'      164.156 
-FUL 'L-saccharide, beta linking'  . beta-L-fucopyranose                       6-DEOXY-BETA-L-GALACTOSE 'C6 H12 O5'      164.156 
-GAL 'D-saccharide, beta linking'  . beta-D-galactopyranose                    ?                        'C6 H12 O6'      180.156 
-GLN 'L-peptide linking'           y GLUTAMINE                                 ?                        'C5 H10 N2 O3'   146.144 
-GLU 'L-peptide linking'           y 'GLUTAMIC ACID'                           ?                        'C5 H9 N O4'     147.129 
-GLY 'peptide linking'             y GLYCINE                                   ?                        'C2 H5 N O2'     75.067  
-HIS 'L-peptide linking'           y HISTIDINE                                 ?                        'C6 H10 N3 O2 1' 156.162 
-ILE 'L-peptide linking'           y ISOLEUCINE                                ?                        'C6 H13 N O2'    131.173 
-LEU 'L-peptide linking'           y LEUCINE                                   ?                        'C6 H13 N O2'    131.173 
-LYS 'L-peptide linking'           y LYSINE                                    ?                        'C6 H15 N2 O2 1' 147.195 
-MAN 'D-saccharide, alpha linking' . alpha-D-mannopyranose                     ?                        'C6 H12 O6'      180.156 
-MET 'L-peptide linking'           y METHIONINE                                ?                        'C5 H11 N O2 S'  149.211 
-NAG 'D-saccharide, beta linking'  . 2-acetamido-2-deoxy-beta-D-glucopyranose  ?                        'C8 H15 N O6'    221.208 
-NDG 'D-saccharide, alpha linking' . 2-acetamido-2-deoxy-alpha-D-glucopyranose ?                        'C8 H15 N O6'    221.208 
-PHE 'L-peptide linking'           y PHENYLALANINE                             ?                        'C9 H11 N O2'    165.189 
-PRO 'L-peptide linking'           y PROLINE                                   ?                        'C5 H9 N O2'     115.130 
-SER 'L-peptide linking'           y SERINE                                    ?                        'C3 H7 N O3'     105.093 
-THR 'L-peptide linking'           y THREONINE                                 ?                        'C4 H9 N O3'     119.119 
-TRP 'L-peptide linking'           y TRYPTOPHAN                                ?                        'C11 H12 N2 O2'  204.225 
-TYR 'L-peptide linking'           y TYROSINE                                  ?                        'C9 H11 N O3'    181.189 
-VAL 'L-peptide linking'           y VALINE                                    ?                        'C5 H11 N O2'    117.146 
+ALA 'L-peptide linking'           y ALANINE                                   ? 'C3 H7 N O2'     89.093  
+ARG 'L-peptide linking'           y ARGININE                                  ? 'C6 H15 N4 O2 1' 175.209 
+ASN 'L-peptide linking'           y ASPARAGINE                                ? 'C4 H8 N2 O3'    132.118 
+ASP 'L-peptide linking'           y 'ASPARTIC ACID'                           ? 'C4 H7 N O4'     133.103 
+BMA 'D-saccharide, beta linking'  . beta-D-mannopyranose                      'beta-D-mannose; D-mannose; mannose' 'C6 H12 O6' 
+180.156 
+CYS 'L-peptide linking'           y CYSTEINE                                  ? 'C3 H7 N O2 S'   121.158 
+FUC 'L-saccharide, alpha linking' . alpha-L-fucopyranose                      
+'alpha-L-fucose; 6-deoxy-alpha-L-galactopyranose; L-fucose; fucose' 'C6 H12 O5'      164.156 
+FUL 'L-saccharide, beta linking'  . beta-L-fucopyranose                       
+'beta-L-fucose; 6-deoxy-beta-L-galactopyranose; L-fucose; fucose; 6-DEOXY-BETA-L-GALACTOSE' 'C6 H12 O5'      164.156 
+GAL 'D-saccharide, beta linking'  . beta-D-galactopyranose                    'beta-D-galactose; D-galactose; galactose' 
+'C6 H12 O6'      180.156 
+GLN 'L-peptide linking'           y GLUTAMINE                                 ? 'C5 H10 N2 O3'   146.144 
+GLU 'L-peptide linking'           y 'GLUTAMIC ACID'                           ? 'C5 H9 N O4'     147.129 
+GLY 'peptide linking'             y GLYCINE                                   ? 'C2 H5 N O2'     75.067  
+HIS 'L-peptide linking'           y HISTIDINE                                 ? 'C6 H10 N3 O2 1' 156.162 
+ILE 'L-peptide linking'           y ISOLEUCINE                                ? 'C6 H13 N O2'    131.173 
+LEU 'L-peptide linking'           y LEUCINE                                   ? 'C6 H13 N O2'    131.173 
+LYS 'L-peptide linking'           y LYSINE                                    ? 'C6 H15 N2 O2 1' 147.195 
+MAN 'D-saccharide, alpha linking' . alpha-D-mannopyranose                     'alpha-D-mannose; D-mannose; mannose' 'C6 H12 O6' 
+180.156 
+MET 'L-peptide linking'           y METHIONINE                                ? 'C5 H11 N O2 S'  149.211 
+NAG 'D-saccharide, beta linking'  . 2-acetamido-2-deoxy-beta-D-glucopyranose  
+;N-acetyl-beta-D-glucosamine; 2-acetamido-2-deoxy-beta-D-glucose; 2-acetamido-2-deoxy-D-glucose; 2-acetamido-2-deoxy-glucose; N-ACETYL-D-GLUCOSAMINE
+;
+'C8 H15 N O6'    221.208 
+NDG 'D-saccharide, alpha linking' . 2-acetamido-2-deoxy-alpha-D-glucopyranose 
+;N-acetyl-alpha-D-glucosamine; 2-acetamido-2-deoxy-alpha-D-glucose; 2-acetamido-2-deoxy-D-glucose; 2-acetamido-2-deoxy-glucose; 2-(ACETYLAMINO)-2-DEOXY-A-D-GLUCOPYRANOSE
+;
+'C8 H15 N O6'    221.208 
+PHE 'L-peptide linking'           y PHENYLALANINE                             ? 'C9 H11 N O2'    165.189 
+PRO 'L-peptide linking'           y PROLINE                                   ? 'C5 H9 N O2'     115.130 
+SER 'L-peptide linking'           y SERINE                                    ? 'C3 H7 N O3'     105.093 
+THR 'L-peptide linking'           y THREONINE                                 ? 'C4 H9 N O3'     119.119 
+TRP 'L-peptide linking'           y TRYPTOPHAN                                ? 'C11 H12 N2 O2'  204.225 
+TYR 'L-peptide linking'           y TYROSINE                                  ? 'C9 H11 N O3'    181.189 
+VAL 'L-peptide linking'           y VALINE                                    ? 'C5 H11 N O2'    117.146 
 # 
 _exptl.entry_id          1IGY 
 _exptl.method            'X-RAY DIFFRACTION' 
@@ -1244,6 +1257,9 @@ _refine_ls_restr_ncs.pdbx_ens_id         1
 _refine_ls_restr_ncs.pdbx_refine_id      'X-RAY DIFFRACTION' 
 _refine_ls_restr_ncs.pdbx_ordinal        1 
 _refine_ls_restr_ncs.pdbx_number         ? 
+_refine_ls_restr_ncs.pdbx_asym_id        ? 
+_refine_ls_restr_ncs.pdbx_rms            ? 
+_refine_ls_restr_ncs.pdbx_weight         ? 
 # 
 _refine_ls_shell.pdbx_total_number_of_bins_used   6 
 _refine_ls_shell.d_res_high                       3.20 
@@ -1276,7 +1292,6 @@ _struct_ncs_ens.details   ?
 # 
 _struct.entry_id                  1IGY 
 _struct.title                     'STRUCTURE OF IMMUNOGLOBULIN' 
-_struct.pdbx_descriptor           'IGG1 INTACT ANTIBODY MAB61.1.3' 
 _struct.pdbx_model_details        ? 
 _struct.pdbx_CASP_flag            ? 
 _struct.pdbx_model_type_details   ? 
@@ -15944,6 +15959,7 @@ _pdbx_audit_revision_history.revision_date
 2 'Structure model' 1 1 2008-03-03 
 3 'Structure model' 1 2 2011-07-13 
 4 'Structure model' 2 0 2020-07-29 
+5 'Structure model' 2 1 2023-08-09 
 # 
 loop_
 _pdbx_audit_revision_details.ordinal 
@@ -15961,15 +15977,19 @@ _pdbx_audit_revision_group.ordinal
 _pdbx_audit_revision_group.revision_ordinal 
 _pdbx_audit_revision_group.data_content_type 
 _pdbx_audit_revision_group.group 
-1 2 'Structure model' 'Version format compliance' 
-2 3 'Structure model' 'Non-polymer description'   
-3 3 'Structure model' 'Version format compliance' 
-4 4 'Structure model' Advisory                    
-5 4 'Structure model' 'Atomic model'              
-6 4 'Structure model' 'Data collection'           
-7 4 'Structure model' 'Database references'       
-8 4 'Structure model' 'Derived calculations'      
-9 4 'Structure model' 'Structure summary'         
+1  2 'Structure model' 'Version format compliance' 
+2  3 'Structure model' 'Non-polymer description'   
+3  3 'Structure model' 'Version format compliance' 
+4  4 'Structure model' Advisory                    
+5  4 'Structure model' 'Atomic model'              
+6  4 'Structure model' 'Data collection'           
+7  4 'Structure model' 'Database references'       
+8  4 'Structure model' 'Derived calculations'      
+9  4 'Structure model' 'Structure summary'         
+10 5 'Structure model' Advisory                    
+11 5 'Structure model' 'Database references'       
+12 5 'Structure model' 'Refinement description'    
+13 5 'Structure model' 'Structure summary'         
 # 
 loop_
 _pdbx_audit_revision_category.ordinal 
@@ -15997,6 +16017,10 @@ _pdbx_audit_revision_category.category
 19 4 'Structure model' struct_ref_seq_dif              
 20 4 'Structure model' struct_site                     
 21 4 'Structure model' struct_site_gen                 
+22 5 'Structure model' chem_comp                       
+23 5 'Structure model' database_2                      
+24 5 'Structure model' pdbx_initial_refinement_model   
+25 5 'Structure model' pdbx_unobs_or_zero_occ_residues 
 # 
 loop_
 _pdbx_audit_revision_item.ordinal 
@@ -16045,6 +16069,9 @@ _pdbx_audit_revision_item.item
 40 4 'Structure model' '_struct_conn.ptnr2_label_comp_id'            
 41 4 'Structure model' '_struct_conn.ptnr2_label_seq_id'             
 42 4 'Structure model' '_struct_ref_seq_dif.details'                 
+43 5 'Structure model' '_chem_comp.pdbx_synonyms'                    
+44 5 'Structure model' '_database_2.pdbx_DOI'                        
+45 5 'Structure model' '_database_2.pdbx_database_accession'         
 # 
 loop_
 _software.name 
@@ -16415,6 +16442,26 @@ _pdbx_validate_chiral.details         'WRONG HAND'
 _pdbx_validate_chiral.omega           . 
 # 
 loop_
+_pdbx_unobs_or_zero_occ_residues.id 
+_pdbx_unobs_or_zero_occ_residues.PDB_model_num 
+_pdbx_unobs_or_zero_occ_residues.polymer_flag 
+_pdbx_unobs_or_zero_occ_residues.occupancy_flag 
+_pdbx_unobs_or_zero_occ_residues.auth_asym_id 
+_pdbx_unobs_or_zero_occ_residues.auth_comp_id 
+_pdbx_unobs_or_zero_occ_residues.auth_seq_id 
+_pdbx_unobs_or_zero_occ_residues.PDB_ins_code 
+_pdbx_unobs_or_zero_occ_residues.label_asym_id 
+_pdbx_unobs_or_zero_occ_residues.label_comp_id 
+_pdbx_unobs_or_zero_occ_residues.label_seq_id 
+1 1 Y 0 B VAL 244 ? B VAL 225 
+2 1 Y 0 B PRO 245 ? B PRO 226 
+3 1 Y 0 B GLU 249 ? B GLU 227 
+4 1 Y 0 B VAL 250 ? B VAL 228 
+5 1 N 0 E NAG 8   ? E NAG ?   
+6 1 N 0 E FUL 9   ? E FUL ?   
+7 1 N 0 F NAG 8   ? F NAG ?   
+# 
+loop_
 _pdbx_branch_scheme.asym_id 
 _pdbx_branch_scheme.entity_id 
 _pdbx_branch_scheme.mon_id 
@@ -16567,4 +16614,18 @@ _pdbx_entity_branch_list.hetero
 4 MAN 7 n 
 4 NAG 8 n 
 4 FUC 9 n 
+# 
+loop_
+_pdbx_initial_refinement_model.id 
+_pdbx_initial_refinement_model.entity_id_list 
+_pdbx_initial_refinement_model.type 
+_pdbx_initial_refinement_model.source_name 
+_pdbx_initial_refinement_model.accession_code 
+_pdbx_initial_refinement_model.details 
+1 ? 'experimental model' PDB 1MCP 
+'VL:VH DOMAIN PAIR OF PDB ENTRY 1MCP, CL:CH1 DOMAIN PAIR OF PDB ENTRY 2HFL, FC FRAGMENT OF PDB ENTRY 1IGT' 
+2 ? 'experimental model' PDB 2HFL 
+'VL:VH DOMAIN PAIR OF PDB ENTRY 1MCP, CL:CH1 DOMAIN PAIR OF PDB ENTRY 2HFL, FC FRAGMENT OF PDB ENTRY 1IGT' 
+3 ? 'experimental model' PDB 1IGT 
+'VL:VH DOMAIN PAIR OF PDB ENTRY 1MCP, CL:CH1 DOMAIN PAIR OF PDB ENTRY 2HFL, FC FRAGMENT OF PDB ENTRY 1IGT' 
 # 

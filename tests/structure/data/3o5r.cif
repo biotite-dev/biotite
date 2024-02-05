@@ -3,15 +3,17 @@ data_3O5R
 _entry.id   3O5R 
 # 
 _audit_conform.dict_name       mmcif_pdbx.dic 
-_audit_conform.dict_version    5.281 
+_audit_conform.dict_version    5.379 
 _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx.dic 
 # 
 loop_
 _database_2.database_id 
 _database_2.database_code 
-PDB   3O5R         
-RCSB  RCSB060699   
-WWPDB D_1000060699 
+_database_2.pdbx_database_accession 
+_database_2.pdbx_DOI 
+PDB   3O5R         pdb_00003o5r 10.2210/pdb3o5r/pdb 
+RCSB  RCSB060699   ?            ?                   
+WWPDB D_1000060699 ?            ?                   
 # 
 loop_
 _pdbx_database_related.db_name 
@@ -42,6 +44,8 @@ _pdbx_database_status.status_code_mr                  ?
 _pdbx_database_status.SG_entry                        ? 
 _pdbx_database_status.status_code_cs                  ? 
 _pdbx_database_status.pdb_format_compatible           Y 
+_pdbx_database_status.status_code_nmr_data            ? 
+_pdbx_database_status.methods_development_category    ? 
 # 
 loop_
 _audit_author.name 
@@ -70,10 +74,11 @@ loop_
 _citation_author.citation_id 
 _citation_author.name 
 _citation_author.ordinal 
-primary 'Bracher, A.' 1 
-primary 'Kozany, C.'  2 
-primary 'Thost, A.K.' 3 
-primary 'Hausch, F.'  4 
+_citation_author.identifier_ORCID 
+primary 'Bracher, A.' 1 ? 
+primary 'Kozany, C.'  2 ? 
+primary 'Thost, A.K.' 3 ? 
+primary 'Hausch, F.'  4 ? 
 # 
 _cell.entry_id           3O5R 
 _cell.length_a           42.051 
@@ -358,9 +363,9 @@ _struct_ref_seq_dif.pdbx_seq_db_seq_num
 _struct_ref_seq_dif.details 
 _struct_ref_seq_dif.pdbx_auth_seq_num 
 _struct_ref_seq_dif.pdbx_ordinal 
-1 3O5R GLY A 1 ? UNP Q13451 ?   ?  'EXPRESSION TAG' 13 1 
-1 3O5R ALA A 2 ? UNP Q13451 ?   ?  'EXPRESSION TAG' 14 2 
-1 3O5R PRO A 3 ? UNP Q13451 ?   ?  'EXPRESSION TAG' 15 3 
+1 3O5R GLY A 1 ? UNP Q13451 ?   ?  'expression tag' 13 1 
+1 3O5R ALA A 2 ? UNP Q13451 ?   ?  'expression tag' 14 2 
+1 3O5R PRO A 3 ? UNP Q13451 ?   ?  'expression tag' 15 3 
 1 3O5R THR A 7 ? UNP Q13451 ALA 19 'SEE REMARK 999' 19 4 
 # 
 loop_
@@ -611,7 +616,6 @@ _pdbx_refine.free_R_val_test_set_ct_4sig_cutoff          ?
 # 
 _struct.entry_id                  3O5R 
 _struct.title                     'Complex of Fk506 with the Fk1 domain mutant A19T of FKBP51' 
-_struct.pdbx_descriptor           'Peptidyl-prolyl cis-trans isomerase FKBP5 (E.C.5.2.1.8)' 
 _struct.pdbx_model_details        ? 
 _struct.pdbx_CASP_flag            ? 
 _struct.pdbx_model_type_details   ? 
@@ -772,9 +776,9 @@ B 5 6 N VAL A 41  ? N VAL A 53  O PHE A 67  ? O PHE A 79
 # 
 _struct_site.id                   AC1 
 _struct_site.pdbx_evidence_code   Software 
-_struct_site.pdbx_auth_asym_id    ? 
-_struct_site.pdbx_auth_comp_id    ? 
-_struct_site.pdbx_auth_seq_id     ? 
+_struct_site.pdbx_auth_asym_id    A 
+_struct_site.pdbx_auth_comp_id    FK5 
+_struct_site.pdbx_auth_seq_id     1001 
 _struct_site.pdbx_auth_ins_code   ? 
 _struct_site.pdbx_num_residues    22 
 _struct_site.details              'BINDING SITE FOR RESIDUE FK5 A 1001' 
@@ -3977,157 +3981,6 @@ A 1 126 LYS 126 138 138 LYS LYS A . n
 A 1 127 GLY 127 139 139 GLY GLY A . n 
 A 1 128 GLU 128 140 140 GLU GLU A . n 
 # 
-_pdbx_struct_assembly.id                   1 
-_pdbx_struct_assembly.details              author_and_software_defined_assembly 
-_pdbx_struct_assembly.method_details       PISA 
-_pdbx_struct_assembly.oligomeric_details   monomeric 
-_pdbx_struct_assembly.oligomeric_count     1 
-# 
-_pdbx_struct_assembly_gen.assembly_id       1 
-_pdbx_struct_assembly_gen.oper_expression   1 
-_pdbx_struct_assembly_gen.asym_id_list      A,B,C 
-# 
-_pdbx_struct_oper_list.id                   1 
-_pdbx_struct_oper_list.type                 'identity operation' 
-_pdbx_struct_oper_list.name                 1_555 
-_pdbx_struct_oper_list.symmetry_operation   x,y,z 
-_pdbx_struct_oper_list.matrix[1][1]         1.0000000000 
-_pdbx_struct_oper_list.matrix[1][2]         0.0000000000 
-_pdbx_struct_oper_list.matrix[1][3]         0.0000000000 
-_pdbx_struct_oper_list.vector[1]            0.0000000000 
-_pdbx_struct_oper_list.matrix[2][1]         0.0000000000 
-_pdbx_struct_oper_list.matrix[2][2]         1.0000000000 
-_pdbx_struct_oper_list.matrix[2][3]         0.0000000000 
-_pdbx_struct_oper_list.vector[2]            0.0000000000 
-_pdbx_struct_oper_list.matrix[3][1]         0.0000000000 
-_pdbx_struct_oper_list.matrix[3][2]         0.0000000000 
-_pdbx_struct_oper_list.matrix[3][3]         1.0000000000 
-_pdbx_struct_oper_list.vector[3]            0.0000000000 
-# 
-loop_
-_pdbx_audit_revision_history.ordinal 
-_pdbx_audit_revision_history.data_content_type 
-_pdbx_audit_revision_history.major_revision 
-_pdbx_audit_revision_history.minor_revision 
-_pdbx_audit_revision_history.revision_date 
-1 'Structure model' 1 0 2011-06-01 
-2 'Structure model' 1 1 2011-07-13 
-3 'Structure model' 1 2 2012-03-28 
-# 
-_pdbx_audit_revision_details.ordinal             1 
-_pdbx_audit_revision_details.revision_ordinal    1 
-_pdbx_audit_revision_details.data_content_type   'Structure model' 
-_pdbx_audit_revision_details.provider            repository 
-_pdbx_audit_revision_details.type                'Initial release' 
-_pdbx_audit_revision_details.description         ? 
-# 
-loop_
-_pdbx_audit_revision_group.ordinal 
-_pdbx_audit_revision_group.revision_ordinal 
-_pdbx_audit_revision_group.data_content_type 
-_pdbx_audit_revision_group.group 
-1 2 'Structure model' 'Version format compliance' 
-2 3 'Structure model' 'Database references'       
-# 
-loop_
-_software.pdbx_ordinal 
-_software.name 
-_software.version 
-_software.date 
-_software.type 
-_software.contact_author 
-_software.contact_author_email 
-_software.classification 
-_software.location 
-_software.language 
-_software.citation_id 
-1 MOSFLM      .     ?               package 'Andrew G.W. Leslie'  andrew@mrc-lmb.cam.ac.uk     'data reduction'  
-http://www.mrc-lmb.cam.ac.uk/harry/mosflm/ ?          ? 
-2 SCALA       3.2.5 5/04/2004       other   'Phil R. Evans'       pre@mrc-lmb.cam.ac.uk        'data scaling'    
-http://www.ccp4.ac.uk/dist/html/scala.html Fortran_77 ? 
-3 SHELX       .     ?               package 'George M. Sheldrick' gsheldr@shelx.uni-ac.gwdg.de refinement        
-http://shelx.uni-ac.gwdg.de/SHELX/         Fortran_77 ? 
-4 PDB_EXTRACT 3.10  'June 10, 2010' package PDB                   deposit@deposit.rcsb.org     'data extraction' 
-http://sw-tools.pdb.org/apps/PDB_EXTRACT/  C++        ? 
-5 SHELXL-97   .     ?               ?       ?                     ?                            refinement        ? ?          ? 
-# 
-_pdbx_entry_details.entry_id             3O5R 
-_pdbx_entry_details.nonpolymer_details   ? 
-_pdbx_entry_details.sequence_details     'AUTHORS STATE THAT A19T IS A MUTATION, BUT NOT A NATURALLY OCCURRING ALLELE.' 
-_pdbx_entry_details.compound_details     ? 
-_pdbx_entry_details.source_details       ? 
-# 
-loop_
-_pdbx_validate_rmsd_angle.id 
-_pdbx_validate_rmsd_angle.PDB_model_num 
-_pdbx_validate_rmsd_angle.auth_atom_id_1 
-_pdbx_validate_rmsd_angle.auth_asym_id_1 
-_pdbx_validate_rmsd_angle.auth_comp_id_1 
-_pdbx_validate_rmsd_angle.auth_seq_id_1 
-_pdbx_validate_rmsd_angle.PDB_ins_code_1 
-_pdbx_validate_rmsd_angle.label_alt_id_1 
-_pdbx_validate_rmsd_angle.auth_atom_id_2 
-_pdbx_validate_rmsd_angle.auth_asym_id_2 
-_pdbx_validate_rmsd_angle.auth_comp_id_2 
-_pdbx_validate_rmsd_angle.auth_seq_id_2 
-_pdbx_validate_rmsd_angle.PDB_ins_code_2 
-_pdbx_validate_rmsd_angle.label_alt_id_2 
-_pdbx_validate_rmsd_angle.auth_atom_id_3 
-_pdbx_validate_rmsd_angle.auth_asym_id_3 
-_pdbx_validate_rmsd_angle.auth_comp_id_3 
-_pdbx_validate_rmsd_angle.auth_seq_id_3 
-_pdbx_validate_rmsd_angle.PDB_ins_code_3 
-_pdbx_validate_rmsd_angle.label_alt_id_3 
-_pdbx_validate_rmsd_angle.angle_value 
-_pdbx_validate_rmsd_angle.angle_target_value 
-_pdbx_validate_rmsd_angle.angle_deviation 
-_pdbx_validate_rmsd_angle.angle_standard_deviation 
-_pdbx_validate_rmsd_angle.linker_flag 
-1 1 NE A ARG 31 ? ? CZ A ARG 31 ? ? NH1 A ARG 31 ? ? 129.20 120.30 8.90  0.50 N 
-2 1 NE A ARG 31 ? ? CZ A ARG 31 ? ? NH2 A ARG 31 ? ? 115.07 120.30 -5.23 0.50 N 
-3 1 CG A MET 48 ? B SD A MET 48 ? B CE  A MET 48 ? B 112.09 100.20 11.89 1.60 N 
-4 1 CA A LYS 65 ? ? CB A LYS 65 ? ? CG  A LYS 65 ? ? 127.58 113.40 14.18 2.20 N 
-# 
-loop_
-_pdbx_validate_torsion.id 
-_pdbx_validate_torsion.PDB_model_num 
-_pdbx_validate_torsion.auth_comp_id 
-_pdbx_validate_torsion.auth_asym_id 
-_pdbx_validate_torsion.auth_seq_id 
-_pdbx_validate_torsion.PDB_ins_code 
-_pdbx_validate_torsion.label_alt_id 
-_pdbx_validate_torsion.phi 
-_pdbx_validate_torsion.psi 
-1 1 LYS A 29  ? A 72.93   36.60   
-2 1 ALA A 112 ? ? -138.88 -119.45 
-# 
-loop_
-_pdbx_unobs_or_zero_occ_atoms.id 
-_pdbx_unobs_or_zero_occ_atoms.PDB_model_num 
-_pdbx_unobs_or_zero_occ_atoms.polymer_flag 
-_pdbx_unobs_or_zero_occ_atoms.occupancy_flag 
-_pdbx_unobs_or_zero_occ_atoms.auth_asym_id 
-_pdbx_unobs_or_zero_occ_atoms.auth_comp_id 
-_pdbx_unobs_or_zero_occ_atoms.auth_seq_id 
-_pdbx_unobs_or_zero_occ_atoms.PDB_ins_code 
-_pdbx_unobs_or_zero_occ_atoms.auth_atom_id 
-_pdbx_unobs_or_zero_occ_atoms.label_alt_id 
-_pdbx_unobs_or_zero_occ_atoms.label_asym_id 
-_pdbx_unobs_or_zero_occ_atoms.label_comp_id 
-_pdbx_unobs_or_zero_occ_atoms.label_seq_id 
-_pdbx_unobs_or_zero_occ_atoms.label_atom_id 
-1 1 Y 1 A GLU 140 ? CG  ? A GLU 128 CG  
-2 1 Y 1 A GLU 140 ? CD  ? A GLU 128 CD  
-3 1 Y 1 A GLU 140 ? OE1 ? A GLU 128 OE1 
-4 1 Y 1 A GLU 140 ? OE2 ? A GLU 128 OE2 
-# 
-loop_
-_pdbx_entity_nonpoly.entity_id 
-_pdbx_entity_nonpoly.name 
-_pdbx_entity_nonpoly.comp_id 
-2 '8-DEETHYL-8-[BUT-3-ENYL]-ASCOMYCIN' FK5 
-3 water                                HOH 
-# 
 loop_
 _pdbx_nonpoly_scheme.asym_id 
 _pdbx_nonpoly_scheme.entity_id 
@@ -4427,4 +4280,1230 @@ C 3 HOH 284 412  412  HOH HOH A .
 C 3 HOH 285 413  413  HOH HOH A . 
 C 3 HOH 286 414  414  HOH HOH A . 
 C 3 HOH 287 415  415  HOH HOH A . 
+# 
+_pdbx_struct_assembly.id                   1 
+_pdbx_struct_assembly.details              author_and_software_defined_assembly 
+_pdbx_struct_assembly.method_details       PISA 
+_pdbx_struct_assembly.oligomeric_details   monomeric 
+_pdbx_struct_assembly.oligomeric_count     1 
+# 
+_pdbx_struct_assembly_gen.assembly_id       1 
+_pdbx_struct_assembly_gen.oper_expression   1 
+_pdbx_struct_assembly_gen.asym_id_list      A,B,C 
+# 
+_pdbx_struct_oper_list.id                   1 
+_pdbx_struct_oper_list.type                 'identity operation' 
+_pdbx_struct_oper_list.name                 1_555 
+_pdbx_struct_oper_list.symmetry_operation   x,y,z 
+_pdbx_struct_oper_list.matrix[1][1]         1.0000000000 
+_pdbx_struct_oper_list.matrix[1][2]         0.0000000000 
+_pdbx_struct_oper_list.matrix[1][3]         0.0000000000 
+_pdbx_struct_oper_list.vector[1]            0.0000000000 
+_pdbx_struct_oper_list.matrix[2][1]         0.0000000000 
+_pdbx_struct_oper_list.matrix[2][2]         1.0000000000 
+_pdbx_struct_oper_list.matrix[2][3]         0.0000000000 
+_pdbx_struct_oper_list.vector[2]            0.0000000000 
+_pdbx_struct_oper_list.matrix[3][1]         0.0000000000 
+_pdbx_struct_oper_list.matrix[3][2]         0.0000000000 
+_pdbx_struct_oper_list.matrix[3][3]         1.0000000000 
+_pdbx_struct_oper_list.vector[3]            0.0000000000 
+# 
+loop_
+_pdbx_audit_revision_history.ordinal 
+_pdbx_audit_revision_history.data_content_type 
+_pdbx_audit_revision_history.major_revision 
+_pdbx_audit_revision_history.minor_revision 
+_pdbx_audit_revision_history.revision_date 
+1 'Structure model' 1 0 2011-06-01 
+2 'Structure model' 1 1 2011-07-13 
+3 'Structure model' 1 2 2012-03-28 
+4 'Structure model' 1 3 2023-09-06 
+# 
+_pdbx_audit_revision_details.ordinal             1 
+_pdbx_audit_revision_details.revision_ordinal    1 
+_pdbx_audit_revision_details.data_content_type   'Structure model' 
+_pdbx_audit_revision_details.provider            repository 
+_pdbx_audit_revision_details.type                'Initial release' 
+_pdbx_audit_revision_details.description         ? 
+_pdbx_audit_revision_details.details             ? 
+# 
+loop_
+_pdbx_audit_revision_group.ordinal 
+_pdbx_audit_revision_group.revision_ordinal 
+_pdbx_audit_revision_group.data_content_type 
+_pdbx_audit_revision_group.group 
+1 2 'Structure model' 'Version format compliance' 
+2 3 'Structure model' 'Database references'       
+3 4 'Structure model' 'Data collection'           
+4 4 'Structure model' 'Database references'       
+5 4 'Structure model' 'Derived calculations'      
+6 4 'Structure model' 'Refinement description'    
+# 
+loop_
+_pdbx_audit_revision_category.ordinal 
+_pdbx_audit_revision_category.revision_ordinal 
+_pdbx_audit_revision_category.data_content_type 
+_pdbx_audit_revision_category.category 
+1 4 'Structure model' chem_comp_atom                
+2 4 'Structure model' chem_comp_bond                
+3 4 'Structure model' database_2                    
+4 4 'Structure model' pdbx_initial_refinement_model 
+5 4 'Structure model' struct_ref_seq_dif            
+6 4 'Structure model' struct_site                   
+# 
+loop_
+_pdbx_audit_revision_item.ordinal 
+_pdbx_audit_revision_item.revision_ordinal 
+_pdbx_audit_revision_item.data_content_type 
+_pdbx_audit_revision_item.item 
+1 4 'Structure model' '_database_2.pdbx_DOI'                
+2 4 'Structure model' '_database_2.pdbx_database_accession' 
+3 4 'Structure model' '_struct_ref_seq_dif.details'         
+4 4 'Structure model' '_struct_site.pdbx_auth_asym_id'      
+5 4 'Structure model' '_struct_site.pdbx_auth_comp_id'      
+6 4 'Structure model' '_struct_site.pdbx_auth_seq_id'       
+# 
+loop_
+_software.pdbx_ordinal 
+_software.name 
+_software.version 
+_software.date 
+_software.type 
+_software.contact_author 
+_software.contact_author_email 
+_software.classification 
+_software.location 
+_software.language 
+_software.citation_id 
+1 MOSFLM      .     ?               package 'Andrew G.W. Leslie'  andrew@mrc-lmb.cam.ac.uk     'data reduction'  
+http://www.mrc-lmb.cam.ac.uk/harry/mosflm/ ?          ? 
+2 SCALA       3.2.5 5/04/2004       other   'Phil R. Evans'       pre@mrc-lmb.cam.ac.uk        'data scaling'    
+http://www.ccp4.ac.uk/dist/html/scala.html Fortran_77 ? 
+3 SHELX       .     ?               package 'George M. Sheldrick' gsheldr@shelx.uni-ac.gwdg.de refinement        
+http://shelx.uni-ac.gwdg.de/SHELX/         Fortran_77 ? 
+4 PDB_EXTRACT 3.10  'June 10, 2010' package PDB                   deposit@deposit.rcsb.org     'data extraction' 
+http://sw-tools.pdb.org/apps/PDB_EXTRACT/  C++        ? 
+5 SHELXL-97   .     ?               ?       ?                     ?                            refinement        ? ?          ? 
+# 
+_pdbx_entry_details.entry_id                 3O5R 
+_pdbx_entry_details.nonpolymer_details       ? 
+_pdbx_entry_details.sequence_details         'AUTHORS STATE THAT A19T IS A MUTATION, BUT NOT A NATURALLY OCCURRING ALLELE.' 
+_pdbx_entry_details.compound_details         ? 
+_pdbx_entry_details.source_details           ? 
+_pdbx_entry_details.has_ligand_of_interest   ? 
+# 
+loop_
+_pdbx_validate_rmsd_angle.id 
+_pdbx_validate_rmsd_angle.PDB_model_num 
+_pdbx_validate_rmsd_angle.auth_atom_id_1 
+_pdbx_validate_rmsd_angle.auth_asym_id_1 
+_pdbx_validate_rmsd_angle.auth_comp_id_1 
+_pdbx_validate_rmsd_angle.auth_seq_id_1 
+_pdbx_validate_rmsd_angle.PDB_ins_code_1 
+_pdbx_validate_rmsd_angle.label_alt_id_1 
+_pdbx_validate_rmsd_angle.auth_atom_id_2 
+_pdbx_validate_rmsd_angle.auth_asym_id_2 
+_pdbx_validate_rmsd_angle.auth_comp_id_2 
+_pdbx_validate_rmsd_angle.auth_seq_id_2 
+_pdbx_validate_rmsd_angle.PDB_ins_code_2 
+_pdbx_validate_rmsd_angle.label_alt_id_2 
+_pdbx_validate_rmsd_angle.auth_atom_id_3 
+_pdbx_validate_rmsd_angle.auth_asym_id_3 
+_pdbx_validate_rmsd_angle.auth_comp_id_3 
+_pdbx_validate_rmsd_angle.auth_seq_id_3 
+_pdbx_validate_rmsd_angle.PDB_ins_code_3 
+_pdbx_validate_rmsd_angle.label_alt_id_3 
+_pdbx_validate_rmsd_angle.angle_value 
+_pdbx_validate_rmsd_angle.angle_target_value 
+_pdbx_validate_rmsd_angle.angle_deviation 
+_pdbx_validate_rmsd_angle.angle_standard_deviation 
+_pdbx_validate_rmsd_angle.linker_flag 
+1 1 NE A ARG 31 ? ? CZ A ARG 31 ? ? NH1 A ARG 31 ? ? 129.20 120.30 8.90  0.50 N 
+2 1 NE A ARG 31 ? ? CZ A ARG 31 ? ? NH2 A ARG 31 ? ? 115.07 120.30 -5.23 0.50 N 
+3 1 CG A MET 48 ? B SD A MET 48 ? B CE  A MET 48 ? B 112.09 100.20 11.89 1.60 N 
+4 1 CA A LYS 65 ? ? CB A LYS 65 ? ? CG  A LYS 65 ? ? 127.58 113.40 14.18 2.20 N 
+# 
+loop_
+_pdbx_validate_torsion.id 
+_pdbx_validate_torsion.PDB_model_num 
+_pdbx_validate_torsion.auth_comp_id 
+_pdbx_validate_torsion.auth_asym_id 
+_pdbx_validate_torsion.auth_seq_id 
+_pdbx_validate_torsion.PDB_ins_code 
+_pdbx_validate_torsion.label_alt_id 
+_pdbx_validate_torsion.phi 
+_pdbx_validate_torsion.psi 
+1 1 LYS A 29  ? A 72.93   36.60   
+2 1 ALA A 112 ? ? -138.88 -119.45 
+# 
+loop_
+_pdbx_unobs_or_zero_occ_atoms.id 
+_pdbx_unobs_or_zero_occ_atoms.PDB_model_num 
+_pdbx_unobs_or_zero_occ_atoms.polymer_flag 
+_pdbx_unobs_or_zero_occ_atoms.occupancy_flag 
+_pdbx_unobs_or_zero_occ_atoms.auth_asym_id 
+_pdbx_unobs_or_zero_occ_atoms.auth_comp_id 
+_pdbx_unobs_or_zero_occ_atoms.auth_seq_id 
+_pdbx_unobs_or_zero_occ_atoms.PDB_ins_code 
+_pdbx_unobs_or_zero_occ_atoms.auth_atom_id 
+_pdbx_unobs_or_zero_occ_atoms.label_alt_id 
+_pdbx_unobs_or_zero_occ_atoms.label_asym_id 
+_pdbx_unobs_or_zero_occ_atoms.label_comp_id 
+_pdbx_unobs_or_zero_occ_atoms.label_seq_id 
+_pdbx_unobs_or_zero_occ_atoms.label_atom_id 
+1 1 Y 1 A GLU 140 ? CG  ? A GLU 128 CG  
+2 1 Y 1 A GLU 140 ? CD  ? A GLU 128 CD  
+3 1 Y 1 A GLU 140 ? OE1 ? A GLU 128 OE1 
+4 1 Y 1 A GLU 140 ? OE2 ? A GLU 128 OE2 
+# 
+loop_
+_chem_comp_atom.comp_id 
+_chem_comp_atom.atom_id 
+_chem_comp_atom.type_symbol 
+_chem_comp_atom.pdbx_aromatic_flag 
+_chem_comp_atom.pdbx_stereo_config 
+_chem_comp_atom.pdbx_ordinal 
+ALA N    N N N 1   
+ALA CA   C N S 2   
+ALA C    C N N 3   
+ALA O    O N N 4   
+ALA CB   C N N 5   
+ALA OXT  O N N 6   
+ALA H    H N N 7   
+ALA H2   H N N 8   
+ALA HA   H N N 9   
+ALA HB1  H N N 10  
+ALA HB2  H N N 11  
+ALA HB3  H N N 12  
+ALA HXT  H N N 13  
+ARG N    N N N 14  
+ARG CA   C N S 15  
+ARG C    C N N 16  
+ARG O    O N N 17  
+ARG CB   C N N 18  
+ARG CG   C N N 19  
+ARG CD   C N N 20  
+ARG NE   N N N 21  
+ARG CZ   C N N 22  
+ARG NH1  N N N 23  
+ARG NH2  N N N 24  
+ARG OXT  O N N 25  
+ARG H    H N N 26  
+ARG H2   H N N 27  
+ARG HA   H N N 28  
+ARG HB2  H N N 29  
+ARG HB3  H N N 30  
+ARG HG2  H N N 31  
+ARG HG3  H N N 32  
+ARG HD2  H N N 33  
+ARG HD3  H N N 34  
+ARG HE   H N N 35  
+ARG HH11 H N N 36  
+ARG HH12 H N N 37  
+ARG HH21 H N N 38  
+ARG HH22 H N N 39  
+ARG HXT  H N N 40  
+ASN N    N N N 41  
+ASN CA   C N S 42  
+ASN C    C N N 43  
+ASN O    O N N 44  
+ASN CB   C N N 45  
+ASN CG   C N N 46  
+ASN OD1  O N N 47  
+ASN ND2  N N N 48  
+ASN OXT  O N N 49  
+ASN H    H N N 50  
+ASN H2   H N N 51  
+ASN HA   H N N 52  
+ASN HB2  H N N 53  
+ASN HB3  H N N 54  
+ASN HD21 H N N 55  
+ASN HD22 H N N 56  
+ASN HXT  H N N 57  
+ASP N    N N N 58  
+ASP CA   C N S 59  
+ASP C    C N N 60  
+ASP O    O N N 61  
+ASP CB   C N N 62  
+ASP CG   C N N 63  
+ASP OD1  O N N 64  
+ASP OD2  O N N 65  
+ASP OXT  O N N 66  
+ASP H    H N N 67  
+ASP H2   H N N 68  
+ASP HA   H N N 69  
+ASP HB2  H N N 70  
+ASP HB3  H N N 71  
+ASP HD2  H N N 72  
+ASP HXT  H N N 73  
+CYS N    N N N 74  
+CYS CA   C N R 75  
+CYS C    C N N 76  
+CYS O    O N N 77  
+CYS CB   C N N 78  
+CYS SG   S N N 79  
+CYS OXT  O N N 80  
+CYS H    H N N 81  
+CYS H2   H N N 82  
+CYS HA   H N N 83  
+CYS HB2  H N N 84  
+CYS HB3  H N N 85  
+CYS HG   H N N 86  
+CYS HXT  H N N 87  
+FK5 C1   C N N 88  
+FK5 C2   C N S 89  
+FK5 C3   C N N 90  
+FK5 C4   C N N 91  
+FK5 C5   C N N 92  
+FK5 C6   C N N 93  
+FK5 C8   C N N 94  
+FK5 C9   C N N 95  
+FK5 C10  C N R 96  
+FK5 C11  C N R 97  
+FK5 C12  C N N 98  
+FK5 C13  C N S 99  
+FK5 C14  C N R 100 
+FK5 C15  C N S 101 
+FK5 C16  C N N 102 
+FK5 C17  C N S 103 
+FK5 C18  C N N 104 
+FK5 C19  C N N 105 
+FK5 C20  C N N 106 
+FK5 C21  C N R 107 
+FK5 C22  C N N 108 
+FK5 C23  C N N 109 
+FK5 C24  C N S 110 
+FK5 C25  C N R 111 
+FK5 C26  C N S 112 
+FK5 C27  C N N 113 
+FK5 C28  C N N 114 
+FK5 C29  C N R 115 
+FK5 C30  C N N 116 
+FK5 C31  C N R 117 
+FK5 C32  C N R 118 
+FK5 C33  C N N 119 
+FK5 C34  C N N 120 
+FK5 C35  C N N 121 
+FK5 C36  C N N 122 
+FK5 C37  C N N 123 
+FK5 C38  C N N 124 
+FK5 C39  C N N 125 
+FK5 C40  C N N 126 
+FK5 C41  C N N 127 
+FK5 C42  C N N 128 
+FK5 C43  C N N 129 
+FK5 C44  C N N 130 
+FK5 C45  C N N 131 
+FK5 N7   N N N 132 
+FK5 O1   O N N 133 
+FK5 O2   O N N 134 
+FK5 O3   O N N 135 
+FK5 O4   O N N 136 
+FK5 O5   O N N 137 
+FK5 O6   O N N 138 
+FK5 O7   O N N 139 
+FK5 O8   O N N 140 
+FK5 O9   O N N 141 
+FK5 O10  O N N 142 
+FK5 O11  O N N 143 
+FK5 O12  O N N 144 
+FK5 H2   H N N 145 
+FK5 H31A H N N 146 
+FK5 H32A H N N 147 
+FK5 H41  H N N 148 
+FK5 H42  H N N 149 
+FK5 H51  H N N 150 
+FK5 H52  H N N 151 
+FK5 H61  H N N 152 
+FK5 H62  H N N 153 
+FK5 H11  H N N 154 
+FK5 H121 H N N 155 
+FK5 H122 H N N 156 
+FK5 H13  H N N 157 
+FK5 H14  H N N 158 
+FK5 H15  H N N 159 
+FK5 H161 H N N 160 
+FK5 H162 H N N 161 
+FK5 H17  H N N 162 
+FK5 H181 H N N 163 
+FK5 H182 H N N 164 
+FK5 H20  H N N 165 
+FK5 H21  H N N 166 
+FK5 H231 H N N 167 
+FK5 H232 H N N 168 
+FK5 H24  H N N 169 
+FK5 H25  H N N 170 
+FK5 H26  H N N 171 
+FK5 H28  H N N 172 
+FK5 H29  H N N 173 
+FK5 H301 H N N 174 
+FK5 H302 H N N 175 
+FK5 H31  H N N 176 
+FK5 H32  H N N 177 
+FK5 H331 H N N 178 
+FK5 H332 H N N 179 
+FK5 H341 H N N 180 
+FK5 H342 H N N 181 
+FK5 H351 H N N 182 
+FK5 H352 H N N 183 
+FK5 H353 H N N 184 
+FK5 H361 H N N 185 
+FK5 H362 H N N 186 
+FK5 H363 H N N 187 
+FK5 H371 H N N 188 
+FK5 H372 H N N 189 
+FK5 H373 H N N 190 
+FK5 H381 H N N 191 
+FK5 H382 H N N 192 
+FK5 H39  H N N 193 
+FK5 H401 H N N 194 
+FK5 H402 H N N 195 
+FK5 H411 H N N 196 
+FK5 H412 H N N 197 
+FK5 H413 H N N 198 
+FK5 H421 H N N 199 
+FK5 H422 H N N 200 
+FK5 H423 H N N 201 
+FK5 H431 H N N 202 
+FK5 H432 H N N 203 
+FK5 H433 H N N 204 
+FK5 H441 H N N 205 
+FK5 H442 H N N 206 
+FK5 H443 H N N 207 
+FK5 H451 H N N 208 
+FK5 H452 H N N 209 
+FK5 H453 H N N 210 
+FK5 HO6  H N N 211 
+FK5 HO10 H N N 212 
+FK5 HO12 H N N 213 
+GLN N    N N N 214 
+GLN CA   C N S 215 
+GLN C    C N N 216 
+GLN O    O N N 217 
+GLN CB   C N N 218 
+GLN CG   C N N 219 
+GLN CD   C N N 220 
+GLN OE1  O N N 221 
+GLN NE2  N N N 222 
+GLN OXT  O N N 223 
+GLN H    H N N 224 
+GLN H2   H N N 225 
+GLN HA   H N N 226 
+GLN HB2  H N N 227 
+GLN HB3  H N N 228 
+GLN HG2  H N N 229 
+GLN HG3  H N N 230 
+GLN HE21 H N N 231 
+GLN HE22 H N N 232 
+GLN HXT  H N N 233 
+GLU N    N N N 234 
+GLU CA   C N S 235 
+GLU C    C N N 236 
+GLU O    O N N 237 
+GLU CB   C N N 238 
+GLU CG   C N N 239 
+GLU CD   C N N 240 
+GLU OE1  O N N 241 
+GLU OE2  O N N 242 
+GLU OXT  O N N 243 
+GLU H    H N N 244 
+GLU H2   H N N 245 
+GLU HA   H N N 246 
+GLU HB2  H N N 247 
+GLU HB3  H N N 248 
+GLU HG2  H N N 249 
+GLU HG3  H N N 250 
+GLU HE2  H N N 251 
+GLU HXT  H N N 252 
+GLY N    N N N 253 
+GLY CA   C N N 254 
+GLY C    C N N 255 
+GLY O    O N N 256 
+GLY OXT  O N N 257 
+GLY H    H N N 258 
+GLY H2   H N N 259 
+GLY HA2  H N N 260 
+GLY HA3  H N N 261 
+GLY HXT  H N N 262 
+HIS N    N N N 263 
+HIS CA   C N S 264 
+HIS C    C N N 265 
+HIS O    O N N 266 
+HIS CB   C N N 267 
+HIS CG   C Y N 268 
+HIS ND1  N Y N 269 
+HIS CD2  C Y N 270 
+HIS CE1  C Y N 271 
+HIS NE2  N Y N 272 
+HIS OXT  O N N 273 
+HIS H    H N N 274 
+HIS H2   H N N 275 
+HIS HA   H N N 276 
+HIS HB2  H N N 277 
+HIS HB3  H N N 278 
+HIS HD1  H N N 279 
+HIS HD2  H N N 280 
+HIS HE1  H N N 281 
+HIS HE2  H N N 282 
+HIS HXT  H N N 283 
+HOH O    O N N 284 
+HOH H1   H N N 285 
+HOH H2   H N N 286 
+ILE N    N N N 287 
+ILE CA   C N S 288 
+ILE C    C N N 289 
+ILE O    O N N 290 
+ILE CB   C N S 291 
+ILE CG1  C N N 292 
+ILE CG2  C N N 293 
+ILE CD1  C N N 294 
+ILE OXT  O N N 295 
+ILE H    H N N 296 
+ILE H2   H N N 297 
+ILE HA   H N N 298 
+ILE HB   H N N 299 
+ILE HG12 H N N 300 
+ILE HG13 H N N 301 
+ILE HG21 H N N 302 
+ILE HG22 H N N 303 
+ILE HG23 H N N 304 
+ILE HD11 H N N 305 
+ILE HD12 H N N 306 
+ILE HD13 H N N 307 
+ILE HXT  H N N 308 
+LEU N    N N N 309 
+LEU CA   C N S 310 
+LEU C    C N N 311 
+LEU O    O N N 312 
+LEU CB   C N N 313 
+LEU CG   C N N 314 
+LEU CD1  C N N 315 
+LEU CD2  C N N 316 
+LEU OXT  O N N 317 
+LEU H    H N N 318 
+LEU H2   H N N 319 
+LEU HA   H N N 320 
+LEU HB2  H N N 321 
+LEU HB3  H N N 322 
+LEU HG   H N N 323 
+LEU HD11 H N N 324 
+LEU HD12 H N N 325 
+LEU HD13 H N N 326 
+LEU HD21 H N N 327 
+LEU HD22 H N N 328 
+LEU HD23 H N N 329 
+LEU HXT  H N N 330 
+LYS N    N N N 331 
+LYS CA   C N S 332 
+LYS C    C N N 333 
+LYS O    O N N 334 
+LYS CB   C N N 335 
+LYS CG   C N N 336 
+LYS CD   C N N 337 
+LYS CE   C N N 338 
+LYS NZ   N N N 339 
+LYS OXT  O N N 340 
+LYS H    H N N 341 
+LYS H2   H N N 342 
+LYS HA   H N N 343 
+LYS HB2  H N N 344 
+LYS HB3  H N N 345 
+LYS HG2  H N N 346 
+LYS HG3  H N N 347 
+LYS HD2  H N N 348 
+LYS HD3  H N N 349 
+LYS HE2  H N N 350 
+LYS HE3  H N N 351 
+LYS HZ1  H N N 352 
+LYS HZ2  H N N 353 
+LYS HZ3  H N N 354 
+LYS HXT  H N N 355 
+MET N    N N N 356 
+MET CA   C N S 357 
+MET C    C N N 358 
+MET O    O N N 359 
+MET CB   C N N 360 
+MET CG   C N N 361 
+MET SD   S N N 362 
+MET CE   C N N 363 
+MET OXT  O N N 364 
+MET H    H N N 365 
+MET H2   H N N 366 
+MET HA   H N N 367 
+MET HB2  H N N 368 
+MET HB3  H N N 369 
+MET HG2  H N N 370 
+MET HG3  H N N 371 
+MET HE1  H N N 372 
+MET HE2  H N N 373 
+MET HE3  H N N 374 
+MET HXT  H N N 375 
+PHE N    N N N 376 
+PHE CA   C N S 377 
+PHE C    C N N 378 
+PHE O    O N N 379 
+PHE CB   C N N 380 
+PHE CG   C Y N 381 
+PHE CD1  C Y N 382 
+PHE CD2  C Y N 383 
+PHE CE1  C Y N 384 
+PHE CE2  C Y N 385 
+PHE CZ   C Y N 386 
+PHE OXT  O N N 387 
+PHE H    H N N 388 
+PHE H2   H N N 389 
+PHE HA   H N N 390 
+PHE HB2  H N N 391 
+PHE HB3  H N N 392 
+PHE HD1  H N N 393 
+PHE HD2  H N N 394 
+PHE HE1  H N N 395 
+PHE HE2  H N N 396 
+PHE HZ   H N N 397 
+PHE HXT  H N N 398 
+PRO N    N N N 399 
+PRO CA   C N S 400 
+PRO C    C N N 401 
+PRO O    O N N 402 
+PRO CB   C N N 403 
+PRO CG   C N N 404 
+PRO CD   C N N 405 
+PRO OXT  O N N 406 
+PRO H    H N N 407 
+PRO HA   H N N 408 
+PRO HB2  H N N 409 
+PRO HB3  H N N 410 
+PRO HG2  H N N 411 
+PRO HG3  H N N 412 
+PRO HD2  H N N 413 
+PRO HD3  H N N 414 
+PRO HXT  H N N 415 
+SER N    N N N 416 
+SER CA   C N S 417 
+SER C    C N N 418 
+SER O    O N N 419 
+SER CB   C N N 420 
+SER OG   O N N 421 
+SER OXT  O N N 422 
+SER H    H N N 423 
+SER H2   H N N 424 
+SER HA   H N N 425 
+SER HB2  H N N 426 
+SER HB3  H N N 427 
+SER HG   H N N 428 
+SER HXT  H N N 429 
+THR N    N N N 430 
+THR CA   C N S 431 
+THR C    C N N 432 
+THR O    O N N 433 
+THR CB   C N R 434 
+THR OG1  O N N 435 
+THR CG2  C N N 436 
+THR OXT  O N N 437 
+THR H    H N N 438 
+THR H2   H N N 439 
+THR HA   H N N 440 
+THR HB   H N N 441 
+THR HG1  H N N 442 
+THR HG21 H N N 443 
+THR HG22 H N N 444 
+THR HG23 H N N 445 
+THR HXT  H N N 446 
+TRP N    N N N 447 
+TRP CA   C N S 448 
+TRP C    C N N 449 
+TRP O    O N N 450 
+TRP CB   C N N 451 
+TRP CG   C Y N 452 
+TRP CD1  C Y N 453 
+TRP CD2  C Y N 454 
+TRP NE1  N Y N 455 
+TRP CE2  C Y N 456 
+TRP CE3  C Y N 457 
+TRP CZ2  C Y N 458 
+TRP CZ3  C Y N 459 
+TRP CH2  C Y N 460 
+TRP OXT  O N N 461 
+TRP H    H N N 462 
+TRP H2   H N N 463 
+TRP HA   H N N 464 
+TRP HB2  H N N 465 
+TRP HB3  H N N 466 
+TRP HD1  H N N 467 
+TRP HE1  H N N 468 
+TRP HE3  H N N 469 
+TRP HZ2  H N N 470 
+TRP HZ3  H N N 471 
+TRP HH2  H N N 472 
+TRP HXT  H N N 473 
+TYR N    N N N 474 
+TYR CA   C N S 475 
+TYR C    C N N 476 
+TYR O    O N N 477 
+TYR CB   C N N 478 
+TYR CG   C Y N 479 
+TYR CD1  C Y N 480 
+TYR CD2  C Y N 481 
+TYR CE1  C Y N 482 
+TYR CE2  C Y N 483 
+TYR CZ   C Y N 484 
+TYR OH   O N N 485 
+TYR OXT  O N N 486 
+TYR H    H N N 487 
+TYR H2   H N N 488 
+TYR HA   H N N 489 
+TYR HB2  H N N 490 
+TYR HB3  H N N 491 
+TYR HD1  H N N 492 
+TYR HD2  H N N 493 
+TYR HE1  H N N 494 
+TYR HE2  H N N 495 
+TYR HH   H N N 496 
+TYR HXT  H N N 497 
+VAL N    N N N 498 
+VAL CA   C N S 499 
+VAL C    C N N 500 
+VAL O    O N N 501 
+VAL CB   C N N 502 
+VAL CG1  C N N 503 
+VAL CG2  C N N 504 
+VAL OXT  O N N 505 
+VAL H    H N N 506 
+VAL H2   H N N 507 
+VAL HA   H N N 508 
+VAL HB   H N N 509 
+VAL HG11 H N N 510 
+VAL HG12 H N N 511 
+VAL HG13 H N N 512 
+VAL HG21 H N N 513 
+VAL HG22 H N N 514 
+VAL HG23 H N N 515 
+VAL HXT  H N N 516 
+# 
+loop_
+_chem_comp_bond.comp_id 
+_chem_comp_bond.atom_id_1 
+_chem_comp_bond.atom_id_2 
+_chem_comp_bond.value_order 
+_chem_comp_bond.pdbx_aromatic_flag 
+_chem_comp_bond.pdbx_stereo_config 
+_chem_comp_bond.pdbx_ordinal 
+ALA N   CA   sing N N 1   
+ALA N   H    sing N N 2   
+ALA N   H2   sing N N 3   
+ALA CA  C    sing N N 4   
+ALA CA  CB   sing N N 5   
+ALA CA  HA   sing N N 6   
+ALA C   O    doub N N 7   
+ALA C   OXT  sing N N 8   
+ALA CB  HB1  sing N N 9   
+ALA CB  HB2  sing N N 10  
+ALA CB  HB3  sing N N 11  
+ALA OXT HXT  sing N N 12  
+ARG N   CA   sing N N 13  
+ARG N   H    sing N N 14  
+ARG N   H2   sing N N 15  
+ARG CA  C    sing N N 16  
+ARG CA  CB   sing N N 17  
+ARG CA  HA   sing N N 18  
+ARG C   O    doub N N 19  
+ARG C   OXT  sing N N 20  
+ARG CB  CG   sing N N 21  
+ARG CB  HB2  sing N N 22  
+ARG CB  HB3  sing N N 23  
+ARG CG  CD   sing N N 24  
+ARG CG  HG2  sing N N 25  
+ARG CG  HG3  sing N N 26  
+ARG CD  NE   sing N N 27  
+ARG CD  HD2  sing N N 28  
+ARG CD  HD3  sing N N 29  
+ARG NE  CZ   sing N N 30  
+ARG NE  HE   sing N N 31  
+ARG CZ  NH1  sing N N 32  
+ARG CZ  NH2  doub N N 33  
+ARG NH1 HH11 sing N N 34  
+ARG NH1 HH12 sing N N 35  
+ARG NH2 HH21 sing N N 36  
+ARG NH2 HH22 sing N N 37  
+ARG OXT HXT  sing N N 38  
+ASN N   CA   sing N N 39  
+ASN N   H    sing N N 40  
+ASN N   H2   sing N N 41  
+ASN CA  C    sing N N 42  
+ASN CA  CB   sing N N 43  
+ASN CA  HA   sing N N 44  
+ASN C   O    doub N N 45  
+ASN C   OXT  sing N N 46  
+ASN CB  CG   sing N N 47  
+ASN CB  HB2  sing N N 48  
+ASN CB  HB3  sing N N 49  
+ASN CG  OD1  doub N N 50  
+ASN CG  ND2  sing N N 51  
+ASN ND2 HD21 sing N N 52  
+ASN ND2 HD22 sing N N 53  
+ASN OXT HXT  sing N N 54  
+ASP N   CA   sing N N 55  
+ASP N   H    sing N N 56  
+ASP N   H2   sing N N 57  
+ASP CA  C    sing N N 58  
+ASP CA  CB   sing N N 59  
+ASP CA  HA   sing N N 60  
+ASP C   O    doub N N 61  
+ASP C   OXT  sing N N 62  
+ASP CB  CG   sing N N 63  
+ASP CB  HB2  sing N N 64  
+ASP CB  HB3  sing N N 65  
+ASP CG  OD1  doub N N 66  
+ASP CG  OD2  sing N N 67  
+ASP OD2 HD2  sing N N 68  
+ASP OXT HXT  sing N N 69  
+CYS N   CA   sing N N 70  
+CYS N   H    sing N N 71  
+CYS N   H2   sing N N 72  
+CYS CA  C    sing N N 73  
+CYS CA  CB   sing N N 74  
+CYS CA  HA   sing N N 75  
+CYS C   O    doub N N 76  
+CYS C   OXT  sing N N 77  
+CYS CB  SG   sing N N 78  
+CYS CB  HB2  sing N N 79  
+CYS CB  HB3  sing N N 80  
+CYS SG  HG   sing N N 81  
+CYS OXT HXT  sing N N 82  
+FK5 C1  C2   sing N N 83  
+FK5 C1  O1   sing N N 84  
+FK5 C1  O2   doub N N 85  
+FK5 C2  C3   sing N N 86  
+FK5 C2  N7   sing N N 87  
+FK5 C2  H2   sing N N 88  
+FK5 C3  C4   sing N N 89  
+FK5 C3  H31A sing N N 90  
+FK5 C3  H32A sing N N 91  
+FK5 C4  C5   sing N N 92  
+FK5 C4  H41  sing N N 93  
+FK5 C4  H42  sing N N 94  
+FK5 C5  C6   sing N N 95  
+FK5 C5  H51  sing N N 96  
+FK5 C5  H52  sing N N 97  
+FK5 C6  N7   sing N N 98  
+FK5 C6  H61  sing N N 99  
+FK5 C6  H62  sing N N 100 
+FK5 C8  C9   sing N N 101 
+FK5 C8  N7   sing N N 102 
+FK5 C8  O3   doub N N 103 
+FK5 C9  C10  sing N N 104 
+FK5 C9  O4   doub N N 105 
+FK5 C10 C11  sing N N 106 
+FK5 C10 O5   sing N N 107 
+FK5 C10 O6   sing N N 108 
+FK5 C11 C12  sing N N 109 
+FK5 C11 C35  sing N N 110 
+FK5 C11 H11  sing N N 111 
+FK5 C12 C13  sing N N 112 
+FK5 C12 H121 sing N N 113 
+FK5 C12 H122 sing N N 114 
+FK5 C13 C14  sing N N 115 
+FK5 C13 O7   sing N N 116 
+FK5 C13 H13  sing N N 117 
+FK5 C14 C15  sing N N 118 
+FK5 C14 O5   sing N N 119 
+FK5 C14 H14  sing N N 120 
+FK5 C15 C16  sing N N 121 
+FK5 C15 O8   sing N N 122 
+FK5 C15 H15  sing N N 123 
+FK5 C16 C17  sing N N 124 
+FK5 C16 H161 sing N N 125 
+FK5 C16 H162 sing N N 126 
+FK5 C17 C18  sing N N 127 
+FK5 C17 C36  sing N N 128 
+FK5 C17 H17  sing N N 129 
+FK5 C18 C19  sing N N 130 
+FK5 C18 H181 sing N N 131 
+FK5 C18 H182 sing N N 132 
+FK5 C19 C20  doub N E 133 
+FK5 C19 C37  sing N N 134 
+FK5 C20 C21  sing N N 135 
+FK5 C20 H20  sing N N 136 
+FK5 C21 C22  sing N N 137 
+FK5 C21 C38  sing N N 138 
+FK5 C21 H21  sing N N 139 
+FK5 C22 C23  sing N N 140 
+FK5 C22 O9   doub N N 141 
+FK5 C23 C24  sing N N 142 
+FK5 C23 H231 sing N N 143 
+FK5 C23 H232 sing N N 144 
+FK5 C24 C25  sing N N 145 
+FK5 C24 O10  sing N N 146 
+FK5 C24 H24  sing N N 147 
+FK5 C25 C26  sing N N 148 
+FK5 C25 C41  sing N N 149 
+FK5 C25 H25  sing N N 150 
+FK5 C26 C27  sing N N 151 
+FK5 C26 O1   sing N N 152 
+FK5 C26 H26  sing N N 153 
+FK5 C27 C28  doub N E 154 
+FK5 C27 C42  sing N N 155 
+FK5 C28 C29  sing N N 156 
+FK5 C28 H28  sing N N 157 
+FK5 C29 C30  sing N N 158 
+FK5 C29 C34  sing N N 159 
+FK5 C29 H29  sing N N 160 
+FK5 C30 C31  sing N N 161 
+FK5 C30 H301 sing N N 162 
+FK5 C30 H302 sing N N 163 
+FK5 C31 C32  sing N N 164 
+FK5 C31 O11  sing N N 165 
+FK5 C31 H31  sing N N 166 
+FK5 C32 C33  sing N N 167 
+FK5 C32 O12  sing N N 168 
+FK5 C32 H32  sing N N 169 
+FK5 C33 C34  sing N N 170 
+FK5 C33 H331 sing N N 171 
+FK5 C33 H332 sing N N 172 
+FK5 C34 H341 sing N N 173 
+FK5 C34 H342 sing N N 174 
+FK5 C35 H351 sing N N 175 
+FK5 C35 H352 sing N N 176 
+FK5 C35 H353 sing N N 177 
+FK5 C36 H361 sing N N 178 
+FK5 C36 H362 sing N N 179 
+FK5 C36 H363 sing N N 180 
+FK5 C37 H371 sing N N 181 
+FK5 C37 H372 sing N N 182 
+FK5 C37 H373 sing N N 183 
+FK5 C38 C39  sing N N 184 
+FK5 C38 H381 sing N N 185 
+FK5 C38 H382 sing N N 186 
+FK5 C39 C40  doub N N 187 
+FK5 C39 H39  sing N N 188 
+FK5 C40 H401 sing N N 189 
+FK5 C40 H402 sing N N 190 
+FK5 C41 H411 sing N N 191 
+FK5 C41 H412 sing N N 192 
+FK5 C41 H413 sing N N 193 
+FK5 C42 H421 sing N N 194 
+FK5 C42 H422 sing N N 195 
+FK5 C42 H423 sing N N 196 
+FK5 C43 O7   sing N N 197 
+FK5 C43 H431 sing N N 198 
+FK5 C43 H432 sing N N 199 
+FK5 C43 H433 sing N N 200 
+FK5 C44 O8   sing N N 201 
+FK5 C44 H441 sing N N 202 
+FK5 C44 H442 sing N N 203 
+FK5 C44 H443 sing N N 204 
+FK5 C45 O11  sing N N 205 
+FK5 C45 H451 sing N N 206 
+FK5 C45 H452 sing N N 207 
+FK5 C45 H453 sing N N 208 
+FK5 O6  HO6  sing N N 209 
+FK5 O10 HO10 sing N N 210 
+FK5 O12 HO12 sing N N 211 
+GLN N   CA   sing N N 212 
+GLN N   H    sing N N 213 
+GLN N   H2   sing N N 214 
+GLN CA  C    sing N N 215 
+GLN CA  CB   sing N N 216 
+GLN CA  HA   sing N N 217 
+GLN C   O    doub N N 218 
+GLN C   OXT  sing N N 219 
+GLN CB  CG   sing N N 220 
+GLN CB  HB2  sing N N 221 
+GLN CB  HB3  sing N N 222 
+GLN CG  CD   sing N N 223 
+GLN CG  HG2  sing N N 224 
+GLN CG  HG3  sing N N 225 
+GLN CD  OE1  doub N N 226 
+GLN CD  NE2  sing N N 227 
+GLN NE2 HE21 sing N N 228 
+GLN NE2 HE22 sing N N 229 
+GLN OXT HXT  sing N N 230 
+GLU N   CA   sing N N 231 
+GLU N   H    sing N N 232 
+GLU N   H2   sing N N 233 
+GLU CA  C    sing N N 234 
+GLU CA  CB   sing N N 235 
+GLU CA  HA   sing N N 236 
+GLU C   O    doub N N 237 
+GLU C   OXT  sing N N 238 
+GLU CB  CG   sing N N 239 
+GLU CB  HB2  sing N N 240 
+GLU CB  HB3  sing N N 241 
+GLU CG  CD   sing N N 242 
+GLU CG  HG2  sing N N 243 
+GLU CG  HG3  sing N N 244 
+GLU CD  OE1  doub N N 245 
+GLU CD  OE2  sing N N 246 
+GLU OE2 HE2  sing N N 247 
+GLU OXT HXT  sing N N 248 
+GLY N   CA   sing N N 249 
+GLY N   H    sing N N 250 
+GLY N   H2   sing N N 251 
+GLY CA  C    sing N N 252 
+GLY CA  HA2  sing N N 253 
+GLY CA  HA3  sing N N 254 
+GLY C   O    doub N N 255 
+GLY C   OXT  sing N N 256 
+GLY OXT HXT  sing N N 257 
+HIS N   CA   sing N N 258 
+HIS N   H    sing N N 259 
+HIS N   H2   sing N N 260 
+HIS CA  C    sing N N 261 
+HIS CA  CB   sing N N 262 
+HIS CA  HA   sing N N 263 
+HIS C   O    doub N N 264 
+HIS C   OXT  sing N N 265 
+HIS CB  CG   sing N N 266 
+HIS CB  HB2  sing N N 267 
+HIS CB  HB3  sing N N 268 
+HIS CG  ND1  sing Y N 269 
+HIS CG  CD2  doub Y N 270 
+HIS ND1 CE1  doub Y N 271 
+HIS ND1 HD1  sing N N 272 
+HIS CD2 NE2  sing Y N 273 
+HIS CD2 HD2  sing N N 274 
+HIS CE1 NE2  sing Y N 275 
+HIS CE1 HE1  sing N N 276 
+HIS NE2 HE2  sing N N 277 
+HIS OXT HXT  sing N N 278 
+HOH O   H1   sing N N 279 
+HOH O   H2   sing N N 280 
+ILE N   CA   sing N N 281 
+ILE N   H    sing N N 282 
+ILE N   H2   sing N N 283 
+ILE CA  C    sing N N 284 
+ILE CA  CB   sing N N 285 
+ILE CA  HA   sing N N 286 
+ILE C   O    doub N N 287 
+ILE C   OXT  sing N N 288 
+ILE CB  CG1  sing N N 289 
+ILE CB  CG2  sing N N 290 
+ILE CB  HB   sing N N 291 
+ILE CG1 CD1  sing N N 292 
+ILE CG1 HG12 sing N N 293 
+ILE CG1 HG13 sing N N 294 
+ILE CG2 HG21 sing N N 295 
+ILE CG2 HG22 sing N N 296 
+ILE CG2 HG23 sing N N 297 
+ILE CD1 HD11 sing N N 298 
+ILE CD1 HD12 sing N N 299 
+ILE CD1 HD13 sing N N 300 
+ILE OXT HXT  sing N N 301 
+LEU N   CA   sing N N 302 
+LEU N   H    sing N N 303 
+LEU N   H2   sing N N 304 
+LEU CA  C    sing N N 305 
+LEU CA  CB   sing N N 306 
+LEU CA  HA   sing N N 307 
+LEU C   O    doub N N 308 
+LEU C   OXT  sing N N 309 
+LEU CB  CG   sing N N 310 
+LEU CB  HB2  sing N N 311 
+LEU CB  HB3  sing N N 312 
+LEU CG  CD1  sing N N 313 
+LEU CG  CD2  sing N N 314 
+LEU CG  HG   sing N N 315 
+LEU CD1 HD11 sing N N 316 
+LEU CD1 HD12 sing N N 317 
+LEU CD1 HD13 sing N N 318 
+LEU CD2 HD21 sing N N 319 
+LEU CD2 HD22 sing N N 320 
+LEU CD2 HD23 sing N N 321 
+LEU OXT HXT  sing N N 322 
+LYS N   CA   sing N N 323 
+LYS N   H    sing N N 324 
+LYS N   H2   sing N N 325 
+LYS CA  C    sing N N 326 
+LYS CA  CB   sing N N 327 
+LYS CA  HA   sing N N 328 
+LYS C   O    doub N N 329 
+LYS C   OXT  sing N N 330 
+LYS CB  CG   sing N N 331 
+LYS CB  HB2  sing N N 332 
+LYS CB  HB3  sing N N 333 
+LYS CG  CD   sing N N 334 
+LYS CG  HG2  sing N N 335 
+LYS CG  HG3  sing N N 336 
+LYS CD  CE   sing N N 337 
+LYS CD  HD2  sing N N 338 
+LYS CD  HD3  sing N N 339 
+LYS CE  NZ   sing N N 340 
+LYS CE  HE2  sing N N 341 
+LYS CE  HE3  sing N N 342 
+LYS NZ  HZ1  sing N N 343 
+LYS NZ  HZ2  sing N N 344 
+LYS NZ  HZ3  sing N N 345 
+LYS OXT HXT  sing N N 346 
+MET N   CA   sing N N 347 
+MET N   H    sing N N 348 
+MET N   H2   sing N N 349 
+MET CA  C    sing N N 350 
+MET CA  CB   sing N N 351 
+MET CA  HA   sing N N 352 
+MET C   O    doub N N 353 
+MET C   OXT  sing N N 354 
+MET CB  CG   sing N N 355 
+MET CB  HB2  sing N N 356 
+MET CB  HB3  sing N N 357 
+MET CG  SD   sing N N 358 
+MET CG  HG2  sing N N 359 
+MET CG  HG3  sing N N 360 
+MET SD  CE   sing N N 361 
+MET CE  HE1  sing N N 362 
+MET CE  HE2  sing N N 363 
+MET CE  HE3  sing N N 364 
+MET OXT HXT  sing N N 365 
+PHE N   CA   sing N N 366 
+PHE N   H    sing N N 367 
+PHE N   H2   sing N N 368 
+PHE CA  C    sing N N 369 
+PHE CA  CB   sing N N 370 
+PHE CA  HA   sing N N 371 
+PHE C   O    doub N N 372 
+PHE C   OXT  sing N N 373 
+PHE CB  CG   sing N N 374 
+PHE CB  HB2  sing N N 375 
+PHE CB  HB3  sing N N 376 
+PHE CG  CD1  doub Y N 377 
+PHE CG  CD2  sing Y N 378 
+PHE CD1 CE1  sing Y N 379 
+PHE CD1 HD1  sing N N 380 
+PHE CD2 CE2  doub Y N 381 
+PHE CD2 HD2  sing N N 382 
+PHE CE1 CZ   doub Y N 383 
+PHE CE1 HE1  sing N N 384 
+PHE CE2 CZ   sing Y N 385 
+PHE CE2 HE2  sing N N 386 
+PHE CZ  HZ   sing N N 387 
+PHE OXT HXT  sing N N 388 
+PRO N   CA   sing N N 389 
+PRO N   CD   sing N N 390 
+PRO N   H    sing N N 391 
+PRO CA  C    sing N N 392 
+PRO CA  CB   sing N N 393 
+PRO CA  HA   sing N N 394 
+PRO C   O    doub N N 395 
+PRO C   OXT  sing N N 396 
+PRO CB  CG   sing N N 397 
+PRO CB  HB2  sing N N 398 
+PRO CB  HB3  sing N N 399 
+PRO CG  CD   sing N N 400 
+PRO CG  HG2  sing N N 401 
+PRO CG  HG3  sing N N 402 
+PRO CD  HD2  sing N N 403 
+PRO CD  HD3  sing N N 404 
+PRO OXT HXT  sing N N 405 
+SER N   CA   sing N N 406 
+SER N   H    sing N N 407 
+SER N   H2   sing N N 408 
+SER CA  C    sing N N 409 
+SER CA  CB   sing N N 410 
+SER CA  HA   sing N N 411 
+SER C   O    doub N N 412 
+SER C   OXT  sing N N 413 
+SER CB  OG   sing N N 414 
+SER CB  HB2  sing N N 415 
+SER CB  HB3  sing N N 416 
+SER OG  HG   sing N N 417 
+SER OXT HXT  sing N N 418 
+THR N   CA   sing N N 419 
+THR N   H    sing N N 420 
+THR N   H2   sing N N 421 
+THR CA  C    sing N N 422 
+THR CA  CB   sing N N 423 
+THR CA  HA   sing N N 424 
+THR C   O    doub N N 425 
+THR C   OXT  sing N N 426 
+THR CB  OG1  sing N N 427 
+THR CB  CG2  sing N N 428 
+THR CB  HB   sing N N 429 
+THR OG1 HG1  sing N N 430 
+THR CG2 HG21 sing N N 431 
+THR CG2 HG22 sing N N 432 
+THR CG2 HG23 sing N N 433 
+THR OXT HXT  sing N N 434 
+TRP N   CA   sing N N 435 
+TRP N   H    sing N N 436 
+TRP N   H2   sing N N 437 
+TRP CA  C    sing N N 438 
+TRP CA  CB   sing N N 439 
+TRP CA  HA   sing N N 440 
+TRP C   O    doub N N 441 
+TRP C   OXT  sing N N 442 
+TRP CB  CG   sing N N 443 
+TRP CB  HB2  sing N N 444 
+TRP CB  HB3  sing N N 445 
+TRP CG  CD1  doub Y N 446 
+TRP CG  CD2  sing Y N 447 
+TRP CD1 NE1  sing Y N 448 
+TRP CD1 HD1  sing N N 449 
+TRP CD2 CE2  doub Y N 450 
+TRP CD2 CE3  sing Y N 451 
+TRP NE1 CE2  sing Y N 452 
+TRP NE1 HE1  sing N N 453 
+TRP CE2 CZ2  sing Y N 454 
+TRP CE3 CZ3  doub Y N 455 
+TRP CE3 HE3  sing N N 456 
+TRP CZ2 CH2  doub Y N 457 
+TRP CZ2 HZ2  sing N N 458 
+TRP CZ3 CH2  sing Y N 459 
+TRP CZ3 HZ3  sing N N 460 
+TRP CH2 HH2  sing N N 461 
+TRP OXT HXT  sing N N 462 
+TYR N   CA   sing N N 463 
+TYR N   H    sing N N 464 
+TYR N   H2   sing N N 465 
+TYR CA  C    sing N N 466 
+TYR CA  CB   sing N N 467 
+TYR CA  HA   sing N N 468 
+TYR C   O    doub N N 469 
+TYR C   OXT  sing N N 470 
+TYR CB  CG   sing N N 471 
+TYR CB  HB2  sing N N 472 
+TYR CB  HB3  sing N N 473 
+TYR CG  CD1  doub Y N 474 
+TYR CG  CD2  sing Y N 475 
+TYR CD1 CE1  sing Y N 476 
+TYR CD1 HD1  sing N N 477 
+TYR CD2 CE2  doub Y N 478 
+TYR CD2 HD2  sing N N 479 
+TYR CE1 CZ   doub Y N 480 
+TYR CE1 HE1  sing N N 481 
+TYR CE2 CZ   sing Y N 482 
+TYR CE2 HE2  sing N N 483 
+TYR CZ  OH   sing N N 484 
+TYR OH  HH   sing N N 485 
+TYR OXT HXT  sing N N 486 
+VAL N   CA   sing N N 487 
+VAL N   H    sing N N 488 
+VAL N   H2   sing N N 489 
+VAL CA  C    sing N N 490 
+VAL CA  CB   sing N N 491 
+VAL CA  HA   sing N N 492 
+VAL C   O    doub N N 493 
+VAL C   OXT  sing N N 494 
+VAL CB  CG1  sing N N 495 
+VAL CB  CG2  sing N N 496 
+VAL CB  HB   sing N N 497 
+VAL CG1 HG11 sing N N 498 
+VAL CG1 HG12 sing N N 499 
+VAL CG1 HG13 sing N N 500 
+VAL CG2 HG21 sing N N 501 
+VAL CG2 HG22 sing N N 502 
+VAL CG2 HG23 sing N N 503 
+VAL OXT HXT  sing N N 504 
+# 
+loop_
+_pdbx_entity_nonpoly.entity_id 
+_pdbx_entity_nonpoly.name 
+_pdbx_entity_nonpoly.comp_id 
+2 '8-DEETHYL-8-[BUT-3-ENYL]-ASCOMYCIN' FK5 
+3 water                                HOH 
+# 
+_pdbx_initial_refinement_model.id               1 
+_pdbx_initial_refinement_model.entity_id_list   ? 
+_pdbx_initial_refinement_model.type             'experimental model' 
+_pdbx_initial_refinement_model.source_name      PDB 
+_pdbx_initial_refinement_model.accession_code   3O5P 
+_pdbx_initial_refinement_model.details          'PDB entry 3O5P' 
 # 

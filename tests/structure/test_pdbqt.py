@@ -19,7 +19,7 @@ from ..util import data_dir
     [
         path for path in glob.glob(join(data_dir("structure"), "*.cif"))
         # Skip this PDB ID as it contains 5-character residue names
-        if "7fgz" not in path
+        if "7gsa" not in path
     ]
 )
 def test_array_conversion(path):

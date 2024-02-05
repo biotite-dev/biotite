@@ -14,6 +14,7 @@ SOURCE   6 EXPRESSION_SYSTEM_TAXID: 562
 KEYWDS    DESIGN, BPY, NON CANONICAL AMINOACID, DE NOVO PROTEIN                 
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    B.SANKARAN,P.H.ZWART,J.H.MILLS,J.H.PEREIRA,D.BAKER                    
+REVDAT   5   15-NOV-23 5EIL    1       REMARK LINK   ATOM                       
 REVDAT   4   25-DEC-19 5EIL    1       REMARK                                   
 REVDAT   3   27-SEP-17 5EIL    1       REMARK                                   
 REVDAT   2   18-JAN-17 5EIL    1       JRNL                                     
@@ -677,9 +678,9 @@ REMARK 500
 REMARK 500 THE FOLLOWING ATOMS ARE IN CLOSE CONTACT.                            
 REMARK 500                                                                      
 REMARK 500  ATM1  RES C  SSEQI   ATM2  RES C  SSEQI           DISTANCE          
-REMARK 500   C    ILE A     8     HN2  BP5 A     9              1.05            
-REMARK 500   C    ILE C     8     HN2  BP5 C     9              1.05            
-REMARK 500   C    ILE B     8     HN2  BP5 B     9              1.05            
+REMARK 500   C    ILE A     8     H2   BP5 A     9              1.05            
+REMARK 500   C    ILE C     8     H2   BP5 C     9              1.05            
+REMARK 500   C    ILE B     8     H2   BP5 B     9              1.05            
 REMARK 500   OD2  ASP C    99     HH   TYR C   108              1.49            
 REMARK 500   OD2  ASP A    99     HH   TYR A   108              1.50            
 REMARK 500   OD2  ASP A    66     HH   TYR A    75              1.59            
@@ -819,17 +820,17 @@ HELIX   31 AD4 HIS C  114  LYS C  124  1                                  11
 HELIX   32 AD5 THR C  137  HIS C  145  1                                   9    
 HELIX   33 AD6 ASN C  147  LYS C  156  1                                  10    
 LINK         C   ILE A   8                 N   BP5 A   9     1555   1555  1.33  
+LINK         C   BP5 A   9                 N   ALA A  10     1555   1555  1.34  
+LINK         C   ILE B   8                 N   BP5 B   9     1555   1555  1.33  
+LINK         C   BP5 B   9                 N   ALA B  10     1555   1555  1.34  
+LINK         C   ILE C   8                 N   BP5 C   9     1555   1555  1.33  
+LINK         C   BP5 C   9                 N   ALA C  10     1555   1555  1.34  
 LINK         N1  BP5 A   9                FE    FE A 201     1555   1555  2.14  
 LINK         N2  BP5 A   9                FE    FE A 201     1555   1555  2.04  
-LINK         C14 BP5 A   9                 N   ALA A  10     1555   1555  1.34  
-LINK         C   ILE B   8                 N   BP5 B   9     1555   1555  1.33  
-LINK         N1  BP5 B   9                FE    FE A 201     1555   1555  2.14  
-LINK         N2  BP5 B   9                FE    FE A 201     1555   1555  2.02  
-LINK         C14 BP5 B   9                 N   ALA B  10     1555   1555  1.34  
-LINK         C   ILE C   8                 N   BP5 C   9     1555   1555  1.33  
-LINK         N1  BP5 C   9                FE    FE A 201     1555   1555  2.11  
-LINK         N2  BP5 C   9                FE    FE A 201     1555   1555  2.04  
-LINK         C14 BP5 C   9                 N   ALA C  10     1555   1555  1.34  
+LINK        FE    FE A 201                 N1  BP5 B   9     1555   1555  2.14  
+LINK        FE    FE A 201                 N2  BP5 B   9     1555   1555  2.02  
+LINK        FE    FE A 201                 N1  BP5 C   9     1555   1555  2.11  
+LINK        FE    FE A 201                 N2  BP5 C   9     1555   1555  2.04  
 SITE     1 AC1  3 BP5 A   9  BP5 B   9  BP5 C   9                               
 CRYST1   63.107   63.940   64.831  90.00 116.87  90.00 P 1 21 1      6          
 ORIGX1      1.000000  0.000000  0.000000        0.00000                         
@@ -1080,26 +1081,26 @@ HETATM  160  N1  BP5 A   9      31.911  41.382   7.189  1.00 56.65           N
 ANISOU  160  N1  BP5 A   9     7853   6899   6774   -467    499    494       N  
 HETATM  161  N2  BP5 A   9      29.915  39.423   7.925  1.00 53.16           N  
 ANISOU  161  N2  BP5 A   9     6996   6659   6544     35    219    170       N  
-HETATM  162  C13 BP5 A   9      26.320  36.072   6.938  1.00 47.28           C  
-ANISOU  162  C13 BP5 A   9     5923   6458   5582    470   -209   -292       C  
-HETATM  163  C14 BP5 A   9      25.775  34.779   7.561  1.00 43.16           C  
-ANISOU  163  C14 BP5 A   9     5230   6040   5128    401   -226   -497       C  
-HETATM  164  O2  BP5 A   9      26.219  33.669   7.176  1.00 41.61           O  
-ANISOU  164  O2  BP5 A   9     5057   5844   4907    311    -90   -587       O  
+HETATM  162  CA  BP5 A   9      26.320  36.072   6.938  1.00 47.28           C  
+ANISOU  162  CA  BP5 A   9     5923   6458   5582    470   -209   -292       C  
+HETATM  163  C   BP5 A   9      25.775  34.779   7.561  1.00 43.16           C  
+ANISOU  163  C   BP5 A   9     5230   6040   5128    401   -226   -497       C  
+HETATM  164  O   BP5 A   9      26.219  33.669   7.176  1.00 41.61           O  
+ANISOU  164  O   BP5 A   9     5057   5844   4907    311    -90   -587       O  
 HETATM  165  N   BP5 A   9      25.176  36.869   6.473  1.00 48.33           N  
 ANISOU  165  N   BP5 A   9     6107   6668   5590    646   -416   -223       N  
-HETATM  166  H2  BP5 A   9      30.642  41.064   4.226  1.00 68.93           H  
+HETATM  166  H2  BP5 A   9      24.401  36.438   6.555  1.00 58.00           H  
 HETATM  167  H8  BP5 A   9      27.540  37.919   5.552  1.00 62.63           H  
 HETATM  168  H7  BP5 A   9      29.084  39.510   4.819  1.00 64.76           H  
 HETATM  169  H5  BP5 A   9      33.706  43.437   5.388  1.00 70.79           H  
 HETATM  170  H4  BP5 A   9      33.440  42.623   7.558  1.00 69.14           H  
-HETATM  171  H1  BP5 A   9      32.287  42.642   3.715  1.00 70.58           H  
-HETATM  172 H121 BP5 A   9      27.556  36.211   8.595  1.00 55.72           H  
-HETATM  173 H122 BP5 A   9      26.467  37.250   8.638  1.00 55.72           H  
-HETATM  174  H11 BP5 A   9      29.027  38.260   9.256  1.00 60.87           H  
-HETATM  175  H13 BP5 A   9      26.916  35.878   6.197  1.00 56.73           H  
-HETATM  176  HN1 BP5 A   9      25.085  37.618   6.886  1.00 58.00           H  
-HETATM  177  HN2 BP5 A   9      24.401  36.438   6.555  1.00 58.00           H  
+HETATM  171  H3  BP5 A   9      30.642  41.064   4.226  1.00 68.93           H  
+HETATM  172  H1  BP5 A   9      32.287  42.642   3.715  1.00 70.58           H  
+HETATM  173 H121 BP5 A   9      27.556  36.211   8.595  1.00 55.72           H  
+HETATM  174 H122 BP5 A   9      26.467  37.250   8.638  1.00 55.72           H  
+HETATM  175  H11 BP5 A   9      29.027  38.260   9.256  1.00 60.87           H  
+HETATM  176  HA  BP5 A   9      26.916  35.878   6.197  1.00 56.73           H  
+HETATM  177  H   BP5 A   9      25.085  37.618   6.886  1.00 58.00           H  
 ATOM    178  N   ALA A  10      24.828  34.912   8.504  1.00 41.16           N  
 ANISOU  178  N   ALA A  10     4819   5860   4959    432   -371   -582       N  
 ATOM    179  CA  ALA A  10      24.224  33.764   9.206  1.00 36.64           C  
@@ -4700,26 +4701,26 @@ HETATM 2581  N1  BP5 B   9      32.871  41.487  10.023  1.00 47.05           N
 ANISOU 2581  N1  BP5 B   9     5595   5502   6780    641   -288    175       N  
 HETATM 2582  N2  BP5 B   9      32.661  38.858   8.904  1.00 40.99           N  
 ANISOU 2582  N2  BP5 B   9     4695   5361   5518    610   -338    316       N  
-HETATM 2583  C13 BP5 B   9      34.464  34.412   7.726  1.00 35.65           C  
-ANISOU 2583  C13 BP5 B   9     3862   5162   4521    453   -439    125       C  
-HETATM 2584  C14 BP5 B   9      33.964  32.975   7.542  1.00 34.72           C  
-ANISOU 2584  C14 BP5 B   9     3732   5100   4360    459   -508      8       C  
-HETATM 2585  O2  BP5 B   9      33.972  32.188   8.523  1.00 34.36           O  
-ANISOU 2585  O2  BP5 B   9     3703   4954   4398    420   -566    -25       O  
+HETATM 2583  CA  BP5 B   9      34.464  34.412   7.726  1.00 35.65           C  
+ANISOU 2583  CA  BP5 B   9     3862   5162   4521    453   -439    125       C  
+HETATM 2584  C   BP5 B   9      33.964  32.975   7.542  1.00 34.72           C  
+ANISOU 2584  C   BP5 B   9     3732   5100   4360    459   -508      8       C  
+HETATM 2585  O   BP5 B   9      33.972  32.188   8.523  1.00 34.36           O  
+ANISOU 2585  O   BP5 B   9     3703   4954   4398    420   -566    -25       O  
 HETATM 2586  N   BP5 B   9      35.456  34.719   6.675  1.00 38.31           N  
 ANISOU 2586  N   BP5 B   9     4149   5561   4846    461   -318    188       N  
-HETATM 2587  H2  BP5 B   9      36.046  40.851  10.038  1.00 59.56           H  
+HETATM 2587  H2  BP5 B   9      35.637  34.016   6.160  1.00 45.97           H  
 HETATM 2588  H8  BP5 B   9      35.526  36.627   8.368  1.00 47.84           H  
 HETATM 2589  H7  BP5 B   9      35.856  38.757   9.249  1.00 51.22           H  
 HETATM 2590  H5  BP5 B   9      34.167  44.220  11.245  1.00 63.03           H  
 HETATM 2591  H4  BP5 B   9      32.135  43.232  10.669  1.00 60.00           H  
-HETATM 2592  H1  BP5 B   9      36.135  43.007  10.922  1.00 62.30           H  
-HETATM 2593 H121 BP5 B   9      33.006  35.408   6.667  1.00 42.97           H  
-HETATM 2594 H122 BP5 B   9      32.493  34.939   8.007  1.00 42.97           H  
-HETATM 2595  H11 BP5 B   9      31.598  37.358   8.184  1.00 46.25           H  
-HETATM 2596  H13 BP5 B   9      34.863  34.529   8.602  1.00 42.78           H  
-HETATM 2597  HN1 BP5 B   9      35.215  35.355   6.148  1.00 45.97           H  
-HETATM 2598  HN2 BP5 B   9      35.637  34.016   6.160  1.00 45.97           H  
+HETATM 2592  H3  BP5 B   9      36.046  40.851  10.038  1.00 59.56           H  
+HETATM 2593  H1  BP5 B   9      36.135  43.007  10.922  1.00 62.30           H  
+HETATM 2594 H121 BP5 B   9      33.006  35.408   6.667  1.00 42.97           H  
+HETATM 2595 H122 BP5 B   9      32.493  34.939   8.007  1.00 42.97           H  
+HETATM 2596  H11 BP5 B   9      31.598  37.358   8.184  1.00 46.25           H  
+HETATM 2597  HA  BP5 B   9      34.863  34.529   8.602  1.00 42.78           H  
+HETATM 2598  H   BP5 B   9      35.215  35.355   6.148  1.00 45.97           H  
 ATOM   2599  N   ALA B  10      33.526  32.628   6.322  1.00 35.95           N  
 ANISOU 2599  N   ALA B  10     3876   5400   4384    507   -517    -53       N  
 ATOM   2600  CA  ALA B  10      33.020  31.277   6.016  1.00 36.68           C  
@@ -8304,26 +8305,26 @@ HETATM 4988  N1  BP5 C   9      30.037  42.025   9.203  1.00 41.28           N
 ANISOU 4988  N1  BP5 C   9     4524   4847   6315   1499    330   -406       N  
 HETATM 4989  N2  BP5 C   9      30.577  39.649  10.735  1.00 38.66           N  
 ANISOU 4989  N2  BP5 C   9     4316   5057   5315    970    182   -658       N  
-HETATM 4990  C13 BP5 C   9      30.000  36.613  14.652  1.00 35.14           C  
-ANISOU 4990  C13 BP5 C   9     3703   5628   4020    270    319   -976       C  
-HETATM 4991  C14 BP5 C   9      30.100  35.116  14.959  1.00 33.77           C  
-ANISOU 4991  C14 BP5 C   9     3469   5682   3682    112    276   -741       C  
-HETATM 4992  O2  BP5 C   9      29.060  34.412  14.947  1.00 34.81           O  
-ANISOU 4992  O2  BP5 C   9     3429   5911   3885    117    300   -659       O  
+HETATM 4990  CA  BP5 C   9      30.000  36.613  14.652  1.00 35.14           C  
+ANISOU 4990  CA  BP5 C   9     3703   5628   4020    270    319   -976       C  
+HETATM 4991  C   BP5 C   9      30.100  35.116  14.959  1.00 33.77           C  
+ANISOU 4991  C   BP5 C   9     3469   5682   3682    112    276   -741       C  
+HETATM 4992  O   BP5 C   9      29.060  34.412  14.947  1.00 34.81           O  
+ANISOU 4992  O   BP5 C   9     3429   5911   3885    117    300   -659       O  
 HETATM 4993  N   BP5 C   9      30.577  37.348  15.779  1.00 35.91           N  
 ANISOU 4993  N   BP5 C   9     3895   5802   3949    156    402  -1228       N  
-HETATM 4994  H2  BP5 C   9      28.202  42.805  11.756  1.00 51.50           H  
+HETATM 4994  H2  BP5 C   9      30.736  36.826  16.483  1.00 43.10           H  
 HETATM 4995  H8  BP5 C   9      29.244  39.027  14.099  1.00 45.77           H  
 HETATM 4996  H7  BP5 C   9      28.704  40.997  12.969  1.00 47.54           H  
 HETATM 4997  H5  BP5 C   9      28.765  44.904   8.351  1.00 52.02           H  
 HETATM 4998  H4  BP5 C   9      30.184  43.212   7.599  1.00 50.55           H  
-HETATM 4999  H1  BP5 C   9      27.772  44.686  10.450  1.00 52.55           H  
-HETATM 5000 H121 BP5 C   9      30.696  36.159  12.762  1.00 42.13           H  
-HETATM 5001 H122 BP5 C   9      31.741  36.883  13.572  1.00 42.13           H  
-HETATM 5002  H11 BP5 C   9      31.448  37.891  10.962  1.00 44.59           H  
-HETATM 5003  H13 BP5 C   9      29.076  36.879  14.520  1.00 42.17           H  
-HETATM 5004  HN1 BP5 C   9      31.319  37.741  15.593  1.00 43.10           H  
-HETATM 5005  HN2 BP5 C   9      30.736  36.826  16.483  1.00 43.10           H  
+HETATM 4999  H3  BP5 C   9      28.202  42.805  11.756  1.00 51.50           H  
+HETATM 5000  H1  BP5 C   9      27.772  44.686  10.450  1.00 52.55           H  
+HETATM 5001 H121 BP5 C   9      30.696  36.159  12.762  1.00 42.13           H  
+HETATM 5002 H122 BP5 C   9      31.741  36.883  13.572  1.00 42.13           H  
+HETATM 5003  H11 BP5 C   9      31.448  37.891  10.962  1.00 44.59           H  
+HETATM 5004  HA  BP5 C   9      29.076  36.879  14.520  1.00 42.17           H  
+HETATM 5005  H   BP5 C   9      31.319  37.741  15.593  1.00 43.10           H  
 ATOM   5006  N   ALA C  10      31.321  34.629  15.238  1.00 32.43           N  
 ANISOU 5006  N   ALA C  10     3392   5573   3359    -29    219   -586       N  
 ATOM   5007  CA  ALA C  10      31.567  33.208  15.552  1.00 31.02           C  
@@ -11764,27 +11765,27 @@ CONECT  152  151  155  161
 CONECT  153  154  157  169                                                      
 CONECT  154  153  160  170                                                      
 CONECT  155  152  156  160                                                      
-CONECT  156  155  157  166                                                      
-CONECT  157  153  156  171                                                      
-CONECT  158  149  162  172  173                                                 
-CONECT  159  149  161  174                                                      
+CONECT  156  155  157  171                                                      
+CONECT  157  153  156  172                                                      
+CONECT  158  149  162  173  174                                                 
+CONECT  159  149  161  175                                                      
 CONECT  160  154  155 7225                                                      
 CONECT  161  152  159 7225                                                      
-CONECT  162  158  163  165  175                                                 
+CONECT  162  158  163  165  176                                                 
 CONECT  163  162  164  178                                                      
 CONECT  164  163                                                                
-CONECT  165  132  162  176  177                                                 
-CONECT  166  156                                                                
+CONECT  165  132  162  166  177                                                 
+CONECT  166  165                                                                
 CONECT  167  150                                                                
 CONECT  168  151                                                                
 CONECT  169  153                                                                
 CONECT  170  154                                                                
-CONECT  171  157                                                                
-CONECT  172  158                                                                
+CONECT  171  156                                                                
+CONECT  172  157                                                                
 CONECT  173  158                                                                
-CONECT  174  159                                                                
-CONECT  175  162                                                                
-CONECT  176  165                                                                
+CONECT  174  158                                                                
+CONECT  175  159                                                                
+CONECT  176  162                                                                
 CONECT  177  165                                                                
 CONECT  178  163                                                                
 CONECT 2553 2586                                                                
@@ -11795,27 +11796,27 @@ CONECT 2573 2572 2576 2582
 CONECT 2574 2575 2578 2590                                                      
 CONECT 2575 2574 2581 2591                                                      
 CONECT 2576 2573 2577 2581                                                      
-CONECT 2577 2576 2578 2587                                                      
-CONECT 2578 2574 2577 2592                                                      
-CONECT 2579 2570 2583 2593 2594                                                 
-CONECT 2580 2570 2582 2595                                                      
+CONECT 2577 2576 2578 2592                                                      
+CONECT 2578 2574 2577 2593                                                      
+CONECT 2579 2570 2583 2594 2595                                                 
+CONECT 2580 2570 2582 2596                                                      
 CONECT 2581 2575 2576 7225                                                      
 CONECT 2582 2573 2580 7225                                                      
-CONECT 2583 2579 2584 2586 2596                                                 
+CONECT 2583 2579 2584 2586 2597                                                 
 CONECT 2584 2583 2585 2599                                                      
 CONECT 2585 2584                                                                
-CONECT 2586 2553 2583 2597 2598                                                 
-CONECT 2587 2577                                                                
+CONECT 2586 2553 2583 2587 2598                                                 
+CONECT 2587 2586                                                                
 CONECT 2588 2571                                                                
 CONECT 2589 2572                                                                
 CONECT 2590 2574                                                                
 CONECT 2591 2575                                                                
-CONECT 2592 2578                                                                
-CONECT 2593 2579                                                                
+CONECT 2592 2577                                                                
+CONECT 2593 2578                                                                
 CONECT 2594 2579                                                                
-CONECT 2595 2580                                                                
-CONECT 2596 2583                                                                
-CONECT 2597 2586                                                                
+CONECT 2595 2579                                                                
+CONECT 2596 2580                                                                
+CONECT 2597 2583                                                                
 CONECT 2598 2586                                                                
 CONECT 2599 2584                                                                
 CONECT 4960 4993                                                                
@@ -11826,27 +11827,27 @@ CONECT 4980 4979 4983 4989
 CONECT 4981 4982 4985 4997                                                      
 CONECT 4982 4981 4988 4998                                                      
 CONECT 4983 4980 4984 4988                                                      
-CONECT 4984 4983 4985 4994                                                      
-CONECT 4985 4981 4984 4999                                                      
-CONECT 4986 4977 4990 5000 5001                                                 
-CONECT 4987 4977 4989 5002                                                      
+CONECT 4984 4983 4985 4999                                                      
+CONECT 4985 4981 4984 5000                                                      
+CONECT 4986 4977 4990 5001 5002                                                 
+CONECT 4987 4977 4989 5003                                                      
 CONECT 4988 4982 4983 7225                                                      
 CONECT 4989 4980 4987 7225                                                      
-CONECT 4990 4986 4991 4993 5003                                                 
+CONECT 4990 4986 4991 4993 5004                                                 
 CONECT 4991 4990 4992 5006                                                      
 CONECT 4992 4991                                                                
-CONECT 4993 4960 4990 5004 5005                                                 
-CONECT 4994 4984                                                                
+CONECT 4993 4960 4990 4994 5005                                                 
+CONECT 4994 4993                                                                
 CONECT 4995 4978                                                                
 CONECT 4996 4979                                                                
 CONECT 4997 4981                                                                
 CONECT 4998 4982                                                                
-CONECT 4999 4985                                                                
-CONECT 5000 4986                                                                
+CONECT 4999 4984                                                                
+CONECT 5000 4985                                                                
 CONECT 5001 4986                                                                
-CONECT 5002 4987                                                                
-CONECT 5003 4990                                                                
-CONECT 5004 4993                                                                
+CONECT 5002 4986                                                                
+CONECT 5003 4987                                                                
+CONECT 5004 4990                                                                
 CONECT 5005 4993                                                                
 CONECT 5006 4991                                                                
 CONECT 7225  160  161 2581 2582                                                 

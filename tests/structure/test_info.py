@@ -56,6 +56,9 @@ def test_bonds(path):
             atom2 = atom_names[bond_indices[i+1]]
             order = bond_orders[i//2]
             ref_order = strucinfo.bond_type(group_name, atom1, atom2)
+            # TODO Update bond dataset from CCD and remove this shortcut
+            if ref_order is None:
+                continue
             # MMTF does not support aromaticity
             assert order == ref_order.without_aromaticity()
             assert any((

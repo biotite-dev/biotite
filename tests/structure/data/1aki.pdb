@@ -1,6 +1,6 @@
 HEADER    HYDROLASE                               19-MAY-97   1AKI              
-TITLE     THE STRUCTURE OF THE ORTHORHOMBIC FORM OF HEN EGG-WHITE               
-TITLE    2 LYSOZYME AT 1.5 ANGSTROMS RESOLUTION                                 
+TITLE     THE STRUCTURE OF THE ORTHORHOMBIC FORM OF HEN EGG-WHITE LYSOZYME AT   
+TITLE    2 1.5 ANGSTROMS RESOLUTION                                             
 COMPND    MOL_ID: 1;                                                            
 COMPND   2 MOLECULE: LYSOZYME;                                                  
 COMPND   3 CHAIN: A;                                                            
@@ -13,20 +13,19 @@ SOURCE   5 CELL: EGG
 KEYWDS    HYDROLASE, GLYCOSIDASE                                                
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    D.CARTER,J.HE,J.R.RUBLE,B.WRIGHT                                      
+REVDAT   3   02-AUG-23 1AKI    1       REMARK                                   
 REVDAT   2   24-FEB-09 1AKI    1       VERSN                                    
 REVDAT   1   19-NOV-97 1AKI    0                                                
 JRNL        AUTH   P.J.ARTYMIUK,C.C.F.BLAKE,D.W.RICE,K.S.WILSON                 
-JRNL        TITL   THE STRUCTURES OF THE MONOCLINIC AND ORTHORHOMBIC            
-JRNL        TITL 2 FORMS OF HEN EGG-WHITE LYSOZYME AT 6 ANGSTROMS               
-JRNL        TITL 3 RESOLUTION                                                   
+JRNL        TITL   THE STRUCTURES OF THE MONOCLINIC AND ORTHORHOMBIC FORMS OF   
+JRNL        TITL 2 HEN EGG-WHITE LYSOZYME AT 6 ANGSTROMS RESOLUTION             
 JRNL        REF    ACTA CRYSTALLOGR.,SECT.B      V.  38   778 1982              
 JRNL        REFN                   ISSN 0108-7681                               
-REMARK   1                                                                      
 REMARK   2                                                                      
 REMARK   2 RESOLUTION.    1.50 ANGSTROMS.                                       
 REMARK   3                                                                      
 REMARK   3 REFINEMENT.                                                          
-REMARK   3   PROGRAM     : GPRLSA, X-PLOR                                       
+REMARK   3   PROGRAM     : GPRLSA                                               
 REMARK   3   AUTHORS     : FUREY                                                
 REMARK   3                                                                      
 REMARK   3  DATA USED IN REFINEMENT.                                            
@@ -73,7 +72,7 @@ REMARK   3
 REMARK   3  ESTIMATED COORDINATE ERROR.                                         
 REMARK   3   ESD FROM LUZZATI PLOT        (A) : NULL                            
 REMARK   3   ESD FROM SIGMAA              (A) : NULL                            
-REMARK   3   LOW RESOLUTION CUTOFF        (A) : 10.00                           
+REMARK   3   LOW RESOLUTION CUTOFF        (A) : 10.0                            
 REMARK   3                                                                      
 REMARK   3  RMS DEVIATIONS FROM IDEAL VALUES.                                   
 REMARK   3   DISTANCE RESTRAINTS.                    RMS    SIGMA               
@@ -105,9 +104,10 @@ REMARK   3   SIDE-CHAIN ANGLE              (A**2) : 3.600 ; 3.000
 REMARK   3                                                                      
 REMARK   3  OTHER REFINEMENT REMARKS: NULL                                      
 REMARK   4                                                                      
-REMARK   4 1AKI COMPLIES WITH FORMAT V. 3.15, 01-DEC-08                         
+REMARK   4 1AKI COMPLIES WITH FORMAT V. 3.30, 13-JUL-11                         
 REMARK 100                                                                      
 REMARK 100 THIS ENTRY HAS BEEN PROCESSED BY BNL.                                
+REMARK 100 THE DEPOSITION ID IS D_1000170929.                                   
 REMARK 200                                                                      
 REMARK 200 EXPERIMENTAL DETAILS                                                 
 REMARK 200  EXPERIMENT TYPE                : X-RAY DIFFRACTION                  
@@ -127,7 +127,7 @@ REMARK 200  OPTICS                         : NULL
 REMARK 200                                                                      
 REMARK 200  DETECTOR TYPE                  : IMAGE PLATE                        
 REMARK 200  DETECTOR MANUFACTURER          : RIGAKU RAXIS IIC                   
-REMARK 200  INTENSITY-INTEGRATION SOFTWARE : RIGAKU                             
+REMARK 200  INTENSITY-INTEGRATION SOFTWARE : BIOTEX, RIGAKU                     
 REMARK 200  DATA SCALING SOFTWARE          : BIOTEX                             
 REMARK 200                                                                      
 REMARK 200  NUMBER OF UNIQUE REFLECTIONS   : 20571                              
@@ -263,7 +263,7 @@ REMARK 500    ARG A  14   NE  -  CZ  -  NH1 ANGL. DEV. =  -4.2 DEGREES
 REMARK 500    ASP A  18   CB  -  CG  -  OD1 ANGL. DEV. =   6.1 DEGREES          
 REMARK 500    ARG A  21   CD  -  NE  -  CZ  ANGL. DEV. =  13.6 DEGREES          
 REMARK 500    ARG A  21   NE  -  CZ  -  NH2 ANGL. DEV. =   5.1 DEGREES          
-REMARK 500    ARG A  45   NE  -  CZ  -  NH1 ANGL. DEV. =   4.6 DEGREES          
+REMARK 500    ARG A  45   NE  -  CZ  -  NH1 ANGL. DEV. =   4.7 DEGREES          
 REMARK 500    ARG A  45   NE  -  CZ  -  NH2 ANGL. DEV. =  -5.7 DEGREES          
 REMARK 500    ASP A  66   CB  -  CG  -  OD1 ANGL. DEV. =   6.6 DEGREES          
 REMARK 500    ASP A  66   CB  -  CG  -  OD2 ANGL. DEV. =  -7.2 DEGREES          
@@ -289,12 +289,12 @@ REMARK 500 (M=MODEL NUMBER; RES=RESIDUE NAME; C=CHAIN IDENTIFIER;
 REMARK 500 SSEQ=SEQUENCE NUMBER; I=INSERTION CODE).                             
 REMARK 500                                                                      
 REMARK 500  M RES CSSEQI        RMS     TYPE                                    
-REMARK 500    ARG A  14         0.12    SIDE_CHAIN                              
-REMARK 500    ARG A  21         0.21    SIDE_CHAIN                              
-REMARK 500    ARG A  68         0.15    SIDE_CHAIN                              
-REMARK 500    ARG A  73         0.25    SIDE_CHAIN                              
-REMARK 500    ARG A 112         0.15    SIDE_CHAIN                              
-REMARK 500    ARG A 114         0.13    SIDE_CHAIN                              
+REMARK 500    ARG A  14         0.12    SIDE CHAIN                              
+REMARK 500    ARG A  21         0.21    SIDE CHAIN                              
+REMARK 500    ARG A  68         0.15    SIDE CHAIN                              
+REMARK 500    ARG A  73         0.25    SIDE CHAIN                              
+REMARK 500    ARG A 112         0.15    SIDE CHAIN                              
+REMARK 500    ARG A 114         0.13    SIDE CHAIN                              
 REMARK 500                                                                      
 REMARK 500 REMARK: NULL                                                         
 REMARK 500                                                                      
@@ -302,7 +302,7 @@ REMARK 500 GEOMETRY AND STEREOCHEMISTRY
 REMARK 500 SUBTOPIC: MAIN CHAIN PLANARITY                                       
 REMARK 500                                                                      
 REMARK 500 THE FOLLOWING RESIDUES HAVE A PSEUDO PLANARITY                       
-REMARK 500 TORSION, C(I) - CA(I) - N(I+1) - O(I), GREATER                       
+REMARK 500 TORSION ANGLE, C(I) - CA(I) - N(I+1) - O(I), GREATER                 
 REMARK 500 10.0 DEGREES. (M=MODEL NUMBER; RES=RESIDUE NAME;                     
 REMARK 500 C=CHAIN IDENTIFIER; SSEQ=SEQUENCE NUMBER;                            
 REMARK 500 I=INSERTION CODE).                                                   

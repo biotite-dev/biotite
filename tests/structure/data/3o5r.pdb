@@ -24,6 +24,7 @@ KEYWDS    FK-506 BINDING DOMAIN, HSP90 COCHAPERONE, IMMUNOPHILINE, PEPTIDYL-
 KEYWDS   2 PROLYL ISOMERASE, ISOMERASE                                          
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    A.BRACHER,C.KOZANY,A.-K.THOST,F.HAUSCH                                
+REVDAT   3   06-SEP-23 3O5R    1       REMARK SEQADV                            
 REVDAT   2   28-MAR-12 3O5R    1       JRNL   VERSN                             
 REVDAT   1   01-JUN-11 3O5R    0                                                
 JRNL        AUTH   A.BRACHER,C.KOZANY,A.K.THOST,F.HAUSCH                        
@@ -37,7 +38,7 @@ REMARK   2
 REMARK   2 RESOLUTION.    1.10 ANGSTROMS.                                       
 REMARK   3                                                                      
 REMARK   3 REFINEMENT.                                                          
-REMARK   3   PROGRAM     : SHELXL-97                                            
+REMARK   3   PROGRAM     : SHELX                                                
 REMARK   3   AUTHORS     : G.M.SHELDRICK                                        
 REMARK   3                                                                      
 REMARK   3  DATA USED IN REFINEMENT.                                            
@@ -100,7 +101,7 @@ REMARK   4
 REMARK   4 3O5R COMPLIES WITH FORMAT V. 3.30, 13-JUL-11                         
 REMARK 100                                                                      
 REMARK 100 THIS ENTRY HAS BEEN PROCESSED BY RCSB ON 06-AUG-10.                  
-REMARK 100 THE RCSB ID CODE IS RCSB060699.                                      
+REMARK 100 THE DEPOSITION ID IS D_1000060699.                                   
 REMARK 200                                                                      
 REMARK 200 EXPERIMENTAL DETAILS                                                 
 REMARK 200  EXPERIMENT TYPE                : X-RAY DIFFRACTION                  
@@ -121,7 +122,7 @@ REMARK 200
 REMARK 200  DETECTOR TYPE                  : CCD                                
 REMARK 200  DETECTOR MANUFACTURER          : ADSC QUANTUM 315R                  
 REMARK 200  INTENSITY-INTEGRATION SOFTWARE : MOSFLM                             
-REMARK 200  DATA SCALING SOFTWARE          : SCALA                              
+REMARK 200  DATA SCALING SOFTWARE          : SCALA 3.2.5                        
 REMARK 200                                                                      
 REMARK 200  NUMBER OF UNIQUE REFLECTIONS   : 53931                              
 REMARK 200  RESOLUTION RANGE HIGH      (A) : 0.945                              
@@ -136,7 +137,7 @@ REMARK 200  R SYM                      (I) : 0.07900
 REMARK 200  <I/SIGMA(I)> FOR THE DATA SET  : 14.7000                            
 REMARK 200                                                                      
 REMARK 200 IN THE HIGHEST RESOLUTION SHELL.                                     
-REMARK 200  HIGHEST RESOLUTION SHELL, RANGE HIGH (A) : 0.94                     
+REMARK 200  HIGHEST RESOLUTION SHELL, RANGE HIGH (A) : 0.95                     
 REMARK 200  HIGHEST RESOLUTION SHELL, RANGE LOW  (A) : 1.16                     
 REMARK 200  COMPLETENESS FOR SHELL     (%) : 99.8                               
 REMARK 200  DATA REDUNDANCY IN SHELL       : 6.60                               
@@ -235,6 +236,7 @@ REMARK 500
 REMARK 500  M RES CSSEQI ATM1   ATM2   ATM3                                     
 REMARK 500    ARG A  31   NE  -  CZ  -  NH1 ANGL. DEV. =   8.9 DEGREES          
 REMARK 500    ARG A  31   NE  -  CZ  -  NH2 ANGL. DEV. =  -5.2 DEGREES          
+REMARK 500    MET A  48   CG  -  SD  -  CE  ANGL. DEV. =  11.9 DEGREES          
 REMARK 500    LYS A  65   CA  -  CB  -  CG  ANGL. DEV. =  14.2 DEGREES          
 REMARK 500                                                                      
 REMARK 500 REMARK: NULL                                                         
@@ -3330,5 +3332,5 @@ CONECT 1170 1137
 CONECT 1171 1139                                                                
 CONECT 1172 1146 1160                                                           
 CONECT 1173 1147                                                                
-MASTER      249    0    1    4   12    0    6    6 1326    1   57   10          
+MASTER      250    0    1    4   12    0    6    6 1326    1   57   10          
 END                                                                             

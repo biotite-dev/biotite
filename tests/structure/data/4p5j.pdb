@@ -14,6 +14,7 @@ SOURCE   6 RNA POLYMERASE
 KEYWDS    TRNA-MIMIC VIRAL RNA PSEUDOKNOT MULTIFUNCTIONAL, RNA                  
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    T.M.COLUSSI,D.A.COSTANTINO,J.A.HAMMOND,G.M.RUEHLE,J.C.NIX,J.S.KIEFT   
+REVDAT   7   27-DEC-23 4P5J    1       REMARK LINK                              
 REVDAT   6   20-NOV-19 4P5J    1       REMARK                                   
 REVDAT   5   06-SEP-17 4P5J    1       SOURCE JRNL   REMARK                     
 REVDAT   4   01-OCT-14 4P5J    1       JRNL                                     
@@ -414,20 +415,20 @@ REMARK 620 N RES CSSEQI ATOM
 REMARK 620 1   A A  40   OP2                                                    
 REMARK 620 2 HOH A 225   O    90.7                                              
 REMARK 620 3 HOH A 228   O    80.8  78.2                                        
-REMARK 620 4 HOH A 252   O   156.8  76.7  77.6                                  
-REMARK 620 5 HOH A 273   O   111.7  90.7 163.6  88.2                            
-REMARK 620 6 HOH A 244   O    81.3 152.8  74.9 101.0 116.4                      
+REMARK 620 4 HOH A 244   O    81.3 152.8  74.9                                  
+REMARK 620 5 HOH A 252   O   156.8  76.7  77.6 101.0                            
+REMARK 620 6 HOH A 273   O   111.7  90.7 163.6 116.4  88.2                      
 REMARK 620 N                    1     2     3     4     5                       
 REMARK 620                                                                      
 REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
 REMARK 620                              MG A 101  MG                            
 REMARK 620 N RES CSSEQI ATOM                                                    
 REMARK 620 1 HOH A 224   O                                                      
-REMARK 620 2 HOH A 237   O    94.2                                              
-REMARK 620 3 HOH A 226   O    88.2  91.5                                        
-REMARK 620 4 HOH A 227   O    88.8  92.9 174.8                                  
-REMARK 620 5 HOH A 229   O   172.6  79.9  87.6  95.9                            
-REMARK 620 6 HOH A 236   O    92.8 171.7  93.1  82.9  93.4                      
+REMARK 620 2 HOH A 226   O    88.2                                              
+REMARK 620 3 HOH A 227   O    88.8 174.8                                        
+REMARK 620 4 HOH A 229   O   172.6  87.6  95.9                                  
+REMARK 620 5 HOH A 236   O    92.8  93.1  82.9  93.4                            
+REMARK 620 6 HOH A 237   O    94.2  91.5  92.9  79.9 171.7                      
 REMARK 620 N                    1     2     3     4     5                       
 REMARK 800                                                                      
 REMARK 800 SITE                                                                 
@@ -526,19 +527,19 @@ FORMUL   2   MG    2(MG 2+)
 FORMUL   4  IRI    12(H18 IR N6 3+)                                             
 FORMUL  16  SPM    C10 H26 N4                                                   
 FORMUL  17  HOH   *126(H2 O)                                                    
-LINK         OP2   A A  40                MG    MG A 102     1555   1555  2.01  
 LINK         O3'   C A  83                 P   A23 A  84     1555   1555  1.59  
+LINK         OP2   A A  40                MG    MG A 102     1555   1555  2.01  
 LINK        MG    MG A 101                 O   HOH A 224     1555   1555  2.03  
-LINK        MG    MG A 101                 O   HOH A 237     1555   1555  2.20  
 LINK        MG    MG A 101                 O   HOH A 226     1555   1555  2.13  
 LINK        MG    MG A 101                 O   HOH A 227     1555   1555  2.02  
 LINK        MG    MG A 101                 O   HOH A 229     1555   1555  2.33  
 LINK        MG    MG A 101                 O   HOH A 236     1555   1555  2.10  
+LINK        MG    MG A 101                 O   HOH A 237     1555   1555  2.20  
 LINK        MG    MG A 102                 O   HOH A 225     1555   1555  2.25  
 LINK        MG    MG A 102                 O   HOH A 228     1555   1555  2.38  
+LINK        MG    MG A 102                 O   HOH A 244     1555   1555  2.12  
 LINK        MG    MG A 102                 O   HOH A 252     1555   1555  2.24  
 LINK        MG    MG A 102                 O   HOH A 273     1555   1555  2.14  
-LINK        MG    MG A 102                 O   HOH A 244     1555   1555  2.12  
 SITE     1 AC1  6 HOH A 224  HOH A 226  HOH A 227  HOH A 229                    
 SITE     2 AC1  6 HOH A 236  HOH A 237                                          
 SITE     1 AC2  6   A A  40  HOH A 225  HOH A 228  HOH A 244                    

@@ -3,14 +3,16 @@ data_5H73
 _entry.id   5H73 
 # 
 _audit_conform.dict_name       mmcif_pdbx.dic 
-_audit_conform.dict_version    5.281 
+_audit_conform.dict_version    5.380 
 _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx.dic 
 # 
 loop_
 _database_2.database_id 
 _database_2.database_code 
-PDB   5H73         
-WWPDB D_1300002131 
+_database_2.pdbx_database_accession 
+_database_2.pdbx_DOI 
+PDB   5H73         pdb_00005h73 10.2210/pdb5h73/pdb 
+WWPDB D_1300002131 ?            ?                   
 # 
 _pdbx_database_related.db_name        PDB 
 _pdbx_database_related.details        'We use the 4JTU to be the model.' 
@@ -28,6 +30,7 @@ _pdbx_database_status.process_site                    PDBJ
 _pdbx_database_status.status_code_cs                  ? 
 _pdbx_database_status.methods_development_category    ? 
 _pdbx_database_status.pdb_format_compatible           Y 
+_pdbx_database_status.status_code_nmr_data            ? 
 # 
 loop_
 _audit_author.name 
@@ -67,8 +70,9 @@ loop_
 _citation_author.citation_id 
 _citation_author.name 
 _citation_author.ordinal 
-primary 'Huang, J.' 1 
-primary 'Wu, D.'    2 
+_citation_author.identifier_ORCID 
+primary 'Huang, J.' 1 ? 
+primary 'Wu, D.'    2 ? 
 # 
 _cell.angle_alpha                  90.00 
 _cell.angle_alpha_esd              ? 
@@ -1150,7 +1154,6 @@ _refine_ls_shell.pdbx_fsc_free                    ?
 # 
 _struct.entry_id                     5H73 
 _struct.title                        'Crystal structure of human DHODH with 18F' 
-_struct.pdbx_descriptor              'Dihydroorotate dehydrogenase (quinone), mitochondrial (E.C.1.3.5.2)' 
 _struct.pdbx_model_details           ? 
 _struct.pdbx_formula_weight          ? 
 _struct.pdbx_formula_weight_method   ? 
@@ -5109,11 +5112,14 @@ _pdbx_struct_oper_list.matrix[3][2]         0.0000000000
 _pdbx_struct_oper_list.matrix[3][3]         1.0000000000 
 _pdbx_struct_oper_list.vector[3]            0.0000000000 
 # 
-_pdbx_audit_revision_history.ordinal             1 
-_pdbx_audit_revision_history.data_content_type   'Structure model' 
-_pdbx_audit_revision_history.major_revision      1 
-_pdbx_audit_revision_history.minor_revision      0 
-_pdbx_audit_revision_history.revision_date       2017-07-26 
+loop_
+_pdbx_audit_revision_history.ordinal 
+_pdbx_audit_revision_history.data_content_type 
+_pdbx_audit_revision_history.major_revision 
+_pdbx_audit_revision_history.minor_revision 
+_pdbx_audit_revision_history.revision_date 
+1 'Structure model' 1 0 2017-07-26 
+2 'Structure model' 1 1 2023-11-08 
 # 
 _pdbx_audit_revision_details.ordinal             1 
 _pdbx_audit_revision_details.revision_ordinal    1 
@@ -5121,6 +5127,34 @@ _pdbx_audit_revision_details.data_content_type   'Structure model'
 _pdbx_audit_revision_details.provider            repository 
 _pdbx_audit_revision_details.type                'Initial release' 
 _pdbx_audit_revision_details.description         ? 
+_pdbx_audit_revision_details.details             ? 
+# 
+loop_
+_pdbx_audit_revision_group.ordinal 
+_pdbx_audit_revision_group.revision_ordinal 
+_pdbx_audit_revision_group.data_content_type 
+_pdbx_audit_revision_group.group 
+1 2 'Structure model' 'Data collection'        
+2 2 'Structure model' 'Database references'    
+3 2 'Structure model' 'Refinement description' 
+# 
+loop_
+_pdbx_audit_revision_category.ordinal 
+_pdbx_audit_revision_category.revision_ordinal 
+_pdbx_audit_revision_category.data_content_type 
+_pdbx_audit_revision_category.category 
+1 2 'Structure model' chem_comp_atom                
+2 2 'Structure model' chem_comp_bond                
+3 2 'Structure model' database_2                    
+4 2 'Structure model' pdbx_initial_refinement_model 
+# 
+loop_
+_pdbx_audit_revision_item.ordinal 
+_pdbx_audit_revision_item.revision_ordinal 
+_pdbx_audit_revision_item.data_content_type 
+_pdbx_audit_revision_item.item 
+1 2 'Structure model' '_database_2.pdbx_DOI'                
+2 2 'Structure model' '_database_2.pdbx_database_accession' 
 # 
 loop_
 _software.citation_id 
@@ -5278,6 +5312,978 @@ _pdbx_unobs_or_zero_occ_residues.label_seq_id
 27 1 Y 1 A ARG 396 ? A ARG 390 
 # 
 loop_
+_chem_comp_atom.comp_id 
+_chem_comp_atom.atom_id 
+_chem_comp_atom.type_symbol 
+_chem_comp_atom.pdbx_aromatic_flag 
+_chem_comp_atom.pdbx_stereo_config 
+_chem_comp_atom.pdbx_ordinal 
+7L7 C1     C N N 1   
+7L7 C2     C N N 2   
+7L7 C3     C N N 3   
+7L7 N4     N N N 4   
+7L7 O5     O N N 5   
+7L7 O6     O N N 6   
+7L7 C7     C N N 7   
+7L7 C8     C N N 8   
+7L7 N9     N N N 9   
+7L7 C10    C N N 10  
+7L7 C11    C N N 11  
+7L7 S12    S N N 12  
+7L7 C13    C Y N 13  
+7L7 C14    C Y N 14  
+7L7 C15    C Y N 15  
+7L7 C16    C Y N 16  
+7L7 C17    C Y N 17  
+7L7 C18    C Y N 18  
+7L7 F19    F N N 19  
+7L7 O20    O N N 20  
+7L7 H1     H N N 21  
+7L7 H2     H N N 22  
+7L7 H3     H N N 23  
+7L7 H4     H N N 24  
+7L7 H5     H N N 25  
+7L7 H6     H N N 26  
+7L7 H7     H N N 27  
+7L7 H8     H N N 28  
+7L7 H9     H N N 29  
+ACT C      C N N 30  
+ACT O      O N N 31  
+ACT OXT    O N N 32  
+ACT CH3    C N N 33  
+ACT H1     H N N 34  
+ACT H2     H N N 35  
+ACT H3     H N N 36  
+ALA N      N N N 37  
+ALA CA     C N S 38  
+ALA C      C N N 39  
+ALA O      O N N 40  
+ALA CB     C N N 41  
+ALA OXT    O N N 42  
+ALA H      H N N 43  
+ALA H2     H N N 44  
+ALA HA     H N N 45  
+ALA HB1    H N N 46  
+ALA HB2    H N N 47  
+ALA HB3    H N N 48  
+ALA HXT    H N N 49  
+ARG N      N N N 50  
+ARG CA     C N S 51  
+ARG C      C N N 52  
+ARG O      O N N 53  
+ARG CB     C N N 54  
+ARG CG     C N N 55  
+ARG CD     C N N 56  
+ARG NE     N N N 57  
+ARG CZ     C N N 58  
+ARG NH1    N N N 59  
+ARG NH2    N N N 60  
+ARG OXT    O N N 61  
+ARG H      H N N 62  
+ARG H2     H N N 63  
+ARG HA     H N N 64  
+ARG HB2    H N N 65  
+ARG HB3    H N N 66  
+ARG HG2    H N N 67  
+ARG HG3    H N N 68  
+ARG HD2    H N N 69  
+ARG HD3    H N N 70  
+ARG HE     H N N 71  
+ARG HH11   H N N 72  
+ARG HH12   H N N 73  
+ARG HH21   H N N 74  
+ARG HH22   H N N 75  
+ARG HXT    H N N 76  
+ASN N      N N N 77  
+ASN CA     C N S 78  
+ASN C      C N N 79  
+ASN O      O N N 80  
+ASN CB     C N N 81  
+ASN CG     C N N 82  
+ASN OD1    O N N 83  
+ASN ND2    N N N 84  
+ASN OXT    O N N 85  
+ASN H      H N N 86  
+ASN H2     H N N 87  
+ASN HA     H N N 88  
+ASN HB2    H N N 89  
+ASN HB3    H N N 90  
+ASN HD21   H N N 91  
+ASN HD22   H N N 92  
+ASN HXT    H N N 93  
+ASP N      N N N 94  
+ASP CA     C N S 95  
+ASP C      C N N 96  
+ASP O      O N N 97  
+ASP CB     C N N 98  
+ASP CG     C N N 99  
+ASP OD1    O N N 100 
+ASP OD2    O N N 101 
+ASP OXT    O N N 102 
+ASP H      H N N 103 
+ASP H2     H N N 104 
+ASP HA     H N N 105 
+ASP HB2    H N N 106 
+ASP HB3    H N N 107 
+ASP HD2    H N N 108 
+ASP HXT    H N N 109 
+FMN N1     N N N 110 
+FMN C2     C N N 111 
+FMN O2     O N N 112 
+FMN N3     N N N 113 
+FMN C4     C N N 114 
+FMN O4     O N N 115 
+FMN C4A    C N N 116 
+FMN N5     N N N 117 
+FMN C5A    C Y N 118 
+FMN C6     C Y N 119 
+FMN C7     C Y N 120 
+FMN C7M    C N N 121 
+FMN C8     C Y N 122 
+FMN C8M    C N N 123 
+FMN C9     C Y N 124 
+FMN C9A    C Y N 125 
+FMN N10    N N N 126 
+FMN C10    C N N 127 
+FMN "C1'"  C N N 128 
+FMN "C2'"  C N S 129 
+FMN "O2'"  O N N 130 
+FMN "C3'"  C N S 131 
+FMN "O3'"  O N N 132 
+FMN "C4'"  C N R 133 
+FMN "O4'"  O N N 134 
+FMN "C5'"  C N N 135 
+FMN "O5'"  O N N 136 
+FMN P      P N N 137 
+FMN O1P    O N N 138 
+FMN O2P    O N N 139 
+FMN O3P    O N N 140 
+FMN HN3    H N N 141 
+FMN H6     H N N 142 
+FMN HM71   H N N 143 
+FMN HM72   H N N 144 
+FMN HM73   H N N 145 
+FMN HM81   H N N 146 
+FMN HM82   H N N 147 
+FMN HM83   H N N 148 
+FMN H9     H N N 149 
+FMN "H1'1" H N N 150 
+FMN "H1'2" H N N 151 
+FMN "H2'"  H N N 152 
+FMN "HO2'" H N N 153 
+FMN "H3'"  H N N 154 
+FMN "HO3'" H N N 155 
+FMN "H4'"  H N N 156 
+FMN "HO4'" H N N 157 
+FMN "H5'1" H N N 158 
+FMN "H5'2" H N N 159 
+FMN HOP2   H N N 160 
+FMN HOP3   H N N 161 
+GLN N      N N N 162 
+GLN CA     C N S 163 
+GLN C      C N N 164 
+GLN O      O N N 165 
+GLN CB     C N N 166 
+GLN CG     C N N 167 
+GLN CD     C N N 168 
+GLN OE1    O N N 169 
+GLN NE2    N N N 170 
+GLN OXT    O N N 171 
+GLN H      H N N 172 
+GLN H2     H N N 173 
+GLN HA     H N N 174 
+GLN HB2    H N N 175 
+GLN HB3    H N N 176 
+GLN HG2    H N N 177 
+GLN HG3    H N N 178 
+GLN HE21   H N N 179 
+GLN HE22   H N N 180 
+GLN HXT    H N N 181 
+GLU N      N N N 182 
+GLU CA     C N S 183 
+GLU C      C N N 184 
+GLU O      O N N 185 
+GLU CB     C N N 186 
+GLU CG     C N N 187 
+GLU CD     C N N 188 
+GLU OE1    O N N 189 
+GLU OE2    O N N 190 
+GLU OXT    O N N 191 
+GLU H      H N N 192 
+GLU H2     H N N 193 
+GLU HA     H N N 194 
+GLU HB2    H N N 195 
+GLU HB3    H N N 196 
+GLU HG2    H N N 197 
+GLU HG3    H N N 198 
+GLU HE2    H N N 199 
+GLU HXT    H N N 200 
+GLY N      N N N 201 
+GLY CA     C N N 202 
+GLY C      C N N 203 
+GLY O      O N N 204 
+GLY OXT    O N N 205 
+GLY H      H N N 206 
+GLY H2     H N N 207 
+GLY HA2    H N N 208 
+GLY HA3    H N N 209 
+GLY HXT    H N N 210 
+HIS N      N N N 211 
+HIS CA     C N S 212 
+HIS C      C N N 213 
+HIS O      O N N 214 
+HIS CB     C N N 215 
+HIS CG     C Y N 216 
+HIS ND1    N Y N 217 
+HIS CD2    C Y N 218 
+HIS CE1    C Y N 219 
+HIS NE2    N Y N 220 
+HIS OXT    O N N 221 
+HIS H      H N N 222 
+HIS H2     H N N 223 
+HIS HA     H N N 224 
+HIS HB2    H N N 225 
+HIS HB3    H N N 226 
+HIS HD1    H N N 227 
+HIS HD2    H N N 228 
+HIS HE1    H N N 229 
+HIS HE2    H N N 230 
+HIS HXT    H N N 231 
+HOH O      O N N 232 
+HOH H1     H N N 233 
+HOH H2     H N N 234 
+ILE N      N N N 235 
+ILE CA     C N S 236 
+ILE C      C N N 237 
+ILE O      O N N 238 
+ILE CB     C N S 239 
+ILE CG1    C N N 240 
+ILE CG2    C N N 241 
+ILE CD1    C N N 242 
+ILE OXT    O N N 243 
+ILE H      H N N 244 
+ILE H2     H N N 245 
+ILE HA     H N N 246 
+ILE HB     H N N 247 
+ILE HG12   H N N 248 
+ILE HG13   H N N 249 
+ILE HG21   H N N 250 
+ILE HG22   H N N 251 
+ILE HG23   H N N 252 
+ILE HD11   H N N 253 
+ILE HD12   H N N 254 
+ILE HD13   H N N 255 
+ILE HXT    H N N 256 
+LEU N      N N N 257 
+LEU CA     C N S 258 
+LEU C      C N N 259 
+LEU O      O N N 260 
+LEU CB     C N N 261 
+LEU CG     C N N 262 
+LEU CD1    C N N 263 
+LEU CD2    C N N 264 
+LEU OXT    O N N 265 
+LEU H      H N N 266 
+LEU H2     H N N 267 
+LEU HA     H N N 268 
+LEU HB2    H N N 269 
+LEU HB3    H N N 270 
+LEU HG     H N N 271 
+LEU HD11   H N N 272 
+LEU HD12   H N N 273 
+LEU HD13   H N N 274 
+LEU HD21   H N N 275 
+LEU HD22   H N N 276 
+LEU HD23   H N N 277 
+LEU HXT    H N N 278 
+LYS N      N N N 279 
+LYS CA     C N S 280 
+LYS C      C N N 281 
+LYS O      O N N 282 
+LYS CB     C N N 283 
+LYS CG     C N N 284 
+LYS CD     C N N 285 
+LYS CE     C N N 286 
+LYS NZ     N N N 287 
+LYS OXT    O N N 288 
+LYS H      H N N 289 
+LYS H2     H N N 290 
+LYS HA     H N N 291 
+LYS HB2    H N N 292 
+LYS HB3    H N N 293 
+LYS HG2    H N N 294 
+LYS HG3    H N N 295 
+LYS HD2    H N N 296 
+LYS HD3    H N N 297 
+LYS HE2    H N N 298 
+LYS HE3    H N N 299 
+LYS HZ1    H N N 300 
+LYS HZ2    H N N 301 
+LYS HZ3    H N N 302 
+LYS HXT    H N N 303 
+MET N      N N N 304 
+MET CA     C N S 305 
+MET C      C N N 306 
+MET O      O N N 307 
+MET CB     C N N 308 
+MET CG     C N N 309 
+MET SD     S N N 310 
+MET CE     C N N 311 
+MET OXT    O N N 312 
+MET H      H N N 313 
+MET H2     H N N 314 
+MET HA     H N N 315 
+MET HB2    H N N 316 
+MET HB3    H N N 317 
+MET HG2    H N N 318 
+MET HG3    H N N 319 
+MET HE1    H N N 320 
+MET HE2    H N N 321 
+MET HE3    H N N 322 
+MET HXT    H N N 323 
+ORO N1     N Y N 324 
+ORO C2     C Y N 325 
+ORO O2     O N N 326 
+ORO N3     N Y N 327 
+ORO C4     C Y N 328 
+ORO O4     O N N 329 
+ORO C5     C Y N 330 
+ORO C6     C Y N 331 
+ORO C7     C N N 332 
+ORO O71    O N N 333 
+ORO O72    O N N 334 
+ORO HN1    H N N 335 
+ORO HN3    H N N 336 
+ORO H5     H N N 337 
+ORO HO7    H N N 338 
+PHE N      N N N 339 
+PHE CA     C N S 340 
+PHE C      C N N 341 
+PHE O      O N N 342 
+PHE CB     C N N 343 
+PHE CG     C Y N 344 
+PHE CD1    C Y N 345 
+PHE CD2    C Y N 346 
+PHE CE1    C Y N 347 
+PHE CE2    C Y N 348 
+PHE CZ     C Y N 349 
+PHE OXT    O N N 350 
+PHE H      H N N 351 
+PHE H2     H N N 352 
+PHE HA     H N N 353 
+PHE HB2    H N N 354 
+PHE HB3    H N N 355 
+PHE HD1    H N N 356 
+PHE HD2    H N N 357 
+PHE HE1    H N N 358 
+PHE HE2    H N N 359 
+PHE HZ     H N N 360 
+PHE HXT    H N N 361 
+PRO N      N N N 362 
+PRO CA     C N S 363 
+PRO C      C N N 364 
+PRO O      O N N 365 
+PRO CB     C N N 366 
+PRO CG     C N N 367 
+PRO CD     C N N 368 
+PRO OXT    O N N 369 
+PRO H      H N N 370 
+PRO HA     H N N 371 
+PRO HB2    H N N 372 
+PRO HB3    H N N 373 
+PRO HG2    H N N 374 
+PRO HG3    H N N 375 
+PRO HD2    H N N 376 
+PRO HD3    H N N 377 
+PRO HXT    H N N 378 
+SER N      N N N 379 
+SER CA     C N S 380 
+SER C      C N N 381 
+SER O      O N N 382 
+SER CB     C N N 383 
+SER OG     O N N 384 
+SER OXT    O N N 385 
+SER H      H N N 386 
+SER H2     H N N 387 
+SER HA     H N N 388 
+SER HB2    H N N 389 
+SER HB3    H N N 390 
+SER HG     H N N 391 
+SER HXT    H N N 392 
+SO4 S      S N N 393 
+SO4 O1     O N N 394 
+SO4 O2     O N N 395 
+SO4 O3     O N N 396 
+SO4 O4     O N N 397 
+THR N      N N N 398 
+THR CA     C N S 399 
+THR C      C N N 400 
+THR O      O N N 401 
+THR CB     C N R 402 
+THR OG1    O N N 403 
+THR CG2    C N N 404 
+THR OXT    O N N 405 
+THR H      H N N 406 
+THR H2     H N N 407 
+THR HA     H N N 408 
+THR HB     H N N 409 
+THR HG1    H N N 410 
+THR HG21   H N N 411 
+THR HG22   H N N 412 
+THR HG23   H N N 413 
+THR HXT    H N N 414 
+TRP N      N N N 415 
+TRP CA     C N S 416 
+TRP C      C N N 417 
+TRP O      O N N 418 
+TRP CB     C N N 419 
+TRP CG     C Y N 420 
+TRP CD1    C Y N 421 
+TRP CD2    C Y N 422 
+TRP NE1    N Y N 423 
+TRP CE2    C Y N 424 
+TRP CE3    C Y N 425 
+TRP CZ2    C Y N 426 
+TRP CZ3    C Y N 427 
+TRP CH2    C Y N 428 
+TRP OXT    O N N 429 
+TRP H      H N N 430 
+TRP H2     H N N 431 
+TRP HA     H N N 432 
+TRP HB2    H N N 433 
+TRP HB3    H N N 434 
+TRP HD1    H N N 435 
+TRP HE1    H N N 436 
+TRP HE3    H N N 437 
+TRP HZ2    H N N 438 
+TRP HZ3    H N N 439 
+TRP HH2    H N N 440 
+TRP HXT    H N N 441 
+TYR N      N N N 442 
+TYR CA     C N S 443 
+TYR C      C N N 444 
+TYR O      O N N 445 
+TYR CB     C N N 446 
+TYR CG     C Y N 447 
+TYR CD1    C Y N 448 
+TYR CD2    C Y N 449 
+TYR CE1    C Y N 450 
+TYR CE2    C Y N 451 
+TYR CZ     C Y N 452 
+TYR OH     O N N 453 
+TYR OXT    O N N 454 
+TYR H      H N N 455 
+TYR H2     H N N 456 
+TYR HA     H N N 457 
+TYR HB2    H N N 458 
+TYR HB3    H N N 459 
+TYR HD1    H N N 460 
+TYR HD2    H N N 461 
+TYR HE1    H N N 462 
+TYR HE2    H N N 463 
+TYR HH     H N N 464 
+TYR HXT    H N N 465 
+VAL N      N N N 466 
+VAL CA     C N S 467 
+VAL C      C N N 468 
+VAL O      O N N 469 
+VAL CB     C N N 470 
+VAL CG1    C N N 471 
+VAL CG2    C N N 472 
+VAL OXT    O N N 473 
+VAL H      H N N 474 
+VAL H2     H N N 475 
+VAL HA     H N N 476 
+VAL HB     H N N 477 
+VAL HG11   H N N 478 
+VAL HG12   H N N 479 
+VAL HG13   H N N 480 
+VAL HG21   H N N 481 
+VAL HG22   H N N 482 
+VAL HG23   H N N 483 
+VAL HXT    H N N 484 
+# 
+loop_
+_chem_comp_bond.comp_id 
+_chem_comp_bond.atom_id_1 
+_chem_comp_bond.atom_id_2 
+_chem_comp_bond.value_order 
+_chem_comp_bond.pdbx_aromatic_flag 
+_chem_comp_bond.pdbx_stereo_config 
+_chem_comp_bond.pdbx_ordinal 
+7L7 C15   C14    doub Y N 1   
+7L7 C15   C16    sing Y N 2   
+7L7 C14   C13    sing Y N 3   
+7L7 C16   C17    doub Y N 4   
+7L7 O20   C10    doub N N 5   
+7L7 C13   N9     sing N N 6   
+7L7 C13   C18    doub Y N 7   
+7L7 C10   N9     sing N N 8   
+7L7 C10   C11    sing N N 9   
+7L7 C17   C18    sing Y N 10  
+7L7 N9    C8     sing N N 11  
+7L7 C18   F19    sing N N 12  
+7L7 C11   S12    sing N N 13  
+7L7 N4    C3     trip N N 14  
+7L7 C8    S12    sing N N 15  
+7L7 C8    C1     doub N Z 16  
+7L7 C3    C1     sing N N 17  
+7L7 C1    C2     sing N N 18  
+7L7 C2    O5     doub N N 19  
+7L7 C2    O6     sing N N 20  
+7L7 O6    C7     sing N N 21  
+7L7 C7    H1     sing N N 22  
+7L7 C7    H2     sing N N 23  
+7L7 C7    H3     sing N N 24  
+7L7 C11   H4     sing N N 25  
+7L7 C11   H5     sing N N 26  
+7L7 C14   H6     sing N N 27  
+7L7 C15   H7     sing N N 28  
+7L7 C16   H8     sing N N 29  
+7L7 C17   H9     sing N N 30  
+ACT C     O      doub N N 31  
+ACT C     OXT    sing N N 32  
+ACT C     CH3    sing N N 33  
+ACT CH3   H1     sing N N 34  
+ACT CH3   H2     sing N N 35  
+ACT CH3   H3     sing N N 36  
+ALA N     CA     sing N N 37  
+ALA N     H      sing N N 38  
+ALA N     H2     sing N N 39  
+ALA CA    C      sing N N 40  
+ALA CA    CB     sing N N 41  
+ALA CA    HA     sing N N 42  
+ALA C     O      doub N N 43  
+ALA C     OXT    sing N N 44  
+ALA CB    HB1    sing N N 45  
+ALA CB    HB2    sing N N 46  
+ALA CB    HB3    sing N N 47  
+ALA OXT   HXT    sing N N 48  
+ARG N     CA     sing N N 49  
+ARG N     H      sing N N 50  
+ARG N     H2     sing N N 51  
+ARG CA    C      sing N N 52  
+ARG CA    CB     sing N N 53  
+ARG CA    HA     sing N N 54  
+ARG C     O      doub N N 55  
+ARG C     OXT    sing N N 56  
+ARG CB    CG     sing N N 57  
+ARG CB    HB2    sing N N 58  
+ARG CB    HB3    sing N N 59  
+ARG CG    CD     sing N N 60  
+ARG CG    HG2    sing N N 61  
+ARG CG    HG3    sing N N 62  
+ARG CD    NE     sing N N 63  
+ARG CD    HD2    sing N N 64  
+ARG CD    HD3    sing N N 65  
+ARG NE    CZ     sing N N 66  
+ARG NE    HE     sing N N 67  
+ARG CZ    NH1    sing N N 68  
+ARG CZ    NH2    doub N N 69  
+ARG NH1   HH11   sing N N 70  
+ARG NH1   HH12   sing N N 71  
+ARG NH2   HH21   sing N N 72  
+ARG NH2   HH22   sing N N 73  
+ARG OXT   HXT    sing N N 74  
+ASN N     CA     sing N N 75  
+ASN N     H      sing N N 76  
+ASN N     H2     sing N N 77  
+ASN CA    C      sing N N 78  
+ASN CA    CB     sing N N 79  
+ASN CA    HA     sing N N 80  
+ASN C     O      doub N N 81  
+ASN C     OXT    sing N N 82  
+ASN CB    CG     sing N N 83  
+ASN CB    HB2    sing N N 84  
+ASN CB    HB3    sing N N 85  
+ASN CG    OD1    doub N N 86  
+ASN CG    ND2    sing N N 87  
+ASN ND2   HD21   sing N N 88  
+ASN ND2   HD22   sing N N 89  
+ASN OXT   HXT    sing N N 90  
+ASP N     CA     sing N N 91  
+ASP N     H      sing N N 92  
+ASP N     H2     sing N N 93  
+ASP CA    C      sing N N 94  
+ASP CA    CB     sing N N 95  
+ASP CA    HA     sing N N 96  
+ASP C     O      doub N N 97  
+ASP C     OXT    sing N N 98  
+ASP CB    CG     sing N N 99  
+ASP CB    HB2    sing N N 100 
+ASP CB    HB3    sing N N 101 
+ASP CG    OD1    doub N N 102 
+ASP CG    OD2    sing N N 103 
+ASP OD2   HD2    sing N N 104 
+ASP OXT   HXT    sing N N 105 
+FMN N1    C2     sing N N 106 
+FMN N1    C10    doub N N 107 
+FMN C2    O2     doub N N 108 
+FMN C2    N3     sing N N 109 
+FMN N3    C4     sing N N 110 
+FMN N3    HN3    sing N N 111 
+FMN C4    O4     doub N N 112 
+FMN C4    C4A    sing N N 113 
+FMN C4A   N5     doub N N 114 
+FMN C4A   C10    sing N N 115 
+FMN N5    C5A    sing N N 116 
+FMN C5A   C6     doub Y N 117 
+FMN C5A   C9A    sing Y N 118 
+FMN C6    C7     sing Y N 119 
+FMN C6    H6     sing N N 120 
+FMN C7    C7M    sing N N 121 
+FMN C7    C8     doub Y N 122 
+FMN C7M   HM71   sing N N 123 
+FMN C7M   HM72   sing N N 124 
+FMN C7M   HM73   sing N N 125 
+FMN C8    C8M    sing N N 126 
+FMN C8    C9     sing Y N 127 
+FMN C8M   HM81   sing N N 128 
+FMN C8M   HM82   sing N N 129 
+FMN C8M   HM83   sing N N 130 
+FMN C9    C9A    doub Y N 131 
+FMN C9    H9     sing N N 132 
+FMN C9A   N10    sing N N 133 
+FMN N10   C10    sing N N 134 
+FMN N10   "C1'"  sing N N 135 
+FMN "C1'" "C2'"  sing N N 136 
+FMN "C1'" "H1'1" sing N N 137 
+FMN "C1'" "H1'2" sing N N 138 
+FMN "C2'" "O2'"  sing N N 139 
+FMN "C2'" "C3'"  sing N N 140 
+FMN "C2'" "H2'"  sing N N 141 
+FMN "O2'" "HO2'" sing N N 142 
+FMN "C3'" "O3'"  sing N N 143 
+FMN "C3'" "C4'"  sing N N 144 
+FMN "C3'" "H3'"  sing N N 145 
+FMN "O3'" "HO3'" sing N N 146 
+FMN "C4'" "O4'"  sing N N 147 
+FMN "C4'" "C5'"  sing N N 148 
+FMN "C4'" "H4'"  sing N N 149 
+FMN "O4'" "HO4'" sing N N 150 
+FMN "C5'" "O5'"  sing N N 151 
+FMN "C5'" "H5'1" sing N N 152 
+FMN "C5'" "H5'2" sing N N 153 
+FMN "O5'" P      sing N N 154 
+FMN P     O1P    doub N N 155 
+FMN P     O2P    sing N N 156 
+FMN P     O3P    sing N N 157 
+FMN O2P   HOP2   sing N N 158 
+FMN O3P   HOP3   sing N N 159 
+GLN N     CA     sing N N 160 
+GLN N     H      sing N N 161 
+GLN N     H2     sing N N 162 
+GLN CA    C      sing N N 163 
+GLN CA    CB     sing N N 164 
+GLN CA    HA     sing N N 165 
+GLN C     O      doub N N 166 
+GLN C     OXT    sing N N 167 
+GLN CB    CG     sing N N 168 
+GLN CB    HB2    sing N N 169 
+GLN CB    HB3    sing N N 170 
+GLN CG    CD     sing N N 171 
+GLN CG    HG2    sing N N 172 
+GLN CG    HG3    sing N N 173 
+GLN CD    OE1    doub N N 174 
+GLN CD    NE2    sing N N 175 
+GLN NE2   HE21   sing N N 176 
+GLN NE2   HE22   sing N N 177 
+GLN OXT   HXT    sing N N 178 
+GLU N     CA     sing N N 179 
+GLU N     H      sing N N 180 
+GLU N     H2     sing N N 181 
+GLU CA    C      sing N N 182 
+GLU CA    CB     sing N N 183 
+GLU CA    HA     sing N N 184 
+GLU C     O      doub N N 185 
+GLU C     OXT    sing N N 186 
+GLU CB    CG     sing N N 187 
+GLU CB    HB2    sing N N 188 
+GLU CB    HB3    sing N N 189 
+GLU CG    CD     sing N N 190 
+GLU CG    HG2    sing N N 191 
+GLU CG    HG3    sing N N 192 
+GLU CD    OE1    doub N N 193 
+GLU CD    OE2    sing N N 194 
+GLU OE2   HE2    sing N N 195 
+GLU OXT   HXT    sing N N 196 
+GLY N     CA     sing N N 197 
+GLY N     H      sing N N 198 
+GLY N     H2     sing N N 199 
+GLY CA    C      sing N N 200 
+GLY CA    HA2    sing N N 201 
+GLY CA    HA3    sing N N 202 
+GLY C     O      doub N N 203 
+GLY C     OXT    sing N N 204 
+GLY OXT   HXT    sing N N 205 
+HIS N     CA     sing N N 206 
+HIS N     H      sing N N 207 
+HIS N     H2     sing N N 208 
+HIS CA    C      sing N N 209 
+HIS CA    CB     sing N N 210 
+HIS CA    HA     sing N N 211 
+HIS C     O      doub N N 212 
+HIS C     OXT    sing N N 213 
+HIS CB    CG     sing N N 214 
+HIS CB    HB2    sing N N 215 
+HIS CB    HB3    sing N N 216 
+HIS CG    ND1    sing Y N 217 
+HIS CG    CD2    doub Y N 218 
+HIS ND1   CE1    doub Y N 219 
+HIS ND1   HD1    sing N N 220 
+HIS CD2   NE2    sing Y N 221 
+HIS CD2   HD2    sing N N 222 
+HIS CE1   NE2    sing Y N 223 
+HIS CE1   HE1    sing N N 224 
+HIS NE2   HE2    sing N N 225 
+HIS OXT   HXT    sing N N 226 
+HOH O     H1     sing N N 227 
+HOH O     H2     sing N N 228 
+ILE N     CA     sing N N 229 
+ILE N     H      sing N N 230 
+ILE N     H2     sing N N 231 
+ILE CA    C      sing N N 232 
+ILE CA    CB     sing N N 233 
+ILE CA    HA     sing N N 234 
+ILE C     O      doub N N 235 
+ILE C     OXT    sing N N 236 
+ILE CB    CG1    sing N N 237 
+ILE CB    CG2    sing N N 238 
+ILE CB    HB     sing N N 239 
+ILE CG1   CD1    sing N N 240 
+ILE CG1   HG12   sing N N 241 
+ILE CG1   HG13   sing N N 242 
+ILE CG2   HG21   sing N N 243 
+ILE CG2   HG22   sing N N 244 
+ILE CG2   HG23   sing N N 245 
+ILE CD1   HD11   sing N N 246 
+ILE CD1   HD12   sing N N 247 
+ILE CD1   HD13   sing N N 248 
+ILE OXT   HXT    sing N N 249 
+LEU N     CA     sing N N 250 
+LEU N     H      sing N N 251 
+LEU N     H2     sing N N 252 
+LEU CA    C      sing N N 253 
+LEU CA    CB     sing N N 254 
+LEU CA    HA     sing N N 255 
+LEU C     O      doub N N 256 
+LEU C     OXT    sing N N 257 
+LEU CB    CG     sing N N 258 
+LEU CB    HB2    sing N N 259 
+LEU CB    HB3    sing N N 260 
+LEU CG    CD1    sing N N 261 
+LEU CG    CD2    sing N N 262 
+LEU CG    HG     sing N N 263 
+LEU CD1   HD11   sing N N 264 
+LEU CD1   HD12   sing N N 265 
+LEU CD1   HD13   sing N N 266 
+LEU CD2   HD21   sing N N 267 
+LEU CD2   HD22   sing N N 268 
+LEU CD2   HD23   sing N N 269 
+LEU OXT   HXT    sing N N 270 
+LYS N     CA     sing N N 271 
+LYS N     H      sing N N 272 
+LYS N     H2     sing N N 273 
+LYS CA    C      sing N N 274 
+LYS CA    CB     sing N N 275 
+LYS CA    HA     sing N N 276 
+LYS C     O      doub N N 277 
+LYS C     OXT    sing N N 278 
+LYS CB    CG     sing N N 279 
+LYS CB    HB2    sing N N 280 
+LYS CB    HB3    sing N N 281 
+LYS CG    CD     sing N N 282 
+LYS CG    HG2    sing N N 283 
+LYS CG    HG3    sing N N 284 
+LYS CD    CE     sing N N 285 
+LYS CD    HD2    sing N N 286 
+LYS CD    HD3    sing N N 287 
+LYS CE    NZ     sing N N 288 
+LYS CE    HE2    sing N N 289 
+LYS CE    HE3    sing N N 290 
+LYS NZ    HZ1    sing N N 291 
+LYS NZ    HZ2    sing N N 292 
+LYS NZ    HZ3    sing N N 293 
+LYS OXT   HXT    sing N N 294 
+MET N     CA     sing N N 295 
+MET N     H      sing N N 296 
+MET N     H2     sing N N 297 
+MET CA    C      sing N N 298 
+MET CA    CB     sing N N 299 
+MET CA    HA     sing N N 300 
+MET C     O      doub N N 301 
+MET C     OXT    sing N N 302 
+MET CB    CG     sing N N 303 
+MET CB    HB2    sing N N 304 
+MET CB    HB3    sing N N 305 
+MET CG    SD     sing N N 306 
+MET CG    HG2    sing N N 307 
+MET CG    HG3    sing N N 308 
+MET SD    CE     sing N N 309 
+MET CE    HE1    sing N N 310 
+MET CE    HE2    sing N N 311 
+MET CE    HE3    sing N N 312 
+MET OXT   HXT    sing N N 313 
+ORO N1    C2     sing Y N 314 
+ORO N1    C6     sing Y N 315 
+ORO N1    HN1    sing N N 316 
+ORO C2    O2     doub N N 317 
+ORO C2    N3     sing Y N 318 
+ORO N3    C4     sing Y N 319 
+ORO N3    HN3    sing N N 320 
+ORO C4    O4     doub N N 321 
+ORO C4    C5     sing Y N 322 
+ORO C5    C6     doub Y N 323 
+ORO C5    H5     sing N N 324 
+ORO C6    C7     sing N N 325 
+ORO C7    O71    doub N N 326 
+ORO C7    O72    sing N N 327 
+ORO O72   HO7    sing N N 328 
+PHE N     CA     sing N N 329 
+PHE N     H      sing N N 330 
+PHE N     H2     sing N N 331 
+PHE CA    C      sing N N 332 
+PHE CA    CB     sing N N 333 
+PHE CA    HA     sing N N 334 
+PHE C     O      doub N N 335 
+PHE C     OXT    sing N N 336 
+PHE CB    CG     sing N N 337 
+PHE CB    HB2    sing N N 338 
+PHE CB    HB3    sing N N 339 
+PHE CG    CD1    doub Y N 340 
+PHE CG    CD2    sing Y N 341 
+PHE CD1   CE1    sing Y N 342 
+PHE CD1   HD1    sing N N 343 
+PHE CD2   CE2    doub Y N 344 
+PHE CD2   HD2    sing N N 345 
+PHE CE1   CZ     doub Y N 346 
+PHE CE1   HE1    sing N N 347 
+PHE CE2   CZ     sing Y N 348 
+PHE CE2   HE2    sing N N 349 
+PHE CZ    HZ     sing N N 350 
+PHE OXT   HXT    sing N N 351 
+PRO N     CA     sing N N 352 
+PRO N     CD     sing N N 353 
+PRO N     H      sing N N 354 
+PRO CA    C      sing N N 355 
+PRO CA    CB     sing N N 356 
+PRO CA    HA     sing N N 357 
+PRO C     O      doub N N 358 
+PRO C     OXT    sing N N 359 
+PRO CB    CG     sing N N 360 
+PRO CB    HB2    sing N N 361 
+PRO CB    HB3    sing N N 362 
+PRO CG    CD     sing N N 363 
+PRO CG    HG2    sing N N 364 
+PRO CG    HG3    sing N N 365 
+PRO CD    HD2    sing N N 366 
+PRO CD    HD3    sing N N 367 
+PRO OXT   HXT    sing N N 368 
+SER N     CA     sing N N 369 
+SER N     H      sing N N 370 
+SER N     H2     sing N N 371 
+SER CA    C      sing N N 372 
+SER CA    CB     sing N N 373 
+SER CA    HA     sing N N 374 
+SER C     O      doub N N 375 
+SER C     OXT    sing N N 376 
+SER CB    OG     sing N N 377 
+SER CB    HB2    sing N N 378 
+SER CB    HB3    sing N N 379 
+SER OG    HG     sing N N 380 
+SER OXT   HXT    sing N N 381 
+SO4 S     O1     doub N N 382 
+SO4 S     O2     doub N N 383 
+SO4 S     O3     sing N N 384 
+SO4 S     O4     sing N N 385 
+THR N     CA     sing N N 386 
+THR N     H      sing N N 387 
+THR N     H2     sing N N 388 
+THR CA    C      sing N N 389 
+THR CA    CB     sing N N 390 
+THR CA    HA     sing N N 391 
+THR C     O      doub N N 392 
+THR C     OXT    sing N N 393 
+THR CB    OG1    sing N N 394 
+THR CB    CG2    sing N N 395 
+THR CB    HB     sing N N 396 
+THR OG1   HG1    sing N N 397 
+THR CG2   HG21   sing N N 398 
+THR CG2   HG22   sing N N 399 
+THR CG2   HG23   sing N N 400 
+THR OXT   HXT    sing N N 401 
+TRP N     CA     sing N N 402 
+TRP N     H      sing N N 403 
+TRP N     H2     sing N N 404 
+TRP CA    C      sing N N 405 
+TRP CA    CB     sing N N 406 
+TRP CA    HA     sing N N 407 
+TRP C     O      doub N N 408 
+TRP C     OXT    sing N N 409 
+TRP CB    CG     sing N N 410 
+TRP CB    HB2    sing N N 411 
+TRP CB    HB3    sing N N 412 
+TRP CG    CD1    doub Y N 413 
+TRP CG    CD2    sing Y N 414 
+TRP CD1   NE1    sing Y N 415 
+TRP CD1   HD1    sing N N 416 
+TRP CD2   CE2    doub Y N 417 
+TRP CD2   CE3    sing Y N 418 
+TRP NE1   CE2    sing Y N 419 
+TRP NE1   HE1    sing N N 420 
+TRP CE2   CZ2    sing Y N 421 
+TRP CE3   CZ3    doub Y N 422 
+TRP CE3   HE3    sing N N 423 
+TRP CZ2   CH2    doub Y N 424 
+TRP CZ2   HZ2    sing N N 425 
+TRP CZ3   CH2    sing Y N 426 
+TRP CZ3   HZ3    sing N N 427 
+TRP CH2   HH2    sing N N 428 
+TRP OXT   HXT    sing N N 429 
+TYR N     CA     sing N N 430 
+TYR N     H      sing N N 431 
+TYR N     H2     sing N N 432 
+TYR CA    C      sing N N 433 
+TYR CA    CB     sing N N 434 
+TYR CA    HA     sing N N 435 
+TYR C     O      doub N N 436 
+TYR C     OXT    sing N N 437 
+TYR CB    CG     sing N N 438 
+TYR CB    HB2    sing N N 439 
+TYR CB    HB3    sing N N 440 
+TYR CG    CD1    doub Y N 441 
+TYR CG    CD2    sing Y N 442 
+TYR CD1   CE1    sing Y N 443 
+TYR CD1   HD1    sing N N 444 
+TYR CD2   CE2    doub Y N 445 
+TYR CD2   HD2    sing N N 446 
+TYR CE1   CZ     doub Y N 447 
+TYR CE1   HE1    sing N N 448 
+TYR CE2   CZ     sing Y N 449 
+TYR CE2   HE2    sing N N 450 
+TYR CZ    OH     sing N N 451 
+TYR OH    HH     sing N N 452 
+TYR OXT   HXT    sing N N 453 
+VAL N     CA     sing N N 454 
+VAL N     H      sing N N 455 
+VAL N     H2     sing N N 456 
+VAL CA    C      sing N N 457 
+VAL CA    CB     sing N N 458 
+VAL CA    HA     sing N N 459 
+VAL C     O      doub N N 460 
+VAL C     OXT    sing N N 461 
+VAL CB    CG1    sing N N 462 
+VAL CB    CG2    sing N N 463 
+VAL CB    HB     sing N N 464 
+VAL CG1   HG11   sing N N 465 
+VAL CG1   HG12   sing N N 466 
+VAL CG1   HG13   sing N N 467 
+VAL CG2   HG21   sing N N 468 
+VAL CG2   HG22   sing N N 469 
+VAL CG2   HG23   sing N N 470 
+VAL OXT   HXT    sing N N 471 
+# 
+loop_
 _pdbx_entity_nonpoly.entity_id 
 _pdbx_entity_nonpoly.name 
 _pdbx_entity_nonpoly.comp_id 
@@ -5287,4 +6293,11 @@ _pdbx_entity_nonpoly.comp_id
 5 'SULFATE ION'                                                                                      SO4 
 6 'ACETATE ION'                                                                                      ACT 
 7 water                                                                                              HOH 
+# 
+_pdbx_initial_refinement_model.id               1 
+_pdbx_initial_refinement_model.entity_id_list   ? 
+_pdbx_initial_refinement_model.type             'experimental model' 
+_pdbx_initial_refinement_model.source_name      PDB 
+_pdbx_initial_refinement_model.accession_code   4JTU 
+_pdbx_initial_refinement_model.details          ? 
 # 

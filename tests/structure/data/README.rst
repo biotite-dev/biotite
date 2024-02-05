@@ -13,11 +13,11 @@ Test structures
 3O5R: Structure contains altlocs
 5H73: Structure contains residue with "'" in atom name
 5UGO: Structure contains nucleotide
-1QXB: Structure contains complementary DNA-sequence
+1QXB: Structure contains complementary DNA-sequence (only used in `base_pairs`)
 5UGO: Structure contains deoxynucleotide
 4GXY: Structure contains ribonucleotide
 2D0F: Structure contains oligosaccharides
 5EIL: Structure contains a non-canonical amino acid on each chain
 4P5J: Structure contains a non-canonical nucleotide
-1CCR: Multi-model structure with the first model ID not beeing 1
-7FGZ: Contains 5-character residue name '7ZTVU'
+1CRR: Multi-model structure with the first model ID not being 1
+7GSA: Contains 5-character residue name 'A1AA6'
