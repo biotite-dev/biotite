@@ -17,13 +17,13 @@ from ..util import data_dir
 @pytest.mark.parametrize(
     "path",
     [
-        path for path in glob.glob(join(data_dir("structure"), "*.cif"))
+        path for path in glob.glob(join(data_dir("structure"), "*.bcif"))
         # Skip this PDB ID as it contains 5-character residue names
         if "7gsa" not in path
     ]
 )
 def test_array_conversion(path):
-    pdbx_file = pdbx.PDBxFile.read(path)
+    pdbx_file = pdbx.BinaryCIFFile.read(path)
     ref_structure = pdbx.get_structure(
         pdbx_file, model=1, extra_fields=["charge"]
     )

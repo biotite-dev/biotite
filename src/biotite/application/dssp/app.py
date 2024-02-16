@@ -9,7 +9,7 @@ __all__ = ["DsspApp"]
 from tempfile import NamedTemporaryFile
 from ..localapp import LocalApp, cleanup_tempfile
 from ..application import AppState, requires_state
-from ...structure.io.pdbx.cif import PDBxFile
+from ...structure.io.pdbx.cif import CIFFile
 from ...structure.io.pdbx.convert import set_structure
 import numpy as np
 
@@ -77,8 +77,8 @@ class DsspApp(LocalApp):
         self._out_file = NamedTemporaryFile("r", suffix=".dssp", delete=False)
 
     def run(self):
-        in_file = PDBxFile()
-        set_structure(in_file, self._array, data_block="DSSP_INPUT")
+        in_file = CIFFile()
+        set_structure(in_file, self._array)
         in_file.write(self._in_file)
         self._in_file.flush()
         self.set_arguments(

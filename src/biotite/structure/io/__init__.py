@@ -5,7 +5,7 @@
 """
 A subpackage for reading and writing structure related data.
 
-Macromolecular structure files (PDB, PDBx/mmCIF, MMTF, etc.) and
+Macromolecular structure files (PDB, PDBx/mmCIF, BinaryCIF, etc.) and
 small molecule files (MOL, SDF, etc.) can be used
 to load an :class:`AtomArray` or :class:`AtomArrayStack`.
 

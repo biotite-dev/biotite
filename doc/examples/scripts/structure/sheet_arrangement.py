@@ -5,7 +5,8 @@ Arrangement of beta-sheets
 This scripts plots the arrangements of strands in selected β-sheets of a
 protein structure.
 The information is entirely taken from the ``struct_sheet_order`` and
-``struct_sheet_range`` categories of the structure's *PDBx/mmCIF* file.
+``struct_sheet_range`` categories of the corresponding *PDBx* file
+in *BinaryCIF* format.
 
 In this case the β-barrel of a split fluorescent protein is shown,
 but the script can be customized to show the β-sheets of any protein
@@ -42,10 +43,10 @@ ARROW_COLORS = [                # Each chain is colored differently
     biotite.colors["lightgreen"],
     biotite.colors["brightorange"],
 ]
-CONNECTION_COLOR = "black"      # Color of the connection lines 
-CONNECTION_LINE_WIDTH = 1.5     # Width of the connection lines 
-CONNECTION_HEIGHT = 0.1         # Minimum height of the connection lines 
-CONNECTION_SEPARATION = 0.1     # Minimum vertical distance between the connection lines 
+CONNECTION_COLOR = "black"      # Color of the connection lines
+CONNECTION_LINE_WIDTH = 1.5     # Width of the connection lines
+CONNECTION_HEIGHT = 0.1         # Minimum height of the connection lines
+CONNECTION_SEPARATION = 0.1     # Minimum vertical distance between the connection lines
 RES_ID_HEIGHT = -0.2            # The vertical distance of the residue ID labels from the arrow ends
 RES_ID_FONT_SIZE = 8            # The font size of the residue ID labels
 RES_ID_FONT_WEIGHT = "bold"     # The font weight of the residue ID labels
@@ -55,8 +56,8 @@ SHEET_NAME_FONT_SIZE = 14       # The font size of the sheet labels
 ##### SNOITPO #####
 
 ########################################################################
-# The ``struct_sheet_order`` category of the *mmCIF* file gives us the
-# information about the existing sheets, the strands these sheets
+# The ``struct_sheet_order`` category of the *BinaryCIF* file gives us
+# the information about the existing sheets, the strands these sheets
 # contain and which of these strands are connected with one another
 # in either parallel or anti-parallel orientation.
 #
@@ -64,25 +65,25 @@ SHEET_NAME_FONT_SIZE = 14       # The font size of the sheet labels
 # we are interested in.
 # The strand adjacency and relative orientation is also saved for later.
 
-pdbx_file = pdbx.PDBxFile.read(rcsb.fetch(PDB_ID, "pdbx"))
-sheet_order_dict = pdbx_file["struct_sheet_order"]
+bcif_file = pdbx.BinaryCIFFile.read(rcsb.fetch(PDB_ID, "bcif"))
+sheet_order = bcif_file.block["struct_sheet_order"]
 
 # Create a boolean mask that covers the selected sheets
 # or all sheets if none is given
 if SHEETS is None:
-    sele = np.full(len(sheet_order_dict["sheet_id"]), True)
+    sele = np.full(sheet_order.row_count, True)
 else:
     sele = np.array([
-        sheet in SHEETS for sheet in sheet_order_dict["sheet_id"]
+        sheet in SHEETS for sheet in sheet_order["sheet_id"].as_array()
     ])
-sheet_ids = sheet_order_dict["sheet_id"][sele]
+sheet_ids = sheet_order["sheet_id"].as_array()[sele]
 
-is_parallel_list = sheet_order_dict["sense"][sele] == "parallel"
+is_parallel_list = sheet_order["sense"].as_array()[sele] == "parallel"
 
 adjacent_strands = np.array([
     (strand_i, strand_j) for strand_i, strand_j in zip(
-        sheet_order_dict["range_id_1"][sele],
-        sheet_order_dict["range_id_2"][sele]
+        sheet_order["range_id_1"].as_array()[sele],
+        sheet_order["range_id_2"].as_array()[sele]
     )
 ])
 
@@ -94,30 +95,30 @@ for sheet_id, (strand_i, strand_j) in zip(sheet_ids, adjacent_strands):
 # The ``struct_sheet_range`` category of the *mmCIF* file tells us
 # which residues compose each strand in terms of chain and
 # residue IDs.
-# 
+#
 # Later the plot shall display connections between consecutive strands
 # in a protein chain.
 # Although, this category does not provide this connection information
 # directly, we can sort the strands by their beginning chain and residue
 # IDs and then simply connect successive entries.
 
-sheet_range_dict = pdbx_file["struct_sheet_range"]
+sheet_range = bcif_file.block["struct_sheet_range"]
 
 # Again, create a boolean mask that covers the selected sheets
 sele = np.array([
-    sheet in sheet_ids for sheet in sheet_range_dict["sheet_id"]
+    sheet in sheet_ids for sheet in sheet_range["sheet_id"].as_array()
 ])
-strand_chain_ids = sheet_range_dict["beg_auth_asym_id"][sele]
-strand_res_id_begs = sheet_range_dict["beg_auth_seq_id"].astype(int)[sele]
-strand_res_id_ends = sheet_range_dict["end_auth_seq_id"].astype(int)[sele]
+strand_chain_ids = sheet_range["beg_auth_asym_id"].as_array()[sele]
+strand_res_id_begs = sheet_range["beg_auth_seq_id"].as_array(int)[sele]
+strand_res_id_ends = sheet_range["end_auth_seq_id"].as_array(int)[sele]
 
 # Secondarily sort by residue ID
 order = np.argsort(strand_res_id_begs, kind="stable")
 # Primarily sort by chain ID
 order = order[np.argsort(strand_chain_ids[order], kind="stable")]
 
-sorted_strand_ids = sheet_range_dict["id"][sele][order]
-sorted_sheet_ids = sheet_range_dict["sheet_id"][sele][order]
+sorted_strand_ids = sheet_range["id"].as_array()[sele][order]
+sorted_sheet_ids = sheet_range["sheet_id"].as_array()[sele][order]
 sorted_chain_ids = strand_chain_ids[order]
 sorted_res_id_begs = strand_res_id_begs[order]
 sorted_res_id_ends = strand_res_id_ends[order]
@@ -297,7 +298,7 @@ for sheet_id, graph in sheet_graphs.items():
 # separable
 # Plot the short connections at low height
 # to decrease line intersections
-# -> sort connections by length of connection 
+# -> sort connections by length of connection
 order = np.argsort([
     np.abs(coord_dict[strand_i][0][0] - coord_dict[strand_j][0][0])
     for strand_i, strand_j in connections
@@ -307,7 +308,7 @@ for i, (strand_i, strand_j) in enumerate(connections):
     horizontal_line_height = 1 + CONNECTION_HEIGHT + i * CONNECTION_SEPARATION
     coord_i_beg, coord_i_end = coord_dict[strand_i]
     coord_j_beg, coord_j_end = coord_dict[strand_j]
-    
+
     if np.sign(coord_i_end[1]) == np.sign(coord_j_beg[1]):
         # Start and end are on the same side of the arrows
         x = (

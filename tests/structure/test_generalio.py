@@ -85,7 +85,7 @@ def test_loading_with_extra_args():
     # loading should fail with wrong arguments
     with pytest.raises(TypeError):
         strucio.load_structure(template, start=2)
-    
+
     # test if atom_i argument is passed to templates
     stack = strucio.load_structure(trajectory, template, atom_i=[1, 2])
     assert stack.shape[1] == 2
@@ -97,8 +97,10 @@ def test_loading_with_extra_args():
 )
 @pytest.mark.parametrize(
     "suffix",
-    ["pdb", "cif", "gro", "pdbx", "mmtf",
-     "trr", "xtc", "tng", "dcd", "netcdf"]
+    [
+        "pdb", "pdbx", "cif", "bcif", "gro", "mmtf", "trr", "xtc", "tng",
+        "dcd", "netcdf"
+    ]
 )
 def test_saving(suffix):
     """
@@ -117,7 +119,7 @@ def test_saving(suffix):
     temp = NamedTemporaryFile("w", suffix=f".{suffix}", delete=False)
     strucio.save_structure(temp.name, ref_array)
     temp.close()
-    
+
     test_array = strucio.load_structure(temp.name, template)
     os.remove(temp.name)
 
@@ -138,8 +140,10 @@ def test_saving(suffix):
 )
 @pytest.mark.parametrize(
     "suffix",
-    ["pdb", "cif", "gro", "pdbx", "mmtf",
-     "trr", "xtc", "tng", "dcd", "netcdf"]
+    [
+        "pdb", "pdbx", "cif", "bcif", "gro", "mmtf", "trr", "xtc", "tng",
+        "dcd", "netcdf"
+    ]
 )
 def test_saving_with_extra_args(suffix):
     """
@@ -166,7 +170,7 @@ def test_small_molecule():
     temp = NamedTemporaryFile("w", suffix=".sdf", delete=False)
     strucio.save_structure(temp.name, ref_array)
     temp.close()
-    
+
     test_array = strucio.load_structure(temp.name)
     os.remove(temp.name)
 

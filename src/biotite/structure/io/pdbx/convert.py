@@ -266,7 +266,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
                 f"the given model {model} does not exist"
             )
 
-        model_atom_site = _filter_model(atom_site, model_starts, 1)
+        model_atom_site = _filter_model(atom_site, model_starts, model)
         # Any field of the category would work here to get the length
         model_length = model_atom_site.row_count
         array = AtomArray(model_length)
@@ -635,14 +635,10 @@ def _get_or_create_block(pdbx_component, block_name):
 
     Block = pdbx_component.subcomponent_class()
 
-    if isinstance(pdbx_component, PDBxFile):
-        # The deprecated 'PDBxFile' is a thin wrapper around 'CIFFile'
-        pdbx_component = pdbx_component.cif_file
-
     if isinstance(pdbx_component, (CIFFile, BinaryCIFFile)):
         if block_name is None:
             if len(pdbx_component) > 0:
-                block_name = pdbx_component.block
+                block_name = next(iter(pdbx_component.keys()))
             else:
                 # File is empty -> invent a new block name
                 block_name = "structure"
