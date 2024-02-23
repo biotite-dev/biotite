@@ -342,5 +342,43 @@
             "dot_bracket_from_structure",
             "base_pairs_from_dot_bracket"
         ]
+    },
+
+    "biotite.structure.io.pdbx" : {
+        "High-level functionality": [
+            "get_sequence",
+            "get_model_count",
+            "get_structure",
+            "set_structure",
+            "get_component",
+            "set_component",
+            "list_assemblies",
+            "get_assembly"
+
+        ],
+        "CIF format" : [
+            "CIFFile",
+            "CIFBlock",
+            "CIFCategory",
+            "CIFColumn",
+            "CIFData"
+        ],
+        "BinaryCIF format" : [
+            "BinaryCIFFile",
+            "BinaryCIFBlock",
+            "BinaryCIFCategory",
+            "BinaryCIFColumn",
+            "BinaryCIFData"
+        ],
+        "BinaryCIF encodings" : [
+            "ByteArrayEncoding",
+            "FixedPointEncoding",
+            "IntervalQuantizationEncoding",
+            "RunLengthEncoding",
+            "DeltaEncoding",
+            "IntegerPackingEncoding",
+            "StringArrayEncoding",
+            "TypeCode"
+        ]
     }
 }
