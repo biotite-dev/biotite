@@ -160,9 +160,13 @@ print(stack)
 # Loading structures from file
 # ----------------------------
 #
+# Reading PDB files
+# ^^^^^^^^^^^^^^^^^
+#
 # Usually structures are not built from scratch, but they are read from
 # a file.
-# Probably the most popular structure file format is the *PDB* format.
+# Probably one of the most popular structure file formats to date is the
+# *Protein Data Bank Exchange* (PDB) format.
 # For our purpose, we will work on a protein structure as small as
 # possible, namely the miniprotein *TC5b* (PDB: ``1L2Y``).
 # The structure of this 20-residue protein (304 atoms) has been
@@ -204,162 +208,169 @@ temp_file.close()
 
 ########################################################################
 # Other information (authors, secondary structure, etc.) cannot be
-# extracted from PDB files, yet.
-# This is a good place to mention, that it is recommended to use the
-# modern PDBx/mmCIF format in favor of the PDB format.
-# It solves limitations of the PDB format, that arise from the column
-# restrictions.
-# Furthermore, much more additional information is stored in these
-# files.
+# easily from PDB files using :class:`PDBFile`.
+#
+# Working with the PDBx format
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # .. currentmodule:: biotite.structure.io.pdbx
 #
-# In contrast to PDB files, *Biotite* can read the entire content of
-# PDBx/mmCIF files, which can be accessed in a dictionary like manner.
-# At first, we read the file similarily to before, but this time we
-# use the :class:`PDBxFile` class.
+# After all, the *PDB* format itself is deprecated now due to several
+# shortcomings and was replaced by the *Protein Data Bank Exchange*
+# (PDBx) format.
+# As PDBx has become the standard structure format, it is also the
+# format with the most comprehensive interface in *Biotite.*
+# Today, this format has two common encodings:
+# The original text-based *Crystallographic Information Framework* (CIF)
+# and the *BinaryCIF* format.
+# While the former is human-readable, the latter is more efficient in
+# terms of file size and parsing speed.
+# The :mod:`biotite.structure.io.pdbx` subpackage provides classes for
+# interacting with both formats, :class:`CIFFile` and
+# :class:`BinaryCIFFile`, respectively.
+# In the following section we will focus on :class:`CIFFile`,
+# but :class:`BinaryCIFFile` works analogous.
 
 import biotite.structure.io.pdbx as pdbx
 
 cif_file_path = rcsb.fetch("1l2y", "cif", gettempdir())
-cif_file = pdbx.PDBxFile.read(cif_file_path)
+cif_file = pdbx.CIFFile.read(cif_file_path)
 
 ########################################################################
+# *PDBx* can be imagined as hierarchical dictionary, with several
+# levels:
+#
+#   #. **File**: The entirety of the *PDBx* file.
+#   #. **Block**: The data for a single structure (e.g. `1L2Y`).
+#   #. **Category**: A coherent group of data
+#      (e.g. `atom_site` describes the atoms).
+#      Each column in the category must have the same length
+#   #. **Column**: Contains values of a specific type
+#      (e.g `atom_site.Cartn_x` contains the *x* coordinates for each atom).
+#      Contains two *Data* instances, one for the actual data and one
+#      for a mask.
+#      In a lot of categories a column contains only a single value.
+#   #. **Data**: The actual data in form of a :class:`ndarray`.
+#
+# Each level may contain multiple instances of the next lower level,
+# e.g. a category may contain multiple columns.
+# Each level is represented by a separate class, that ban be used like a
+# dictionary.
+# For CIF files these are :class:`CIFFile`, :class:`CIFBlock`,
+# :class:`CIFCategory`, :class:`CIFColumn` and :class:`CIFData`.
+# Note that :class:`CIFColumn` is not treated like a dictionary, but
+# instead has a ``data`` and ``mask`` attribute.
 # Now we can access the data like a dictionary of dictionaries.
 
-print(cif_file["1L2Y", "audit_author"]["name"])
+block = cif_file["1L2Y"]
+# If there is as single block, you can alternatively use `cif_file.block`
+category = block["audit_author"]
+column = category["name"]
+data = column.data
+print(data.array)
 
 ########################################################################
-# The first index contains the data block and the category name.
-# The data block could be omitted, since there is only one block in the
-# file.
-# This returns a dictionary.
-# If the category is in a ``loop_`` category, i.e. the category's fields
-# have a list of values, like in this case, the dictionary contains
-# :class:`ndarray` objects of type string as values, otherwise the
-# dictionary contains strings directly.
-# The second index specifies the name of the subcategory, which is used
-# as key in this dictionary and returns the corresponding
-# :class:`ndarray`.
-# Setting/adding a category in the file is done in a similar way:
+# The data access can be cut short, especially if a certain data type is
+# expected instead of strings.
 
-cif_file["audit_author"] = {
-    "name" : ["Doe, Jane", "Doe, John"],
-    "pdbx_ordinal" : ["1","2"]
-}
+column = category["pdbx_ordinal"]
+print(column.as_array(int))
 
 ########################################################################
-# In most applications only the structure itself
-# (stored in the *atom_site* category) is relevant.
-# :func:`get_structure()` and :func:`set_structure()` are convenience
-# functions that are used to convert the
-# ``atom_site`` category into an atom array (stack) and vice versa.
+# As already mentioned, many categories contain only a single value per
+# column.
+# In this case it may be convenient to get only a single item instead of
+# an array.
 
-tc5b = pdbx.get_structure(cif_file)
+for key, column in block["citation"].items():
+    print(f"{key:25}{column.as_item()}")
+
+########################################################################
+# Note the ``?`` in the output.
+# It indicates that the value is masked as '*unknown*'.
+# That becomes clear when we look at the mask of that column.
+
+mask = block["citation"]["book_publisher"].mask.array
+print(mask)
+print(pdbx.MaskValue(mask[0]))
+
+########################################################################
+# For setting/adding blocks, categories etc. we simply assign values as
+# we would do with dictionaries.
+
+category = pdbx.CIFCategory()
+category["number"] = pdbx.CIFColumn(pdbx.CIFData([1, 2]))
+category["person"] = pdbx.CIFColumn(pdbx.CIFData(["me", "you"]))
+category["greeting"] = pdbx.CIFColumn(pdbx.CIFData(["Hi!", "Hello!"]))
+block["greetings"] = category
+print(category.serialize())
+
+########################################################################
+# For the sake of brevity it is also possible to omit :class:`CIFColumn`
+# and :class:`CIFData` and even pass columns directly at category
+# creation.
+
+category = pdbx.CIFCategory({
+    # If the columns contain only a single value, no list is required
+    "fruit": "apple",
+    "color": "red",
+    "taste": "delicious",
+})
+block["fruits"] = category
+print(category.serialize())
+
+########################################################################
+# For :class:`BinaryCIFFile` the usage is analogous.
+
+bcif_file_path = rcsb.fetch("1l2y", "bcif", gettempdir())
+bcif_file = pdbx.BinaryCIFFile.read(bcif_file_path)
+for key, column in bcif_file["1L2Y"]["audit_author"].items():
+    print(f"{key:25}{column.as_array()}")
+
+########################################################################
+# The main difference is that :class:`BinaryCIFData` has an additional
+# ``encoding`` attribute that specifies how the data is encoded
+# in the binary representation.
+# A well chosen encoding can reduce the file size significantly.
+
+# Default uncompressed encoding
+array = np.arange(100)
+print(pdbx.BinaryCIFData(array).serialize())
+print("\nvs.\n")
+# Delta encoding followed by run-length encoding
+# [0, 1, 2, ...] -> [0, 1, 1, ...] -> [0, 1, 1, 99]
+print(
+    pdbx.BinaryCIFData(
+        array,
+        encoding = [
+            # [0, 1, 2, ...] -> [0, 1, 1, ...]
+            pdbx.DeltaEncoding(),
+            # [0, 1, 1, ...] -> [0, 1, 1, 99]
+            pdbx.RunLengthEncoding(),
+            # [0, 1, 1, 99] -> b"\x00\x00..."
+            pdbx.ByteArrayEncoding()
+        ]
+    ).serialize()
+)
+
+########################################################################
+# While this low-level API is useful for using the entire potential of
+# the PDBx format, most applications require only reading/writing a
+# structure.
+# As the *BinaryCIF* format is both, smaller and faster to parse, it is
+# recommended to use it instead of the *CIF* format in *Biotite*.
+
+tc5b = pdbx.get_structure(bcif_file)
 # Do some fancy stuff
-pdbx.set_structure(cif_file, tc5b)
+pdbx.set_structure(bcif_file, tc5b)
 
 ########################################################################
 # :func:`get_structure()` creates automatically an
 # :class:`AtomArrayStack`, even if the file actually contains only a
 # single model.
 # If you would like to have an :class:`AtomArray` instead, you have to
-# specifiy the :obj:`model` parameter.
+# specify the :obj:`model` parameter.
 #
-# .. currentmodule:: biotite.structure.io.mmtf
-#
-# If you want to parse a large batch of structure files or you have to
-# load very large structure files, the usage of PDB or mmCIF files might
-# be too slow for your requirements.
-# In this case you probably might want to use MMTF files.
-# MMTF files describe structures just like PDB and mmCIF files,
-# but they are binary!
-# This circumstance increases the downloading and parsing speed by
-# several multiples.
-# The usage is similar to :class:`PDBxFile`: The :class:`MMTFFile` class
-# decodes the file and makes it raw information accessible.
-# Via :func:`get_structure()` the data can be loaded into an atom array
-# (stack) and :func:`set_structure()` is used to save it back into a
-# MMTF file.
-
-import numpy as np
-import biotite.structure.io.mmtf as mmtf
-
-mmtf_file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
-mmtf_file = mmtf.MMTFFile.read(mmtf_file_path)
-stack = mmtf.get_structure(mmtf_file)
-array = mmtf.get_structure(mmtf_file, model=1)
-# Do some fancy stuff
-mmtf.set_structure(mmtf_file, array)
-
-########################################################################
-# A more low level access to MMTF files is also possible:
-# An MMTF file is structured as dictionary, with each key being a
-# structural feature like the coordinates, the residue ID or the
-# secondary structure.
-# Most of the fields are encoded to reduce to size of the file,
-# but the whole decoding process is handled automatically by
-# the :class:`MMTFFile` class:
-# If a field is encoded the decoded
-# :class:`ndarray` is returned, otherwise the value is directly
-# returned.
-# A list of all MMTF fields (keys) can be found in the
-# `specification <https://github.com/rcsb/mmtf/blob/master/spec.md#fields>`_.
-# The implementation of :class:`MMTFFile` decodes the encoded fields
-# only when you need them, so no computation time is wasted on fields
-# you are not interested in.
-
-# Field is not encoded
-print(mmtf_file["title"])
-# Field is encoded and is automatically decoded
-print(mmtf_file["groupIdList"])
-
-########################################################################
-# Setting fields of an MMTF file works in an analogous way for values,
-# that should not be encoded.
-# The situation is a little more complex for arrays, that should be
-# encoded:
-# Since arbitrarily named fields can be set in the file,
-# :class:`MMTFFile` does not know which codec to use for encoding
-# your array.
-# Hence, you need to use the :func:`MMTFFile.set_array()` function.
-
-mmtf_file["title"] = "Some other title"
-print(mmtf_file["title"])
-# Determine appropriate codec from the codec used originally
-mmtf_file.set_array(
-    "groupIdList",
-    np.arange(20,40),
-    codec=mmtf_file.get_codec("groupIdList"))
-print(mmtf_file["groupIdList"])
-
-########################################################################
-# There are also some other supported file formats.
-# For a full list, have a look at :mod:`biotite.structure.io`.
-#
-# .. currentmodule:: biotite.structure.io
-#
-# Since programmers are usually lazy and do not want to write more code
-# than necessary, there are two convenient function for loading and
-# saving atom arrays or stacks, unifying the forementioned file formats:
-# :func:`load_structure()` takes a file path and outputs an array
-# (or stack, if the file contains multiple models).
-# Internally, this function uses the appropriate :class:`File` class,
-# depending on the file format.
-# The analogous :func:`save_structure()` function provides a shortcut
-# for writing to structure files.
-# The desired file format is inferred from the the extension of the
-# provided file name.
-
-import biotite.structure.io as strucio
-
-stack_from_pdb = strucio.load_structure(pdb_file_path)
-stack_from_cif = strucio.load_structure(cif_file_path)
-temp_file = NamedTemporaryFile(suffix=".cif", delete=False)
-strucio.save_structure(temp_file.name, stack_from_pdb)
-temp_file.close()
-
-########################################################################
 # Reading trajectory files
 # ^^^^^^^^^^^^^^^^^^^^^^^^
 #
@@ -403,11 +414,10 @@ print(coord.shape)
 # coordinate information.
 
 import biotite.database.rcsb as rcsb
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 
-mmtf_file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
-mmtf_file = mmtf.MMTFFile.read(mmtf_file_path)
-template = mmtf.get_structure(mmtf_file, model=1)
+pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("1l2y", "bcif", gettempdir()))
+template = pdbx.get_structure(pdbx_file, model=1)
 
 traj_file = xtc.XTCFile.read(temp_xtc_file.name)
 trajectory = traj_file.get_structure(template)
@@ -441,7 +451,7 @@ import biotite.structure as struc
 import biotite.database.rcsb as rcsb
 import biotite.structure.io as strucio
 
-file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
+file_path = rcsb.fetch("1l2y", "bcif", gettempdir())
 stack = strucio.load_structure(file_path)
 print(type(stack).__name__)
 print(stack.shape)
@@ -713,7 +723,7 @@ array = struc.AtomArray(length=100)
 print(array.box)
 array.box = struc.vectors_from_unitcell(10, 20, 30, np.pi/2, np.pi/2, np.pi/2)
 print(array.box)
-file_path = rcsb.fetch("3o5r", "mmtf", gettempdir())
+file_path = rcsb.fetch("3o5r", "bcif", gettempdir())
 array = strucio.load_structure(file_path)
 print(array.box)
 
@@ -736,11 +746,10 @@ array = struc.remove_pbc(array)
 from tempfile import gettempdir
 import biotite.database.rcsb as rcsb
 import biotite.structure as struc
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 
-file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
-mmtf_file = mmtf.MMTFFile.read(file_path)
-structure = mmtf.get_structure(mmtf_file, model=1)
+pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("1l2y", "bcif", gettempdir()))
+structure = pdbx.get_structure(pdbx_file, model=1)
 print("Before:")
 print(structure[structure.res_id == 1])
 print()
@@ -752,7 +761,7 @@ print(structure[structure.res_id == 1])
 # *Biotite* provides also some transformation functions, for example
 # :func:`rotate()` for rotations about the *x*-, *y*- or *z*-axis.
 
-structure = mmtf.get_structure(mmtf_file, model=1)
+structure = pdbx.get_structure(pdbx_file, model=1)
 print("Before:")
 print(structure[structure.res_id == 1])
 print()
@@ -793,7 +802,7 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 
-file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
+file_path = rcsb.fetch("1l2y", "bcif", gettempdir())
 stack = strucio.load_structure(file_path)
 # Filter only CA atoms
 stack = stack[:, stack.atom_name == "CA"]

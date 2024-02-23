@@ -24,7 +24,7 @@ object).
 The base class for all interfaces is the :class:`Application` class.
 Each :class:`Application` instance has a life cycle, starting with its
 creation and ending with the result extraction.
-Each state in this life cycle is described by the value of the 
+Each state in this life cycle is described by the value of the
 *enum* :class:`AppState`, that each :class:`Application` contains:
 Directly after its instantiation the app is in the ``CREATED`` state.
 In this state further parameters can be set for the application run.
@@ -66,7 +66,7 @@ from biotite.application import Application
 class MyApplication(Application):
     def __init__(self, param): super().__init__()
     def run(self): pass
-    def is_finished(self): return True 
+    def is_finished(self): return True
     def wait_interval(self): return 0.1
     def evaluate(self): pass
     def clean_up(self): pass
@@ -85,7 +85,7 @@ results = app.get_some_data()
 ########################################################################
 # The following subsections will dive into the available
 # :class:`Application` classes in depth.
-# 
+#
 # Finding homologous sequences with BLAST
 # ---------------------------------------
 #
@@ -126,8 +126,8 @@ print("Hit name: ", best_ali.hit_definition)
 # :class:`biotite.sequence.align.Alignment`.
 # It contains some additional information as shown above.
 # The hit UID can be used to obtain the complete hit sequence via
-# :mod:`biotite.database.entrez`. 
-# 
+# :mod:`biotite.database.entrez`.
+#
 # The next alignment should be a bit more challenging.
 # We take a random part of the *E. coli* BL21 genome and distort it a
 # little bit.
@@ -164,7 +164,7 @@ print("Hit name: ", best_ali.hit_definition)
 # of conduct and prevents you from submitting two queries within one
 # minute. If you want to be rude to the NCBI server, create the
 # instance with :obj:`obey_rules` set to false.
-# 
+#
 # Multiple sequence alignments
 # ----------------------------
 #
@@ -263,7 +263,7 @@ print(alignment.trace)
 ########################################################################
 # Secondary structure annotation
 # ------------------------------
-# 
+#
 # .. currentmodule:: biotite.application.dssp
 #
 # Althogh :mod:`biotite.structure` offers the function
@@ -279,7 +279,7 @@ import biotite.database.rcsb as rcsb
 import biotite.application.dssp as dssp
 import biotite.structure.io as strucio
 
-file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
+file_path = rcsb.fetch("1l2y", "bcif", gettempdir())
 stack = strucio.load_structure(file_path)
 array = stack[0]
 app = dssp.DsspApp(array)
