@@ -4,92 +4,819 @@
 
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
-__all__ = ["PDBxFile"]
+__all__ = ["CIFFile", "CIFBlock", "CIFCategory", "CIFColumn", "CIFData"]
 
-import copy
+import itertools
 import shlex
-from collections.abc import MutableMapping
+from collections.abc import MutableMapping, Sequence
 import numpy as np
-from ....file import TextFile, InvalidFileError
+from .component import _Component, MaskValue
+from .error import DeserializationError, SerializationError
+from ....file import File, is_open_compatible, is_text
 
 
-class PDBxFile(TextFile, MutableMapping):
+UNICODE_CHAR_SIZE = 4
+
+
+# Small class without much functionality
+# It exists merely for consistency with BinaryCIFFile
+class CIFData:
     """
-    This class represents a PDBx/mmCIF file.
+    This class represents the data in a :class:`CIFColumn`.
 
-    The categories of the file can be accessed using the
-    :meth:`get_category()`/:meth:`set_category()` methods.
-    The content of each category is represented by a dictionary.
-    The dictionary contains the entry
-    (e.g. *label_entity_id* in *atom_site*) as key.
-    The corresponding values are either strings in *non-looped*
-    categories, or 1-D numpy arrays of string objects in case of
-    *looped* categories.
+    Parameters
+    ----------
+    array : array_like or int or float or str
+        The data array to be stored.
+        If a single item is given, it is converted into an array.
+    dtype : dtype-like, optional
+        If given, the *dtype* the stored array should be converted to.
 
-    A category can be changed or added using :meth:`set_category()`:
-    If a string-valued dictionary is provided, a *non-looped* category
-    will be created; if an array-valued dictionary is given, a
-    *looped* category will be created. In case of arrays, it is
-    important that all arrays have the same size.
-
-    Alternatively, The content of this file can also be read/write
-    accessed using dictionary-like indexing:
-    You can either provide a data block and a category or only a
-    category, in which case the first data block is taken.
+    Attributes
+    ----------
+    array : ndarray
+        The stored data array.
 
     Notes
     -----
-    This class is also able to detect and parse multiline entries in the
-    file. However, when writing a category no multiline values are used.
-    This could lead to long lines.
-
-    This class uses a lazy category dictionary creation: When reading
-    the file only the line positions of all categories are checked. The
-    time consuming task of dictionary creation is done when
-    :meth:`get_category()` is called.
+    When a :class:`CIFFile` is written, the data type is automatically
+    converted to string.
+    The other way around, when a :class:`CIFFile` is read, the data type
+    is always a string type.
 
     Examples
     --------
-    Read the file and get author names:
 
-    >>> import os.path
-    >>> file = PDBxFile.read(os.path.join(path_to_structures, "1l2y.cif"))
-    >>> author_dict = file.get_category("citation_author", block="1L2Y")
-    >>> print(author_dict["name"])
-    ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']
-
-    Dictionary style indexing, no specification of data block:
-
-    >>> print(file["citation_author"]["name"])
-    ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']
-
-    Get the structure from the file:
-
-    >>> arr = get_structure(file)
-    >>> print(type(arr).__name__)
-    AtomArrayStack
-    >>> arr = get_structure(file, model=1)
-    >>> print(type(arr).__name__)
-    AtomArray
-
-    Modify atom array and write it back into the file:
-
-    >>> arr_mod = rotate(arr, [1,2,3])
-    >>> set_structure(file, arr_mod)
-    >>> file.write(os.path.join(path_to_directory, "1l2y_mod.cif"))
+    >>> data = CIFData([1, 2, 3])
+    >>> print(data.array)
+    [1 2 3]
+    >>> print(len(data))
+    3
+    >>> # A single item is converted into an array
+    >>> data = CIFData("apple")
+    >>> print(data.array)
+    ['apple']
     """
 
-    def __init__(self):
-        super().__init__()
-        # This dictionary saves the PDBx category names,
-        # together with its line position in the file
-        # and the data_block it is in
-        self._categories = {}
+    def __init__(self, array, dtype=None):
+        self._array = _arrayfy(array)
+        if np.issubdtype(self._array.dtype, np.object_):
+            raise ValueError("Object arrays are not supported")
+        if dtype is not None:
+            self._array = self._array.astype(dtype)
+
+    @property
+    def array(self):
+        return self._array
+
+    @staticmethod
+    def subcomponent_class():
+        return None
+
+    @staticmethod
+    def supercomponent_class():
+        return CIFColumn
+
+    def __len__(self):
+        return len(self._array)
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return np.array_equal(self._array, other._array)
+
+
+class CIFColumn:
+    """
+    This class represents a single column in a :class:`CIFCategory`.
+
+    Parameters
+    ----------
+    data : CIFData or array_like or int or float or str
+        The data to be stored.
+        If no :class:`CIFData` is given, the passed argument is
+        coerced into such an object.
+    mask : CIFData or array_like, dtype=int or int
+        The mask to be stored.
+        If given, the mask indicates whether the `data` is
+        inapplicable (``.``) or missing (``?``) in some rows.
+        The data presence is indicated by values from the
+        :class:`MaskValue` enum.
+        If no :class:`CIFData` is given, the passed argument is
+        coerced into such an object.
+        By default, no mask is created.
+
+    Attributes
+    ----------
+    data : CIFData
+        The stored data.
+    mask : CIFData
+        The mask that indicates whether certain data elements are
+        inapplicable or missing.
+        If no mask is present, this attribute is ``None``.
+
+    Examples
+    --------
+
+    >>> print(CIFColumn([1, 2, 3]).as_array())
+    ['1' '2' '3']
+    >>> mask = [MaskValue.PRESENT, MaskValue.INAPPLICABLE, MaskValue.MISSING]
+    >>> print(CIFColumn([1, 2, 3], mask).as_array())
+    ['1' '.' '?']
+    >>> print(CIFColumn([1]).as_item())
+    1
+    >>> print(CIFColumn([1], mask=[MaskValue.MISSING]).as_item())
+    ?
+    """
+
+    def __init__(self, data, mask=None):
+        if not isinstance(data, CIFData):
+            data = CIFData(data, str)
+        if mask is None:
+            mask = np.full(
+                len(data), MaskValue.PRESENT, dtype=np.uint8
+            )
+            mask[data.array == "."] = MaskValue.INAPPLICABLE
+            mask[data.array == "?"] = MaskValue.MISSING
+            if np.all(mask == MaskValue.PRESENT):
+                # No mask required
+                mask = None
+            else:
+                mask = CIFData(mask)
+        else:
+            if not isinstance(mask, CIFData):
+                mask = CIFData(mask, np.uint8)
+            if len(mask) != len(data):
+                raise IndexError(
+                    f"Data has length {len(data)}, "
+                    f"but mask has length {len(mask)}"
+                )
+        self._data = data
+        self._mask = mask
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def mask(self):
+        return self._mask
+
+    @staticmethod
+    def subcomponent_class():
+        return CIFData
+
+    @staticmethod
+    def supercomponent_class():
+        return CIFCategory
+
+    def as_item(self):
+        """
+        Get the only item in the data of this column.
+
+        If the data is masked as inapplicable or missing, ``'.'`` or
+        ``'?'`` is returned, respectively.
+        If the data contains more than one item, an exception is raised.
+
+        Returns
+        -------
+        item : str
+            The item in the data.
+        """
+        if self._mask is None:
+            return self._data.array.item()
+        mask = self._mask.array.item()
+        if self._mask is None or mask == MaskValue.PRESENT:
+            item = self._data.array.item()
+            # Limit float precision to 3 decimals
+            if isinstance(item, float):
+                return f"{item:.3f}"
+            else:
+                return str(item)
+        elif mask == MaskValue.INAPPLICABLE:
+            return "."
+        elif mask == MaskValue.MISSING:
+            return "?"
+
+    def as_array(self, dtype=str, masked_value=None):
+        """
+        Get the data of this column as an :class:`ndarray`.
+
+        This is a shortcut to get ``CIFColumn.data.array``.
+        Furthermore, the mask is applied to the data.
+
+        Parameters
+        ----------
+        dtype : dtype-like, optional
+            The data type the array should be converted to.
+            By default, a string type is used.
+        masked_value : str, optional
+            The value that should be used for masked elements, i.e.
+            ``MaskValue.INAPPLICABLE`` or ``MaskValue.MISSING``.
+            By default, masked elements are converted to ``'.'`` or
+            ``'?'`` depending on the :class:`MaskValue`.
+        """
+        if self._mask is None:
+            return self._data.array.astype(dtype, copy=False)
+
+        elif np.issubdtype(dtype, np.str_):
+            # Limit float precision to 3 decimals
+            if np.issubdtype(self._data.array.dtype, np.floating):
+                array = np.array(
+                    [f"{e:.3f}" for e in self._data.array], type=dtype
+                )
+            else:
+                array = self._data.array.astype(dtype, copy=False)
+            if masked_value is None:
+                array[self._mask.array == MaskValue.INAPPLICABLE] = "."
+                array[self._mask.array == MaskValue.MISSING] = "?"
+            else:
+                array[self._mask.array == MaskValue.INAPPLICABLE] = masked_value
+                array[self._mask.array == MaskValue.MISSING] = masked_value
+            return array
+
+        else:
+            # Array needs to be converted, but masked values are
+            # not necessarily convertible
+            # (e.g. '' cannot be converted to int)
+            if masked_value is None:
+                array = np.zeros(len(self._data), dtype=dtype)
+            else:
+                array = np.full(len(self._data), masked_value, dtype=dtype)
+
+            present_mask = self._mask.array == MaskValue.PRESENT
+            array[present_mask] = (
+                self._data.array[present_mask].astype(dtype)
+            )
+            return array
+
+    def __len__(self):
+        return len(self._data)
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        if self._data != other._data:
+            return False
+        if self._mask != other._mask:
+            return False
+        return True
+
+
+class CIFCategory(_Component, MutableMapping):
+    """
+    This class represents a category in a :class:`CIFBlock`.
+
+    Columns can be accessed and modified like a dictionary.
+    The values are :class:`CIFColumn` objects.
+
+    Parameters
+    ----------
+    columns : dict, optional
+        The columns of the category.
+        The keys are the column names and the values are the
+        :class:`CIFColumn` objects (or objects that can be coerced into
+        a :class:`CIFColumn`).
+        By default, an empty category is created.
+        Each column must have the same length.
+    name : str, optional
+        The name of the category.
+        This is only used for serialization and is automatically set,
+        when the :class:`CIFCategory` is added to a :class:`CIFBlock`.
+        It only needs to be set manually, when the category is directly
+        serialized.
+
+    Attributes
+    ----------
+    name : str
+        The name of the category.
+    row_count : int
+        The number of rows in the category, i.e. the length of each
+        column.
+
+    Notes
+    -----
+    When a column containing strings with line breaks are added, these
+    strings are written as multiline strings to the CIF file.
+
+    Examples
+    --------
+
+    >>> # Add column on creation
+    >>> category = CIFCategory({"fruit": ["apple", "banana"]}, name="fruits")
+    >>> # Add column later on
+    >>> category["taste"] = ["delicious", "tasty"]
+    >>> # Add column the formal way
+    >>> category["color"] = CIFColumn(CIFData(["red", "yellow"]))
+    >>> # Access a column
+    >>> print(category["fruit"].as_array())
+    ['apple' 'banana']
+    >>> print(category.serialize())
+    loop_
+    _fruits.fruit
+    _fruits.taste
+    _fruits.color
+    apple  delicious red
+    banana tasty     yellow
+    """
+
+    def __init__(self, columns=None, name=None):
+        self._name = name
+        if columns is None:
+            columns = {}
+        else:
+            columns = {
+                key: CIFColumn(col) if not isinstance(col, CIFColumn) else col
+                for key, col in columns.items()
+            }
+
+        self._row_count = None
+        self._columns = columns
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    @property
+    def row_count(self):
+        if self._row_count is None:
+            # Row count is not determined yet
+            # -> check the length of the first column
+            self._row_count = len(next(iter(self.values())))
+        return self._row_count
+
+    @staticmethod
+    def subcomponent_class():
+        return CIFColumn
+
+    @staticmethod
+    def supercomponent_class():
+        return CIFBlock
+
+    @staticmethod
+    def deserialize(text, expect_whitespace=True):
+        lines = [
+            line.strip() for line in text.splitlines() if not _is_empty(line)
+        ]
+
+        if _is_loop_start(lines[0]):
+            is_looped = True
+            lines.pop(0)
+        else:
+            is_looped = False
+
+        category_name = _parse_category_name(lines[0])
+        if category_name is None:
+            raise DeserializationError(
+                "Failed to parse category name"
+            )
+
+        lines = _to_single(lines, is_looped)
+        if is_looped:
+            category_dict = CIFCategory._deserialize_looped(
+                lines, expect_whitespace
+            )
+        else:
+            category_dict = CIFCategory._deserialize_single(lines)
+        return CIFCategory(category_dict, category_name)
+
+    def serialize(self):
+        if self._name is None:
+            raise SerializationError("Category name is required")
+        if not self._columns:
+            raise ValueError("At least one column is required")
+
+        for column_name, column in self.items():
+            if self._row_count is None:
+                self._row_count = len(column)
+            elif len(column) != self._row_count:
+                raise SerializationError(
+                    f"All columns must have the same length, "
+                    f"but '{column_name}' has length {len(column)}, "
+                    f"while the first column has row_count {self._row_count}"
+                )
+
+        if self._row_count == 1:
+            lines = self._serialize_single()
+        else:
+            lines = self._serialize_looped()
+        # Enforce terminal line break
+        lines.append("")
+        return "\n".join(lines)
+
+    def __getitem__(self, key):
+        return self._columns[key]
+
+    def __setitem__(self, key, column):
+        if not isinstance(column, CIFColumn):
+            column = CIFColumn(column)
+        self._columns[key] = column
+
+    def __delitem__(self, key):
+        if len(self._columns) == 1:
+            raise ValueError("At least one column must remain")
+        del self._columns[key]
+
+    def __iter__(self):
+        return iter(self._columns)
+
+    def __len__(self):
+        return len(self._columns)
+
+    def __eq__(self, other):
+        # Row count can be omitted here, as it is based on the columns
+        if not isinstance(other, type(self)):
+            return False
+        if set(self.keys()) != set(other.keys()):
+            return False
+        for col_name in self.keys():
+            if self[col_name] != other[col_name]:
+                return False
+        return True
+
+    @staticmethod
+    def _deserialize_single(lines):
+        """
+        Process a category where each field has a single value.
+        """
+        category_dict = {}
+        for line in lines:
+            parts = shlex.split(line)
+            column_name = parts[0].split(".")[1]
+            column = parts[1]
+            category_dict[column_name] = CIFColumn(column)
+        return category_dict
+
+    @staticmethod
+    def _deserialize_looped(lines, expect_whitespace):
+        """
+        Process a category where each field has multiple values
+        (category is a table).
+        """
+        category_dict = {}
+        column_names = []
+        i = 0
+        for key_line in lines:
+            if key_line[0] == "_":
+                # Key line
+                key = key_line.split(".")[1]
+                column_names.append(key)
+                category_dict[key] = []
+                i += 1
+            else:
+                break
+
+        data_lines = lines[i:]
+        # Rows may be split over multiple lines -> do not rely on
+        # row-line-alignment at all and simply cycle through columns
+        column_names = itertools.cycle(column_names)
+        for data_line in data_lines:
+            # If whitespace is expected in quote protected values,
+            # use standard shlex split
+            # Otherwise use much more faster whitespace split
+            # and quote removal if applicable,
+            # bypassing the slow shlex module
+            if expect_whitespace:
+                values = shlex.split(data_line)
+            else:
+                values = data_line.split()
+                for k in range(len(values)):
+                    # Remove quotes
+                    if (values[k][0] == '"' and values[k][-1] == '"') or (
+                        values[k][0] == "'" and values[k][-1] == "'"
+                    ):
+                        values[k] = values[k][1:-1]
+            for val in values:
+                column_name = next(column_names)
+                category_dict[column_name].append(val)
+
+        return category_dict
+
+    def _serialize_single(self):
+        keys = ["_" + self._name + "." + name for name in self.keys()]
+        max_len = max(len(key) for key in keys)
+        # "+3" Because of three whitespace chars after longest key
+        req_len = max_len + 3
+        return [
+            key.ljust(req_len) + _multiline(_quote(column.as_item()))
+            for key, column in zip(keys, self.values())
+        ]
+
+    def _serialize_looped(self):
+        key_lines = [
+            "_" + self._name + "." + key + " "
+            for key in self.keys()
+        ]
+
+        column_arrays = []
+        for column in self.values():
+            array = column.as_array(str)
+            # Quote before measuring the number of chars,
+            # as the quote characters modify the length
+            array = np.array(
+                [_multiline(_quote(element)) for element in array]
+            )
+            column_arrays.append(array)
+
+        # Number of characters the longest string in the column needs
+        # This can be deduced from the dtype
+        # The "+1" is for the small whitespace column
+        column_n_chars = [
+            array.dtype.itemsize // UNICODE_CHAR_SIZE + 1
+            for array in column_arrays
+        ]
+        value_lines = [""] * self._row_count
+        for i in range(self._row_count):
+            for j, array in enumerate(column_arrays):
+                value_lines[i] += array[i].ljust(column_n_chars[j])
+            # Remove trailing justification of last column
+            value_lines[i].rstrip()
+
+        return ["loop_"] + key_lines + value_lines
+
+
+class CIFBlock(_Component, MutableMapping):
+    """
+    This class represents a block in a :class:`CIFFile`.
+
+    Categories can be accessed and modified like a dictionary.
+    The values are :class:`CIFCategory` objects.
+
+    Parameters
+    ----------
+    categories : dict, optional
+        The categories of the block.
+        The keys are the category names and the values are the
+        :class:`CIFCategory` objects.
+        By default, an empty block is created.
+
+    Notes
+    -----
+    The category names do not include the leading underscore character.
+    This character is automatically added when the category is
+    serialized.
+
+    Examples
+    --------
+
+    >>> # Add category on creation
+    >>> block = CIFBlock({"foo": CIFCategory({"some_column": 1})})
+    >>> # Add category later on
+    >>> block["bar"] = CIFCategory({"another_column": [2, 3]})
+    >>> # Access a column
+    >>> print(block["bar"]["another_column"].as_array())
+    ['2' '3']
+    >>> print(block.serialize())
+    _foo.some_column   1
+    #
+    loop_
+    _bar.another_column
+    2
+    3
+    #
+    """
+
+    def __init__(self, categories=None):
+        if categories is None:
+            categories = {}
+        self._categories = categories
+
+    @staticmethod
+    def subcomponent_class():
+        return CIFCategory
+
+    @staticmethod
+    def supercomponent_class():
+        return CIFFile
+
+    @staticmethod
+    def deserialize(text):
+        lines = text.splitlines()
+        current_category_name = None
+        category_starts = []
+        category_names = []
+        for i, line in enumerate(lines):
+            if not _is_empty(line):
+                is_loop_in_line = _is_loop_start(line)
+                category_name_in_line = _parse_category_name(line)
+                if is_loop_in_line or (
+                    category_name_in_line != current_category_name
+                    and category_name_in_line is not None
+                ):
+                    # Track the new category
+                    if is_loop_in_line:
+                        # In case of lines with "loop_" the category is
+                        # in the next line
+                        category_name_in_line = _parse_category_name(
+                            lines[i + 1]
+                        )
+                    current_category_name = category_name_in_line
+                    category_starts.append(i)
+                    category_names.append(current_category_name)
+        return CIFBlock(_create_element_dict(
+            lines, category_names, category_starts
+        ))
+
+    def serialize(self):
+        text_blocks = []
+        for category_name, category in self._categories.items():
+            if isinstance(category, str):
+                # Category is already stored as lines
+                text_blocks.append(category)
+            else:
+                try:
+                    category.name = category_name
+                    text_blocks.append(category.serialize())
+                except:
+                    raise SerializationError(
+                        f"Failed to serialize category '{category_name}'"
+                    )
+                # A comment line is set after each category
+                text_blocks.append("#\n")
+        return "".join(text_blocks)
+
+    def __getitem__(self, key):
+        category = self._categories[key]
+        if isinstance(category, str):
+            # Element is stored in serialized form
+            # -> must be deserialized first
+            try:
+                # Special optimization for "atom_site":
+                # Even if the values are quote protected,
+                # no whitespace is expected in escaped values
+                # Therefore slow shlex.split() call is not necessary
+                if key == "atom_site":
+                    expect_whitespace = False
+                else:
+                    expect_whitespace = True
+                category = CIFCategory.deserialize(category, expect_whitespace)
+            except:
+                raise DeserializationError(
+                    f"Failed to deserialize category '{key}'"
+                )
+            # Update with deserialized object
+            self._categories[key] = category
+        return category
+
+    def __setitem__(self, key, category):
+        if not isinstance(category, CIFCategory):
+            raise TypeError(
+                f"Expected 'CIFCategory', but got '{type(category).__name__}'"
+            )
+        category.name = key
+        self._categories[key] = category
+
+    def __delitem__(self, key):
+        del self._categories[key]
+
+    def __iter__(self):
+        return iter(self._categories)
+
+    def __len__(self):
+        return len(self._categories)
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        if set(self.keys()) != set(other.keys()):
+            return False
+        for cat_name in self.keys():
+            if self[cat_name] != other[cat_name]:
+                return False
+        return True
+
+
+class CIFFile(_Component, File, MutableMapping):
+    """
+    This class represents a CIF file.
+
+    The categories of the file can be accessed and modified like a
+    dictionary.
+    The values are :class:`CIFBlock` objects.
+
+    To parse or write a structure from/to a :class:`CIFFile` object,
+    use the high-level :func:`get_structure()` or
+    :func:`set_structure()` function respectively.
+
+    Notes
+    -----
+    The content of CIF files are lazily deserialized:
+    When reading the file only the line positions of all blocks are
+    indexed.
+    The time consuming deserialization of a block/category is only
+    performed when accessed.
+    The deserialized :class:`CIFBlock`/:class:`CIFCategory` objects
+    are cached for subsequent accesses.
+
+    Attributes
+    ----------
+    block : CIFBlock
+        The sole block of the file.
+        If the file contains multiple blocks, an exception is raised.
+
+    Examples
+    --------
+    Read a CIF file and access its content:
+
+    >>> import os.path
+    >>> file = CIFFile.read(os.path.join(path_to_structures, "1l2y.cif"))
+    >>> print(file["1L2Y"]["citation_author"]["name"].as_array())
+    ['Neidigh, J.W.' 'Fesinmeyer, R.M.' 'Andersen, N.H.']
+    >>> # Access the only block in the file
+    >>> print(file.block["entity"]["pdbx_description"].as_item())
+    TC5b
+
+    Create a CIF file and write it to disk:
+
+    >>> category = CIFCategory(
+    ...     {"some_column": "some_value", "another_column": "another_value"}
+    ... )
+    >>> block = CIFBlock({"some_category": category, "another_category": category})
+    >>> file = CIFFile({"some_block": block, "another_block": block})
+    >>> print(file.serialize())
+    data_some_block
+    #
+    _some_category.some_column      some_value
+    _some_category.another_column   another_value
+    #
+    _another_category.some_column      some_value
+    _another_category.another_column   another_value
+    #
+    data_another_block
+    #
+    _some_category.some_column      some_value
+    _some_category.another_column   another_value
+    #
+    _another_category.some_column      some_value
+    _another_category.another_column   another_value
+    #
+    >>> file.write(os.path.join(path_to_directory, "some_file.cif"))
+    """
+
+    def __init__(self, blocks=None):
+        if blocks is None:
+            blocks = {}
+        self._blocks = blocks
+
+    @property
+    def lines(self):
+        return "\n".join(self.serialize())
+
+    @property
+    def block(self):
+        if len(self) != 1:
+            raise ValueError("There are multiple blocks in the file")
+        return self[next(iter(self))]
+
+    @staticmethod
+    def subcomponent_class():
+        return CIFBlock
+
+    @staticmethod
+    def supercomponent_class():
+        return None
+
+    @staticmethod
+    def deserialize(text):
+        lines = text.splitlines()
+        block_starts = []
+        block_names = []
+        for i, line in enumerate(lines):
+            if not _is_empty(line):
+                data_block_name = _parse_data_block_name(line)
+                if data_block_name is not None:
+                    block_starts.append(i)
+                    block_names.append(data_block_name)
+        return CIFFile(_create_element_dict(lines, block_names, block_starts))
+
+    def serialize(self):
+        text_blocks = []
+        for block_name, block in self._blocks.items():
+            text_blocks.append("data_" + block_name + "\n")
+            # A comment line is set after the block indicator
+            text_blocks.append("#\n")
+            if isinstance(block, str):
+                # Block is already stored as text
+                text_blocks.append(block)
+            else:
+                try:
+                    text_blocks.append(block.serialize())
+                except:
+                    raise SerializationError(
+                        f"Failed to serialize block '{block_name}'"
+                    )
+        # Enforce terminal line break
+        text_blocks.append("")
+        return "".join(text_blocks)
 
     @classmethod
     def read(cls, file):
         """
-        Read a PDBx/mmCIF file.
+        Read a CIF file.
 
         Parameters
         ----------
@@ -99,554 +826,201 @@ class PDBxFile(TextFile, MutableMapping):
 
         Returns
         -------
-        file_object : PDBxFile
+        file_object : CIFFile
             The parsed file.
         """
-        file = super().read(file)
-        # Remove emptyline at then end of file, if present
-        if file.lines[-1] == "":
-            del file.lines[-1]
+        # File name
+        if is_open_compatible(file):
+            with open(file, "r") as f:
+                text = f.read()
+        # File object
+        else:
+            if not is_text(file):
+                raise TypeError("A file opened in 'text' mode is required")
+            text = file.read()
+        return CIFFile.deserialize(text)
 
-        current_category = None
-        start = -1
-        stop = -1
-        is_loop = False
-        has_multiline_values = False
-        for i, line in enumerate(file.lines):
-            # Ignore empty and comment lines
-            if not _is_empty(line):
-                data_block_name = _data_block_name(line)
-                if data_block_name is not None:
-                    data_block = data_block_name
-                    # If new data block begins, reset category data
-                    current_category = None
-                    start = -1
-                    stop = -1
-                    is_loop = False
-                    has_multiline_values = False
-
-                is_loop_in_line = _is_loop_start(line)
-                category_in_line = _get_category_name(line)
-                if is_loop_in_line or (
-                    category_in_line != current_category
-                    and category_in_line is not None
-                ):
-                    # Start of a new category
-                    # Add an entry into the dictionary with the old category
-                    stop = i
-                    file._add_category(
-                        data_block,
-                        current_category,
-                        start,
-                        stop,
-                        is_loop,
-                        has_multiline_values,
-                    )
-                    # Track the new category
-                    if is_loop_in_line:
-                        # In case of lines with "loop_" the category is in the
-                        # next line
-                        category_in_line = _get_category_name(
-                            file.lines[i + 1]
-                        )
-                    is_loop = is_loop_in_line
-                    current_category = category_in_line
-                    start = i
-                    has_multiline_values = False
-
-                multiline = _is_multi(line, is_loop)
-                if multiline:
-                    has_multiline_values = True
-        # Add the entry for the final category
-        # Since at the end of the file the end of the category
-        # is not determined by the start of a new one,
-        # this needs to be handled separately
-        stop = len(file.lines)
-        file._add_category(
-            data_block,
-            current_category,
-            start,
-            stop,
-            is_loop,
-            has_multiline_values,
-        )
-        return file
-
-    def get_block_names(self):
+    def write(self, file):
         """
-        Get the names of all data blocks in the file.
-
-        Returns
-        -------
-        blocks : list
-            List of data block names.
-        """
-        blocks = set()
-        for category_tuple in self._categories.keys():
-            block, _ = category_tuple
-            blocks.add(block)
-        return sorted(blocks)
-
-    def get_category(self, category, block=None, expect_looped=False):
-        """
-        Get the dictionary for a given category.
+        Write the contents of this object into a CIF file.
 
         Parameters
         ----------
-        category : string
-            The name of the category. The leading underscore is omitted.
-        block : string, optional
-            The name of the data block. Default is the first
-            (and most times only) data block of the file.
-        expect_looped : bool, optional
-            If set to true, the returned dictionary will always contain
-            arrays (only if the category exists):
-            If the category is *non-looped*, each array will contain
-            only one element.
-
-        Returns
-        -------
-        category_dict : dict of (str or ndarray, dtype=str) or None
-            A entry keyed dictionary. The corresponding values are
-            strings or array of strings for *non-looped* and
-            *looped* categories, respectively.
-            Returns None, if the data block does not contain the given
-            category.
+        file : file-like object or str
+            The file to be written to.
+            Alternatively a file path can be supplied.
         """
-        if block is None:
+        if is_open_compatible(file):
+            with open(file, "w") as f:
+                f.write(self.serialize())
+        else:
+            if not is_text(file):
+                raise TypeError("A file opened in 'text' mode is required")
+            file.write(self.serialize())
+
+    def __getitem__(self, key):
+        block = self._blocks[key]
+        if isinstance(block, str):
+            # Element is stored in serialized form
+            # -> must be deserialized first
             try:
-                block = self.get_block_names()[0]
-            except IndexError:
-                raise InvalidFileError("File is empty")
-        category_info = self._categories.get((block, category))
-        if category_info is None:
-            return None
-        start = category_info["start"]
-        stop = category_info["stop"]
-        is_loop = category_info["loop"]
-        is_multilined = category_info["multiline"]
-
-        if is_multilined:
-            # Convert multiline values into singleline values
-            prelines = [
-                line.strip()
-                for line in self.lines[start:stop]
-                if not _is_empty(line) and not _is_loop_start(line)
-            ]
-            lines = (len(prelines)) * [None]
-            # lines index
-            k = 0
-            # prelines index
-            i = 0
-            while i < len(prelines):
-                if prelines[i][0] == ";":
-                    # multiline values
-                    multi_line_str = prelines[i][1:]
-                    j = i + 1
-                    while prelines[j] != ";":
-                        multi_line_str += prelines[j]
-                        j += 1
-                    lines[k - 1] += " " + shlex.quote(multi_line_str)
-                    i = j + 1
-                elif not is_loop and prelines[i][0] in ["'", '"']:
-                    # Singleline values where value is in the line
-                    # after the corresponding key
-                    lines[k - 1] += " " + prelines[i]
-                    i += 1
-                else:
-                    # Normal singleline value in the same row as the key
-                    lines[k] = prelines[i]
-                    i += 1
-                    k += 1
-            lines = [line for line in lines if line is not None]
-
-        else:
-            lines = [
-                line.strip()
-                for line in self.lines[start:stop]
-                if not _is_empty(line) and not _is_loop_start(line)
-            ]
-
-        if is_loop:
-            # Special optimization for "atom_site":
-            # Even if the values are quote protected,
-            # no whitespace is expected in escaped values
-            # Therefore slow shlex.split() call is not necessary
-            if category == "atom_site":
-                whitespace_values = False
-            else:
-                whitespace_values = True
-            category_dict = _process_looped(lines, whitespace_values)
-        else:
-            category_dict = _process_singlevalued(lines)
-
-        if expect_looped and not is_loop:
-            category_dict = {
-                key: np.array([val], dtype=object)
-                for key, val in category_dict.items()
-            }
-
-        return category_dict
-
-    def set_category(self, category, category_dict, block=None):
-        """
-        Set the content of a category.
-
-        If the category is already existing, all lines corresponding
-        to the category are replaced. Otherwise a new category is
-        created and the lines are appended at the end of the data block.
-
-        Parameters
-        ----------
-        category : string
-            The name of the category. The leading underscore is omitted.
-        category_dict : dict
-            The category content. The dictionary must have strings
-            (subcategories) as keys and strings or :class:`ndarray`
-            objects as values.
-        block : string, optional
-            The name of the data block. Default is the first
-            (and most times only) data block of the file. If the
-            block is not contained in the file yet, a new block is
-            appended at the end of the file.
-        """
-        if block is None:
-            try:
-                block = self.get_block_names()[0]
-            except IndexError:
-                raise InvalidFileError(
-                    "File is empty, give an explicit data block"
+                block = CIFBlock.deserialize(block)
+            except:
+                raise DeserializationError(
+                    f"Failed to deserialize block '{key}'"
                 )
+            # Update with deserialized object
+            self._blocks[key] = block
+        return block
 
-        # Determine whether the category is a looped category
-        sample_category_value = list(category_dict.values())[0]
-        if isinstance(sample_category_value, (np.ndarray, list)):
-            is_looped = True
-            # Check whether all arrays have the same length
-            arr_len = len(list(category_dict.values())[0])
-            for subcat, array in category_dict.items():
-                if len(array) != arr_len:
-                    raise ValueError(
-                        f"Length of Subcategory '{subcat}' is {len(array)}, "
-                        f" but {arr_len} was expected"
-                    )
-        else:
-            is_looped = False
-
-        # Sanitize dictionary
-        # -> convert to string
-        # -> replace empty values with '.'
-        category_dict = copy.deepcopy(category_dict)
-        if is_looped:
-            for subcat, value in category_dict.items():
-                array = np.asarray(value)
-                # Cast array if its data type is not a Unicode string
-                if array.dtype.kind != "U":
-                    array = array.astype(str)
-                array = np.char.strip(array)
-                array[array == ""] = "."
-                category_dict[subcat] = array
-        else:
-            for subcat, value in category_dict.items():
-                value = str(value)
-                value = value if value != "" else "."
-                category_dict[subcat] = str(value)
-
-        # Value arrays (looped categories) can be modified (e.g. quoted)
-        # Hence make a copy to avoid unwanted side effects
-        # due to modification of input values
-        if is_looped:
-            category_dict = {
-                key: val.copy() for key, val in category_dict.items()
-            }
-
-        # Enclose values with quotes if required
-        for key, value in category_dict.items():
-            if is_looped:
-                # Since value is a numpy string array with fixed size,
-                # we need to convert it as a list before using _quote
-                category_dict[key] = np.asarray(
-                    [_quote(item) for item in value.tolist()]
-                )
-            else:
-                category_dict[key] = _quote(value)
-
-        if is_looped:
-            keylines = [
-                "_" + category + "." + key + " "
-                for key in category_dict.keys()
-            ]
-            value_arr = list(category_dict.values())
-            # Array containing the number of characters + whitespace
-            # of each column
-            col_lens = np.zeros(len(value_arr), dtype=int)
-            for i, column in enumerate(value_arr):
-                col_len = 0
-                for value in column:
-                    if len(value) > col_len:
-                        col_len = len(value)
-                # Length of column is max value length
-                # +1 whitespace character as separator
-                col_lens[i] = col_len + 1
-            valuelines = [""] * arr_len
-            for i in range(arr_len):
-                for j, arr in enumerate(value_arr):
-                    valuelines[i] += arr[i] + " " * (col_lens[j] - len(arr[i]))
-            newlines = ["loop_"] + keylines + valuelines
-
-        else:
-            # For better readability, not only one space is inserted
-            # after each key, but as much spaces that every value starts
-            # at the same position in the line
-            max_len = 0
-            for key in category_dict.keys():
-                if len(key) > max_len:
-                    max_len = len(key)
-            # "+3" Because of three whitespace chars after longest key
-            req_len = max_len + 3
-            newlines = [
-                "_" + category + "." + key + " " * (req_len - len(key)) + value
-                for key, value in category_dict.items()
-            ]
-
-        # A comment line is set after every category
-        newlines += ["#"]
-
-        if (block, category) in self._categories:
-            # Category already exists in data block
-            category_info = self._categories[(block, category)]
-            # Insertion point of new lines
-            old_category_start = category_info["start"]
-            old_category_stop = category_info["stop"]
-            category_start = old_category_start
-            # Difference between number of lines of the old and new category
-            len_diff = len(newlines) - (old_category_stop - old_category_start)
-            # Remove old category content
-            del self.lines[old_category_start:old_category_stop]
-            # Insert new lines at category start
-            self.lines[category_start:category_start] = newlines
-            # Update category info
-            category_info["start"] = category_start
-            category_info["stop"] = category_start + len(newlines)
-            # When writing a category no multiline values are used
-            category_info["multiline"] = False
-            category_info["loop"] = is_looped
-        elif block in self.get_block_names():
-            # Data block exists but not the category
-            # Find last category in the block
-            # and set start of new category to stop of last category
-            last_stop = 0
-            for category_tuple, category_info in self._categories.items():
-                if block == category_tuple[0]:
-                    if last_stop < category_info["stop"]:
-                        last_stop = category_info["stop"]
-            category_start = last_stop
-            category_stop = category_start + len(newlines)
-            len_diff = len(newlines)
-            self.lines[category_start:category_start] = newlines
-            self._add_category(
-                block,
-                category,
-                category_start,
-                category_stop,
-                is_looped,
-                is_multilined=False,
+    def __setitem__(self, key, block):
+        if not isinstance(block, CIFBlock):
+            raise TypeError(
+                f"Expected 'CIFBlock', but got '{type(block).__name__}'"
             )
-        else:
-            # The data block does not exist
-            # Put the begin of data block in front of newlines
-            newlines = ["data_" + block, "#"] + newlines
-            # Find last category in the file
-            # and set start of new data_block with new category
-            # to stop of last category
-            last_stop = 0
-            for category_info in self._categories.values():
-                if last_stop < category_info["stop"]:
-                    last_stop = category_info["stop"]
-            category_start = last_stop + 2
-            category_stop = last_stop + len(newlines)
-            len_diff = len(newlines) - 2
-            self.lines[last_stop:last_stop] = newlines
-            self._add_category(
-                block,
-                category,
-                category_start,
-                category_stop,
-                is_looped,
-                is_multilined=False,
-            )
-        # Update start and stop of all categories appearing after the
-        # changed/added category
-        for category_info in self._categories.values():
-            if category_info["start"] > category_start:
-                category_info["start"] += len_diff
-                category_info["stop"] += len_diff
+        self._blocks[key] = block
 
-    def __copy_fill__(self, clone):
-        super().__copy_fill__(clone)
-        clone._categories = copy.deepcopy(self._categories)
-
-    def __setitem__(self, index, item):
-        block, category_name = self._full_index(index)
-        self.set_category(category_name, item, block=block)
-
-    def __getitem__(self, index):
-        block, category_name = self._full_index(index)
-        return self.get_category(category_name, block=block)
-
-    def __delitem__(self, index):
-        block, category_name = self._full_index(index)
-        category_info = self._categories[(block, category_name)]
-        # Insertion point of new lines
-        category_start = category_info["start"]
-        category_stop = category_info["stop"]
-        del self.lines[category_start:category_stop]
-        # Update start and stop of all categories appearing after the
-        # deleted category
-        len_diff = category_stop - category_start
-        for category_info in self._categories.values():
-            if category_info["start"] > category_start:
-                category_info["start"] -= len_diff
-                category_info["stop"] -= len_diff
-
-    def __contains__(self, index):
-        block, category_name = self._full_index(index)
-        return (block, category_name) in self._categories
+    def __delitem__(self, key):
+        del self._blocks[key]
 
     def __iter__(self):
-        return self._categories.__iter__()
+        return iter(self._blocks)
 
     def __len__(self):
-        return len(self._categories)
+        return len(self._blocks)
 
-    def _full_index(self, index):
-        """
-        Converts a an integer or tuple index into a block and a category
-        name.
-        """
-        if isinstance(index, tuple):
-            return index[0], index[1]
-        elif isinstance(index, str):
-            return self.get_block_names()[0], index
-        else:
-            raise TypeError(
-                f"'{type(index).__name__}' is an invalid index type"
-            )
-
-    def _add_category(
-        self, block, category_name, start, stop, is_loop, is_multilined
-    ):
-        # Before the first category starts,
-        # the current_category is None
-        # This is checked before adding an entry
-        if category_name is not None:
-            self._categories[(block, category_name)] = {
-                "start": start,
-                "stop": stop,
-                "loop": is_loop,
-                "multiline": is_multilined,
-            }
-
-
-def _process_singlevalued(lines):
-    category_dict = {}
-    i = 0
-    while i < len(lines):
-        parts = shlex.split(lines[i])
-        key = parts[0].split(".")[1]
-        if len(parts) > 1:
-            value = parts[1]
-        else:
-            # The value is not in the same line,
-            # but in the following one
-            i += 1
-            value = shlex.split(lines[i])[0]
-        category_dict[key] = value
-        i += 1
-    return category_dict
-
-
-def _process_looped(lines, whitepace_values):
-    category_dict = {}
-    keys = []
-    # Array index
-    i = 0
-    # Dictionary key index
-    j = 0
-    for line in lines:
-        if line[0] == "_":
-            # Key line
-            key = line.split(".")[1]
-            keys.append(key)
-            # Pessimistic array allocation
-            # numpy array filled with strings
-            category_dict[key] = np.zeros(len(lines), dtype=object)
-            keys_length = len(keys)
-        else:
-            # If whitespace is expected in quote protected values,
-            # use standard shlex split
-            # Otherwise use much more faster whitespace split
-            # and quote removal if applicable,
-            # bypassing the slow shlex module
-            if whitepace_values:
-                values = shlex.split(line)
-            else:
-                values = line.split()
-                for k in range(len(values)):
-                    # Remove quotes
-                    if (values[k][0] == '"' and values[k][-1] == '"') or (
-                        values[k][0] == "'" and values[k][-1] == "'"
-                    ):
-                        values[k] = values[k][1:-1]
-            for value in values:
-                category_dict[keys[j]][i] = value
-                j += 1
-                if j == keys_length:
-                    # If all keys have been filled with a value,
-                    # restart with first key with incremented index
-                    j = 0
-                    i += 1
-    for key in category_dict.keys():
-        # Trim to correct size
-        category_dict[key] = category_dict[key][:i]
-    return category_dict
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        if set(self.keys()) != set(other.keys()):
+            return False
+        for block_name in self.keys():
+            if self[block_name] != other[block_name]:
+                return False
+        return True
 
 
 def _is_empty(line):
-    return len(line) == 0 or line[0] == "#"
+    return len(line.strip()) == 0 or line[0] == "#"
 
 
-def _data_block_name(line):
+def _create_element_dict(lines, element_names, element_starts):
+    """
+    Create a dict mapping the `element_names` to the corresponding
+    `lines`, which are located between ``element_starts[i]`` and
+    ``element_starts[i+1]``.
+    """
+    # Add exclusive stop to indices for easier slicing
+    element_starts.append(len(lines))
+    # Lazy deserialization
+    # -> keep as text for now and deserialize later if needed
+    return {
+        element_name: "\n".join(lines[element_starts[i] : element_starts[i+1]])
+        for i, element_name in enumerate(element_names)
+    }
+
+
+def _parse_data_block_name(line):
+    """
+    If the line defines a data block, return this name.
+    Return ``None`` otherwise.
+    """
     if line.startswith("data_"):
         return line[5:]
     else:
         return None
 
 
-def _is_loop_start(line):
-    return line.startswith("loop_")
-
-
-def _is_multi(line, is_loop):
-    if is_loop:
-        return line[0] == ";"
-    else:
-        return line[0] in [";", "'", '"']
-
-
-def _get_category_name(line):
+def _parse_category_name(line):
+    """
+    If the line defines a category, return this name.
+    Return ``None`` otherwise.
+    """
     if line[0] != "_":
         return None
     else:
         return line[1 : line.find(".")]
 
 
+def _is_loop_start(line):
+    """
+    Return whether the line starts a looped category.
+    """
+    return line.startswith("loop_")
+
+
+def _to_single(lines, is_looped):
+    """
+    Convert multiline values into singleline values
+    (in terms of 'lines' list elements).
+    Linebreaks are preserved.
+    """
+    processed_lines = [None] * len(lines)
+    in_i = 0
+    out_i = 0
+    while in_i < len(lines):
+        if lines[in_i][0] == ";":
+            # Multiline value
+            multi_line_str = lines[in_i][1:]
+            j = in_i + 1
+            while lines[j] != ";":
+                # Preserve linebreaks
+                multi_line_str += "\n" + lines[j]
+                j += 1
+            if is_looped:
+                # Create a line for the multiline string only
+                processed_lines[out_i] = shlex.quote(multi_line_str)
+                out_i += 1
+            else:
+                # Append multiline string to previous line
+                processed_lines[out_i - 1] += " " + shlex.quote(multi_line_str)
+            in_i = j + 1
+
+        elif not is_looped and lines[in_i][0] in ["'", '"']:
+            # Singleline value in the line after the corresponding key
+            processed_lines[out_i - 1] += " " + lines[in_i]
+            in_i += 1
+
+        else:
+            # Normal singleline value in the same row as the key
+            processed_lines[out_i] = lines[in_i]
+            in_i += 1
+            out_i += 1
+
+    return [line for line in processed_lines if line is not None]
+
+
 def _quote(value):
-    if "'" in value:
+    """
+    A less secure but much quicker version of ``shlex.quote()``.
+    """
+    if len(value) == 0:
+        return "''"
+    elif value[0] == "_":
+        return "'" + value + "'"
+    elif "'" in value:
         return '"' + value + '"'
     elif '"' in value:
         return "'" + value + "'"
     elif " " in value:
         return "'" + value + "'"
+    elif "\t" in value:
+        return "'" + value + "'"
     else:
         return value
+
+
+def _multiline(value):
+    """
+    Convert a string containing linebreaks into CIF-compatible
+    multiline string.
+    """
+    if "\n" in value:
+        return "\n;" + value + "\n;\n"
+    return value
+
+
+def _arrayfy(data):
+    if not isinstance(data, (Sequence, np.ndarray)) or isinstance(data, str):
+        data = [data]
+    return np.asarray(data)

@@ -3,8 +3,8 @@
 # information.
 
 """
-This subpackage provides support for the the modern PDBx file format.
-The :class:`PDBxFile` class provides dictionary-like access to
+This subpackage provides support for the the modern PDBx file formats.
+The :class:`CIFFile` class provides dictionary-like access to
 every field in text-based *mmCIF* files.
 :class:`BinaryCIFFile` provides analogous functionality for the
 *BinaryCIF* format.
@@ -18,4 +18,7 @@ __author__ = "Patrick Kunzmann"
 from .convert import *
 from .bcif import *
 from .cif import *
+from .component import *
 from .encoding import *
+from .error import *
+from .legacy import *
