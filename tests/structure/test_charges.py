@@ -13,7 +13,7 @@ from biotite.structure import partial_charges
 
 # Test the partial charge of carbon in the molecules given in table
 # 3 of the Gasteiger-Marsili publication
-# Since some of the molecules are not available in the Chemical 
+# Since some of the molecules are not available in the Chemical
 # Components Dictionary, the respective AtomArrays are constructed via
 # Biotite and the coordinates are arbitrarily set to the origin since
 # the relevant information is the BondList
@@ -118,7 +118,7 @@ tetrafluoromethane.charge = np.array([0] * mol_length)
 
 
 fluoroethane = array(
-    [carbon, carbon, fluorine, hydrogen, hydrogen, hydrogen, 
+    [carbon, carbon, fluorine, hydrogen, hydrogen, hydrogen,
     hydrogen, hydrogen]
 )
 fluoroethane.bonds = BondList(
@@ -328,14 +328,13 @@ def test_valence_state_not_parametrized():
     the two hydrogens. Furthermore, the respective warning is expected
     to be raised.
     """
-    warning_message_no_param_for_valence = (
-        "Parameters for specific valence states of some atoms are not "
-        "available. These valence states are: \n"
-        "Atom:     Amount of binding partners:     Bond type:\n"
-        "S         ---------------------------     2\n"
-        "Their electronegativity is given as NaN."
-    )
-    with pytest.warns(None) as record:
+    with pytest.warns(
+        UserWarning,
+        match=(
+            "Parameters for specific valence states of some atoms "
+            "are not available"
+        )
+    ):
         thioformaldehyde = array(
             [carbon, sulfur, hydrogen, hydrogen]
         )
@@ -349,10 +348,6 @@ def test_valence_state_not_parametrized():
         sulfur_part_charge = charges[1]
         carb_part_charge = charges[0]
         hyd_part_charge = charges[2]
-    assert len(record) == 1
-    warning = record[0]
-    assert issubclass(warning.category, UserWarning)
-    assert str(warning.message) == warning_message_no_param_for_valence
     assert np.isnan(sulfur_part_charge)
     assert carb_part_charge < hyd_part_charge
 
@@ -371,11 +366,11 @@ def test_correct_output_ions():
     sodium_array.charge = np.array([1])
     # Sodium is not involved in covalent bonding
     sodium_array.bonds = BondList(sodium_array.array_length())
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         sodium_charge = partial_charges(
             sodium_array, iteration_step_num=1
         )[0]
-    assert len(record) == 0
     assert sodium_charge == 1
 
 
@@ -419,12 +414,6 @@ def test_correct_output_charged_aa():
     unspecified bond types throughout the whole AtomArray is raised.
     """
 
-    warning_message_unspecified_btype_throughout_the_array = (
-        "Each atom's bond type is 0 (any). Therefore, it is resorted "
-        "to the amount of binding partners for the identification of "
-        "the hybridisation state which can lead to erroneous results."
-    )
-
     glycine_charge = np.array(
         [+1, 0, 0, 0, -1, 0, 0, 0, 0, 0]
     )
@@ -453,15 +442,10 @@ def test_correct_output_charged_aa():
     )
 
     part_charges_with_btype = partial_charges(glycine_with_btype)
-    with pytest.warns(None) as record:
+    with pytest.warns(UserWarning, match="Each atom's bond type is 0"):
         part_charges_without_btype = partial_charges(
             glycine_without_btype
         )
-    assert len(record) == 1
-    warning = record[0]
-    assert issubclass(warning.category, UserWarning)
-    assert str(warning.message) == \
-        warning_message_unspecified_btype_throughout_the_array
 
     # Nitrogen of the amino group has the index 0
     nitr_charge_with_btype = part_charges_with_btype[0]
