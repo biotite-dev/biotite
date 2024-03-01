@@ -3,11 +3,11 @@
 # information.
 
 import glob
-from os.path import join, basename, splitext
+from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 import biotite.sequence.io.fasta as fasta
 from ..util import data_dir
 
@@ -16,8 +16,8 @@ def test_sse_legacy():
     """
     Legacy test to assert that refactoring did not change behavior.
     """
-    array = mmtf.get_structure(
-        mmtf.MMTFFile.read(join(data_dir("structure"), "3o5r.mmtf")),
+    array = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "3o5r.bcif")),
         model = 1
     )
     test_sse = struc.annotate_sse(array, "A")
@@ -47,8 +47,10 @@ def test_sse():
     for pdb_id in ref_psea_file:
         ref_sse = np.array(list(ref_psea_file[pdb_id]))
 
-        atoms = mmtf.get_structure(
-            mmtf.MMTFFile.read(join(data_dir("structure"), f"{pdb_id}.mmtf")),
+        atoms = pdbx.get_structure(
+            pdbx.BinaryCIFFile.read(
+                join(data_dir("structure"), f"{pdb_id}.bcif")
+            ),
             model=1
         )
         atoms = atoms[struc.filter_canonical_amino_acids(atoms)]
@@ -75,8 +77,8 @@ def test_sse_discontinuity(discont_pos):
     discontinuity at a random location and expect that the SSE in its
     proximity becomes 'coil'.
     """
-    atoms = mmtf.get_structure(
-        mmtf.MMTFFile.read(join(data_dir("structure"), "1gya.mmtf")),
+    atoms = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1gya.bcif")),
         model=1
     )
     atoms = atoms[struc.filter_canonical_amino_acids(atoms)]
@@ -105,13 +107,13 @@ def test_sse_discontinuity(discont_pos):
 
 
 @pytest.mark.parametrize(
-    "file_name", glob.glob(join(data_dir("structure"), "*.mmtf"))
+    "file_name", glob.glob(join(data_dir("structure"), "*.bcif"))
 )
 def test_sse_non_peptide(file_name):
     """
     Test whether only amino acids get SSE annotated.
     """
-    atoms = mmtf.get_structure(mmtf.MMTFFile.read(file_name), model=1)
+    atoms = pdbx.get_structure(pdbx.BinaryCIFFile.read(file_name), model=1)
 
     # Special case for PDB 5EIL:
     # The residue BP5 is an amino acid, but has no CA

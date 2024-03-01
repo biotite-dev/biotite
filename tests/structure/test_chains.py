@@ -12,7 +12,7 @@ import pytest
 
 @pytest.fixture
 def array():
-    return strucio.load_structure(join(data_dir("structure"), "1igy.mmtf"))
+    return strucio.load_structure(join(data_dir("structure"), "1igy.bcif"))
 
 def test_get_chain_starts(array):
     """

@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 from ..util import data_dir, cannot_import
 
 
@@ -20,12 +20,12 @@ from ..util import data_dir, cannot_import
 @pytest.mark.parametrize("pdb_id", ["1l2y", "1gya"])
 def test_single(pdb_id):
     file_name = join(data_dir("structure"), pdb_id+".pdb")
-    
+
     # Single atom SASA, compare with MDTraj
     file = pdb.PDBFile.read(file_name)
     array = file.get_structure(model=1)
     sasa = struc.sasa(array, vdw_radii="Single", point_number=5000)
-    
+
     from biotite.structure.info.radii import _SINGLE_RADII as radii
     import mdtraj
     # Use the same atom radii
@@ -37,7 +37,7 @@ def test_single(pdb_id):
         traj, change_radii=radii, n_sphere_points=5000
     )[0] * 100
 
-    
+
     # Assert that more than 90% of atoms
     # have less than 10% SASA difference
     assert np.count_nonzero(
@@ -54,8 +54,8 @@ def test_single(pdb_id):
 def test_coarse_grained(pdb_id):
     # Multi atom SASA (ProtOr), compare with single atom SASA
     # on residue level
-    file = mmtf.MMTFFile.read(join(data_dir("structure"), pdb_id+".mmtf"))
-    array = mmtf.get_structure(file, model=1)
+    file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), pdb_id+".bcif"))
+    array = pdbx.get_structure(file, model=1)
     array = array[struc.filter_amino_acids(array)]
     sasa = struc.apply_residue_wise(
         array, struc.sasa(array, vdw_radii="ProtOr"), np.nansum

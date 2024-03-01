@@ -8,7 +8,7 @@ import warnings
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 from biotite.structure.io import load_structure
 from ..util import data_dir, cannot_import
 
@@ -118,9 +118,9 @@ def test_conversion_to_fraction(len_a, len_b, len_c,
 @pytest.mark.parametrize("multi_model", [False, True])
 def test_repeat_box(multi_model):
     model = None if multi_model else 1
-    array = mmtf.get_structure(
-        mmtf.MMTFFile.read(join(data_dir("structure"), "3o5r.mmtf")),
-        model=model, include_bonds=True
+    array = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "3o5r.bcif")),
+        model=model
     )
     repeat_array, _ = struc.repeat_box(array)
     assert repeat_array.array_length() == array.array_length() * 27
@@ -176,11 +176,11 @@ def test_remove_pbc_restore(multi_model, seed):
             matrix = np.stack([m[0] for m in matrices])
             matrix_pbc = np.stack([m[1] for m in matrices])
         return matrix, matrix_pbc
-    
+
     stack = load_structure(
         join(data_dir("structure"), "1l2y.mmtf"), include_bonds=True
     )
-    
+
     # Only consider a single molecule
     # -> remove all other atoms (in this case some unbound hydrogen)
     mol_masks = struc.get_molecule_masks(stack)
@@ -238,10 +238,10 @@ def test_remove_pbc_selection(multi_model):
     This test makes no assertions, it only test whether an exception
     occurs, when the `selection` parameter is given in `remove_pbc()`.
     """
-    array = load_structure(join(data_dir("structure"), "3o5r.mmtf"))
+    array = load_structure(join(data_dir("structure"), "3o5r.bcif"))
     if multi_model:
         array = struc.stack([array, array])
-    
+
     select_all = np.ones(array.array_length(), dtype=bool)
     select_none = np.zeros(array.array_length(), dtype=bool)
     assert struc.remove_pbc(array, select_all) == struc.remove_pbc(array)

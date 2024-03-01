@@ -6,11 +6,9 @@ from tempfile import NamedTemporaryFile
 import biotite.structure as struc
 import biotite.structure.io as strucio
 from biotite.structure.io.general import _guess_element
-import numpy as np
 import glob
 import os
-import itertools
-from os.path import join, basename, splitext
+from os.path import join, splitext
 from ..util import data_dir, cannot_import
 import pytest
 
@@ -30,7 +28,7 @@ def test_loading(path):
     suffix = splitext(path)[1]
     if suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
         template = strucio.load_structure(
-            join(data_dir("structure"), "1l2y.mmtf")
+            join(data_dir("structure"), "1l2y.bcif")
         )
         array = strucio.load_structure(path, template)
     else:
@@ -108,7 +106,7 @@ def test_saving(suffix):
     :func:`save_structure()` gives the same result as the input to
     :func:`save_structure()`.
     """
-    path = join(data_dir("structure"), "1l2y.mmtf")
+    path = join(data_dir("structure"), "1l2y.bcif")
     ref_array = strucio.load_structure(path)
     if suffix in ("trr", "xtc", "tng", "dcd", "netcdf"):
         # Reading a trajectory file requires a template
@@ -150,7 +148,7 @@ def test_saving_with_extra_args(suffix):
     Test if giving a wrong optional parameter to
     :func:`save_structure()` raises a :class:`TypeError`
     """
-    array = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
     temp = NamedTemporaryFile("w+", suffix=f".{suffix}")
     with pytest.raises(TypeError):
         strucio.save_structure(

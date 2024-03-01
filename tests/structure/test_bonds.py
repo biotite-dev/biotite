@@ -96,7 +96,7 @@ def test_invalid_creation():
                 [3,4]
             ])
         )
-    
+
     # Test invalid BondType
     with pytest.raises(ValueError):
         struc.BondList(
@@ -214,7 +214,7 @@ def test_indexing(bond_list):
     sub_list = bond_list[2:]
     assert sub_list.as_array().tolist() == [[1, 2, 0],
                                             [2, 4, 0]]
-    
+
     sub_list = bond_list[[0,3,4]]
     assert sub_list.as_array().tolist() == [[1, 2, 0],
                                             [0, 2, 0]]
@@ -233,7 +233,7 @@ def test_get_all_bonds():
     """
     ATOM_COUNT = 100
     BOND_COUNT = 500
-    
+
     bond_list = generate_random_bond_list(ATOM_COUNT, BOND_COUNT)
 
     bonds, bond_types = bond_list.get_all_bonds()
@@ -265,7 +265,7 @@ def test_adjacency_matrix():
     """
     ATOM_COUNT = 100
     BOND_COUNT = 500
-    
+
     bond_list = generate_random_bond_list(ATOM_COUNT, BOND_COUNT)
 
     test_matrix = bond_list.adjacency_matrix()
@@ -274,7 +274,7 @@ def test_adjacency_matrix():
     for i in range(ATOM_COUNT):
         for j, _ in zip(*bond_list.get_bonds(i)):
             ref_matrix[i, j] = True
-    
+
     assert test_matrix.tolist() == ref_matrix.tolist()
 
 
@@ -285,7 +285,7 @@ def test_bond_type_matrix():
     """
     ATOM_COUNT = 100
     BOND_COUNT = 500
-    
+
     bond_list = generate_random_bond_list(ATOM_COUNT, BOND_COUNT)
 
     test_matrix = bond_list.bond_type_matrix()
@@ -294,7 +294,7 @@ def test_bond_type_matrix():
     for i in range(ATOM_COUNT):
         for j, bond_type in zip(*bond_list.get_bonds(i)):
             ref_matrix[i, j] = bond_type
-    
+
     assert test_matrix.tolist() == ref_matrix.tolist()
 
 
@@ -316,7 +316,7 @@ def test_sorted_array_indexing():
     ))
     test_bonds = bonds[index_array]
 
-    # Create a boolean mask that indexes the same elements as the array 
+    # Create a boolean mask that indexes the same elements as the array
     mask = np.zeros(ATOM_COUNT, dtype=bool)
     mask[index_array] = True
     ref_bonds = bonds[mask]
@@ -340,7 +340,7 @@ def test_unsorted_array_indexing():
     # For simplicity use a reference integer array
     # instead of an atom array
     integers = np.arange(ATOM_COUNT)
-    
+
     # Create random bonds between the reference integers
     bonds = np.random.randint(ATOM_COUNT, size=(BOND_COUNT, 2))
     # Remove bonds of elements to itself
@@ -380,7 +380,7 @@ def test_unsorted_array_indexing():
     assert test_bonds.as_array().tolist() != ref_bonds.as_array().tolist()
     # But the actual bonded 'atom' pairs, should still be the same
     assert test_integer_pairs == ref_integer_pairs
-    # Additionally, check whether in each bond the lower atom index 
+    # Additionally, check whether in each bond the lower atom index
     # comes first
     for i, j, _ in test_bonds.as_array():
         assert i < j
@@ -393,22 +393,22 @@ def test_atom_array_consistency():
     The boolean mask is constructed in a way that all bonded atoms are
     masked.
     """
-    array = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))[0]
+    array = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))[0]
     ca = array[array.atom_name == "CA"]
     # Just for testing, does not reflect real bonds
-    bond_list = struc.BondList(ca.array_length(), 
+    bond_list = struc.BondList(ca.array_length(),
         np.array([(0,1),(2,8),(5,15),(1,5),(0,9),(3,18),(2,9)])
     )
     ca.bonds = bond_list
-    
+
     ref_ids = ca.res_id[bond_list.as_array()[:,:2].flatten()]
-    
+
     # Some random boolean mask as index,
     # but all bonded atoms are included
     mask = np.array([1,1,1,1,0,1,0,0,1,1,0,1,1,0,0,1,1,0,1,1], dtype=bool)
     masked_ca = ca[mask]
     test_ids = masked_ca.res_id[masked_ca.bonds.as_array()[:,:2].flatten()]
-    
+
     # The bonds, should always point to the same atoms (same res_id),
     # irrespective of indexing
     assert test_ids.tolist() == ref_ids.tolist()
@@ -426,7 +426,7 @@ def test_connect_via_residue_names(single_model):
         atoms = mmtf.get_structure(file, include_bonds=True, model=1)
     else:
         atoms = mmtf.get_structure(file, include_bonds=True)
-    
+
     ref_bonds = atoms.bonds
 
     test_bonds = struc.connect_via_residue_names(atoms)
@@ -452,7 +452,7 @@ def test_connect_via_distances(periodic):
         # Add large dummy box to test parameter
         # No actual bonds over the periodic boundary are expected
         atoms.box = np.identity(3) * 100
-    
+
     ref_bonds = atoms.bonds
     # Convert all bonds to BondType.ANY
     ref_bonds = struc.BondList(
@@ -505,7 +505,7 @@ def test_find_rotatable_bonds(res_name, expected_bonds):
     known examples.
     """
     molecule = info.residue(res_name)
-    
+
     ref_bond_set = {
         tuple(sorted((name_i, name_j))) for name_i, name_j in expected_bonds
     }
@@ -516,7 +516,7 @@ def test_find_rotatable_bonds(res_name, expected_bonds):
         test_bond_set.add(
             tuple(sorted((molecule.atom_name[i], molecule.atom_name[j])))
         )
-    
+
     # Compare with reference bonded atom names
     assert test_bond_set == ref_bond_set
     # All rotatable bonds must be single bonds

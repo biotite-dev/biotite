@@ -15,10 +15,8 @@ only one *altloc* can be chosen for each atom. Hence, the amount of
 atoms may be lower in the atom array (stack) than in respective
 structure file.
 
-The recommended format for reading structure files is MMTF.
+The recommended format for reading structure files is *BinaryCIF*.
 It has by far the shortest parsing time and file size.
-Furthermore, chemical bond information can be read from MMTF files
-as :class:`BondList` instances.
 
 Besides the mentioned structure formats, Gromacs trajectory files can be
 loaded, if `mdtraj` is installed.

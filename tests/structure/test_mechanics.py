@@ -6,7 +6,7 @@ from ..util import data_dir
 import pytest
 
 def test_gyration_radius():
-    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
+    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
     radii = struc.gyration_radius(stack)
     # Compare with results from MDTraj
     exp_radii = \
