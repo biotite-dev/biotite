@@ -71,6 +71,8 @@ def test_conversion(tmpdir, format, path, model):
     Test serializing and deserializing a structure from a file
     restores the same same structure
     """
+    DELETED_ANNOTATION = "auth_comp_id"
+
     base_path = splitext(path)[0]
     if format == "cif":
         data_path = base_path + ".cif"
@@ -84,7 +86,9 @@ def test_conversion(tmpdir, format, path, model):
 
     pdbx_file = File.read(data_path)
     try:
-        ref_atoms = pdbx.get_structure(pdbx_file, model=model)
+        ref_atoms = pdbx.get_structure(
+            pdbx_file, model=model, include_bonds=True
+        )
     except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
@@ -96,29 +100,30 @@ def test_conversion(tmpdir, format, path, model):
 
     pdbx_file = File()
     pdbx.set_structure(pdbx_file, ref_atoms)
-    file_path = join(tmpdir, "test")
+    file_path = join(tmpdir, f"test.{format}")
     pdbx_file.write(file_path)
 
     pdbx_file = File.read(file_path)
-    # Remove one optional auth section in label to test fallback to label
-    # fields
+    # Remove one label section to test fallback to auth fields
     if format == "legacy":
-        del pdbx_file.cif_file.block["atom_site"]["auth_atom_id"]
+        del pdbx_file.cif_file.block["atom_site"][DELETED_ANNOTATION]
     else:
-        del pdbx_file.block["atom_site"]["auth_atom_id"]
-    with pytest.warns(UserWarning, match="Attribute 'auth_atom_id' not found"):
-        test_atoms = pdbx.get_structure(pdbx_file, model=model)
+        del pdbx_file.block["atom_site"][DELETED_ANNOTATION]
+    with pytest.warns(UserWarning, match=f"'{DELETED_ANNOTATION}' not found"):
+        test_atoms = pdbx.get_structure(
+            pdbx_file, model=model, include_bonds=True
+        )
 
     assert ref_atoms.array_length() > 0
     if ref_atoms.box is not None:
         assert np.allclose(test_atoms.box, test_atoms.box)
-    assert ref_atoms.bonds == test_atoms.bonds
+    assert test_atoms.bonds == ref_atoms.bonds
     for category in ref_atoms.get_annotation_categories():
         assert (
-            ref_atoms.get_annotation(category).tolist()
-            == test_atoms.get_annotation(category).tolist()
+            test_atoms.get_annotation(category).tolist()
+            == ref_atoms.get_annotation(category).tolist()
         )
-    assert ref_atoms.coord.tolist() == test_atoms.coord.tolist()
+    assert test_atoms.coord.tolist() == ref_atoms.coord.tolist()
 
 
 @pytest.mark.parametrize(

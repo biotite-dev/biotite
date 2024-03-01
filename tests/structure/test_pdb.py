@@ -7,6 +7,7 @@ import warnings
 import itertools
 import glob
 from os.path import join, splitext
+import sys
 import pytest
 from pytest import approx
 import numpy as np
@@ -89,9 +90,11 @@ def test_array_conversion(path, model, hybrid36, include_bonds):
 )
 def test_pdbx_consistency(path, model):
     bcif_path = splitext(path)[0] + ".bcif"
-    pdb_file = pdb.PDBFile.read(path)
+    pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
     try:
-        a1 = pdb_file.get_structure(model=model)
+        ref_atoms = pdbx.get_structure(
+            pdbx_file, model=model, include_bonds=True
+        )
     except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
@@ -101,16 +104,39 @@ def test_pdbx_consistency(path, model):
         else:
             raise
 
-    pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
-    a2 = pdbx.get_structure(pdbx_file, model=model)
+    pdb_file = pdb.PDBFile.read(path)
+    test_atoms = pdb_file.get_structure(model=model, include_bonds=True)
 
-    if a2.box is not None:
-        assert np.allclose(a1.box, a2.box)
-    assert a1.bonds == a2.bonds
-    for category in a1.get_annotation_categories():
-        assert a1.get_annotation(category).tolist() == \
-               a2.get_annotation(category).tolist()
-    assert a1.coord.tolist() == a2.coord.tolist()
+    # Some bond types are explicitly set only in the PDB file or the
+    # PDBx file -> Remove bond types for comparison
+    ref_atoms.bonds.remove_bond_order()
+    test_atoms.bonds.remove_bond_order()
+
+    if ref_atoms.box is not None:
+        assert np.allclose(test_atoms.box, ref_atoms.box)
+    try:
+        assert test_atoms.bonds == ref_atoms.bonds
+    except AssertionError:
+        if model is None:
+            ref_atoms = ref_atoms[0]
+            test_atoms = test_atoms[0]
+        test_bond_set = set([tuple(e) for e in test_atoms.bonds.as_array()])
+        ref_bond_set = set([tuple(e) for e in ref_atoms.bonds.as_array()])
+        print("Additional bonds in test_atoms:", file=sys.stderr)
+        for i, j, _ in test_bond_set - ref_bond_set:
+            print(test_atoms[i], file=sys.stderr)
+            print(test_atoms[j], file=sys.stderr)
+            print(file=sys.stderr)
+        print("Additional bonds in ref_atoms:", file=sys.stderr)
+        for i, j, _ in ref_bond_set - test_bond_set:
+            print(ref_atoms[i], file=sys.stderr)
+            print(ref_atoms[j], file=sys.stderr)
+            print(file=sys.stderr)
+        raise
+    for category in ref_atoms.get_annotation_categories():
+        assert test_atoms.get_annotation(category).tolist() == \
+               ref_atoms.get_annotation(category).tolist()
+    assert test_atoms.coord.tolist() == ref_atoms.coord.tolist()
 
 
 @pytest.mark.parametrize(
