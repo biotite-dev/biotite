@@ -251,7 +251,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v3
       with:
-        name: release
+        name: documentation
         path: dist
     - uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
       if: github.event_name == 'release' && github.event.action == 'published'
