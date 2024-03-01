@@ -1578,10 +1578,8 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
 
     Notes
     -----
-    If obtaining the bonds from an *MMTF* file is not possible, this is
-    the recommended way to obtain :class:`BondList` for a structure.
-    However, this method can only find bonds for residues in the RCSB
-    ``components.cif`` dataset.
+    This method can only find bonds for residues in the RCSB
+    *Chemical Component Dictionary*.
     Although this includes most molecules one encounters, this will fail
     for exotic molecules, e.g. specialized inhibitors.
     """

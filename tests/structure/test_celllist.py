@@ -59,8 +59,8 @@ def test_adjacency_matrix(cell_size, threshold, periodic, use_selection):
     Compare the construction of an adjacency matrix using a cell list
     and using a computationally expensive but simpler distance matrix.
     """
-    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
-    
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
+
     if periodic:
         # Create an orthorhombic box
         # with the outer coordinates as bounds
@@ -78,7 +78,7 @@ def test_adjacency_matrix(cell_size, threshold, periodic, use_selection):
         array, cell_size=cell_size, periodic=periodic, selection=selection
     )
     test_matrix = cell_list.create_adjacency_matrix(threshold)
-    
+
     length = array.array_length()
     distance = struc.index_distance(
         array,
@@ -98,7 +98,7 @@ def test_adjacency_matrix(cell_size, threshold, periodic, use_selection):
         # Set rows and columns to False for filtered out atoms
         exp_matrix[~selection, :] = False
         exp_matrix[:, ~selection] = False
-    
+
     # Both ways to create an adjacency matrix
     # should give the same result
     assert np.array_equal(test_matrix, exp_matrix)
@@ -108,7 +108,7 @@ def test_outside_location():
     """
     Test result for location outside any cell.
     """
-    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
     array = array[struc.filter_amino_acids(array)]
     cell_list = struc.CellList(array, cell_size=5)
     outside_coord = np.min(array.coord, axis=0) - 100
@@ -122,9 +122,9 @@ def test_selection():
     This is tested by comparing the selection done prior to cell list
     creation with the selection done in the cell list construction.
     """
-    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
     selection = np.array([False, True] * (array.array_length() // 2))
-    
+
     # Selection prior to cell list creation
     selected = array[selection]
     cell_list = struc.CellList(selected, cell_size=10)
@@ -142,9 +142,9 @@ def test_empty_coordinates():
     Test whether empty input coordinates result in an empty output
     array/mask.
     """
-    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
     cell_list = struc.CellList(array, cell_size=10)
-    
+
     for method in (
         struc.CellList.get_atoms, struc.CellList.get_atoms_in_cells
     ):

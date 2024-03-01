@@ -12,7 +12,7 @@ import pytest
 
 @pytest.fixture
 def array():
-    return strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))[0]
+    return strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))[0]
 
 
 def test_apply_residue_wise(array):

@@ -49,18 +49,15 @@ import matplotlib.colors as colors
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-import biotite.sequence as seq
-import biotite.sequence.io.fasta as fasta
 import biotite.sequence.align as align
 import biotite.sequence.graphics as graphics
 import biotite.application.blast as blast
 import biotite.application.clustalo as clustalo
 import biotite.database.rcsb as rcsb
-import biotite.database.entrez as entrez
 
 
 # Get structure and sequence
-pdbx_file = pdbx.PDBxFile.read(rcsb.fetch("1GUU", "mmcif"))
+pdbx_file = pdbx.CIFFile.read(rcsb.fetch("1GUU", "mmcif"))
 sequence = pdbx.get_sequence(pdbx_file)[0]
 # 'use_author_fields' is set to false,
 # to ensure that values in the 'res_id' annotation point to the sequence
@@ -117,7 +114,7 @@ fig.tight_layout()
 def mutual_information_zscore(alignment, n_shuffle=100):
     codes = align.get_codes(alignment).T
     alph = alignment.sequences[0].alphabet
-    
+
     mi = _mutual_information(codes, alph)
     np.random.seed(0)
     random_mi = [None] * n_shuffle
@@ -158,13 +155,13 @@ def _mutual_information(codes, alph):
             marginal_probs_i = marginal_counts_i / nrows
             marginal_probs_j = marginal_counts_j / nrows
             combined_probs = combined_counts / nrows
-            
+
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 mi_before_sum = (
                     combined_probs * np.log2(
                         combined_probs / (
-                            marginal_probs_i[:, np.newaxis] * 
+                            marginal_probs_i[:, np.newaxis] *
                             marginal_probs_j[np.newaxis, :]
                         )
                     )

@@ -5,7 +5,7 @@
 """
 A subpackage for reading and writing structure related data.
 
-Macromolecular structure files (PDB, PDBx/mmCIF, MMTF, etc.) and
+Macromolecular structure files (PDB, PDBx/mmCIF, BinaryCIF, etc.) and
 small molecule files (MOL, SDF, etc.) can be used
 to load an :class:`AtomArray` or :class:`AtomArrayStack`.
 
@@ -15,10 +15,8 @@ only one *altloc* can be chosen for each atom. Hence, the amount of
 atoms may be lower in the atom array (stack) than in respective
 structure file.
 
-The recommended format for reading structure files is MMTF.
+The recommended format for reading structure files is *BinaryCIF*.
 It has by far the shortest parsing time and file size.
-Furthermore, chemical bond information can be read from MMTF files
-as :class:`BondList` instances.
 
 Besides the mentioned structure formats, Gromacs trajectory files can be
 loaded, if `mdtraj` is installed.

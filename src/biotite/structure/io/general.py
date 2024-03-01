@@ -21,12 +21,12 @@ def load_structure(file_path, template=None, **kwargs):
     Load an :class:`AtomArray` or class`AtomArrayStack` from a structure
     file without the need to manually instantiate a :class:`File`
     object.
-    
+
     Internally this function uses a :class:`File` object, based on the
     file extension.
     Trajectory files furthermore require specification of the `template`
     parameter.
-    
+
     Parameters
     ----------
     file_path : str
@@ -40,13 +40,13 @@ def load_structure(file_path, template=None, **kwargs):
         This does not affect files given via the `template` parameter.
         The only exception is the `atom_i`, which is applied to the template
         as well if number of atoms do not match.
-    
+
     Returns
     -------
     array : AtomArray or AtomArrayStack
         If the file contains multiple models, an AtomArrayStack is
         returned, otherwise an AtomArray is returned.
-    
+
     Raises
     ------
     ValueError
@@ -65,56 +65,37 @@ def load_structure(file_path, template=None, **kwargs):
         from .pdb import PDBFile
         file = PDBFile.read(file_path)
         array = file.get_structure(**kwargs)
-        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
-            # Stack containing only one model -> return as atom array
-            return array[0]
-        else:
-            return array
+        return _as_single_model_if_possible(array)
     elif suffix == ".pdbqt":
         from .pdbqt import PDBQTFile
         file = PDBQTFile.read(file_path)
         array = file.get_structure(**kwargs)
-        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
-            # Stack containing only one model -> return as atom array
-            return array[0]
-        else:
-            return array
+        return _as_single_model_if_possible(array)
     elif suffix == ".cif" or suffix == ".pdbx":
-        from .pdbx import PDBxFile, get_structure
-        file = PDBxFile.read(file_path)
+        from .pdbx import CIFFile, get_structure
+        file = CIFFile.read(file_path)
         array = get_structure(file, **kwargs)
-        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
-            # Stack containing only one model -> return as atom array
-            return array[0]
-        else:
-            return array
+        return _as_single_model_if_possible(array)
+    elif suffix == ".bcif":
+        from .pdbx import BinaryCIFFile, get_structure
+        file = BinaryCIFFile.read(file_path)
+        array = get_structure(file, **kwargs)
+        return _as_single_model_if_possible(array)
     elif suffix == ".gro":
         from .gro import GROFile
         file = GROFile.read(file_path)
         array = file.get_structure(**kwargs)
-        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
-            # Stack containing only one model -> return as atom array
-            return array[0]
-        else:
-            return array
+        return _as_single_model_if_possible(array)
     elif suffix == ".mmtf":
         from .mmtf import MMTFFile, get_structure
         file = MMTFFile.read(file_path)
         array = get_structure(file, **kwargs)
-        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
-            # Stack containing only one model -> return as atom array
-            return array[0]
-        else:
-            return array
+        return _as_single_model_if_possible(array)
     elif suffix == ".npz":
         from .npz import NpzFile
         file = NpzFile.read(file_path)
         array = file.get_structure(**kwargs)
-        if isinstance(array, AtomArrayStack) and array.stack_depth() == 1:
-            # Stack containing only one model -> return as atom array
-            return array[0]
-        else:
-            return array
+        return _as_single_model_if_possible(array)
     elif suffix == ".mol" or suffix == ".sdf":
         from .mol import MOLFile
         file = MOLFile.read(file_path)
@@ -153,10 +134,10 @@ def save_structure(file_path, array, **kwargs):
     Save an :class:`AtomArray` or class`AtomArrayStack` to a structure
     file without the need to manually instantiate a :class:`File`
     object.
-    
+
     Internally this function uses a :class:`File` object, based on the
     file extension.
-    
+
     Parameters
     ----------
     file_path : str
@@ -185,9 +166,14 @@ def save_structure(file_path, array, **kwargs):
         file.set_structure(array, **kwargs)
         file.write(file_path)
     elif suffix == ".cif" or suffix == ".pdbx":
-        from .pdbx import PDBxFile, set_structure
-        file = PDBxFile()
-        set_structure(file, array, data_block="STRUCTURE", **kwargs)
+        from .pdbx import CIFFile, set_structure
+        file = CIFFile()
+        set_structure(file, array, **kwargs)
+        file.write(file_path)
+    elif suffix == ".bcif":
+        from .pdbx import BinaryCIFFile, set_structure
+        file = BinaryCIFFile()
+        set_structure(file, array, **kwargs)
         file.write(file_path)
     elif suffix == ".gro":
         from .gro import GROFile
@@ -232,8 +218,16 @@ def save_structure(file_path, array, **kwargs):
         raise ValueError(f"Unknown file format '{suffix}'")
 
 
+def _as_single_model_if_possible(atoms):
+    if isinstance(atoms, AtomArrayStack) and atoms.stack_depth() == 1:
+        # Stack containing only one model -> return as atom array
+        return atoms[0]
+    else:
+        return atoms
+
+
 # Helper function to estimate elements from atom names
-_elements = [elem.upper() for elem in 
+_elements = [elem.upper() for elem in
 ["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg",
 "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe",
 "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr", "Rb", "Sr", "Y",
@@ -268,4 +262,4 @@ def _guess_element(atom_name):
             pass
 
     return ""
- 
+

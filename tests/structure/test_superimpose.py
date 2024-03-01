@@ -71,7 +71,7 @@ def test_rotation_matrix():
 
 @pytest.mark.parametrize(
     "path, coord_only", itertools.product(
-        glob.glob(join(data_dir("structure"), "*.mmtf")),
+        glob.glob(join(data_dir("structure"), "*.bcif")),
         [False, True]
     )
 )
@@ -114,7 +114,7 @@ def test_superimposition_stack(ca_only):
     (optimally) superimposed onto each other.
     Then superimpose and expect an improved RMSD.
     """
-    path = join(data_dir("structure"), "1l2y.mmtf")
+    path = join(data_dir("structure"), "1l2y.bcif")
     stack = strucio.load_structure(path)
     fixed = stack[0]
     mobile = stack[1:]
@@ -147,7 +147,7 @@ def test_masked_superimposition(seed):
     the atom in both models should be 0.
     """
 
-    path = join(data_dir("structure"), "1l2y.mmtf")
+    path = join(data_dir("structure"), "1l2y.bcif")
     fixed = strucio.load_structure(path, model=1)
     mobile = strucio.load_structure(path, model=2)
 
@@ -175,7 +175,8 @@ def test_masked_superimposition(seed):
 
 
 @pytest.mark.parametrize(
-    "single_model, single_atom", itertools.product([False, True], [False, True])
+    "single_model, single_atom",
+    itertools.product([False, True], [False, True])
 )
 def test_input_shapes(single_model, single_atom):
     """
@@ -183,7 +184,7 @@ def test_input_shapes(single_model, single_atom):
     even if the input :class:`AtomArrayStack` contains only a single
     model or a single atom.
     """
-    path = join(data_dir("structure"), "1l2y.mmtf")
+    path = join(data_dir("structure"), "1l2y.bcif")
     stack = strucio.load_structure(path)
     fixed = stack[0]
 

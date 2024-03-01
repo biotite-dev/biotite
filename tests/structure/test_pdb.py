@@ -53,7 +53,7 @@ def test_array_conversion(path, model, hybrid36, include_bonds):
             return
         else:
             raise
-    
+
     if hybrid36 and (array1.res_id < 0).any():
         with pytest.raises(
             ValueError,
@@ -66,11 +66,11 @@ def test_array_conversion(path, model, hybrid36, include_bonds):
     else:
         pdb_file = pdb.PDBFile()
         pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
-    
+
     array2 = pdb.get_structure(
         pdb_file, model=model, include_bonds=include_bonds
     )
-    
+
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
     assert array1.bonds == array2.bonds
@@ -88,7 +88,7 @@ def test_array_conversion(path, model, hybrid36, include_bonds):
     )
 )
 def test_pdbx_consistency(path, model):
-    cif_path = splitext(path)[0] + ".cif"
+    bcif_path = splitext(path)[0] + ".bcif"
     pdb_file = pdb.PDBFile.read(path)
     try:
         a1 = pdb_file.get_structure(model=model)
@@ -101,9 +101,9 @@ def test_pdbx_consistency(path, model):
         else:
             raise
 
-    pdbx_file = pdbx.PDBxFile.read(cif_path)
+    pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
-    
+
     if a2.box is not None:
         assert np.allclose(a1.box, a2.box)
     assert a1.bonds == a2.bonds
@@ -136,9 +136,9 @@ def test_pdbx_consistency_assembly(path, model):
             return
         else:
             raise
-    
-    cif_path = splitext(path)[0] + ".cif"
-    pdbx_file = pdbx.PDBxFile.read(cif_path)
+
+    bcif_path = splitext(path)[0] + ".bcif"
+    pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
     ref_assembly = pdbx.get_assembly(pdbx_file, model=model)
 
     for category in ref_assembly.get_annotation_categories():
@@ -160,7 +160,7 @@ def test_extra_fields(hybrid36):
 
     with pytest.raises(ValueError):
         pdb_file.get_structure(extra_fields=["unsupported_field"])
-    
+
     # Add non-neutral charge values,
     # as the input PDB has only neutral charges
     stack1.charge[0] = -1
@@ -168,13 +168,13 @@ def test_extra_fields(hybrid36):
 
     pdb_file = pdb.PDBFile()
     pdb_file.set_structure(stack1, hybrid36=hybrid36)
-    
+
     stack2 = pdb_file.get_structure(
         extra_fields=[
             "atom_id", "b_factor", "occupancy", "charge"
         ]
     )
-    
+
     assert stack1.ins_code.tolist() == stack2.ins_code.tolist()
     assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
     assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
@@ -262,7 +262,7 @@ def test_id_overflow():
     a.hetero = np.full(length, False)
     a.atom_name = np.full(length, "CA")
     a.element = np.full(length, "C")
-    
+
     # Write stack to pdb file and make sure a warning is thrown
     with pytest.warns(UserWarning):
         temp = TemporaryFile("w+")
@@ -274,7 +274,7 @@ def test_id_overflow():
     temp.seek(0)
     a2 = pdb.get_structure(pdb.PDBFile.read(temp))
     assert(a2.array_length() == a.array_length())
-    
+
     # Manually check if the written atom id is correct
     temp.seek(0)
     last_line = temp.readlines()[-1]
@@ -282,7 +282,7 @@ def test_id_overflow():
     assert(atom_id == 1)
 
     temp.close()
-    
+
     # Write stack as hybrid-36 pdb file: no warning should be thrown
     with warnings.catch_warnings():
         warnings.simplefilter("error")
@@ -308,11 +308,11 @@ def test_get_coord(model):
     # to avoid atom filtering in reference atom array (stack)
     path = join(data_dir("structure"), "1l2y.pdb")
     pdb_file = pdb.PDBFile.read(path)
-    
+
     ref_coord = pdb_file.get_structure(model=model).coord
-    
+
     test_coord = pdb_file.get_coord(model=model)
-    
+
     assert test_coord.shape == ref_coord.shape
     assert (test_coord == ref_coord).all()
 
@@ -323,7 +323,7 @@ def test_get_b_factor(model):
     # to avoid atom filtering in reference atom array (stack)
     path = join(data_dir("structure"), "1l2y.pdb")
     pdb_file = pdb.PDBFile.read(path)
-    
+
     if model is None:
         # The B-factor is an annotation category
         # -> it can only be extracted in a per-model basis
@@ -337,9 +337,9 @@ def test_get_b_factor(model):
         ref_b_factor = pdb_file.get_structure(
             model=model, extra_fields=["b_factor"]
         ).b_factor
-    
+
     test_b_factor= pdb_file.get_b_factor(model=model)
-    
+
     assert test_b_factor.shape == ref_b_factor.shape
     assert (test_b_factor == ref_b_factor).all()
 
@@ -387,7 +387,7 @@ def test_bond_records(hybrid36):
     atoms = struc.AtomArray(n_atoms)
     # NaN values cannot be written to PDB
     atoms.coord[...] = 0
-    # Only the bonds of 'HETATM' atoms records are written 
+    # Only the bonds of 'HETATM' atoms records are written
     atoms.hetero[:] = True
     # Omit time consuming element guessing
     atoms.element[:] = "NA"
@@ -417,7 +417,7 @@ def test_bond_parsing():
     path = join(data_dir("structure"), "3o5r.pdb")
     pdb_file = pdb.PDBFile.read(path)
     atoms = pdb.get_structure(pdb_file, model=1, include_bonds=True)
-    
+
     test_bonds = atoms.bonds
     test_bonds.remove_bond_order()
 
@@ -447,7 +447,7 @@ def test_get_symmetry_mates(model):
     cell_sizes = np.diagonal(box)
 
     symmetry_mates = pdb_file.get_symmetry_mates(model=model)
-    
+
     # Space group has 4 copies in a unit cell
     assert symmetry_mates.array_length() \
         == original_structure.array_length() * 4

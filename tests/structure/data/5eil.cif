@@ -3,14 +3,16 @@ data_5EIL
 _entry.id   5EIL 
 # 
 _audit_conform.dict_name       mmcif_pdbx.dic 
-_audit_conform.dict_version    5.320 
+_audit_conform.dict_version    5.381 
 _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx.dic 
 # 
 loop_
 _database_2.database_id 
 _database_2.database_code 
-PDB   5EIL         
-WWPDB D_1000214979 
+_database_2.pdbx_database_accession 
+_database_2.pdbx_DOI 
+PDB   5EIL         pdb_00005eil 10.2210/pdb5eil/pdb 
+WWPDB D_1000214979 ?            ?                   
 # 
 _pdbx_database_status.status_code                     REL 
 _pdbx_database_status.status_code_sf                  REL 
@@ -23,6 +25,7 @@ _pdbx_database_status.process_site                    RCSB
 _pdbx_database_status.status_code_cs                  ? 
 _pdbx_database_status.methods_development_category    ? 
 _pdbx_database_status.pdb_format_compatible           Y 
+_pdbx_database_status.status_code_nmr_data            ? 
 # 
 loop_
 _audit_author.name 
@@ -787,7 +790,6 @@ _refine_ls_shell.pdbx_fsc_free
 _struct.entry_id                     5EIL 
 _struct.title                        
 'Computational design of a high-affinity metalloprotein homotrimer containing a metal chelating non-canonical amino acid' 
-_struct.pdbx_descriptor              TRI-05 
 _struct.pdbx_model_details           ? 
 _struct.pdbx_formula_weight          ? 
 _struct.pdbx_formula_weight_method   ? 
@@ -906,18 +908,19 @@ _struct_conn.pdbx_ptnr3_PDB_ins_code
 _struct_conn.details 
 _struct_conn.pdbx_dist_value 
 _struct_conn.pdbx_value_order 
-covale1 covale one  ? A ILE 9  C   ? ? ? 1_555 A BP5 10 N  ? ? A ILE 8 A BP5 9   1_555 ? ? ? ? ? ? ? 1.326 ? 
-metalc1 metalc ?    ? A BP5 10 N1  ? ? ? 1_555 D FE  .  FE ? ? A BP5 9 A FE  201 1_555 ? ? ? ? ? ? ? 2.136 ? 
-metalc2 metalc ?    ? A BP5 10 N2  ? ? ? 1_555 D FE  .  FE ? ? A BP5 9 A FE  201 1_555 ? ? ? ? ? ? ? 2.036 ? 
-covale2 covale both ? A BP5 10 C14 ? ? ? 1_555 A ALA 11 N  ? ? A BP5 9 A ALA 10  1_555 ? ? ? ? ? ? ? 1.343 ? 
-covale3 covale one  ? B ILE 9  C   ? ? ? 1_555 B BP5 10 N  ? ? B ILE 8 B BP5 9   1_555 ? ? ? ? ? ? ? 1.327 ? 
-metalc3 metalc ?    ? B BP5 10 N1  ? ? ? 1_555 D FE  .  FE ? ? B BP5 9 A FE  201 1_555 ? ? ? ? ? ? ? 2.138 ? 
-metalc4 metalc ?    ? B BP5 10 N2  ? ? ? 1_555 D FE  .  FE ? ? B BP5 9 A FE  201 1_555 ? ? ? ? ? ? ? 2.019 ? 
-covale4 covale both ? B BP5 10 C14 ? ? ? 1_555 B ALA 11 N  ? ? B BP5 9 B ALA 10  1_555 ? ? ? ? ? ? ? 1.342 ? 
-covale5 covale one  ? C ILE 9  C   ? ? ? 1_555 C BP5 10 N  ? ? C ILE 8 C BP5 9   1_555 ? ? ? ? ? ? ? 1.327 ? 
-metalc5 metalc ?    ? C BP5 10 N1  ? ? ? 1_555 D FE  .  FE ? ? C BP5 9 A FE  201 1_555 ? ? ? ? ? ? ? 2.106 ? 
-metalc6 metalc ?    ? C BP5 10 N2  ? ? ? 1_555 D FE  .  FE ? ? C BP5 9 A FE  201 1_555 ? ? ? ? ? ? ? 2.043 ? 
-covale6 covale both ? C BP5 10 C14 ? ? ? 1_555 C ALA 11 N  ? ? C BP5 9 C ALA 10  1_555 ? ? ? ? ? ? ? 1.344 ? 
+_struct_conn.pdbx_role 
+covale1 covale both ? A ILE 9  C  ? ? ? 1_555 A BP5 10 N  ? ? A ILE 8   A BP5 9   1_555 ? ? ? ? ? ? ? 1.326 ? ? 
+covale2 covale both ? A BP5 10 C  ? ? ? 1_555 A ALA 11 N  ? ? A BP5 9   A ALA 10  1_555 ? ? ? ? ? ? ? 1.343 ? ? 
+covale3 covale both ? B ILE 9  C  ? ? ? 1_555 B BP5 10 N  ? ? B ILE 8   B BP5 9   1_555 ? ? ? ? ? ? ? 1.327 ? ? 
+covale4 covale both ? B BP5 10 C  ? ? ? 1_555 B ALA 11 N  ? ? B BP5 9   B ALA 10  1_555 ? ? ? ? ? ? ? 1.342 ? ? 
+covale5 covale both ? C ILE 9  C  ? ? ? 1_555 C BP5 10 N  ? ? C ILE 8   C BP5 9   1_555 ? ? ? ? ? ? ? 1.327 ? ? 
+covale6 covale both ? C BP5 10 C  ? ? ? 1_555 C ALA 11 N  ? ? C BP5 9   C ALA 10  1_555 ? ? ? ? ? ? ? 1.344 ? ? 
+metalc1 metalc ?    ? A BP5 10 N1 ? ? ? 1_555 D FE  .  FE ? ? A BP5 9   A FE  201 1_555 ? ? ? ? ? ? ? 2.136 ? ? 
+metalc2 metalc ?    ? A BP5 10 N2 ? ? ? 1_555 D FE  .  FE ? ? A BP5 9   A FE  201 1_555 ? ? ? ? ? ? ? 2.036 ? ? 
+metalc3 metalc ?    ? D FE  .  FE ? ? ? 1_555 B BP5 10 N1 ? ? A FE  201 B BP5 9   1_555 ? ? ? ? ? ? ? 2.138 ? ? 
+metalc4 metalc ?    ? D FE  .  FE ? ? ? 1_555 B BP5 10 N2 ? ? A FE  201 B BP5 9   1_555 ? ? ? ? ? ? ? 2.019 ? ? 
+metalc5 metalc ?    ? D FE  .  FE ? ? ? 1_555 C BP5 10 N1 ? ? A FE  201 C BP5 9   1_555 ? ? ? ? ? ? ? 2.106 ? ? 
+metalc6 metalc ?    ? D FE  .  FE ? ? ? 1_555 C BP5 10 N2 ? ? A FE  201 C BP5 9   1_555 ? ? ? ? ? ? ? 2.043 ? ? 
 # 
 loop_
 _struct_conn_type.id 
@@ -1160,22 +1163,22 @@ HETATM 158  C  C12  . BP5 A 1 10  ? 27.106 36.855 8.025   1.00 46.43  ?  9   BP5
 HETATM 159  C  C11  . BP5 A 1 10  ? 29.012 38.493 8.356   1.00 50.72  ?  9   BP5 A C11  1 
 HETATM 160  N  N1   . BP5 A 1 10  ? 31.911 41.382 7.189   1.00 56.65  ?  9   BP5 A N1   1 
 HETATM 161  N  N2   . BP5 A 1 10  ? 29.915 39.423 7.925   1.00 53.16  ?  9   BP5 A N2   1 
-HETATM 162  C  C13  . BP5 A 1 10  ? 26.320 36.072 6.938   1.00 47.28  ?  9   BP5 A C13  1 
-HETATM 163  C  C14  . BP5 A 1 10  ? 25.775 34.779 7.561   1.00 43.16  ?  9   BP5 A C14  1 
-HETATM 164  O  O2   . BP5 A 1 10  ? 26.219 33.669 7.176   1.00 41.61  ?  9   BP5 A O2   1 
+HETATM 162  C  CA   . BP5 A 1 10  ? 26.320 36.072 6.938   1.00 47.28  ?  9   BP5 A CA   1 
+HETATM 163  C  C    . BP5 A 1 10  ? 25.775 34.779 7.561   1.00 43.16  ?  9   BP5 A C    1 
+HETATM 164  O  O    . BP5 A 1 10  ? 26.219 33.669 7.176   1.00 41.61  ?  9   BP5 A O    1 
 HETATM 165  N  N    . BP5 A 1 10  ? 25.176 36.869 6.473   1.00 48.33  ?  9   BP5 A N    1 
-HETATM 166  H  H2   . BP5 A 1 10  ? 30.642 41.064 4.226   1.00 68.93  ?  9   BP5 A H2   1 
+HETATM 166  H  H2   . BP5 A 1 10  ? 24.401 36.438 6.555   1.00 58.00  ?  9   BP5 A H2   1 
 HETATM 167  H  H8   . BP5 A 1 10  ? 27.540 37.919 5.552   1.00 62.63  ?  9   BP5 A H8   1 
 HETATM 168  H  H7   . BP5 A 1 10  ? 29.084 39.510 4.819   1.00 64.76  ?  9   BP5 A H7   1 
 HETATM 169  H  H5   . BP5 A 1 10  ? 33.706 43.437 5.388   1.00 70.79  ?  9   BP5 A H5   1 
 HETATM 170  H  H4   . BP5 A 1 10  ? 33.440 42.623 7.558   1.00 69.14  ?  9   BP5 A H4   1 
-HETATM 171  H  H1   . BP5 A 1 10  ? 32.287 42.642 3.715   1.00 70.58  ?  9   BP5 A H1   1 
-HETATM 172  H  H121 . BP5 A 1 10  ? 27.556 36.211 8.595   1.00 55.72  ?  9   BP5 A H121 1 
-HETATM 173  H  H122 . BP5 A 1 10  ? 26.467 37.250 8.638   1.00 55.72  ?  9   BP5 A H122 1 
-HETATM 174  H  H11  . BP5 A 1 10  ? 29.027 38.260 9.256   1.00 60.87  ?  9   BP5 A H11  1 
-HETATM 175  H  H13  . BP5 A 1 10  ? 26.916 35.878 6.197   1.00 56.73  ?  9   BP5 A H13  1 
-HETATM 176  H  HN1  . BP5 A 1 10  ? 25.085 37.618 6.886   1.00 58.00  ?  9   BP5 A HN1  1 
-HETATM 177  H  HN2  . BP5 A 1 10  ? 24.401 36.438 6.555   1.00 58.00  ?  9   BP5 A HN2  1 
+HETATM 171  H  H3   . BP5 A 1 10  ? 30.642 41.064 4.226   1.00 68.93  ?  9   BP5 A H3   1 
+HETATM 172  H  H1   . BP5 A 1 10  ? 32.287 42.642 3.715   1.00 70.58  ?  9   BP5 A H1   1 
+HETATM 173  H  H121 . BP5 A 1 10  ? 27.556 36.211 8.595   1.00 55.72  ?  9   BP5 A H121 1 
+HETATM 174  H  H122 . BP5 A 1 10  ? 26.467 37.250 8.638   1.00 55.72  ?  9   BP5 A H122 1 
+HETATM 175  H  H11  . BP5 A 1 10  ? 29.027 38.260 9.256   1.00 60.87  ?  9   BP5 A H11  1 
+HETATM 176  H  HA   . BP5 A 1 10  ? 26.916 35.878 6.197   1.00 56.73  ?  9   BP5 A HA   1 
+HETATM 177  H  H    . BP5 A 1 10  ? 25.085 37.618 6.886   1.00 58.00  ?  9   BP5 A H    1 
 ATOM   178  N  N    . ALA A 1 11  ? 24.828 34.912 8.504   1.00 41.16  ?  10  ALA A N    1 
 ATOM   179  C  CA   . ALA A 1 11  ? 24.224 33.764 9.206   1.00 36.64  ?  10  ALA A CA   1 
 ATOM   180  C  C    . ALA A 1 11  ? 23.528 32.803 8.249   1.00 35.47  ?  10  ALA A C    1 
@@ -3580,22 +3583,22 @@ HETATM 2578 C  C12  . BP5 B 1 10  ? 33.266 35.360 7.600   1.00 35.81  ?  9   BP5
 HETATM 2579 C  C11  . BP5 B 1 10  ? 32.469 37.613 8.388   1.00 38.54  ?  9   BP5 B C11  1 
 HETATM 2580 N  N1   . BP5 B 1 10  ? 32.871 41.487 10.023  1.00 47.05  ?  9   BP5 B N1   1 
 HETATM 2581 N  N2   . BP5 B 1 10  ? 32.661 38.858 8.904   1.00 40.99  ?  9   BP5 B N2   1 
-HETATM 2582 C  C13  . BP5 B 1 10  ? 34.464 34.412 7.726   1.00 35.65  ?  9   BP5 B C13  1 
-HETATM 2583 C  C14  . BP5 B 1 10  ? 33.964 32.975 7.542   1.00 34.72  ?  9   BP5 B C14  1 
-HETATM 2584 O  O2   . BP5 B 1 10  ? 33.972 32.188 8.523   1.00 34.36  ?  9   BP5 B O2   1 
+HETATM 2582 C  CA   . BP5 B 1 10  ? 34.464 34.412 7.726   1.00 35.65  ?  9   BP5 B CA   1 
+HETATM 2583 C  C    . BP5 B 1 10  ? 33.964 32.975 7.542   1.00 34.72  ?  9   BP5 B C    1 
+HETATM 2584 O  O    . BP5 B 1 10  ? 33.972 32.188 8.523   1.00 34.36  ?  9   BP5 B O    1 
 HETATM 2585 N  N    . BP5 B 1 10  ? 35.456 34.719 6.675   1.00 38.31  ?  9   BP5 B N    1 
-HETATM 2586 H  H2   . BP5 B 1 10  ? 36.046 40.851 10.038  1.00 59.56  ?  9   BP5 B H2   1 
+HETATM 2586 H  H2   . BP5 B 1 10  ? 35.637 34.016 6.160   1.00 45.97  ?  9   BP5 B H2   1 
 HETATM 2587 H  H8   . BP5 B 1 10  ? 35.526 36.627 8.368   1.00 47.84  ?  9   BP5 B H8   1 
 HETATM 2588 H  H7   . BP5 B 1 10  ? 35.856 38.757 9.249   1.00 51.22  ?  9   BP5 B H7   1 
 HETATM 2589 H  H5   . BP5 B 1 10  ? 34.167 44.220 11.245  1.00 63.03  ?  9   BP5 B H5   1 
 HETATM 2590 H  H4   . BP5 B 1 10  ? 32.135 43.232 10.669  1.00 60.00  ?  9   BP5 B H4   1 
-HETATM 2591 H  H1   . BP5 B 1 10  ? 36.135 43.007 10.922  1.00 62.30  ?  9   BP5 B H1   1 
-HETATM 2592 H  H121 . BP5 B 1 10  ? 33.006 35.408 6.667   1.00 42.97  ?  9   BP5 B H121 1 
-HETATM 2593 H  H122 . BP5 B 1 10  ? 32.493 34.939 8.007   1.00 42.97  ?  9   BP5 B H122 1 
-HETATM 2594 H  H11  . BP5 B 1 10  ? 31.598 37.358 8.184   1.00 46.25  ?  9   BP5 B H11  1 
-HETATM 2595 H  H13  . BP5 B 1 10  ? 34.863 34.529 8.602   1.00 42.78  ?  9   BP5 B H13  1 
-HETATM 2596 H  HN1  . BP5 B 1 10  ? 35.215 35.355 6.148   1.00 45.97  ?  9   BP5 B HN1  1 
-HETATM 2597 H  HN2  . BP5 B 1 10  ? 35.637 34.016 6.160   1.00 45.97  ?  9   BP5 B HN2  1 
+HETATM 2591 H  H3   . BP5 B 1 10  ? 36.046 40.851 10.038  1.00 59.56  ?  9   BP5 B H3   1 
+HETATM 2592 H  H1   . BP5 B 1 10  ? 36.135 43.007 10.922  1.00 62.30  ?  9   BP5 B H1   1 
+HETATM 2593 H  H121 . BP5 B 1 10  ? 33.006 35.408 6.667   1.00 42.97  ?  9   BP5 B H121 1 
+HETATM 2594 H  H122 . BP5 B 1 10  ? 32.493 34.939 8.007   1.00 42.97  ?  9   BP5 B H122 1 
+HETATM 2595 H  H11  . BP5 B 1 10  ? 31.598 37.358 8.184   1.00 46.25  ?  9   BP5 B H11  1 
+HETATM 2596 H  HA   . BP5 B 1 10  ? 34.863 34.529 8.602   1.00 42.78  ?  9   BP5 B HA   1 
+HETATM 2597 H  H    . BP5 B 1 10  ? 35.215 35.355 6.148   1.00 45.97  ?  9   BP5 B H    1 
 ATOM   2598 N  N    . ALA B 1 11  ? 33.526 32.628 6.322   1.00 35.95  ?  10  ALA B N    1 
 ATOM   2599 C  CA   . ALA B 1 11  ? 33.020 31.277 6.016   1.00 36.68  ?  10  ALA B CA   1 
 ATOM   2600 C  C    . ALA B 1 11  ? 34.079 30.222 6.292   1.00 37.53  ?  10  ALA B C    1 
@@ -5986,22 +5989,22 @@ HETATM 4984 C  C12  . BP5 C 1 10  ? 30.794 36.914 13.363  1.00 35.11  ?  9   BP5
 HETATM 4985 C  C11  . BP5 C 1 10  ? 30.893 38.499 11.395  1.00 37.16  ?  9   BP5 C C11  1 
 HETATM 4986 N  N1   . BP5 C 1 10  ? 30.037 42.025 9.203   1.00 41.28  ?  9   BP5 C N1   1 
 HETATM 4987 N  N2   . BP5 C 1 10  ? 30.577 39.649 10.735  1.00 38.66  ?  9   BP5 C N2   1 
-HETATM 4988 C  C13  . BP5 C 1 10  ? 30.000 36.613 14.652  1.00 35.14  ?  9   BP5 C C13  1 
-HETATM 4989 C  C14  . BP5 C 1 10  ? 30.100 35.116 14.959  1.00 33.77  ?  9   BP5 C C14  1 
-HETATM 4990 O  O2   . BP5 C 1 10  ? 29.060 34.412 14.947  1.00 34.81  ?  9   BP5 C O2   1 
+HETATM 4988 C  CA   . BP5 C 1 10  ? 30.000 36.613 14.652  1.00 35.14  ?  9   BP5 C CA   1 
+HETATM 4989 C  C    . BP5 C 1 10  ? 30.100 35.116 14.959  1.00 33.77  ?  9   BP5 C C    1 
+HETATM 4990 O  O    . BP5 C 1 10  ? 29.060 34.412 14.947  1.00 34.81  ?  9   BP5 C O    1 
 HETATM 4991 N  N    . BP5 C 1 10  ? 30.577 37.348 15.779  1.00 35.91  ?  9   BP5 C N    1 
-HETATM 4992 H  H2   . BP5 C 1 10  ? 28.202 42.805 11.756  1.00 51.50  ?  9   BP5 C H2   1 
+HETATM 4992 H  H2   . BP5 C 1 10  ? 30.736 36.826 16.483  1.00 43.10  ?  9   BP5 C H2   1 
 HETATM 4993 H  H8   . BP5 C 1 10  ? 29.244 39.027 14.099  1.00 45.77  ?  9   BP5 C H8   1 
 HETATM 4994 H  H7   . BP5 C 1 10  ? 28.704 40.997 12.969  1.00 47.54  ?  9   BP5 C H7   1 
 HETATM 4995 H  H5   . BP5 C 1 10  ? 28.765 44.904 8.351   1.00 52.02  ?  9   BP5 C H5   1 
 HETATM 4996 H  H4   . BP5 C 1 10  ? 30.184 43.212 7.599   1.00 50.55  ?  9   BP5 C H4   1 
-HETATM 4997 H  H1   . BP5 C 1 10  ? 27.772 44.686 10.450  1.00 52.55  ?  9   BP5 C H1   1 
-HETATM 4998 H  H121 . BP5 C 1 10  ? 30.696 36.159 12.762  1.00 42.13  ?  9   BP5 C H121 1 
-HETATM 4999 H  H122 . BP5 C 1 10  ? 31.741 36.883 13.572  1.00 42.13  ?  9   BP5 C H122 1 
-HETATM 5000 H  H11  . BP5 C 1 10  ? 31.448 37.891 10.962  1.00 44.59  ?  9   BP5 C H11  1 
-HETATM 5001 H  H13  . BP5 C 1 10  ? 29.076 36.879 14.520  1.00 42.17  ?  9   BP5 C H13  1 
-HETATM 5002 H  HN1  . BP5 C 1 10  ? 31.319 37.741 15.593  1.00 43.10  ?  9   BP5 C HN1  1 
-HETATM 5003 H  HN2  . BP5 C 1 10  ? 30.736 36.826 16.483  1.00 43.10  ?  9   BP5 C HN2  1 
+HETATM 4997 H  H3   . BP5 C 1 10  ? 28.202 42.805 11.756  1.00 51.50  ?  9   BP5 C H3   1 
+HETATM 4998 H  H1   . BP5 C 1 10  ? 27.772 44.686 10.450  1.00 52.55  ?  9   BP5 C H1   1 
+HETATM 4999 H  H121 . BP5 C 1 10  ? 30.696 36.159 12.762  1.00 42.13  ?  9   BP5 C H121 1 
+HETATM 5000 H  H122 . BP5 C 1 10  ? 31.741 36.883 13.572  1.00 42.13  ?  9   BP5 C H122 1 
+HETATM 5001 H  H11  . BP5 C 1 10  ? 31.448 37.891 10.962  1.00 44.59  ?  9   BP5 C H11  1 
+HETATM 5002 H  HA   . BP5 C 1 10  ? 29.076 36.879 14.520  1.00 42.17  ?  9   BP5 C HA   1 
+HETATM 5003 H  H    . BP5 C 1 10  ? 31.319 37.741 15.593  1.00 43.10  ?  9   BP5 C H    1 
 ATOM   5004 N  N    . ALA C 1 11  ? 31.321 34.629 15.238  1.00 32.43  ?  10  ALA C N    1 
 ATOM   5005 C  CA   . ALA C 1 11  ? 31.567 33.208 15.552  1.00 31.02  ?  10  ALA C CA   1 
 ATOM   5006 C  C    . ALA C 1 11  ? 30.689 32.732 16.704  1.00 31.35  ?  10  ALA C C    1 
@@ -8427,9 +8430,9 @@ _atom_site_anisotrop.pdbx_auth_atom_id
 159  C  C11 . BP5 A 10  ? 0.6497 0.6463 0.6313 0.0186  0.0103  0.0012  9   BP5 A C11 
 160  N  N1  . BP5 A 10  ? 0.7853 0.6899 0.6774 -0.0467 0.0499  0.0494  9   BP5 A N1  
 161  N  N2  . BP5 A 10  ? 0.6996 0.6659 0.6544 0.0035  0.0219  0.0170  9   BP5 A N2  
-162  C  C13 . BP5 A 10  ? 0.5923 0.6458 0.5582 0.0470  -0.0209 -0.0292 9   BP5 A C13 
-163  C  C14 . BP5 A 10  ? 0.5230 0.6040 0.5128 0.0401  -0.0226 -0.0497 9   BP5 A C14 
-164  O  O2  . BP5 A 10  ? 0.5057 0.5844 0.4907 0.0311  -0.0090 -0.0587 9   BP5 A O2  
+162  C  CA  . BP5 A 10  ? 0.5923 0.6458 0.5582 0.0470  -0.0209 -0.0292 9   BP5 A CA  
+163  C  C   . BP5 A 10  ? 0.5230 0.6040 0.5128 0.0401  -0.0226 -0.0497 9   BP5 A C   
+164  O  O   . BP5 A 10  ? 0.5057 0.5844 0.4907 0.0311  -0.0090 -0.0587 9   BP5 A O   
 165  N  N   . BP5 A 10  ? 0.6107 0.6668 0.5590 0.0646  -0.0416 -0.0223 9   BP5 A N   
 178  N  N   . ALA A 11  ? 0.4819 0.5860 0.4959 0.0432  -0.0371 -0.0582 10  ALA A N   
 179  C  CA  . ALA A 11  ? 0.4093 0.5403 0.4424 0.0299  -0.0404 -0.0748 10  ALA A CA  
@@ -9626,9 +9629,9 @@ _atom_site_anisotrop.pdbx_auth_atom_id
 2579 C  C11 . BP5 B 10  ? 0.4330 0.5287 0.5028 0.0600  -0.0376 0.0320  9   BP5 B C11 
 2580 N  N1  . BP5 B 10  ? 0.5595 0.5502 0.6780 0.0641  -0.0288 0.0175  9   BP5 B N1  
 2581 N  N2  . BP5 B 10  ? 0.4695 0.5361 0.5518 0.0610  -0.0338 0.0316  9   BP5 B N2  
-2582 C  C13 . BP5 B 10  ? 0.3862 0.5162 0.4521 0.0453  -0.0439 0.0125  9   BP5 B C13 
-2583 C  C14 . BP5 B 10  ? 0.3732 0.5100 0.4360 0.0459  -0.0508 0.0008  9   BP5 B C14 
-2584 O  O2  . BP5 B 10  ? 0.3703 0.4954 0.4398 0.0420  -0.0566 -0.0025 9   BP5 B O2  
+2582 C  CA  . BP5 B 10  ? 0.3862 0.5162 0.4521 0.0453  -0.0439 0.0125  9   BP5 B CA  
+2583 C  C   . BP5 B 10  ? 0.3732 0.5100 0.4360 0.0459  -0.0508 0.0008  9   BP5 B C   
+2584 O  O   . BP5 B 10  ? 0.3703 0.4954 0.4398 0.0420  -0.0566 -0.0025 9   BP5 B O   
 2585 N  N   . BP5 B 10  ? 0.4149 0.5561 0.4846 0.0461  -0.0318 0.0188  9   BP5 B N   
 2598 N  N   . ALA B 11  ? 0.3876 0.5400 0.4384 0.0507  -0.0517 -0.0053 10  ALA B N   
 2599 C  CA  . ALA B 11  ? 0.3945 0.5494 0.4499 0.0486  -0.0613 -0.0242 10  ALA B CA  
@@ -10823,9 +10826,9 @@ _atom_site_anisotrop.pdbx_auth_atom_id
 4985 C  C11 . BP5 C 10  ? 0.4163 0.5107 0.4849 0.0747  0.0130  -0.0682 9   BP5 C C11 
 4986 N  N1  . BP5 C 10  ? 0.4524 0.4847 0.6315 0.1499  0.0330  -0.0406 9   BP5 C N1  
 4987 N  N2  . BP5 C 10  ? 0.4316 0.5057 0.5315 0.0970  0.0182  -0.0658 9   BP5 C N2  
-4988 C  C13 . BP5 C 10  ? 0.3703 0.5628 0.4020 0.0270  0.0319  -0.0976 9   BP5 C C13 
-4989 C  C14 . BP5 C 10  ? 0.3469 0.5682 0.3682 0.0112  0.0276  -0.0741 9   BP5 C C14 
-4990 O  O2  . BP5 C 10  ? 0.3429 0.5911 0.3885 0.0117  0.0300  -0.0659 9   BP5 C O2  
+4988 C  CA  . BP5 C 10  ? 0.3703 0.5628 0.4020 0.0270  0.0319  -0.0976 9   BP5 C CA  
+4989 C  C   . BP5 C 10  ? 0.3469 0.5682 0.3682 0.0112  0.0276  -0.0741 9   BP5 C C   
+4990 O  O   . BP5 C 10  ? 0.3429 0.5911 0.3885 0.0117  0.0300  -0.0659 9   BP5 C O   
 4991 N  N   . BP5 C 10  ? 0.3895 0.5802 0.3949 0.0156  0.0402  -0.1228 9   BP5 C N   
 5004 N  N   . ALA C 11  ? 0.3392 0.5573 0.3359 -0.0029 0.0219  -0.0586 10  ALA C N   
 5005 C  CA  . ALA C 11  ? 0.3153 0.5553 0.3080 -0.0153 0.0219  -0.0300 10  ALA C CA  
@@ -12643,6 +12646,7 @@ _pdbx_audit_revision_history.revision_date
 2 'Structure model' 1 1 2017-01-18 
 3 'Structure model' 1 2 2017-09-27 
 4 'Structure model' 1 3 2019-12-25 
+5 'Structure model' 2 0 2023-11-15 
 # 
 _pdbx_audit_revision_details.ordinal             1 
 _pdbx_audit_revision_details.revision_ordinal    1 
@@ -12661,24 +12665,65 @@ _pdbx_audit_revision_group.group
 2 3 'Structure model' 'Author supporting evidence' 
 3 3 'Structure model' 'Refinement description'     
 4 4 'Structure model' 'Author supporting evidence' 
+5 5 'Structure model' Advisory                     
+6 5 'Structure model' 'Atomic model'               
+7 5 'Structure model' 'Data collection'            
+8 5 'Structure model' 'Database references'        
+9 5 'Structure model' 'Derived calculations'       
 # 
 loop_
 _pdbx_audit_revision_category.ordinal 
 _pdbx_audit_revision_category.revision_ordinal 
 _pdbx_audit_revision_category.data_content_type 
 _pdbx_audit_revision_category.category 
-1 3 'Structure model' pdbx_audit_support 
-2 3 'Structure model' software           
-3 4 'Structure model' pdbx_audit_support 
+1  3 'Structure model' pdbx_audit_support          
+2  3 'Structure model' software                    
+3  4 'Structure model' pdbx_audit_support          
+4  5 'Structure model' atom_site                   
+5  5 'Structure model' atom_site_anisotrop         
+6  5 'Structure model' chem_comp_atom              
+7  5 'Structure model' chem_comp_bond              
+8  5 'Structure model' database_2                  
+9  5 'Structure model' pdbx_validate_close_contact 
+10 5 'Structure model' struct_conn                 
 # 
 loop_
 _pdbx_audit_revision_item.ordinal 
 _pdbx_audit_revision_item.revision_ordinal 
 _pdbx_audit_revision_item.data_content_type 
 _pdbx_audit_revision_item.item 
-1 3 'Structure model' '_pdbx_audit_support.funding_organization' 
-2 3 'Structure model' '_software.classification'                 
-3 4 'Structure model' '_pdbx_audit_support.funding_organization' 
+1  3 'Structure model' '_pdbx_audit_support.funding_organization'    
+2  3 'Structure model' '_software.classification'                    
+3  4 'Structure model' '_pdbx_audit_support.funding_organization'    
+4  5 'Structure model' '_atom_site.B_iso_or_equiv'                   
+5  5 'Structure model' '_atom_site.Cartn_x'                          
+6  5 'Structure model' '_atom_site.Cartn_y'                          
+7  5 'Structure model' '_atom_site.Cartn_z'                          
+8  5 'Structure model' '_atom_site.auth_atom_id'                     
+9  5 'Structure model' '_atom_site.label_atom_id'                    
+10 5 'Structure model' '_atom_site_anisotrop.pdbx_auth_atom_id'      
+11 5 'Structure model' '_atom_site_anisotrop.pdbx_label_atom_id'     
+12 5 'Structure model' '_database_2.pdbx_DOI'                        
+13 5 'Structure model' '_database_2.pdbx_database_accession'         
+14 5 'Structure model' '_pdbx_validate_close_contact.auth_atom_id_2' 
+15 5 'Structure model' '_struct_conn.conn_type_id'                   
+16 5 'Structure model' '_struct_conn.id'                             
+17 5 'Structure model' '_struct_conn.pdbx_dist_value'                
+18 5 'Structure model' '_struct_conn.pdbx_leaving_atom_flag'         
+19 5 'Structure model' '_struct_conn.ptnr1_auth_asym_id'             
+20 5 'Structure model' '_struct_conn.ptnr1_auth_comp_id'             
+21 5 'Structure model' '_struct_conn.ptnr1_auth_seq_id'              
+22 5 'Structure model' '_struct_conn.ptnr1_label_asym_id'            
+23 5 'Structure model' '_struct_conn.ptnr1_label_atom_id'            
+24 5 'Structure model' '_struct_conn.ptnr1_label_comp_id'            
+25 5 'Structure model' '_struct_conn.ptnr1_label_seq_id'             
+26 5 'Structure model' '_struct_conn.ptnr2_auth_asym_id'             
+27 5 'Structure model' '_struct_conn.ptnr2_auth_comp_id'             
+28 5 'Structure model' '_struct_conn.ptnr2_auth_seq_id'              
+29 5 'Structure model' '_struct_conn.ptnr2_label_asym_id'            
+30 5 'Structure model' '_struct_conn.ptnr2_label_atom_id'            
+31 5 'Structure model' '_struct_conn.ptnr2_label_comp_id'            
+32 5 'Structure model' '_struct_conn.ptnr2_label_seq_id'             
 # 
 loop_
 _pdbx_refine_tls.id 
@@ -12961,22 +13006,22 @@ _pdbx_validate_close_contact.auth_seq_id_2
 _pdbx_validate_close_contact.PDB_ins_code_2 
 _pdbx_validate_close_contact.label_alt_id_2 
 _pdbx_validate_close_contact.dist 
-1  1 C   A ILE 8   ? ? HN2 A BP5 9   ? ? 1.05 
-2  1 C   C ILE 8   ? ? HN2 C BP5 9   ? ? 1.05 
-3  1 C   B ILE 8   ? ? HN2 B BP5 9   ? ? 1.05 
-4  1 OD2 C ASP 99  ? ? HH  C TYR 108 ? ? 1.49 
-5  1 OD2 A ASP 99  ? ? HH  A TYR 108 ? ? 1.50 
-6  1 OD2 A ASP 66  ? ? HH  A TYR 75  ? ? 1.59 
-7  1 O   C HOH 231 ? ? O   C HOH 232 ? ? 1.91 
-8  1 O   A LEU 23  ? ? O   A HOH 301 ? ? 1.95 
-9  1 O   B LEU 89  ? ? O   B HOH 201 ? ? 2.04 
-10 1 O   C ALA 27  ? ? O   C HOH 201 ? ? 2.08 
-11 1 O   A HOH 322 ? ? O   A HOH 327 ? ? 2.08 
-12 1 OE1 C GLU 149 ? ? O   C HOH 202 ? ? 2.09 
-13 1 OE2 B GLU 34  ? ? O   B HOH 202 ? ? 2.10 
-14 1 OE2 B GLU 5   ? ? O   B HOH 203 ? ? 2.13 
-15 1 O   B HOH 206 ? ? O   B HOH 233 ? ? 2.16 
-16 1 OE1 C GLU 5   ? A O   C HOH 203 ? ? 2.19 
+1  1 C   A ILE 8   ? ? H2 A BP5 9   ? ? 1.05 
+2  1 C   C ILE 8   ? ? H2 C BP5 9   ? ? 1.05 
+3  1 C   B ILE 8   ? ? H2 B BP5 9   ? ? 1.05 
+4  1 OD2 C ASP 99  ? ? HH C TYR 108 ? ? 1.49 
+5  1 OD2 A ASP 99  ? ? HH A TYR 108 ? ? 1.50 
+6  1 OD2 A ASP 66  ? ? HH A TYR 75  ? ? 1.59 
+7  1 O   C HOH 231 ? ? O  C HOH 232 ? ? 1.91 
+8  1 O   A LEU 23  ? ? O  A HOH 301 ? ? 1.95 
+9  1 O   B LEU 89  ? ? O  B HOH 201 ? ? 2.04 
+10 1 O   C ALA 27  ? ? O  C HOH 201 ? ? 2.08 
+11 1 O   A HOH 322 ? ? O  A HOH 327 ? ? 2.08 
+12 1 OE1 C GLU 149 ? ? O  C HOH 202 ? ? 2.09 
+13 1 OE2 B GLU 34  ? ? O  B HOH 202 ? ? 2.10 
+14 1 OE2 B GLU 5   ? ? O  B HOH 203 ? ? 2.13 
+15 1 O   B HOH 206 ? ? O  B HOH 233 ? ? 2.16 
+16 1 OE1 C GLU 5   ? A O  C HOH 203 ? ? 2.19 
 # 
 _pdbx_validate_symm_contact.id                1 
 _pdbx_validate_symm_contact.PDB_model_num     1 
@@ -13007,6 +13052,724 @@ _pdbx_unobs_or_zero_occ_residues.PDB_ins_code     ?
 _pdbx_unobs_or_zero_occ_residues.label_asym_id    A 
 _pdbx_unobs_or_zero_occ_residues.label_comp_id    GLY 
 _pdbx_unobs_or_zero_occ_residues.label_seq_id     159 
+# 
+loop_
+_chem_comp_atom.comp_id 
+_chem_comp_atom.atom_id 
+_chem_comp_atom.type_symbol 
+_chem_comp_atom.pdbx_aromatic_flag 
+_chem_comp_atom.pdbx_stereo_config 
+_chem_comp_atom.pdbx_ordinal 
+ALA N    N  N N 1   
+ALA CA   C  N S 2   
+ALA C    C  N N 3   
+ALA O    O  N N 4   
+ALA CB   C  N N 5   
+ALA OXT  O  N N 6   
+ALA H    H  N N 7   
+ALA H2   H  N N 8   
+ALA HA   H  N N 9   
+ALA HB1  H  N N 10  
+ALA HB2  H  N N 11  
+ALA HB3  H  N N 12  
+ALA HXT  H  N N 13  
+ARG N    N  N N 14  
+ARG CA   C  N S 15  
+ARG C    C  N N 16  
+ARG O    O  N N 17  
+ARG CB   C  N N 18  
+ARG CG   C  N N 19  
+ARG CD   C  N N 20  
+ARG NE   N  N N 21  
+ARG CZ   C  N N 22  
+ARG NH1  N  N N 23  
+ARG NH2  N  N N 24  
+ARG OXT  O  N N 25  
+ARG H    H  N N 26  
+ARG H2   H  N N 27  
+ARG HA   H  N N 28  
+ARG HB2  H  N N 29  
+ARG HB3  H  N N 30  
+ARG HG2  H  N N 31  
+ARG HG3  H  N N 32  
+ARG HD2  H  N N 33  
+ARG HD3  H  N N 34  
+ARG HE   H  N N 35  
+ARG HH11 H  N N 36  
+ARG HH12 H  N N 37  
+ARG HH21 H  N N 38  
+ARG HH22 H  N N 39  
+ARG HXT  H  N N 40  
+ASN N    N  N N 41  
+ASN CA   C  N S 42  
+ASN C    C  N N 43  
+ASN O    O  N N 44  
+ASN CB   C  N N 45  
+ASN CG   C  N N 46  
+ASN OD1  O  N N 47  
+ASN ND2  N  N N 48  
+ASN OXT  O  N N 49  
+ASN H    H  N N 50  
+ASN H2   H  N N 51  
+ASN HA   H  N N 52  
+ASN HB2  H  N N 53  
+ASN HB3  H  N N 54  
+ASN HD21 H  N N 55  
+ASN HD22 H  N N 56  
+ASN HXT  H  N N 57  
+ASP N    N  N N 58  
+ASP CA   C  N S 59  
+ASP C    C  N N 60  
+ASP O    O  N N 61  
+ASP CB   C  N N 62  
+ASP CG   C  N N 63  
+ASP OD1  O  N N 64  
+ASP OD2  O  N N 65  
+ASP OXT  O  N N 66  
+ASP H    H  N N 67  
+ASP H2   H  N N 68  
+ASP HA   H  N N 69  
+ASP HB2  H  N N 70  
+ASP HB3  H  N N 71  
+ASP HD2  H  N N 72  
+ASP HXT  H  N N 73  
+BP5 C9   C  Y N 74  
+BP5 C8   C  Y N 75  
+BP5 C7   C  Y N 76  
+BP5 C6   C  Y N 77  
+BP5 C5   C  Y N 78  
+BP5 C4   C  Y N 79  
+BP5 C3   C  Y N 80  
+BP5 C2   C  Y N 81  
+BP5 C1   C  Y N 82  
+BP5 C12  C  N N 83  
+BP5 C11  C  Y N 84  
+BP5 N1   N  Y N 85  
+BP5 N2   N  Y N 86  
+BP5 CA   C  N S 87  
+BP5 C    C  N N 88  
+BP5 OXT  O  N N 89  
+BP5 O    O  N N 90  
+BP5 N    N  N N 91  
+BP5 H8   H  N N 92  
+BP5 H7   H  N N 93  
+BP5 H5   H  N N 94  
+BP5 H4   H  N N 95  
+BP5 H3   H  N N 96  
+BP5 H1   H  N N 97  
+BP5 H121 H  N N 98  
+BP5 H122 H  N N 99  
+BP5 H11  H  N N 100 
+BP5 HA   H  N N 101 
+BP5 HXT  H  N N 102 
+BP5 H    H  N N 103 
+BP5 H2   H  N N 104 
+FE  FE   FE N N 105 
+GLN N    N  N N 106 
+GLN CA   C  N S 107 
+GLN C    C  N N 108 
+GLN O    O  N N 109 
+GLN CB   C  N N 110 
+GLN CG   C  N N 111 
+GLN CD   C  N N 112 
+GLN OE1  O  N N 113 
+GLN NE2  N  N N 114 
+GLN OXT  O  N N 115 
+GLN H    H  N N 116 
+GLN H2   H  N N 117 
+GLN HA   H  N N 118 
+GLN HB2  H  N N 119 
+GLN HB3  H  N N 120 
+GLN HG2  H  N N 121 
+GLN HG3  H  N N 122 
+GLN HE21 H  N N 123 
+GLN HE22 H  N N 124 
+GLN HXT  H  N N 125 
+GLU N    N  N N 126 
+GLU CA   C  N S 127 
+GLU C    C  N N 128 
+GLU O    O  N N 129 
+GLU CB   C  N N 130 
+GLU CG   C  N N 131 
+GLU CD   C  N N 132 
+GLU OE1  O  N N 133 
+GLU OE2  O  N N 134 
+GLU OXT  O  N N 135 
+GLU H    H  N N 136 
+GLU H2   H  N N 137 
+GLU HA   H  N N 138 
+GLU HB2  H  N N 139 
+GLU HB3  H  N N 140 
+GLU HG2  H  N N 141 
+GLU HG3  H  N N 142 
+GLU HE2  H  N N 143 
+GLU HXT  H  N N 144 
+GLY N    N  N N 145 
+GLY CA   C  N N 146 
+GLY C    C  N N 147 
+GLY O    O  N N 148 
+GLY OXT  O  N N 149 
+GLY H    H  N N 150 
+GLY H2   H  N N 151 
+GLY HA2  H  N N 152 
+GLY HA3  H  N N 153 
+GLY HXT  H  N N 154 
+HIS N    N  N N 155 
+HIS CA   C  N S 156 
+HIS C    C  N N 157 
+HIS O    O  N N 158 
+HIS CB   C  N N 159 
+HIS CG   C  Y N 160 
+HIS ND1  N  Y N 161 
+HIS CD2  C  Y N 162 
+HIS CE1  C  Y N 163 
+HIS NE2  N  Y N 164 
+HIS OXT  O  N N 165 
+HIS H    H  N N 166 
+HIS H2   H  N N 167 
+HIS HA   H  N N 168 
+HIS HB2  H  N N 169 
+HIS HB3  H  N N 170 
+HIS HD1  H  N N 171 
+HIS HD2  H  N N 172 
+HIS HE1  H  N N 173 
+HIS HE2  H  N N 174 
+HIS HXT  H  N N 175 
+HOH O    O  N N 176 
+HOH H1   H  N N 177 
+HOH H2   H  N N 178 
+ILE N    N  N N 179 
+ILE CA   C  N S 180 
+ILE C    C  N N 181 
+ILE O    O  N N 182 
+ILE CB   C  N S 183 
+ILE CG1  C  N N 184 
+ILE CG2  C  N N 185 
+ILE CD1  C  N N 186 
+ILE OXT  O  N N 187 
+ILE H    H  N N 188 
+ILE H2   H  N N 189 
+ILE HA   H  N N 190 
+ILE HB   H  N N 191 
+ILE HG12 H  N N 192 
+ILE HG13 H  N N 193 
+ILE HG21 H  N N 194 
+ILE HG22 H  N N 195 
+ILE HG23 H  N N 196 
+ILE HD11 H  N N 197 
+ILE HD12 H  N N 198 
+ILE HD13 H  N N 199 
+ILE HXT  H  N N 200 
+LEU N    N  N N 201 
+LEU CA   C  N S 202 
+LEU C    C  N N 203 
+LEU O    O  N N 204 
+LEU CB   C  N N 205 
+LEU CG   C  N N 206 
+LEU CD1  C  N N 207 
+LEU CD2  C  N N 208 
+LEU OXT  O  N N 209 
+LEU H    H  N N 210 
+LEU H2   H  N N 211 
+LEU HA   H  N N 212 
+LEU HB2  H  N N 213 
+LEU HB3  H  N N 214 
+LEU HG   H  N N 215 
+LEU HD11 H  N N 216 
+LEU HD12 H  N N 217 
+LEU HD13 H  N N 218 
+LEU HD21 H  N N 219 
+LEU HD22 H  N N 220 
+LEU HD23 H  N N 221 
+LEU HXT  H  N N 222 
+LYS N    N  N N 223 
+LYS CA   C  N S 224 
+LYS C    C  N N 225 
+LYS O    O  N N 226 
+LYS CB   C  N N 227 
+LYS CG   C  N N 228 
+LYS CD   C  N N 229 
+LYS CE   C  N N 230 
+LYS NZ   N  N N 231 
+LYS OXT  O  N N 232 
+LYS H    H  N N 233 
+LYS H2   H  N N 234 
+LYS HA   H  N N 235 
+LYS HB2  H  N N 236 
+LYS HB3  H  N N 237 
+LYS HG2  H  N N 238 
+LYS HG3  H  N N 239 
+LYS HD2  H  N N 240 
+LYS HD3  H  N N 241 
+LYS HE2  H  N N 242 
+LYS HE3  H  N N 243 
+LYS HZ1  H  N N 244 
+LYS HZ2  H  N N 245 
+LYS HZ3  H  N N 246 
+LYS HXT  H  N N 247 
+MET N    N  N N 248 
+MET CA   C  N S 249 
+MET C    C  N N 250 
+MET O    O  N N 251 
+MET CB   C  N N 252 
+MET CG   C  N N 253 
+MET SD   S  N N 254 
+MET CE   C  N N 255 
+MET OXT  O  N N 256 
+MET H    H  N N 257 
+MET H2   H  N N 258 
+MET HA   H  N N 259 
+MET HB2  H  N N 260 
+MET HB3  H  N N 261 
+MET HG2  H  N N 262 
+MET HG3  H  N N 263 
+MET HE1  H  N N 264 
+MET HE2  H  N N 265 
+MET HE3  H  N N 266 
+MET HXT  H  N N 267 
+PRO N    N  N N 268 
+PRO CA   C  N S 269 
+PRO C    C  N N 270 
+PRO O    O  N N 271 
+PRO CB   C  N N 272 
+PRO CG   C  N N 273 
+PRO CD   C  N N 274 
+PRO OXT  O  N N 275 
+PRO H    H  N N 276 
+PRO HA   H  N N 277 
+PRO HB2  H  N N 278 
+PRO HB3  H  N N 279 
+PRO HG2  H  N N 280 
+PRO HG3  H  N N 281 
+PRO HD2  H  N N 282 
+PRO HD3  H  N N 283 
+PRO HXT  H  N N 284 
+SER N    N  N N 285 
+SER CA   C  N S 286 
+SER C    C  N N 287 
+SER O    O  N N 288 
+SER CB   C  N N 289 
+SER OG   O  N N 290 
+SER OXT  O  N N 291 
+SER H    H  N N 292 
+SER H2   H  N N 293 
+SER HA   H  N N 294 
+SER HB2  H  N N 295 
+SER HB3  H  N N 296 
+SER HG   H  N N 297 
+SER HXT  H  N N 298 
+THR N    N  N N 299 
+THR CA   C  N S 300 
+THR C    C  N N 301 
+THR O    O  N N 302 
+THR CB   C  N R 303 
+THR OG1  O  N N 304 
+THR CG2  C  N N 305 
+THR OXT  O  N N 306 
+THR H    H  N N 307 
+THR H2   H  N N 308 
+THR HA   H  N N 309 
+THR HB   H  N N 310 
+THR HG1  H  N N 311 
+THR HG21 H  N N 312 
+THR HG22 H  N N 313 
+THR HG23 H  N N 314 
+THR HXT  H  N N 315 
+TYR N    N  N N 316 
+TYR CA   C  N S 317 
+TYR C    C  N N 318 
+TYR O    O  N N 319 
+TYR CB   C  N N 320 
+TYR CG   C  Y N 321 
+TYR CD1  C  Y N 322 
+TYR CD2  C  Y N 323 
+TYR CE1  C  Y N 324 
+TYR CE2  C  Y N 325 
+TYR CZ   C  Y N 326 
+TYR OH   O  N N 327 
+TYR OXT  O  N N 328 
+TYR H    H  N N 329 
+TYR H2   H  N N 330 
+TYR HA   H  N N 331 
+TYR HB2  H  N N 332 
+TYR HB3  H  N N 333 
+TYR HD1  H  N N 334 
+TYR HD2  H  N N 335 
+TYR HE1  H  N N 336 
+TYR HE2  H  N N 337 
+TYR HH   H  N N 338 
+TYR HXT  H  N N 339 
+VAL N    N  N N 340 
+VAL CA   C  N S 341 
+VAL C    C  N N 342 
+VAL O    O  N N 343 
+VAL CB   C  N N 344 
+VAL CG1  C  N N 345 
+VAL CG2  C  N N 346 
+VAL OXT  O  N N 347 
+VAL H    H  N N 348 
+VAL H2   H  N N 349 
+VAL HA   H  N N 350 
+VAL HB   H  N N 351 
+VAL HG11 H  N N 352 
+VAL HG12 H  N N 353 
+VAL HG13 H  N N 354 
+VAL HG21 H  N N 355 
+VAL HG22 H  N N 356 
+VAL HG23 H  N N 357 
+VAL HXT  H  N N 358 
+# 
+loop_
+_chem_comp_bond.comp_id 
+_chem_comp_bond.atom_id_1 
+_chem_comp_bond.atom_id_2 
+_chem_comp_bond.value_order 
+_chem_comp_bond.pdbx_aromatic_flag 
+_chem_comp_bond.pdbx_stereo_config 
+_chem_comp_bond.pdbx_ordinal 
+ALA N   CA   sing N N 1   
+ALA N   H    sing N N 2   
+ALA N   H2   sing N N 3   
+ALA CA  C    sing N N 4   
+ALA CA  CB   sing N N 5   
+ALA CA  HA   sing N N 6   
+ALA C   O    doub N N 7   
+ALA C   OXT  sing N N 8   
+ALA CB  HB1  sing N N 9   
+ALA CB  HB2  sing N N 10  
+ALA CB  HB3  sing N N 11  
+ALA OXT HXT  sing N N 12  
+ARG N   CA   sing N N 13  
+ARG N   H    sing N N 14  
+ARG N   H2   sing N N 15  
+ARG CA  C    sing N N 16  
+ARG CA  CB   sing N N 17  
+ARG CA  HA   sing N N 18  
+ARG C   O    doub N N 19  
+ARG C   OXT  sing N N 20  
+ARG CB  CG   sing N N 21  
+ARG CB  HB2  sing N N 22  
+ARG CB  HB3  sing N N 23  
+ARG CG  CD   sing N N 24  
+ARG CG  HG2  sing N N 25  
+ARG CG  HG3  sing N N 26  
+ARG CD  NE   sing N N 27  
+ARG CD  HD2  sing N N 28  
+ARG CD  HD3  sing N N 29  
+ARG NE  CZ   sing N N 30  
+ARG NE  HE   sing N N 31  
+ARG CZ  NH1  sing N N 32  
+ARG CZ  NH2  doub N N 33  
+ARG NH1 HH11 sing N N 34  
+ARG NH1 HH12 sing N N 35  
+ARG NH2 HH21 sing N N 36  
+ARG NH2 HH22 sing N N 37  
+ARG OXT HXT  sing N N 38  
+ASN N   CA   sing N N 39  
+ASN N   H    sing N N 40  
+ASN N   H2   sing N N 41  
+ASN CA  C    sing N N 42  
+ASN CA  CB   sing N N 43  
+ASN CA  HA   sing N N 44  
+ASN C   O    doub N N 45  
+ASN C   OXT  sing N N 46  
+ASN CB  CG   sing N N 47  
+ASN CB  HB2  sing N N 48  
+ASN CB  HB3  sing N N 49  
+ASN CG  OD1  doub N N 50  
+ASN CG  ND2  sing N N 51  
+ASN ND2 HD21 sing N N 52  
+ASN ND2 HD22 sing N N 53  
+ASN OXT HXT  sing N N 54  
+ASP N   CA   sing N N 55  
+ASP N   H    sing N N 56  
+ASP N   H2   sing N N 57  
+ASP CA  C    sing N N 58  
+ASP CA  CB   sing N N 59  
+ASP CA  HA   sing N N 60  
+ASP C   O    doub N N 61  
+ASP C   OXT  sing N N 62  
+ASP CB  CG   sing N N 63  
+ASP CB  HB2  sing N N 64  
+ASP CB  HB3  sing N N 65  
+ASP CG  OD1  doub N N 66  
+ASP CG  OD2  sing N N 67  
+ASP OD2 HD2  sing N N 68  
+ASP OXT HXT  sing N N 69  
+BP5 C9  C12  sing N N 70  
+BP5 C9  C8   doub Y N 71  
+BP5 C9  C11  sing Y N 72  
+BP5 C8  C7   sing Y N 73  
+BP5 C8  H8   sing N N 74  
+BP5 C7  C6   doub Y N 75  
+BP5 C7  H7   sing N N 76  
+BP5 C6  N2   sing Y N 77  
+BP5 C6  C3   sing N N 78  
+BP5 C5  C1   doub Y N 79  
+BP5 C5  C4   sing Y N 80  
+BP5 C5  H5   sing N N 81  
+BP5 C4  N1   doub Y N 82  
+BP5 C4  H4   sing N N 83  
+BP5 C3  C2   doub Y N 84  
+BP5 C3  N1   sing Y N 85  
+BP5 C2  C1   sing Y N 86  
+BP5 C2  H3   sing N N 87  
+BP5 C1  H1   sing N N 88  
+BP5 C12 CA   sing N N 89  
+BP5 C12 H121 sing N N 90  
+BP5 C12 H122 sing N N 91  
+BP5 C11 N2   doub Y N 92  
+BP5 C11 H11  sing N N 93  
+BP5 CA  C    sing N N 94  
+BP5 CA  N    sing N N 95  
+BP5 CA  HA   sing N N 96  
+BP5 C   O    doub N N 97  
+BP5 C   OXT  sing N N 98  
+BP5 OXT HXT  sing N N 99  
+BP5 N   H    sing N N 100 
+BP5 N   H2   sing N N 101 
+GLN N   CA   sing N N 102 
+GLN N   H    sing N N 103 
+GLN N   H2   sing N N 104 
+GLN CA  C    sing N N 105 
+GLN CA  CB   sing N N 106 
+GLN CA  HA   sing N N 107 
+GLN C   O    doub N N 108 
+GLN C   OXT  sing N N 109 
+GLN CB  CG   sing N N 110 
+GLN CB  HB2  sing N N 111 
+GLN CB  HB3  sing N N 112 
+GLN CG  CD   sing N N 113 
+GLN CG  HG2  sing N N 114 
+GLN CG  HG3  sing N N 115 
+GLN CD  OE1  doub N N 116 
+GLN CD  NE2  sing N N 117 
+GLN NE2 HE21 sing N N 118 
+GLN NE2 HE22 sing N N 119 
+GLN OXT HXT  sing N N 120 
+GLU N   CA   sing N N 121 
+GLU N   H    sing N N 122 
+GLU N   H2   sing N N 123 
+GLU CA  C    sing N N 124 
+GLU CA  CB   sing N N 125 
+GLU CA  HA   sing N N 126 
+GLU C   O    doub N N 127 
+GLU C   OXT  sing N N 128 
+GLU CB  CG   sing N N 129 
+GLU CB  HB2  sing N N 130 
+GLU CB  HB3  sing N N 131 
+GLU CG  CD   sing N N 132 
+GLU CG  HG2  sing N N 133 
+GLU CG  HG3  sing N N 134 
+GLU CD  OE1  doub N N 135 
+GLU CD  OE2  sing N N 136 
+GLU OE2 HE2  sing N N 137 
+GLU OXT HXT  sing N N 138 
+GLY N   CA   sing N N 139 
+GLY N   H    sing N N 140 
+GLY N   H2   sing N N 141 
+GLY CA  C    sing N N 142 
+GLY CA  HA2  sing N N 143 
+GLY CA  HA3  sing N N 144 
+GLY C   O    doub N N 145 
+GLY C   OXT  sing N N 146 
+GLY OXT HXT  sing N N 147 
+HIS N   CA   sing N N 148 
+HIS N   H    sing N N 149 
+HIS N   H2   sing N N 150 
+HIS CA  C    sing N N 151 
+HIS CA  CB   sing N N 152 
+HIS CA  HA   sing N N 153 
+HIS C   O    doub N N 154 
+HIS C   OXT  sing N N 155 
+HIS CB  CG   sing N N 156 
+HIS CB  HB2  sing N N 157 
+HIS CB  HB3  sing N N 158 
+HIS CG  ND1  sing Y N 159 
+HIS CG  CD2  doub Y N 160 
+HIS ND1 CE1  doub Y N 161 
+HIS ND1 HD1  sing N N 162 
+HIS CD2 NE2  sing Y N 163 
+HIS CD2 HD2  sing N N 164 
+HIS CE1 NE2  sing Y N 165 
+HIS CE1 HE1  sing N N 166 
+HIS NE2 HE2  sing N N 167 
+HIS OXT HXT  sing N N 168 
+HOH O   H1   sing N N 169 
+HOH O   H2   sing N N 170 
+ILE N   CA   sing N N 171 
+ILE N   H    sing N N 172 
+ILE N   H2   sing N N 173 
+ILE CA  C    sing N N 174 
+ILE CA  CB   sing N N 175 
+ILE CA  HA   sing N N 176 
+ILE C   O    doub N N 177 
+ILE C   OXT  sing N N 178 
+ILE CB  CG1  sing N N 179 
+ILE CB  CG2  sing N N 180 
+ILE CB  HB   sing N N 181 
+ILE CG1 CD1  sing N N 182 
+ILE CG1 HG12 sing N N 183 
+ILE CG1 HG13 sing N N 184 
+ILE CG2 HG21 sing N N 185 
+ILE CG2 HG22 sing N N 186 
+ILE CG2 HG23 sing N N 187 
+ILE CD1 HD11 sing N N 188 
+ILE CD1 HD12 sing N N 189 
+ILE CD1 HD13 sing N N 190 
+ILE OXT HXT  sing N N 191 
+LEU N   CA   sing N N 192 
+LEU N   H    sing N N 193 
+LEU N   H2   sing N N 194 
+LEU CA  C    sing N N 195 
+LEU CA  CB   sing N N 196 
+LEU CA  HA   sing N N 197 
+LEU C   O    doub N N 198 
+LEU C   OXT  sing N N 199 
+LEU CB  CG   sing N N 200 
+LEU CB  HB2  sing N N 201 
+LEU CB  HB3  sing N N 202 
+LEU CG  CD1  sing N N 203 
+LEU CG  CD2  sing N N 204 
+LEU CG  HG   sing N N 205 
+LEU CD1 HD11 sing N N 206 
+LEU CD1 HD12 sing N N 207 
+LEU CD1 HD13 sing N N 208 
+LEU CD2 HD21 sing N N 209 
+LEU CD2 HD22 sing N N 210 
+LEU CD2 HD23 sing N N 211 
+LEU OXT HXT  sing N N 212 
+LYS N   CA   sing N N 213 
+LYS N   H    sing N N 214 
+LYS N   H2   sing N N 215 
+LYS CA  C    sing N N 216 
+LYS CA  CB   sing N N 217 
+LYS CA  HA   sing N N 218 
+LYS C   O    doub N N 219 
+LYS C   OXT  sing N N 220 
+LYS CB  CG   sing N N 221 
+LYS CB  HB2  sing N N 222 
+LYS CB  HB3  sing N N 223 
+LYS CG  CD   sing N N 224 
+LYS CG  HG2  sing N N 225 
+LYS CG  HG3  sing N N 226 
+LYS CD  CE   sing N N 227 
+LYS CD  HD2  sing N N 228 
+LYS CD  HD3  sing N N 229 
+LYS CE  NZ   sing N N 230 
+LYS CE  HE2  sing N N 231 
+LYS CE  HE3  sing N N 232 
+LYS NZ  HZ1  sing N N 233 
+LYS NZ  HZ2  sing N N 234 
+LYS NZ  HZ3  sing N N 235 
+LYS OXT HXT  sing N N 236 
+MET N   CA   sing N N 237 
+MET N   H    sing N N 238 
+MET N   H2   sing N N 239 
+MET CA  C    sing N N 240 
+MET CA  CB   sing N N 241 
+MET CA  HA   sing N N 242 
+MET C   O    doub N N 243 
+MET C   OXT  sing N N 244 
+MET CB  CG   sing N N 245 
+MET CB  HB2  sing N N 246 
+MET CB  HB3  sing N N 247 
+MET CG  SD   sing N N 248 
+MET CG  HG2  sing N N 249 
+MET CG  HG3  sing N N 250 
+MET SD  CE   sing N N 251 
+MET CE  HE1  sing N N 252 
+MET CE  HE2  sing N N 253 
+MET CE  HE3  sing N N 254 
+MET OXT HXT  sing N N 255 
+PRO N   CA   sing N N 256 
+PRO N   CD   sing N N 257 
+PRO N   H    sing N N 258 
+PRO CA  C    sing N N 259 
+PRO CA  CB   sing N N 260 
+PRO CA  HA   sing N N 261 
+PRO C   O    doub N N 262 
+PRO C   OXT  sing N N 263 
+PRO CB  CG   sing N N 264 
+PRO CB  HB2  sing N N 265 
+PRO CB  HB3  sing N N 266 
+PRO CG  CD   sing N N 267 
+PRO CG  HG2  sing N N 268 
+PRO CG  HG3  sing N N 269 
+PRO CD  HD2  sing N N 270 
+PRO CD  HD3  sing N N 271 
+PRO OXT HXT  sing N N 272 
+SER N   CA   sing N N 273 
+SER N   H    sing N N 274 
+SER N   H2   sing N N 275 
+SER CA  C    sing N N 276 
+SER CA  CB   sing N N 277 
+SER CA  HA   sing N N 278 
+SER C   O    doub N N 279 
+SER C   OXT  sing N N 280 
+SER CB  OG   sing N N 281 
+SER CB  HB2  sing N N 282 
+SER CB  HB3  sing N N 283 
+SER OG  HG   sing N N 284 
+SER OXT HXT  sing N N 285 
+THR N   CA   sing N N 286 
+THR N   H    sing N N 287 
+THR N   H2   sing N N 288 
+THR CA  C    sing N N 289 
+THR CA  CB   sing N N 290 
+THR CA  HA   sing N N 291 
+THR C   O    doub N N 292 
+THR C   OXT  sing N N 293 
+THR CB  OG1  sing N N 294 
+THR CB  CG2  sing N N 295 
+THR CB  HB   sing N N 296 
+THR OG1 HG1  sing N N 297 
+THR CG2 HG21 sing N N 298 
+THR CG2 HG22 sing N N 299 
+THR CG2 HG23 sing N N 300 
+THR OXT HXT  sing N N 301 
+TYR N   CA   sing N N 302 
+TYR N   H    sing N N 303 
+TYR N   H2   sing N N 304 
+TYR CA  C    sing N N 305 
+TYR CA  CB   sing N N 306 
+TYR CA  HA   sing N N 307 
+TYR C   O    doub N N 308 
+TYR C   OXT  sing N N 309 
+TYR CB  CG   sing N N 310 
+TYR CB  HB2  sing N N 311 
+TYR CB  HB3  sing N N 312 
+TYR CG  CD1  doub Y N 313 
+TYR CG  CD2  sing Y N 314 
+TYR CD1 CE1  sing Y N 315 
+TYR CD1 HD1  sing N N 316 
+TYR CD2 CE2  doub Y N 317 
+TYR CD2 HD2  sing N N 318 
+TYR CE1 CZ   doub Y N 319 
+TYR CE1 HE1  sing N N 320 
+TYR CE2 CZ   sing Y N 321 
+TYR CE2 HE2  sing N N 322 
+TYR CZ  OH   sing N N 323 
+TYR OH  HH   sing N N 324 
+TYR OXT HXT  sing N N 325 
+VAL N   CA   sing N N 326 
+VAL N   H    sing N N 327 
+VAL N   H2   sing N N 328 
+VAL CA  C    sing N N 329 
+VAL CA  CB   sing N N 330 
+VAL CA  HA   sing N N 331 
+VAL C   O    doub N N 332 
+VAL C   OXT  sing N N 333 
+VAL CB  CG1  sing N N 334 
+VAL CB  CG2  sing N N 335 
+VAL CB  HB   sing N N 336 
+VAL CG1 HG11 sing N N 337 
+VAL CG1 HG12 sing N N 338 
+VAL CG1 HG13 sing N N 339 
+VAL CG2 HG21 sing N N 340 
+VAL CG2 HG22 sing N N 341 
+VAL CG2 HG23 sing N N 342 
+VAL OXT HXT  sing N N 343 
 # 
 _pdbx_audit_support.funding_organization   
 'National Institutes of Health/National Institute of General Medical Sciences (NIH/NIGMS)' 

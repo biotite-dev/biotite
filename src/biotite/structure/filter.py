@@ -10,9 +10,9 @@ arrays and atom array stacks.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Tom David Müller"
 __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
-           "filter_canonical_nucleotides", "filter_amino_acids", 
-           "filter_canonical_amino_acids", "filter_carbohydrates", 
-           "filter_backbone", "filter_intersection", "filter_first_altloc", 
+           "filter_canonical_nucleotides", "filter_amino_acids",
+           "filter_canonical_amino_acids", "filter_carbohydrates",
+           "filter_backbone", "filter_intersection", "filter_first_altloc",
            "filter_highest_occupancy_altloc", "filter_peptide_backbone",
            "filter_phosphate_backbone", "filter_linear_bond_continuity",
            "filter_polymer"]
@@ -118,13 +118,13 @@ def filter_nucleotides(array):
 
     Notes
     -----
-    Nucleotides are identified according to the PDB chemical component 
+    Nucleotides are identified according to the PDB chemical component
     dictionary. A residue is considered a nucleotide if it its
     ``_chem_comp.type`` property has one of the following values (case
     insensitive):
 
-    ``DNA LINKING``, ``DNA OH 3 PRIME TERMINUS``, 
-    ``DNA OH 5 PRIME TERMINUS``, ``L-DNA LINKING``, ``L-RNA LINKING``, 
+    ``DNA LINKING``, ``DNA OH 3 PRIME TERMINUS``,
+    ``DNA OH 5 PRIME TERMINUS``, ``L-DNA LINKING``, ``L-RNA LINKING``,
     ``RNA LINKING``, ``RNA OH 3 PRIME TERMINUS``,
     ``RNA OH 5 PRIME TERMINUS``
     """
@@ -133,7 +133,7 @@ def filter_nucleotides(array):
 
 def filter_canonical_amino_acids(array):
     """
-    Filter all atoms of one array that belong to canonical amino acid 
+    Filter all atoms of one array that belong to canonical amino acid
     residues.
 
     Parameters
@@ -164,20 +164,20 @@ def filter_amino_acids(array):
     filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         belongs to an amino acid residue.
-    
+
     Notes
     -----
-    Amino acids are identified according to the PDB chemical component 
+    Amino acids are identified according to the PDB chemical component
     dictionary. A residue is considered an amino acid if it its
     ``_chem_comp.type`` property has one of the following values (case
     insensitive):
 
-    ``D-BETA-PEPTIDE``, ``C-GAMMA LINKING``, ``D-GAMMA-PEPTIDE``, 
-    ``C-DELTA LINKING``, ``D-PEPTIDE LINKING``, 
-    ``D-PEPTIDE NH3 AMINO TERMINUS``, 
-    ``L-BETA-PEPTIDE, C-GAMMA LINKING``, 
-    ``L-GAMMA-PEPTIDE, C-DELTA LINKING``, 
-    ``L-PEPTIDE COOH CARBOXY TERMINUS``, ``L-PEPTIDE LINKING``, 
+    ``D-BETA-PEPTIDE``, ``C-GAMMA LINKING``, ``D-GAMMA-PEPTIDE``,
+    ``C-DELTA LINKING``, ``D-PEPTIDE LINKING``,
+    ``D-PEPTIDE NH3 AMINO TERMINUS``,
+    ``L-BETA-PEPTIDE, C-GAMMA LINKING``,
+    ``L-GAMMA-PEPTIDE, C-DELTA LINKING``,
+    ``L-PEPTIDE COOH CARBOXY TERMINUS``, ``L-PEPTIDE LINKING``,
     ``L-PEPTIDE NH3 AMINO TERMINUS``, ``PEPTIDE LINKING``
     """
     return np.isin(array.res_name, _amino_acid_list)
@@ -197,17 +197,17 @@ def filter_carbohydrates(array):
     filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where the atom
         belongs to a carbohydrate.
-    
+
     Notes
     -----
-    Carbohydrates are identified according to the PDB chemical component 
+    Carbohydrates are identified according to the PDB chemical component
     dictionary. A residue is considered a carbohydrate if it its
     ``_chem_comp.type`` property has one of the following values (case
     insensitive):
 
-    ``D-SACCHARIDE``, ``D-SACCHARIDE,ALPHA LINKING``, 
-    ``D-SACCHARIDE, BETA LINKING``, ``L-SACCHARIDE``, 
-    ``L-SACCHARIDE, ALPHA LINKING``, ``L-SACCHARIDE, BETA LINKING``, 
+    ``D-SACCHARIDE``, ``D-SACCHARIDE,ALPHA LINKING``,
+    ``D-SACCHARIDE, BETA LINKING``, ``L-SACCHARIDE``,
+    ``L-SACCHARIDE, ALPHA LINKING``, ``L-SACCHARIDE, BETA LINKING``,
     ``SACCHARIDE``
     """
     return np.isin(array.res_name, _carbohydrate_list)
@@ -299,7 +299,7 @@ def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
 
     The result will depend on the atoms' order.
     For instance, consider a molecule::
-    
+
            C3
            |
         C1-C2-C4
@@ -323,7 +323,7 @@ def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
         This array is `True` for all indices in `array`, where an atom
         has a bond length with the next atom within [`min_len`, `max_len`]
         boundaries.
-        
+
     Notes
     -----
     Note that this function purely uses distances between consecutive atoms.
@@ -438,7 +438,7 @@ def filter_first_altloc(atoms, altloc_ids):
     Filter all atoms, that have the first *altloc* ID appearing in a
     residue.
 
-    Structure files (PDB, PDBx, MMTF) allow for duplicate atom records,
+    Structure files (PDB, PDBx) allow for duplicate atom records,
     in case a residue is found in multiple alternate locations
     (*altloc*).
     This function is used to remove such duplicate atoms by choosing a
@@ -507,7 +507,7 @@ def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
     For each residue, filter all atoms, that have the *altloc* ID
     with the highest occupancy for this residue.
 
-    Structure files (PDB, PDBx, MMTF) allow for duplicate atom records,
+    Structure files (PDB, PDBx) allow for duplicate atom records,
     in case a residue is found in multiple alternate locations
     (*altloc*).
     This function is used to remove such duplicate atoms by choosing a

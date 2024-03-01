@@ -3,25 +3,29 @@ data_1AKI
 _entry.id   1AKI 
 # 
 _audit_conform.dict_name       mmcif_pdbx.dic 
-_audit_conform.dict_version    5.279 
+_audit_conform.dict_version    5.375 
 _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx.dic 
 # 
 loop_
 _database_2.database_id 
 _database_2.database_code 
-PDB   1AKI         
-WWPDB D_1000170929 
+_database_2.pdbx_database_accession 
+_database_2.pdbx_DOI 
+PDB   1AKI         pdb_00001aki 10.2210/pdb1aki/pdb 
+WWPDB D_1000170929 ?            ?                   
 # 
 _pdbx_database_status.status_code                     REL 
 _pdbx_database_status.entry_id                        1AKI 
 _pdbx_database_status.recvd_initial_deposition_date   1997-05-19 
 _pdbx_database_status.deposit_site                    ? 
-_pdbx_database_status.process_site                    ? 
+_pdbx_database_status.process_site                    BNL 
 _pdbx_database_status.status_code_sf                  REL 
 _pdbx_database_status.status_code_mr                  ? 
 _pdbx_database_status.SG_entry                        ? 
 _pdbx_database_status.pdb_format_compatible           Y 
 _pdbx_database_status.status_code_cs                  ? 
+_pdbx_database_status.status_code_nmr_data            ? 
+_pdbx_database_status.methods_development_category    ? 
 # 
 loop_
 _audit_author.name 
@@ -51,10 +55,11 @@ loop_
 _citation_author.citation_id 
 _citation_author.name 
 _citation_author.ordinal 
-primary 'Artymiuk, P.J.' 1 
-primary 'Blake, C.C.F.'  2 
-primary 'Rice, D.W.'     3 
-primary 'Wilson, K.S.'   4 
+_citation_author.identifier_ORCID 
+primary 'Artymiuk, P.J.' 1 ? 
+primary 'Blake, C.C.F.'  2 ? 
+primary 'Rice, D.W.'     3 ? 
+primary 'Wilson, K.S.'   4 ? 
 # 
 _cell.entry_id           1AKI 
 _cell.length_a           59.062 
@@ -496,7 +501,6 @@ p_special_tor       ?      ?     ? ? 'X-RAY DIFFRACTION' ?
 # 
 _struct.entry_id                  1AKI 
 _struct.title                     'THE STRUCTURE OF THE ORTHORHOMBIC FORM OF HEN EGG-WHITE LYSOZYME AT 1.5 ANGSTROMS RESOLUTION' 
-_struct.pdbx_descriptor           LYSOZYME 
 _struct.pdbx_model_details        ? 
 _struct.pdbx_CASP_flag            ? 
 _struct.pdbx_model_type_details   ? 
@@ -585,10 +589,11 @@ _struct_conn.pdbx_ptnr3_PDB_ins_code
 _struct_conn.details 
 _struct_conn.pdbx_dist_value 
 _struct_conn.pdbx_value_order 
-disulf1 disulf ? ? A CYS 6  SG ? ? ? 1_555 A CYS 127 SG ? ? A CYS 6  A CYS 127 1_555 ? ? ? ? ? ? ? 1.970 ? 
-disulf2 disulf ? ? A CYS 30 SG ? ? ? 1_555 A CYS 115 SG ? ? A CYS 30 A CYS 115 1_555 ? ? ? ? ? ? ? 2.001 ? 
-disulf3 disulf ? ? A CYS 64 SG ? ? ? 1_555 A CYS 80  SG ? ? A CYS 64 A CYS 80  1_555 ? ? ? ? ? ? ? 1.987 ? 
-disulf4 disulf ? ? A CYS 76 SG ? ? ? 1_555 A CYS 94  SG ? ? A CYS 76 A CYS 94  1_555 ? ? ? ? ? ? ? 2.018 ? 
+_struct_conn.pdbx_role 
+disulf1 disulf ? ? A CYS 6  SG ? ? ? 1_555 A CYS 127 SG ? ? A CYS 6  A CYS 127 1_555 ? ? ? ? ? ? ? 1.970 ? ? 
+disulf2 disulf ? ? A CYS 30 SG ? ? ? 1_555 A CYS 115 SG ? ? A CYS 30 A CYS 115 1_555 ? ? ? ? ? ? ? 2.001 ? ? 
+disulf3 disulf ? ? A CYS 64 SG ? ? ? 1_555 A CYS 80  SG ? ? A CYS 64 A CYS 80  1_555 ? ? ? ? ? ? ? 1.987 ? ? 
+disulf4 disulf ? ? A CYS 76 SG ? ? ? 1_555 A CYS 94  SG ? ? A CYS 76 A CYS 94  1_555 ? ? ? ? ? ? ? 2.018 ? ? 
 # 
 _struct_conn_type.id          disulf 
 _struct_conn_type.criteria    ? 
@@ -2053,6 +2058,7 @@ _pdbx_audit_revision_history.revision_date
 1 'Structure model' 1 0 1997-11-19 
 2 'Structure model' 1 1 2008-03-24 
 3 'Structure model' 1 2 2011-07-13 
+4 'Structure model' 1 3 2023-08-02 
 # 
 _pdbx_audit_revision_details.ordinal             1 
 _pdbx_audit_revision_details.revision_ordinal    1 
@@ -2060,6 +2066,7 @@ _pdbx_audit_revision_details.data_content_type   'Structure model'
 _pdbx_audit_revision_details.provider            repository 
 _pdbx_audit_revision_details.type                'Initial release' 
 _pdbx_audit_revision_details.description         ? 
+_pdbx_audit_revision_details.details             ? 
 # 
 loop_
 _pdbx_audit_revision_group.ordinal 
@@ -2068,6 +2075,29 @@ _pdbx_audit_revision_group.data_content_type
 _pdbx_audit_revision_group.group 
 1 2 'Structure model' 'Version format compliance' 
 2 3 'Structure model' 'Version format compliance' 
+3 4 'Structure model' 'Database references'       
+4 4 'Structure model' Other                       
+5 4 'Structure model' 'Refinement description'    
+# 
+loop_
+_pdbx_audit_revision_category.ordinal 
+_pdbx_audit_revision_category.revision_ordinal 
+_pdbx_audit_revision_category.data_content_type 
+_pdbx_audit_revision_category.category 
+1 4 'Structure model' database_2                    
+2 4 'Structure model' pdbx_database_status          
+3 4 'Structure model' pdbx_initial_refinement_model 
+4 4 'Structure model' software                      
+# 
+loop_
+_pdbx_audit_revision_item.ordinal 
+_pdbx_audit_revision_item.revision_ordinal 
+_pdbx_audit_revision_item.data_content_type 
+_pdbx_audit_revision_item.item 
+1 4 'Structure model' '_database_2.pdbx_DOI'                
+2 4 'Structure model' '_database_2.pdbx_database_accession' 
+3 4 'Structure model' '_pdbx_database_status.process_site'  
+4 4 'Structure model' '_software.name'                      
 # 
 loop_
 _software.name 
@@ -2076,12 +2106,12 @@ _software.version
 _software.citation_id 
 _software.pdbx_ordinal 
 RIGAKU 'data collection' . ? 1 
-BIOTEX 'data reduction'  . ? 2 
+bioteX 'data reduction'  . ? 2 
 X-PLOR 'model building'  . ? 3 
 GPRLSA refinement        . ? 4 
 X-PLOR refinement        . ? 5 
 RIGAKU 'data reduction'  . ? 6 
-BIOTEX 'data scaling'    . ? 7 
+bioteX 'data scaling'    . ? 7 
 X-PLOR phasing           . ? 8 
 # 
 _pdbx_validate_close_contact.id               1 
@@ -2189,4 +2219,11 @@ _pdbx_validate_planes.type
 _pdbx_entity_nonpoly.entity_id   2 
 _pdbx_entity_nonpoly.name        water 
 _pdbx_entity_nonpoly.comp_id     HOH 
+# 
+_pdbx_initial_refinement_model.id               1 
+_pdbx_initial_refinement_model.entity_id_list   ? 
+_pdbx_initial_refinement_model.type             'experimental model' 
+_pdbx_initial_refinement_model.source_name      PDB 
+_pdbx_initial_refinement_model.accession_code   2LZH 
+_pdbx_initial_refinement_model.details          'PDB ENTRY 2LZH' 
 # 

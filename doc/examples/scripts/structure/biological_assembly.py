@@ -5,15 +5,16 @@ Biological assembly of a structure
 Often the biological assembly (or biological unit) reveals the complete
 picture of a protein function, may it be a viral capsid or a
 microfilament.
-However, the usual records in an *PDB*/*mmCIF*/*MMTF* file usually
+However, the usual atom records in an *PDB* or *PDBx* file usually
 describe only the asymmetric unit.
 For large complexes the asymmetric unit may only display one monomer or
 one small subcomplex.
 Multiple copies of the asymmetric unit must be geometrically arranged to
 build the assembly.
 
-In order to get the entire assembly, the *mmCIF* files provided by the
-*RCSB PDB* contain the following fields:
+In order to get the entire assembly, the *PDBx* files provided by the
+*RCSB PDB* (either in *CIF* or *BinaryCIF* format) contain the following
+fields:
 
     - ``pdbx_struct_assembly`` - General information about the
       assemblies
@@ -37,14 +38,13 @@ At first we will check, which assemblies are available to us.
 # License: BSD 3 clause
 
 from tempfile import NamedTemporaryFile
-import numpy as np
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 
 
-pdbx_file = pdbx.PDBxFile.read(rcsb.fetch("3J31", "mmcif"))
+pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("3J31", "bcif"))
 
 assemblies = pdbx.list_assemblies(pdbx_file)
 print("ID    name")

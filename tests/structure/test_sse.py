@@ -3,21 +3,21 @@
 # information.
 
 import glob
-from os.path import join, basename, splitext
+from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 import biotite.sequence.io.fasta as fasta
 from ..util import data_dir
 
 
-def test_sse():
+def test_sse_legacy():
     """
     Legacy test to assert that refactoring did not change behavior.
     """
-    array = mmtf.get_structure(
-        mmtf.MMTFFile.read(join(data_dir("structure"), "3o5r.mmtf")),
+    array = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "3o5r.bcif")),
         model = 1
     )
     test_sse = struc.annotate_sse(array, "A")
@@ -40,25 +40,26 @@ def test_sse():
 
     matches = 0
     total = 0
+    ref_psea_file = fasta.FastaFile.read(
+        join(data_dir("structure"), "psea.fasta")
+    )
 
-    for file_name in glob.glob(join(data_dir("structure"), "*.mmtf")):
+    for pdb_id in ref_psea_file:
+        ref_sse = np.array(list(ref_psea_file[pdb_id]))
 
-        pdb_id = splitext(basename(file_name))[0]
-
-        atoms = mmtf.get_structure(mmtf.MMTFFile.read(file_name), model=1)
+        atoms = pdbx.get_structure(
+            pdbx.BinaryCIFFile.read(
+                join(data_dir("structure"), f"{pdb_id}.bcif")
+            ),
+            model=1
+        )
         atoms = atoms[struc.filter_canonical_amino_acids(atoms)]
         if atoms.array_length() == 0:
             # Structure contains no peptide to annotate SSE for
             continue
         atoms = atoms[atoms.chain_id == atoms.chain_id[0]]
-
-        ref_sse = fasta.FastaFile.read(
-            join(data_dir("structure"), "psea.fasta")
-        )[pdb_id]
-        ref_sse = np.array(list(ref_sse))
-        
         test_sse = struc.annotate_sse(atoms)
-        
+
         assert len(test_sse) == len(ref_sse)
         matches += np.count_nonzero(test_sse == ref_sse)
         total += len(ref_sse)
@@ -76,8 +77,8 @@ def test_sse_discontinuity(discont_pos):
     discontinuity at a random location and expect that the SSE in its
     proximity becomes 'coil'.
     """
-    atoms = mmtf.get_structure(
-        mmtf.MMTFFile.read(join(data_dir("structure"), "1gya.mmtf")),
+    atoms = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1gya.bcif")),
         model=1
     )
     atoms = atoms[struc.filter_canonical_amino_acids(atoms)]
@@ -106,14 +107,14 @@ def test_sse_discontinuity(discont_pos):
 
 
 @pytest.mark.parametrize(
-    "file_name", glob.glob(join(data_dir("structure"), "*.mmtf"))
+    "file_name", glob.glob(join(data_dir("structure"), "*.bcif"))
 )
 def test_sse_non_peptide(file_name):
     """
     Test whether only amino acids get SSE annotated.
     """
-    atoms = mmtf.get_structure(mmtf.MMTFFile.read(file_name), model=1)
-    
+    atoms = pdbx.get_structure(pdbx.BinaryCIFFile.read(file_name), model=1)
+
     # Special case for PDB 5EIL:
     # The residue BP5 is an amino acid, but has no CA
     # -> rename analogous atom

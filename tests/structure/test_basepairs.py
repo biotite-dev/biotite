@@ -137,13 +137,13 @@ def test_base_pairs_incomplete_structure(nuc_sample_array):
     Remove atoms belonging to the pyrimidine / purine ring of each base
     and the ``O2`` atom contained in pyrimidine bases.
 
-    Test that no base pairs are detected as all bases have less than 3 
-    common atoms with their implemented reference base. 
+    Test that no base pairs are detected as all bases have less than 3
+    common atoms with their implemented reference base.
     """
-    
+
     nuc_sample_array = nuc_sample_array[
         ~ np.isin(
-            nuc_sample_array.atom_name, 
+            nuc_sample_array.atom_name,
             ['N1', 'C2', 'N3', 'C4', 'C5', 'C6', 'N7', 'C8', 'N9', 'O2']
         )
     ]
@@ -324,7 +324,7 @@ def test_base_stacking():
     """
     # Load the test structure (1BNA) - a DNA-double-helix
     helix = strucio.load_structure(
-        join(data_dir("structure"), "base_pairs", "1bna.mmtf")
+        join(data_dir("structure"), "base_pairs", "1bna.cif")
     )
 
     residue_starts = struc.get_residue_starts(helix)

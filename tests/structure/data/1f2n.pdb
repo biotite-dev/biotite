@@ -3,33 +3,33 @@ TITLE     RICE YELLOW MOTTLE VIRUS
 COMPND    MOL_ID: 1;                                                            
 COMPND   2 MOLECULE: CAPSID PROTEIN;                                            
 COMPND   3 CHAIN: A, B, C;                                                      
-COMPND   4 OTHER_DETAILS: COLLECTED FROM RICE FIELD IN THE IVORY                
-COMPND   5 COAST AND WAS PROPAGATED UNDER CONTAINED CONDITIONS IN A             
-COMPND   6 SUSCEPTIBLE RICE VARIETY IR8 (ORYZA SATIVA L.)                       
+COMPND   4 OTHER_DETAILS: COLLECTED FROM RICE FIELD IN THE IVORY COAST AND WAS  
+COMPND   5 PROPAGATED UNDER CONTAINED CONDITIONS IN A SUSCEPTIBLE RICE VARIETY  
+COMPND   6 IR8 (ORYZA SATIVA L.)                                                
 SOURCE    MOL_ID: 1;                                                            
 SOURCE   2 ORGANISM_SCIENTIFIC: RICE YELLOW MOTTLE VIRUS;                       
 SOURCE   3 ORGANISM_TAXID: 31744                                                
-KEYWDS    PLANT VIRUS, CAPSID PROTEIN, COAT PROTEIN, BETA-ANNULUS,              
-KEYWDS   2 DOMAIN SWAPPING, X-RAY DIFFRACTION, ICOSAHEDRAL VIRUS                
+KEYWDS    PLANT VIRUS, CAPSID PROTEIN, COAT PROTEIN, BETA-ANNULUS, DOMAIN       
+KEYWDS   2 SWAPPING, ICOSAHEDRAL VIRUS, VIRUS                                   
 EXPDTA    X-RAY DIFFRACTION                                                     
-AUTHOR    C.QU,L.LILJAS,N.OPALKA,C.BRUGIDOU,M.YEAGER,R.N.BEACHY,                
-AUTHOR   2 C.M.FAUQUET,J.E.JOHNSON,T.LIN                                        
+AUTHOR    C.QU,L.LILJAS,N.OPALKA,C.BRUGIDOU,M.YEAGER,R.N.BEACHY,C.M.FAUQUET,    
+AUTHOR   2 J.E.JOHNSON,T.LIN                                                    
+REVDAT   3   07-FEB-24 1F2N    1       REMARK LINK                              
 REVDAT   2   24-FEB-09 1F2N    1       VERSN                                    
 REVDAT   1   01-NOV-00 1F2N    0                                                
-JRNL        AUTH   C.QU,L.LILJAS,N.OPALKA,C.BRUGIDOU,M.YEAGER,                  
-JRNL        AUTH 2 R.N.BEACHY,C.M.FAUQUET,J.E.JOHNSON,T.LIN                     
-JRNL        TITL   3D DOMAIN SWAPPING MODULATES THE STABILITY OF                
-JRNL        TITL 2 MEMBERS OF AN ICOSAHEDRAL VIRUS GROUP.                       
+JRNL        AUTH   C.QU,L.LILJAS,N.OPALKA,C.BRUGIDOU,M.YEAGER,R.N.BEACHY,       
+JRNL        AUTH 2 C.M.FAUQUET,J.E.JOHNSON,T.LIN                                
+JRNL        TITL   3D DOMAIN SWAPPING MODULATES THE STABILITY OF MEMBERS OF AN  
+JRNL        TITL 2 ICOSAHEDRAL VIRUS GROUP.                                     
 JRNL        REF    STRUCTURE FOLD.DES.           V.   8  1095 2000              
 JRNL        REFN                   ISSN 0969-2126                               
 JRNL        PMID   11080631                                                     
 JRNL        DOI    10.1016/S0969-2126(00)00508-6                                
 REMARK   1                                                                      
 REMARK   1 REFERENCE 1                                                          
-REMARK   1  AUTH   M.N.YASSI,C.RITZENTHALER,C.BRUGIDOU,C.FAUQUET,               
-REMARK   1  AUTH 2 R.N.BEACHY                                                   
-REMARK   1  TITL   NUCLEOTIDE SEQUENCE AND GENOME CHARACTERIZATION OF           
-REMARK   1  TITL 2 RICE YELLOW MOTTLE VIRUS RNA                                 
+REMARK   1  AUTH   M.N.YASSI,C.RITZENTHALER,C.BRUGIDOU,C.FAUQUET,R.N.BEACHY     
+REMARK   1  TITL   NUCLEOTIDE SEQUENCE AND GENOME CHARACTERIZATION OF RICE      
+REMARK   1  TITL 2 YELLOW MOTTLE VIRUS RNA                                      
 REMARK   1  REF    J.GEN.VIROL.                  V.  75   249 1994              
 REMARK   1  REFN                   ISSN 0022-1317                               
 REMARK   2                                                                      
@@ -97,7 +97,7 @@ REMARK   3   ESD FROM C-V SIGMAA          (A) : NULL
 REMARK   3                                                                      
 REMARK   3  RMS DEVIATIONS FROM IDEAL VALUES.                                   
 REMARK   3   BOND LENGTHS                 (A) : 0.008                           
-REMARK   3   BOND ANGLES            (DEGREES) : 1.40                            
+REMARK   3   BOND ANGLES            (DEGREES) : 1.400                           
 REMARK   3   DIHEDRAL ANGLES        (DEGREES) : NULL                            
 REMARK   3   IMPROPER ANGLES        (DEGREES) : NULL                            
 REMARK   3                                                                      
@@ -118,13 +118,13 @@ REMARK   3
 REMARK   3  PARAMETER FILE  1  : NULL                                           
 REMARK   3  TOPOLOGY FILE  1   : NULL                                           
 REMARK   3                                                                      
-REMARK   3  OTHER REFINEMENT REMARKS: 60-FOLD NON CRYSTALLOGRAPHIC              
-REMARK   3  SYMMETRY CONSTRAINTS                                                
+REMARK   3  OTHER REFINEMENT REMARKS: 60-FOLD NON CRYSTALLOGRAPHIC SYMMETRY     
+REMARK   3  CONSTRAINTS                                                         
 REMARK   4                                                                      
-REMARK   4 1F2N COMPLIES WITH FORMAT V. 3.15, 01-DEC-08                         
+REMARK   4 1F2N COMPLIES WITH FORMAT V. 3.30, 13-JUL-11                         
 REMARK 100                                                                      
 REMARK 100 THIS ENTRY HAS BEEN PROCESSED BY RCSB ON 02-JUN-00.                  
-REMARK 100 THE RCSB ID CODE IS RCSB011168.                                      
+REMARK 100 THE DEPOSITION ID IS D_1000011168.                                   
 REMARK 200                                                                      
 REMARK 200 EXPERIMENTAL DETAILS                                                 
 REMARK 200  EXPERIMENT TYPE                : X-RAY DIFFRACTION                  
@@ -179,9 +179,9 @@ REMARK 280 CRYSTAL
 REMARK 280 SOLVENT CONTENT, VS   (%): NULL                                      
 REMARK 280 MATTHEWS COEFFICIENT, VM (ANGSTROMS**3/DA): NULL                     
 REMARK 280                                                                      
-REMARK 280 CRYSTALLIZATION CONDITIONS: 3.6% (W/V) PEG 8000,   200 MM            
-REMARK 280  LITHIUM SULFATE, 50 MM SODIUM CITRATE, PH 3.0, VAPOR                
-REMARK 280  DIFFUSION, HANGING DROP, TEMPERATURE 293.0K                         
+REMARK 280 CRYSTALLIZATION CONDITIONS: 3.6% (W/V) PEG 8000, 200 MM LITHIUM      
+REMARK 280  SULFATE, 50 MM SODIUM CITRATE, PH 3.0, VAPOR DIFFUSION, HANGING     
+REMARK 280  DROP, TEMPERATURE 293.0K                                            
 REMARK 290                                                                      
 REMARK 290 CRYSTALLOGRAPHIC SYMMETRY                                            
 REMARK 290 SYMMETRY OPERATORS FOR SPACE GROUP: P 1 21 1                         
@@ -591,54 +591,56 @@ REMARK 500 (M=MODEL NUMBER; RES=RESIDUE NAME; C=CHAIN IDENTIFIER;
 REMARK 500 SSEQ=SEQUENCE NUMBER; I=INSERTION CODE).                             
 REMARK 500                                                                      
 REMARK 500  M RES CSSEQI        RMS     TYPE                                    
-REMARK 500    TYR A 134         0.07    SIDE_CHAIN                              
-REMARK 500    TYR C 134         0.07    SIDE_CHAIN                              
+REMARK 500    TYR A 134         0.07    SIDE CHAIN                              
+REMARK 500    TYR C 134         0.07    SIDE CHAIN                              
 REMARK 500                                                                      
 REMARK 500 REMARK: NULL                                                         
 REMARK 620                                                                      
 REMARK 620 METAL COORDINATION                                                   
-REMARK 620  (M=MODEL NUMBER; RES=RESIDUE NAME; C=CHAIN IDENTIFIER;              
-REMARK 620  SSEQ=SEQUENCE NUMBER; I=INSERTION CODE):                            
+REMARK 620 (M=MODEL NUMBER; RES=RESIDUE NAME; C=CHAIN IDENTIFIER;               
+REMARK 620 SSEQ=SEQUENCE NUMBER; I=INSERTION CODE):                             
 REMARK 620                                                                      
 REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
 REMARK 620                              CA A1002  CA                            
 REMARK 620 N RES CSSEQI ATOM                                                    
-REMARK 620 1 VAL B 182   O                                                      
-REMARK 620 2 THR B 238   O    91.8                                              
-REMARK 620 3 ASP A 126   OD2  93.0  81.8                                        
-REMARK 620 4 ASP A 129   OD1 164.2  84.7 101.8                                  
-REMARK 620 5 ASN B 237   OD1  81.0  86.3 166.5  83.4                            
-REMARK 620 6 ASP A 129   OD2 143.1 125.1  93.3  42.6  98.7                      
+REMARK 620 1 ASP A 126   OD2                                                    
+REMARK 620 2 ASP A 129   OD1 101.8                                              
+REMARK 620 3 ASP A 129   OD2  93.3  42.6                                        
+REMARK 620 4 VAL B 182   O    93.0 164.2 143.1                                  
+REMARK 620 5 ASN B 237   OD1 166.5  83.4  98.7  81.0                            
+REMARK 620 6 THR B 238   O    81.8  84.7 125.1  91.8  86.3                      
 REMARK 620 N                    1     2     3     4     5                       
-REMARK 620                                                                      
-REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
-REMARK 620                              CA B1003  CA                            
-REMARK 620 N RES CSSEQI ATOM                                                    
-REMARK 620 1 ASP B 129   OD1                                                    
-REMARK 620 2 ASN C 237   OD1  91.6                                              
-REMARK 620 3 ASP B 126   OD2  99.9 162.3                                        
-REMARK 620 4 VAL C 182   O   172.2  81.0  87.0                                  
-REMARK 620 5 THR C 238   O    92.5  85.6  80.4  85.0                            
-REMARK 620 N                    1     2     3     4                             
 REMARK 620                                                                      
 REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
 REMARK 620                              CA C1001  CA                            
 REMARK 620 N RES CSSEQI ATOM                                                    
 REMARK 620 1 VAL A 182   O                                                      
-REMARK 620 2 THR A 238   O    82.4                                              
-REMARK 620 3 ASP C 126   OD2  93.2  72.7                                        
-REMARK 620 4 ASN A 237   OD1  83.4  82.6 155.3                                  
-REMARK 620 5 ASP C 129   OD1 161.5  81.8  91.3  85.2                            
-REMARK 620 6 ASP C 129   OD2 154.3 123.2  92.5 101.2  43.0                      
+REMARK 620 2 ASN A 237   OD1  83.4                                              
+REMARK 620 3 THR A 238   O    82.4  82.6                                        
+REMARK 620 4 ASP C 126   OD2  93.2 155.3  72.7                                  
+REMARK 620 5 ASP C 129   OD1 161.5  85.2  81.8  91.3                            
+REMARK 620 6 ASP C 129   OD2 154.3 101.2 123.2  92.5  43.0                      
 REMARK 620 N                    1     2     3     4     5                       
+REMARK 620                                                                      
+REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
+REMARK 620                              CA B1003  CA                            
+REMARK 620 N RES CSSEQI ATOM                                                    
+REMARK 620 1 ASP B 126   OD2                                                    
+REMARK 620 2 ASP B 129   OD1  99.9                                              
+REMARK 620 3 VAL C 182   O    87.0 172.2                                        
+REMARK 620 4 ASN C 237   OD1 162.3  91.6  81.0                                  
+REMARK 620 5 THR C 238   O    80.4  92.5  85.0  85.6                            
+REMARK 620 N                    1     2     3     4                             
 REMARK 800                                                                      
 REMARK 800 SITE                                                                 
 REMARK 800 SITE_IDENTIFIER: AC1                                                 
 REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
 REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE CA C 1001                 
+REMARK 800                                                                      
 REMARK 800 SITE_IDENTIFIER: AC2                                                 
 REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
 REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE CA A 1002                 
+REMARK 800                                                                      
 REMARK 800 SITE_IDENTIFIER: AC3                                                 
 REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
 REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE CA B 1003                 
@@ -702,9 +704,9 @@ SEQRES  16 C  238  ASN THR ILE LEU PRO ALA ARG LEU ALA VAL ARG SER SER
 SEQRES  17 C  238  ILE LYS PRO THR VAL SER ASP THR PRO GLY LYS LEU TYR          
 SEQRES  18 C  238  VAL ILE ALA SER MET VAL LEU ARG ASP PRO VAL ASP PRO          
 SEQRES  19 C  238  THR LEU ASN THR                                              
-HET     CA  C1001       1                                                       
 HET     CA  A1002       1                                                       
 HET     CA  B1003       1                                                       
+HET     CA  C1001       1                                                       
 HETNAM      CA CALCIUM ION                                                      
 FORMUL   4   CA    3(CA 2+)                                                     
 FORMUL   7  HOH   *199(H2 O)                                                    
@@ -763,30 +765,30 @@ SHEET    1   I 4 THR C  76  ASP C  79  0
 SHEET    2   I 4 ARG C 202  SER C 207 -1  N  LEU C 203   O  TYR C  78           
 SHEET    3   I 4 SER C 118  LEU C 124 -1  N  GLU C 120   O  ARG C 206           
 SHEET    4   I 4 VAL C 145  SER C 148 -1  O  VAL C 145   N  MET C 121           
+LINK         OD2 ASP A 126                CA    CA A1002     1555   1555  2.42  
+LINK         OD1 ASP A 129                CA    CA A1002     1555   1555  2.49  
+LINK         OD2 ASP A 129                CA    CA A1002     1555   1555  3.26  
+LINK         O   VAL A 182                CA    CA C1001     1555   1555  2.39  
+LINK         OD1 ASN A 237                CA    CA C1001     1555   1555  2.50  
+LINK         O   THR A 238                CA    CA C1001     1555   1555  2.39  
 LINK        CA    CA A1002                 O   VAL B 182     1555   1555  2.36  
-LINK        CA    CA A1002                 O   THR B 238     1555   1555  2.46  
-LINK        CA    CA A1002                 OD2 ASP A 126     1555   1555  2.42  
-LINK        CA    CA A1002                 OD1 ASP A 129     1555   1555  2.49  
 LINK        CA    CA A1002                 OD1 ASN B 237     1555   1555  2.56  
-LINK        CA    CA A1002                 OD2 ASP A 129     1555   1555  3.26  
-LINK        CA    CA B1003                 OD1 ASP B 129     1555   1555  2.46  
-LINK        CA    CA B1003                 OD1 ASN C 237     1555   1555  2.59  
-LINK        CA    CA B1003                 OD2 ASP B 126     1555   1555  2.47  
+LINK        CA    CA A1002                 O   THR B 238     1555   1555  2.46  
+LINK         OD2 ASP B 126                CA    CA B1003     1555   1555  2.47  
+LINK         OD1 ASP B 129                CA    CA B1003     1555   1555  2.46  
 LINK        CA    CA B1003                 O   VAL C 182     1555   1555  2.38  
+LINK        CA    CA B1003                 OD1 ASN C 237     1555   1555  2.59  
 LINK        CA    CA B1003                 O   THR C 238     1555   1555  2.51  
-LINK        CA    CA C1001                 O   VAL A 182     1555   1555  2.39  
-LINK        CA    CA C1001                 O   THR A 238     1555   1555  2.39  
-LINK        CA    CA C1001                 OD2 ASP C 126     1555   1555  2.45  
-LINK        CA    CA C1001                 OD1 ASN A 237     1555   1555  2.50  
-LINK        CA    CA C1001                 OD1 ASP C 129     1555   1555  2.52  
-LINK        CA    CA C1001                 OD2 ASP C 129     1555   1555  3.23  
+LINK         OD2 ASP C 126                CA    CA C1001     1555   1555  2.45  
+LINK         OD1 ASP C 129                CA    CA C1001     1555   1555  2.52  
+LINK         OD2 ASP C 129                CA    CA C1001     1555   1555  3.23  
 SITE     1 AC1  5 VAL A 182  ASN A 237  THR A 238  ASP C 126                    
 SITE     2 AC1  5 ASP C 129                                                     
 SITE     1 AC2  5 ASP A 126  ASP A 129  VAL B 182  ASN B 237                    
 SITE     2 AC2  5 THR B 238                                                     
 SITE     1 AC3  5 ASP B 126  ASP B 129  VAL C 182  ASN C 237                    
 SITE     2 AC3  5 THR C 238                                                     
-CRYST1  283.500  401.800  284.000  90.00  89.40  90.00 P 1 21 1      6          
+CRYST1  283.500  401.800  284.000  90.00  89.40  90.00 P 1 21 1    360          
 ORIGX1      1.000000  0.000000  0.000000        0.00000                         
 ORIGX2      0.000000  1.000000  0.000000        0.00000                         
 ORIGX3      0.000000  0.000000  1.000000        0.00000                         
@@ -5729,5 +5731,5 @@ CONECT 4533 2077 2101 4113 4521
 CONECT 4533 4526                                                                
 CONECT 4534 1038 1446 1451 3696                                                 
 CONECT 4534 3720 3721                                                           
-MASTER      618    0    3   18   37    0    6  186 4730    3   23   57          
+MASTER      619    0    3   18   37    0    6  186 4730    3   23   57          
 END                                                                             

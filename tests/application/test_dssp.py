@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 import biotite.structure.io.mmtf as mmtf
 from biotite.application.dssp import DsspApp
 from ..util import data_dir, is_not_installed
@@ -46,7 +47,7 @@ def test_dssp(path):
         return
     sse = np.array([sec_struct_codes[code] for code in sse],
                     dtype="U1")
-    
+
     chain = array[array.chain_id == first_chain_id]
     sse_from_app = DsspApp.annotate_sse(chain)
     # PDB uses different DSSP version -> slight differences possible
@@ -56,19 +57,19 @@ def test_dssp(path):
 
 @pytest.mark.skipif(is_not_installed("mkdssp"), reason="DSSP is not installed")
 def test_multiple_chains():
-    atoms = mmtf.get_structure(
-        mmtf.MMTFFile.read(join(data_dir("structure"), "1igy.mmtf")),
+    atoms = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1igy.bcif")),
         model=1
     )
     atoms = atoms[struc.filter_canonical_amino_acids(atoms)]
     sse = DsspApp.annotate_sse(atoms)
-    assert np.all(np.isin(sse, ["C", "H", "B", "E", "G", "I", "T", "S"])) 
+    assert np.all(np.isin(sse, ["C", "H", "B", "E", "G", "I", "T", "S"]))
     assert len(sse) == struc.get_residue_count(atoms)
 
 
 @pytest.mark.skipif(is_not_installed("mkdssp"), reason="DSSP is not installed")
 def test_invalid_structure():
-    array = strucio.load_structure(join(data_dir("structure"), "5ugo.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "5ugo.bcif"))
     # Get DNA chain -> Invalid for DSSP
     chain = array[array.chain_id == "T"]
     with pytest.raises(SubprocessError):

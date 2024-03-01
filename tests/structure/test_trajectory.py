@@ -15,7 +15,6 @@ import biotite.structure.io.trr as trr
 import biotite.structure.io.tng as tng
 import biotite.structure.io.dcd as dcd
 import biotite.structure.io.netcdf as netcdf
-import biotite.structure.io.pdbx as pdbx
 from ..util import data_dir, cannot_import
 
 
@@ -26,7 +25,7 @@ from ..util import data_dir, cannot_import
 @pytest.mark.parametrize("format", ["trr", "xtc", "tng", "dcd", "netcdf"])
 def test_array_conversion(format):
     template = strucio.load_structure(
-        join(data_dir("structure"), "1l2y.mmtf")
+        join(data_dir("structure"), "1l2y.bcif")
     )[0]
     # Add fake box
     template.box = np.diag([1,2,3])
@@ -73,19 +72,17 @@ def test_array_conversion(format):
         [None, 3]
     )
 )
-def test_mmtf_consistency(format, start, stop, step, chunk_size):
+def test_bcif_consistency(format, start, stop, step, chunk_size):
     if format == "netcdf" and stop is not None and step is not None:
         # Currently, there is an inconsistency in in MDTraj's
         # NetCDFTrajectoryFile class:
         # In this class the number of frames in the output arrays
         # is dependent on the 'stride' parameter
         return
-    
-    # MMTF is used as reference for consistency check
-    # due to higher performance
-    ref_traj = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
+
+    ref_traj = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
     ref_traj = ref_traj[slice(start, stop, step)]
-    
+
     # Template is first model of the reference
     template = ref_traj[0]
     if format == "trr":
@@ -104,7 +101,7 @@ def test_mmtf_consistency(format, start, stop, step, chunk_size):
     )
     test_traj = traj_file.get_structure(template)
     test_traj_time = traj_file.get_time()
-    
+
     if format not in ["dcd", "netcdf"]:
         # The time starts at 1.0 and increases by 1.0 each step
         # -> can be tested against 'range()' function
@@ -149,7 +146,7 @@ def test_read_iter(format, start, stop, step, stack_size):
         # In this class the number of frames in the output arrays
         # is dependent on the 'stride' parameter
         return
-    
+
     if format == "trr":
         traj_file_cls = trr.TRRFile
     if format == "xtc":
@@ -161,7 +158,7 @@ def test_read_iter(format, start, stop, step, stack_size):
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
     file_name = join(data_dir("structure"), f"1l2y.{format}")
-    
+
     traj_file = traj_file_cls.read(file_name, start, stop, step)
     ref_coord = traj_file.get_coord()
     ref_box = traj_file.get_box()
@@ -176,7 +173,7 @@ def test_read_iter(format, start, stop, step, stack_size):
         test_coord.append(coord)
         test_box.append(box)
         test_time.append(time)
-    
+
     # Convert list to NumPy array
     combination_func = np.stack if stack_size is None else np.concatenate
     test_coord =combination_func(test_coord)
@@ -226,9 +223,9 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
         # In this class the number of frames in the output arrays
         # is dependent on the 'stride' parameter
         return
-    
-    template = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
-    
+
+    template = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
+
     if format == "trr":
         traj_file_cls = trr.TRRFile
     if format == "xtc":
@@ -240,10 +237,10 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
     file_name = join(data_dir("structure"), f"1l2y.{format}")
-    
+
     traj_file = traj_file_cls.read(file_name, start, stop, step)
     ref_traj = traj_file.get_structure(template)
-    
+
     frames = [frame for frame in traj_file_cls.read_iter_structure(
         file_name, template, start, stop, step, stack_size=stack_size
     )]
@@ -254,7 +251,7 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
     else:
         assert isinstance(frames[0], struc.AtomArrayStack)
         test_traj = struc.stack(list(itertools.chain(*frames)))
-    
+
     assert test_traj == ref_traj
 
 
@@ -307,7 +304,7 @@ def test_write_iter(format, n_models, n_atoms, include_box, include_time):
     traj_file.set_box(box)
     traj_file.set_time(time)
     traj_file.write(ref_file.name)
-    
+
     traj_file = traj_file_cls.read(ref_file.name)
     ref_coord = traj_file.get_coord()
     ref_box = traj_file.get_box()

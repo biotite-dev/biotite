@@ -30,8 +30,8 @@ ku_dna_file_name = ku_dna_file.name
 ku_file_name = ku_file.name
 
 # Download and parse structure files
-ku_dna = pdbx.get_structure(pdbx.PDBxFile.read(rcsb.fetch("1JEY", "cif")))[0]
-ku     = pdbx.get_structure(pdbx.PDBxFile.read(rcsb.fetch("1JEQ", "cif")))[0]
+ku_dna = pdbx.get_structure(pdbx.CIFFile.read(rcsb.fetch("1JEY", "cif")))[0]
+ku     = pdbx.get_structure(pdbx.CIFFile.read(rcsb.fetch("1JEQ", "cif")))[0]
 # Remove DNA and water
 ku_dna = ku_dna[(ku_dna.chain_id == "A") | (ku_dna.chain_id == "B")]
 ku_dna = ku_dna[~struc.filter_solvent(ku_dna)]
@@ -48,11 +48,11 @@ ku_superimposed, transformation = struc.superimpose(
 # We do not want the cropped structures
 # -> apply superimposition on original structures
 ku_superimposed = transformation.apply(ku)
-# Write PDBx files as input for PyMOL
-cif_file = pdbx.PDBxFile()
+# Write mmCIF files as input for PyMOL
+cif_file = pdbx.CIFFile()
 pdbx.set_structure(cif_file, ku_dna, data_block="ku_dna")
 cif_file.write(ku_dna_file_name)
-cif_file = pdbx.PDBxFile()
+cif_file = pdbx.CIFFile()
 pdbx.set_structure(cif_file, ku_superimposed, data_block="ku")
 cif_file.write(ku_file_name)
 # Visualization with PyMOL...

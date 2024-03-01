@@ -53,7 +53,8 @@ class PDBFile(TextFile):
     r"""
     This class represents a PDB file.
 
-    The usage of PDBxFile is encouraged in favor of this class.
+    The usage of :mod:`biotite.structure.io.pdbx` is encouraged in favor
+    of this class.
 
     This class only provides support for reading/writing the pure atom
     information (*ATOM*, *HETATM*, *MODEL* and *ENDMDL* records). *TER*
@@ -62,7 +63,8 @@ class PDBFile(TextFile):
 
     See also
     --------
-    PDBxFile
+    CIFFile
+    BinaryCIFFile
 
     Examples
     --------

@@ -44,8 +44,8 @@ print([file_path for file_path in file_paths])
 # If you want to download files irrespectively, set :obj:`overwrite` to
 # true.
 
-# Download file in the fast and small binary MMTF format
-file_path = rcsb.fetch("1l2y", "mmtf", gettempdir(), overwrite=True)
+# Download file in the fast and small BinaryCIF format
+file_path = rcsb.fetch("1l2y", "bcif", gettempdir(), overwrite=True)
 
 ########################################################################
 # If you omit the file path or set it to ``None``, the downloaded data
@@ -72,11 +72,11 @@ query = rcsb.BasicQuery("HCN1")
 pdb_ids = rcsb.search(query)
 print(pdb_ids)
 print(rcsb.count(query))
-files = rcsb.fetch(pdb_ids, "mmtf", gettempdir())
+files = rcsb.fetch(pdb_ids, "cif", gettempdir())
 
 ########################################################################
 # This was a simple search for the occurrence of the search term in any
-# field. 
+# field.
 # You can also search for a value in a specific field with a
 # :class:`FieldQuery`.
 # A complete list of the available fields and its supported operators
@@ -125,15 +125,15 @@ print(rcsb.search(
 ########################################################################
 # Note that grouping may omit PDB IDs in search results, if such PDB IDs
 # cannot be grouped.
-# In the example shown above, not all structures 
+# In the example shown above, not all structures
 # For example in the case shown above only a few PDB entries were
 # uploaded as collection and hence are part of the search results.
 #
 # Fetching files from the NCBI Entrez database
 # --------------------------------------------
-# 
+#
 # .. currentmodule:: biotite.database.entrez
-# 
+#
 # Another important source of biological information is the
 # *NCBI Entrez* database, which is commonly known as *the NCBI*.
 # It provides a myriad of information, ranging from sequences and
@@ -153,7 +153,7 @@ file_path = entrez.fetch(
     db_name="nuccore", ret_type="fasta"
 )
 print(file_path)
-# ... or multiple UIDs 
+# ... or multiple UIDs
 file_paths = entrez.fetch(
     ["1L2Y_A","1AKI_A"], gettempdir(), suffix="fa",
     db_name="protein", ret_type="fasta"

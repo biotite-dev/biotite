@@ -23,6 +23,7 @@ KEYWDS    INTACT IMMUNOGLOBULIN, V REGION, C REGION, HINGE REGION,
 KEYWDS   2 IMMUNOGLOBULIN                                                       
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    L.J.HARRIS,A.MCPHERSON                                                
+REVDAT   5   09-AUG-23 1IGY    1       REMARK HETSYN                            
 REVDAT   4   29-JUL-20 1IGY    1       CAVEAT COMPND REMARK SEQADV              
 REVDAT   4 2                   1       HETNAM LINK   SITE   ATOM                
 REVDAT   3   13-JUL-11 1IGY    1       VERSN                                    
@@ -669,7 +670,20 @@ HETNAM     MAN ALPHA-D-MANNOPYRANOSE
 HETNAM     GAL BETA-D-GALACTOPYRANOSE                                           
 HETNAM     FUL BETA-L-FUCOPYRANOSE                                              
 HETNAM     FUC ALPHA-L-FUCOPYRANOSE                                             
-HETSYN     FUL 6-DEOXY-BETA-L-GALACTOSE                                         
+HETSYN     NAG N-ACETYL-BETA-D-GLUCOSAMINE; 2-ACETAMIDO-2-DEOXY-BETA-           
+HETSYN   2 NAG  D-GLUCOSE; 2-ACETAMIDO-2-DEOXY-D-GLUCOSE; 2-ACETAMIDO-          
+HETSYN   3 NAG  2-DEOXY-GLUCOSE; N-ACETYL-D-GLUCOSAMINE                         
+HETSYN     NDG N-ACETYL-ALPHA-D-GLUCOSAMINE; 2-ACETAMIDO-2-DEOXY-               
+HETSYN   2 NDG  ALPHA-D-GLUCOSE; 2-ACETAMIDO-2-DEOXY-D-GLUCOSE; 2-              
+HETSYN   3 NDG  ACETAMIDO-2-DEOXY-GLUCOSE; 2-(ACETYLAMINO)-2-DEOXY-A-           
+HETSYN   4 NDG  D-GLUCOPYRANOSE                                                 
+HETSYN     BMA BETA-D-MANNOSE; D-MANNOSE; MANNOSE                               
+HETSYN     MAN ALPHA-D-MANNOSE; D-MANNOSE; MANNOSE                              
+HETSYN     GAL BETA-D-GALACTOSE; D-GALACTOSE; GALACTOSE                         
+HETSYN     FUL BETA-L-FUCOSE; 6-DEOXY-BETA-L-GALACTOPYRANOSE; L-                
+HETSYN   2 FUL  FUCOSE; FUCOSE; 6-DEOXY-BETA-L-GALACTOSE                        
+HETSYN     FUC ALPHA-L-FUCOSE; 6-DEOXY-ALPHA-L-GALACTOPYRANOSE; L-              
+HETSYN   2 FUC  FUCOSE; FUCOSE                                                  
 FORMUL   5  NAG    6(C8 H15 N O6)                                               
 FORMUL   5  NDG    2(C8 H15 N O6)                                               
 FORMUL   5  BMA    2(C6 H12 O6)                                                 

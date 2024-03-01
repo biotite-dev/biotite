@@ -17,7 +17,6 @@ __all__ = [
 
 import itertools
 import warnings
-from collections import OrderedDict
 import numpy as np
 from ....file import InvalidFileError
 from ....sequence.seqtypes import NucleotideSequence, ProteinSequence
@@ -28,6 +27,11 @@ from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
 from ...residues import get_residue_count
 from ...error import BadStructureError
 from ...util import matrix_rotate
+from .legacy import PDBxFile
+from .component import MaskValue
+from .cif import CIFFile, CIFBlock
+from .bcif import BinaryCIFFile, BinaryCIFBlock, BinaryCIFColumn
+from .encoding import StringArrayEncoding
 
 
 # Map 'chem_comp_bond' bond orders to 'BondType'...
@@ -74,11 +78,14 @@ def get_sequence(pdbx_file, data_block=None):
 
     Parameters
     ----------
-    pdbx_file : PDBxFile
+    pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
         The file object.
-    data_block : string, optional
-        The name of the data block. Default is the first
-        (and most times only) data block of the file.
+    data_block : str, optional
+        The name of the data block.
+        Default is the first (and most times only) data block of the
+        file.
+        If the data block object is passed directly to `pdbx_file`,
+        this parameter is ignored.
 
     Returns
     -------
@@ -86,39 +93,43 @@ def get_sequence(pdbx_file, data_block=None):
         The protein and nucleotide sequences for each entity
         (equivalent to chains in most cases).
     """
-    poly_dict = pdbx_file.get_category("entity_poly", data_block)
-    seq_string = poly_dict["pdbx_seq_one_letter_code_can"]
-    seq_type = poly_dict["type"]
+    block = _get_block(pdbx_file, data_block)
+
+    poly_category= block["entity_poly"]
+    seq_string = poly_category["pdbx_seq_one_letter_code_can"].as_array(str)
+    seq_type = poly_category["type"].as_array(str)
     sequences = []
-    if isinstance(seq_string, np.ndarray):
-        for string, stype in zip(seq_string, seq_type):
-            sequence = _convert_string_to_sequence(string, stype)
-            if sequence is not None:
-                sequences.append(sequence)
-    else:
-        sequences.append(_convert_string_to_sequence(seq_string, seq_type))
+    for string, stype in zip(seq_string, seq_type):
+        sequence = _convert_string_to_sequence(string, stype)
+        if sequence is not None:
+            sequences.append(sequence)
     return sequences
 
 
-def get_model_count(file, data_block=None):
+def get_model_count(pdbx_file, data_block=None):
     """
     Get the number of models contained in a :class:`PDBxFile`.
 
     Parameters
     ----------
-    file : PDBxFile
+    pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
         The file object.
     data_block : str, optional
-        The name of the data block. Default is the first
-        (and most times only) data block of the file.
+        The name of the data block.
+        Default is the first (and most times only) data block of the
+        file.
+        If the data block object is passed directly to `pdbx_file`,
+        this parameter is ignored.
 
     Returns
     -------
     model_count : int
         The number of models.
     """
-    atom_site_dict = file.get_category("atom_site", data_block)
-    return len(_get_model_starts(atom_site_dict["pdbx_PDB_model_num"]))
+    block = _get_block(pdbx_file, data_block)
+    return len(_get_model_starts(
+        block["atom_site"]["pdbx_PDB_model_num"].as_array(np.int32)
+    ))
 
 
 def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
@@ -129,7 +140,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
 
     Parameters
     ----------
-    pdbx_file : PDBxFile
+    pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
         The file object.
     model : int, optional
         If this parameter is given, the function will return an
@@ -141,8 +152,11 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         containing all models will be returned, even if the structure
         contains only one model.
     data_block : str, optional
-        The name of the data block. Default is the first
-        (and most times only) data block of the file.
+        The name of the data block.
+        Default is the first (and most times only) data block of the
+        file.
+        If the data block object is passed directly to `pdbx_file`,
+        this parameter is ignored.
     altloc : {'first', 'occupancy', 'all'}
         This parameter defines how *altloc* IDs are handled:
             - ``'first'`` - Use atoms that have the first *altloc* ID
@@ -186,31 +200,35 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
     --------
 
     >>> import os.path
-    >>> file = PDBxFile.read(os.path.join(path_to_structures, "1l2y.cif"))
+    >>> file = CIFFile.read(os.path.join(path_to_structures, "1l2y.cif"))
     >>> arr = get_structure(file, model=1)
     >>> print(len(arr))
     304
 
     """
-    extra_fields = [] if extra_fields is None else extra_fields
+    block = _get_block(pdbx_file, data_block)
 
-    atom_site_dict = pdbx_file.get_category("atom_site", data_block)
-    if atom_site_dict is None:
+    extra_fields = set() if extra_fields is None else set(extra_fields)
+
+    atom_site = block.get("atom_site")
+    if atom_site is None:
         raise InvalidFileError("Missing 'atom_site' category in file")
-    
-    models = atom_site_dict["pdbx_PDB_model_num"]
+
+    models = atom_site["pdbx_PDB_model_num"].as_array(np.int32)
     model_starts = _get_model_starts(models)
     model_count = len(model_starts)
     atom_count = len(models)
 
     if model is None:
         # For a stack, the annotations are derived from the first model
-        model_dict = _get_model_dict(atom_site_dict, model_starts, 1)
+        model_atom_site = _filter_model(atom_site, model_starts, 1)
         # Any field of the category would work here to get the length
-        model_length = len(model_dict["group_PDB"])
+        model_length = model_atom_site.row_count
         stack = AtomArrayStack(model_count, model_length)
 
-        _fill_annotations(stack, model_dict, extra_fields, use_author_fields)
+        _fill_annotations(
+            stack, model_atom_site, extra_fields, use_author_fields
+        )
 
         # Check if each model has the same amount of atoms
         # If not, raise exception
@@ -221,22 +239,16 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
                 "instead"
             )
 
-        stack.coord = np.zeros(
-            (model_count, model_length, 3), dtype=np.float32
-        )
-        stack.coord[:, :, 0] = atom_site_dict["Cartn_x"].reshape(
-            (model_count, model_length)
-        )
-        stack.coord[:, :, 1] = atom_site_dict["Cartn_y"].reshape(
-            (model_count, model_length)
-        )
-        stack.coord[:, :, 2] = atom_site_dict["Cartn_z"].reshape(
-            (model_count, model_length)
-        )
+        stack.coord[:, :, 0] = atom_site["Cartn_x"].as_array(np.float32) \
+                              .reshape((model_count, model_length))
+        stack.coord[:, :, 1] = atom_site["Cartn_y"].as_array(np.float32) \
+                              .reshape((model_count, model_length))
+        stack.coord[:, :, 2] = atom_site["Cartn_z"].as_array(np.float32) \
+                              .reshape((model_count, model_length))
 
-        stack = _filter_altloc(stack, model_dict, altloc)
+        stack = _filter_altloc(stack, model_atom_site, altloc)
 
-        box = _get_box(pdbx_file, data_block)
+        box = _get_box(block)
         if box is not None:
             # Duplicate same box for each model
             stack.box = np.repeat(box[np.newaxis, ...], model_count, axis=0)
@@ -254,47 +266,71 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
                 f"the given model {model} does not exist"
             )
 
-        model_dict = _get_model_dict(atom_site_dict, model_starts, model)
+        model_atom_site = _filter_model(atom_site, model_starts, model)
         # Any field of the category would work here to get the length
-        model_length = len(model_dict["group_PDB"])
+        model_length = model_atom_site.row_count
         array = AtomArray(model_length)
 
-        _fill_annotations(array, model_dict, extra_fields, use_author_fields)
-
-        # Append exclusive stop
-        model_starts = np.append(
-            model_starts, [len(atom_site_dict["group_PDB"])]
-        )
-        # Indexing starts at 0, but model number starts at 1
-        model_index = model - 1
-        start, stop = model_starts[model_index], model_starts[model_index + 1]
-        array.coord = np.zeros((model_length, 3), dtype=np.float32)
-        array.coord[:, 0] = atom_site_dict["Cartn_x"][start:stop].astype(
-            np.float32
-        )
-        array.coord[:, 1] = atom_site_dict["Cartn_y"][start:stop].astype(
-            np.float32
-        )
-        array.coord[:, 2] = atom_site_dict["Cartn_z"][start:stop].astype(
-            np.float32
+        _fill_annotations(
+            array, model_atom_site, extra_fields, use_author_fields
         )
 
-        array = _filter_altloc(array, model_dict, altloc)
+        array.coord[:, 0] = model_atom_site["Cartn_x"].as_array(np.float32)
+        array.coord[:, 1] = model_atom_site["Cartn_y"].as_array(np.float32)
+        array.coord[:, 2] = model_atom_site["Cartn_z"].as_array(np.float32)
 
-        array.box = _get_box(pdbx_file, data_block)
+        array = _filter_altloc(array, model_atom_site, altloc)
+
+        array.box = _get_box(block)
 
         return array
 
 
-def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
+def _get_block(pdbx_component, block_name):
+    if isinstance(pdbx_component, PDBxFile):
+        # The deprecated 'PDBxFile' is a thin wrapper around 'CIFFile'
+        pdbx_component = pdbx_component.cif_file
+
+    if not isinstance(pdbx_component, (CIFBlock, BinaryCIFBlock)):
+        # Determine block
+        if block_name is None:
+            return pdbx_component.block
+        else:
+            return pdbx_component[block_name]
+    else:
+        return pdbx_component
+
+
+def _get_or_fallback(category, key, fallback_key, cat_name="input"):
+        """
+        Return column related to key in category if it exists,
+        otherwise try to get the column related to fallback key.
+        """
+        if key not in category:
+            warnings.warn(
+                f"Attribute '{key}' not found within '{cat_name}' category. "
+                f"The fallback attribute '{fallback_key}' will be used instead",
+                UserWarning
+            )
+            try:
+                return category[fallback_key]
+            except KeyError as key_exc:
+                raise InvalidFileError(
+                    f"Fallback attribute '{fallback_key}' not found in "
+                    "'{dict_name}' category"
+                ) from key_exc
+        return category[key]
+
+
+def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
     """Fill atom_site annotations in atom array or atom array stack.
 
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         Atom array or stack which will be annotated.
-    model_dict : dict(str, ndarray)
-        ``atom_site`` dictionary with values for one model.
+    atom_site : CIFCategory or BinaryCIFCategory
+        ``atom_site`` category with values for one model.
     extra_fields : list of str
         Entry names, that are additionally added as annotation arrays.
     use_author_fields : bool
@@ -302,121 +338,83 @@ def _fill_annotations(array, model_dict, extra_fields, use_author_fields):
         instead of ``label_``.
     """
 
-    def get_or_fallback_from_dict(input_dict, key, fallback_key,
-                                  dict_name="input"):
-        """
-        Return value related to key in input dict if it exists,
-        otherwise try to get the value related to fallback key."""
-        if key not in input_dict:
-            warnings.warn(
-                f"Attribute '{key}' not found within '{dict_name}' category. "
-                f"The fallback attribute '{fallback_key}' will be used instead",
-                UserWarning
-            )
-            try:
-                return input_dict[fallback_key]
-            except KeyError as key_exc:
-                raise InvalidFileError(
-                    f"Fallback attribute '{fallback_key}' not found in "
-                    "'{dict_name}' category"
-                ) from key_exc
-        return input_dict[key]
-
-    def get_annotation_from_model(
-        model_dict,
-        annotation_name,
-        annotation_fallback=None,
-        as_type=None,
-        formatter=None,
-    ):
-        """Get and format annotation array from model dictionary."""
-        array = (
-            get_or_fallback_from_dict(
-                model_dict, annotation_name, annotation_fallback,
-                dict_name="atom_site"
-            )
-            if annotation_fallback is not None
-            else model_dict[annotation_name]
-        )
-        if as_type is not None:
-            array = array.astype(as_type)
-        return formatter(array) if formatter is not None else array
-
     prefix, alt_prefix = (
         ("auth", "label") if use_author_fields else ("label", "auth")
     )
 
-    annotation_data = {
-        "chain_id": (f"{prefix}_asym_id", f"{alt_prefix}_asym_id", "U4", None),
-        "res_id": (
-            f"{prefix}_seq_id",
-            f"{alt_prefix}_seq_id",
-            None,
-            lambda annot: np.array(
-                [-1 if elt in [".", "?"] else int(elt) for elt in annot]
-            ),
-        ),
-        "ins_code": (
-            "pdbx_PDB_ins_code",
-            None,
-            "U1",
-            lambda annot: np.array(
-                ["" if elt in [".", "?"] else elt for elt in annot]
-            ),
-        ),
-        "res_name": (f"{prefix}_comp_id", f"{alt_prefix}_comp_id", "U5", None),
-        "hetero": ("group_PDB", None, None, lambda annot: annot == "HETATM"),
-        "atom_name": (
-            f"{prefix}_atom_id",
-            f"{alt_prefix}_atom_id",
-            "U6",
-            None,
-        ),
-        "element": ("type_symbol", None, "U2", None),
-        "atom_id": ("id", None, int, None),
-        "b_factor": ("B_iso_or_equiv", None, float, None),
-        "occupancy": ("occupancy", None, float, None),
-        "charge": (
-            "pdbx_formal_charge",
-            None,
-            None,
-            lambda annot: np.array(
-                [
-                    0 if charge in ["?", "."] else int(charge)
-                    for charge in annot
-                ],
-                dtype=int,
-            ),
-        ),
-    }
-
-    mandatory_annotations = [
+    array.set_annotation(
         "chain_id",
+        _get_or_fallback(
+            atom_site, f"{prefix}_asym_id", f"{alt_prefix}_asym_id"
+        ).as_array("U4")
+    )
+    array.set_annotation(
         "res_id",
+        _get_or_fallback(
+            atom_site, f"{prefix}_seq_id", f"{alt_prefix}_seq_id"
+        ).as_array(int, -1)
+    )
+    array.set_annotation(
         "ins_code",
+        atom_site["pdbx_PDB_ins_code"].as_array("U1", "")
+    )
+    array.set_annotation(
         "res_name",
+        _get_or_fallback(
+            atom_site, f"{prefix}_comp_id", f"{alt_prefix}_comp_id"
+        ).as_array("U5")
+    )
+    array.set_annotation(
         "hetero",
+        atom_site["group_PDB"].as_array(str) == "HETATM"
+    )
+    array.set_annotation(
         "atom_name",
+        _get_or_fallback(
+            atom_site, f"{prefix}_atom_id", f"{alt_prefix}_atom_id"
+        ).as_array("U6")
+    )
+    array.set_annotation(
         "element",
-    ]
+        atom_site["type_symbol"].as_array("U2")
+    )
 
-    # Iterate over mandatory annotations and given extra_fields
-    for annotation_name in mandatory_annotations + extra_fields:
+    if "atom_id" in extra_fields:
         array.set_annotation(
-            annotation_name,
-            get_annotation_from_model(
-                model_dict, *annotation_data[annotation_name]
-            )
-            if annotation_name in annotation_data
-            else get_annotation_from_model(
-                model_dict, annotation_name, as_type=str
-            ),
+            "atom_id",
+            atom_site["id"].as_array(int)
+        )
+        extra_fields.remove("atom_id")
+    if "b_factor" in extra_fields:
+        array.set_annotation(
+            "b_factor",
+            atom_site["B_iso_or_equiv"].as_array(float)
+        )
+        extra_fields.remove("b_factor")
+    if "occupancy" in extra_fields:
+        array.set_annotation(
+            "occupancy",
+            atom_site["occupancy"].as_array(float)
+        )
+        extra_fields.remove("occupancy")
+    if "charge" in extra_fields:
+        array.set_annotation(
+            "charge",
+            atom_site["pdbx_formal_charge"].as_array(int, 0)
+        )
+        extra_fields.remove("charge")
+
+    # Handle all remaining custom fields
+    for field in extra_fields:
+        array.set_annotation(
+            field,
+            atom_site[field].as_array(str)
         )
 
 
-def _filter_altloc(array, model_dict, altloc):
-    altloc_ids = model_dict.get("label_alt_id")
-    occupancy = model_dict.get("occupancy")
+def _filter_altloc(array, atom_site, altloc):
+    altloc_ids = atom_site.get("label_alt_id")
+    occupancy = atom_site.get("occupancy")
 
     # Filter altloc IDs and return
     if altloc_ids is None:
@@ -425,14 +423,14 @@ def _filter_altloc(array, model_dict, altloc):
         return array[
             ...,
             filter_highest_occupancy_altloc(
-                array, altloc_ids, occupancy.astype(float)
+                array, altloc_ids.as_array(str), occupancy.as_array(float)
             ),
         ]
     # 'first' is also fallback if file has no occupancy information
     elif altloc == "first":
-        return array[..., filter_first_altloc(array, altloc_ids)]
+        return array[..., filter_first_altloc(array, altloc_ids.as_array(str))]
     elif altloc == "all":
-        array.set_annotation("altloc_id", altloc_ids)
+        array.set_annotation("altloc_id", altloc_ids.as_array(str))
         return array
     else:
         raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
@@ -443,49 +441,55 @@ def _get_model_starts(model_array):
     Get the start index for each model in the arrays of the
     ``atom_site`` category.
     """
-    models, indices = np.unique(model_array, return_index=True)
+    _, indices = np.unique(model_array, return_index=True)
     indices.sort()
     return indices
 
 
-def _get_model_dict(atom_site_dict, model_starts, model):
+def _filter_model(atom_site, model_starts, model):
     """
-    Reduce the ``atom_site`` dictionary to the values for the given
+    Reduce the ``atom_site`` category to the values for the given
     model.
     """
+    Category = type(atom_site)
+    Column = Category.subcomponent_class()
+    Data = Column.subcomponent_class()
+
     # Append exclusive stop
     model_starts = np.append(
-        model_starts, [len(atom_site_dict["pdbx_PDB_model_num"])]
+        model_starts, [atom_site.row_count]
     )
-    model_dict = {}
     # Indexing starts at 0, but model number starts at 1
     model_index = model - 1
-    for key in atom_site_dict.keys():
-        model_dict[key] = atom_site_dict[key][
-            model_starts[model_index] : model_starts[model_index + 1]
-        ]
-    return model_dict
+    index = slice(model_starts[model_index], model_starts[model_index + 1])
+    return Category({
+        key: Column(
+            Data(column.data.array[index]),
+            (
+                Data(column.mask.array[index])
+                if column.mask is not None else None
+            )
+        )
+        for key, column in atom_site.items()
+    })
 
 
-def _get_box(pdbx_file, data_block):
-    if data_block is None:
-        cell_dict = pdbx_file.get("cell")
-    else:
-        cell_dict = pdbx_file.get((data_block, "cell"))
-    if cell_dict is None:
+def _get_box(block):
+    cell = block.get("cell")
+    if cell is None:
         return None
     try:
         len_a, len_b, len_c = [
-            float(cell_dict[length])
+            float(cell[length].as_item())
             for length in ["length_a", "length_b", "length_c"]
+        ]
+        alpha, beta, gamma = [
+            np.deg2rad(float(cell[angle].as_item()))
+            for angle in ["angle_alpha", "angle_beta", "angle_gamma"]
         ]
     except ValueError:
         # 'cell_dict' has no proper unit cell values, e.g. '?'
         return None
-    alpha, beta, gamma = [
-        np.deg2rad(float(cell_dict[angle]))
-        for angle in ["angle_alpha", "angle_beta", "angle_gamma"]
-    ]
     return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
 
 
@@ -503,60 +507,70 @@ def set_structure(pdbx_file, array, data_block=None):
 
     Parameters
     ----------
-    pdbx_file : PDBxFile
+    pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
         The file object.
     array : AtomArray or AtomArrayStack
         The structure to be written. If a stack is given, each array in
         the stack will be in a separate model.
     data_block : str, optional
-        The name of the data block. Default is the first
-        (and most times only) data block of the file.
+        The name of the data block.
+        Default is the first (and most times only) data block of the
+        file.
+        If the data block object is passed directly to `pdbx_file`,
+        this parameter is ignored.
+        If the file is empty, a new data will be created.
+
 
     Examples
     --------
 
     >>> import os.path
-    >>> file = PDBxFile()
-    >>> set_structure(file, atom_array, data_block="structure")
+    >>> file = CIFFile()
+    >>> set_structure(file, atom_array)
     >>> file.write(os.path.join(path_to_directory, "structure.cif"))
 
     """
+    block = _get_or_create_block(pdbx_file, data_block)
+    Category = block.subcomponent_class()
+    Column = Category.subcomponent_class()
+
     # Fill PDBx columns from information
     # in structures' attribute arrays as good as possible
-    # Use OrderedDict in order to ensure the usually used column order.
-    atom_site_dict = OrderedDict()
-    # Save list of annotation categories for checks,
-    # if an optional category exists
-    annot_categories = array.get_annotation_categories()
-    atom_site_dict["group_PDB"] = np.array(
-        ["ATOM" if e == False else "HETATM" for e in array.hetero]
+    atom_site = Category()
+    atom_site["group_PDB"] = np.where(
+        array.hetero, "HETATM", "ATOM"
     )
-    atom_site_dict["type_symbol"] = np.copy(array.element)
-    atom_site_dict["label_atom_id"] = np.copy(array.atom_name)
-    atom_site_dict["label_alt_id"] = np.full(array.array_length(), ".")
-    atom_site_dict["label_comp_id"] = np.copy(array.res_name)
-    atom_site_dict["label_asym_id"] = np.copy(array.chain_id)
-    atom_site_dict["label_entity_id"] = _determine_entity_id(array.chain_id)
-    atom_site_dict["label_seq_id"] = np.array([str(e) for e in array.res_id])
-    atom_site_dict["pdbx_PDB_ins_code"] = array.ins_code
-    atom_site_dict["auth_seq_id"] = atom_site_dict["label_seq_id"]
-    atom_site_dict["auth_comp_id"] = atom_site_dict["label_comp_id"]
-    atom_site_dict["auth_asym_id"] = atom_site_dict["label_asym_id"]
-    atom_site_dict["auth_atom_id"] = atom_site_dict["label_atom_id"]
+    atom_site["type_symbol"] = np.copy(array.element)
+    atom_site["label_atom_id"] = np.copy(array.atom_name)
+    atom_site["label_alt_id"] = Column(
+        # AtomArrays do not store altloc atoms
+        np.full(array.array_length(), "."),
+        np.full(array.array_length(), MaskValue.INAPPLICABLE),
+    )
+    atom_site["label_comp_id"] = np.copy(array.res_name)
+    atom_site["label_asym_id"] = np.copy(array.chain_id)
+    atom_site["label_entity_id"] = _determine_entity_id(array.chain_id)
+    atom_site["label_seq_id"] = np.copy(array.res_id)
+    atom_site["pdbx_PDB_ins_code"] = Column(
+        np.copy(array.ins_code),
+        np.where(array.ins_code == "", MaskValue.INAPPLICABLE, MaskValue.PRESENT)
+    )
+    atom_site["auth_seq_id"] = atom_site["label_seq_id"]
+    atom_site["auth_comp_id"] = atom_site["label_comp_id"]
+    atom_site["auth_asym_id"] = atom_site["label_asym_id"]
+    atom_site["auth_atom_id"] = atom_site["label_atom_id"]
 
+    annot_categories = array.get_annotation_categories()
     if "atom_id" in annot_categories:
-        atom_site_dict["id"] = array.atom_id.astype(str)
+        atom_site["id"] = np.copy(array.atom_id)
     if "b_factor" in annot_categories:
-        atom_site_dict["B_iso_or_equiv"] = np.array(
-            [f"{b:.2f}" for b in array.b_factor]
-        )
+        atom_site["B_iso_or_equiv"] = np.copy(array.b_factor)
     if "occupancy" in annot_categories:
-        atom_site_dict["occupancy"] = np.array(
-            [f"{occ:.2f}" for occ in array.occupancy]
-        )
+        atom_site["occupancy"] = np.copy(array.occupancy)
     if "charge" in annot_categories:
-        atom_site_dict["pdbx_formal_charge"] = np.array(
-            [f"{c:+d}" if c != 0 else "?" for c in array.charge]
+        atom_site["pdbx_formal_charge"] = Column(
+            np.array([f"{c:+d}" if c != 0 else "?" for c in array.charge]),
+            np.where(array.charge == 0, MaskValue.MISSING, MaskValue.PRESENT)
         )
 
     # In case of a single model handle each coordinate
@@ -566,42 +580,34 @@ def set_structure(pdbx_file, array, data_block=None):
     ):
         # 'ravel' flattens coord without copy
         # in case of stack with stack_depth = 1
-        atom_site_dict["Cartn_x"] = np.array(
-            [f"{c:.3f}" for c in np.ravel(array.coord[..., 0])]
-        )
-        atom_site_dict["Cartn_y"] = np.array(
-            [f"{c:.3f}" for c in np.ravel(array.coord[..., 1])]
-        )
-        atom_site_dict["Cartn_z"] = np.array(
-            [f"{c:.3f}" for c in np.ravel(array.coord[..., 2])]
-        )
-        atom_site_dict["pdbx_PDB_model_num"] = np.full(
-            array.array_length(), "1"
+        atom_site["Cartn_x"] = np.copy(np.ravel(array.coord[..., 0]))
+        atom_site["Cartn_y"] = np.copy(np.ravel(array.coord[..., 1]))
+        atom_site["Cartn_z"] = np.copy(np.ravel(array.coord[..., 2]))
+        atom_site["pdbx_PDB_model_num"] = np.ones(
+            array.array_length(), dtype=np.int32
         )
     # In case of multiple models repeat annotations
     # and use model specific coordinates
     elif type(array) == AtomArrayStack:
-        for key, value in atom_site_dict.items():
-            atom_site_dict[key] = np.tile(value, reps=array.stack_depth())
+        atom_site = _repeat(atom_site, array.stack_depth())
         coord = np.reshape(
             array.coord, (array.stack_depth() * array.array_length(), 3)
         )
-        atom_site_dict["Cartn_x"] = np.array([f"{c:.3f}" for c in coord[:, 0]])
-        atom_site_dict["Cartn_y"] = np.array([f"{c:.3f}" for c in coord[:, 1]])
-        atom_site_dict["Cartn_z"] = np.array([f"{c:.3f}" for c in coord[:, 2]])
-        models = np.repeat(
-            np.arange(1, array.stack_depth() + 1).astype(str),
+        atom_site["Cartn_x"] = np.copy(coord[:, 0])
+        atom_site["Cartn_y"] = np.copy(coord[:, 1])
+        atom_site["Cartn_z"] = np.copy(coord[:, 2])
+        atom_site["pdbx_PDB_model_num"] = np.repeat(
+            np.arange(1, array.stack_depth() + 1, dtype=np.int32),
             repeats=array.array_length(),
         )
-        atom_site_dict["pdbx_PDB_model_num"] = models
     else:
         raise ValueError("Structure must be AtomArray or AtomArrayStack")
     if not "atom_id" in annot_categories:
         # Count from 1
-        atom_site_dict["id"] = np.arange(
-            1, len(atom_site_dict["group_PDB"]) + 1
-        ).astype("U6")
-    pdbx_file.set_category("atom_site", atom_site_dict, data_block)
+        atom_site["id"] = np.arange(
+            1, len(atom_site["group_PDB"]) + 1
+        )
+    block["atom_site"] = atom_site
 
     # Write box into file
     if array.box is not None:
@@ -612,14 +618,38 @@ def set_structure(pdbx_file, array, data_block=None):
         else:
             box = array.box
         len_a, len_b, len_c, alpha, beta, gamma = unitcell_from_vectors(box)
-        cell_dict = OrderedDict()
-        cell_dict["length_a"] = "{:6.3f}".format(len_a)
-        cell_dict["length_b"] = "{:6.3f}".format(len_b)
-        cell_dict["length_c"] = "{:6.3f}".format(len_c)
-        cell_dict["angle_alpha"] = "{:5.3f}".format(np.rad2deg(alpha))
-        cell_dict["angle_beta"] = "{:5.3f}".format(np.rad2deg(beta))
-        cell_dict["angle_gamma"] = "{:5.3f}".format(np.rad2deg(gamma))
-        pdbx_file.set_category("cell", cell_dict, data_block)
+        cell = Category()
+        cell["length_a"] = len_a
+        cell["length_b"] = len_b
+        cell["length_c"] = len_c
+        cell["angle_alpha"] = np.rad2deg(alpha)
+        cell["angle_beta"] = np.rad2deg(beta)
+        cell["angle_gamma"] = np.rad2deg(gamma)
+        block["cell"] = cell
+
+
+def _get_or_create_block(pdbx_component, block_name):
+    if isinstance(pdbx_component, PDBxFile):
+        # The deprecated 'PDBxFile' is a thin wrapper around 'CIFFile'
+        pdbx_component = pdbx_component.cif_file
+
+    Block = pdbx_component.subcomponent_class()
+
+    if isinstance(pdbx_component, (CIFFile, BinaryCIFFile)):
+        if block_name is None:
+            if len(pdbx_component) > 0:
+                block_name = next(iter(pdbx_component.keys()))
+            else:
+                # File is empty -> invent a new block name
+                block_name = "structure"
+
+        if block_name not in pdbx_component:
+            block = Block()
+            pdbx_component[block_name] = block
+        return pdbx_component[block_name]
+    else:
+        # Already a block
+        return pdbx_component
 
 
 def _determine_entity_id(chain_id):
@@ -635,7 +665,30 @@ def _determine_entity_id(chain_id):
             id_translation[chain_id[i]] = id
             entity_id[i] = id_translation[chain_id[i]]
             id += 1
-    return entity_id.astype(str)
+    return entity_id
+
+
+def _repeat(category, repetitions):
+    Category = type(category)
+    Column = Category.subcomponent_class()
+    Data = Column.subcomponent_class()
+
+    category_dict = {}
+    for key, column in category.items():
+        if isinstance(column, BinaryCIFColumn):
+            data_encoding = column.data.encoding
+            # Optimization: The repeated string array has the same
+            # unique values, as the original string array
+            # -> Use same unique values (faster due to shorter array)
+            if isinstance(data_encoding[0], StringArrayEncoding):
+                data_encoding[0].strings = np.unique(column.data.array)
+            data = Data(np.tile(column.data.array, repetitions), data_encoding)
+        else:
+            data = Data(np.tile(column.data.array, repetitions))
+        mask = Data(np.tile(column.mask.array, repetitions)) \
+               if column.mask is not None else None
+        category_dict[key] = Column(data, mask)
+    return Category(category_dict)
 
 
 def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
@@ -646,26 +699,31 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
 
     Parameters
     ----------
+    pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
+        The file object.
     data_block : str, optional
-        The name of the data block. Default is the first
-        (and most times only) data block of the file.
+        The name of the data block.
+        Default is the first (and most times only) data block of the
+        file.
+        If the data block object is passed directly to `pdbx_file`,
+        this parameter is ignored.
     use_ideal_coord : bool, optional
         If true, the *ideal* coordinates are read from the file
         (``pdbx_model_Cartn_<dim>_ideal`` fields), typically
         originating from computations.
         If set to false, alternative coordinates are read
         (``model_Cartn_<dim>_`` fields).
-    
+
     Returns
     -------
     array : AtomArray
         The parsed chemical component.
-    
+
     Examples
     --------
 
     >>> import os.path
-    >>> file = PDBxFile.read(
+    >>> file = CIFFile.read(
     ...     os.path.join(path_to_structures, "molecules", "TYR.cif")
     ... )
     >>> comp = get_component(file)
@@ -695,26 +753,22 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
     HET         0  TYR HH     H        -0.123   -0.399   -5.059
     HET         0  TYR HXT    H        -1.333   -0.030    4.784
     """
-    atom_dict = pdbx_file.get_category(
-        "chem_comp_atom", block=data_block, expect_looped=True
-    )
-    if atom_dict is None:
-        raise InvalidFileError("Missing 'chem_comp_atom' category in file")
-    bond_dict = pdbx_file.get_category(
-        "chem_comp_bond", block=data_block, expect_looped=True
-    )
+    block = _get_block(pdbx_file, data_block)
 
-    array = AtomArray(len(list(atom_dict.values())[0]))
+    try:
+        atom_category = block["chem_comp_atom"]
+    except KeyError:
+        raise InvalidFileError("Missing 'chem_comp_atom' category in file")
+
+    array = AtomArray(atom_category.row_count)
 
     array.hetero[:] = True
-    array.res_name = atom_dict["comp_id"]
-    array.atom_name = atom_dict["atom_id"]
-    array.element = atom_dict["type_symbol"]
+    array.res_name = atom_category["comp_id"].as_array("U5")
+    array.atom_name = atom_category["atom_id"].as_array("U6")
+    array.element = atom_category["type_symbol"].as_array("U2")
     array.add_annotation("charge", int)
-    array.charge = np.array(
-        [int(c) if c != "?" else 0 for c in atom_dict["charge"]]
-    )
-    
+    array.charge = atom_category["charge"].as_array(int, 0)
+
     coord_fields = [f"pdbx_model_Cartn_{dim}_ideal" for dim in ("x", "y", "z")]
     alt_coord_fields = [f"model_Cartn_{dim}" for dim in ("x", "y", "z")]
     if not use_ideal_coord:
@@ -722,7 +776,7 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
         coord_fields, alt_coord_fields = alt_coord_fields, coord_fields
     try:
         for i, field in enumerate(coord_fields):
-            array.coord[:,i] = atom_dict[field]
+            array.coord[:,i] = atom_category[field].as_array(np.float32)
     except KeyError as err:
         key = err.args[0]
         warnings.warn(
@@ -731,9 +785,11 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
             UserWarning
         )
         for i, field in enumerate(alt_coord_fields):
-            array.coord[:,i] = atom_dict[field]
-    
-    if bond_dict is None:
+            array.coord[:,i] = atom_category[field].as_array(np.float32)
+
+    try:
+        bond_category = block["chem_comp_bond"]
+    except KeyError:
         warnings.warn(
             f"Category 'chem_comp_bond' not found. "
             f"No bonds will be parsed",
@@ -742,8 +798,10 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
     else:
         bonds = BondList(array.array_length())
         for atom1, atom2, order, aromatic_flag in zip(
-            bond_dict["atom_id_1"], bond_dict["atom_id_2"],
-            bond_dict["value_order"], bond_dict["pdbx_aromatic_flag"]
+            bond_category["atom_id_1"].as_array(str),
+            bond_category["atom_id_2"].as_array(str),
+            bond_category["value_order"].as_array(str),
+            bond_category["pdbx_aromatic_flag"].as_array(str)
         ):
             atom_i = np.where(array.atom_name == atom1)[0][0]
             atom_j = np.where(array.atom_name == atom2)[0][0]
@@ -766,15 +824,22 @@ def set_component(pdbx_file, array, data_block=None):
 
     Parameters
     ----------
-    pdbx_file : PDBxFile
+    pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
         The file object.
     array : AtomArray
         The chemical component to be written.
         Must contain only a single residue.
     data_block : str, optional
-        The name of the data block. Default is the first
-        (and most times only) data block of the file.
+        The name of the data block.
+        Default is the first (and most times only) data block of the
+        file.
+        If the file is empty, a new data will be created.
+        If the data block object is passed directly to `pdbx_file`,
+        this parameter is ignored.
     """
+    block = _get_or_create_block(pdbx_file, data_block)
+    Category = block.subcomponent_class()
+
     if get_residue_count(array) > 1:
         raise BadStructureError(
             "The input atom array must comprise only one residue"
@@ -787,24 +852,24 @@ def set_component(pdbx_file, array, data_block=None):
     else:
         charge = np.full(array.array_length(), "?", dtype="U2")
 
-    chem_comp_dict = OrderedDict()
-    chem_comp_dict["comp_id"] = np.full(array.array_length(), res_name)
-    chem_comp_dict["atom_id"] = np.copy(array.atom_name)
-    chem_comp_dict["alt_atom_id"] = chem_comp_dict["atom_id"]
-    chem_comp_dict["type_symbol"] = np.copy(array.element)
-    chem_comp_dict["charge"] = charge
-    chem_comp_dict["model_Cartn_x"] = np.copy(array.coord[:, 0])
-    chem_comp_dict["model_Cartn_y"] = np.copy(array.coord[:, 1])
-    chem_comp_dict["model_Cartn_z"] = np.copy(array.coord[:, 2])
-    chem_comp_dict["pdbx_model_Cartn_x_ideal"] = chem_comp_dict["model_Cartn_x"]
-    chem_comp_dict["pdbx_model_Cartn_y_ideal"] = chem_comp_dict["model_Cartn_y"]
-    chem_comp_dict["pdbx_model_Cartn_z_ideal"] = chem_comp_dict["model_Cartn_z"]
-    chem_comp_dict["pdbx_component_atom_id"] = chem_comp_dict["atom_id"]
-    chem_comp_dict["pdbx_component_comp_id"] = chem_comp_dict["comp_id"]
-    chem_comp_dict["pdbx_ordinal"] = np.arange(
+    atom_cat = Category()
+    atom_cat["comp_id"] = np.full(array.array_length(), res_name)
+    atom_cat["atom_id"] = np.copy(array.atom_name)
+    atom_cat["alt_atom_id"] = atom_cat["atom_id"]
+    atom_cat["type_symbol"] = np.copy(array.element)
+    atom_cat["charge"] = charge
+    atom_cat["model_Cartn_x"] = np.copy(array.coord[:, 0])
+    atom_cat["model_Cartn_y"] = np.copy(array.coord[:, 1])
+    atom_cat["model_Cartn_z"] = np.copy(array.coord[:, 2])
+    atom_cat["pdbx_model_Cartn_x_ideal"] = atom_cat["model_Cartn_x"]
+    atom_cat["pdbx_model_Cartn_y_ideal"] = atom_cat["model_Cartn_y"]
+    atom_cat["pdbx_model_Cartn_z_ideal"] = atom_cat["model_Cartn_z"]
+    atom_cat["pdbx_component_atom_id"] = atom_cat["atom_id"]
+    atom_cat["pdbx_component_comp_id"] = atom_cat["comp_id"]
+    atom_cat["pdbx_ordinal"] = np.arange(
         1, array.array_length() + 1
     ).astype(str)
-    pdbx_file.set_category("chem_comp_atom", chem_comp_dict, data_block)
+    block["chem_comp_atom"] = atom_cat
 
     if array.bonds is not None:
         bond_array = array.bonds.as_array()
@@ -815,17 +880,16 @@ def set_component(pdbx_file, array, data_block=None):
             order_flags.append(order_flag)
             aromatic_flags.append(aromatic_flag)
 
-        chem_comp_bond_dict = OrderedDict()
-        chem_comp_bond_dict["comp_id"] = np.full(len(bond_array), res_name)
-        chem_comp_bond_dict["atom_id_1"] = array.atom_name[bond_array[:,0]]
-        chem_comp_bond_dict["atom_id_2"] = array.atom_name[bond_array[:,1]]
-        chem_comp_bond_dict["value_order"] = np.array(order_flags)
-        chem_comp_bond_dict["pdbx_aromatic_flag"] = np.array(aromatic_flags)
-        chem_comp_bond_dict["pdbx_ordinal"] = np.arange(
+        bond_cat = Category()
+        bond_cat["comp_id"] = np.full(len(bond_array), res_name)
+        bond_cat["atom_id_1"] = array.atom_name[bond_array[:,0]]
+        bond_cat["atom_id_2"] = array.atom_name[bond_array[:,1]]
+        bond_cat["value_order"] = np.array(order_flags)
+        bond_cat["pdbx_aromatic_flag"] = np.array(aromatic_flags)
+        bond_cat["pdbx_ordinal"] = np.arange(
             1, len(bond_array) + 1
         ).astype(str)
-        pdbx_file.set_category("chem_comp_bond", chem_comp_bond_dict, data_block)
-
+        block["chem_comp_bond"] = bond_cat
 
 def list_assemblies(pdbx_file, data_block=None):
     """
@@ -838,23 +902,25 @@ def list_assemblies(pdbx_file, data_block=None):
 
     Parameters
     ----------
-    pdbx_file : PDBxFile
+    pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
         The file object.
     data_block : str, optional
         The name of the data block.
-        Defaults to the first (and most times only) data block of the
+        Default is the first (and most times only) data block of the
         file.
+        If the data block object is passed directly to `pdbx_file`,
+        this parameter is ignored.
 
     Returns
     -------
     assemblies : dict of str -> str
         A dictionary that maps an assembly ID to a description of the
         corresponding assembly.
-    
+
     Examples
     --------
     >>> import os.path
-    >>> file = PDBxFile.read(os.path.join(path_to_structures, "1f2n.cif"))
+    >>> file = CIFFile.read(os.path.join(path_to_structures, "1f2n.cif"))
     >>> assembly_ids = list_assemblies(file)
     >>> for key, val in assembly_ids.items():
     ...     print(f"'{key}' : '{val}'")
@@ -865,15 +931,17 @@ def list_assemblies(pdbx_file, data_block=None):
     '5' : 'icosahedral asymmetric unit, std point frame'
     '6' : 'crystal asymmetric unit, crystal frame'
     """
-    assembly_category = pdbx_file.get_category(
-        "pdbx_struct_assembly", data_block, expect_looped=True
-    )
-    if assembly_category is None:
+    block = _get_block(pdbx_file, data_block)
+
+    try:
+        assembly_category = block["pdbx_struct_assembly"]
+    except KeyError:
         raise InvalidFileError("File has no 'pdbx_struct_assembly' category")
     return {
         id: details
         for id, details in zip(
-            assembly_category["id"], assembly_category["details"]
+            assembly_category["id"].as_array(str),
+            assembly_category["details"].as_array(str)
         )
     }
 
@@ -890,7 +958,7 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
 
     Parameters
     ----------
-    pdbx_file : PDBxFile
+    pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
         The file object.
     assembly_id : str
         The assembly to build.
@@ -907,8 +975,10 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
         contains only one model.
     data_block : str, optional
         The name of the data block.
-        Defaults to the first (and most times only) data block of the
+        Default is the first (and most times only) data block of the
         file.
+        If the data block object is passed directly to `pdbx_file`,
+        this parameter is ignored.
     altloc : {'first', 'occupancy', 'all'}
         This parameter defines how *altloc* IDs are handled:
             - ``'first'`` - Use atoms that have the first *altloc* ID
@@ -945,31 +1015,32 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
     -------
     assembly : AtomArray or AtomArrayStack
         The assembly. The return type depends on the `model` parameter.
-    
+
     Examples
     --------
 
     >>> import os.path
-    >>> file = PDBxFile.read(os.path.join(path_to_structures, "1f2n.cif"))
+    >>> file = CIFFile.read(os.path.join(path_to_structures, "1f2n.cif"))
     >>> assembly = get_assembly(file, model=1)
     """
-    assembly_gen_category = pdbx_file.get_category(
-        "pdbx_struct_assembly_gen", data_block, expect_looped=True
-    )
-    if assembly_gen_category is None:
+    block = _get_block(pdbx_file, data_block)
+
+    try:
+        assembly_gen_category = block["pdbx_struct_assembly_gen"]
+    except KeyError:
         raise InvalidFileError(
             "File has no 'pdbx_struct_assembly_gen' category"
         )
 
-    struct_oper_category = pdbx_file.get_category(
-        "pdbx_struct_oper_list", data_block, expect_looped=True
-    )
-    if struct_oper_category is None:
+    try:
+        struct_oper_category = block["pdbx_struct_oper_list"]
+    except KeyError:
         raise InvalidFileError("File has no 'pdbx_struct_oper_list' category")
 
+    assembly_ids = assembly_gen_category["assembly_id"].as_array(str)
     if assembly_id is None:
-        assembly_id = assembly_gen_category["assembly_id"][0]
-    elif assembly_id not in assembly_gen_category["assembly_id"]:
+        assembly_id = assembly_ids[0]
+    elif assembly_id not in assembly_ids:
         raise KeyError(f"File has no Assembly ID '{assembly_id}'")
 
     ### Calculate all possible transformations
@@ -982,6 +1053,8 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
     if "label_asym_id" in extra_fields:
         extra_fields_and_asym = extra_fields
     else:
+        # The operations apply on asym IDs
+        # -> they need to be included to select the correct atoms
         extra_fields_and_asym = extra_fields + ["label_asym_id"]
     structure = get_structure(
         pdbx_file,
@@ -995,9 +1068,9 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
     ### Get transformations and apply them to the affected asym IDs
     assembly = None
     for id, op_expr, asym_id_expr in zip(
-        assembly_gen_category["assembly_id"],
-        assembly_gen_category["oper_expression"],
-        assembly_gen_category["asym_id_list"],
+        assembly_gen_category["assembly_id"].as_array(str),
+        assembly_gen_category["oper_expression"].as_array(str),
+        assembly_gen_category["asym_id_list"].as_array(str),
     ):
         # Find the operation expressions for given assembly ID
         # We already asserted that the ID is actually present
@@ -1017,12 +1090,12 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
                 assembly = sub_assembly
             else:
                 assembly += sub_assembly
-    
+
     # Remove 'label_asym_id', if it was not included in the original
     # user-supplied 'extra_fields'
     if "label_asym_id" not in extra_fields:
         assembly.del_annotation("label_asym_id")
-    
+
     return assembly
 
 
@@ -1056,19 +1129,20 @@ def _get_transformations(struct_oper):
     translation for each operation ID in ``pdbx_struct_oper_list``.
     """
     transformation_dict = {}
-    for index, id in enumerate(struct_oper["id"]):
+    for index, id in enumerate(struct_oper["id"].as_array(str)):
         rotation_matrix = np.array(
             [
                 [
-                    float(struct_oper[f"matrix[{i}][{j}]"][index])
+                    struct_oper[f"matrix[{i}][{j}]"].as_array(float)[index]
                     for j in (1, 2, 3)
                 ]
                 for i in (1, 2, 3)
             ]
         )
-        translation_vector = np.array(
-            [float(struct_oper[f"vector[{i}]"][index]) for i in (1, 2, 3)]
-        )
+        translation_vector = np.array([
+            struct_oper[f"vector[{i}]"].as_array(float)[index]
+            for i in (1, 2, 3)
+        ])
         transformation_dict[id] = (rotation_matrix, translation_vector)
     return transformation_dict
 
@@ -1112,6 +1186,8 @@ def _convert_string_to_sequence(string, stype):
     ``proteinseq_type_list`` or to ``NucleotideSequence`` if `stype` is
     contained in ``_nucleotideseq_type_list``.
     """
+    # sequence may be stored as multiline string
+    string = string.replace("\n", "")
     if stype in _proteinseq_type_list:
         return ProteinSequence(string)
     elif stype in _nucleotideseq_type_list:

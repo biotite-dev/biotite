@@ -19,6 +19,7 @@ KEYWDS   2 GENOMICS, JCSG, PSI, PROTEIN STRUCTURE INITIATIVE, JOINT CENTER FOR
 KEYWDS   3 STRUCTURAL GENOMICS, HYDROLASE                                       
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    JOINT CENTER FOR STRUCTURAL GENOMICS (JCSG)                           
+REVDAT  10   25-JAN-23 1O1Z    1       REMARK SEQADV LINK                       
 REVDAT   9   18-JUL-18 1O1Z    1       REMARK                                   
 REVDAT   8   04-OCT-17 1O1Z    1       REMARK                                   
 REVDAT   7   13-JUL-11 1O1Z    1       VERSN                                    
@@ -424,11 +425,11 @@ REMARK 620
 REMARK 620 COORDINATION ANGLES FOR:  M RES CSSEQI METAL                         
 REMARK 620                              NA A 602  NA                            
 REMARK 620 N RES CSSEQI ATOM                                                    
-REMARK 620 1 ARG A 114   O                                                      
-REMARK 620 2 SER A 111   O    89.2                                              
-REMARK 620 3 HOH A 656   O   132.6  84.7                                        
-REMARK 620 4 ASP A 125   OD2  90.2 175.8  92.7                                  
-REMARK 620 5 HOH A 655   O   136.4  96.8  91.0  86.5                            
+REMARK 620 1 SER A 111   O                                                      
+REMARK 620 2 ARG A 114   O    89.2                                              
+REMARK 620 3 ASP A 125   OD2 175.8  90.2                                        
+REMARK 620 4 HOH A 655   O    96.8 136.4  86.5                                  
+REMARK 620 5 HOH A 656   O    84.7 132.6  92.7  91.0                            
 REMARK 620 N                    1     2     3     4                             
 REMARK 800                                                                      
 REMARK 800 SITE                                                                 
@@ -439,18 +440,18 @@ REMARK 900
 REMARK 900 RELATED ENTRIES                                                      
 REMARK 900 RELATED ID: 283478   RELATED DB: TARGETDB                            
 DBREF  1O1Z A    2   222  UNP    Q9X1V6   Q9X1V6_THEMA     2    222             
-SEQADV 1O1Z GLY A  -10  UNP  Q9X1V6              LEADER SEQUENCE                
-SEQADV 1O1Z SER A   -9  UNP  Q9X1V6              LEADER SEQUENCE                
-SEQADV 1O1Z ASP A   -8  UNP  Q9X1V6              LEADER SEQUENCE                
-SEQADV 1O1Z LYS A   -7  UNP  Q9X1V6              LEADER SEQUENCE                
-SEQADV 1O1Z ILE A   -6  UNP  Q9X1V6              LEADER SEQUENCE                
-SEQADV 1O1Z HIS A   -5  UNP  Q9X1V6              LEADER SEQUENCE                
-SEQADV 1O1Z HIS A   -4  UNP  Q9X1V6              LEADER SEQUENCE                
-SEQADV 1O1Z HIS A   -3  UNP  Q9X1V6              LEADER SEQUENCE                
-SEQADV 1O1Z HIS A   -2  UNP  Q9X1V6              LEADER SEQUENCE                
-SEQADV 1O1Z HIS A   -1  UNP  Q9X1V6              LEADER SEQUENCE                
-SEQADV 1O1Z HIS A    0  UNP  Q9X1V6              LEADER SEQUENCE                
-SEQADV 1O1Z VAL A    1  UNP  Q9X1V6              LEADER SEQUENCE                
+SEQADV 1O1Z GLY A  -10  UNP  Q9X1V6              EXPRESSION TAG                 
+SEQADV 1O1Z SER A   -9  UNP  Q9X1V6              EXPRESSION TAG                 
+SEQADV 1O1Z ASP A   -8  UNP  Q9X1V6              EXPRESSION TAG                 
+SEQADV 1O1Z LYS A   -7  UNP  Q9X1V6              EXPRESSION TAG                 
+SEQADV 1O1Z ILE A   -6  UNP  Q9X1V6              EXPRESSION TAG                 
+SEQADV 1O1Z HIS A   -5  UNP  Q9X1V6              EXPRESSION TAG                 
+SEQADV 1O1Z HIS A   -4  UNP  Q9X1V6              EXPRESSION TAG                 
+SEQADV 1O1Z HIS A   -3  UNP  Q9X1V6              EXPRESSION TAG                 
+SEQADV 1O1Z HIS A   -2  UNP  Q9X1V6              EXPRESSION TAG                 
+SEQADV 1O1Z HIS A   -1  UNP  Q9X1V6              EXPRESSION TAG                 
+SEQADV 1O1Z HIS A    0  UNP  Q9X1V6              EXPRESSION TAG                 
+SEQADV 1O1Z VAL A    1  UNP  Q9X1V6              EXPRESSION TAG                 
 SEQRES   1 A  234  MET GLY SER ASP LYS ILE HIS HIS HIS HIS HIS HIS VAL          
 SEQRES   2 A  234  ILE VAL LEU GLY HIS ARG GLY TYR SER ALA LYS TYR LEU          
 SEQRES   3 A  234  GLU ASN THR LEU GLU ALA PHE MET LYS ALA ILE GLU ALA          
@@ -499,11 +500,11 @@ SHEET    9   A10 ILE A  93  ILE A  98  1  O  ILE A  94   N  ILE A 118
 SHEET   10   A10 GLY A  31  LEU A  38  1  O  VAL A  32   N  ASN A  95           
 SHEET    1   B 2 ASP A  51  LEU A  52  0                                        
 SHEET    2   B 2 LEU A  58  LYS A  61 -1  N  LEU A  58   O  LEU A  52           
-LINK        NA    NA A 602                 O   ARG A 114     1555   1555  2.22  
-LINK        NA    NA A 602                 O   SER A 111     1555   1555  2.37  
-LINK        NA    NA A 602                 O   HOH A 656     1555   1555  2.38  
-LINK        NA    NA A 602                 OD2 ASP A 125     1555   3545  2.31  
+LINK         O   SER A 111                NA    NA A 602     1555   1555  2.37  
+LINK         O   ARG A 114                NA    NA A 602     1555   1555  2.22  
+LINK         OD2 ASP A 125                NA    NA A 602     3545   1555  2.31  
 LINK        NA    NA A 602                 O   HOH A 655     1555   3545  2.43  
+LINK        NA    NA A 602                 O   HOH A 656     1555   1555  2.38  
 CISPEP   1 TRP A  192    THR A  193          0       -23.47                     
 SITE     1 AC1  6 SER A 111  LYS A 112  ARG A 114  ASP A 125                    
 SITE     2 AC1  6 HOH A 655  HOH A 656                                          

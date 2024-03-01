@@ -9,6 +9,9 @@ format is used to store `NumPy` arrays. Since atom arrays and stacks are
 completely built on `NumPy` arrays, this format is preferable for
 Biotite internal usage due to fast I/O operations and preservation
 of all atom annotation arrays.
+
+DEPRECATED: Pickle data directly or use
+:class:`biotite.structure.io.pdbx.BinaryCIFFile` instead.
 """
 
 __name__ = "biotite.structure.io.npz"

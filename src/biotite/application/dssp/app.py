@@ -9,7 +9,7 @@ __all__ = ["DsspApp"]
 from tempfile import NamedTemporaryFile
 from ..localapp import LocalApp, cleanup_tempfile
 from ..application import AppState, requires_state
-from ...structure.io.pdbx.file import PDBxFile
+from ...structure.io.pdbx.cif import CIFFile
 from ...structure.io.pdbx.convert import set_structure
 import numpy as np
 
@@ -18,13 +18,13 @@ class DsspApp(LocalApp):
     r"""
     Annotate the secondary structure of a protein structure using the
     *DSSP* software.
-    
+
     Internally this creates a :class:`Popen` instance, which handles
     the execution.
-    
+
     DSSP differentiates between 8 different types of secondary
     structure elements:
-    
+
        - C: loop, coil or irregular
        - H: :math:`{\alpha}`-helix
        - B: :math:`{\beta}`-bridge
@@ -32,15 +32,15 @@ class DsspApp(LocalApp):
        - G: 3 :sub:`10`-helix
        - I: :math:`{\pi}`-helix
        - T: hydrogen bonded turn
-       - S: bend 
-    
+       - S: bend
+
     Parameters
     ----------
     atom_array : AtomArray
         The atom array to be annotated.
     bin_path : str, optional
         Path of the *DDSP* binary.
-    
+
     Examples
     --------
 
@@ -51,7 +51,7 @@ class DsspApp(LocalApp):
     ['C' 'H' 'H' 'H' 'H' 'H' 'H' 'H' 'T' 'T' 'G' 'G' 'G' 'G' 'T' 'C' 'C' 'C'
      'C' 'C']
     """
-    
+
     def __init__(self, atom_array, bin_path="mkdssp"):
         super().__init__(bin_path)
 
@@ -77,15 +77,15 @@ class DsspApp(LocalApp):
         self._out_file = NamedTemporaryFile("r", suffix=".dssp", delete=False)
 
     def run(self):
-        in_file = PDBxFile()
-        set_structure(in_file, self._array, data_block="DSSP_INPUT")
+        in_file = CIFFile()
+        set_structure(in_file, self._array)
         in_file.write(self._in_file)
         self._in_file.flush()
         self.set_arguments(
             ["-i", self._in_file.name, "-o", self._out_file.name]
         )
         super().run()
-    
+
     def evaluate(self):
         super().evaluate()
         lines = self._out_file.read().split("\n")
@@ -106,17 +106,17 @@ class DsspApp(LocalApp):
         for i, line in enumerate(lines):
             self._sse[i] = line[16]
         self._sse[self._sse == " "] = "C"
-    
+
     def clean_up(self):
         super().clean_up()
         cleanup_tempfile(self._in_file)
         cleanup_tempfile(self._out_file)
-    
+
     @requires_state(AppState.JOINED)
     def get_sse(self):
         """
         Get the resulting secondary structure assignment.
-        
+
         Returns
         -------
         sse : ndarray, dtype="U1"
@@ -124,22 +124,22 @@ class DsspApp(LocalApp):
             corresponding to the residues in the input atom array.
         """
         return self._sse
-    
+
     @staticmethod
     def annotate_sse(atom_array, bin_path="mkdssp"):
         """
         Perform a secondary structure assignment to an atom array.
-        
+
         This is a convenience function, that wraps the :class:`DsspApp`
         execution.
-        
+
         Parameters
         ----------
         atom_array : AtomArray
             The atom array to be annotated.
         bin_path : str, optional
             Path of the DDSP binary.
-        
+
         Returns
         -------
         sse : ndarray, dtype="U1"

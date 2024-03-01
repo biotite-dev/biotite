@@ -15,7 +15,7 @@ from ..util import data_dir, cannot_import
 @pytest.fixture()
 def stack(request):
     stack = load_structure(
-        join(data_dir("structure"), "1l2y.mmtf")
+        join(data_dir("structure"), "1l2y.bcif")
     )
     if request.param:
         # Use connect_via_distances, since 1l2y has invalidly bonded
@@ -40,8 +40,8 @@ def test_hbond_structure(pdb_id, use_bond_list):
     """
     Compare hydrogen bond detection with MDTraj
     """
-    file_name = join(data_dir("structure"), pdb_id+".mmtf")
-    
+    file_name = join(data_dir("structure"), pdb_id+".bcif")
+
     array = load_structure(file_name)
     if use_bond_list:
         if isinstance(array, struc.AtomArrayStack):
@@ -51,7 +51,7 @@ def test_hbond_structure(pdb_id, use_bond_list):
         bonds = struc.connect_via_distances(ref_model)
         bonds = bonds.merge(struc.connect_via_residue_names(ref_model))
         array.bonds = bonds
-    
+
     # Only consider amino acids for consistency
     # with bonded hydrogen detection in MDTraj
     array = array[..., struc.filter_amino_acids(array)]
@@ -61,12 +61,12 @@ def test_hbond_structure(pdb_id, use_bond_list):
         triplets, mask = struc.hbond(array, acceptor_elements=("O","N"))
     else:
         triplets = struc.hbond(array, acceptor_elements=("O","N"))
-    
+
     # Save to new pdb file for consistent treatment of inscode/altloc
     # im MDTraj
     temp = NamedTemporaryFile("w+", suffix=".pdb")
     save_structure(temp.name, array)
-    
+
     # Compare with MDTraj
     import mdtraj
     traj = mdtraj.load(temp.name)

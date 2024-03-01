@@ -18,6 +18,7 @@ SOURCE   8 EXPRESSION_SYSTEM_STRAIN: BL21
 KEYWDS    DIHYDROOROTATE DEHYDROGENASE, OXIDOREDUCTASE-INHIBITOR COMPLEX        
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    J.HUANG,D.WU                                                          
+REVDAT   2   08-NOV-23 5H73    1       REMARK                                   
 REVDAT   1   26-JUL-17 5H73    0                                                
 JRNL        AUTH   J.HUANG,D.WU                                                 
 JRNL        TITL   CRYSTAL STRUCTURE OF HUMAN DHODH WITH 18F AT 1.58 ANGSTROMS  
@@ -29,7 +30,8 @@ REMARK   2 RESOLUTION.    1.58 ANGSTROMS.
 REMARK   3                                                                      
 REMARK   3 REFINEMENT.                                                          
 REMARK   3   PROGRAM     : REFMAC 5.7.0032                                      
-REMARK   3   AUTHORS     : MURSHUDOV,VAGIN,DODSON                               
+REMARK   3   AUTHORS     : MURSHUDOV,SKUBAK,LEBEDEV,PANNU,STEINER,              
+REMARK   3               : NICHOLLS,WINN,LONG,VAGIN                             
 REMARK   3                                                                      
 REMARK   3    REFINEMENT TARGET : NULL                                          
 REMARK   3                                                                      
@@ -3667,5 +3669,5 @@ CONECT 2859 2860 2861 2862
 CONECT 2860 2859                                                                
 CONECT 2861 2859                                                                
 CONECT 2862 2859                                                                
-MASTER      406    0    9   20   14    0   22    6 3006    1   88   30          
+MASTER      407    0    9   20   14    0   22    6 3006    1   88   30          
 END                                                                             

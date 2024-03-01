@@ -4,7 +4,6 @@
 
 __author__ = "Patrick Kunzmann"
 
-import pkgutil
 import doctest
 from os.path import join
 import tempfile
@@ -12,6 +11,7 @@ from importlib import import_module
 import numpy as np
 import pytest
 import biotite.structure.io as strucio
+import biotite.structure as struc
 from .util import is_not_installed, cannot_import, cannot_connect_to
 
 
@@ -76,7 +76,7 @@ TEST_PARAMETERS = [
     ),
     pytest.param(
         "biotite.structure.graphics",
-        ["biotite.structure"],    
+        ["biotite.structure"],
         marks = pytest.mark.skipif(
             cannot_import("matplotlib"), reason="Matplotlib is not installed"
         ),
@@ -115,7 +115,7 @@ TEST_PARAMETERS = [
     ),
     pytest.param(
         "biotite.database.entrez",
-        [],                           
+        [],
         marks = pytest.mark.skipif(
             cannot_connect_to(NCBI_URL), reason="NCBI Entrez is not available"
         )
@@ -143,7 +143,7 @@ TEST_PARAMETERS = [
     ),
     pytest.param(
         "biotite.application",
-        ["biotite.application.clustalo", "biotite.sequence"],            
+        ["biotite.application.clustalo", "biotite.sequence"],
         marks = pytest.mark.skipif(
             is_not_installed("clustalo"), reason="Software is not installed"
         )
@@ -192,7 +192,7 @@ TEST_PARAMETERS = [
             is_not_installed("RNAfold") | is_not_installed("RNAplot"),
             reason="Software is not installed"
         )
-    ),                                      
+    ),
     pytest.param(
         "biotite.application.dssp",
         ["biotite.structure"],
@@ -229,7 +229,7 @@ def test_doctest(package_name, context_package_names):
             {attr : getattr(context_package, attr)
              for attr in dir(context_package)}
         )
-    
+
     # Add fixed names for certain paths
     globs["path_to_directory"]  = tempfile.gettempdir()
     globs["path_to_structures"] = join(".", "tests", "structure", "data")
@@ -237,12 +237,13 @@ def test_doctest(package_name, context_package_names):
     # Add frequently used modules
     globs["np"] = np
     # Add frequently used objects
-    globs["atom_array_stack"] = strucio.load_structure(
-        join(".", "tests", "structure", "data", "1l2y.mmtf"),
-        include_bonds=True
+    atoms = strucio.load_structure(
+        join(".", "tests", "structure", "data", "1l2y.bcif"),
     )
+    atoms.bonds = struc.connect_via_residue_names(atoms)
+    globs["atom_array_stack"] = atoms
     globs["atom_array"] = globs["atom_array_stack"][0]
-    
+
     # Adjust NumPy print formatting
     np.set_printoptions(precision=3, floatmode="maxprec_equal")
 
@@ -253,7 +254,7 @@ def test_doctest(package_name, context_package_names):
     package = import_module(package_name)
     runner = doctest.DocTestRunner(
         verbose = False,
-        optionflags = 
+        optionflags =
             doctest.ELLIPSIS |
             doctest.REPORT_ONLY_FIRST_FAILURE |
             doctest.NORMALIZE_WHITESPACE

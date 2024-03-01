@@ -10,7 +10,6 @@ import numpy as np
 import pytest
 from pytest import approx
 import biotite
-import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io.mmtf as mmtf
 import biotite.structure.io.pdbx as pdbx
@@ -65,7 +64,7 @@ def test_array_conversion(path, model):
             return
         else:
             raise
-    
+
     mmtf_file = mmtf.MMTFFile()
     mmtf.set_structure(mmtf_file, a1)
     temp = TemporaryFile("w+b")
@@ -75,7 +74,7 @@ def test_array_conversion(path, model):
     mmtf_file = mmtf.MMTFFile.read(temp)
     temp.close()
     a2 = mmtf.get_structure(mmtf_file, model=model, include_bonds=True)
-    
+
     for category in a1.get_annotation_categories():
         assert a1.get_annotation(category).tolist() == \
                a2.get_annotation(category).tolist()
@@ -94,7 +93,7 @@ def test_array_conversion(path, model):
     )
 )
 def test_pdbx_consistency(path, model):
-    cif_path = splitext(path)[0] + ".cif"
+    bcif_path = splitext(path)[0] + ".bcif"
     mmtf_file = mmtf.MMTFFile.read(path)
     try:
         a1 = mmtf.get_structure(mmtf_file, model=model)
@@ -106,10 +105,10 @@ def test_pdbx_consistency(path, model):
             return
         else:
             raise
-    
-    pdbx_file = pdbx.PDBxFile.read(cif_path)
+
+    pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
     a2 = pdbx.get_structure(pdbx_file, model=model)
-    
+
     # Sometimes mmCIF files can have 'cell' entry
     # but corresponding MMTF file has not 'unitCell' entry
     # -> Do not assert for dummy entry in mmCIF file
@@ -164,9 +163,9 @@ def test_pdbx_consistency_assembly(path, model):
         pytest.skip(
             "The limitation of the function does not support this structure"
         )
-    
-    cif_path = splitext(path)[0] + ".cif"
-    pdbx_file = pdbx.PDBxFile.read(cif_path)
+
+    bcif_path = splitext(path)[0] + ".bcif"
+    pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
     ref_assembly = pdbx.get_assembly(pdbx_file, model=model)
 
     # MMTF might assign some residues, that PDBx assigns as 'hetero',
@@ -193,14 +192,14 @@ def test_extra_fields():
 
     mmtf_file == mmtf.MMTFFile()
     mmtf.set_structure(mmtf_file, stack1)
-    
+
     stack2 = mmtf.get_structure(
         mmtf_file,
         extra_fields=[
             "atom_id", "b_factor", "occupancy", "charge"
         ]
     )
-    
+
     assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
     assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
     assert stack1.occupancy.tolist() == approx(stack2.occupancy.tolist())

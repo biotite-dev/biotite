@@ -11,7 +11,7 @@ import numpy.random as random
 import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 from ..util import data_dir, cannot_import
 
 
@@ -44,7 +44,7 @@ def test_dihedral():
 
 @pytest.mark.parametrize("multiple_chains", [False, True])
 def test_dihedral_backbone_general(multiple_chains):
-    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
+    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
     n_models = stack.stack_depth()
     n_res = stack.res_id[-1]
     if multiple_chains:
@@ -79,7 +79,7 @@ def _assert_plausible_omega(omega):
     reason="MDTraj is not installed"
 )
 @pytest.mark.parametrize(
-    "file_name", glob.glob(join(data_dir("structure"), "*.mmtf"))
+    "file_name", glob.glob(join(data_dir("structure"), "*.bcif"))
 )
 def test_dihedral_backbone_result(file_name):
     import mdtraj
@@ -88,15 +88,15 @@ def test_dihedral_backbone_result(file_name):
         # Structure contains non-canonical amino acid
         # with missing backbone atoms
         pytest.skip("Structure contains non-canonical amino acid")
-    
-    mmtf_file = mmtf.MMTFFile.read(file_name)
-    array = mmtf.get_structure(mmtf_file, model=1)
+
+    pdbx_file = pdbx.BinaryCIFFile.read(file_name)
+    array = pdbx.get_structure(pdbx_file, model=1)
     array = array[struc.filter_amino_acids(array)]
     if array.array_length() == 0:
         # Structure contains no protein
         # -> determination of backbone angles makes no sense
         return
-    
+
     for chain in struc.chain_iter(array):
         print("Chain: ", chain.chain_id[0])
         if len(struc.check_res_id_continuity(chain)) != 0:
@@ -124,7 +124,7 @@ def test_index_distance_non_periodic():
     Without PBC the result should be equal to the normal distance
     calculation.
     """
-    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
     ref_dist = struc.distance(
         array.coord[np.newaxis, :, :],
         array.coord[:, np.newaxis, :]
@@ -150,9 +150,9 @@ def test_index_distance_non_periodic():
 def test_index_distance_periodic_orthogonal(shift):
     """
     The PBC aware computation, should give the same results,
-    irrespective of which atoms are centered in the box 
+    irrespective of which atoms are centered in the box
     """
-    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
     # Use a box based on the boundaries of the structure
     # '+1' to add a margin
     array.box = np.diag(
@@ -165,7 +165,7 @@ def test_index_distance_periodic_orthogonal(shift):
             np.tile(np.arange(length), length)
     ], axis=1)
     ref_dist = struc.index_distance(array, dist_indices, periodic=True)
-    
+
     array.coord += shift
     array.coord = struc.move_inside_box(array.coord, array.box)
     dist = struc.index_distance(array, dist_indices, periodic=True)
@@ -194,9 +194,9 @@ def test_index_distance_periodic_orthogonal(shift):
 def test_index_distance_periodic_triclinic(shift, angles):
     """
     The PBC aware computation, should give the same results,
-    irrespective of which atoms are centered in the box 
+    irrespective of which atoms are centered in the box
     """
-    array = strucio.load_structure(join(data_dir("structure"), "3o5r.mmtf"))
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
     # Use a box based on the boundaries of the structure
     # '+1' to add a margin
     boundaries = np.max(array.coord, axis=0) - np.min(array.coord, axis=0) + 1
@@ -226,7 +226,7 @@ def test_index_distance_periodic_triclinic(shift, angles):
     mdtraj_dist = mdtraj.compute_distances(traj, dist_indices)[0] * 10
     ind = np.where(~np.isclose(ref_dist, mdtraj_dist, atol=1e-5, rtol=1e-3))[0]
     assert np.allclose(ref_dist, mdtraj_dist, atol=1e-5, rtol=1e-3)
-    
+
     # Compare with shifted variant
     array.coord += shift
     array.coord = struc.move_inside_box(array.coord, array.box)
@@ -243,7 +243,7 @@ def test_index_functions():
     The `index_xxx()` functions should give the same result as the
     corresponding `xxx` functions.
     """
-    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.mmtf"))
+    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
     array = stack[0]
     # Test for atom array, stack and raw coordinates
     samples = (array, stack, struc.coord(array), struc.coord(stack))
