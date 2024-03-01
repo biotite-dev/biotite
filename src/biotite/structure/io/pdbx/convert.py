@@ -21,10 +21,10 @@ import numpy as np
 from ....file import InvalidFileError
 from ....sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...atoms import AtomArray, AtomArrayStack, repeat
-from ...bonds import BondList, BondType
+from ...bonds import BondList, BondType, connect_via_residue_names
 from ...box import unitcell_from_vectors, vectors_from_unitcell
 from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
-from ...residues import get_residue_count
+from ...residues import get_residue_count, get_residue_starts_for
 from ...error import BadStructureError
 from ...util import matrix_rotate
 from .legacy import PDBxFile
@@ -34,8 +34,33 @@ from .bcif import BinaryCIFFile, BinaryCIFBlock, BinaryCIFColumn
 from .encoding import StringArrayEncoding
 
 
-# Map 'chem_comp_bond' bond orders to 'BondType'...
-BOND_ORDER_TO_BOND_TYPE = {
+# Cond types in `struct_conn` category that refer to covalent bonds
+PDBX_COVALENT_TYPES = [
+    "covale", "covale_base", "covale_phosphate", "covale_sugar",
+    "disulf", "modres", "modres_link", "metalc"
+]
+# Map 'struct_conn' bond orders to 'BondType'...
+PDBX_BOND_ORDER_TO_TYPE = {
+    "":     BondType.ANY,
+    "sing": BondType.SINGLE,
+    "doub": BondType.DOUBLE,
+    "trip": BondType.TRIPLE,
+    "quad": BondType.QUADRUPLE,
+}
+# ...and vice versa
+PDBX_BOND_TYPE_TO_ORDER = {
+    # 'ANY' is masked later, it is merely added here to avoid a KeyError
+    BondType.ANY: "",
+    BondType.SINGLE: "sing",
+    BondType.DOUBLE: "doub",
+    BondType.TRIPLE: "trip",
+    BondType.QUADRUPLE: "quad",
+    BondType.AROMATIC_SINGLE: "sing",
+    BondType.AROMATIC_DOUBLE: "doub",
+    BondType.AROMATIC_TRIPLE: "trip",
+}
+# Map 'chem_comp_bond' bond orders and aromaticity to 'BondType'...
+COMP_BOND_ORDER_TO_TYPE = {
     ("SING", "N") : BondType.SINGLE,
     ("DOUB", "N") : BondType.DOUBLE,
     ("TRIP", "N") : BondType.TRIPLE,
@@ -45,10 +70,9 @@ BOND_ORDER_TO_BOND_TYPE = {
     ("TRIP", "Y") : BondType.AROMATIC_TRIPLE,
 }
 # ...and vice versa
-BOND_TYPE_TO_BOND_ORDER = {
-    bond_type: order for order, bond_type in BOND_ORDER_TO_BOND_TYPE.items()
+COMP_BOND_TYPE_TO_ORDER = {
+    bond_type: order for order, bond_type in COMP_BOND_ORDER_TO_TYPE.items()
 }
-
 
 _proteinseq_type_list = ["polypeptide(D)", "polypeptide(L)"]
 _nucleotideseq_type_list = [
@@ -133,7 +157,8 @@ def get_model_count(pdbx_file, data_block=None):
 
 
 def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
-                  extra_fields=None, use_author_fields=True):
+                  extra_fields=None, use_author_fields=True,
+                  include_bonds=False):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from the
     ``atom_site`` category in a :class:`PDBxFile`.
@@ -190,6 +215,15 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         otherwise from the the ``label_xxx`` fields.
         If the requested field is not available, the respective other
         field is taken as fallback.
+    include_bonds : bool, optional
+        If set to true, a :class:`BondList` will be created for the
+        resulting :class:`AtomArray` containing the bond information
+        from the file.
+        Bonds, whose order could not be determined from the
+        *Chemical Component Dictionary*
+        (e.g. especially inter-residue bonds),
+        have :attr:`BondType.ANY`, since the PDB format itself does
+        not support bond orders.
 
     Returns
     -------
@@ -246,6 +280,14 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         stack.coord[:, :, 2] = atom_site["Cartn_z"].as_array(np.float32) \
                               .reshape((model_count, model_length))
 
+        if include_bonds:
+            bonds = connect_via_residue_names(stack)
+            if "struct_conn" in block:
+                bonds = bonds.merge(_parse_inter_residue_bonds(
+                    model_atom_site, block["struct_conn"]
+                ))
+            stack.bonds = bonds
+
         stack = _filter_altloc(stack, model_atom_site, altloc)
 
         box = _get_box(block)
@@ -278,6 +320,14 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         array.coord[:, 0] = model_atom_site["Cartn_x"].as_array(np.float32)
         array.coord[:, 1] = model_atom_site["Cartn_y"].as_array(np.float32)
         array.coord[:, 2] = model_atom_site["Cartn_z"].as_array(np.float32)
+
+        if include_bonds:
+            bonds = connect_via_residue_names(array)
+            if "struct_conn" in block:
+                bonds = bonds.merge(_parse_inter_residue_bonds(
+                    model_atom_site, block["struct_conn"]
+                ))
+            array.bonds = bonds
 
         array = _filter_altloc(array, model_atom_site, altloc)
 
@@ -412,6 +462,118 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
         )
 
 
+def _parse_inter_residue_bonds(atom_site, struct_conn):
+    """
+    Create inter-residue bonds by parsing the ``struct_conn`` category.
+    The atom indices of each bond are found by matching the bond labels
+    to the ``atom_site`` category.
+    """
+    # Identity symmetry operation
+    IDENTITY = "1_555"
+    # Columns in 'atom_site' that should be matched by 'struct_conn'
+    COLUMNS = [
+        "label_asym_id", "label_comp_id", "label_seq_id", "label_atom_id",
+        "auth_asym_id", "auth_comp_id", "auth_seq_id", "pdbx_PDB_ins_code"
+    ]
+
+    covale_mask = np.isin(
+        struct_conn["conn_type_id"].as_array(str), PDBX_COVALENT_TYPES
+    )
+    if "ptnr1_symmetry" in struct_conn:
+        covale_mask &= (
+            struct_conn["ptnr1_symmetry"].as_array(str, IDENTITY) == IDENTITY
+        )
+    if "ptnr2_symmetry" in struct_conn:
+        covale_mask &= (
+            struct_conn["ptnr2_symmetry"].as_array(str, IDENTITY) == IDENTITY
+        )
+
+    atom_indices = [None] * 2
+    for i in range(2):
+        reference_arrays = []
+        query_arrays = []
+        for col_name in COLUMNS:
+            struct_conn_col_name = _get_struct_conn_col_name(col_name, i+1)
+            if (
+                col_name not in atom_site
+                or struct_conn_col_name not in struct_conn
+            ):
+                continue
+            # Ensure both arrays have the same dtype to allow comparison
+            reference = atom_site[col_name].as_array()
+            dtype = reference.dtype
+            query = struct_conn[struct_conn_col_name].as_array(dtype)
+            reference_arrays.append(reference)
+            query_arrays.append(query[covale_mask])
+        # Match the combination of 'label_asym_id', 'label_comp_id', etc.
+        # in 'atom_site' and 'struct_conn'
+        atom_indices[i] = _find_matches(query_arrays, reference_arrays)
+    atoms_indices_1 = atom_indices[0]
+    atoms_indices_2 = atom_indices[1]
+
+    # Some bonds in 'struct_conn' may not be found in 'atom_site'
+    # This is okay,
+    # as 'atom_site' might already be reduced to a single model
+    mapping_exists_mask = (atoms_indices_1 != -1) & (atoms_indices_2 != -1)
+    atoms_indices_1 = atoms_indices_1[mapping_exists_mask]
+    atoms_indices_2 = atoms_indices_2[mapping_exists_mask]
+
+    # Interpret missing values as ANY bonds
+    bond_order = struct_conn["pdbx_value_order"].as_array("U4", "")
+    # Consecutively apply the same masks as applied to the atom indices
+    # Logical combination does not work here,
+    # as the second mask was created based on already filtered data
+    bond_order = bond_order[covale_mask][mapping_exists_mask]
+    bond_types = [PDBX_BOND_ORDER_TO_TYPE[order] for order in bond_order]
+
+    return BondList(
+        atom_site.row_count,
+        np.stack([atoms_indices_1, atoms_indices_2, bond_types], axis=-1)
+    )
+
+
+def _find_matches(query_arrays, reference_arrays):
+    """
+    For each index in the `query_arrays` find the indices in the
+    `reference_arrays` where all query values the reference counterpart.
+    If no match is found for a query, the corresponding index is -1.
+    """
+    match_masks_for_all_columns = np.stack([
+        query[:, np.newaxis] == reference[np.newaxis, :]
+        for query, reference in zip(query_arrays, reference_arrays)
+    ], axis=-1)
+    match_masks = np.all(match_masks_for_all_columns, axis=-1)
+    query_matches, reference_matches = np.where(match_masks)
+
+    # Duplicate matches indicate that an atom from the query cannot
+    # be uniquely matched to an atom in the reference
+    unique_query_matches, counts = np.unique(query_matches, return_counts=True)
+    if np.any(counts > 1):
+        ambiguous_query = unique_query_matches[np.where(counts > 1)[0][0]]
+        raise InvalidFileError(
+            f"The covalent bond in the 'struct_conn' category at index "
+            f"{ambiguous_query} cannot be unambiguously assigned to atoms in "
+            f"the 'atom_site' category"
+        )
+
+    # -1 indicates that no match was found in the reference
+    match_indices = np.full(len(query_arrays[0]), -1, dtype=int)
+    match_indices[query_matches] = reference_matches
+    return match_indices
+
+
+def _get_struct_conn_col_name(col_name, partner):
+    """
+    For a column name in ``atom_site`` get the corresponding column name
+    in ``struct_conn``.
+    """
+    if col_name.startswith("pdbx_"):
+        # Move 'pdbx_' to front
+        return f"pdbx_ptnr{partner}_{col_name[5:]}"
+    else:
+        return f"ptnr{partner}_{col_name}"
+
+
 def _filter_altloc(array, atom_site, altloc):
     altloc_ids = atom_site.get("label_alt_id")
     occupancy = atom_site.get("occupancy")
@@ -500,10 +662,12 @@ def set_structure(pdbx_file, array, data_block=None):
 
     This will save the coordinates, the mandatory annotation categories
     and the optional annotation categories
-    ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
+    ``atom_id``, ``b_factor``, ``occupancy`` and ``charge``.
     If the atom array (stack) contains the annotation ``'atom_id'``,
     these values will be used for atom numbering instead of continuous
     numbering.
+    Furthermore, inter-residue bonds will be written into the
+    ``struct_conn`` category.
 
     Parameters
     ----------
@@ -520,6 +684,12 @@ def set_structure(pdbx_file, array, data_block=None):
         this parameter is ignored.
         If the file is empty, a new data will be created.
 
+    Notes
+    -----
+    In some cases, the written inter-residue bonds cannot be read again
+    due to ambiguity to which atoms the bond refers.
+    This is the case, when two equal residues in the same chain have
+    the same (or a masked) `res_id`.
 
     Examples
     --------
@@ -572,6 +742,9 @@ def set_structure(pdbx_file, array, data_block=None):
             np.array([f"{c:+d}" if c != 0 else "?" for c in array.charge]),
             np.where(array.charge == 0, MaskValue.MISSING, MaskValue.PRESENT)
         )
+
+    if array.bonds is not None:
+        block["struct_conn"] = _set_inter_residue_bonds(array, atom_site)
 
     # In case of a single model handle each coordinate
     # simply like a flattened array
@@ -691,6 +864,53 @@ def _repeat(category, repetitions):
     return Category(category_dict)
 
 
+def _set_inter_residue_bonds(array, atom_site):
+    """
+    Create the ``struct_conn`` category containing the inter-residue
+    bonds.
+    The involved atoms are identified by annotations from the
+    ``atom_site`` category.
+    """
+    COLUMNS = [
+        "label_asym_id", "label_comp_id", "label_seq_id", "label_atom_id",
+        "pdbx_PDB_ins_code"
+    ]
+
+    Category = type(atom_site)
+    Column = Category.subcomponent_class()
+
+    bond_array = array.bonds.as_array()
+    # To save computation time call 'get_residue_starts_for()' only once
+    # with indices of the first and second atom of each bond
+    residue_starts_1, residue_starts_2 = get_residue_starts_for(
+        array, bond_array[:, :2].flatten()
+    ).reshape(-1, 2).T
+    # Filter out all intra-residue bonds
+    bond_array = bond_array[residue_starts_1 != residue_starts_2]
+
+    struct_conn = Category()
+    struct_conn["id"] = np.arange(1, len(bond_array) + 1)
+    struct_conn["conn_type_id"] = np.full(len(bond_array), "covale")
+    struct_conn["pdbx_value_order"] = Column(
+        np.array(
+            [PDBX_BOND_TYPE_TO_ORDER[btype] for btype in bond_array[:, 2]]
+        ),
+        np.where(
+            bond_array[:, 2] == BondType.ANY,
+            MaskValue.MISSING, MaskValue.PRESENT,
+        )
+    )
+    # Write the identifying annotation...
+    for col_name in COLUMNS:
+        annot = atom_site[col_name].as_array()
+        # ...for each bond partner
+        for i in range(2):
+            atom_indices = bond_array[:, i]
+            struct_conn[_get_struct_conn_col_name(col_name, i+1)] \
+                = annot[atom_indices]
+    return struct_conn
+
+
 def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
     """
     Create an :class:`AtomArray` for a chemical component from the
@@ -805,7 +1025,7 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
         ):
             atom_i = np.where(array.atom_name == atom1)[0][0]
             atom_j = np.where(array.atom_name == atom2)[0][0]
-            bond_type = BOND_ORDER_TO_BOND_TYPE[order, aromatic_flag]
+            bond_type = COMP_BOND_ORDER_TO_TYPE[order, aromatic_flag]
             bonds.add_bond(atom_i, atom_j, bond_type)
         array.bonds = bonds
 
@@ -876,7 +1096,7 @@ def set_component(pdbx_file, array, data_block=None):
         order_flags = []
         aromatic_flags = []
         for bond_type in bond_array[:,2]:
-            order_flag, aromatic_flag = BOND_TYPE_TO_BOND_ORDER[bond_type]
+            order_flag, aromatic_flag = COMP_BOND_TYPE_TO_ORDER[bond_type]
             order_flags.append(order_flag)
             aromatic_flags.append(aromatic_flag)
 
