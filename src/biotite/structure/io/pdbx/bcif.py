@@ -257,7 +257,9 @@ class BinaryCIFColumn(_Component):
             return self._data.array.astype(dtype, copy=False)
 
         elif np.issubdtype(dtype, np.str_):
-            array = self._data.array.astype(dtype, copy=False)
+            # Copy, as otherwise original data would be overwritten
+            # with mask values
+            array = self._data.array.astype(dtype, copy=True)
             if masked_value is None:
                 array[self._mask.array == MaskValue.INAPPLICABLE] = "."
                 array[self._mask.array == MaskValue.MISSING] = "?"

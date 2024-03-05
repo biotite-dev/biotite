@@ -226,7 +226,9 @@ class CIFColumn:
                     [f"{e:.3f}" for e in self._data.array], type=dtype
                 )
             else:
-                array = self._data.array.astype(dtype, copy=False)
+                # Copy, as otherwise original data would be overwritten
+                # with mask values
+                array = self._data.array.astype(dtype, copy=True)
             if masked_value is None:
                 array[self._mask.array == MaskValue.INAPPLICABLE] = "."
                 array[self._mask.array == MaskValue.MISSING] = "?"
