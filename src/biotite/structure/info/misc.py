@@ -24,19 +24,19 @@ def all_residues():
     """
     Get a list of all residues/compound names in the
     PDB chemical components dictionary.
-    
+
     Returns
     -------
     residues : list of str
         A list of all available The up to 3-letter residue names.
-    
+
     Examples
     --------
 
     >>> print(all_residues()[1000 : 1010])
-    ['0Y4', '0Y5', '0Y7', '0Y8', '0Y9', '0YA', '0YB', '0YC', '0YD', '0YE']
+    ['0V9', '0VA', '0VB', '0VC', '0VD', '0VE', '0VF', '0VG', '0VH', '0VI']
     """
-    return list(_res_names.keys()) 
+    return list(_res_names.keys())
 
 
 def full_name(res_name):
@@ -48,12 +48,12 @@ def full_name(res_name):
     ----------
     res_name : str
         The up to 3-letter residue name.
-    
+
     Returns
     -------
     name : str
         The full name of the residue.
-    
+
     Examples
     --------
 
@@ -72,12 +72,12 @@ def link_type(res_name):
     ----------
     res_name : str
         The up to 3-letter residue name.
-    
+
     Returns
     -------
     link_type : str
         The link type.
-    
+
     Examples
     --------
 
