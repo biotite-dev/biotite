@@ -549,7 +549,6 @@ class DeltaEncoding(Encoding):
         # If not given in constructor, it is determined from the data
         if self.src_type is None:
             self.src_type = TypeCode.from_dtype(data.dtype)
-        self.src_size = len(data)
 
         data = data - self.origin
         return np.diff(data, prepend=0).astype(np.int32, copy=False)
