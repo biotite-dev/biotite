@@ -828,8 +828,8 @@ class StringArrayEncoding(Encoding):
             "kind": "StringArray",
             "dataEncoding": [e.serialize() for e in self.data_encoding],
             "stringData": string_data,
-            "offsetEncoding": [e.serialize() for e in self.offset_encoding],
             "offsets": encode_stepwise(offsets, self.offset_encoding),
+            "offsetEncoding": [e.serialize() for e in self.offset_encoding],
         }
 
     def encode(self, data):
