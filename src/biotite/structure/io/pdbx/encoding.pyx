@@ -266,7 +266,7 @@ class ByteArrayEncoding(Encoding):
     def encode(self, data):
         if self.type is None:
             self.type = TypeCode.from_dtype(data.dtype)
-        return data.astype(self.type.to_dtype(), copy=False).tobytes()
+        return _safe_cast(data, self.type.to_dtype()).tobytes()
 
     def decode(self, data):
         # Data is raw bytes in this case
@@ -315,8 +315,8 @@ class FixedPointEncoding(Encoding):
                 )
 
     def encode(self, data):
-        # Round to avoid floating point inaccuracies
-        return np.round(data * self.factor).astype(np.int32, copy=False)
+        # Round to avoid wrong values due to floating point inaccuracies
+        return np.round(data * self.factor).astype(np.int32)
 
     def decode(self, data):
         return (data / self.factor).astype(
@@ -443,7 +443,7 @@ class RunLengthEncoding(Encoding):
             raise IndexError(
                 "Given source size does not match actual data size"
             )
-        return self._encode(data.astype(self.src_type.to_dtype(), copy=False))
+        return self._encode(_safe_cast(data, self.src_type.to_dtype()))
 
     def decode(self, data):
         return self._decode(
@@ -839,12 +839,15 @@ class StringArrayEncoding(Encoding):
         if self.strings is None:
             # 'unique()' already sorts the strings
             self.strings = np.unique(data)
+            check_present = False
+        else:
+            check_present = True
 
         string_order = np.argsort(self.strings).astype(np.int32)
         sorted_strings = self.strings[string_order]
         sorted_indices = np.searchsorted(sorted_strings, data)
         indices = string_order[sorted_indices]
-        if not np.all(self.strings[indices] == data):
+        if check_present and not np.all(self.strings[indices] == data):
             raise ValueError("Data contains strings not present in 'strings'")
         return encode_stepwise(indices, self.data_encoding)
 
@@ -924,6 +927,19 @@ def _snake_to_camel_case(attribute_name):
         word.capitalize() for word in attribute_name.split("_")
     )
     return attribute_name[0].lower() + attribute_name[1:]
+
+
+def _safe_cast(array, dtype):
+    dtype = np.dtype(dtype)
+    if dtype == array.dtype:
+        return array
+    if np.issubdtype(dtype, np.integer):
+        if not np.issubdtype(array.dtype, np.integer):
+            raise ValueError("Cannot cast floating point to integer")
+        dtype_info = np.iinfo(dtype)
+        if np.any(array < dtype_info.min) or np.any(array > dtype_info.max):
+            raise ValueError("Integer values do not fit into the given dtype")
+    return array.astype(dtype)
 
 
 def _get_n_decimals(value, tolerance):
