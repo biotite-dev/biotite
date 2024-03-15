@@ -8,11 +8,7 @@ Installation
 Requirements
 ------------
 
-*Biotite* requires at least *Python* version 3.6. If you are still using
-*Python* 2.7, you should `hurry up <https://pythonclock.org/>`_ with upgrading
-to *Python* 3.
-
-*Biotite* also requires the following packages:
+*Biotite* requires at least *Python* version 3.7 and the following packages:
 
    - **numpy**
    - **requests**
