@@ -84,7 +84,7 @@ setup(
         # Codon tables
         "biotite.sequence"          : ["codon_tables.txt"],
         # Structure data (masses, bonds, etc.)
-        "biotite.structure.info"    : ["*.json", "*.msgpack"]
+        "biotite.structure.info"    : ["atom_masses.json", "ccd/*"]
     },
 )
 
