@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import glob
 import itertools
 from os.path import join
 import numpy as np
@@ -10,8 +9,29 @@ import pytest
 import biotite.structure as struc
 import biotite.structure.info as strucinfo
 from biotite.structure.io import load_structure
-import biotite.structure.io.mmtf as mmtf
 from ..util import data_dir
+
+
+@pytest.mark.parametrize(
+    "function, included, excluded",
+    [
+        (strucinfo.amino_acid_names, ["ALA", "ARG", "ASN", "ASP"], ["HOH"]),
+        (strucinfo.nucleotide_names, ["A", "C", "G", "U"], ["HOH", "ALA"]),
+        (strucinfo.carbohydrate_names, ["GLC", "RIB"], ["HOH", "ALA"]),
+    ]
+)
+def test_group_names(function, included, excluded):
+    """
+    Check if some expected group names are present in the group list
+    and unexpected ones are not.
+    """
+    # Run two times to check if caching works
+    for _ in range(2):
+        res_names = function()
+        for res_name in included:
+            assert res_name in res_names
+        for res_name in excluded:
+            assert res_name not in res_names
 
 
 def test_mass():
@@ -33,42 +53,9 @@ def test_mass():
         [mass - ref_mass for mass, ref_mass in zip(masses, ref_masses)]
     ))
     assert (mass_diff // strucinfo.mass("H") <= 3).all()
-    assert np.allclose((mass_diff % strucinfo.mass("H")), 0, atol=5e-3)
-
-
-@pytest.mark.parametrize(
-    "path", glob.glob(join(data_dir("structure"), "*.mmtf"))
-)
-def test_bonds(path):
-    """
-    Test whether the bond data is consistent with the content of MMTF
-    files.
-    """
-    bond_data = strucinfo.bond_dataset()
-    mmtf_file = mmtf.MMTFFile.read(path)
-    for group in mmtf_file["groupList"]:
-        group_name = group["groupName"]
-        atom_names = group["atomNameList"]
-        bond_indices = group["bondAtomList"]
-        bond_orders = group["bondOrderList"]
-        for i in range(0, len(bond_indices), 2):
-            atom1 = atom_names[bond_indices[i]]
-            atom2 = atom_names[bond_indices[i+1]]
-            order = bond_orders[i//2]
-            ref_order = strucinfo.bond_type(group_name, atom1, atom2)
-            # TODO Update bond dataset from CCD and remove this shortcut
-            if ref_order is None:
-                continue
-            # MMTF does not support aromaticity
-            assert order == ref_order.without_aromaticity()
-            assert any((
-                (atom1, atom2) in strucinfo.bonds_in_residue(group_name),
-                (atom2, atom1) in strucinfo.bonds_in_residue(group_name)
-            ))
-            assert any((
-                (atom1, atom2) in bond_data[group_name],
-                (atom2, atom1) in bond_data[group_name]
-            ))
+    # Check if the mass difference is a multiple of the hydrogen mass
+    multiple_of_h_masses = mass_diff / strucinfo.mass("H")
+    assert np.all(np.round(multiple_of_h_masses, decimals=2) % 1 == 0)
 
 
 def test_protOr_radii():

@@ -20,23 +20,16 @@ __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
 import warnings
 
 import numpy as np
-import operator as op
-from functools import partial, reduce
-from .atoms import Atom, AtomArray, AtomArrayStack, array as atom_array
+from functools import partial
+from .atoms import array as atom_array
 from .residues import get_residue_starts, get_residue_count
-from .info.nucleotides import nucleotide_names
-from .info.amino_acids import amino_acid_names
-from .info.carbohydrates import carbohydrate_names
+from .info.groups import amino_acid_names, carbohydrate_names, nucleotide_names
 
 
 _canonical_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS",
                       "ILE","LEU","LYS","MET","PHE","PRO","PYL","SER","THR",
                       "TRP","TYR","VAL", "SEC"]
 _canonical_nucleotide_list = ["A", "DA", "G", "DG", "C", "DC", "U", "DT"]
-
-_nucleotide_list = nucleotide_names()
-_amino_acid_list = amino_acid_names()
-_carbohydrate_list = carbohydrate_names()
 
 _solvent_list = ["HOH","SOL"]
 
@@ -128,7 +121,7 @@ def filter_nucleotides(array):
     ``RNA LINKING``, ``RNA OH 3 PRIME TERMINUS``,
     ``RNA OH 5 PRIME TERMINUS``
     """
-    return np.isin(array.res_name, _nucleotide_list)
+    return np.isin(array.res_name, nucleotide_names())
 
 
 def filter_canonical_amino_acids(array):
@@ -180,7 +173,7 @@ def filter_amino_acids(array):
     ``L-PEPTIDE COOH CARBOXY TERMINUS``, ``L-PEPTIDE LINKING``,
     ``L-PEPTIDE NH3 AMINO TERMINUS``, ``PEPTIDE LINKING``
     """
-    return np.isin(array.res_name, _amino_acid_list)
+    return np.isin(array.res_name, amino_acid_names())
 
 
 def filter_carbohydrates(array):
@@ -210,7 +203,7 @@ def filter_carbohydrates(array):
     ``L-SACCHARIDE, ALPHA LINKING``, ``L-SACCHARIDE, BETA LINKING``,
     ``SACCHARIDE``
     """
-    return np.isin(array.res_name, _carbohydrate_list)
+    return np.isin(array.res_name, carbohydrate_names())
 
 
 def filter_backbone(array):

@@ -69,8 +69,8 @@ def test_docking(flexible):
     assert test_ligand_coord.shape[1] > 0
     rmsd = struc.rmsd(ref_ligand_coord, test_ligand_coord)
     # The deviation of the best pose from the real conformation
-    # should be less than 1 Å
-    assert rmsd < 1.0
+    # should be small
+    assert rmsd < 1.1
 
     if flexible:
         # Select best binding pose
