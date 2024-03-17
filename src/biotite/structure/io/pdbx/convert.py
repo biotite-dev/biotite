@@ -89,6 +89,27 @@ _other_type_list = [
 ]
 
 
+def _filter(category, index):
+    """
+    Reduce the ``atom_site`` category to the values for the given
+    model.
+    """
+    Category = type(category)
+    Column = Category.subcomponent_class()
+    Data = Column.subcomponent_class()
+
+    return Category({
+        key: Column(
+            Data(column.data.array[index]),
+            (
+                Data(column.mask.array[index])
+                if column.mask is not None else None
+            )
+        )
+        for key, column in category.items()
+    })
+
+
 def get_sequence(pdbx_file, data_block=None):
     """
     Get the protein and nucleotide sequences from the
@@ -624,16 +645,7 @@ def _filter_model(atom_site, model_starts, model):
     # Indexing starts at 0, but model number starts at 1
     model_index = model - 1
     index = slice(model_starts[model_index], model_starts[model_index + 1])
-    return Category({
-        key: Column(
-            Data(column.data.array[index]),
-            (
-                Data(column.mask.array[index])
-                if column.mask is not None else None
-            )
-        )
-        for key, column in atom_site.items()
-    })
+    return _filter(atom_site, index)
 
 
 def _get_box(block):
@@ -911,7 +923,8 @@ def _set_inter_residue_bonds(array, atom_site):
     return struct_conn
 
 
-def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
+def get_component(pdbx_file, data_block=None, use_ideal_coord=True,
+                  res_name=None):
     """
     Create an :class:`AtomArray` for a chemical component from the
     ``chem_comp_atom`` and, if available, the ``chem_comp_bond``
@@ -933,6 +946,12 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
         originating from computations.
         If set to false, alternative coordinates are read
         (``model_Cartn_<dim>_`` fields).
+    res_name : str
+        In rare cases the categories may contain rows for multiple
+        components.
+        In this case, the component with the given residue name is
+        read.
+        By default, all rows would be read in this case.
 
     Returns
     -------
@@ -979,6 +998,15 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
         atom_category = block["chem_comp_atom"]
     except KeyError:
         raise InvalidFileError("Missing 'chem_comp_atom' category in file")
+    if res_name is not None:
+        atom_category = _filter(
+            atom_category, atom_category["comp_id"].as_array() == res_name
+        )
+        if len(atom_category) == 0:
+            raise KeyError(
+                f"No rows with residue name '{res_name}' found in "
+                f"'chem_comp_atom' category"
+            )
 
     array = AtomArray(atom_category.row_count)
 
@@ -1009,6 +1037,10 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True):
 
     try:
         bond_category = block["chem_comp_bond"]
+        if res_name is not None:
+            bond_category = _filter(
+                bond_category, bond_category["comp_id"].as_array() == res_name
+            )
     except KeyError:
         warnings.warn(
             f"Category 'chem_comp_bond' not found. "
