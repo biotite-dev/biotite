@@ -15,7 +15,7 @@ __all__ = ["BondList", "BondType",
 
 cimport cython
 cimport numpy as np
-from libc.stdlib cimport free, malloc, realloc
+from libc.stdlib cimport free, realloc
 
 import itertools
 import numbers
