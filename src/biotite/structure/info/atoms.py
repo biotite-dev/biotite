@@ -6,36 +6,16 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["residue"]
 
-from os.path import join, dirname, realpath
-import msgpack
-import numpy as np
-from ..atoms import AtomArray
-from ..bonds import BondList
+from ..io.pdbx import get_component
+from .ccd import get_ccd
 
 
-_residues = None
-
-
-def _init_dataset():
-    """
-    Load the residue dataset from MessagePack file.
-
-    Since loading the database is computationally expensive,
-    this is only done, when the residue database is actually required.
-    """
-    global _residues
-    if _residues is not None:
-        # Database is already initialized
-        return
-
-    # Residue data is taken from
-    # ftp://ftp.wwpdb.org/pub/pdb/data/monomers/components.cif
-    # (2019/01/27)
-    _info_dir = dirname(realpath(__file__))
-    with open(join(_info_dir, "residues.msgpack"), "rb") as file:
-        _residues = msgpack.unpack(
-            file, use_list=False, raw=False
-        )
+non_hetero_residues = set([
+    "ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS",
+    "ILE","LEU","LYS","MET","PHE","PRO","PYL","SER","THR",
+    "TRP","TYR","VAL", "SEC",
+    "A", "DA", "G", "DG", "C", "DC", "U", "DT",
+])
 
 
 def residue(res_name):
@@ -62,19 +42,19 @@ def residue(res_name):
     >>> alanine = residue("ALA")
     >>> # Atoms and geometry
     >>> print(alanine)
-                0  ALA N      N        -0.966    0.493    1.500
-                0  ALA CA     C         0.257    0.418    0.692
-                0  ALA C      C        -0.094    0.017   -0.716
-                0  ALA O      O        -1.056   -0.682   -0.923
-                0  ALA CB     C         1.204   -0.620    1.296
-                0  ALA OXT    O         0.661    0.439   -1.742
-                0  ALA H      H        -1.383   -0.425    1.482
-                0  ALA H2     H        -0.676    0.661    2.452
-                0  ALA HA     H         0.746    1.392    0.682
-                0  ALA HB1    H         1.459   -0.330    2.316
-                0  ALA HB2    H         0.715   -1.594    1.307
-                0  ALA HB3    H         2.113   -0.676    0.697
-                0  ALA HXT    H         0.435    0.182   -2.647
+                0  ALA N      N        -0.970    0.490    1.500
+                0  ALA CA     C         0.260    0.420    0.690
+                0  ALA C      C        -0.090    0.020   -0.720
+                0  ALA O      O        -1.060   -0.680   -0.920
+                0  ALA CB     C         1.200   -0.620    1.300
+                0  ALA OXT    O         0.660    0.440   -1.740
+                0  ALA H      H        -1.380   -0.420    1.480
+                0  ALA H2     H        -0.680    0.660    2.450
+                0  ALA HA     H         0.750    1.390    0.680
+                0  ALA HB1    H         1.460   -0.330    2.320
+                0  ALA HB2    H         0.720   -1.590    1.310
+                0  ALA HB3    H         2.110   -0.680    0.700
+                0  ALA HXT    H         0.440    0.180   -2.650
     >>> # Bonds
     >>> print(alanine.atom_name[alanine.bonds.as_array()[:,:2]])
     [['N' 'CA']
@@ -90,30 +70,6 @@ def residue(res_name):
      ['CB' 'HB3']
      ['OXT' 'HXT']]
     """
-    _init_dataset()
-    array_dict = _residues[res_name]
-
-    array = AtomArray(len(array_dict["res_name"]))
-
-    array.add_annotation("charge", int)
-
-    array.res_name = array_dict["res_name"]
-    array.atom_name = array_dict["atom_name"]
-    array.element = array_dict["element"]
-    array.charge = array_dict["charge"]
-    array.hetero = array_dict["hetero"]
-
-    array.coord[:,0] = array_dict["coord_x"]
-    array.coord[:,1] = array_dict["coord_y"]
-    array.coord[:,2] = array_dict["coord_z"]
-
-    array.bonds = BondList(
-        array.array_length(),
-        bonds = np.stack([
-            array_dict["bond_i"],
-            array_dict["bond_j"],
-            array_dict["bond_type"]
-        ]).T
-    )
-
-    return array
+    component = get_component(get_ccd(), res_name=res_name)
+    component.hetero[:] = res_name not in non_hetero_residues
+    return component

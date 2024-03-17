@@ -6,37 +6,26 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["all_residues", "full_name", "link_type"]
 
-from os.path import join, dirname, realpath
-import msgpack
-
-
-_info_dir = dirname(realpath(__file__))
-# Data is taken from
-# ftp://ftp.wwpdb.org/pub/pdb/data/monomers/components.cif
-# (2019/01/27)
-with open(join(_info_dir, "residue_names.msgpack"), "rb") as file:
-    _res_names = msgpack.load(file, raw=False)
-with open(join(_info_dir, "link_types.msgpack"), "rb") as file:
-    _link_types = msgpack.load(file, raw=False)
+from .ccd import get_ccd, get_from_ccd
 
 
 def all_residues():
     """
     Get a list of all residues/compound names in the
     PDB chemical components dictionary.
-    
+
     Returns
     -------
     residues : list of str
         A list of all available The up to 3-letter residue names.
-    
+
     Examples
     --------
 
     >>> print(all_residues()[1000 : 1010])
-    ['0Y4', '0Y5', '0Y7', '0Y8', '0Y9', '0YA', '0YB', '0YC', '0YD', '0YE']
+    ['0V9', '0VA', '0VB', '0VC', '0VD', '0VE', '0VF', '0VG', '0VH', '0VI']
     """
-    return list(_res_names.keys()) 
+    return get_ccd()["chem_comp"]["id"].as_array().tolist()
 
 
 def full_name(res_name):
@@ -48,19 +37,19 @@ def full_name(res_name):
     ----------
     res_name : str
         The up to 3-letter residue name.
-    
+
     Returns
     -------
     name : str
         The full name of the residue.
-    
+
     Examples
     --------
 
     >>> print(full_name("MAN"))
     alpha-D-mannopyranose
     """
-    return _res_names.get(res_name.upper())
+    return get_from_ccd("chem_comp", res_name.upper(), "name").item()
 
 
 def link_type(res_name):
@@ -72,12 +61,12 @@ def link_type(res_name):
     ----------
     res_name : str
         The up to 3-letter residue name.
-    
+
     Returns
     -------
     link_type : str
         The link type.
-    
+
     Examples
     --------
 
@@ -88,4 +77,4 @@ def link_type(res_name):
     >>> print(link_type("HOH"))
     NON-POLYMER
     """
-    return _link_types.get(res_name.upper())
+    return get_from_ccd("chem_comp", res_name.upper(), "type").item()
