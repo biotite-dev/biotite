@@ -6,13 +6,11 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["standardize_order"]
 
+import warnings
 import numpy as np
-from .atoms import residue
+from .ccd import get_from_ccd
 from ..residues import get_residue_starts
 from ..error import BadStructureError
-
-
-_atom_name_cache = {}
 
 
 def standardize_order(atoms):
@@ -34,20 +32,20 @@ def standardize_order(atoms):
     atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
         Input structure with atoms that are potentially not in the
         *standard* order.
-    
+
     Returns
     -------
     indices : ndarray, dtype=int, shape=(n,)
         When this index array is applied on the input `atoms`,
         the atoms for each residue are reordered to obtain the
         standard *RCSB PDB* atom order.
-    
+
     Raises
     ------
     BadStructureError
         If the input `atoms` have duplicate atoms (same atom name)
         within a residue.
-    
+
     Examples
     --------
 
@@ -123,11 +121,18 @@ def standardize_order(atoms):
         stop = starts[i+1]
 
         res_name = atoms.res_name[start]
-        standard_atom_names = _atom_name_cache.get(res_name)
+        standard_atom_names = get_from_ccd(
+            "chem_comp_atom", res_name, "atom_id"
+        )
         if standard_atom_names is None:
-            standard_atom_names = residue(res_name).atom_name
-            _atom_name_cache[res_name] = standard_atom_names
-        
+            # If the residue is not in the CCD, keep the current order
+            warnings.warn(
+                f"Residue '{res_name}' is not in the CCD, "
+                f"keeping current atom order"
+            )
+            reordered_indices[start : stop] = np.arange(start, stop)
+            continue
+
         reordered_indices[start : stop] = _reorder(
             atoms.atom_name[start : stop], standard_atom_names
         ) + start
@@ -152,7 +157,7 @@ def _reorder(origin, target):
         The atom names to reorder.
     target : ndarray, dtype=str
         The atom names in target order.
-    
+
     Returns
     -------
     indices : ndarray, dtype=int
