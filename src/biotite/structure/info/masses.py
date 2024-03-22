@@ -7,20 +7,14 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["mass"]
 
 import json
-from os.path import join, dirname, realpath
-import msgpack
+from pathlib import Path
 from ..atoms import Atom, AtomArray, AtomArrayStack
+from .ccd import get_from_ccd
 
 
-_info_dir = dirname(realpath(__file__))
 # Masses are taken from http://www.sbcs.qmul.ac.uk/iupac/AtWt/ (2018/03/01)
-with open(join(_info_dir, "atom_masses.json"), "r") as file:
-    _atom_masses = json.load(file)
-# Masses are taken from
-# ftp://ftp.wwpdb.org/pub/pdb/data/monomers/components.cif
-# (2019/01/27)
-with open(join(_info_dir, "residue_masses.msgpack"), "rb") as file:
-    _res_masses = msgpack.load(file, raw=False)
+ATOM_MASSES_FILE = Path(__file__).parent / "atom_masses.json"
+_atom_masses = None
 
 
 def mass(item, is_residue=None):
@@ -34,7 +28,7 @@ def mass(item, is_residue=None):
     from the molecule.
     For example non-terminal residues in a protein or nucleotide chain
     miss the mass of a water molecule.
-    
+
     Parameters
     ----------
     item : str or Atom or AtomArray or AtomArrayStack
@@ -50,17 +44,17 @@ def mass(item, is_residue=None):
         If set to false, the string is strictly interpreted as element.
         By default the string will be interpreted as element at first
         and secondly as residue name, if the element is unknown.
-    
+
     Returns
     -------
     mass : float or None
         The mass of the given object in *u*. None if the mass is unknown.
-    
+
     References
     ----------
-    
+
     .. footbibliography::
-    
+
     Examples
     --------
 
@@ -94,29 +88,36 @@ def mass(item, is_residue=None):
     >>> print(mass("N"))
     14.007
     """
+    global _atom_masses
+    with open(ATOM_MASSES_FILE, "r") as file:
+        _atom_masses = json.load(file)
 
     if isinstance(item, str):
         if is_residue is None:
             result_mass = _atom_masses.get(item.upper())
             if result_mass is None:
-                result_mass = _res_masses.get(item.upper())
+                result_mass = get_from_ccd(
+                    "chem_comp", item.upper(), "formula_weight"
+                ).item()
         elif not is_residue:
             result_mass = _atom_masses.get(item.upper())
         else:
-            result_mass = _res_masses.get(item.upper())
-    
+            result_mass = get_from_ccd(
+                "chem_comp", item.upper(), "formula_weight"
+            ).item()
+
     elif isinstance(item, Atom):
         result_mass = mass(item.element, is_residue=False)
     elif isinstance(item, AtomArray) or isinstance(item, AtomArrayStack):
         result_mass = sum(
             (mass(element, is_residue=False) for element in item.element)
         )
-    
+
     else:
         raise TypeError(
             f"Cannot calculate mass for {type(item).__name__} objects"
         )
-    
+
     if result_mass is None:
         raise KeyError(f"{item} is not known")
     return result_mass

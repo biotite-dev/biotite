@@ -15,7 +15,7 @@ __all__ = ["BondList", "BondType",
 
 cimport cython
 cimport numpy as np
-from libc.stdlib cimport free, malloc, realloc
+from libc.stdlib cimport free, realloc
 
 import itertools
 import numbers
@@ -1467,7 +1467,6 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
     cdef float dist
     cdef np.ndarray elements = atoms.element
     cdef np.ndarray elements_in_res
-    cdef int index_in_res1, index_in_res2
     cdef int atom_index1, atom_index2
     cdef dict dist_ranges = {}
     cdef tuple dist_range
@@ -1583,7 +1582,7 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
     Although this includes most molecules one encounters, this will fail
     for exotic molecules, e.g. specialized inhibitors.
     """
-    from .info.bonds import bond_dataset
+    from .info.bonds import bonds_in_residue
     from .residues import get_residue_starts
 
     cdef list bonds = []
@@ -1594,10 +1593,6 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
     cdef np.ndarray res_names = atoms.res_name
     cdef str atom_name1, atom_name2
     cdef np.ndarray atom_indices1, atom_indices2
-    cdef int atom_index1, atom_index2
-    cdef int bond_order
-    # Obtain dictionary containing bonds for all residues in RCSB
-    cdef dict bond_dict = bond_dataset()
     cdef dict bond_dict_for_res
 
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
@@ -1606,10 +1601,7 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
         curr_start_i = residue_starts[i]
         next_start_i = residue_starts[i+1]
 
-        bond_dict_for_res = bond_dict.get(res_names[curr_start_i])
-        if bond_dict_for_res is None:
-            # Residue is not in dataset -> skip this residue
-            continue
+        bond_dict_for_res = bonds_in_residue(res_names[curr_start_i])
         atom_names_in_res = atom_names[curr_start_i : next_start_i]
         for (atom_name1, atom_name2), bond_type in bond_dict_for_res.items():
             atom_indices1 = np.where(atom_names_in_res == atom_name1)[0]

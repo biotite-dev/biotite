@@ -6,23 +6,20 @@
 A subpackage for obtaining all kinds of chemical information about atoms
 and residues, including masses, radii, bonds, etc.
 
-Most information is extracted from the chemical compound dictionary
+Most information is extracted from the *Chemical Component Dictionary*
 of the
-`wwPDB <ftp://ftp.wwpdb.org/pub/pdb/data/monomers/components.cif>`_
-via tools from the
-`biotite-util <https://github.com/biotite-dev/biotite-util>`_
-repository.
+`wwPDB <ftp://ftp.wwpdb.org/pub/pdb/data/monomers/components.cif>`_.
 """
 
 __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann, Tom David Müller"
 
+from .groups import *
+
 from .atoms import *
 from .bonds import *
+from .groups import *
 from .masses import *
 from .misc import *
 from .radii import *
 from .standardize import *
-from .nucleotides import *
-from .amino_acids import *
-from .carbohydrates import *

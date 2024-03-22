@@ -8,11 +8,7 @@ Installation
 Requirements
 ------------
 
-*Biotite* requires at least *Python* version 3.6. If you are still using
-*Python* 2.7, you should `hurry up <https://pythonclock.org/>`_ with upgrading
-to *Python* 3.
-
-*Biotite* also requires the following packages:
+*Biotite* requires at least *Python* version 3.7 and the following packages:
 
    - **numpy**
    - **requests**
@@ -78,24 +74,24 @@ Note that installing from source distribution requires a C-compiler
 Install from source
 -------------------
 
-If you want to install *Biotite* from the
-`project repository <https://github.com/biotite-dev/biotite>`_, navigate to the
-top-level directory of your local *Biotite* repository clone (the one
+You can also install Biotite from the
+`project repository <https://github.com/biotite-dev/biotite>`_.
+The repository uses `Git LFS <https://git-lfs.com/>`_ to store large binary
+files, which needs to be installed first.
+
+.. note::
+   In case installing *Git LFS* is not an option: The binary file can also be
+   downloaded manually from
+   `here <https://github.com/biotite-dev/biotite/raw/info/src/biotite/structure/info/ccd/components.bcif>`.
+   Then the ``biotite/structure/info/ccd/components.bcif`` file in the
+   repository needs to be replaced with the downloaded file.
+
+After cloning the repository, navigate to its top-level directory (the one
 ``setup.py`` is in) and type the following:
 
 .. code-block:: console
 
    $ pip install .
-
-Note that this requires a C-compiler (typically GCC) and the packages
-`cython` and `wheel` to be installed.
-For convenience
-`this Conda environment <http://raw.githubusercontent.com/biotite-dev/biotite/master/environment.yml>`_
-contains all runtime and build dependencies for *Biotite*:
-
-.. code-block:: console
-
-   conda env create -f environment.yml
 
 Having the *Biotite* package always pointing to your directory containing the
 repository is also possible.
@@ -104,17 +100,6 @@ Type the following in the top-level directory:
 .. code-block:: console
 
    $ pip install -e .
-
-To generate the wheels and source distribution for upload to PyPI (most
-probably you won't need that, but just in case), simply type:
-
-.. code-block:: console
-
-   $ python setup.py bdist_wheel
-   $ python setup.py sdist
-
-You can find the created wheel and the source distribution in the ``dist``
-directory.
 
 
 Common issues and solutions
