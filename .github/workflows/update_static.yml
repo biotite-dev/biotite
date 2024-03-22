@@ -1,0 +1,41 @@
+---
+name: "Update static data"
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run monthly on the first day of the month
+    - cron: "0 0 1 * *"
+  # TODO: Remove
+  pull_request:
+
+jobs:
+  build-package:
+    name: Update CCD subset
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: biotite-dev
+        miniforge-variant: Mambaforge
+        python-version: "3.12"
+        channels: conda-forge,defaults
+    - name: Install Biotite
+      run: pip install .
+    - name: Create CCD
+      run: python setup_ccd.py
+    #- name: Create pull request for changes
+    #  uses: peter-evans/create-pull-request@v6
+    #  with:
+    #    base: master
+    #    commit-message: "Update CCD dataset"
+    #    branch: "auto-ccd-update"
+    #    title: "Update CCD dataset"
+    #    body: |
+    #      This automatic pull request brings the CCD subset in
+    #      `biotite.structure.info` up-to-date with the latest CCD from
+    #      wwPDB.
