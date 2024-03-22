@@ -37,7 +37,9 @@ jobs:
     outputs:
       include: ${{ steps.set-matrix.outputs.include }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
       - name: Install cibuildwheel
         # MAKE SURE THIS STAYS IN SYNC WITH THE LOWER GHA cibuildwheel
         run: pipx install cibuildwheel==2.16.5
@@ -72,7 +74,9 @@ jobs:
         include: ${{ fromJson(needs.generate-wheels-matrix.outputs.include) }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       # QEMU enables building/testing for non-native architectures (ie arm64)
       # at the cost of speed
@@ -103,7 +107,9 @@ jobs:
         shell: bash -l {0}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: conda-incubator/setup-miniconda@v2
         with:
           environment-file: environment.yml
@@ -138,7 +144,9 @@ jobs:
         shell: bash -l {0}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: biotite-dev
@@ -159,10 +167,9 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
-        fetch-depth: 0
-        submodules: true
+        lfs: true
     - name: Build source distribution
       run: pipx run build --sdist
     - uses: actions/upload-artifact@v3
@@ -182,7 +189,9 @@ jobs:
       NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+      with:
+        lfs: true
     - uses: conda-incubator/setup-miniconda@v2
       with:
         environment-file: environment.yml
