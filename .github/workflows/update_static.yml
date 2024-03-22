@@ -24,6 +24,8 @@ jobs:
         miniforge-variant: Mambaforge
         python-version: "3.12"
         channels: conda-forge,defaults
+    - run: which pip
+    - run: pip --version
     - name: Install Biotite
       run: pip install .
     - name: Create CCD
