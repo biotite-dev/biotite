@@ -19,7 +19,6 @@ import itertools
 import warnings
 import numpy as np
 from ....file import InvalidFileError
-from ....sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...atoms import AtomArray, AtomArrayStack, repeat
 from ...bonds import BondList, BondType, connect_via_residue_names
 from ...box import unitcell_from_vectors, vectors_from_unitcell
@@ -1438,6 +1437,8 @@ def _convert_string_to_sequence(string, stype):
     ``proteinseq_type_list`` or to ``NucleotideSequence`` if `stype` is
     contained in ``_nucleotideseq_type_list``.
     """
+    # Import here to reduce inter-package dependencies on Biotite import
+    from ....sequence.seqtypes import NucleotideSequence, ProteinSequence
     # sequence may be stored as multiline string
     string = string.replace("\n", "")
     if stype in _proteinseq_type_list:

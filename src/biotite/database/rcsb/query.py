@@ -17,7 +17,6 @@ import copy
 from datetime import datetime
 import numpy as np
 import requests
-from ...sequence.seqtypes import NucleotideSequence
 from ..error import RequestError
 
 
@@ -306,10 +305,10 @@ class SequenceQuery(SingleQuery):
     ----------
     sequence : Sequence or str
         The input sequence.
-        If `sequence` is a :class:`NucleotideSequence` and the `scope`
-        is ``'rna'``, ``'T'`` is automatically replaced by ``'U'``.
     scope : {'protein', 'dna', 'rna'}
         The type of molecule to find.
+        If ``'rna'``, ``'T'`` is automatically replaced by
+        ``'U'``.
     min_identity : float, optional
         A match is only returned, if the sequence identity between
         the match and the input sequence exceeds this value.
@@ -339,10 +338,7 @@ class SequenceQuery(SingleQuery):
         if self._target is None:
             raise ValueError(f"'{scope}' is an invalid scope")
 
-        if isinstance(sequence, NucleotideSequence) and scope.lower() == "rna":
-            self._sequence = str(sequence).replace("T", "U")
-        else:
-            self._sequence = str(sequence)
+        self._sequence = str(sequence).replace("T", "U")
 
         self._min_identity = min_identity
         self._max_expect_value = max_expect_value
