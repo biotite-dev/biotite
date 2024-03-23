@@ -6,7 +6,6 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["residue"]
 
-from ..io.pdbx import get_component
 from .ccd import get_ccd
 
 
@@ -70,6 +69,9 @@ def residue(res_name):
      ['CB' 'HB3']
      ['OXT' 'HXT']]
     """
+    # Avoid circular import
+    from ..io.pdbx import get_component
+
     component = get_component(get_ccd(), res_name=res_name)
     component.hetero[:] = res_name not in non_hetero_residues
     return component
