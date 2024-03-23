@@ -3,16 +3,45 @@
 # information.
 
 import re
+import os
 from os.path import join, abspath, dirname, normpath
 import fnmatch
-import os
+import sys
+import logging
+from pathlib import Path
 from setuptools import setup, find_packages, Extension
 import numpy
 from Cython.Build import cythonize
 
+
+EXPECTED_CCD_FILES = [
+    "components.bcif",
+    "amino_acids.txt",
+    "carbohydrates.txt",
+    "nucleotides.txt"
+]
+
+
 original_wd = os.getcwd()
 # Change directory to setup directory to ensure correct file identification
 os.chdir(dirname(abspath(__file__)))
+
+# Create CCD subset for structure.info
+ccd_path = (
+    Path(__file__).parent / "src" / "biotite" / "structure" / "info" / "ccd"
+)
+
+if any(
+    not (ccd_path / file_name).exists() for file_name in  EXPECTED_CCD_FILES
+):
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
+    logging.info("Creating CCD subset for structure.info...")
+    # Make setup_ccd importable even when executed via 'pip install'
+    sys.path.insert(0, os.getcwd())
+    from setup_ccd import setup_ccd
+    setup_ccd(ccd_path)
+    # Clean up PYTHONPATH
+    sys.path.pop(0)
 
 # Parse the top level package for the version
 # Do not use an import to prevent side effects

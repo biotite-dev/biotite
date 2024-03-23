@@ -1,10 +1,19 @@
+import numpy as np
+import pyximport
+pyximport.install(
+    # Do not pollute project with compiled files prior to actual build
+    build_in_temp=True,
+    setup_args={"include_dirs":np.get_include()},
+    language_level=3
+)
+
 import gzip
 import logging
 from io import StringIO
 from dataclasses import dataclass
 import numpy as np
 import requests
-from biotite.structure.io.pdbx import *
+from src.biotite.structure.io.pdbx import *
 
 
 class ComponentException(Exception):
@@ -388,7 +397,9 @@ def extract_component_groups(type_dict, include, exclude, file_name):
 
 
 def setup_ccd(target_diriectory):
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(levelname)s:%(message)s", force=True
+    )
 
     target_diriectory.mkdir(parents=True, exist_ok=True)
 
@@ -444,6 +455,3 @@ def setup_ccd(target_diriectory):
     compressed_file = BinaryCIFFile()
     compressed_file["components"] = compressed_block
     compressed_file.write(target_diriectory / "components.bcif")
-
-from pathlib import Path
-setup_ccd(Path(__file__).parent / "src" / "biotite" / "structure" / "info" / "ccd")
