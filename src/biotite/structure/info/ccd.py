@@ -8,7 +8,6 @@ __all__ = ["get_ccd", "get_from_ccd"]
 
 from pathlib import Path
 import numpy as np
-from ..io.pdbx.bcif import BinaryCIFFile
 
 
 CCD_DIR = Path(__file__).parent / "ccd"
@@ -32,6 +31,9 @@ def get_ccd():
     ccd : BinaryCIFFile
         The CCD.
     """
+    # Avoid circular import
+    from ..io.pdbx.bcif import BinaryCIFFile
+
     global _ccd_block
     if _ccd_block is None:
         # Load CCD once and cache it for subsequent calls
