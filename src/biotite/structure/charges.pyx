@@ -17,7 +17,7 @@ from libc.math cimport isnan
 
 import warnings
 import numpy as np
-from biotite.structure import BondType
+from .bonds import BondType
 
 
 ctypedef np.float32_t float32
