@@ -12,14 +12,12 @@ __name__ = "biotite.structure"
 __author__ = "Jacob Marcel Anter, Patrick Kunzmann"
 __all__ = ["partial_charges"]
 
-cimport cython
 cimport numpy as np
 from libc.math cimport isnan
 
 import warnings
 import numpy as np
-from .info import residue
-from biotite.structure import AtomArray, BondType
+from biotite.structure import BondType
 
 
 ctypedef np.float32_t float32
@@ -99,7 +97,7 @@ cdef dict EN_PARAM_BTYPE = {
 
     "I": {
         int(BondType.SINGLE):   (9.90, 7.96, 0.96)
-    }        
+    }
 }
 
 cdef dict EN_PARAM_BPARTNERS = {
@@ -176,7 +174,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
     amount_of_binding_partners: ndarray, dtype=int
         The array containing information about the amount of binding
         partners of the respective atom.
-    
+
     Returns
     -------
     parameters: NumPy array, dtype=float, shape=(n,3)
@@ -274,7 +272,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
                     )
                     has_valence_key_error = True
                 parameters_v[i, :] = np.nan
-    
+
 
     # Error and warning handling
     if np.all(bond_types == BondType.ANY):
@@ -334,7 +332,7 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
             f"Parameters required for computation of "
             f"electronegativity aren't available for the following "
             f"atoms: {', '.join(unique_list)}. "
-            f"Their electronegativity is given as NaN.", 
+            f"Their electronegativity is given as NaN.",
             UserWarning
         )
 
@@ -359,7 +357,7 @@ def partial_charges(atom_array, int iteration_step_num=6, charges=None):
         The :class:`AtomArray` to get the partial charge values for.
         Must have an associated `BondList`.
     iteration_step_num: int, optional
-        The number of iteration steps is an optional argument and can be 
+        The number of iteration steps is an optional argument and can be
         chosen by the user depending on the desired precision of the
         result. If no value is entered by the user, the default value
         ``6`` will be used.
@@ -371,13 +369,13 @@ def partial_charges(atom_array, int iteration_step_num=6, charges=None):
         input `atom_array` is used.
         If neither of them is given, the formal charges of all atoms
         will be arbitrarily set to zero.
-    
+
     Returns
     -------
     charges: ndarray, dtype=float32
         The partial charge values of the individual atoms in the input
         `atom_array`.
-    
+
     Notes
     -----
     A :class:`BondList` must be associated to the input
@@ -399,7 +397,7 @@ def partial_charges(atom_array, int iteration_step_num=6, charges=None):
 
     References
     ----------
-    
+
     .. footbibliography::
 
     Examples
@@ -418,7 +416,7 @@ def partial_charges(atom_array, int iteration_step_num=6, charges=None):
             f"The input AtomArray doesn't possess an associated "
             f"BondList."
         )
-    
+
     if charges is None:
         try:
             # Implicitly this creates a copy of the charges
@@ -473,11 +471,11 @@ def partial_charges(atom_array, int iteration_step_num=6, charges=None):
     cdef float32[:] en_values_v
 
     for _ in range(iteration_step_num):
-        # In the beginning of each iteration step, the damping factor is 
+        # In the beginning of each iteration step, the damping factor is
         # halved in order to guarantee rapid convergence
         damping *= 0.5
         # Calculate electronegativity via vectorization:
-        # X = a + bQ + cQ^2 
+        # X = a + bQ + cQ^2
         charge_factor = np.stack((
             np.ones(atom_array.array_length()),
             charges,
