@@ -76,16 +76,6 @@ Install from source
 
 You can also install Biotite from the
 `project repository <https://github.com/biotite-dev/biotite>`_.
-The repository uses `Git LFS <https://git-lfs.com/>`_ to store large binary
-files, which needs to be installed first.
-
-.. note::
-   In case installing *Git LFS* is not an option: The binary file can also be
-   downloaded manually from
-   `here <https://github.com/biotite-dev/biotite/raw/info/src/biotite/structure/info/ccd/components.bcif>`.
-   Then the ``biotite/structure/info/ccd/components.bcif`` file in the
-   repository needs to be replaced with the downloaded file.
-
 After cloning the repository, navigate to its top-level directory (the one
 ``setup.py`` is in) and type the following:
 
@@ -100,6 +90,20 @@ Type the following in the top-level directory:
 .. code-block:: console
 
    $ pip install -e .
+
+Updating the Chemical Component Dictionary
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :mod:`biotite.structure.info` subpackage contains a subset from the
+`PDB Chemical Component Dictionary (CCD) <https://www.wwpdb.org/data/ccd>`_.
+The repository ships a potentially outdated version of this subset.
+To update this subset to the current upstream CCD version, run
+
+.. code-block:: console
+
+   $ python setup_ccd.py
+
+Afterwards, install *Biotite* again.
 
 
 Common issues and solutions
