@@ -168,6 +168,39 @@ jobs:
         path: dist//*.tar.gz
 
 
+  make-ccd:
+    name: Compile the CCD subset for structure.info from the wwPDB CCD
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: biotite-dev
+        miniforge-variant: Mambaforge
+        python-version: "3.10"
+        channels: conda-forge,defaults
+    - name: Build distribution
+      run: pip wheel -w dist .
+    - name: Install distribution
+      run: pip install .//dist//*.whl pytest
+    - name: Compile CCD subset
+      run: python setup_ccd.py
+    - name: Zip CCD
+      run: |
+          cd src/biotite/structure/info
+          zip -r ${{ github.workspace }}//dist//ccd.zip ccd
+          cd ${{ github.workspace }}
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ccd
+        path: dist//ccd.zip
+
+
   make-docs:
     name: Build documentation
 
