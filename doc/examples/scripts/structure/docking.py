@@ -33,18 +33,17 @@ import matplotlib.pyplot as plt
 from scipy.stats import spearmanr
 import biotite.structure as struc
 import biotite.structure.info as info
-import biotite.structure.io.mmtf as mmtf
-import biotite.structure.graphics as graphics
+import biotite.structure.io.pdbx as pdbx
 import biotite.database.rcsb as rcsb
 import biotite.application.autodock as autodock
 
 
 # Get the receptor structure
 # and the original 'correct' conformation of the ligand
-mmtf_file = mmtf.MMTFFile.read(rcsb.fetch("2RTG", "mmtf"))
-structure = mmtf.get_structure(
+pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("2RTG", "bcif"))
+structure = pdbx.get_structure(
     # Include formal charge for accurate partial charge calculation
-    mmtf_file, model=1, include_bonds=True, extra_fields=["charge"]
+    pdbx_file, model=1, include_bonds=True, extra_fields=["charge"]
 )
 # The asymmetric unit describes a streptavidin homodimer
 # However, we are only interested in a single monomer

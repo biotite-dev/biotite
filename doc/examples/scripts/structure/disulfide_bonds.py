@@ -17,14 +17,14 @@ of :math:`2.05 \pm 0.05` Å and the dihedral angle of
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+import io
 from tempfile import gettempdir
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import biotite.sequence as seq
 import biotite.structure as struc
-import biotite.structure.io as strucio
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 import biotite.database.rcsb as rcsb
 
 
@@ -96,18 +96,18 @@ def detect_disulfide_bonds(structure, distance=2.05, distance_tol=0.05,
 # (PDB: `2IT7 <http://www.rcsb.org/structure/2IT7>`_).
 # This motif is famous for its three characteristic disulfide bridges
 # forming a 'knot'.
-# However, the loaded MMTF file already has information about the
-# covalent bonds - including the disulfide bridges.
+# However, the loaded PDBx file already has information about the
+# the disulfide bridges.
 # To have a proper test case, all disulfide bonds are removed from the
 # structure and we pretend that the structure never had information
 # about the disulfide bonds.
-# For later verification that the implemented function wroks correctly,
+# For later verification that the implemented function works correctly,
 # the disulfide bonds, that are removed, are printed out.
 
-mmtf_file = mmtf.MMTFFile.read(
-    rcsb.fetch("2IT7", "mmtf", gettempdir())
+pdbx_file = pdbx.BinaryCIFFile.read(
+    rcsb.fetch("2IT7", "bcif", gettempdir())
 )
-knottin = mmtf.get_structure(mmtf_file, include_bonds=True, model=1)
+knottin = pdbx.get_structure(pdbx_file, include_bonds=True, model=1)
 sulfide_indices = np.where(
     (knottin.res_name == "CYS") & (knottin.atom_name == "SG")
 )[0]
@@ -175,8 +175,9 @@ for sg1_index, sg2_index in disulfide_bonds:
     knottin.bonds.add_bond(sg1_index, sg2_index, struc.BondType.SINGLE)
 # The structure with added disulfide bonds
 # could now be written back into a structure file
-# At the moment, Biotite only supports bond input/outpout in MMTF files
 #
-# strucio.save_structure("structure_with_disulfide_bonds.mmtf", knottin)
+out_file = pdbx.BinaryCIFFile()
+pdbx.set_structure(out_file, knottin)
+out_file.write(io.BytesIO())
 
 plt.show()
