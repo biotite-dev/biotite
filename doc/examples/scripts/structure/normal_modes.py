@@ -34,12 +34,11 @@ The file containing the eigenvectors can be downloaded via this
 # License: BSD 3 clause
 
 from tempfile import NamedTemporaryFile
-from os.path import join
 import numpy as np
 from numpy import newaxis
 import biotite.structure as struc
 import biotite.structure.io as strucio
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 import biotite.database.rcsb as rcsb
 
 
@@ -59,8 +58,8 @@ MAX_AMPLITUDE = 5
 
 
 # Load structure
-mmtf_file = mmtf.MMTFFile.read(rcsb.fetch(PDB_ID, "mmtf"))
-structure = mmtf.get_structure(mmtf_file, model=1)
+pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch(PDB_ID, "bcif"))
+structure = pdbx.get_structure(pdbx_file, model=1)
 
 
 # Filter first peptide chain

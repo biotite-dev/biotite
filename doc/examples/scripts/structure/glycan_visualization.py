@@ -25,8 +25,7 @@ import networkx as nx
 from networkx.drawing.nx_pydot import graphviz_layout
 import biotite.sequence as seq
 import biotite.structure as struc
-import biotite.structure.info as info
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 import biotite.database.rcsb as rcsb
 
 
@@ -113,60 +112,60 @@ SACCHARIDE_REPRESENTATION = {
     "All": ("o", "purple"),
     "Tal": ("o", "lightsteelblue"),
     "Ido": ("o", "chocolate"),
-    
+
     "GlcNAc": ("s", "royalblue"),
     "ManNAc": ("s", "forestgreen"),
     "GalNAc": ("s", "gold"),
     "GulNAc": ("s", "darkorange"),
     "AllNAc": ("s", "purple"),
     "IdoNAc": ("s", "chocolate"),
-    
+
     "GlcN": ("1", "royalblue"),
     "ManN": ("1", "forestgreen"),
     "GalN": ("1", "gold"),
-    
+
     "GlcA": ("v", "royalblue"),
     "ManA": ("v", "forestgreen"),
     "GalA": ("v", "gold"),
     "GulA": ("v", "darkorange"),
     "TalA": ("v", "lightsteelblue"),
     "IdoA": ("v", "chocolate"),
-    
+
     "Qui": ("^", "royalblue"),
     "Rha": ("^", "forestgreen"),
     "6dGul": ("^", "darkorange"),
     "Fuc": ("^", "crimson"),
-    
+
     "QuiNAc": ("P", "royalblue"),
     "FucNAc": ("P", "crimson"),
-    
+
     "Oli": ("X", "royalblue"),
     "Tyv": ("X", "forestgreen"),
     "Abe": ("X", "darkorange"),
     "Par": ("X", "pink"),
     "Dig": ("X", "purple"),
-    
+
     "Ara": ("*", "forestgreen"),
     "Lyx": ("*", "gold"),
     "Xyl": ("*", "darkorange"),
     "Rib": ("*", "pink"),
-    
+
     "Kdn": ("D", "forestgreen"),
     "Neu5Ac": ("D", "mediumvioletred"),
     "Neu5Gc": ("D", "turquoise"),
-    
+
     "LDManHep": ("H", "forestgreen"),
     "Kdo": ("H", "gold"),
     "DDManHep": ("H", "pink"),
     "MurNAc": ("H", "purple"),
     "Mur": ("H", "chocolate"),
-    
+
     "Api": ("p", "royalblue"),
     "Fru": ("p", "forestgreen"),
     "Tag": ("p", "gold"),
     "Sor": ("p", "darkorange"),
     "Psi": ("p", "pink"),
-    
+
     # Default representation
     None: ("h", "black")
 }
@@ -183,8 +182,8 @@ SACCHARIDE_REPRESENTATION = {
 
 PDB_ID = "4CUO"
 
-mmtf_file = mmtf.MMTFFile.read(rcsb.fetch(PDB_ID, "mmtf"))
-structure = mmtf.get_structure(mmtf_file, model=1, include_bonds=True)
+pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch(PDB_ID, "bcif"))
+structure = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
 
 # Create masks identifying whether an atom is part of a glycan...
 is_glycan = np.isin(structure.res_name, list(SACCHARIDE_NAMES.keys()))
@@ -239,7 +238,7 @@ nx.draw(
 # So far, so good. We can already see glycans (red) on the long peptide
 # chain (blue).
 # The surrounding single nodes belong to water, ions etc.
-# In the final plot only the glycans should be highlighted. 
+# In the final plot only the glycans should be highlighted.
 # For this purpose the edges between all non-saccharides will be
 # removed.
 # The remaining subgraphs are either single nodes,
@@ -299,7 +298,7 @@ for glycan_graph in glycan_graphs:
         [(min(atom_i, atom_j), max(atom_i, atom_j))
          for atom_i, atom_j in glycan_graph.edges()]
     )
-    
+
     # The 'root' is the amino acid
     root = [
         atom_i for atom_i in glycan_graph.nodes() if is_amino_acid[atom_i]
@@ -342,18 +341,18 @@ for glycan_graph in glycan_graphs:
     pos_array[:,0] += structure.res_id[root]
     # Convert array back to dictionary
     pos = {node: tuple(coord) for node, coord in zip(nodes, pos_array)}
-    
+
     nx.draw_networkx_edges(
         glycan_graph, pos, ax=ax,
         arrows=False, node_size=0, width=LINE_WIDTH
     )
-    
+
     # Draw each node individually
     for atom_i in glycan_graph.nodes():
         # Only plot glycans, not amino acids
         if not is_glycan[atom_i]:
             continue
-        
+
         # Now the above data sets come into play
         common_name = SACCHARIDE_NAMES.get(structure.res_name[atom_i])
         shape, color = SACCHARIDE_REPRESENTATION[common_name]
@@ -388,7 +387,7 @@ ax.set_xticklabels(
 # Set the end of the axis to the last amino acid
 ax.set_xlim(1, np.max(structure.res_id[is_amino_acid]))
 ax.set_ylim(0, 7)
-ax.set_title(mmtf_file["title"])
+ax.set_title(pdbx_file.block["struct"]["title"].as_item())
 fig.tight_layout()
 
 # sphinx_gallery_thumbnail_number = 2

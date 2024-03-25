@@ -5,7 +5,7 @@ Construction of an adjacency matrix
 In this example we create an adjacency matrix of the CA atoms in the
 lysozyme crystal structure (PDB: 1AKI).
 The values in the adjacency matrix ``m`` are
-``m[i,j] = 1 if distance(i,j) <= threshold else 0``. 
+``m[i,j] = 1 if distance(i,j) <= threshold else 0``.
 """
 
 # Code source: Patrick Kunzmann
@@ -16,12 +16,11 @@ import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
 
-file_name = rcsb.fetch("1aki", "mmtf", gettempdir())
+file_name = rcsb.fetch("1aki", "bcif", gettempdir())
 array = strucio.load_structure(file_name)
 # We only consider CA atoms
 ca = array[array.atom_name == "CA"]

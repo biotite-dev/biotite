@@ -248,7 +248,7 @@ def assemble_peptide(sequence):
 # Sequence of an antimicrobial peptide
 sequence = seq.ProteinSequence("WRKFWKYLK")
 chain = assemble_peptide(sequence)
-out_file = NamedTemporaryFile(suffix=".mmtf", delete=False)
+out_file = NamedTemporaryFile(suffix=".bcif", delete=False)
 strucio.save_structure(out_file.name, chain)
 # Visualization with PyMOL...
 # sphinx_gallery_ammolite_script = "peptide_assembly_pymol.py"
