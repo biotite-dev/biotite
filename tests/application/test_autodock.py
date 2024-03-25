@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.info as info
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 from biotite.application.autodock import VinaApp
 from ..util import data_dir, is_not_installed
 
@@ -24,9 +24,11 @@ def test_docking(flexible):
     PDB structure.
     """
     # A structure of a straptavidin-biotin complex
-    mmtf_file = mmtf.MMTFFile.read(join(data_dir("application"), "2rtg.mmtf"))
-    structure = mmtf.get_structure(
-        mmtf_file, model=1, extra_fields=["charge"], include_bonds=True
+    pdbx_file = pdbx.BinaryCIFFile.read(
+        join(data_dir("application"), "2rtg.bcif")
+    )
+    structure = pdbx.get_structure(
+        pdbx_file, model=1, extra_fields=["charge"], include_bonds=True
     )
     structure = structure[structure.chain_id == "B"]
     receptor = structure[struc.filter_amino_acids(structure)]

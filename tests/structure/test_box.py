@@ -135,7 +135,7 @@ def test_remove_pbc_unsegmented(multi_model):
     """
     model = None if multi_model else 1
     ref_array = load_structure(
-        join(data_dir("structure"), "3o5r.mmtf"),
+        join(data_dir("structure"), "3o5r.bcif"),
         model=model,
         include_bonds=True
     )
@@ -178,7 +178,7 @@ def test_remove_pbc_restore(multi_model, seed):
         return matrix, matrix_pbc
 
     stack = load_structure(
-        join(data_dir("structure"), "1l2y.mmtf"), include_bonds=True
+        join(data_dir("structure"), "1l2y.bcif"), include_bonds=True
     )
 
     # Only consider a single molecule

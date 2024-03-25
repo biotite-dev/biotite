@@ -8,7 +8,7 @@ import pytest
 import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io as strucio
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 from ..util import data_dir
 
 
@@ -414,54 +414,35 @@ def test_atom_array_consistency():
     assert test_ids.tolist() == ref_ids.tolist()
 
 
-@pytest.mark.parametrize("single_model", [False, True])
-def test_connect_via_residue_names(single_model):
-    """
-    Test whether the created bond list is equal to the bonds deposited
-    in the MMTF file.
-    """
-    # Structure with peptide, nucleotide, small molecules and water
-    file = mmtf.MMTFFile.read(join(data_dir("structure"), "5ugo.mmtf"))
-    if single_model:
-        atoms = mmtf.get_structure(file, include_bonds=True, model=1)
-    else:
-        atoms = mmtf.get_structure(file, include_bonds=True)
-
-    ref_bonds = atoms.bonds
-
-    test_bonds = struc.connect_via_residue_names(atoms)
-    # MMTF format does not represent aromaticity
-    test_bonds.remove_aromaticity()
-
-    assert test_bonds == ref_bonds
-
-
 @pytest.mark.parametrize("periodic", [False, True])
-def test_connect_via_distances(periodic):
+def test_method_consistency(periodic):
     """
-    Test whether the created bond list is equal to the bonds deposited
-    in the MMTF file.
+    Check if :func:`connect_via_distances()` and
+    :func:`connect_via_residue_names()` give the same bond list
     """
-    file = mmtf.MMTFFile.read(join(data_dir("structure"), "1l2y.mmtf"))
-    atoms = mmtf.get_structure(file, include_bonds=True, model=1)
-    # Remove termini to solve the issue that the reference bonds do not
-    # contain proper bonds for the protonated/deprotonated termini
-    atoms = atoms[(atoms.res_id > 1) & (atoms.res_id < 20)]
+    THRESHOLD_PERCENTAGE = 0.99
 
+    # Structure with peptide, nucleotide, small molecules and water
+    pdbx_file = pdbx.BinaryCIFFile.read(
+        join(data_dir("structure"), "5ugo.bcif")
+    )
+    atoms = pdbx.get_structure(pdbx_file, model=1)
     if periodic:
         # Add large dummy box to test parameter
         # No actual bonds over the periodic boundary are expected
         atoms.box = np.identity(3) * 100
 
-    ref_bonds = atoms.bonds
-    # Convert all bonds to BondType.ANY
-    ref_bonds = struc.BondList(
-        ref_bonds.get_atom_count(), ref_bonds.as_array()[:, :2]
+    bonds_from_names = struc.connect_via_residue_names(atoms)
+    bonds_from_names.remove_bond_order()
+
+    bonds_from_distances = struc.connect_via_distances(
+        atoms, periodic=periodic
     )
 
-    test_bonds = struc.connect_via_distances(atoms, periodic=periodic)
-
-    assert test_bonds == ref_bonds
+    # The distance based method may not detect all bonds
+    assert bonds_from_distances.as_set().issubset(bonds_from_names.as_set())
+    assert len(bonds_from_distances.as_array()) \
+        >= len(bonds_from_names.as_array()) * THRESHOLD_PERCENTAGE
 
 
 def test_find_connected(bond_list):
