@@ -12,7 +12,7 @@ import numpy as np
 import msgpack
 from .component import _Component, _HierarchicalContainer, MaskValue
 from .encoding import decode_stepwise, encode_stepwise, deserialize_encoding, \
-                      create_uncompressed_encoding
+                      create_uncompressed_encoding, ByteArrayEncoding
 from .error import SerializationError
 from ....file import File, is_binary, is_open_compatible
 
@@ -86,8 +86,9 @@ class BinaryCIFData(_Component):
 
         self._array = array
         if encoding is None:
-            encoding = create_uncompressed_encoding(array)
-        self._encoding = encoding
+            self._encoding = create_uncompressed_encoding(array)
+        else:
+            self._encoding = list(encoding)
 
     @property
     def array(self):
@@ -115,10 +116,13 @@ class BinaryCIFData(_Component):
         )
 
     def serialize(self):
-        return {
-            "data": encode_stepwise(self._array, self._encoding),
-            "encoding": [enc.serialize() for enc in self._encoding]
-        }
+        serialized_data = encode_stepwise(self._array, self._encoding)
+        if not isinstance(serialized_data, bytes):
+            raise SerializationError(
+                "Final encoding must return 'bytes'"
+            )
+        serialized_encoding = [enc.serialize() for enc in self._encoding]
+        return {"data": serialized_data, "encoding": serialized_encoding}
 
     def __len__(self):
         return len(self._array)
