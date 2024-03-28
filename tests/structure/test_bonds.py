@@ -437,7 +437,7 @@ def test_method_consistency(periodic):
         atoms, periodic=periodic
     )
 
-    assert bonds_from_names == bonds_from_distances
+    assert bonds_from_names.as_set() == bonds_from_distances.as_set()
 
 
 def test_find_connected(bond_list):
