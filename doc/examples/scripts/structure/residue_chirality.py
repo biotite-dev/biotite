@@ -53,7 +53,7 @@ def analyze_chirality(array):
     return enantiomers
 
 # Fetch and parse structure file
-file = rcsb.fetch("1l2y", "mmtf", gettempdir())
+file = rcsb.fetch("1l2y", "bcif", gettempdir())
 stack = strucio.load_structure(file)
 # Get first model
 array = stack[0]

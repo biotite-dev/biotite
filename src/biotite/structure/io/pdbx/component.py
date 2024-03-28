@@ -122,6 +122,12 @@ class _HierarchicalContainer(_Component, MutableMapping,
     def __init__(self, elements=None):
         if elements is None:
             elements = {}
+        for element in elements.values():
+            if not isinstance(element, (dict, self.subcomponent_class())):
+                raise TypeError(
+                    f"Expected '{self.subcomponent_class().__name__}', "
+                    f"but got '{type(element).__name__}'"
+                )
         self._elements = elements
 
     @staticmethod

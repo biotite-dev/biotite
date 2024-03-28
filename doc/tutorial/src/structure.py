@@ -631,17 +631,17 @@ print(sub_array.atom_name[sub_array.bonds.as_array()[:, :2]])
 # Up to now the bond information has been created manually, which is
 # infeasible for larger molecules.
 # Instead bond information can be loaded from and saved to some file
-# formats, including MMTF and MOL files.
+# formats, including PDBx and MOL files.
 # We'll try that on the structure of *TC5b* and look at the bond
 # information of the third residue, a tyrosine.
 
 import biotite.database.rcsb as rcsb
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 
-file_path = rcsb.fetch("1l2y", "mmtf", gettempdir())
-mmtf_file = mmtf.MMTFFile.read(file_path)
+file_path = rcsb.fetch("1l2y", "bcif", gettempdir())
+pdbx_file = pdbx.BinaryCIFFile.read(file_path)
 # Essential: set the 'include_bonds' parameter to true
-stack = mmtf.get_structure(mmtf_file, include_bonds=True)
+stack = pdbx.get_structure(pdbx_file, include_bonds=True)
 tyrosine = stack[:, (stack.res_id == 3)]
 print("Bonds (indices):")
 print(tyrosine.bonds)
@@ -649,8 +649,7 @@ print("Bonds (atoms names):")
 print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
 
 ########################################################################
-# Since we loaded the bond information from a MMTF file, the bond types
-# are also defined:
+# Not only the connected atoms, but also the the bond types are defined:
 # Here we have both, ``BondType.SINGLE`` and ``BondType.DOUBLE``
 # bonds (*1* and *2*, respectively).
 #
