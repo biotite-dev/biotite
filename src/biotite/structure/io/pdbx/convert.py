@@ -1199,7 +1199,8 @@ def list_assemblies(pdbx_file, data_block=None):
 
 
 def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
-                 altloc="first", extra_fields=None, use_author_fields=True):
+                 altloc="first", extra_fields=None, use_author_fields=True,
+                 include_bonds=False):
     """
     Build the given biological assembly.
 
@@ -1262,6 +1263,15 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
         If `use_author_fields` is true, the annotation arrays will be
         read from the ``auth_xxx`` fields (if applicable),
         otherwise from the the ``label_xxx`` fields.
+    include_bonds : bool, optional
+        If set to true, a :class:`BondList` will be created for the
+        resulting :class:`AtomArray` containing the bond information
+        from the file.
+        Bonds, whose order could not be determined from the
+        *Chemical Component Dictionary*
+        (e.g. especially inter-residue bonds),
+        have :attr:`BondType.ANY`, since the PDB format itself does
+        not support bond orders.
 
     Returns
     -------
@@ -1315,6 +1325,7 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
         altloc,
         extra_fields_and_asym,
         use_author_fields,
+        include_bonds
     )
 
     ### Get transformations and apply them to the affected asym IDs
