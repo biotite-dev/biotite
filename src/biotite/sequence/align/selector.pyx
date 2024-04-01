@@ -10,10 +10,8 @@ __all__ = ["MinimizerSelector", "SyncmerSelector", "CachedSyncmerSelector",
 cimport cython
 cimport numpy as np
 
-from numbers import Integral
 import numpy as np
 from .kmeralphabet import KmerAlphabet
-from ..alphabet import AlphabetError
 
 
 ctypedef np.int64_t int64
