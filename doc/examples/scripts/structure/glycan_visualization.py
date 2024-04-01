@@ -184,9 +184,13 @@ PDB_ID = "4CUO"
 
 pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch(PDB_ID, "bcif"))
 structure = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
+# We are not interested in water, ions, etc.
+structure = structure[
+    struc.filter_carbohydrates(structure) | struc.filter_amino_acids(structure)
+]
 
-# Create masks identifying whether an atom is part of a glycan...
-is_glycan = np.isin(structure.res_name, list(SACCHARIDE_NAMES.keys()))
+# Recreate masks after atom selection for later use
+is_glycan = struc.filter_carbohydrates(structure)
 # ... or part of an amino acid
 is_amino_acid = struc.filter_amino_acids(structure)
 
@@ -196,8 +200,7 @@ is_amino_acid = struc.filter_amino_acids(structure)
 # respective residue later.
 # The residue ID is not sufficient here, because the same residue ID
 # might appear in conjunction with different chain IDs.
-
-########################################################################
+#
 # To determine which residues (including the saccharides) are connected
 # with each other, we will use a graph representation:
 # The nodes are residues, the edges indicate which residues are
@@ -237,7 +240,6 @@ nx.draw(
 ########################################################################
 # So far, so good. We can already see glycans (red) on the long peptide
 # chain (blue).
-# The surrounding single nodes belong to water, ions etc.
 # In the final plot only the glycans should be highlighted.
 # For this purpose the edges between all non-saccharides will be
 # removed.
