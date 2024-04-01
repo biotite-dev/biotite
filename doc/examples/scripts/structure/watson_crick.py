@@ -12,14 +12,14 @@ pairs, taken from an actual DNA 3D structure.
 import numpy as np
 import matplotlib.pyplot as plt
 import biotite.structure as struc
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 import biotite.structure.graphics as graphics
 import biotite.database.rcsb as rcsb
 
 
 # Structure of a DNA double helix
-mmtf_file = mmtf.MMTFFile.read(rcsb.fetch("1qxb", "mmtf"))
-structure = mmtf.get_structure(mmtf_file, model=1, include_bonds=True)
+pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("1qxb", "bcif"))
+structure = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
 nucleotides = structure[struc.filter_nucleotides(structure)]
 
 # Choose one adenine-thymine and one guanine-cytosine base pair

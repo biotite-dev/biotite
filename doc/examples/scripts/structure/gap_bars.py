@@ -16,7 +16,6 @@ residues in a recent cryo-EM structure (PDB: 5W1R).
 # License: BSD 3 clause
 
 from tempfile import gettempdir
-import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 import matplotlib.pyplot as plt
@@ -25,7 +24,7 @@ import numpy as np
 
 def plot_gaps(pdb_id, chain_id, ax):
     # Download and parse structure file
-    path = rcsb.fetch(pdb_id, "mmtf", gettempdir())
+    path = rcsb.fetch(pdb_id, "bcif", gettempdir())
     atom_array = strucio.load_structure(path)
     # Consider only one chain
     atom_array = atom_array[atom_array.chain_id == chain_id]
@@ -43,7 +42,7 @@ def plot_gaps(pdb_id, chain_id, ax):
         else:
             # existing
             states[i] = 2
-    
+
     # Find the intervals for each state
     state_intervals = []
     curr_state = None
@@ -58,7 +57,7 @@ def plot_gaps(pdb_id, chain_id, ax):
                 curr_start = i
                 curr_state = states[i]
     state_intervals.append((curr_start, i, curr_state))
-    
+
     # Draw the state intervals as colored rectangles
     for interval in state_intervals:
         start = interval[0]

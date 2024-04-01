@@ -20,7 +20,7 @@ import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 
 
-file_name = rcsb.fetch("2KB1", "mmtf", gettempdir())
+file_name = rcsb.fetch("2KB1", "bcif", gettempdir())
 stack = strucio.load_structure(file_name)
 # Four identical chains, consider only chain A
 chain_a = stack[:, stack.chain_id == "A"]

@@ -15,7 +15,7 @@ The identified contact residues are highlighted as sticks.
 
 import numpy as np
 import biotite.structure as struc
-import biotite.structure.io.mmtf as mmtf
+import biotite.structure.io.pdbx as pdbx
 import biotite.database.rcsb as rcsb
 
 
@@ -25,8 +25,8 @@ THRESHOLD_DISTANCE = 4.0
 
 
 # Fetch and load structure
-mmtf_file = mmtf.MMTFFile.read(rcsb.fetch("2or1", "mmtf"))
-structure = mmtf.get_structure(mmtf_file, model=1)
+pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("2or1", "bcif"))
+structure = pdbx.get_structure(pdbx_file, model=1)
 
 
 # Separate structure into the DNA and the two identical protein chains

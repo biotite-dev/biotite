@@ -16,7 +16,7 @@ import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
 
 def get_diameter(pdb_id):
-    file_name = rcsb.fetch(pdb_id, "mmtf", gettempdir())
+    file_name = rcsb.fetch(pdb_id, "bcif", gettempdir())
     atom_array = strucio.load_structure(file_name)
     # Remove all non-amino acids
     atom_array = atom_array[struc.filter_amino_acids(atom_array)]
