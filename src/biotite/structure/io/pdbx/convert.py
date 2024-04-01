@@ -494,7 +494,8 @@ def _parse_inter_residue_bonds(atom_site, struct_conn):
     # Columns in 'atom_site' that should be matched by 'struct_conn'
     COLUMNS = [
         "label_asym_id", "label_comp_id", "label_seq_id", "label_atom_id",
-        "auth_asym_id", "auth_comp_id", "auth_seq_id", "pdbx_PDB_ins_code"
+        "label_alt_id", "auth_asym_id", "auth_comp_id", "auth_seq_id",
+        "pdbx_PDB_ins_code"
     ]
 
     covale_mask = np.isin(
@@ -524,6 +525,12 @@ def _parse_inter_residue_bonds(atom_site, struct_conn):
             reference = atom_site[col_name].as_array()
             dtype = reference.dtype
             query = struct_conn[struct_conn_col_name].as_array(dtype)
+            if np.issubdtype(reference.dtype, str):
+                # The mask value is not necessarily consistent
+                # between query and reference
+                # -> make it consistent
+                reference[reference == "?"] = "."
+                query[query == "?"] = "."
             reference_arrays.append(reference)
             query_arrays.append(query[covale_mask])
         # Match the combination of 'label_asym_id', 'label_comp_id', etc.
@@ -588,7 +595,9 @@ def _get_struct_conn_col_name(col_name, partner):
     For a column name in ``atom_site`` get the corresponding column name
     in ``struct_conn``.
     """
-    if col_name.startswith("pdbx_"):
+    if col_name == "label_alt_id":
+        return f"pdbx_ptnr{partner}_label_alt_id"
+    elif col_name.startswith("pdbx_"):
         # Move 'pdbx_' to front
         return f"pdbx_ptnr{partner}_{col_name[5:]}"
     else:
