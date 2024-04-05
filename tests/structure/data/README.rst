@@ -21,3 +21,12 @@ Test structures
 4P5J: Structure contains a non-canonical nucleotide
 1CRR: Multi-model structure with the first model ID not being 1
 7GSA: Contains 5-character residue name 'A1AA6'
+
+Creation
+--------
+
+To create the test files for the above entries, run the following command:
+
+.. code-block:: console
+
+    $ python create_test_structures.py -f ids.txt
