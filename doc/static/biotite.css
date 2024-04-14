@@ -4,6 +4,28 @@ html {
     --pst-font-weight-heading: 300;
 }
 
+html[data-theme="light"] {
+    --pst-color-primary: #dc7000ff;
+    --pst-color-primary-highlight: #b45c00ff;
+    --pst-color-secondary: #389a1aff;
+    --pst-color-secondary-highlight: #2b6f00ff;
+    --pst-color-accent: #dc7000ff;
+    --pst-color-inline-code: #b45c00ff;
+    --pst-color-inline-code-links: #b45c00ff;
+    --pst-color-table-row-hover-bg: #ffb569ff;
+}
+
+html[data-theme="dark"] {
+    --pst-color-primary: #ff982dff;
+    --pst-color-primary-highlight: #dc7000ff;
+    --pst-color-secondary: #52da2aff;
+    --pst-color-secondary-highlight: #389a1aff;
+    --pst-color-accent: #ff982dff;
+    --pst-color-inline-code: #ff8405ff;
+    --pst-color-inline-code-links: #ff8405ff;
+    --pst-color-table-row-hover-bg: #b45c00ff;
+}
+
 
 /* Separation between methods in the API reference */
 .py.method, .py.attribute{
