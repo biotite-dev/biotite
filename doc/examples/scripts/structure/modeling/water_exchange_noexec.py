@@ -19,7 +19,7 @@ example.
 However, the trajectories are based of publicly accessible structures
 of the open (PDB: 7NP3) and closed (PDB: 7NP4) state.
 
-.. image:: ../../scripts/structure/water_exchange.png
+.. image:: ../../../scripts/structure/modeling/water_exchange.png
 """
 
 # Code source: Daniel Bauer, Patrick Kunzmann

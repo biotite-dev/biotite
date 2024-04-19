@@ -30,7 +30,7 @@ import biotite.structure.io as strucio
 
 # The bilayer structure file can be downloaded from
 # http://www.charmm-gui.org/archive/pure_bilayer/dppc.tar.gz
-PDB_FILE_PATH = "../../download/dppc_n128.pdb"
+PDB_FILE_PATH = "../../../download/dppc_n128.pdb"
 
 
 def find_leaflets(structure, head_atom_mask,

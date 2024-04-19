@@ -43,7 +43,7 @@ import biotite.database.rcsb as rcsb
 
 
 # A CSV file containing the eigenvectors for the CA atoms
-VECTOR_FILE = "../../download/glycosylase_anm_vectors.csv"
+VECTOR_FILE = "../../../download/glycosylase_anm_vectors.csv"
 # The corresponding structure
 PDB_ID = "1MUG"
 # The normal mode to be visualized

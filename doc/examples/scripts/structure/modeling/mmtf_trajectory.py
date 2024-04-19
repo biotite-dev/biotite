@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt
 import os.path
 
 # Put here the path of the downloaded trajectory file
-xtc_file_path = "../../download/lysozyme_md.xtc"
+xtc_file_path = "../../../download/lysozyme_md.xtc"
 
 xtc_file = xtc.XTCFile.read(xtc_file_path)
 coord = xtc_file.get_coord()

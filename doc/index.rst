@@ -84,7 +84,7 @@ Biotite documentation
 
             .. grid-item::
 
-                .. button-ref:: examples/gallery/index
+                .. button-ref:: examples/index
                     :color: primary
                     :outline:
                     :expand:
@@ -98,12 +98,12 @@ Biotite documentation
            :gutter: 2
 
            .. grid-item-card::
-               :link: examples/gallery/sequence/lexa_conservation.html
-               :img-background: /examples/gallery/sequence/images/sphx_glr_lexa_conservation_002.png
+               :link: examples/gallery/sequence/homology/lexa_conservation.html
+               :img-background: /examples/gallery/sequence/homology/images/sphx_glr_lexa_conservation_002.png
 
            .. grid-item-card::
-               :link: examples/gallery/structure/transketolase_sse.html
-               :img-background: /examples/gallery/structure/images/sphx_glr_transketolase_sse_004.png
+               :link: examples/gallery/structure/protein/transketolase_sse.html
+               :img-background: /examples/gallery/structure/protein/images/sphx_glr_transketolase_sse_004.png
 
 .. raw:: html
 
@@ -131,8 +131,8 @@ Biotite documentation
         representations, ranging from sequence alignments to feature maps.
 
         .. card::
-            :img-background: /examples/gallery/sequence/images/sphx_glr_avidin_alignment_001.png
-            :link: examples/gallery/sequence/avidin_alignment.html
+            :img-background: /examples/gallery/sequence/homology/images/sphx_glr_avidin_alignment_001.png
+            :link: examples/gallery/sequence/homology/avidin_alignment.html
 
     .. grid-item::
 
@@ -150,8 +150,8 @@ Biotite documentation
 
 
         .. card::
-            :img-background: /examples/gallery/structure/images/sphx_glr_contact_sites_001.png
-            :link: examples/gallery/structure/contact_sites.html
+            :img-background: /examples/gallery/structure/contacts/images/sphx_glr_contact_sites_001.png
+            :link: examples/gallery/structure/contacts/contact_sites.html
 
     .. grid-item::
 
@@ -165,8 +165,8 @@ Biotite documentation
         instead of learning the respective REST API.
 
         .. card::
-            :img-background: /examples/gallery/structure/images/sphx_glr_pdb_statistics_001.png
-            :link: examples/gallery/structure/pdb_statistics.html
+            :img-background: /examples/gallery/structure/misc/images/sphx_glr_pdb_statistics_001.png
+            :link: examples/gallery/structure/misc/pdb_statistics.html
 
     .. grid-item::
 
@@ -183,8 +183,8 @@ Biotite documentation
         File creation and command line execution are handled under the hood.
 
         .. card::
-            :img-background: /examples/gallery/structure/images/sphx_glr_docking_002.png
-            :link: examples/gallery/structure/docking.html
+            :img-background: /examples/gallery/structure/modeling/images/sphx_glr_docking_002.png
+            :link: examples/gallery/structure/modeling/docking.html
 
 
 .. raw:: html
@@ -238,7 +238,7 @@ Biotite documentation
     tutorial/index
     install
     apidoc/index
-    examples/gallery/index
+    examples/index
     extensions
     contribution/index
     logo

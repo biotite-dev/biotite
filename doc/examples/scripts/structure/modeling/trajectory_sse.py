@@ -26,8 +26,8 @@ from biotite.application.dssp import DsspApp
 
 
 # Put here the path of the downloaded files
-templ_file_path = "../../download/lysozyme_md.pdb"
-traj_file_path  = "../../download/lysozyme_md.xtc"
+templ_file_path = "../../../download/lysozyme_md.pdb"
+traj_file_path  = "../../../download/lysozyme_md.xtc"
 
 
 xtc_file = xtc.XTCFile.read(traj_file_path)

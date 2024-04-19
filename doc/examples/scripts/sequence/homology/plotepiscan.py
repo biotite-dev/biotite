@@ -40,7 +40,7 @@ import biotite.sequence.graphics as graphics
 import biotite.sequence.io.fasta as fasta
 
 # Path to the data files
-array_seq_path = "../../download/Array_Seq.txt"
+array_seq_path = "../../../download/Array_Seq.txt"
 
 fasta_file = fasta.FastaFile.read(array_seq_path)
 
@@ -99,8 +99,8 @@ def read_scan(filename, pep_len=20, score_res=20):
     return df
 
 # Load epitope scan data
-fcr3_file_path  = "../../download/FCR3_10ug.csv"
-nf54_file_path  = "../../download/NF54_10ug.csv"
+fcr3_file_path  = "../../../download/FCR3_10ug.csv"
+nf54_file_path  = "../../../download/NF54_10ug.csv"
 
 # Define the score residues on the arrays
 files = [fcr3_file_path, nf54_file_path]

@@ -17,7 +17,7 @@ from os.path import realpath, dirname, join, basename
 import sys
 import warnings
 import pybtex
-from sphinx_gallery.sorting import FileNameSortKey
+from sphinx_gallery.sorting import FileNameSortKey, ExplicitOrder
 import matplotlib
 
 import biotite
@@ -88,7 +88,12 @@ copyright = "The Biotite contributors"
 version = biotite.__version__
 release = biotite.__version__
 
-exclude_patterns = ["build"]
+exclude_patterns = [
+    # These are automatically incorporated by sphinx_gallery
+    "examples/scripts/**/README.rst",
+    # Execution times are not reported to the user
+    "sg_execution_times.rst",
+]
 
 pygments_style = "sphinx"
 
@@ -162,8 +167,27 @@ html_context = {
 }
 
 sphinx_gallery_conf = {
-    "examples_dirs"             : "examples/scripts",
-    "gallery_dirs"              : "examples/gallery",
+    "examples_dirs"             : [
+        "examples/scripts/sequence",
+        "examples/scripts/structure"
+    ],
+    "gallery_dirs"              : [
+        "examples/gallery/sequence",
+        "examples/gallery/structure"
+    ],
+    "subsection_order": ExplicitOrder([
+        "examples/scripts/sequence/homology",
+        "examples/scripts/sequence/sequencing",
+        "examples/scripts/sequence/profile",
+        "examples/scripts/sequence/annotation",
+        "examples/scripts/sequence/misc",
+        "examples/scripts/structure/protein",
+        "examples/scripts/structure/nucleotide",
+        "examples/scripts/structure/molecule",
+        "examples/scripts/structure/contacts",
+        "examples/scripts/structure/modeling",
+        "examples/scripts/structure/misc",
+    ]),
     "within_subsection_order"   : FileNameSortKey,
     # Do not run example scripts with a trailing '_noexec'
     "filename_pattern"          : "^((?!_noexec).)*$",

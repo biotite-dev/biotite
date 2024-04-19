@@ -33,8 +33,8 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 
 # Put here the path of the downloaded files
-templ_file_path = "../../download/waterbox_md.pdb"
-traj_file_path  = "../../download/waterbox_md.xtc"
+templ_file_path = "../../../download/waterbox_md.pdb"
+traj_file_path  = "../../../download/waterbox_md.xtc"
 
 # Load the trajectory
 traj = strucio.load_structure(traj_file_path, template=templ_file_path)
