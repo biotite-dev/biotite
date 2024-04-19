@@ -58,8 +58,9 @@ biotite.egg-info
 *.code-workspace
 .vscode/*
 
-# Ignore fuse_hidden files on Linux systems
+# Ignore hidden OS related files
 *.fuse_hidden*
+.DS_Store
 
 # Ignore temp files created via Jupyter
 **/.ipynb_checkpoints/
