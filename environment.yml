@@ -40,6 +40,7 @@ dependencies:
   - jupyter-sphinx >=0.5.3
   - sphinx >=5.0
   - sphinxcontrib-bibtex >=2.3
+  - sphinx-copybutton >=0.5
   - sphinx-design >=0.5
   - sphinx-gallery =0.15.0
   # Extra packages used in example gallery
