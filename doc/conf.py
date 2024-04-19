@@ -107,8 +107,6 @@ numpydoc_show_class_members = False
 # overwrite the document structure given by apidoc.json
 autosummary_generate = False
 
-autodoc_member_order = "bysource"
-
 bibtex_bibfiles = ["references.bib"]
 bibtex_default_style = "ieee"
 
@@ -151,6 +149,7 @@ html_theme_options = {
    ],
    "use_edit_page_button": True,
    "show_prev_next": False,
+   "show_toc_level": 2,
 }
 html_sidebars = {
     # No primary sidebar for these pages
@@ -216,4 +215,4 @@ sphinx_gallery_conf = {
 #### App setup ####
 
 def setup(app):
-    app.connect("autodoc-skip-member", apidoc.skip_non_methods)
+    app.connect("autodoc-skip-member", apidoc.skip_nonrelevant)
