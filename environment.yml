@@ -37,6 +37,7 @@ dependencies:
   - pydata-sphinx-theme =0.15
   - matplotlib >=3.3
   - numpydoc >=0.8
+  - jupyter-sphinx >=0.5.3
   - sphinx >=5.0
   - sphinxcontrib-bibtex >=2.3
   - sphinx-design >=0.5

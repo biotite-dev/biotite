@@ -75,7 +75,7 @@ Biotite documentation
 
             .. grid-item::
 
-                .. button-ref:: install
+                .. button-ref:: tutorial/index
                     :color: primary
                     :expand:
                     :shadow:
@@ -235,8 +235,8 @@ Biotite documentation
     :maxdepth: 1
     :hidden:
 
+    tutorial/index
     install
-    tutorial/target/index
     apidoc/index
     examples/gallery/index
     extensions
