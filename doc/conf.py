@@ -13,7 +13,7 @@ pyximport.install(
     language_level=3
 )
 
-from os.path import realpath, dirname, join, basename
+from os.path import realpath, dirname, join
 import sys
 import warnings
 import pybtex
@@ -36,13 +36,19 @@ import viewcode
 import scraper
 import bibliography
 import key
+import switcher
 
 
 # Reset matplotlib params
 matplotlib.rcdefaults()
 
-# Creation of API documentation
+# Pregeneration of files
 apidoc.create_api_doc(PACKAGE_PATH, join(DOC_PATH, "apidoc"))
+switcher.create_switcher_json(
+    join("static", "switcher.json"),
+    "v0.41.0",
+    n_versions=5
+)
 
 # Use custom citation sytle
 pybtex.plugin.register_plugin(
@@ -127,6 +133,12 @@ html_logo = "static/assets/general/biotite_logo_navbar.png"
 html_favicon = "static/assets/general/biotite_icon_32p.png"
 html_baseurl = f"https://{BIOTITE_DOMAIN}/latest/"
 html_theme_options = {
+    "navbar_start": ["navbar-logo", "version-switcher"],
+    "switcher": {
+        "json_url": f"https://{BIOTITE_DOMAIN}/latest/_static/switcher.json",
+        "version_match": version,
+    },
+    "show_version_warning_banner": True,
     "header_links_before_dropdown": 7,
     "pygment_light_style": "friendly",
     "icon_links": [
