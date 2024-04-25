@@ -612,7 +612,7 @@ class PDBFile(TextFile):
         if np.isnan(array.coord).any():
             raise BadStructureError("Coordinates contain 'NaN' values")
         if any([len(name) > 1 for name in array.chain_id]):
-            raise BadStructureError("Some chain IDs exceed 1 character")
+            warnings.warn("Some chain IDs exceed 1 character")
         if any([len(name) > 3 for name in array.res_name]):
             raise BadStructureError("Some residue names exceed 3 characters")
         if any([len(name) > 4 for name in array.atom_name]):

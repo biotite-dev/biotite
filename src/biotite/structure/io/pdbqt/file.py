@@ -363,7 +363,7 @@ class PDBQTFile(TextFile):
         if np.isnan(atoms.coord).any():
             raise BadStructureError("Coordinates contain 'NaN' values")
         if any([len(name) > 1 for name in atoms.chain_id]):
-            raise BadStructureError("Some chain IDs exceed 1 character")
+            warnings.warn("Some chain IDs exceed 1 character")
         if any([len(name) > 3 for name in atoms.res_name]):
             raise BadStructureError("Some residue names exceed 3 characters")
         if any([len(name) > 4 for name in atoms.atom_name]):
