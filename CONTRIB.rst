@@ -13,3 +13,4 @@ CONTRIBUTORS
 - Jan H. Krumbach <https://github.com/JHKru>
 - Danny P. Farrell <https://github.com/danpf>
 - Daniel Ferrer Vinals <https://github.com/ferrervi>
+- Jincai Yang <https://github.com/0ut0fcontrol>

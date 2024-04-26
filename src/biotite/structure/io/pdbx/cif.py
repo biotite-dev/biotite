@@ -978,7 +978,7 @@ def _to_single(lines, is_looped):
                 processed_lines[out_i - 1] += " " + shlex.quote(multi_line_str)
             in_i = j + 1
 
-        elif not is_looped and lines[in_i][0] in ["'", '"']:
+        elif not is_looped and lines[in_i][0] != "_":
             # Singleline value in the line after the corresponding key
             processed_lines[out_i - 1] += " " + lines[in_i]
             in_i += 1

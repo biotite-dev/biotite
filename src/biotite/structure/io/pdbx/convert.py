@@ -1428,25 +1428,26 @@ def _parse_operation_expression(expression):
     # Split groups by parentheses:
     # use the opening parenthesis as delimiter
     # and just remove the closing parenthesis
+    # example: '(X0)(1-10,21-25)' from 1a34
     expressions_per_step = expression.replace(")", "").split("(")
     expressions_per_step = [e for e in expressions_per_step if len(e) > 0]
     # Important: Operations are applied from right to left
     expressions_per_step.reverse()
 
     operations = []
-    for expr in expressions_per_step:
-        if "-" in expr:
-            # Range of operation IDs, they must be integers
-            first, last = expr.split("-")
-            operations.append(
-                [str(id) for id in range(int(first), int(last) + 1)]
-            )
-        elif "," in expr:
-            # List of operation IDs
-            operations.append(expr.split(","))
-        else:
-            # Single operation ID
-            operations.append([expr])
+    for one_step_expr in expressions_per_step:
+        one_step_op_ids = []
+        for expr in one_step_expr.split(","):
+            if "-" in expr:
+                # Range of operation IDs, they must be integers
+                first, last = expr.split("-")
+                one_step_op_ids.extend(
+                    [str(id) for id in range(int(first), int(last) + 1)]
+                )
+            else:
+                # Single operation ID
+                one_step_op_ids.append(expr)
+        operations.append(one_step_op_ids)
 
     # Cartesian product of operations
     return list(itertools.product(*operations))
