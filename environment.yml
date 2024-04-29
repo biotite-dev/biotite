@@ -24,7 +24,7 @@ dependencies:
   # Testing
   - mdtraj >=1.9.3
   - pytest >=7.0
-  # Interfaced software in biotite.application
+  # Interfaced software in biotite.application (can also be installed separately)
   - autodock-vina
   - clustalo
   - dssp

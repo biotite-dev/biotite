@@ -46,7 +46,7 @@ def static_image_scraper(block, block_vars, gallery_conf):
 def pymol_scraper(block, block_vars, gallery_conf):
     _, code, _ = block
     block_conf = extract_file_config(code)
-    # Search for a `sphinx_gallery_pymol_image` command
+    # Search for a `sphinx_gallery_ammolite_script` command
     if PYMOL_IMAGE_COMMAND not in block_conf:
         return figure_rst([], gallery_conf['src_dir'])
 

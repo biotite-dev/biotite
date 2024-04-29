@@ -208,7 +208,7 @@ Biotite documentation
 
         Interested in contributing to the project?
 
-        .. button-ref:: contribute
+        .. button-ref:: contribution/index
             :color: primary
             :outline:
             :shadow:

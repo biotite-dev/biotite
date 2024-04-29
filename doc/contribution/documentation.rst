@@ -1,0 +1,179 @@
+Writing the documentation
+=========================
+
+Having a good documentation on a package is arguably as important as the
+code itself.
+Hence, *Biotite* provides in addition to the API reference documented in
+docstrings, a comprehensive documentation residing in the ``doc/`` directory
+containing tutorials, examples and more.
+
+Documentation generation
+------------------------
+*Biotite* uses the widely used `Sphinx <https://www.sphinx-doc.org>`_ package
+for generating its documentation.
+Therefore, the documentation is based on *reStructuredText* files.
+The line length of these ``*.rst`` files is also limited to 79 characters
+where reasonable.
+
+To build the documentation, run from the root directory of the repository:
+
+.. code-block:: console
+
+    $ sphinx-build doc build/doc
+
+Documentation structure
+-----------------------
+*Biotite* employs the
+`Divio documentation system <https://documentation.divio.com>`_.
+In short, the documentation is splitted into four different parts that
+addresses different purposes and audiences:
+
+.. list-table:: Documentation sections
+    :widths: 10 20 20
+    :header-rows: 1
+
+    * - Part
+      - Summary
+      - Section in *Biotite*
+    * - `Tutorials <https://documentation.divio.com/tutorials.html>`_
+      - Learning of basic concepts via simple examples
+      - Tutorial
+    * - `How-to guides <https://documentation.divio.com/how-to.html>`_
+      - Step-by-step instructions for specific real-world tasks
+      - Example gallery
+    * - `Explanation <https://documentation.divio.com/explanation.html>`_
+      - Detailed explanation of concepts
+      - Literature citations, contributor guide
+    * - `Reference <https://documentation.divio.com/reference.html>`_
+      - Technical description in a consistent format
+      - API reference
+
+When adding new content, please consider which part of the documentation
+it fits best and adhere to the purpose of that part.
+You might also consider to split the content into multiple parts
+(e.g. into an example for the gallery and a tutorial), if you think your
+content fulfills a mixture of different purposes.
+
+.. _example_gallery:
+
+Example gallery
+---------------
+For gallery generation the package *sphinx-gallery* is used.
+Please refer to its
+`documentation <http://sphinx-gallery.readthedocs.io>`_
+for further information on script formatting.
+The example scripts are placed in ``doc/examples/scripts`` in the subdirectory
+that fits best topic of the example.
+Choose a title for the example that focuses on the employed method rather than
+the biological context.
+For example,
+'*Homology search and multiple sequence alignment of protein sequences*'
+would be a better name than
+'*Similarities of lysozyme variants*'.
+
+Building the example gallery for the first time may take a while, as all
+scripts are executed.
+To build the documentation without the gallery, run
+
+.. code-block:: console
+
+    $ sphinx-build -D plot_gallery=0 doc build/doc
+
+You may also ask the *Biotite* maintainers to run the example script and check
+the generated page, if building the gallery on your device is not possible.
+
+Static images and molecular visualizations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In addition to *Matplotlib* plots, the *Biotite* example gallery can also
+show molecular visualizations, via the *PyMOL* software, and static images.
+
+Static images can be included by adding the following comment in the
+corresponding code block:
+
+.. code-block:: python
+
+    # sphinx_gallery_static_image = <name_of_the_image>.png
+
+The image file must be stored in the same directory as the example script.
+
+|
+
+To visualize images using *PyMOL*, the
+`Ammolite <https://ammolite.biotite-python.org/>`_ package is required.
+Please make sure to use open-source *PyMOL* to avoid licensing issues.
+
+Let's assume you have an example script `<example_name>.py`.
+The visualization is initiated by adding the comment line
+
+.. code-block:: python
+
+    # sphinx_gallery_ammolite_script = <name_of_the_script>.py
+
+in the code block where you want show the visualization.
+Then the visualization script ``<name_of_the_script>.py`` is executed, which
+can use the global variables from the example script and the special
+``__image_destination__`` variable.
+``__image_destination__`` is a string representing the path to the output image
+file.
+The PyMOL visualization can be saved to this file with e.g.
+
+.. code-block:: python
+
+    ammolite.cmd.png(__image_destination__)
+
+The rendered image is saved in the directory of the example script as
+``<example_name>.png`` and is added to version control.
+The visualization script is only executed, if the rendered image does not
+exist, yet.
+The traceback of errors in the visualization script are printed, if
+``sphinx-build`` is run in verbose (``-v``) mode.
+An example of this can be seen in the
+``doc/examples/structure/contact_sites.py`` example.
+
+Tutorial
+--------
+When adding new content for a broad audience, it is appreciated to update the
+tutorial pages (``doc/tutorial/``) as well.
+The tutorial uses `jupyter-sphinx <https://jupyter-sphinx.readthedocs.io>`_ to
+run the code snippets and show the results.
+This has the advantage that the output of code snippets is not static but
+dynamically generated based on the current state of the *Biotite* source
+code.
+
+Make sure to add
+
+.. code-block:: rst
+
+    .. include:: /tutorial/preamble.rst
+
+at the beginning of the tutorial page.
+
+API reference
+-------------
+Each  *Biotite* subpackage has a dedicated reference page, describing
+its classes and functions.
+The categories and classes/functions that are assigned to it can be set
+in ``doc/apidoc.json``.
+Classes/functions that are not assigned to any category are placed in
+the 'Miscellaneous' category or, if no class/function is assigned,
+in the 'Content' category.
+
+Citing articles
+---------------
+*Biotite* uses
+`sphinxcontrib-bibtex <https://sphinxcontrib-bibtex.readthedocs.io>`_ for
+creating references in docstrings, examples, etc.
+The references are stored in ``doc/references.bib`` with citation keys
+in ``[Author][year]`` format.
+References are cited with the ``:footcite:`` role and the bibliography
+is rendered where the ``.. footbibliography::`` directive is placed.
+
+Setting NCBI API key
+--------------------
+The example gallery as well as the tutorial use :mod:`biotite.database.entrez`
+to fetch sequence data.
+Hence, these scripts may raise a ``RequestError`` due to
+a hight number of requests to the NCBI Entrez database.
+This can be fixed by exporting the ``NCBI_API_KEY`` environment variable,
+containing an
+`NCBI API key <https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/>`_.
