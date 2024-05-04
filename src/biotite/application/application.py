@@ -74,7 +74,8 @@ class Application(metaclass=abc.ABCMeta):
 
     Every :class:`Application` runs through a different app states
     (instances of enum :class:`AppState`) from its creation until its
-    termination:
+    termination.
+
     Directly after its instantiation the app is in the *CREATED* state.
     In this state further parameters can be set for the application run.
     After the user calls the :func:`start()` method, the app state is

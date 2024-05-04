@@ -88,8 +88,8 @@ The input and output are sequence and structure objects, file input/output and
 the command line interface is handled internally.
 It is basically very similar to using normal functions.
 
-In the following chapters you will get an overview over the mentioned
-subpackages, so go and grab some tea and cookies und let us begin.
+The following chapters will take you on a journey through the functionalities
+provided by the mentioned subpackages.
 
 .. note::
 
