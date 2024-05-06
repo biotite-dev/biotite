@@ -14,7 +14,8 @@ jobs:
     name: "Build & test wheel"
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # Support both Mac x86_64 and arm64
+        os: [ubuntu-latest, windows-latest, macos-12, macos-latest]
         py-version: ["3.10", "3.11", "3.12"]
     runs-on: ${{ matrix.os }}
     defaults:
