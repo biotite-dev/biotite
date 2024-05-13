@@ -18,44 +18,44 @@ class Alphabet(object):
     """
     This class defines the allowed symbols for a :class:`Sequence` and
     handles the encoding/decoding between symbols and symbol codes.
-    
+
     An :class:`Alphabet` is created with the list of symbols, that can
     be used in this context.
     In most cases a symbol will be simply a letter, hence a string of
     length 1. But in principle every hashable Python object can serve
     as symbol.
-    
+
     The encoding of a symbol into a symbol code is
     done in the following way: Find the first index in the symbol list,
     where the list element equals the symbol. This index is the
     symbol code. If the symbol is not found in the list, an
     :class:`AlphabetError` is raised.
-    
+
     Internally, a dictionary is used for encoding, with symbols as keys
     and symbol codes as values. Therefore, every symbol must be
     hashable. For decoding the symbol list is indexed with the symbol
     code.
-    
+
     If an alphabet *1* contains the same symbols and the same
     symbol-code-mappings like another alphabet *2*, but alphabet *1*
     introduces also new symbols, then alphabet *1* *extends* alphabet
     *2*.
     Per definition, every alphabet also extends itself.
-    
+
     Objects of this class are immutable.
-    
+
     Parameters
     ----------
     symbols : iterable object
         The symbols, that are allowed in this alphabet. The
         corresponding code for a symbol, is the index of that symbol
         in this list.
-    
+
     Examples
     --------
     Create an Alphabet containing DNA letters and encode/decode a
     letter/code:
-    
+
     >>> alph = Alphabet(["A","C","G","T"])
     >>> print(alph.encode("G"))
     2
@@ -66,9 +66,9 @@ class Alphabet(object):
     ... except Exception as e:
     ...    print(e)
     Symbol 'foo' is not in the alphabet
-    
+
     Create an Alphabet of arbitrary objects:
-    
+
     >>> alph = Alphabet(["foo", 42, (1,2,3), 5, 3.141])
     >>> print(alph.encode((1,2,3)))
     2
@@ -77,26 +77,26 @@ class Alphabet(object):
 
     On the subject of alphabet extension:
     An alphabet always extends itself.
-    
+
     >>> Alphabet(["A","C","G","T"]).extends(Alphabet(["A","C","G","T"]))
     True
 
     An alphabet extends an alphabet when it contains additional symbols...
-    
+
     >>> Alphabet(["A","C","G","T","U"]).extends(Alphabet(["A","C","G","T"]))
     True
-    
+
     ...but not vice versa
-    
+
     >>> Alphabet(["A","C","G","T"]).extends(Alphabet(["A","C","G","T","U"]))
     False
-    
+
     Two alphabets with same symbols but different symbol-code-mappings
-    
-    >>> Alphabet(["A","C","G","T"]).extends(Alphabet(["A","C","T","G"]))    
+
+    >>> Alphabet(["A","C","G","T"]).extends(Alphabet(["A","C","T","G"]))
     False
     """
-    
+
     def __init__(self, symbols):
         if len(symbols) == 0:
             raise ValueError("Symbol list is empty")
@@ -112,18 +112,18 @@ class Alphabet(object):
     def get_symbols(self):
         """
         Get the symbols in the alphabet.
-        
+
         Returns
         -------
         symbols : list
             Copy of the internal list of symbols.
         """
         return copy.deepcopy(self._symbols)
-    
+
     def extends(self, alphabet):
         """
         Check, if this alphabet extends another alphabet.
-        
+
         Parameters
         ----------
         alphabet : Alphabet
@@ -141,21 +141,21 @@ class Alphabet(object):
         else:
             return alphabet.get_symbols() \
                 == self.get_symbols()[:len(alphabet)]
-    
+
     def encode(self, symbol):
         """
         Use the alphabet to encode a symbol.
-        
+
         Parameters
         ----------
         symbol : object
             The object to encode into a symbol code.
-        
+
         Returns
         -------
         code : int
             The symbol code of `symbol`.
-        
+
         Raises
         ------
         AlphabetError
@@ -167,21 +167,21 @@ class Alphabet(object):
             raise AlphabetError(
                 f"Symbol {repr(symbol)} is not in the alphabet"
             )
-    
+
     def decode(self, code):
         """
         Use the alphabet to decode a symbol code.
-        
+
         Parameters
         ----------
         code : int
             The symbol code to be decoded.
-        
+
         Returns
         -------
         symbol : object
             The symbol corresponding to `code`.
-        
+
         Raises
         ------
         AlphabetError
@@ -190,41 +190,41 @@ class Alphabet(object):
         if code < 0 or code >= len(self._symbols):
             raise AlphabetError(f"'{code:d}' is not a valid code")
         return self._symbols[code]
-    
+
     def encode_multiple(self, symbols, dtype=np.int64):
         """
         Encode a list of symbols.
-        
+
         Parameters
         ----------
         symbols : array-like
             The symbols to encode.
         dtype : dtype, optional
             The dtype of the output ndarray. (Default: `int64`)
-            
+
         Returns
         -------
         code : ndarray
             The sequence code.
         """
         return np.array([self.encode(e) for e in symbols], dtype=dtype)
-    
+
     def decode_multiple(self, code):
         """
         Decode a sequence code into a list of symbols.
-        
+
         Parameters
         ----------
         code : ndarray
             The sequence code to decode.
-        
+
         Returns
         -------
         symbols : list
             The decoded list of symbols.
         """
         return [self.decode(c) for c in code]
-    
+
     def is_letter_alphabet(self):
         """
         Check whether the symbols in this alphabet are single printable
@@ -246,22 +246,22 @@ class Alphabet(object):
             if symbol not in LetterAlphabet.PRINATBLES:
                 return False
         return True
-    
+
     def __str__(self):
         return str(self.get_symbols())
-    
+
     def __len__(self):
         return len(self.get_symbols())
-    
+
     def __iter__(self):
         return self.get_symbols().__iter__()
-    
+
     def __contains__(self, symbol):
         return symbol in self.get_symbols()
-    
+
     def __hash__(self):
         return hash(tuple(self._symbols))
-    
+
     def __eq__(self, item):
         if item is self:
             return True
@@ -291,7 +291,7 @@ class LetterAlphabet(Alphabet):
         corresponding code for a symbol, is the index of that symbol
         in this list.
     """
-    
+
     PRINATBLES = (string.digits + string.ascii_letters + string.punctuation) \
                  .encode("ASCII")
 
@@ -319,7 +319,7 @@ class LetterAlphabet(Alphabet):
     def __repr__(self):
         """Represent LetterAlphabet as a string for debugging."""
         return f'LetterAlphabet({self.get_symbols()})'
-    
+
     def extends(self, alphabet):
         if alphabet is self:
             return True
@@ -335,7 +335,7 @@ class LetterAlphabet(Alphabet):
     def get_symbols(self):
         """
         Get the symbols in the alphabet.
-        
+
         Returns
         -------
         symbols : list
@@ -343,7 +343,7 @@ class LetterAlphabet(Alphabet):
         """
         return [symbol.decode("ASCII") for symbol
                 in self._symbols_as_bytes()]
-    
+
     def encode(self, symbol):
         if not isinstance(symbol, (str, bytes)) or len(symbol) > 1:
             raise AlphabetError(f"Symbol '{symbol}' is not a single letter")
@@ -353,16 +353,16 @@ class LetterAlphabet(Alphabet):
                 f"Symbol {repr(symbol)} is not in the alphabet"
             )
         return indices[0]
-    
+
     def decode(self, code, as_bytes=False):
         if code < 0 or code >= len(self._symbols):
             raise AlphabetError(f"'{code:d}' is not a valid code")
         return chr(self._symbols[code])
-    
+
     def encode_multiple(self, symbols, dtype=None):
         """
         Encode multiple symbols.
-        
+
         Parameters
         ----------
         symbols : iterable object or str or bytes
@@ -371,7 +371,7 @@ class LetterAlphabet(Alphabet):
             containing the symbols is provided, instead of e.g. a list.
         dtype : dtype, optional
             For compatibility with superclass. The value is ignored
-            
+
         Returns
         -------
         code : ndarray
@@ -391,11 +391,11 @@ class LetterAlphabet(Alphabet):
                 dtype=np.ubyte
             )
         return encode_chars(alphabet=self._symbols, symbols=symbols)
-    
+
     def decode_multiple(self, code, as_bytes=False):
         """
         Decode a sequence code into a list of symbols.
-        
+
         Parameters
         ----------
         code : ndarray, dtype=uint8
@@ -421,20 +421,20 @@ class LetterAlphabet(Alphabet):
         if not as_bytes:
             symbols = symbols.astype("U1")
         return symbols
-    
+
     def __contains__(self, symbol):
         if not isinstance(symbol, (str, bytes)):
             return False
         return ord(symbol) in self._symbols
-    
+
     def __len__(self):
         return len(self._symbols)
-    
+
     def _symbols_as_bytes(self):
         "Properly convert from dtype 'np.ubyte' to '|S1'"
         return np.frombuffer(self._symbols, dtype="|S1")
 
-    
+
 
 class AlphabetMapper(object):
     """
@@ -445,7 +445,7 @@ class AlphabetMapper(object):
     alphabet so that the symbol itself is preserved.
     This class works for single symbol codes or an entire sequence code
     likewise.
-    
+
     Parameters
     ----------
     source_alphabet, target_alphabet : Alphabet
@@ -454,7 +454,7 @@ class AlphabetMapper(object):
         The target alphabet must contain at least all symbols of the
         source alphabet, but it is not required that the shared symbols
         are in the same order.
-    
+
     Examples
     --------
 
@@ -470,16 +470,16 @@ class AlphabetMapper(object):
     >>> in_sequence = GeneralSequence(source_alph, "GCCTAT")
     >>> print(in_sequence.code)
     [2 1 1 3 0 3]
-    >>> print(in_sequence)
+    >>> print("".join(in_sequence.symbols))
     GCCTAT
     >>> out_sequence = GeneralSequence(target_alph)
     >>> out_sequence.code = mapper[in_sequence.code]
     >>> print(out_sequence.code)
     [3 4 4 0 2 0]
-    >>> print(out_sequence)
+    >>> print("".join(out_sequence.symbols))
     GCCTAT
     """
-    
+
     def __init__(self, source_alphabet, target_alphabet):
         if target_alphabet.extends(source_alphabet):
             self._necessary_mapping = False
@@ -493,7 +493,7 @@ class AlphabetMapper(object):
                 symbol = source_alphabet.decode(old_code)
                 new_code = target_alphabet.encode(symbol)
                 self._mapper[old_code] = new_code
-        
+
     def __getitem__(self, code):
         if isinstance(code, Integral):
             if self._necessary_mapping:
@@ -552,7 +552,7 @@ def common_alphabet(alphabets):
     -------
     common_alphabet : Alphabet or None
         The alphabet from `alphabets` that extends all alphabets.
-        ``None`` if no such common alphabet exists. 
+        ``None`` if no such common alphabet exists.
     """
     common_alphabet = None
     for alphabet in alphabets:
