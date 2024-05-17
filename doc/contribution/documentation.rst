@@ -168,6 +168,35 @@ in ``[Author][year]`` format.
 References are cited with the ``:footcite:`` role and the bibliography
 is rendered where the ``.. footbibliography::`` directive is placed.
 
+Adding articles to bibliography
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The recommended way to add articles to the bibliography is not to add them
+directly to ``references.bib``, but to update the *Biotite*
+`Zotero <https://www.zotero.org/>`_ library.
+As this step is a bit more involved, you may also ask the *Biotite* maintainers
+to add the article for you.
+
+After installation of *Zotero* and
+`Better BibTeX <https://retorque.re/zotero-better-bibtex/>`_, import the
+`Biotite library <https://www.zotero.org/groups/5533833/biotite_documentation>`_.
+Then, edit the citation format (``Preferences > Better BibTeX``):
+
+- ``Citation keys > Citation key formula``:
+
+  .. code-block:: none
+
+      auth.capitalize + year
+
+- ``Export > Fields > Fields to omit from export``:
+
+  .. code-block:: none
+
+      file, langid, abstract, urldate, copyright, keywords, annotation
+
+- ``Export > Export unicode as plain text latex commands``: uncheck
+
+To update ``references.bib``, export the library as ``Better BibTeX``.
+
 Setting NCBI API key
 --------------------
 The example gallery as well as the tutorial use :mod:`biotite.database.entrez`
