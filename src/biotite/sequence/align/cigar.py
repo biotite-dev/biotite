@@ -106,6 +106,14 @@ def read_alignment_from_cigar(cigar, position,
     AAAAGGTTTCCGACCGTAGGTAG
     CCCCGGTTT--GACCGTATGTAG
 
+    Explicit terminal deletions are also possible.
+    Note that in this case the deleted positions count as aligned bases
+    with respect to the `position` parameter.
+
+    >>> print(read_alignment_from_cigar("3D9M2D12M4D", 0, ref, seg))
+    TATAAAAGGTTTCCGACCGTAGGTAGCTGA
+    ---CCCCGGTTT--GACCGTATGTAG----
+
     If bases in the segment sequence are soft-clipped, they do not
     appear in the alignment.
     Furthermore, the start of the reference sequence must be adapted.
@@ -122,7 +130,7 @@ def read_alignment_from_cigar(cigar, position,
     GGTTTCCGACCGTAGGTAG
     GGTTT--GACCGTATGTAG
 
-    Reading from BAM codes is also possible:
+    Reading from BAM codes is also possible.
 
     >>> seg = NucleotideSequence("CCCCGGTTTGACCGTATGTAG")
     >>> op_tuples = [
@@ -190,7 +198,8 @@ def read_alignment_from_cigar(cigar, position,
 
 def write_alignment_to_cigar(alignment, reference_index=0, segment_index=1,
                              introns=(), distinguish_matches=False,
-                             hard_clip=False, as_string=True):
+                             hard_clip=False, include_terminal_gaps=False,
+                             as_string=True):
     """
     Convert an :class:`Alignment` into a CIGAR string.
 
@@ -220,6 +229,13 @@ def write_alignment_to_cigar(alignment, reference_index=0, segment_index=1,
     hard_clip : bool, optional
         If true, clipped bases are hard-clipped.
         Otherwise, clipped bases are soft-clipped.
+    include_terminal_gaps : bool, optional
+        If true, terminal gaps in the segment sequence are included in
+        the CIGAR string.
+        These are represented by ``D`` operations at the start and/or
+        end of the string.
+        By default, those terminal gaps are omitted in the CIGAR, which
+        is the way SAM/BAM expects a CIGAR to be.
     as_string : bool, optional
         If true, the CIGAR string is returned.
         Otherwise, a list of tuples is returned, where the first element
@@ -237,6 +253,12 @@ def write_alignment_to_cigar(alignment, reference_index=0, segment_index=1,
     See Also
     --------
     read_alignment_from_cigar
+
+    Notes
+    -----
+    If `include_terminal_gaps` is set to true, you usually want to set
+    ``position=0`` in :func:`read_alignment_from_cigar` to get the
+    correct alignment.
 
     Examples
     --------
@@ -256,6 +278,8 @@ def write_alignment_to_cigar(alignment, reference_index=0, segment_index=1,
     9M2N12M
     >>> print(write_alignment_to_cigar(semiglobal_alignment, distinguish_matches=True))
     4X5=2D7=1X4=
+    >>> print(write_alignment_to_cigar(semiglobal_alignment, include_terminal_gaps=True))
+    3D9M2D12M4D
     >>> local_alignment = align_optimal(ref, seg, matrix, local=True)[0]
     >>> print(local_alignment)
     GGTTTCCGACCGTAGGTAG
@@ -274,9 +298,8 @@ def write_alignment_to_cigar(alignment, reference_index=0, segment_index=1,
     CigarOp.DELETION 2
     CigarOp.MATCH 12
     """
-    # Ignore terminal gaps in segment sequence
-    no_gap_pos = np.where(alignment.trace[:, segment_index] != -1)[0]
-    alignment = alignment[no_gap_pos[0] : no_gap_pos[-1] + 1]
+    if not include_terminal_gaps:
+        alignment = _remove_terminal_segment_gaps(alignment, segment_index)
 
     ref_trace = alignment.trace[:, reference_index]
     seg_trace = alignment.trace[:, segment_index]
@@ -321,19 +344,13 @@ def write_alignment_to_cigar(alignment, reference_index=0, segment_index=1,
     op_tuples = _aggregate_consecutive(operations)
 
     clip_op = CigarOp.HARD_CLIP if hard_clip else CigarOp.SOFT_CLIP
-    # Missing bases at the beginning and end of the segment are
-    # interpreted as clipped
-    # As first element in the segment trace is the first aligned base,
-    # all previous bases are clipped...
-    start_clip_length = seg_trace[0]
+    start_clip_length, end_clip_length = _find_clipped_bases(
+        alignment, segment_index
+    )
     if start_clip_length != 0:
-        start_clip = [(clip_op, seg_trace[0])]
+        start_clip = [(clip_op, start_clip_length)]
     else:
         start_clip = np.zeros((0, 2), dtype=int)
-    # ...and the same applies for the last base
-    end_clip_length = (
-        len(alignment.sequences[segment_index]) - seg_trace[-1] - 1
-    )
     if end_clip_length != 0:
         end_clip = [(clip_op, end_clip_length)]
     else:
@@ -345,6 +362,34 @@ def write_alignment_to_cigar(alignment, reference_index=0, segment_index=1,
         return cigar
     else:
         return op_tuples
+
+
+def _remove_terminal_segment_gaps(alignment, segment_index):
+    """
+    Remove terminal gaps in the segment sequence.
+    """
+    no_gap_pos = np.where(alignment.trace[:, segment_index] != -1)[0]
+    return alignment[no_gap_pos[0] : no_gap_pos[-1] + 1]
+
+
+def _find_clipped_bases(alignment, segment_index):
+    """
+    Find the number of clipped bases at the start and end of the segment.
+    """
+    # Finding the clipped part is easier, when the terminal segment gaps
+    # are removed (if not already done)
+    alignment = _remove_terminal_segment_gaps(alignment, segment_index)
+    seg_trace = alignment.trace[:, segment_index]
+    # Missing bases at the beginning and end of the segment are
+    # interpreted as clipped
+    # As first element in the segment trace is the first aligned base,
+    # all previous bases are clipped...
+    start_clip_length = seg_trace[0]
+    # ...and the same applies for the last base
+    end_clip_length = (
+        len(alignment.sequences[segment_index]) - seg_trace[-1] - 1
+    )
+    return start_clip_length, end_clip_length
 
 
 def _aggregate_consecutive(operations):
