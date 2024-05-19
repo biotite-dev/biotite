@@ -26,9 +26,9 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
           throttle_threshold=0.5, return_throttle_status=False):
     """
     Download structure files from *PubChem* in various formats.
-    
+
     This function requires an internet connection.
-    
+
     Parameters
     ----------
     cids : int or iterable object or int
@@ -62,7 +62,7 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
     return_throttle_status : float, optional
         If set to true, the :class:`ThrottleStatus` of the final request
         is also returned.
-    
+
     Returns
     -------
     files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
@@ -78,10 +78,10 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
         of the final response is returned.
         This can be used for custom request throttling, for example.
         Only returned, if `return_throttle_status` is set to true.
-    
+
     Examples
     --------
-    
+
     >>> import os.path
     >>> file = fetch(2244, "sdf", path_to_directory)
     >>> print(os.path.basename(file))
@@ -100,7 +100,7 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
     # Create the target folder, if not existing
     if target_path is not None and not isdir(target_path):
         os.makedirs(target_path)
-    
+
     files = []
     for i, cid in enumerate(cids):
         # Prevent IDs as strings, this could be a common error, as other
@@ -111,14 +111,14 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
         if verbose:
             print(f"Fetching file {i+1:d} / {len(cids):d} ({cid})...",
                   end="\r")
-        
+
         # Fetch file from database
         if target_path is not None:
             file = join(target_path, str(cid) + "." + format)
         else:
             # 'file = None' -> store content in a file-like object
             file = None
-        
+
         if file is None \
            or not isfile(file) \
            or getsize(file) == 0 \
@@ -130,12 +130,12 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
                 )
                 if not r.ok:
                     raise RequestError(parse_error_details(r.text))
-                
+
                 if format.lower() in _binary_formats:
                     content = r.content
                 else:
                     content = r.text
-                
+
                 if file is None:
                     if format in _binary_formats:
                         file = io.BytesIO(content)
@@ -145,11 +145,11 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
                     mode = "wb+" if format in _binary_formats else "w+"
                     with open(file, mode) as f:
                         f.write(content)
-                
+
                 throttle_status = ThrottleStatus.from_response(r)
                 if throttle_threshold is not None:
                     throttle_status.wait_if_busy(throttle_threshold)
-        
+
         files.append(file)
     if verbose:
         print("\nDone")
@@ -168,9 +168,9 @@ def fetch_property(cids, name,
                    throttle_threshold=0.5, return_throttle_status=False):
     """
     Download the given property for the given CID(s).
-    
+
     This function requires an internet connection.
-    
+
     Parameters
     ----------
     cids : int or iterable object or int
@@ -189,7 +189,7 @@ def fetch_property(cids, name,
     return_throttle_status : float, optional
         If set to true, the :class:`ThrottleStatus` of the final request
         is also returned.
-    
+
     Returns
     -------
     property : str or list of str
@@ -202,23 +202,23 @@ def fetch_property(cids, name,
         The :class:`ThrottleStatus` obtained from the server response.
         This can be used for custom request throttling, for example.
         Only returned, if `return_throttle_status` is set to true.
-    
+
     Examples
     --------
-    
+
     >>> butane_cids = np.array(search(FormulaQuery("C4H10")))
     >>> # Filter natural isotopes...
     >>> n_iso = np.array(fetch_property(butane_cids, "IsotopeAtomCount"), dtype=int)
     >>> # ...and neutral compounds
     >>> charge = np.array(fetch_property(butane_cids, "Charge"), dtype=int)
     >>> butane_cids = butane_cids[(n_iso == 0) & (charge == 0)]
-    >>> print(butane_cids.tolist())
-    [7843, 6360, 161897780, 161295599, 158934736, 158271732, 157632982, 19048342, 19029854, 18402699]
+    >>> print(sorted(butane_cids.tolist()))
+    [6360, 7843, 18402699, 19029854, 19048342, 157632982, 158271732, 158934736, 161295599, 161897780]
     >>> # Get the IUPAC names for each compound
     >>> iupac_names = fetch_property(butane_cids, "IUPACName")
     >>> # Compounds with multiple molecules use ';' as separator
     >>> print(iupac_names)
-    ['butane', '2-methylpropane', 'methylcyclopropane;molecular hydrogen', 'carbanylium;propane', 'carbanide;propane', 'acetylene;methane', 'cyclobutane;molecular hydrogen', 'cyclopropane;methane', 'ethane;ethene', 'methane;prop-1-ene']
+    ['butane', '2-methylpropane', 'methane;prop-1-ene', 'ethane;ethene', 'cyclopropane;methane', 'cyclobutane;molecular hydrogen', 'acetylene;methane', 'carbanide;propane', 'carbanylium;propane', 'methylcyclopropane;molecular hydrogen']
     """
     # If only a single CID is present,
     # put it into a single element list
@@ -227,13 +227,13 @@ def fetch_property(cids, name,
         single_element = True
     else:
         single_element = False
-    
+
     # Property names may only contain letters and numbers
     if not name.isalnum():
         raise ValueError(
             f"Property '{name}' contains invalid characters"
         )
-    
+
     # Use TXT format instead of CSV to avoid issues with ',' characters
     # within table elements
     r = requests.post(
@@ -245,7 +245,7 @@ def fetch_property(cids, name,
     throttle_status = ThrottleStatus.from_response(r)
     if throttle_threshold is not None:
         throttle_status.wait_if_busy(throttle_threshold)
-    
+
     # Each line contains the property for one CID
     properties = r.text.splitlines()
 

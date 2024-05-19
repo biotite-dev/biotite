@@ -85,7 +85,7 @@ def test_fetch_invalid():
 @pytest.mark.parametrize(
     "query, ref_ids",
     [
-        (pubchem.NameQuery("Alanine"), [155817681, 449619, 7311724, 5950]),
+        (pubchem.NameQuery("Alanine"), [602, 5950, 71080]),
         (pubchem.SmilesQuery("CCCC"), [7843]),
         (pubchem.InchiQuery("InChI=1S/C4H10/c1-3-4-2/h3-4H2,1-2H3"), [7843]),
         (pubchem.InchiKeyQuery("IJDNQMDRQITEOD-UHFFFAOYSA-N"), [7843]),
