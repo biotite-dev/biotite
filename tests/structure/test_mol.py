@@ -5,15 +5,37 @@
 import datetime
 import glob
 import itertools
-from os.path import join, split, splitext
+from os.path import join, splitext
 from tempfile import TemporaryFile
 import numpy as np
 import pytest
+import biotite.structure as struc
 import biotite.structure.io.mol as mol
 import biotite.structure.io.pdbx as pdbx
 from biotite.structure.bonds import BondType
-from biotite.structure.io.ctab import BOND_TYPE_MAPPING_REV
+from biotite.structure.io.mol.ctab import BOND_TYPE_MAPPING_REV
 from ..util import data_dir
+
+
+def list_v2000_sdf_files():
+    return [
+        path for path
+        in glob.glob(join(data_dir("structure"), "molecules", "*.sdf"))
+        if not "v3000" in path
+    ]
+
+def list_v3000_sdf_files():
+    return glob.glob(join(data_dir("structure"), "molecules", "*v3000.sdf"))
+
+
+def toy_atom_array(n_atoms):
+    atoms = struc.AtomArray(n_atoms)
+    atoms.coord[:] = 1.0
+    atoms.element[:] = "H"
+    atoms.add_annotation("charge", dtype=int)
+    atoms.charge[:] = 0
+    atoms.bonds = struc.BondList(n_atoms)
+    return atoms
 
 
 def test_header_conversion():
@@ -29,7 +51,6 @@ def test_header_conversion():
 
     mol_file = mol.MOLFile()
     mol_file.set_header(*ref_header)
-    print(mol_file)
     temp = TemporaryFile("w+")
     mol_file.write(temp)
 
@@ -42,13 +63,14 @@ def test_header_conversion():
 
 
 @pytest.mark.parametrize(
-    "path, omit_charge",
+    "path, version, omit_charge",
     itertools.product(
-        glob.glob(join(data_dir("structure"), "molecules", "*.sdf")),
+        list_v2000_sdf_files(),
+        ["V2000", "V3000"],
         [False, True]
     )
 )
-def test_structure_conversion(path, omit_charge):
+def test_structure_conversion(path, version, omit_charge):
     """
     After reading a MOL file, writing the structure back to a new file
     and reading it again should give the same structure.
@@ -58,12 +80,11 @@ def test_structure_conversion(path, omit_charge):
     """
     mol_file = mol.MOLFile.read(path)
     ref_atoms = mol.get_structure(mol_file)
-    print(ref_atoms.charge)
     if omit_charge:
         ref_atoms.del_annotation("charge")
 
     mol_file = mol.MOLFile()
-    mol.set_structure(mol_file, ref_atoms)
+    mol.set_structure(mol_file, ref_atoms, version=version)
     temp = TemporaryFile("w+")
     mol_file.write(temp)
 
@@ -78,9 +99,8 @@ def test_structure_conversion(path, omit_charge):
     assert test_atoms == ref_atoms
 
 
-
 @pytest.mark.parametrize(
-    "path", glob.glob(join(data_dir("structure"), "molecules", "*.sdf")),
+    "path", list_v2000_sdf_files() + list_v3000_sdf_files()
 )
 def test_pdbx_consistency(path):
     """
@@ -90,7 +110,8 @@ def test_pdbx_consistency(path):
     In this case an SDF file is used, but it is compatible with the
     MOL format.
     """
-    cif_path = splitext(path)[0] + ".cif"
+    # Remove '.sdf' and optional '.v3000' suffix
+    cif_path = splitext(splitext(path)[0])[0] + ".cif"
 
     pdbx_file = pdbx.CIFFile.read(cif_path)
     ref_atoms = pdbx.get_component(pdbx_file)
@@ -109,9 +130,8 @@ def test_pdbx_consistency(path):
     assert set(tuple(bond) for bond in test_atoms.bonds.as_array()) \
         == set(tuple(bond) for bond in  ref_atoms.bonds.as_array())
 
-@pytest.mark.parametrize(
-    "path", glob.glob(join(data_dir("structure"), "molecules", "*.sdf")),
-)
+
+@pytest.mark.parametrize("path", list_v2000_sdf_files())
 def test_structure_bond_type_fallback(path):
     """
     Check if a bond with a type not supported by MOL files will be translated
@@ -148,3 +168,44 @@ def test_structure_bond_type_fallback(path):
     ].pop()
     assert int(updated_line[8]) == \
         BOND_TYPE_MAPPING_REV[BondType.SINGLE]
+
+
+@pytest.mark.parametrize("atom_type", ["", " ", "A ", " A"])
+def test_quoted_atom_types(atom_type):
+    """
+    Check if V3000 MOL files can handle atom types (aka elements) with
+    empty strings or whitespaces.
+    """
+    ref_atoms = toy_atom_array(1)
+    ref_atoms.element[0] = atom_type
+    mol_file = mol.MOLFile()
+    mol_file.set_structure(ref_atoms, version="V3000")
+    temp = TemporaryFile("w+")
+    mol_file.write(temp)
+
+    temp.seek(0)
+    mol_file = mol.MOLFile.read(temp)
+    test_atoms = mol_file.get_structure()
+    assert test_atoms.element[0] == atom_type
+    # Also check if the rest of the structure was parsed correctly
+    assert test_atoms == ref_atoms
+
+
+def test_large_structure():
+    """
+    Check if MOL files automatically switch to V3000 format if the
+    number of atoms exceeds the fixed size columns in the table.
+    """
+    ref_atoms = toy_atom_array(1000)
+    mol_file = mol.MOLFile()
+    # Let the MOL file automatically switch to V3000 format
+    mol_file.set_structure(ref_atoms, version=None)
+    temp = TemporaryFile("w+")
+    mol_file.write(temp)
+
+    temp.seek(0)
+    mol_file = mol.MOLFile.read(temp)
+    test_atoms = mol_file.get_structure()
+    # Check if file is written in V3000 format
+    assert "V3000" in str(mol_file)
+    assert test_atoms == ref_atoms

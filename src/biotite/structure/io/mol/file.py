@@ -7,12 +7,8 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["MOLFile"]
 
 import datetime
-from warnings import warn
-import numpy as np
-from ...atoms import AtomArray
 from ....file import TextFile, InvalidFileError
-from ...error import BadStructureError
-from ..ctab import read_structure_from_ctab, write_structure_to_ctab
+from .ctab import read_structure_from_ctab, write_structure_to_ctab
 from ...bonds import BondType
 
 
@@ -24,7 +20,8 @@ DATE_FORMAT = "%m%d%y%H%M"
 class MOLFile(TextFile):
     """
     This class represents a file in MOL format, that is used to store
-    structure information for small molecules. :footcite:`Dalby1992`
+    structure information for small molecules.
+    :footcite:`Dalby1992`
 
     Since its use is intended for single small molecules, it stores
     less atom annotation information than the macromolecular structure
@@ -179,7 +176,8 @@ class MOLFile(TextFile):
         return read_structure_from_ctab(ctab_lines)
 
 
-    def set_structure(self, atoms, default_bond_type=BondType.ANY):
+    def set_structure(self, atoms, default_bond_type=BondType.ANY,
+                      version=None):
         """
         Set the :class:`AtomArray` for the file.
 
@@ -192,11 +190,17 @@ class MOLFile(TextFile):
             Bond type fallback in the *Bond block* if a bond has no bond_type
             defined in *atoms* array. By default, each bond is treated as
             :attr:`BondType.ANY`.
+        version : {"V2000", "V3000"}, optional
+            The version of the CTAB format.
+            ``"V2000"`` uses the *Atom* and *Bond* block, while
+            ``"V3000"`` uses the *Properties* block.
+            By default, ``"V2000"`` is used unless the number of atoms
+            or bonds exceeds 1000, in which case ``"V3000"`` is used.
         """
         self.lines = self.lines[:N_HEADER] + write_structure_to_ctab(
-            atoms,
-            default_bond_type
+            atoms, default_bond_type, version
         )
+
 
 
 def _get_ctab_lines(lines):

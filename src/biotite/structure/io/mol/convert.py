@@ -32,7 +32,8 @@ def get_structure(mol_file):
     return mol_file.get_structure()
 
 
-def set_structure(mol_file, atoms, default_bond_type=BondType.ANY):
+def set_structure(mol_file, atoms, default_bond_type=BondType.ANY,
+                  version=None):
     """
     Set the :class:`AtomArray` for the MOL file.
 
@@ -46,6 +47,12 @@ def set_structure(mol_file, atoms, default_bond_type=BondType.ANY):
     array : AtomArray
         The array to be saved into this file.
         Must have an associated :class:`BondList`.
-
+    version : {"V2000", "V3000"}, optional
+        The version of the CTAB format.
+        ``"V2000"`` uses the *Atom* and *Bond* block, while ``"V3000"``
+        uses the *Properties* block.
+        By default, ``"V2000"`` is used unless the number of atoms or
+        bonds exceed the fixed size columns in the table, in which case
+        ``"V3000"`` is used.
     """
-    mol_file.set_structure(atoms, default_bond_type)
+    mol_file.set_structure(atoms, default_bond_type, version)
