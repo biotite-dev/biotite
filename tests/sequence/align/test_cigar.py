@@ -97,14 +97,16 @@ def test_cigar_conversion(cigar):
 
 
 @pytest.mark.parametrize(
-    "seed, local, distinguish_matches",
+    "seed, local, distinguish_matches, include_terminal_gaps",
     itertools.product(
         range(20),
         [False, True],
         [False, True],
+        [False, True],
     )
 )
-def test_alignment_conversion(seed, local, distinguish_matches):
+def test_alignment_conversion(seed, local, distinguish_matches,
+                              include_terminal_gaps):
     """
     Check whether an :class:`Alignment` converted into a CIGAR string
     and back again into an :class:`Alignment` gives the same result.
@@ -130,15 +132,18 @@ def test_alignment_conversion(seed, local, distinguish_matches):
         ref_ali = align.align_optimal(
             ref, seg, matrix, terminal_penalty=False, max_number=1
         )[0]
-        # Turn into a semi-global alignment
-        ref_ali = align.remove_terminal_gaps(ref_ali)
+        if not include_terminal_gaps:
+            # Turn into a semi-global alignment
+            ref_ali = align.remove_terminal_gaps(ref_ali)
     # Remove score as the compared reconstructed alignment does not
     # contain it either
     ref_ali.score = None
     start_position = ref_ali.trace[0,0]
 
     cigar = align.write_alignment_to_cigar(
-        ref_ali, distinguish_matches=distinguish_matches
+        ref_ali,
+        distinguish_matches=distinguish_matches,
+        include_terminal_gaps=include_terminal_gaps
     )
 
     test_ali = align.read_alignment_from_cigar(
@@ -147,13 +152,8 @@ def test_alignment_conversion(seed, local, distinguish_matches):
 
     print(cigar)
     print("\n\n")
-    print(seg)
-    print("\n\n")
     print(ref_ali)
     print("\n\n")
     print(test_ali)
     print("\n\n")
-    print(start_position)
-    print(ref_ali.trace[:5])
-    print(test_ali.trace[:5])
     assert test_ali == ref_ali
