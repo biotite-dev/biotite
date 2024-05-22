@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import warnings
 import glob
 import itertools
 from os.path import join, splitext
@@ -69,7 +70,7 @@ def test_escape(string, looped):
 def test_conversion(tmpdir, format, path, model):
     """
     Test serializing and deserializing a structure from a file
-    restores the same same structure
+    restores the same structure.
     """
     DELETED_ANNOTATION = "auth_comp_id"
 
@@ -127,6 +128,54 @@ def test_conversion(tmpdir, format, path, model):
 
 
 @pytest.mark.parametrize(
+    "format, path",
+    itertools.product(
+        ["cif", "bcif"],
+        glob.glob(join(data_dir("structure"), "*.cif")),
+    ),
+)
+def test_bond_conversion(tmpdir, format, path):
+    """
+    Test serializing and deserializing bonds from a file
+    restores the bonds.
+
+    This test is similar to :func:`test_conversion`, but intra bonds
+    are written to ``chem_comp_bond`` and read from there, instead of
+    relying on the CCD.
+    """
+    base_path = splitext(path)[0]
+    if format == "cif":
+        data_path = base_path + ".cif"
+        File = pdbx.CIFFile
+    else:
+        data_path = base_path + ".bcif"
+        File = pdbx.BinaryCIFFile
+
+    pdbx_file = File.read(data_path)
+    atoms = pdbx.get_structure(
+        pdbx_file, model=1, include_bonds=True
+    )
+    ref_bonds = atoms.bonds
+
+    pdbx_file = File()
+    # The import difference to `test_conversion()` is `include_bonds`
+    pdbx.set_structure(pdbx_file, atoms, include_bonds=True)
+    file_path = join(tmpdir, f"test.{format}")
+    pdbx_file.write(file_path)
+
+    pdbx_file = File.read(file_path)
+    # Ensure that the CCD fallback is not used,
+    # i.e. the bonds can be properly read from ``chem_comp_bond``
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        test_bonds = pdbx.get_structure(
+            pdbx_file, model=1, include_bonds=True
+        ).bonds
+
+    assert test_bonds == ref_bonds
+
+
+@pytest.mark.parametrize(
     "format", ["cif", "bcif"]
 )
 def test_extra_fields(tmpdir, format):
@@ -157,6 +206,79 @@ def test_extra_fields(tmpdir, format):
     assert test_atoms.occupancy.tolist() == approx(ref_atoms.occupancy.tolist())
     assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
     assert test_atoms == ref_atoms
+
+
+def test_intra_bond_residue_parsing():
+    """
+    Check if intra-residue bonds can be parsed from a NextGen CIF file
+    and expect the same bonds as the CCD-based ones from an *original*
+    CIF file.
+    """
+    cif_path = join(data_dir("structure"), "1l2y.cif")
+    cif_file = pdbx.CIFFile.read(cif_path)
+    ref_bonds = pdbx.get_structure(
+        cif_file, model=1, include_bonds=True
+    ).bonds
+
+    nextgen_cif_path = join(
+        data_dir("structure"), "nextgen", "pdb_00001l2y_xyz-enrich.cif"
+    )
+    nextgen_cif_file = pdbx.CIFFile.read(nextgen_cif_path)
+    # Ensure that the CCD fallback is not used,
+    # i.e. the bonds can be properly read from ``chem_comp_bond``
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        test_bonds = pdbx.get_structure(
+            nextgen_cif_file, model=1, include_bonds=True
+        ).bonds
+
+    assert test_bonds == ref_bonds
+
+
+@pytest.mark.parametrize(
+    "format", ["cif", "bcif"]
+)
+def test_any_bonds(tmpdir, format):
+    """
+    Check if ``BondType.ANY`` bonds can be written and read from a PDBx
+    file, i.e. the ``chem_comp_bond`` and ``struct_conn`` categories.
+    ``BondType.ANY`` is represented by missing values.
+    """
+    N_ATOMS = 4
+
+    File = pdbx.CIFFile if format == "cif" else pdbx.BinaryCIFFile
+
+    atoms = struc.AtomArray(N_ATOMS)
+    atoms.coord[...] = 1.0
+    atoms.atom_name = [f"C{i}" for i in range(N_ATOMS)]
+    # Two different residues to test inter-residue bonds as well
+    atoms.res_id = [0, 0, 1, 1]
+    atoms.res_name = ["A", "A", "B", "B"]
+
+    ref_bonds = struc.BondList(N_ATOMS)
+    # Intra-residue bond
+    ref_bonds.add_bond(0, 1, struc.BondType.ANY)
+    # Inter-residue bond
+    ref_bonds.add_bond(1, 2, struc.BondType.ANY)
+    # Intra-residue bond
+    ref_bonds.add_bond(2, 3, struc.BondType.ANY)
+    atoms.bonds = ref_bonds
+
+    pdbx_file = File()
+    pdbx.set_structure(pdbx_file, atoms, include_bonds=True)
+    file_path = join(tmpdir, f"test.{format}")
+    pdbx_file.write(file_path)
+
+    pdbx_file = File.read(file_path)
+    # Ensure that the CCD fallback is not used,
+    # i.e. the bonds can be properly read from ``chem_comp_bond``
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        test_bonds = pdbx.get_structure(
+            pdbx_file, model=1, include_bonds=True
+        ).bonds
+
+    assert test_bonds == ref_bonds
 
 
 @pytest.mark.parametrize(

@@ -1541,7 +1541,8 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
 
 
 
-def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
+def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True,
+                              dict custom_bond_dict=None):
     """
     connect_via_residue_names(atoms, atom_mask=None, inter_residue=True)
 
@@ -1562,7 +1563,13 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
     inter_residue : bool, optional
         If true, connections between consecutive amino acids and
         nucleotides are also added.
-
+    custom_bond_dict : dict (str -> dict ((str, str) -> int)), optional
+        A dictionary of dictionaries:
+        The outer dictionary maps residue names to inner dictionaries.
+        The inner dictionary maps tuples of two atom names to their
+        respective :class:`BondType` (represented as integer).
+        If given, these bonds are used instead of the bonds read from
+        ``components.cif``.
 
     Returns
     -------
@@ -1578,44 +1585,86 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True):
     Notes
     -----
     This method can only find bonds for residues in the RCSB
-    *Chemical Component Dictionary*.
+    *Chemical Component Dictionary*, unless `custom_bond_dict` is set.
     Although this includes most molecules one encounters, this will fail
     for exotic molecules, e.g. specialized inhibitors.
+
+    .. currentmodule:: biotite.structure.info
+
+    To supplement `custom_bond_dict` with bonds for residues from the
+    *Chemical Component Dictionary*  you can use
+    :meth:`bonds_in_residue()`.
+
+    >>> import pprint
+    >>> custom_bond_dict = {
+    ...     "XYZ": {
+    ...         ("A", "B"): BondType.SINGLE,
+    ...         ("B", "C"): BondType.SINGLE
+    ...     }
+    ... }
+    >>> # Supplement with bonds for common residues
+    >>> custom_bond_dict["ALA"] = bonds_in_residue("ALA")
+    >>> pp = pprint.PrettyPrinter(width=40)
+    >>> pp.pprint(custom_bond_dict)
+    {'ALA': {('C', 'O'): <BondType.DOUBLE: 2>,
+             ('C', 'OXT'): <BondType.SINGLE: 1>,
+             ('CA', 'C'): <BondType.SINGLE: 1>,
+             ('CA', 'CB'): <BondType.SINGLE: 1>,
+             ('CA', 'HA'): <BondType.SINGLE: 1>,
+             ('CB', 'HB1'): <BondType.SINGLE: 1>,
+             ('CB', 'HB2'): <BondType.SINGLE: 1>,
+             ('CB', 'HB3'): <BondType.SINGLE: 1>,
+             ('N', 'CA'): <BondType.SINGLE: 1>,
+             ('N', 'H'): <BondType.SINGLE: 1>,
+             ('N', 'H2'): <BondType.SINGLE: 1>,
+             ('OXT', 'HXT'): <BondType.SINGLE: 1>},
+     'XYZ': {('A', 'B'): <BondType.SINGLE: 1>,
+             ('B', 'C'): <BondType.SINGLE: 1>}}
+
     """
     from .info.bonds import bonds_in_residue
     from .residues import get_residue_starts
 
     cdef list bonds = []
-    cdef int i
+    cdef int res_i
+    cdef int i, j
     cdef int curr_start_i, next_start_i
     cdef np.ndarray atom_names = atoms.atom_name
     cdef np.ndarray atom_names_in_res
     cdef np.ndarray res_names = atoms.res_name
     cdef str atom_name1, atom_name2
-    cdef np.ndarray atom_indices1, atom_indices2
+    cdef int64[:] atom_indices1, atom_indices2
     cdef dict bond_dict_for_res
 
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
     # Omit exclsive stop in 'residue_starts'
-    for i in range(len(residue_starts)-1):
-        curr_start_i = residue_starts[i]
-        next_start_i = residue_starts[i+1]
+    for res_i in range(len(residue_starts)-1):
+        curr_start_i = residue_starts[res_i]
+        next_start_i = residue_starts[res_i+1]
 
-        bond_dict_for_res = bonds_in_residue(res_names[curr_start_i])
+        if custom_bond_dict is None:
+            bond_dict_for_res = bonds_in_residue(res_names[curr_start_i])
+        else:
+            bond_dict_for_res = custom_bond_dict.get(
+                res_names[curr_start_i], {}
+            )
+
         atom_names_in_res = atom_names[curr_start_i : next_start_i]
         for (atom_name1, atom_name2), bond_type in bond_dict_for_res.items():
-            atom_indices1 = np.where(atom_names_in_res == atom_name1)[0]
-            atom_indices2 = np.where(atom_names_in_res == atom_name2)[0]
-            if len(atom_indices1) == 0 or len(atom_indices2) == 0:
-                # The pair of atoms in this bond from the dataset is not
-                # in the residue of the atom array
-                # -> skip this bond
-                continue
-            bonds.append((
-                curr_start_i + atom_indices1[0],
-                curr_start_i + atom_indices2[0],
-                bond_type
-            ))
+            atom_indices1 = np.where(atom_names_in_res == atom_name1)[0] \
+                            .astype(np.int64, copy=False)
+            atom_indices2 = np.where(atom_names_in_res == atom_name2)[0] \
+                            .astype(np.int64, copy=False)
+            # In rare cases the same atom name may appear multiple times
+            # (e.g. in altlocs)
+            # -> create all possible bond combinations
+            for i in range(atom_indices1.shape[0]):
+                for j in range(atom_indices2.shape[0]):
+                    bonds.append((
+                        curr_start_i + atom_indices1[i],
+                        curr_start_i + atom_indices2[j],
+                        bond_type
+                    ))
 
     bond_list = BondList(atoms.array_length(), np.array(bonds))
 

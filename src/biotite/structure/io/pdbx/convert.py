@@ -240,11 +240,11 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         If set to true, a :class:`BondList` will be created for the
         resulting :class:`AtomArray` containing the bond information
         from the file.
-        Bonds, whose order could not be determined from the
-        *Chemical Component Dictionary*
-        (e.g. especially inter-residue bonds),
-        have :attr:`BondType.ANY`, since the PDB format itself does
-        not support bond orders.
+        Inter-residue bonds, will be read from the ``struct_conn``
+        category.
+        Intra-residue bonds will be read from the ``chem_comp_bond``, if
+        available, otherwise they will be derived from the Chemical
+        Component Dictionary.
 
     Returns
     -------
@@ -279,11 +279,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         model_atom_site = _filter_model(atom_site, model_starts, 1)
         # Any field of the category would work here to get the length
         model_length = model_atom_site.row_count
-        stack = AtomArrayStack(model_count, model_length)
-
-        _fill_annotations(
-            stack, model_atom_site, extra_fields, use_author_fields
-        )
+        atoms = AtomArrayStack(model_count, model_length)
 
         # Check if each model has the same amount of atoms
         # If not, raise exception
@@ -294,29 +290,17 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
                 "instead"
             )
 
-        stack.coord[:, :, 0] = atom_site["Cartn_x"].as_array(np.float32) \
+        atoms.coord[:, :, 0] = atom_site["Cartn_x"].as_array(np.float32) \
                               .reshape((model_count, model_length))
-        stack.coord[:, :, 1] = atom_site["Cartn_y"].as_array(np.float32) \
+        atoms.coord[:, :, 1] = atom_site["Cartn_y"].as_array(np.float32) \
                               .reshape((model_count, model_length))
-        stack.coord[:, :, 2] = atom_site["Cartn_z"].as_array(np.float32) \
+        atoms.coord[:, :, 2] = atom_site["Cartn_z"].as_array(np.float32) \
                               .reshape((model_count, model_length))
-
-        if include_bonds:
-            bonds = connect_via_residue_names(stack)
-            if "struct_conn" in block:
-                bonds = bonds.merge(_parse_inter_residue_bonds(
-                    model_atom_site, block["struct_conn"]
-                ))
-            stack.bonds = bonds
-
-        stack = _filter_altloc(stack, model_atom_site, altloc)
 
         box = _get_box(block)
         if box is not None:
             # Duplicate same box for each model
-            stack.box = np.repeat(box[np.newaxis, ...], model_count, axis=0)
-
-        return stack
+            atoms.box = np.repeat(box[np.newaxis, ...], model_count, axis=0)
 
     else:
         if model == 0:
@@ -332,29 +316,44 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         model_atom_site = _filter_model(atom_site, model_starts, model)
         # Any field of the category would work here to get the length
         model_length = model_atom_site.row_count
-        array = AtomArray(model_length)
+        atoms = AtomArray(model_length)
 
-        _fill_annotations(
-            array, model_atom_site, extra_fields, use_author_fields
-        )
+        atoms.coord[:, 0] = model_atom_site["Cartn_x"].as_array(np.float32)
+        atoms.coord[:, 1] = model_atom_site["Cartn_y"].as_array(np.float32)
+        atoms.coord[:, 2] = model_atom_site["Cartn_z"].as_array(np.float32)
 
-        array.coord[:, 0] = model_atom_site["Cartn_x"].as_array(np.float32)
-        array.coord[:, 1] = model_atom_site["Cartn_y"].as_array(np.float32)
-        array.coord[:, 2] = model_atom_site["Cartn_z"].as_array(np.float32)
+        atoms.box = _get_box(block)
 
-        if include_bonds:
-            bonds = connect_via_residue_names(array)
-            if "struct_conn" in block:
-                bonds = bonds.merge(_parse_inter_residue_bonds(
-                    model_atom_site, block["struct_conn"]
-                ))
-            array.bonds = bonds
+    # The below part is the same for both, AtomArray and AtomArrayStack
+    _fill_annotations(
+        atoms, model_atom_site, extra_fields, use_author_fields
+    )
+    if include_bonds:
+        if "chem_comp_bond" in block:
+            try:
+                custom_bond_dict = _parse_intra_residue_bonds(
+                    block["chem_comp_bond"]
+                )
+            except KeyError:
+                warnings.warn(
+                    "The 'chem_comp_bond' category has missing columns, "
+                    "falling back to using Chemical Component Dictionary",
+                    UserWarning
+                )
+                custom_bond_dict = None
+            bonds = connect_via_residue_names(
+                atoms, custom_bond_dict=custom_bond_dict
+            )
+        else:
+            bonds = connect_via_residue_names(atoms)
+        if "struct_conn" in block:
+            bonds = bonds.merge(_parse_inter_residue_bonds(
+                model_atom_site, block["struct_conn"]
+            ))
+        atoms.bonds = bonds
+    atoms = _filter_altloc(atoms, model_atom_site, altloc)
 
-        array = _filter_altloc(array, model_atom_site, altloc)
-
-        array.box = _get_box(block)
-
-        return array
+    return atoms
 
 
 def _get_block(pdbx_component, block_name):
@@ -481,6 +480,28 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
             field,
             atom_site[field].as_array(str)
         )
+
+
+def _parse_intra_residue_bonds(chem_comp_bond):
+    """
+    Create a :func:`connect_via_residue_names()` compatible
+    `custom_bond_dict` from the ``chem_comp_bond`` category.
+    """
+    custom_bond_dict = {}
+    for res_name, atom_1, atom_2, order, aromatic_flag in zip(
+        chem_comp_bond["comp_id"].as_array(str),
+        chem_comp_bond["atom_id_1"].as_array(str),
+        chem_comp_bond["atom_id_2"].as_array(str),
+        chem_comp_bond["value_order"].as_array(str),
+        chem_comp_bond["pdbx_aromatic_flag"].as_array(str)
+    ):
+        if res_name not in custom_bond_dict:
+            custom_bond_dict[res_name] = {}
+        bond_type = COMP_BOND_ORDER_TO_TYPE.get(
+            (order.upper(), aromatic_flag), BondType.ANY
+        )
+        custom_bond_dict[res_name][atom_1.item(), atom_2.item()] = bond_type
+    return custom_bond_dict
 
 
 def _parse_inter_residue_bonds(atom_site, struct_conn):
@@ -676,7 +697,7 @@ def _get_box(block):
     return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
 
 
-def set_structure(pdbx_file, array, data_block=None):
+def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
     """
     Set the ``atom_site`` category with atom information from an
     :class:`AtomArray` or :class:`AtomArrayStack`.
@@ -704,6 +725,12 @@ def set_structure(pdbx_file, array, data_block=None):
         If the data block object is passed directly to `pdbx_file`,
         this parameter is ignored.
         If the file is empty, a new data will be created.
+    include_bonds : bool, optional
+        If set to true and `array` has associated ``bonds`` , the
+        intra-residue bonds will be written into the ``chem_comp_bond``
+        category.
+        Inter-residue bonds will be written into the ``struct_conn``
+        independent of this parameter.
 
     Notes
     -----
@@ -766,6 +793,10 @@ def set_structure(pdbx_file, array, data_block=None):
 
     if array.bonds is not None:
         block["struct_conn"] = _set_inter_residue_bonds(array, atom_site)
+        if include_bonds:
+            block["chem_comp_bond"] = _set_intra_residue_bonds(
+                array, atom_site
+            )
 
     # In case of a single model handle each coordinate
     # simply like a flattened array
@@ -885,6 +916,65 @@ def _repeat(category, repetitions):
     return Category(category_dict)
 
 
+def _set_intra_residue_bonds(array, atom_site):
+    """
+    Create the ``chem_comp_bond`` category containing the intra-residue
+    bonds.
+    ``atom_site`` is only used to infer the right :class:`Category` type
+    (either :class:`CIFCategory` or :class:`BinaryCIFCategory`).
+    """
+    if (array.res_name == "").any():
+        raise BadStructureError(
+            "Structure contains atoms with empty residue name, "
+            "but it is required to write intra-residue bonds"
+        )
+    if (array.atom_name == "").any():
+        raise BadStructureError(
+            "Structure contains atoms with empty atom name, "
+            "but it is required to write intra-residue bonds"
+        )
+
+    Category = type(atom_site)
+    Column = Category.subcomponent_class()
+
+    bond_array = _filter_bonds(array, "intra")
+    value_order = np.zeros(len(bond_array), dtype="U4")
+    aromatic_flag = np.zeros(len(bond_array), dtype="U1")
+    for i, bond_type in enumerate(bond_array[:, 2]):
+        if bond_type == BondType.ANY:
+            # ANY bonds will be masked anyway, no need to set the value
+            continue
+        order, aromatic = COMP_BOND_TYPE_TO_ORDER[bond_type]
+        value_order[i] = order
+        aromatic_flag[i] = aromatic
+    any_mask = bond_array[:, 2] == BondType.ANY
+
+    chem_comp_bond = Category()
+    # Take the residue name from the first atom index, as the residue
+    # name is the same for both atoms, since we have only intra bonds
+    chem_comp_bond["comp_id"] = array.res_name[bond_array[:, 0]]
+    chem_comp_bond["atom_id_1"] = array.atom_name[bond_array[:, 0]]
+    chem_comp_bond["atom_id_2"] = array.atom_name[bond_array[:, 1]]
+    chem_comp_bond["value_order"] = Column(
+        value_order,
+        np.where(any_mask, MaskValue.MISSING, MaskValue.PRESENT)
+    )
+    chem_comp_bond["pdbx_aromatic_flag"] = Column(
+        aromatic_flag,
+        np.where(any_mask, MaskValue.MISSING, MaskValue.PRESENT)
+    )
+    # BondList does not contain stereo information
+    # -> all values are missing
+    chem_comp_bond["pdbx_stereo_config"] = Column(
+        np.zeros(len(bond_array), dtype="U1"),
+        np.full(len(bond_array), MaskValue.MISSING)
+    )
+    chem_comp_bond["pdbx_ordinal"] = np.arange(
+        1, len(bond_array) + 1, dtype=np.int32
+    )
+    return chem_comp_bond
+
+
 def _set_inter_residue_bonds(array, atom_site):
     """
     Create the ``struct_conn`` category containing the inter-residue
@@ -900,15 +990,7 @@ def _set_inter_residue_bonds(array, atom_site):
     Category = type(atom_site)
     Column = Category.subcomponent_class()
 
-    bond_array = array.bonds.as_array()
-    # To save computation time call 'get_residue_starts_for()' only once
-    # with indices of the first and second atom of each bond
-    residue_starts_1, residue_starts_2 = get_residue_starts_for(
-        array, bond_array[:, :2].flatten()
-    ).reshape(-1, 2).T
-    # Filter out all intra-residue bonds
-    bond_array = bond_array[residue_starts_1 != residue_starts_2]
-
+    bond_array = _filter_bonds(array, "inter")
     struct_conn = Category()
     struct_conn["id"] = np.arange(1, len(bond_array) + 1)
     struct_conn["conn_type_id"] = np.full(len(bond_array), "covale")
@@ -930,6 +1012,25 @@ def _set_inter_residue_bonds(array, atom_site):
             struct_conn[_get_struct_conn_col_name(col_name, i+1)] \
                 = annot[atom_indices]
     return struct_conn
+
+
+def _filter_bonds(array, connection):
+    """
+    Get a bonds array, that contain either only intra-residue or
+    only inter-residue bonds.
+    """
+    bond_array = array.bonds.as_array()
+    # To save computation time call 'get_residue_starts_for()' only once
+    # with indices of the first and second atom of each bond
+    residue_starts_1, residue_starts_2 = get_residue_starts_for(
+        array, bond_array[:, :2].flatten()
+    ).reshape(-1, 2).T
+    if connection == "intra":
+        return bond_array[residue_starts_1 == residue_starts_2]
+    elif connection == "inter":
+        return bond_array[residue_starts_1 != residue_starts_2]
+    else:
+        raise ValueError("Invalid 'connection' option")
 
 
 def get_component(pdbx_file, data_block=None, use_ideal_coord=True,
