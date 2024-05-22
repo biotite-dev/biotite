@@ -40,8 +40,10 @@ def full_name(res_name):
 
     Returns
     -------
-    name : str
+    name : str or None
         The full name of the residue.
+        If the residue is unknown to the chemical components dictionary,
+        ``None`` is returned.
 
     Examples
     --------
@@ -49,7 +51,10 @@ def full_name(res_name):
     >>> print(full_name("MAN"))
     alpha-D-mannopyranose
     """
-    return get_from_ccd("chem_comp", res_name.upper(), "name").item()
+    array = get_from_ccd("chem_comp", res_name.upper(), "name")
+    if array is None:
+        return None
+    return array.item()
 
 
 def link_type(res_name):
@@ -64,8 +69,10 @@ def link_type(res_name):
 
     Returns
     -------
-    link_type : str
+    link_type : str or None
         The link type.
+        If the residue is unknown to the chemical components dictionary,
+        ``None`` is returned.
 
     Examples
     --------
@@ -77,7 +84,10 @@ def link_type(res_name):
     >>> print(link_type("HOH"))
     NON-POLYMER
     """
-    return get_from_ccd("chem_comp", res_name.upper(), "type").item()
+    array = get_from_ccd("chem_comp", res_name.upper(), "type")
+    if array is None:
+        return None
+    return array.item()
 
 
 def one_letter_code(res_name):
