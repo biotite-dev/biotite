@@ -85,6 +85,20 @@ MAIN_COLUMNS = {
         ],
         fill_value=0
     ),
+    "one_letter_code": ColumnInfo(
+        "U1",
+        [StringArrayEncoding(
+            # The unique strings in the column are sorted
+            # -> Indices do not follow distinct pattern
+            data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
+            offset_encoding=[
+                DeltaEncoding(src_type=TypeCode.INT32),
+                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                ByteArrayEncoding()
+            ]
+        )],
+        fill_value=""
+    ),
 }
 
 
