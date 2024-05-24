@@ -35,11 +35,13 @@ class AffineTransformation:
     ----------
     center_translation, rotation, target_translation : ndarray
         Same as the parameters.
+        The dimensions are always expanded to *(m,3)* or *(m,3,3)*,
+        respectively.
     """
     def __init__(self, center_translation, rotation, target_translation):
-        self.center_translation = center_translation
-        self.rotation = rotation
-        self.target_translation = target_translation
+        self.center_translation = _expand_dims(center_translation, 2)
+        self.rotation = _expand_dims(rotation, 3)
+        self.target_translation = _expand_dims(target_translation, 2)
 
 
     def apply(self, atoms):
