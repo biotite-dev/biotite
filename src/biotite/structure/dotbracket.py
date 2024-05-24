@@ -57,6 +57,8 @@ def dot_bracket_from_structure(
     .. footbibliography::
     """
     basepairs = base_pairs(nucleic_acid_strand)
+    if len(base_pairs) == 0:
+        return ['']
     basepairs = get_residue_positions(nucleic_acid_strand, basepairs)
     length = get_residue_count(nucleic_acid_strand)
     return dot_bracket(basepairs, length, scores=scores,
