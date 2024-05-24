@@ -4,7 +4,7 @@
 
 __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
-__all__ = ["all_residues", "full_name", "link_type"]
+__all__ = ["all_residues", "full_name", "link_type", "one_letter_code"]
 
 from .ccd import get_ccd, get_from_ccd
 
@@ -78,3 +78,57 @@ def link_type(res_name):
     NON-POLYMER
     """
     return get_from_ccd("chem_comp", res_name.upper(), "type").item()
+
+
+def one_letter_code(res_name):
+    """
+    Get the one-letter code of a residue/compound,
+    based on the PDB chemical components dictionary.
+
+    The one-letter code is only defined for amino acids and nucleotides
+    and for compounds that are structurally similar to them.
+
+    Parameters
+    ----------
+    res_name : str
+        The up to 3-letter residue name.
+
+    Returns
+    -------
+    one_letter_code : str or None
+        The one-letter code.
+        None if the compound is not present in the CCD or if no
+        one-letter code is defined for this compound.
+
+    Examples
+    --------
+
+    Get the one letter code for an amino acid (or a nucleotide).
+
+    >>> print(full_name("ALA"))
+    ALANINE
+    >>> print(one_letter_code("ALA"))
+    A
+
+    For similar compounds, the one-letter code is also defined.
+
+    >>> print(full_name("DAL"))
+    D-ALANINE
+    >>> print(one_letter_code("DAL"))
+    A
+
+    For other compounds, the one-letter code is not defined.
+
+    >>> print(full_name("MAN"))
+    alpha-D-mannopyranose
+    >>> print(one_letter_code("MAN"))
+    None
+
+    """
+    array = get_from_ccd("chem_comp", res_name.upper(), "one_letter_code")
+    if array is None:
+        return None
+    item = array.item()
+    if item == "":
+        return None
+    return item

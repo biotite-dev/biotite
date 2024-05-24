@@ -101,6 +101,32 @@ def test_link_type():
 
 
 @pytest.mark.parametrize(
+    "residues, should_have_one_letter, exception_ratio",
+    [
+        (strucinfo.amino_acid_names(), True, 0.4),
+        (strucinfo.nucleotide_names(), True, 0.4),
+        (sorted(
+            set(strucinfo.all_residues())
+            - set(strucinfo.amino_acid_names())
+            - set(strucinfo.nucleotide_names())
+        ), False, 0.01),
+    ]
+)
+def test_one_letter_code(residues, should_have_one_letter, exception_ratio):
+    """
+    Generally, expect that for amino acids and nucleotides the one-letter code
+    is defined, while for the rest it is not.
+    However, there are a relatively high number of exceptions.
+    """
+    exception_count = 0
+    for res_name in residues:
+        has_one_letter = strucinfo.one_letter_code(res_name) is not None
+        if should_have_one_letter ^ has_one_letter:
+            exception_count += 1
+    assert exception_count / len(residues) <= exception_ratio
+
+
+@pytest.mark.parametrize(
     "multi_model, seed", itertools.product([False, True], range(10))
 )
 def test_standardize_order(multi_model, seed):
