@@ -254,8 +254,13 @@
             "rotate_centered",
             "rotate_about_axis",
             "align_vectors",
-            "orient_principal_components",
+            "orient_principal_components"
+        ],
+        "Superimpositions" : [
             "superimpose",
+            "superimpose_homologs",
+            "superimpose_without_outliers",
+            "AffineTransformation",
             "superimpose_apply"
         ],
         "Filters" : [

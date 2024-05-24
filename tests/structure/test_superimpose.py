@@ -6,7 +6,6 @@ import glob
 import itertools
 from os.path import join
 import numpy as np
-from numpy import sin, cos
 import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
@@ -178,7 +177,6 @@ def test_masked_superimposition(seed):
     Since two atoms can be superimposed perfectly, the distance between
     the atom in both models should be 0.
     """
-
     path = join(data_dir("structure"), "1l2y.bcif")
     fixed = strucio.load_structure(path, model=1)
     mobile = strucio.load_structure(path, model=2)
@@ -233,7 +231,141 @@ def test_input_shapes(single_model, single_atom):
     assert fitted.coord.shape == mobile.coord.shape
 
 
+@pytest.mark.parametrize("seed", range(5))
+def test_outlier_detection(seed):
+    """
+    Check if :meth:`superimpose_without_outliers()` is able to detect
+    clear outliers in artificially generated coordinates.
+    """
+    N_COORD = 100
+    # Keep P_OUTLIERS < 0.5, otherwise outliers would be superimposed
+    P_OUTLIERS = 0.1
+    # Keep NOISE << OUTLIER_MAGNITUDE
+    NOISE = 0.1
+    OUTLIER_MAGNITUDE = 100
+
+    np.random.seed(seed)
+    fixed_coord = np.random.rand(N_COORD, 3)
+    # Add a little bit of noise
+    mobile_coord = fixed_coord + np.random.rand(N_COORD, 3) * NOISE
+    # Make some coordinates outliers
+    ref_outlier_mask = np.random.choice(
+        [False, True], size=N_COORD, p=[1 - P_OUTLIERS, P_OUTLIERS]
+    )
+    mobile_coord[ref_outlier_mask] += OUTLIER_MAGNITUDE
+    mobile_coord = _transform_random_affine(mobile_coord)
+
+    superimposed_coord, _, anchors = struc.superimpose_without_outliers(
+        # Increase the threshold a bit,
+        # to ensure that no inlier is classified as outlier
+        fixed_coord, mobile_coord, outlier_threshold=3.0
+    )
+    test_outlier_mask = np.full(N_COORD, True)
+    test_outlier_mask[anchors] = False
+
+    assert test_outlier_mask.tolist() == ref_outlier_mask.tolist()
+    # Without the outliers, the RMSD should be in the noise range
+    assert struc.rmsd(
+        fixed_coord[~ref_outlier_mask], superimposed_coord[~ref_outlier_mask]
+    ) < NOISE
+
+
+@pytest.mark.parametrize(
+    "multi_model, coord_only",
+    itertools.product(
+        [False, True],
+        [False, True]
+    )
+)
+def test_superimpose_without_outliers_inputs(multi_model, coord_only):
+    """
+    Ensure that :meth:`superimpose_without_outliers()` is able to handle
+    single models, multiple models and pure coordinates.
+    """
+    path = join(data_dir("structure"), "1l2y.bcif")
+    atoms = strucio.load_structure(path)
+    if not multi_model:
+        atoms = atoms[0]
+    if coord_only:
+        atoms = atoms.coord
+
+    superimposed, transform, _ = struc.superimpose_without_outliers(
+        atoms, atoms
+    )
+
+    assert type(superimposed) == type(atoms)
+    assert superimposed.shape == atoms.shape
+    transform_matrix = transform.as_matrix()
+    if multi_model:
+        assert transform_matrix.shape == (atoms.shape[0], 4, 4)
+    else:
+        assert transform_matrix.shape == (1, 4, 4)
+    # Fixed and mobile are the same
+    # -> expect identity transformation and all atoms as anchors
+    for matrix in transform_matrix:
+        assert np.allclose(matrix, np.eye(4), atol=1e-6)
+
+
+@pytest.mark.parametrize(
+    "pdb_id, chain_id, as_stack",
+    [
+        ("1aki", "A", False),  # is a protein
+        ("1aki", "A", True),
+        ("4gxy", "A", False),  # is a nucleic acid
+        ("4gxy", "A", True),
+    ]
+)
+def test_superimpose_homologs(pdb_id, chain_id, as_stack):
+    """
+    Check if :meth:`superimpose_homologs()` is able to superimpose
+    two homologous structures.
+    The homologous structures originate from the same structure with
+    randomized deletions.
+    As the alignment should detect the deletions, the superimposed
+    RMSD should be 0.
+    """
+    P_CONSERVATION = 0.9
+    path = join(data_dir("structure"), f"{pdb_id}.bcif")
+    atoms = strucio.load_structure(path)
+    atoms = atoms[atoms.chain_id == chain_id]
+    if as_stack:
+        atoms = struc.stack([atoms])
+
+    # Delete random residues
+    np.random.seed(0)
+    fixed_atoms = _delete_random_residues(atoms, P_CONSERVATION)
+    mobile_atoms = _delete_random_residues(atoms, P_CONSERVATION)
+    mobile_atoms.coord = _transform_random_affine(mobile_atoms.coord)
+
+    super_atoms, _, fix_anchors, mob_anchors = struc.superimpose_homologs(
+        fixed_atoms, mobile_atoms
+    )
+
+    # Check if corresponding residues were superimposed
+    assert fixed_atoms.res_id[fix_anchors].tolist() \
+        == mobile_atoms.res_id[mob_anchors].tolist()
+    # If a stack, it only contains one model
+    if as_stack:
+        fixed_atoms = fixed_atoms[0]
+        super_atoms = super_atoms[0]
+    assert struc.rmsd(
+        fixed_atoms[..., fix_anchors], super_atoms[..., mob_anchors]
+    ) == pytest.approx(0, abs=1e-3)
+
+
 def _transform_random_affine(coord):
     coord = struc.translate(coord, np.random.rand(3))
     coord = struc.rotate(coord, np.random.uniform(low=0, high=2*np.pi, size=3))
     return coord
+
+
+def _delete_random_residues(atoms, p_conservation):
+    residue_starts = struc.get_residue_starts(atoms)
+    conserved_residue_starts = np.random.choice(
+        residue_starts, size=int(p_conservation * len(residue_starts)),
+        replace=False
+    )
+    conservation_mask = np.any(
+        struc.get_residue_masks(atoms, conserved_residue_starts), axis=0
+    )
+    return atoms[..., conservation_mask]
