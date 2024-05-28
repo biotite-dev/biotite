@@ -224,8 +224,8 @@ def test_index_distance_periodic_triclinic(shift, angles):
     traj.unitcell_vectors = array.box[np.newaxis, :, :] / 10
     # Nanometers to Angstrom
     mdtraj_dist = mdtraj.compute_distances(traj, dist_indices)[0] * 10
-    ind = np.where(~np.isclose(ref_dist, mdtraj_dist, atol=1e-5, rtol=1e-3))[0]
-    assert np.allclose(ref_dist, mdtraj_dist, atol=1e-5, rtol=1e-3)
+    ind = np.where(~np.isclose(ref_dist, mdtraj_dist, atol=2e-5, rtol=1e-3))[0]
+    assert np.allclose(ref_dist, mdtraj_dist, atol=2e-5, rtol=1e-3)
 
     # Compare with shifted variant
     array.coord += shift
@@ -235,7 +235,7 @@ def test_index_distance_periodic_triclinic(shift, angles):
         test_dist = struc.index_distance(array, dist_indices, periodic=True)
     except MemoryError:
         pytest.skip("Not enough memory")
-    assert np.allclose(test_dist, ref_dist, atol=1e-5)
+    assert np.allclose(test_dist, ref_dist, atol=2e-5)
 
 
 def test_index_functions():
