@@ -1,6 +1,6 @@
 """
-Comparison of human PI3K family
-===============================
+Display sequence similarity in a heat map
+=========================================
 
 .. currentmodule:: biotite.sequence.graphics
 
@@ -89,7 +89,7 @@ figure.tight_layout()
 # As the plot creates a heatmap field for every alignment column,
 # the plot looks quite confusing.
 # It is not clearly visible, which parts of the sequences have a low or
-# high similarity to each other. 
+# high similarity to each other.
 # Hence, we create bins, that contain the mean similarity over a range of
 # columns.
 

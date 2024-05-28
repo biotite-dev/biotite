@@ -1,6 +1,6 @@
 r"""
-Solvation shells of sodium and chloride ions
-============================================
+Analysis of solvation shells
+============================
 
 Based on a 10 ns Gromacs MD simulation of 0.15 mM sodium chloride,
 the distance of solvation shells to the central ion for both,
@@ -48,7 +48,7 @@ traj.hetero[:] = True
 # Create boolean masks for all sodium or chloride ions, respectively
 na = traj.coord[:, traj.element == "NA"]
 cl = traj.coord[:, traj.element == "CL"]
-# Create a boolean mask for all watewr molecules 
+# Create a boolean mask for all watewr molecules
 solvent = traj[:, struc.filter_solvent(traj)]
 # Calculate the RDF of water molecules
 # centered on sodium or chloride ions, respectively

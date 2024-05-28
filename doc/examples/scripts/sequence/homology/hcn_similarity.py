@@ -1,6 +1,6 @@
 """
-Similarity of HCN and related channels
-======================================
+Dendrogram of a protein family
+==============================
 
 This example creates a simple dendrogram for HCN channels and
 other proteins of the *cyclic nucleotide–gated* (NCG) ion channel

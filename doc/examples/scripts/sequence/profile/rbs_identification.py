@@ -1,9 +1,9 @@
 """
-Identification of the ribosomal binding site
-============================================
+Identification of a binding site by sequence conservation
+=========================================================
 
 In this example we identify the ribosomal binding site on mRNA, also
-called *Shine–Dalgarno* sequence, in *Escherichia coli*.
+called *Shine-Dalgarno* sequence, in *Escherichia coli*.
 
 In the beginning of the translation the 16S rRNA of the ribosome
 recognizes this purine-rich region on the mRNA, which typically lies a
@@ -90,7 +90,7 @@ profile = seq.SequenceProfile(
 
 ### Visualize the profile
 
-# Spend extra effort for correct sequence postion labels 
+# Spend extra effort for correct sequence postion labels
 def normalize_seq_pos(x):
     """
     Normalize sequence position, so that the position of the upstream bases is negative.
@@ -102,7 +102,7 @@ def normalize_seq_pos(x):
     if x <= 0:
         x -= 1
     return x
-    
+
 @ticker.FuncFormatter
 def sequence_loc_formatter(x, pos):
     x = normalize_seq_pos(x)

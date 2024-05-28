@@ -1,6 +1,6 @@
 """
-Polymorphisms in the THCA synthase gene
-=======================================
+Polymorphisms in a gene
+=======================
 
 The THCA synthase catalyzes the last step in the synthesis of
 tetrahydrocannabinolic acid (THCA), the precursor molecule of
@@ -42,7 +42,7 @@ query =   entrez.SimpleQuery("Forensic Sci. Int.", "Journal") \
 uids = entrez.search(query, db_name="nuccore")
 
 # Download and read file containing the Genbank records for the THCA
-# synthase genes 
+# synthase genes
 multi_file = gb.MultiFile.read(entrez.fetch_single_file(
     uids, file_name=None, db_name="nuccore", ret_type="gb"
 ))
@@ -53,14 +53,14 @@ sequences = {}
 
 for gb_file in multi_file:
     annotation = gb.get_annotation(gb_file)
-    
+
     # Find ID of strain in 'source' feature
     strain = None
     for feature in annotation:
         if feature.key == "source":
             strain = int(feature.qual["strain"])
     assert strain is not None
-    
+
     # Find corresponding protein sequence in 'CDS' feature
     sequence = None
     for feature in annotation:

@@ -1,6 +1,6 @@
 """
-Bionigma style multiple sequence alignment
-==========================================
+Customized visualization of a multiple sequence alignment
+=========================================================
 
 This example shows an alignment visualization used by the serious game
 *Bionigma* :footcite:`Hess2014`.
@@ -14,7 +14,7 @@ This visualization distinguishes amino acids by color and shape.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon, Rectangle
+from matplotlib.patches import Rectangle
 from matplotlib.transforms import Bbox
 import biotite.sequence as seq
 import biotite.sequence.align as align
@@ -136,7 +136,7 @@ class ShapePlotter(graphics.SymbolPlotter):
     """
     def __init__(self, axes, font_size=None, font_param=None):
         super().__init__(axes)
-        
+
         # The symbol to shape mapping
         self._draw_funcs = {
             "A" : ShapePlotter._draw_circle,
@@ -163,7 +163,7 @@ class ShapePlotter(graphics.SymbolPlotter):
 
         self._font_size = font_size
         self._font_param = font_param if font_param is not None else {}
-    
+
     def plot_symbol(self, bbox, alignment, column_i, seq_i):
         trace = alignment.trace
         if trace[column_i,seq_i] != -1:
@@ -171,7 +171,7 @@ class ShapePlotter(graphics.SymbolPlotter):
         else:
             symbol = ""
         color = self._get_color(alignment, column_i, seq_i)
-        
+
         draw_func = self._draw_funcs.get(symbol)
         # 'draw_func' is None for gaps
         if draw_func is not None:
@@ -190,7 +190,7 @@ class ShapePlotter(graphics.SymbolPlotter):
                 size=self._font_size, **self._font_param
             )
             text.set_clip_on(True)
-    
+
     def _get_color(self, alignment, column_i, seq_i):
         index = alignment.trace[column_i, seq_i]
         if index == -1:
@@ -207,7 +207,7 @@ class ShapePlotter(graphics.SymbolPlotter):
             facecolor=color, edgecolor="None", fill=True
         )
         self.axes.add_patch(circle)
-    
+
     def _draw_rectangle(self, bbox, color):
         rectangle = Rectangle(
             bbox.p0, bbox.width, bbox.height,
@@ -217,16 +217,16 @@ class ShapePlotter(graphics.SymbolPlotter):
 
     def _draw_hexagon(self, bbox, color):
         self._draw_polygon(bbox, color, _hexagon_coord)
-    
+
     def _draw_spiked(self, bbox, color):
         self._draw_polygon(bbox, color, _spiked_coord)
-    
+
     def _draw_cross(self, bbox, color):
         self._draw_polygon(bbox, color, _cross_coord)
-    
+
     def _draw_star(self, bbox, color):
         self._draw_polygon(bbox, color, _star_coord)
-    
+
     def _draw_hourglass(self, bbox, color):
         self._draw_polygon(bbox, color, _hourglass_coord)
 
@@ -265,7 +265,7 @@ def plot_alignment_shapes(axes, alignment, symbols_per_line=30,
         show_line_position=show_line_position,
         spacing=spacing
     )
-    
+
     twin = axes.get_shared_x_axes().get_siblings(axes)[0]
     for ax in (axes, twin):
         ax.set_yticklabels(ax.get_yticklabels(), fontdict={"color":"white"})

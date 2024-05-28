@@ -1,6 +1,6 @@
 """
-Pairwise sequence alignment of Avidin with Streptavidin
-=======================================================
+Pairwise sequence alignment of protein sequences
+================================================
 
 This script performs a pairwise sequence alignment of
 avidin (*Gallus gallus*)

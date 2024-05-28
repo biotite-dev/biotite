@@ -1,6 +1,6 @@
 """
-Sequence comparison of bacterial luciferases
-============================================
+Fetching and aligning a protein from different species
+======================================================
 
 .. currentmodule:: biotite.sequence.align
 
@@ -48,7 +48,8 @@ ids = [ids[i] for i in order]
 fig = plt.figure(figsize=(8.0, 20.0))
 ax = fig.add_subplot(111)
 graphics.plot_alignment_type_based(
-    ax, alignment, labels=ids, show_numbers=True, spacing=2.0
+    ax, alignment, labels=ids, show_numbers=True, spacing=2.0,
+    color_scheme="blossom"
 )
 fig.tight_layout()
 

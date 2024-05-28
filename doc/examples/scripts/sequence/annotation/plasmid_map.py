@@ -1,6 +1,6 @@
 """
-Plasmid map of a pET15 vector
-==============================
+Plasmid map of a vector
+=======================
 
 This script downloads the GenBank file for a *pET15* plasmid from
 *AddGene* and draws a plasmid map using a custom feature formatter.

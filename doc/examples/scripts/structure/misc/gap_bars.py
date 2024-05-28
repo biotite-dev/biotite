@@ -1,6 +1,6 @@
 """
-Missing residues in protein structures of DNA-PKcs
-==================================================
+Identifying unresolved regions in protein structures
+====================================================
 
 This script creates two bars, each indicating gaps in the structure
 of DNA-PKcs. The top bar indicates the missing residues in a recent

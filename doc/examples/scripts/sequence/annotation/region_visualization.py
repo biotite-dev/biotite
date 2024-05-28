@@ -1,6 +1,6 @@
 r"""
-Visualization of region in proximity to *lac* operon
-====================================================
+Visualization of a region in proximity to a feature
+===================================================
 
 This script creates a feature map for the region around the *lac* operon
 in the E. coli BL21 genome.

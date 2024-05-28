@@ -1,6 +1,6 @@
 """
-Homology of G-protein coupled receptors
-=======================================
+Phylogenetic tree of a protein family
+=====================================
 
 This example plots an unrooted phylogenetic tree depicting the evolution
 of different G-protein coupled receptors (GPCRs).

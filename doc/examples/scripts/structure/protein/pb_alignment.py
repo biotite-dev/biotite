@@ -1,6 +1,6 @@
 """
-Structural alignment of lysozyme variants using 'Protein Blocks'
-================================================================
+Structural alignment of orthologous proteins using 'Protein Blocks'
+===================================================================
 
 In this example we perform a structural alignment of multiple lysozyme
 variants from different organisms.

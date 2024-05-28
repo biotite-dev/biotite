@@ -1,6 +1,6 @@
 """
-Comparative genome assembly of SARS-CoV-2 B.1.1.7 variant
-=========================================================
+Comparative genome assembly
+===========================
 
 .. currentmodule:: biotite.sequence.align
 

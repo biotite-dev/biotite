@@ -1,6 +1,6 @@
 """
-Multiple sequence alignment of Cas9 homologs
-============================================
+Homology search and multiple sequence alignment
+===============================================
 
 This script searches for proteins homologous to Cas9 from
 *Streptococcus pyogenes* via NCBI BLAST and performs a multiple
@@ -59,7 +59,7 @@ ax = fig.add_subplot(111)
 order = app.get_alignment_order()
 graphics.plot_alignment_type_based(
     ax, alignment[:200, order.tolist()], labels=[hits[i] for i in order],
-    show_numbers=True, color_scheme="clustalx"
+    show_numbers=True
 )
 fig.tight_layout()
 

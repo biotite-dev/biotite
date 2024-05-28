@@ -1,6 +1,6 @@
 r"""
-Cavity solvation in different states of HCN4
-============================================
+Cavity solvation in different states of an ion channel
+======================================================
 
 In selective sodium/potassium channels, the internal cavity of the pore
 is walled off from the solvent if the channel is closed.

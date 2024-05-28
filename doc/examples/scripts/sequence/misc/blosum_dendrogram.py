@@ -1,6 +1,6 @@
 """
-Dendrogram of the BLOSUM62 matrix
-=================================
+Dendrogram of a substitution matrix
+===================================
 
 In this example a dendrogram is created, that displays the similarity
 of amino acids in the *BLOSUM62* substitution matrix.

@@ -1,6 +1,6 @@
 """
-Molecular visualization of caffeine
-===================================
+Molecular visualization of a small molecule using Matplotlib
+============================================================
 
 .. currentmodule:: biotite.structure.graphics
 
@@ -52,7 +52,7 @@ graphics.plot_atoms(
 )
 fig.tight_layout()
 
-# Create an animation that rotates the molecule about the x-axis 
+# Create an animation that rotates the molecule about the x-axis
 def update(angle):
     ax.elev = angle
 

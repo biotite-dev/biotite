@@ -1,6 +1,6 @@
 """
-Genome comparison between chloroplasts and cyanobacteria
-========================================================
+Finding homologous regions in two genomes
+=========================================
 
 .. currentmodule:: biotite.sequence.align
 
@@ -16,8 +16,8 @@ been conserved, by comparing the chloroplast genome of
 *Synechocystis sp.* PCC 6803.
 
 To compare the genomes this script creates local alignments between both
-sequences using a *k-mer* based multi-step process, known from software
-like *BLAST* :footcite:`Altschul1990` or *MMseqs*
+genome sequences using a *k-mer* based multi-step process, known from
+software like *BLAST* :footcite:`Altschul1990` or *MMseqs*
 :footcite:`Steinegger2017`:
 Fast *k-mer* matching, ungapped alignment at the hit positions and
 a final time-consuming local gapped alignment.

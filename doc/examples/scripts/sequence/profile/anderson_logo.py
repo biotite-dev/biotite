@@ -1,6 +1,6 @@
 """
-Sequence logo of the Anderson promoter collection
-=================================================
+Sequence logo of sequences with equal length
+============================================
 
 This script creates a sequence logo for the
 `Anderson promoter collection <http://parts.igem.org/Promoters/Catalog/Anderson>`_.

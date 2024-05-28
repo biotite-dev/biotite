@@ -1,5 +1,5 @@
 """
-Docking biotin to streptavidin
+Docking a ligand to a receptor
 ==============================
 
 This example shows how to use *AutoDock Vina* :footcite:`Trott2010`

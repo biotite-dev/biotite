@@ -1,5 +1,5 @@
 """
-Hydropathy and conservation of HCN channels
+Hydropathy and conservation of ion channels
 ===========================================
 
 This script creates a hydropathy plot of the human HCN1 channel protein
@@ -182,7 +182,7 @@ ax.legend(
 # as expected.
 # Secondly the sequence conservation is extraordinarily high in the
 # transmembrane region.
-# 
+#
 # Finally the alignment itself is visualized.
 # As this example focuses on the hydropathy, the colors of the symbols
 # should illustrate the hydropathy of the respective amino acid.
@@ -196,7 +196,7 @@ def hydropathy_to_color(hydropathy, colormap):
     norm_hydropathy = (hydropathy - (-4.5)) / (4.5 - (-4.5))
     return colormap(norm_hydropathy)
 
-# Create a color scheme highlighting the hydropathy 
+# Create a color scheme highlighting the hydropathy
 colormap = plt.get_cmap("coolwarm")
 colorscheme = [
     hydropathy_to_color(hydropathy_dict[symbol], colormap)

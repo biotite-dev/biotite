@@ -1,6 +1,6 @@
 """
-Conservation of *LexA* DNA-binding site
-=======================================
+Conservation of binding site
+============================
 
 The web page on sequence logos on
 `Wikipedia <https://en.wikipedia.org/wiki/Sequence_logo#Consensus_logo>`_
@@ -84,7 +84,7 @@ for source in all_sources[:20]:
 # To reduce this bias, we only want each species to occur only a single
 # time.
 # So we use a set to store the source name of sequences we already
-# listed and ignore all further occurences of that source species. 
+# listed and ignore all further occurences of that source species.
 
 # List of sequences
 binding_sites = []
