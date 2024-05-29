@@ -83,7 +83,7 @@ def bonds_in_residue(res_name):
 
     Returns
     -------
-    bonds : dict (str -> int)
+    bonds : dict ((str, str) -> int)
         A dictionary that maps tuples of two atom names to their
         respective bond types (represented as integer).
         Empty, if the residue is unknown to the

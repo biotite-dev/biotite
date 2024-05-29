@@ -23,7 +23,7 @@ dependencies:
   - requests >=2.12
   # Testing
   - mdtraj >=1.9.3
-  - pytest >=5.2
+  - pytest >=7.0
   # Interfaced software in biotite.application
   - autodock-vina
   - clustalo
