@@ -194,8 +194,8 @@ class MOLFile(TextFile):
             The version of the CTAB format.
             ``"V2000"`` uses the *Atom* and *Bond* block, while
             ``"V3000"`` uses the *Properties* block.
-            By default, ``"V2000"`` is used unless the number of atoms
-            or bonds exceeds 1000, in which case ``"V3000"`` is used.
+            By default, ``"V2000"`` is used, unless the number of atoms
+            or bonds exceeds 999, in which case ``"V3000"`` is used.
         """
         self.lines = self.lines[:N_HEADER] + write_structure_to_ctab(
             atoms, default_bond_type, version
