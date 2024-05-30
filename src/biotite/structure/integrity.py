@@ -12,7 +12,7 @@ __author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["check_id_continuity", "check_atom_id_continuity",
            "check_res_id_continuity", "check_backbone_continuity",
            "check_duplicate_atoms", "check_bond_continuity",
-           "check_linear_continuity", "renumber_atom_ids", "renumber_res_ids"]
+           "check_linear_continuity"]
 
 import numpy as np
 import warnings
@@ -32,17 +32,17 @@ def check_id_continuity(array):
     """
     Check if the residue IDs are incremented by more than 1 or
     decremented, from one atom to the next one.
-    
+
     An increment by more than 1 is as strong clue for missing residues,
     a decrement means probably a start of a new chain.
 
     DEPRECATED: Use :func:`check_res_id_continuity()` instead.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be checked.
-    
+
     Returns
     -------
     discontinuity : ndarray, dtype=int
@@ -60,14 +60,14 @@ def check_atom_id_continuity(array):
     """
     Check if the atom IDs are incremented by more than 1 or
     decremented, from one atom to the next one.
-    
+
     An increment by more than 1 is as strong clue for missing atoms.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be checked.
-    
+
     Returns
     -------
     discontinuity : ndarray, dtype=int
@@ -81,15 +81,15 @@ def check_res_id_continuity(array):
     """
     Check if the residue IDs are incremented by more than 1 or
     decremented, from one atom to the next one.
-    
+
     An increment by more than 1 is as strong clue for missing residues,
     a decrement means probably a start of a new chain.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be checked.
-    
+
     Returns
     -------
     discontinuity : ndarray, dtype=int
@@ -168,7 +168,7 @@ def check_backbone_continuity(array, min_len=1.2, max_len=1.8):
     """
     Check if the (peptide or phosphate) backbone atoms have
     non-reasonable distance to the next atom.
-    
+
     A large or very small distance is a very strong clue, that there is
     no bond between those atoms, therefore the chain is discontinued.
 
@@ -206,16 +206,16 @@ def check_duplicate_atoms(array):
     """
     Check if a structure contains duplicate atoms, i.e. two atoms in a
     structure have the same annotations (coordinates may be different).
-    
+
     Duplicate atoms may appear, when a structure has occupancy for an
     atom at two or more positions or when the *altloc* positions are
     improperly read.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
         The array to be checked.
-    
+
     Returns
     -------
     duplicate : ndarray, dtype=int
@@ -232,7 +232,7 @@ def check_duplicate_atoms(array):
         for annot in annots:
             # For each annotation array filter out the atoms until
             # index i that have an unequal annotation
-            # to the atom at index i 
+            # to the atom at index i
             is_dublicate &= (annot[:i] == annot[i])
         # After checking all annotation arrays,
         # if there still is any duplicate to the atom at index i,
@@ -255,7 +255,7 @@ def check_in_box(array):
     ----------
     array : AtomArray or AtomArrayStack
         The array to be checked.
-    
+
     Returns
     -------
     outside : ndarray, dtype=int
@@ -266,54 +266,3 @@ def check_in_box(array):
     box = array.box
     fractions = coord_to_fraction(array, box)
     return np.where(((fractions >= 0) & (fractions < 1)).all(axis=-1))[0]
-
-
-def renumber_atom_ids(array, start=None):
-    """
-    Renumber the atom IDs of the given array.
-
-    Parameters
-    ----------
-    array : AtomArray or AtomArrayStack
-        The array to be checked.
-    start : int, optional
-        The starting index for renumbering.
-        The first ID in the array is taken by default.
-
-    Returns
-    -------
-    array : AtomArray or AtomArrayStack
-        The renumbered array.
-    """
-    if "atom_id" not in array.get_annotation_categories():
-        raise ValueError("The atom array must have the 'atom_id' annotation")
-    if start is None:
-        start = array.atom_id[0]
-    array.atom_id = np.arange(start, array.shape[-1]+1)
-    return array
-    
-
-def renumber_res_ids(array, start=None):
-    """
-    Renumber the residue IDs of the given array.
-
-    Parameters
-    ----------
-    array : AtomArray or AtomArrayStack
-        The array to be checked.
-    start : int, optional
-        The starting index for renumbering.
-        The first ID in the array is taken by default.
-    
-    Returns
-    -------
-    array : AtomArray or AtomArrayStack
-        The renumbered array.
-    """
-    if start is None:
-        start = array.res_id[0]
-    diff = np.diff(array.res_id)
-    diff[diff != 0] = 1
-    new_res_ids =  np.concatenate(([start], diff)).cumsum()
-    array.res_id = new_res_ids
-    return array

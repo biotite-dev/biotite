@@ -210,7 +210,7 @@ def test_extra_fields(hybrid36):
 
 
 @pytest.mark.filterwarnings("ignore")
-def test_guess_elements():
+def test_inferred_elements():
     # Read valid pdb file
     path = join(data_dir("structure"), "1l2y.pdb")
     pdb_file = pdb.PDBFile.read(path)

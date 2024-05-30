@@ -3,7 +3,7 @@
 # information.
 
 import biotite.structure as struc
-import biotite.structure.io.npz as npz
+import biotite.structure.io.pdbx as pdbx
 import numpy as np
 from os.path import join
 from ..util import data_dir
@@ -12,8 +12,10 @@ import pytest
 
 @pytest.fixture
 def sample_array():
-    file = npz.NpzFile.read(join(data_dir("structure"), "1l2y.npz"))
-    return file.get_structure()[0]
+    pdbx_file = pdbx.BinaryCIFFile.read(
+        join(data_dir("structure"), "1l2y.bcif")
+    )
+    return pdbx.get_structure(pdbx_file, model=1)
 
 @pytest.fixture
 def gapped_sample_array(sample_array):
@@ -63,15 +65,3 @@ def test_bond_continuity_check(gapped_sample_array):
 def test_duplicate_atoms_check(duplicate_sample_array):
     discon = struc.check_duplicate_atoms(duplicate_sample_array)
     assert discon.tolist() == [42,234]
-
-def test_renum_res_ids(gapped_sample_array): 
-    renumbered_array = struc.renumber_res_ids(gapped_sample_array)
-    # if renumbering was successful, this should not raise
-    with pytest.raises(AssertionError):
-        test_res_id_continuity_check(renumbered_array)
-
-def test_renum_atom_ids(gapped_sample_array):
-    renumbered_array = struc.renumber_atom_ids(gapped_sample_array)
-    # if renumbering was successful, this should not raise
-    with pytest.raises(AssertionError):
-        test_atom_id_continuity_check(renumbered_array)
