@@ -120,6 +120,7 @@ from .mechanics import *
 from .molecules import *
 from .pseudoknots import *
 from .rdf import *
+from .repair import *
 from .residues import *
 from .chains import *
 from .sasa import *

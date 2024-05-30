@@ -284,6 +284,10 @@
             "check_bond_continuity",
             "check_linear_continuity"
         ],
+        "Repair" : [
+            "renumber_atom_ids",
+            "renumber_res_ids"
+        ],
         "Residue level utility" : [
             "get_residue_starts",
             "get_residues",
