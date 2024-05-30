@@ -14,7 +14,7 @@ __all__ = ["MaskValue"]
 from enum import IntEnum
 from abc import ABCMeta, abstractmethod
 from collections.abc import MutableMapping
-from .error import SerializationError, DeserializationError
+from ....file import SerializationError, DeserializationError
 
 
 class MaskValue(IntEnum):
