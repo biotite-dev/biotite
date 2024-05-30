@@ -10,12 +10,15 @@ __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["renumber_atom_ids", "renumber_res_ids"]
 
+import warnings
 import numpy as np
 
 
 def renumber_atom_ids(array, start=None):
     """
     Renumber the atom IDs of the given array.
+
+    DEPRECATED.
 
     Parameters
     ----------
@@ -30,6 +33,10 @@ def renumber_atom_ids(array, start=None):
     array : AtomArray or AtomArrayStack
         The renumbered array.
     """
+    warnings.warn(
+      "'renumber_atom_ids()' is deprecated",
+        DeprecationWarning
+    )
     if "atom_id" not in array.get_annotation_categories():
         raise ValueError("The atom array must have the 'atom_id' annotation")
     if start is None:
@@ -43,6 +50,8 @@ def renumber_res_ids(array, start=None):
     """
     Renumber the residue IDs of the given array, so that are continuous.
 
+    DEPRECATED.
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
@@ -56,6 +65,10 @@ def renumber_res_ids(array, start=None):
     array : AtomArray or AtomArrayStack
         The renumbered array.
     """
+    warnings.warn(
+      "'renumber_res_ids()' is deprecated",
+        DeprecationWarning
+    )
     if start is None:
         start = array.res_id[0]
     diff = np.diff(array.res_id)
