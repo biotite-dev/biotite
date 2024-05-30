@@ -7,12 +7,13 @@ This module contains functionalities for repairing malformed structures.
 """
 
 __name__ = "biotite.structure"
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["renumber_atom_ids", "renumber_res_ids",
-           "create_continuous_res_ids"]
+           "create_continuous_res_ids", "infer_elements"]
 
 import warnings
 import numpy as np
+from .atoms import AtomArray, AtomArrayStack
 from .residues import get_residue_starts
 from .chains import get_chain_starts
 
@@ -125,3 +126,70 @@ def create_continuous_res_ids(atoms, restart_each_chain=True):
             res_ids[start:] -= res_ids[start] - 1
 
     return res_ids
+
+
+def infer_elements(atoms):
+    """
+    Infer the element of an atom based on its name.
+
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack or array-like of str
+        The atoms for which the elements should be inferred.
+        Alternatively the atom names can be passed directly.
+
+    Returns
+    -------
+    elements : ndarray, dtype=str
+        The inferred elements.
+
+    Examples
+    --------
+
+    >>> print(infer_elements(atom_array)[:10])
+    ['N' 'C' 'C' 'O' 'C' 'C' 'O' 'N' 'H' 'H']
+    >>> print(infer_elements(["CA", "C", "C1", "OD1", "HD21", "1H", "FE"]))
+    ['C' 'C' 'C' 'O' 'H' 'H' 'FE']
+
+    """
+    if isinstance(atoms, (AtomArray, AtomArrayStack)):
+        atom_names = atoms.atom_name
+    else:
+        atom_names = atoms
+    return np.array([_guess_element(name) for name in atom_names])
+
+
+_elements = [elem.upper() for elem in
+["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg",
+"Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe",
+"Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr", "Rb", "Sr", "Y",
+"Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te",
+"I", "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb",
+"Dy", "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt",
+"Au", "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", "Pa",
+"U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", "Md", "No", "Lr", "Rf",
+"Db", "Sg", "Bh", "Hs", "Mt", "Ds", "Rg", "Cn", "Nh", "Fl", "Mc", "Lv", "Ts",
+"Og"]
+]
+def _guess_element(atom_name):
+    # remove digits (1H -> H)
+    elem = "".join([i for i in atom_name if not i.isdigit()])
+    elem = elem.upper()
+    if len(elem) == 0:
+        return ""
+
+    # Some often used elements for biomolecules
+    if elem.startswith("C") or elem.startswith("N") or \
+        elem.startswith("O") or elem.startswith("S") or \
+        elem.startswith("H"):
+        return elem[0]
+
+    # Exactly match element abbreviations
+    try:
+        return _elements[_elements.index(elem[:2])]
+    except ValueError:
+        try:
+            return _elements[_elements.index(elem[0])]
+        except ValueError:
+            warnings.warn(f"Could not infer element for '{atom_name}'")
+            return ""

@@ -12,7 +12,7 @@ from ...atoms import AtomArray, AtomArrayStack, repeat
 from ...bonds import BondList, connect_via_residue_names
 from ...box import vectors_from_unitcell, unitcell_from_vectors
 from ....file import TextFile, InvalidFileError
-from ..general import _guess_element as guess_element
+from ...repair import infer_elements
 from ...error import BadStructureError
 from ...filter import (
     filter_first_altloc,
@@ -460,15 +460,14 @@ class PDBFile(TextFile):
 
         # Replace empty strings for elements with guessed types
         # This is used e.g. for PDB files created by Gromacs
-        if "" in array.element:
-            rep_num = 0
-            for idx in range(len(array.element)):
-                if not array.element[idx]:
-                    atom_name = array.atom_name[idx]
-                    array.element[idx] = guess_element(atom_name)
-                    rep_num += 1
+        empty_element_mask = array.element == ""
+        if empty_element_mask.any():
             warnings.warn(
-                "{} elements were guessed from atom_name.".format(rep_num)
+                f"{np.count_nonzero(empty_element_mask)} elements "
+                "were guessed from atom name"
+            )
+            array.element[empty_element_mask] = infer_elements(
+                array.atom_name[empty_element_mask]
             )
 
         # Fill in coordinates

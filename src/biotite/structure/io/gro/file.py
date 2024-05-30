@@ -10,7 +10,7 @@ import numpy as np
 from ...atoms import AtomArray, AtomArrayStack
 from ...box import is_orthogonal
 from ....file import TextFile, InvalidFileError
-from ..general import _guess_element as guess_element
+from ...repair import infer_elements
 from ...error import BadStructureError
 import copy
 from datetime import datetime
@@ -38,7 +38,7 @@ class GROFile(TextFile):
     --------
     Load a `\\*.gro` file, modify the structure and save the new
     structure into a new file:
-    
+
     >>> import os.path
     >>> file = GROFile.read(os.path.join(path_to_structures, "1l2y.gro"))
     >>> array_stack = file.get_structure()
@@ -46,7 +46,7 @@ class GROFile(TextFile):
     >>> file = GROFile()
     >>> file.set_structure(array_stack_mod)
     >>> file.write(os.path.join(path_to_directory, "1l2y_mod.gro"))
-    
+
     """
     def get_model_count(self):
         """
@@ -68,7 +68,7 @@ class GROFile(TextFile):
         """
         Get an :class:`AtomArray` or :class:`AtomArrayStack` from the
         GRO file.
-        
+
         Parameters
         ----------
         model : int, optional
@@ -80,13 +80,13 @@ class GROFile(TextFile):
             If this parameter is omitted, an :class:`AtomArrayStack`
             containing all models will be returned, even if the
             structure contains only one model.
-        
+
         Returns
         -------
         array : AtomArray or AtomArrayStack
             The return type depends on the `model` parameter.
         """
-        
+
         def get_atom_line_i(model_start_i, model_atom_counts):
             """
             Helper function to get the indices of all atoms for a model
@@ -94,7 +94,7 @@ class GROFile(TextFile):
             return np.arange(
                 model_start_i+1, model_start_i+1+model_atom_counts
             )
-        
+
         def set_box_dimen(box_param):
             """
             Helper function to create the box vectors from the values
@@ -104,7 +104,7 @@ class GROFile(TextFile):
             ----------
             box_param : list of float
                 The box dimensions in the GRO file.
-            
+
             Returns
             -------
             box_vectors : ndarray, dtype=float, shape=(3,3)
@@ -171,7 +171,7 @@ class GROFile(TextFile):
             array.res_id[i] = int(line[0:5])
             array.res_name[i] = line[5:10].strip()
             array.atom_name[i] = line[10:15].strip()
-            array.element[i] = guess_element(line[10:15].strip())
+        array.element = infer_elements(array.atom_name)
 
         # Fill in coordinates and boxes
         if isinstance(array, AtomArray):
@@ -186,7 +186,7 @@ class GROFile(TextFile):
             box_i = atom_i[-1] + 1
             box_param = [float(e)*10 for e in self.lines[box_i].split()]
             array.box = set_box_dimen(box_param)
-        
+
         elif isinstance(array, AtomArrayStack):
             for m in range(len(model_start_i)):
                 atom_i = get_atom_line_i(
@@ -204,18 +204,18 @@ class GROFile(TextFile):
                 # Create a box in the stack if not already existing
                 # and the box is not a dummy
                 if box is not None:
-                    if array.box is None: 
+                    if array.box is None:
                         array.box = np.zeros((array.stack_depth(), 3, 3))
                     array.box[m] = box
-                    
+
         return array
 
-            
+
     def set_structure(self, array):
         """
         Set the :class:`AtomArray` or :class:`AtomArrayStack` for the
         file.
-        
+
         Parameters
         ----------
         array : AtomArray or AtomArrayStack
@@ -235,7 +235,7 @@ class GROFile(TextFile):
             ----------
             array : AtomArray
                 The atom array to get the box dimensions from.
-            
+
             Returns
             -------
             box : str
@@ -259,7 +259,7 @@ class GROFile(TextFile):
                         box[2,0], box[2,1],
                     )
                     return " ".join([f"{e:>9.5f}" for e in box_elements])
-        
+
         if "atom_id" in array.get_annotation_categories():
             atom_id = array.atom_id
         else:

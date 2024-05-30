@@ -46,3 +46,29 @@ def test_create_continuous_res_ids(multi_chain, restart_each_chain):
     else:
         assert test_res_ids.tolist() \
             == (np.arange(len(test_res_ids)) + 1).tolist()
+
+
+@pytest.mark.parametrize(
+    "name,expected",
+    [("CA", "C"),
+     ("C", "C"),
+     ("CB", "C"),
+     ("OD1", "O"),
+     ("HD21", "H"),
+     ("1H", "H"),
+     #("CL", "CL"),  # This is an edge case where inference is difficult
+     ("HE", "H"),
+     ("SD", "S"),
+     ("NA", "N"),
+     ("NX", "N"),
+     ("BE", "BE"),
+     ("BEA", "BE"),
+     ("K", "K"),
+     ("KA", "K"),
+     ("QWERT", "")]
+)
+def test_infer_elements(name, expected):
+    """
+    Check if elements are correctly guessed based on known examples.
+    """
+    assert struc.infer_elements([name])[0] == expected

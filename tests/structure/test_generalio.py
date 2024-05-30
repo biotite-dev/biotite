@@ -5,7 +5,6 @@
 from tempfile import NamedTemporaryFile
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from biotite.structure.io.general import _guess_element
 import glob
 import os
 from os.path import join, splitext
@@ -173,32 +172,3 @@ def test_small_molecule():
     os.remove(temp.name)
 
     assert test_array == ref_array
-
-
-@pytest.mark.parametrize(
-    "name,expected",
-    [("CA", "C"),
-     ("C", "C"),
-     ("CB", "C"),
-     ("OD1", "O"),
-     ("HD21", "H"),
-     ("1H", "H"),
-     ("CL", "C"),
-     ("HE", "H"),
-     ("SD", "S"),
-     ("NA", "N"),
-     ("NX", "N"),
-     ("BE", "BE"),
-     ("BEA", "BE"),
-     ("K", "K"),
-     ("KA", "K"),
-     ("QWERT", "")]
-)
-def test_guess_element(name, expected):
-    """
-    Check if elements are correctly guessed based on known examples.
-    Elements are automatically guessed in GRO and PDB files where the
-    *element* column is missing.
-    """
-    result = _guess_element(name)
-    assert result == expected
