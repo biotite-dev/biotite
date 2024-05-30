@@ -494,3 +494,55 @@ def test_get_symmetry_mates(model):
                    original_structure.get_annotation(category).tolist()
         assert chain.coord.flatten().tolist() == \
                approx(original_structure.coord.flatten().tolist(), abs=1e-3)
+
+
+@pytest.mark.parametrize(
+    "annotation, value, warning_only",
+    [
+        ("coord", -1000, False),
+        ("coord", 10000, False),
+        ("chain_id", "AA", False),
+        ("res_id", 10000, True),
+        ("res_name", "ABCD", False),
+        ("atom_name", "ABCDE", False),
+        ("atom_id", 100000, True),
+        ("b_factor", -100, False),
+        ("b_factor", 1000, False),
+        ("occupancy", -100, False),
+        ("occupancy", 1000, False),
+        ("charge", -10, False),
+        ("charge", 10, False),
+    ]
+)
+def test_setting_incompatible_structure(annotation, value, warning_only):
+    """
+    Expect that an exception is raised, when trying to set a structure,
+    with values exceeding the number of PDB columns
+    """
+    atoms = struc.AtomArray(10)
+    atoms.coord[:, :] = 0.0
+    atoms.chain_id[:] = "A"
+    atoms.res_id[:] = 1
+    atoms.ins_code[:] = ""
+    atoms.res_name[:] = "ABC"
+    atoms.hetero[:] = False
+    atoms.atom_name[:] = ["C{i}" for i in range(atoms.array_length())]
+    atoms.element[:] = "C"
+    atoms.set_annotation("atom_id", np.arange(atoms.array_length()) + 1)
+    atoms.set_annotation("b_factor", np.full(atoms.array_length(), 0.0))
+    atoms.set_annotation("occupancy", np.full(atoms.array_length(), 1.0))
+    atoms.set_annotation("charge", np.full(atoms.array_length(), 0))
+
+    # Set one annotation to a value that exceeds the number of columns
+    if annotation == "coord":
+        atoms.coord[0,0] = value
+    else:
+        atoms.get_annotation(annotation)[0] = value
+
+    pdb_file = pdb.PDBFile()
+    if warning_only:
+        with pytest.warns(UserWarning):
+            pdb_file.set_structure(atoms)
+    else:
+        with pytest.raises(struc.BadStructureError):
+            pdb_file.set_structure(atoms)
