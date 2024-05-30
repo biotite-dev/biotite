@@ -107,7 +107,7 @@ TEST_PARAMETERS = [
     ),
     pytest.param(
         "biotite.structure.io.mol",
-        ["biotite.structure"]
+        ["biotite.structure", "biotite.structure.info"]
     ),
     pytest.param(
         "biotite.structure.info",

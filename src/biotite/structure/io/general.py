@@ -97,11 +97,16 @@ def load_structure(file_path, template=None, **kwargs):
             file = NpzFile.read(file_path)
             array = file.get_structure(**kwargs)
             return _as_single_model_if_possible(array)
-        case ".mol" | ".sdf":
+        case ".mol":
             from .mol import MOLFile
             file = MOLFile.read(file_path)
             array = file.get_structure(**kwargs)
-            # MOL files only contain a single model
+            # MOL and SDF files only contain a single model
+            return array
+        case ".sdf" | ".sd":
+            from .mol import SDFile, get_structure
+            file = SDFile.read(file_path)
+            array = get_structure(file, **kwargs)
             return array
         case ".trr" | ".xtc" | ".tng" | ".dcd" | ".netcdf":
             if template is None:
@@ -197,10 +202,16 @@ def save_structure(file_path, array, **kwargs):
             file = NpzFile()
             file.set_structure(array, **kwargs)
             file.write(file_path)
-        case ".mol" | ".sdf":
+        case ".mol":
             from .mol import MOLFile
             file = MOLFile()
             file.set_structure(array, **kwargs)
+            file.write(file_path)
+        case ".sdf" | ".sd":
+            from .mol import SDFile, SDRecord, set_structure
+            record = SDRecord()
+            record.set_structure(array, **kwargs)
+            file = SDFile({"Structure": record})
             file.write(file_path)
         case ".trr" | ".xtc" | ".tng" | ".dcd" | ".netcdf":
             from .trr import TRRFile

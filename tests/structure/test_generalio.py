@@ -156,7 +156,8 @@ def test_saving_with_extra_args(suffix):
     temp.close()
 
 
-def test_small_molecule():
+@pytest.mark.parametrize("format", [".mol", ".sdf"])
+def test_small_molecule(format):
     """
     Check if loading a small molecule file written via
     :func:`save_structure()` gives the same result as the input to
@@ -164,7 +165,7 @@ def test_small_molecule():
     """
     path = join(data_dir("structure"), "molecules", "TYR.sdf")
     ref_array = strucio.load_structure(path)
-    temp = NamedTemporaryFile("w", suffix=".sdf", delete=False)
+    temp = NamedTemporaryFile("w", suffix=format, delete=False)
     strucio.save_structure(temp.name, ref_array)
     temp.close()
 
