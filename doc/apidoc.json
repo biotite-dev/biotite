@@ -286,7 +286,8 @@
         ],
         "Repair" : [
             "renumber_atom_ids",
-            "renumber_res_ids"
+            "renumber_res_ids",
+            "create_continuous_res_ids"
         ],
         "Residue level utility" : [
             "get_residue_starts",

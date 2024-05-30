@@ -8,10 +8,13 @@ This module contains functionalities for repairing malformed structures.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["renumber_atom_ids", "renumber_res_ids"]
+__all__ = ["renumber_atom_ids", "renumber_res_ids",
+           "create_continuous_res_ids"]
 
 import warnings
 import numpy as np
+from .residues import get_residue_starts
+from .chains import get_chain_starts
 
 
 def renumber_atom_ids(array, start=None):
@@ -50,7 +53,7 @@ def renumber_res_ids(array, start=None):
     """
     Renumber the residue IDs of the given array, so that are continuous.
 
-    DEPRECATED.
+    DEPRECATED: Use :func:`create_continuous_res_ids()`instead.
 
     Parameters
     ----------
@@ -66,7 +69,7 @@ def renumber_res_ids(array, start=None):
         The renumbered array.
     """
     warnings.warn(
-      "'renumber_res_ids()' is deprecated",
+      "'renumber_res_ids()' is deprecated, use 'create_continuous_res_ids()'",
         DeprecationWarning
     )
     if start is None:
@@ -77,3 +80,48 @@ def renumber_res_ids(array, start=None):
     array = array.copy()
     array.res_id = new_res_ids
     return array
+
+
+def create_continuous_res_ids(atoms, restart_each_chain=True):
+    """
+    Create an array of continuous residue IDs for a given structure.
+
+    This means that residue IDs are incremented by 1 for each residue.
+
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack
+        The atoms for which the continuous residue IDs should be created.
+    restart_each_chain : bool, optional
+        If true, the residue IDs are reset to 1 for each chain.
+
+    Returns
+    -------
+    res_ids : ndarray, dtype=int
+        The continuous residue IDs.
+
+    Examples
+    --------
+
+    >>> # Remove a residue to make the residue IDs discontinuous
+    >>> atom_array = atom_array[atom_array.res_id != 5]
+    >>> res_ids, _ = get_residues(atom_array)
+    >>> print(res_ids)
+    [ 1  2  3  4  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20]
+    >>> atom_array.res_id = create_continuous_res_ids(atom_array)
+    >>> res_ids, _ = get_residues(atom_array)
+    >>> print(res_ids)
+    [ 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19]
+
+    """
+    res_ids_diff = np.zeros(atoms.array_length(), dtype=int)
+    res_starts = get_residue_starts(atoms)
+    res_ids_diff[res_starts] = 1
+    res_ids = np.cumsum(res_ids_diff)
+
+    if restart_each_chain:
+        chain_starts = get_chain_starts(atoms)
+        for start in chain_starts:
+            res_ids[start:] -= res_ids[start] - 1
+
+    return res_ids
