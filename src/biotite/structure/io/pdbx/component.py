@@ -105,6 +105,9 @@ class _Component(metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
+    def __str__(self):
+        return str(self.serialize())
+
 
 class _HierarchicalContainer(_Component, MutableMapping,
                              metaclass=ABCMeta):

@@ -768,7 +768,7 @@ class CIFFile(_Component, File, MutableMapping):
 
     @property
     def lines(self):
-        return "\n".join(self.serialize())
+        return self.serialize().splitlines()
 
     @property
     def block(self):
