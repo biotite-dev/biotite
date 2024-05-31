@@ -455,7 +455,7 @@ class Annotation(Copyable):
                 i_last = sys.maxsize
             else:
                 i_last = index.stop - 1
-            
+
             sub_annot = Annotation()
             for feature in self:
                 locs_in_scope = []
@@ -744,7 +744,7 @@ class AnnotatedSequence(Copyable):
                     locs, key=lambda loc: loc.last, reverse=True
                 )
             # Merge the sequences corresponding to the ordered locations
-            for loc in sorted(locs, key=lambda loc: loc.first):
+            for loc in sorted_locs:
                 slice_start = loc.first - self._seqstart
                 # +1 due to exclusive stop
                 slice_stop = loc.last - self._seqstart +1
