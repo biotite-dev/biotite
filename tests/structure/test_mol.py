@@ -63,14 +63,15 @@ def test_header_conversion():
 
 
 @pytest.mark.parametrize(
-    "path, version, omit_charge",
+    "path, version, omit_charge, use_charge_property",
     itertools.product(
         list_v2000_sdf_files(),
         ["V2000", "V3000"],
+        [False, True],
         [False, True]
     )
 )
-def test_structure_conversion(path, version, omit_charge):
+def test_structure_conversion(path, version, omit_charge, use_charge_property):
     """
     After reading a MOL file, writing the structure back to a new file
     and reading it again should give the same structure.
@@ -87,6 +88,14 @@ def test_structure_conversion(path, version, omit_charge):
     mol.set_structure(mol_file, ref_atoms, version=version)
     temp = TemporaryFile("w+")
     mol_file.write(temp)
+
+    if version == "V2000":
+        if use_charge_property:
+            # Enforce usage of 'M  CHG' entries
+            _delete_charge_columns(temp)
+        else:
+            # Enforce usage of charge column in atom block
+            _delete_charge_property(temp)
 
     temp.seek(0)
     mol_file = mol.MOLFile.read(temp)
@@ -209,3 +218,40 @@ def test_large_structure():
     # Check if file is written in V3000 format
     assert "V3000" in str(mol_file)
     assert test_atoms == ref_atoms
+
+
+def _delete_charge_columns(file):
+    """
+    Reset the charge column from a V2000 MOL file to enforce
+    usage of `M  CHG` entries.
+    """
+    CHARGE_START = 36
+    CHARGE_STOP = 39
+
+    file.seek(0)
+    lines = file.read().splitlines()
+    for i, line in enumerate(lines):
+        if (
+            len(line) >= CHARGE_STOP
+            and line[CHARGE_START:CHARGE_STOP].strip()
+            and "V2000" not in line
+        ):
+            # Line contains a charge value -> reset to 0
+            line = line[:CHARGE_START] + "  0" + line[CHARGE_STOP:]
+        lines[i] = line
+    file.seek(0)
+    file.truncate()
+    file.write("\n".join(lines) + "\n")
+
+
+def _delete_charge_property(file):
+    """
+    Delete the charge properties from from a V2000 MOL file to enforce
+    usage of charge column in atom block.
+    """
+    file.seek(0)
+    lines = file.read().splitlines()
+    lines = [line for line in lines if not line.startswith("M  CHG")]
+    file.seek(0)
+    file.truncate()
+    file.write("\n".join(lines) + "\n")

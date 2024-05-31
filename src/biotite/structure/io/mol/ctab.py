@@ -11,6 +11,7 @@ __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["read_structure_from_ctab", "write_structure_to_ctab"]
 
+import itertools
 import warnings
 import shlex
 import numpy as np
@@ -41,6 +42,8 @@ CHARGE_MAPPING = {0: 0, 1: 3, 2: 2, 3: 1, 5: -1, 6: -2, 7: -3}
 CHARGE_MAPPING_REV = {val: key for key, val in CHARGE_MAPPING.items()}
 
 V2000_COMPATIBILITY_LINE = "  0  0  0  0  0  0  0  0  0  0999 V3000"
+# The number of charges per `M  CHG` line
+N_CHARGES_PER_LINE = 8
 
 
 def read_structure_from_ctab(ctab_lines):
@@ -156,6 +159,10 @@ def _read_structure_from_ctab_v2000(ctab_lines):
     n_atoms, n_bonds = _get_counts_v2000(ctab_lines[0])
     atom_lines = ctab_lines[1 : 1 + n_atoms]
     bond_lines = ctab_lines[1 + n_atoms : 1 + n_atoms + n_bonds]
+    charge_lines = [
+        line for line in ctab_lines[1 + n_atoms + n_bonds:]
+        if line.startswith("M  CHG")
+    ]
 
     atoms = AtomArray(n_atoms)
     atoms.add_annotation("charge", int)
@@ -164,14 +171,26 @@ def _read_structure_from_ctab_v2000(ctab_lines):
         atoms.coord[i, 1] = float(line[10:20])
         atoms.coord[i, 2] = float(line[20:30])
         atoms.element[i] = line[31:34].strip().upper()
-        charge = CHARGE_MAPPING.get(int(line[36:39]))
-        if charge is None:
-            warnings.warn(
-                f"Cannot handle MDL charge type {int(line[36 : 39])}, "
-                f"0 is used instead"
-            )
-            charge = 0
-        atoms.charge[i] = charge
+        # If one 'M CHG' entry is present,
+        # it supersedes all atom charges in the atom block
+        if not charge_lines:
+            charge = CHARGE_MAPPING.get(int(line[36:39]))
+            if charge is None:
+                warnings.warn(
+                    f"Cannot handle MDL charge type {int(line[36 : 39])}, "
+                    f"0 is used instead"
+                )
+                charge = 0
+            atoms.charge[i] = charge
+
+    for line in charge_lines:
+        # Remove 'M  CHGnn8' prefix
+        line = line[9:]
+        # The lines contains atom index and charge alternatingly
+        for atom_i_str, charge_str in _batched(line.split(), 2):
+            atom_index = int(atom_i_str) - 1
+            charge = int(charge_str)
+            atoms.charge[atom_index] = charge
 
     bond_array = np.zeros((n_bonds, 3), dtype=np.uint32)
     for i, line in enumerate(bond_lines):
@@ -306,7 +325,20 @@ def _write_structure_to_ctab_v2000(atoms, default_bond_type):
         for i, j, bond_type in atoms.bonds.as_array()
     ]
 
-    return [counts_line] + atom_lines + bond_lines + ["M  END"]
+    # V2000 files introduce charge annotations in the property block
+    # They define the charge literally (without mapping)
+    charge_lines = []
+    # Each `M  CHG` line can contain up to 8 charges
+    for batch in _batched(
+        [(atom_i, c) for atom_i, c in enumerate(charge) if c != 0],
+        N_CHARGES_PER_LINE
+    ):
+        charge_lines.append(
+            f"M  CHG{len(batch):>3d}"
+            + "".join(f" {atom_i+1:>3d} {c:>3d}" for atom_i, c in batch)
+        )
+
+    return [counts_line] + atom_lines + bond_lines + charge_lines + ["M  END"]
 
 
 def _write_structure_to_ctab_v3000(atoms, default_bond_type):
@@ -366,3 +398,15 @@ def _quote(string):
         return f'"{string}"'
     else:
         return string
+
+def _batched(iterable, n):
+    """
+    Equivalent to :func:`itertools.batched()`.
+
+    However, :func:`itertools.batched()` is available since Python 3.12.
+    This function can be removed when the minimum supported Python
+    version is 3.12.
+    """
+    iterator = iter(iterable)
+    while batch := tuple(itertools.islice(iterator, n)):
+        yield batch
