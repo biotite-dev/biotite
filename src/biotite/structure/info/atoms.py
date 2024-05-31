@@ -72,6 +72,11 @@ def residue(res_name):
     # Avoid circular import
     from ..io.pdbx import get_component
 
-    component = get_component(get_ccd(), res_name=res_name)
+    try:
+        component = get_component(get_ccd(), res_name=res_name)
+    except KeyError:
+        raise KeyError(
+            f"No atom information found for residue '{res_name}' in CCD"
+        )
     component.hetero[:] = res_name not in non_hetero_residues
     return component

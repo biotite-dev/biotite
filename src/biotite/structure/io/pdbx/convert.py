@@ -1112,7 +1112,7 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True,
         atom_category = _filter(
             atom_category, atom_category["comp_id"].as_array() == res_name
         )
-        if len(atom_category) == 0:
+        if atom_category.row_count == 0:
             raise KeyError(
                 f"No rows with residue name '{res_name}' found in "
                 f"'chem_comp_atom' category"
