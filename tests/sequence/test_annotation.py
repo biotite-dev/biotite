@@ -58,26 +58,33 @@ def test_annotated_sequence():
     annot_seq = AnnotatedSequence(annotation, sequence)
     assert annot_seq[2] == "T"
     assert annot_seq.sequence[2] == "G"
-    
+
     # test slicing with only stop
     annot_seq2 = annot_seq[:16]
     assert annot_seq2.sequence == seq.NucleotideSequence("ATGGCGTACGATTAG")
     assert set([f.qual['note'] for f in annot_seq2.annotation]) == {'walker'}
-    
+
     # test slicing with only start
     annot_seq3 = annot_seq[16:]
     assert annot_seq3.sequence == seq.NucleotideSequence("AAAAAAA")
     assert set([f.qual['note'] for f in annot_seq3.annotation]) == {'poly-A'}
-    
+
     # test slicing with start and stop
     annot_seq4 = annot_seq[1:17]
     assert annot_seq4.sequence == seq.NucleotideSequence("ATGGCGTACGATTAGA") # sequences are 1-indexed
     assert set([f.qual['note'] for f in annot_seq4.annotation]) == {'walker', 'poly-A'}
-    
+
     assert annot_seq[feature1] == seq.NucleotideSequence("ATAT")
     assert annot_seq[feature2] == seq.NucleotideSequence("AAAAAAA")
     annot_seq[feature1] = seq.NucleotideSequence("CCCC")
     assert annot_seq.sequence == seq.NucleotideSequence("CCGGCGTACGCCTAGAAAAAAA")
+
+    # test slicing with feature on minus strand
+    feature3 = Feature("misc_feature", [Location(1,4), Location(8,12)])
+    feature4 = Feature("misc_feature_minus", [
+        Location(1,4,strand=Location.Strand.REVERSE),
+        Location(8,12,strand=Location.Strand.REVERSE)])
+    assert annot_seq[feature4] == annot_seq[feature3].reverse().complement()
 
 def test_reverse_complement():
     gb_file = gb.GenBankFile.read(join(data_dir("sequence"), "ec_bl21.gb"))
