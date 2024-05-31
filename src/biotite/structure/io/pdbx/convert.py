@@ -371,14 +371,14 @@ def _get_block(pdbx_component, block_name):
         return pdbx_component
 
 
-def _get_or_fallback(category, key, fallback_key, cat_name="input"):
+def _get_or_fallback(category, key, fallback_key):
         """
         Return column related to key in category if it exists,
         otherwise try to get the column related to fallback key.
         """
         if key not in category:
             warnings.warn(
-                f"Attribute '{key}' not found within '{cat_name}' category. "
+                f"Attribute '{key}' not found within 'atom_site' category. "
                 f"The fallback attribute '{fallback_key}' will be used instead",
                 UserWarning
             )
@@ -386,8 +386,8 @@ def _get_or_fallback(category, key, fallback_key, cat_name="input"):
                 return category[fallback_key]
             except KeyError as key_exc:
                 raise InvalidFileError(
-                    f"Fallback attribute '{fallback_key}' not found in "
-                    "'{dict_name}' category"
+                    f"Fallback attribute '{fallback_key}' not found within "
+                    "'atom_site' category"
                 ) from key_exc
         return category[key]
 
