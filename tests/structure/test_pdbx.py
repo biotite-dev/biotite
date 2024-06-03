@@ -285,6 +285,10 @@ def test_any_bonds(tmpdir, format):
     "format", ["cif", "bcif"]
 )
 def test_unequal_lengths(format):
+    """
+    Check if setting columns with unequal lengths in the same category
+    raises an exception.
+    """
     if format == "cif":
         Category = pdbx.CIFCategory
     else:
@@ -297,6 +301,35 @@ def test_unequal_lengths(format):
     }
     with pytest.raises(pdbx.SerializationError):
         Category(invalid_category_dict).serialize()
+
+
+def test_setting_empty_column():
+    """
+    Check if setting an empty column raises an exception.
+    """
+    with pytest.raises(
+        ValueError, match="Array must contain at least one element"
+    ):
+        pdbx.CIFCategory({"foo": []})
+
+
+def test_setting_empty_structure():
+    """
+    Check if setting an empty structure raises an exception.
+    In contrast, empty bonds should be simply ignored
+    """
+    empty_atoms = struc.AtomArray(0)
+    with pytest.raises(struc.BadStructureError):
+        pdbx.set_structure(pdbx.CIFFile(), empty_atoms)
+
+    atoms = struc.AtomArray(1)
+    # Residue and atom name are required for setting intra-residue bonds
+    atoms.res_name[:] = "ALA"
+    atoms.atom_name[:] = "A"
+    atoms.coord[:, :] = 0.0
+    empty_bonds = struc.BondList(atoms.array_length())
+    atoms.bonds = empty_bonds
+    pdbx.set_structure(pdbx.CIFFile(), atoms, include_bonds=True)
 
 
 @pytest.mark.parametrize(

@@ -402,7 +402,9 @@ class CIFCategory(_Component, MutableMapping):
                     f"while the first column has row_count {self._row_count}"
                 )
 
-        if self._row_count == 1:
+        if self._row_count == 0:
+            raise ValueError("At least one row is required")
+        elif self._row_count == 1:
             lines = self._serialize_single()
         else:
             lines = self._serialize_looped()
@@ -1025,4 +1027,6 @@ def _multiline(value):
 def _arrayfy(data):
     if not isinstance(data, (Sequence, np.ndarray)) or isinstance(data, str):
         data = [data]
+    elif len(data) == 0:
+        raise ValueError("Array must contain at least one element")
     return np.asarray(data)
