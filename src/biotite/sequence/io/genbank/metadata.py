@@ -14,7 +14,7 @@ __all__ = ["get_locus", "get_definition", "get_accession", "get_version",
 
 from ....file import InvalidFileError
 from .file import GenBankFile
-
+import re
 
 def get_locus(gb_file):
     """
@@ -64,12 +64,45 @@ def get_locus(gb_file):
     # 'LOCUS' field has only one line
     locus_info = lines[0]
 
-    name = locus_info[:18].strip()
-    length = int(locus_info[18 : 28])
-    mol_type = locus_info[32 : 42].strip()
-    is_circular = True if locus_info[43 : 51] == "circular" else False
-    division = locus_info[52 : 55].strip()
-    date = locus_info[56 : 67]
+    fields = str(locus_info).split()
+
+    # The first field will always be the ID
+    name = fields[0]
+
+    # The second field will always be the length followed 
+    # by units (eg 1224 aa)
+    length = int(fields[1])
+
+    # The third field *should* be the molecular type 
+    # but sometimes this is missing
+    # NOTE: remember that fields[2] is the unit for length, 
+    #       eg bp or aa, so we move to fields[3] here.
+    if fields[3] not in ('linear', 'circular'):
+        mol_type = fields[3]
+        next_idx = 4
+    else:
+        mol_type = ''
+        next_idx = 3
+
+
+    # The next field should be the token 'linear' or 'circular', 
+    # but sometimes this is missing
+    if 'linear' == fields[next_idx]:
+        is_circular = False
+        next_idx += 1
+    elif 'circular' == fields[next_idx]:
+        is_circular = True
+        next_idx += 1
+    else:
+        is_circular = False
+
+    # The next field is the division, an all caps 3 letter token
+    division = fields[next_idx]
+    next_idx += 1
+
+    # The last field is a date in the format DD-M-YYYY
+    date = fields[next_idx]
+
     return name, length, mol_type, is_circular, division, date
 
 def get_definition(gb_file):

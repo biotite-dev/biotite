@@ -178,3 +178,14 @@ def test_multi_file():
     multi_file = gb.MultiFile.read(join(data_dir("sequence"), "multifile.gp"))
     accessions = [gb.get_accession(f) for f in multi_file]
     assert accessions == ["1L2Y_A", "3O5R_A", "5UGO_A"]
+
+def test_long_locus_id():
+     gb_file = gb.GenBankFile.read(join(data_dir("sequence"), "long_locus_id.gb"))
+     assert gb.get_locus(gb_file) \
+        == ("AJ311647LOOOOOOOOOOOOOOOOOOOOOOOOOONGID", 1224, "DNA", False, "VRT", "14-NOV-2006")
+     
+def test_missing_linear_vs_circular():
+     gb_file = gb.GenBankFile.read(join(data_dir("sequence"), "missing_linear_vs_circular.gb"))
+     assert gb.get_locus(gb_file) \
+        == ("SCU49845", 5028, "DNA", False, "PLN", "21-JUN-1999")
+     
