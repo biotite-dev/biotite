@@ -228,16 +228,16 @@ def check_duplicate_atoms(array):
     for i in range(1, array.array_length()):
         # Start with assumption that all atoms in the array
         # until index i are duplicates of the atom at index i
-        is_dublicate = np.full(i, True, dtype=bool)
+        is_duplicate = np.full(i, True, dtype=bool)
         for annot in annots:
             # For each annotation array filter out the atoms until
             # index i that have an unequal annotation
             # to the atom at index i
-            is_dublicate &= (annot[:i] == annot[i])
+            is_duplicate &= (annot[:i] == annot[i])
         # After checking all annotation arrays,
         # if there still is any duplicate to the atom at index i,
         # add i the the list of duplicate atom indices
-        if is_dublicate.any():
+        if is_duplicate.any():
             duplicates.append(i)
     return np.array(duplicates)
 
