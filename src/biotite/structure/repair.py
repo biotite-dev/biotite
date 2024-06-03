@@ -9,8 +9,9 @@ This module contains functionalities for repairing malformed structures.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["renumber_atom_ids", "renumber_res_ids",
-           "create_continuous_res_ids", "infer_elements"]
+           "create_continuous_res_ids", "infer_elements", "create_atom_names"]
 
+from collections import Counter
 import warnings
 import numpy as np
 from .atoms import AtomArray, AtomArrayStack
@@ -130,7 +131,7 @@ def create_continuous_res_ids(atoms, restart_each_chain=True):
 
 def infer_elements(atoms):
     """
-    Infer the element of an atom based on its name.
+    Infer the elements of atoms based on their atom name.
 
     Parameters
     ----------
@@ -142,6 +143,10 @@ def infer_elements(atoms):
     -------
     elements : ndarray, dtype=str
         The inferred elements.
+
+    See Also
+    --------
+    create_atoms_names : The opposite of this function
 
     Examples
     --------
@@ -157,6 +162,59 @@ def infer_elements(atoms):
     else:
         atom_names = atoms
     return np.array([_guess_element(name) for name in atom_names])
+
+
+def create_atom_names(atoms):
+    """
+    Create atom names for a single residue based on elements.
+
+    The atom names are simply enumerated separately for each element.
+
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack or array-like of str
+        The atoms for which the atom names should be created.
+        Alternatively the elements can be passed directly.
+
+    Returns
+    -------
+    atom_names : ndarray, dtype=str
+        The atom names.
+
+    See Also
+    --------
+    infer_elements : The opposite of this function
+
+    Notes
+    -----
+    The atom names created this way may differ from the ones in the
+    original source, as different schemes for atom naming exist.
+    This function only ensures that the created atom names are unique.
+    This is e.g. necessary for writing bonds to PDBx files.
+
+    Note that this function should be used only on single residues,
+    otherwise enumeration would continue in the next residue.
+
+    Examples
+    --------
+
+    >>> atoms = residue("URA")  # Uracil
+    >>> print(atoms.element)
+    ['N' 'C' 'O' 'N' 'C' 'O' 'C' 'C' 'H' 'H' 'H' 'H']
+    >>> print(create_atom_names(atoms))
+    ['N1' 'C1' 'O1' 'N2' 'C2' 'O2' 'C3' 'C4' 'H1' 'H2' 'H3' 'H4']
+    """
+    if isinstance(atoms, (AtomArray, AtomArrayStack)):
+        elements = atoms.element
+    else:
+        elements = atoms
+
+    atom_names = np.zeros(len(elements), dtype="U6")
+    element_counter = Counter()
+    for i, elem in enumerate(elements):
+        element_counter[elem] += 1
+        atom_names[i] = f"{elem}{element_counter[elem]}"
+    return atom_names
 
 
 _elements = [elem.upper() for elem in

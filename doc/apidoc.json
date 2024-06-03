@@ -288,7 +288,8 @@
             "renumber_atom_ids",
             "renumber_res_ids",
             "create_continuous_res_ids",
-            "infer_elements"
+            "infer_elements",
+            "create_atom_names"
         ],
         "Residue level utility" : [
             "get_residue_starts",
