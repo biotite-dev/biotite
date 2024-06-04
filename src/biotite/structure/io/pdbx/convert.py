@@ -724,7 +724,7 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
         file.
         If the data block object is passed directly to `pdbx_file`,
         this parameter is ignored.
-        If the file is empty, a new data will be created.
+        If the file is empty, a new data block will be created.
     include_bonds : bool, optional
         If set to true and `array` has associated ``bonds`` , the
         intra-residue bonds will be written into the ``chem_comp_bond``

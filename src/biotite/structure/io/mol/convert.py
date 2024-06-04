@@ -59,9 +59,13 @@ def set_structure(mol_file, atoms, default_bond_type=BondType.ANY,
         The version of the CTAB format.
         ``"V2000"`` uses the *Atom* and *Bond* block, while ``"V3000"``
         uses the *Properties* block.
-        By default, ``"V2000"`` is used unless the number of atoms or
-        bonds exceed the fixed size columns in the table, in which case
-        ``"V3000"`` is used.
+        By default, ``"V2000"`` is used, unless the number of atoms or
+        bonds exceeds 999, in which case ``"V3000"`` is used.
+    record_name : str, optional
+        Has only an effect when `mol_file` is a :class:`SDFile`.
+        The name of the record.
+        Default is the first record of the file.
+        If the file is empty, a new record will be created.
     """
     record = _get_or_create_record(mol_file, record_name)
     record.set_structure(atoms, default_bond_type, version)
