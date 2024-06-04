@@ -34,8 +34,7 @@ def test_fetch(format, as_file_like):
     file_path_or_obj = pubchem.fetch(CID, format, path, overwrite=True)
     if format == "sdf":
         mol_file = mol.MOLFile.read(file_path_or_obj)
-        mol_name, _, _, _, _, _, _, _, _ = mol_file.get_header()
-        assert int(mol_name) == CID
+        assert int(mol_file.header.mol_name) == CID
         # This should be a readable structure
         mol_file.get_structure()
 
