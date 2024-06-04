@@ -95,23 +95,23 @@ def write_structure_to_ctab(atoms, default_bond_type=BondType.ANY,
     ----------
     atoms : AtomArray
         The array must have an associated :class:`BondList`.
+    default_bond_type : BondType, optional
+        Bond type fallback for the *Bond block*, if a :class:`BondType`
+        has no CTAB counterpart.
+        By default, each such bond is treated as :attr:`BondType.ANY`.
+    version : {"V2000", "V3000"}, optional
+        The version of the CTAB format.
+        ``"V2000"`` uses the *Atom* and *Bond* block, while ``"V3000"``
+        uses the *Properties* block.
+        By default, ``"V2000"`` is used, unless the number of atoms or
+        bonds exceeds 999, in which case ``"V3000"`` is used.
 
     Returns
     -------
     ctab_lines : lines of str
         The lines containing the *ctab*.
         The lines begin with the *counts* line and end with the `M END`
-        .line
-    default_bond_type : BondType
-        Bond type fallback in the *Bond block* if a bond has no bond_type
-        defined in *atoms* array. By default, each bond is treated as
-        :attr:`BondType.ANY`.
-    version : {"V2000", "V3000"}, optional
-        The version of the CTAB format.
-        ``"V2000"`` uses the *Atom* and *Bond* block, while ``"V3000"``
-        uses the *Properties* block.
-        By default, ``"V2000"`` is used unless the number of atoms or
-        bonds exceeds 1000, in which case ``"V3000"`` is used.
+        line.
 
     References
     ----------

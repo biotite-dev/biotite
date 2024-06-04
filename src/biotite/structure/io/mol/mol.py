@@ -168,9 +168,10 @@ class MOLFile(TextFile):
         array : AtomArray
             The array to be saved into this file.
             Must have an associated :class:`BondList`.
-        default_bond_type : BondType
-            Bond type fallback in the *Bond block* if a bond has no bond_type
-            defined in *atoms* array. By default, each bond is treated as
+        default_bond_type : BondType, optional
+            Bond type fallback for the *Bond block*, if a
+            :class:`BondType` has no CTAB counterpart.
+            By default, each such bond is treated as
             :attr:`BondType.ANY`.
         version : {"V2000", "V3000"}, optional
             The version of the CTAB format.

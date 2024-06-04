@@ -27,7 +27,6 @@ def get_structure(mol_file, record_name=None):
         The name of the record in the SD file.
         By default, the first record is used.
 
-
     Returns
     -------
     array : AtomArray
@@ -55,6 +54,14 @@ def set_structure(mol_file, atoms, default_bond_type=BondType.ANY,
     array : AtomArray
         The array to be saved into this file.
         Must have an associated :class:`BondList`.
+        Bond type fallback for the *Bond block*, if a
+        :class:`BondType` has no CTAB counterpart.
+        By default, each such bond is treated as
+        :attr:`BondType.ANY`.
+    default_bond_type : BondType, optional
+        Bond type fallback for the *Bond block*, if a :class:`BondType`
+        has no CTAB counterpart.
+        By default, each such bond is treated as :attr:`BondType.ANY`.
     version : {"V2000", "V3000"}, optional
         The version of the CTAB format.
         ``"V2000"`` uses the *Atom* and *Bond* block, while ``"V3000"``
