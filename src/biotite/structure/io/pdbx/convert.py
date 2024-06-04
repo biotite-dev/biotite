@@ -748,6 +748,8 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
     >>> file.write(os.path.join(path_to_directory, "structure.cif"))
 
     """
+    _check_non_empty(array)
+
     block = _get_or_create_block(pdbx_file, data_block)
     Category = block.subcomponent_class()
     Column = Category.subcomponent_class()
@@ -792,11 +794,13 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
         )
 
     if array.bonds is not None:
-        block["struct_conn"] = _set_inter_residue_bonds(array, atom_site)
+        struct_conn =  _set_inter_residue_bonds(array, atom_site)
+        if struct_conn is not None:
+            block["struct_conn"] = struct_conn
         if include_bonds:
-            block["chem_comp_bond"] = _set_intra_residue_bonds(
-                array, atom_site
-            )
+            chem_comp_bond = _set_intra_residue_bonds(array, atom_site)
+            if chem_comp_bond is not None:
+                block["chem_comp_bond"] = chem_comp_bond
 
     # In case of a single model handle each coordinate
     # simply like a flattened array
@@ -813,7 +817,7 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
         )
     # In case of multiple models repeat annotations
     # and use model specific coordinates
-    elif type(array) == AtomArrayStack:
+    else:
         atom_site = _repeat(atom_site, array.stack_depth())
         coord = np.reshape(
             array.coord, (array.stack_depth() * array.array_length(), 3)
@@ -825,8 +829,6 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
             np.arange(1, array.stack_depth() + 1, dtype=np.int32),
             repeats=array.array_length(),
         )
-    else:
-        raise ValueError("Structure must be AtomArray or AtomArrayStack")
     if not "atom_id" in annot_categories:
         # Count from 1
         atom_site["id"] = np.arange(
@@ -851,6 +853,20 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
         cell["angle_beta"] = np.rad2deg(beta)
         cell["angle_gamma"] = np.rad2deg(gamma)
         block["cell"] = cell
+
+
+def _check_non_empty(array):
+    if isinstance(array, AtomArray):
+        if array.array_length() == 0:
+            raise BadStructureError("Structure must not be empty")
+    elif isinstance(array, AtomArrayStack):
+        if array.array_length() == 0 or array.stack_depth() == 0:
+            raise BadStructureError("Structure must not be empty")
+    else:
+        raise ValueError(
+            "Structure must be AtomArray or AtomArrayStack, "
+            f"but got {type(array).__name__}"
+        )
 
 
 def _get_or_create_block(pdbx_component, block_name):
@@ -938,6 +954,8 @@ def _set_intra_residue_bonds(array, atom_site):
     Column = Category.subcomponent_class()
 
     bond_array = _filter_bonds(array, "intra")
+    if len(bond_array) == 0:
+        return None
     value_order = np.zeros(len(bond_array), dtype="U4")
     aromatic_flag = np.zeros(len(bond_array), dtype="U1")
     for i, bond_type in enumerate(bond_array[:, 2]):
@@ -991,6 +1009,8 @@ def _set_inter_residue_bonds(array, atom_site):
     Column = Category.subcomponent_class()
 
     bond_array = _filter_bonds(array, "inter")
+    if len(bond_array) == 0:
+        return None
     struct_conn = Category()
     struct_conn["id"] = np.arange(1, len(bond_array) + 1)
     struct_conn["conn_type_id"] = np.full(len(bond_array), "covale")
@@ -1199,6 +1219,8 @@ def set_component(pdbx_file, array, data_block=None):
         If the data block object is passed directly to `pdbx_file`,
         this parameter is ignored.
     """
+    _check_non_empty(array)
+
     block = _get_or_create_block(pdbx_file, data_block)
     Category = block.subcomponent_class()
 
@@ -1233,7 +1255,7 @@ def set_component(pdbx_file, array, data_block=None):
     ).astype(str)
     block["chem_comp_atom"] = atom_cat
 
-    if array.bonds is not None:
+    if array.bonds is not None and array.bonds.get_bond_count() > 0:
         bond_array = array.bonds.as_array()
         order_flags = []
         aromatic_flags = []
