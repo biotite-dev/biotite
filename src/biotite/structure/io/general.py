@@ -11,6 +11,7 @@ __name__ = "biotite.structure.io"
 __author__ = "Patrick Kunzmann"
 __all__ = ["load_structure", "save_structure"]
 
+import datetime
 import os.path
 import io
 from ..atoms import AtomArrayStack
@@ -206,12 +207,14 @@ def save_structure(file_path, array, **kwargs):
             from .mol import MOLFile
             file = MOLFile()
             file.set_structure(array, **kwargs)
+            file.header = _mol_header()
             file.write(file_path)
         case ".sdf" | ".sd":
             from .mol import SDFile, SDRecord, set_structure
             record = SDRecord()
             record.set_structure(array, **kwargs)
-            file = SDFile({"Structure": record})
+            record.header = _mol_header()
+            file = SDFile({"Molecule": record})
             file.write(file_path)
         case ".trr" | ".xtc" | ".tng" | ".dcd" | ".netcdf":
             from .trr import TRRFile
@@ -242,3 +245,13 @@ def _as_single_model_if_possible(atoms):
         return atoms[0]
     else:
         return atoms
+
+
+def _mol_header():
+    from .mol import Header
+    return Header(
+        mol_name="Molecule",
+        program="Biotite",
+        time=datetime.datetime.now(),
+        dimensions="3D",
+    )
