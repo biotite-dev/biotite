@@ -23,7 +23,7 @@ def get_sequence(fasta_file, header=None, seq_type=None):
     The type of sequence is guessed from the sequence string:
     First, a conversion into a :class:`NucleotideSequence` and
     second a conversion into a :class:`ProteinSequence` is tried.
-    
+
     Parameters
     ----------
     fasta_file : FastaFile
@@ -32,17 +32,17 @@ def get_sequence(fasta_file, header=None, seq_type=None):
         The header to get the sequence from. By default, the first
         sequence of the file is returned.
     seq_type : Class, optional
-        The :class:`Sequence` subclass contained in the file. If not 
-        set, biotite will attempt to automatically detect whether a 
+        The :class:`Sequence` subclass contained in the file. If not
+        set, biotite will attempt to automatically detect whether a
         nucleotide or protein sequence is present.
-    
+
     Returns
     -------
     sequence : NucleotideSequence or ProteinSequence
         The requested sequence in the `FastaFile`.
         :class:`NucleotideSequence` if the sequence string fits the
         corresponding alphabet, :class:`ProteinSequence` otherwise.
-    
+
     Raises
     ------
     ValueError
@@ -72,23 +72,23 @@ def get_sequences(fasta_file, seq_type=None):
     The type of sequence is guessed from the sequence string:
     First, a conversion into a :class:`NucleotideSequence` and
     second a conversion into a :class:`ProteinSequence` is tried.
-    
+
     Parameters
     ----------
     fasta_file : FastaFile
         The :class:`FastaFile` to be accessed.
     seq_type : Class, optional
-        The :class:`Sequence` subclass contained in the file. If not 
-        set, biotite will attempt to automatically detect whether a 
+        The :class:`Sequence` subclass contained in the file. If not
+        set, biotite will attempt to automatically detect whether a
         nucleotide or protein sequence is present.
-    
+
     Returns
     -------
     seq_dict : dict
         A dictionary that maps headers to
         :class:`NucleotideSequence` and/or :class:`ProteinSequence`
         instances as values.
-    
+
     Raises
     ------
     ValueError
@@ -105,7 +105,7 @@ def get_sequences(fasta_file, seq_type=None):
 def set_sequence(fasta_file, sequence, header=None, as_rna=False):
     """
     Set a sequence in a :class:`FastaFile` instance.
-    
+
     Parameters
     ----------
     fasta_file : FastaFile
@@ -117,7 +117,7 @@ def set_sequence(fasta_file, sequence, header=None, as_rna=False):
     as_rna : bool, optional
         If set to true, ``'T'`` will be replaced by ``'U'``,
         if a :class:`NucleotideSequence` was given.
-    
+
     Raises
     ------
     ValueError
@@ -132,7 +132,7 @@ def set_sequence(fasta_file, sequence, header=None, as_rna=False):
 def set_sequences(fasta_file, sequence_dict, as_rna=False):
     """
     Set sequences in a :class:`FastaFile` instance from a dictionary.
-    
+
     Parameters
     ----------
     fasta_file : FastaFile
@@ -143,7 +143,7 @@ def set_sequences(fasta_file, sequence_dict, as_rna=False):
     as_rna : bool, optional
         If set to true, ``'T'`` will be replaced by ``'U'``,
         if a :class:`NucleotideSequence` was given.
-    
+
     Raises
     ------
     ValueError
@@ -157,7 +157,7 @@ def set_sequences(fasta_file, sequence_dict, as_rna=False):
 def get_alignment(fasta_file, additional_gap_chars=("_",), seq_type=None):
     """
     Get an alignment from a :class:`FastaFile` instance.
-    
+
     Parameters
     ----------
     fasta_file : FastaFile
@@ -165,10 +165,10 @@ def get_alignment(fasta_file, additional_gap_chars=("_",), seq_type=None):
     additional_gap_chars : str, optional
         The characters to be treated as gaps.
     seq_type : Class, optional
-        The :class:`Sequence` subclass contained in the file. If not 
-        set, biotite will attempt to automatically detect whether a 
+        The :class:`Sequence` subclass contained in the file. If not
+        set, biotite will attempt to automatically detect whether a
         nucleotide or protein sequence is present.
-    
+
     Returns
     -------
     alignment : Alignment
@@ -190,13 +190,13 @@ def set_alignment(fasta_file, alignment, seq_names):
     """
     Fill a :class:`FastaFile` with gapped sequence strings from an
     alignment.
-    
+
     Parameters
     ----------
     fasta_file : FastaFile
         The :class:`FastaFile` to be accessed.
     alignment : Alignment
-        The alignment to be set. 
+        The alignment to be set.
     seq_names : iterable object of str
         The names for the sequences in the alignment.
         Must have the same length as the sequence count in `alignment`.
@@ -215,9 +215,12 @@ def _convert_to_sequence(seq_str, seq_type=None):
 
     # Define preprocessing of preimplemented sequence types
 
-    # Selenocysteine is not supported, replace with cysteine
-    process_protein_sequence = lambda x : x.upper().replace("U", "C")
-    # For nucleotides uracil is represented by thymine and there is is only 
+    # Replace selenocysteine with cysteine
+    # and pyrrolysine with lysine
+    process_protein_sequence = (
+        lambda x : x.upper().replace("U", "C").replace("O", "K")
+    )
+    # For nucleotides uracil is represented by thymine and there is only
     # one letter for completely unknown nucleotides
     process_nucleotide_sequence = (
         lambda x : x.upper().replace("U","T").replace("X","N")
@@ -237,7 +240,7 @@ def _convert_to_sequence(seq_str, seq_type=None):
                 )
             seq_str = process_protein_sequence(seq_str)
         # Return the converted sequence
-        return seq_type(seq_str)    
+        return seq_type(seq_str)
 
     # Attempt to automatically determine sequence type
 

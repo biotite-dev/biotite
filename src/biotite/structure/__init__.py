@@ -124,6 +124,7 @@ from .repair import *
 from .residues import *
 from .chains import *
 from .sasa import *
+from .sequence import *
 from .sse import *
 from .superimpose import *
 from .transform import *
