@@ -309,11 +309,13 @@ def _write_structure_to_ctab_v2000(atoms, default_bond_type):
     )
 
     atom_lines = [
-        f"{atoms.coord[i,0]:>10.5f}"
-        f"{atoms.coord[i,1]:>10.5f}"
-        f"{atoms.coord[i,2]:>10.5f}"
-        f" {atoms.element[i].capitalize():>3}"
-        f"  {CHARGE_MAPPING_REV.get(charge[i], 0):>3d}" + f"{0:>3d}" * 10
+        f"{atoms.coord[i,0]:>10.4f}"
+        f"{atoms.coord[i,1]:>10.4f}"
+        f"{atoms.coord[i,2]:>10.4f}"
+        f" {atoms.element[i].capitalize():3}"
+        f"{0:>2}"  # Mass difference -> unused
+        f"{CHARGE_MAPPING_REV.get(charge[i], 0):>3d}"
+        + f"{0:>3d}" * 10  # More unused fields
         for i in range(atoms.array_length())
     ]
 
@@ -354,9 +356,9 @@ def _write_structure_to_ctab_v3000(atoms, default_bond_type):
     atom_lines = [
         f"{i + 1}"
         f" {_quote(atoms.element[i].capitalize())}"
-        f" {atoms.coord[i,0]:.5f}"
-        f" {atoms.coord[i,1]:.5f}"
-        f" {atoms.coord[i,2]:.5f}"
+        f" {atoms.coord[i,0]:.4f}"
+        f" {atoms.coord[i,1]:.4f}"
+        f" {atoms.coord[i,2]:.4f}"
         # 'aamap' is unused
         f" 0"
         f" {_to_property(charges[i])}"
