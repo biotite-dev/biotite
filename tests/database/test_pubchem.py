@@ -84,7 +84,7 @@ def test_fetch_invalid():
 @pytest.mark.parametrize(
     "query, ref_ids",
     [
-        (pubchem.NameQuery("Alanine"), [602, 5950, 71080]),
+        (pubchem.NameQuery("Alanine"), [5950]),
         (pubchem.SmilesQuery("CCCC"), [7843]),
         (pubchem.InchiQuery("InChI=1S/C4H10/c1-3-4-2/h3-4H2,1-2H3"), [7843]),
         (pubchem.InchiKeyQuery("IJDNQMDRQITEOD-UHFFFAOYSA-N"), [7843]),
@@ -95,7 +95,11 @@ def test_search_simple(query, ref_ids):
     """
     Checks for the simpler `Query` types, where the output is known.
     """
-    assert set(pubchem.search(query)) == set(ref_ids)
+    # NOTE: The full set of ref ids returned by pubchem routinely changes.
+    #       For this reason, we check that the expected ref_ids set is
+    #       a subset of the actual set. The expected ref_ids set should
+    #       be stable over time.
+    assert set(ref_ids).issubset(pubchem.search(query))
 
 
 @pytest.mark.skipif(
