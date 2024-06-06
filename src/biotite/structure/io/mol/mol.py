@@ -6,15 +6,14 @@ __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["MOLFile"]
 
-import datetime
 from ....file import TextFile, InvalidFileError
 from .ctab import read_structure_from_ctab, write_structure_to_ctab
+from .header import Header
 from ...bonds import BondType
 
 
 # Number of header lines
 N_HEADER = 3
-DATE_FORMAT = "%m%d%y%H%M"
 
 
 class MOLFile(TextFile):
@@ -31,6 +30,11 @@ class MOLFile(TextFile):
 
     This class can also be used to parse the first structure from an SDF
     file, as the SDF format extends the MOL format.
+
+    Attributes
+    ----------
+    header : Header
+        The header of the MOL file.
 
     References
     ----------
@@ -74,88 +78,66 @@ class MOLFile(TextFile):
         super().__init__()
         # empty header lines
         self.lines = [""] * N_HEADER
+        self._header = None
+
+
+    @classmethod
+    def read(cls, file):
+        mol_file = super().read(file)
+        mol_file._header = None
+        return mol_file
+
+
+    @property
+    def header(self):
+        if self._header is None:
+            self._header = Header.deserialize("\n".join(self.lines[0:3]) + "\n")
+        return self._header
+
+
+    @header.setter
+    def header(self, header):
+        self._header = header
+        self.lines[0:3] = self._header.serialize().splitlines()
+
 
     def get_header(self):
         """
         Get the header from the MOL file.
 
+        DEPRECATED: Use the :attr:`header` property instead.
+
         Returns
         -------
-        mol_name : str
-            The name of the molecule.
-        initials : str
-            The author's initials.
-        program : str
-            The program name.
-        time : datetime
-            The time of file creation.
-        dimensions : str
-            Dimensional codes.
-        scaling_factors : str
-            Scaling factors.
-        energy : str
-            Energy from modeling program.
-        registry_number : str
-            MDL registry number.
-        comments : str
-            Additional comments.
+        header_attributes
+            See :class:`Header`.
         """
-        mol_name        = self.lines[0].strip()
-        initials        = self.lines[1][0:2].strip()
-        program         = self.lines[1][2:10].strip()
-        time            = datetime.datetime.strptime(self.lines[1][10:20],
-                                                     DATE_FORMAT)
-        dimensions      = self.lines[1][20:22].strip()
-        scaling_factors = self.lines[1][22:34].strip()
-        energy          = self.lines[1][34:46].strip()
-        registry_number = self.lines[1][46:52].strip()
-        comments        = self.lines[2].strip()
-        return mol_name, initials, program, time, dimensions, \
-               scaling_factors, energy, registry_number, comments
+        header = self.header
+        return (
+            header.mol_name,
+            header.initials,
+            header.program,
+            header.time,
+            header.dimensions,
+            header.scaling_factors,
+            header.energy,
+            header.registry_number,
+            header.comments
+        )
 
 
-    def set_header(self, mol_name, initials="", program="", time=None,
-                   dimensions="", scaling_factors="", energy="",
-                   registry_number="", comments=""):
+    def set_header(self, *args, **kwargs):
         """
         Set the header for the MOL file.
 
+        DEPRECATED: Use the :attr:`header` property instead.
+
         Parameters
         ----------
-        mol_name : str
-            The name of the molecule.
-        initials : str, optional
-            The author's initials. Maximum length is 2.
-        program : str, optional
-            The program name. Maximum length is 8.
-        time : datetime or date, optional
-            The time of file creation.
-        dimensions : str, optional
-            Dimensional codes. Maximum length is 2.
-        scaling_factors : str, optional
-            Scaling factors. Maximum length is 12.
-        energy : str, optional
-            Energy from modeling program. Maximum length is 12.
-        registry_number : str, optional
-            MDL registry number. Maximum length is 6.
-        comments : str, optional
-            Additional comments.
+        **args, **kwars
+            See :class:`Header`.
         """
-        if time is None:
-            time = datetime.datetime.now()
-        time_str = time.strftime(DATE_FORMAT)
-
-        self.lines[0] = str(mol_name)
-        self.lines[1] = (
-            f"{initials:>2}"
-            f"{program:>8}"
-            f"{time_str:>10}"
-            f"{dimensions:>2}"
-            f"{scaling_factors:>12}"
-            f"{energy:>12}"
-            f"{registry_number:>6}"
-        )
-        self.lines[2] = str(comments)
+        self.header = Header(*args, **kwargs)
 
 
     def get_structure(self):
@@ -186,16 +168,17 @@ class MOLFile(TextFile):
         array : AtomArray
             The array to be saved into this file.
             Must have an associated :class:`BondList`.
-        default_bond_type : BondType
-            Bond type fallback in the *Bond block* if a bond has no bond_type
-            defined in *atoms* array. By default, each bond is treated as
+        default_bond_type : BondType, optional
+            Bond type fallback for the *Bond block*, if a
+            :class:`BondType` has no CTAB counterpart.
+            By default, each such bond is treated as
             :attr:`BondType.ANY`.
         version : {"V2000", "V3000"}, optional
             The version of the CTAB format.
             ``"V2000"`` uses the *Atom* and *Bond* block, while
             ``"V3000"`` uses the *Properties* block.
-            By default, ``"V2000"`` is used unless the number of atoms
-            or bonds exceeds 1000, in which case ``"V3000"`` is used.
+            By default, ``"V2000"`` is used, unless the number of atoms
+            or bonds exceeds 999, in which case ``"V3000"`` is used.
         """
         self.lines = self.lines[:N_HEADER] + write_structure_to_ctab(
             atoms, default_bond_type, version

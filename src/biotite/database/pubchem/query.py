@@ -16,7 +16,7 @@ import requests
 from .error import parse_error_details
 from .throttle import ThrottleStatus
 from ..error import RequestError
-from ...structure.io.mol.file import MOLFile
+from ...structure.io.mol.mol import MOLFile
 
 
 _base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"

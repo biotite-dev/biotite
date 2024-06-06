@@ -12,9 +12,8 @@ import numpy as np
 import msgpack
 from .component import _Component, _HierarchicalContainer, MaskValue
 from .encoding import decode_stepwise, encode_stepwise, deserialize_encoding, \
-                      create_uncompressed_encoding, ByteArrayEncoding
-from .error import SerializationError
-from ....file import File, is_binary, is_open_compatible
+                      create_uncompressed_encoding
+from ....file import File, is_binary, is_open_compatible, SerializationError
 
 
 class BinaryCIFData(_Component):

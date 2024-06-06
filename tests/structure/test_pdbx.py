@@ -299,7 +299,7 @@ def test_unequal_lengths(format):
         "foo1": np.arange(3),
         "foo2": np.arange(4),
     }
-    with pytest.raises(pdbx.SerializationError):
+    with pytest.raises(biotite.SerializationError):
         Category(invalid_category_dict).serialize()
 
 

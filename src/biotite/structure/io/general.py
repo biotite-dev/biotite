@@ -11,6 +11,7 @@ __name__ = "biotite.structure.io"
 __author__ = "Patrick Kunzmann"
 __all__ = ["load_structure", "save_structure"]
 
+import datetime
 import os.path
 import io
 from ..atoms import AtomArrayStack
@@ -61,72 +62,83 @@ def load_structure(file_path, template=None, **kwargs):
 
     # We only need the suffix here
     _, suffix = os.path.splitext(file_path)
-    if suffix == ".pdb":
-        from .pdb import PDBFile
-        file = PDBFile.read(file_path)
-        array = file.get_structure(**kwargs)
-        return _as_single_model_if_possible(array)
-    elif suffix == ".pdbqt":
-        from .pdbqt import PDBQTFile
-        file = PDBQTFile.read(file_path)
-        array = file.get_structure(**kwargs)
-        return _as_single_model_if_possible(array)
-    elif suffix == ".cif" or suffix == ".pdbx":
-        from .pdbx import CIFFile, get_structure
-        file = CIFFile.read(file_path)
-        array = get_structure(file, **kwargs)
-        return _as_single_model_if_possible(array)
-    elif suffix == ".bcif":
-        from .pdbx import BinaryCIFFile, get_structure
-        file = BinaryCIFFile.read(file_path)
-        array = get_structure(file, **kwargs)
-        return _as_single_model_if_possible(array)
-    elif suffix == ".gro":
-        from .gro import GROFile
-        file = GROFile.read(file_path)
-        array = file.get_structure(**kwargs)
-        return _as_single_model_if_possible(array)
-    elif suffix == ".mmtf":
-        from .mmtf import MMTFFile, get_structure
-        file = MMTFFile.read(file_path)
-        array = get_structure(file, **kwargs)
-        return _as_single_model_if_possible(array)
-    elif suffix == ".npz":
-        from .npz import NpzFile
-        file = NpzFile.read(file_path)
-        array = file.get_structure(**kwargs)
-        return _as_single_model_if_possible(array)
-    elif suffix == ".mol" or suffix == ".sdf":
-        from .mol import MOLFile
-        file = MOLFile.read(file_path)
-        array = file.get_structure(**kwargs)
-        # MOL files only contain a single model
-        return array
-    elif suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
-        if template is None:
-            raise TypeError("Template must be specified for trajectory files")
-        # filter template for atom ids if it is an unfiltered template
-        if "atom_i" in kwargs and template.shape[-1] != len(kwargs["atom_i"]):
-            template = template[..., kwargs["atom_i"]]
-        from .trr import TRRFile
-        from .xtc import XTCFile
-        from .tng import TNGFile
-        from .dcd import DCDFile
-        from .netcdf import NetCDFFile
-        if suffix == ".trr":
-            traj_file_cls = TRRFile
-        if suffix == ".xtc":
-            traj_file_cls = XTCFile
-        if suffix == ".tng":
-            traj_file_cls = TNGFile
-        if suffix == ".dcd":
-            traj_file_cls = DCDFile
-        if suffix == ".netcdf":
-            traj_file_cls = NetCDFFile
-        file = traj_file_cls.read(file_path, **kwargs)
-        return file.get_structure(template)
-    else:
-        raise ValueError(f"Unknown file format '{suffix}'")
+    match suffix:
+        case ".pdb":
+            from .pdb import PDBFile
+            file = PDBFile.read(file_path)
+            array = file.get_structure(**kwargs)
+            return _as_single_model_if_possible(array)
+        case ".pdbqt":
+            from .pdbqt import PDBQTFile
+            file = PDBQTFile.read(file_path)
+            array = file.get_structure(**kwargs)
+            return _as_single_model_if_possible(array)
+        case ".cif" | ".pdbx":
+            from .pdbx import CIFFile, get_structure
+            file = CIFFile.read(file_path)
+            array = get_structure(file, **kwargs)
+            return _as_single_model_if_possible(array)
+        case ".bcif":
+            from .pdbx import BinaryCIFFile, get_structure
+            file = BinaryCIFFile.read(file_path)
+            array = get_structure(file, **kwargs)
+            return _as_single_model_if_possible(array)
+        case ".gro":
+            from .gro import GROFile
+            file = GROFile.read(file_path)
+            array = file.get_structure(**kwargs)
+            return _as_single_model_if_possible(array)
+        case ".mmtf":
+            from .mmtf import MMTFFile, get_structure
+            file = MMTFFile.read(file_path)
+            array = get_structure(file, **kwargs)
+            return _as_single_model_if_possible(array)
+        case ".npz":
+            from .npz import NpzFile
+            file = NpzFile.read(file_path)
+            array = file.get_structure(**kwargs)
+            return _as_single_model_if_possible(array)
+        case ".mol":
+            from .mol import MOLFile
+            file = MOLFile.read(file_path)
+            array = file.get_structure(**kwargs)
+            # MOL and SDF files only contain a single model
+            return array
+        case ".sdf" | ".sd":
+            from .mol import SDFile, get_structure
+            file = SDFile.read(file_path)
+            array = get_structure(file, **kwargs)
+            return array
+        case ".trr" | ".xtc" | ".tng" | ".dcd" | ".netcdf":
+            if template is None:
+                raise TypeError(
+                    "Template must be specified for trajectory files"
+                )
+            # Filter template for atom ids, if an unfiltered template
+            if (
+                "atom_i" in kwargs
+                and template.shape[-1] != len(kwargs["atom_i"])
+            ):
+                template = template[..., kwargs["atom_i"]]
+            from .trr import TRRFile
+            from .xtc import XTCFile
+            from .tng import TNGFile
+            from .dcd import DCDFile
+            from .netcdf import NetCDFFile
+            if suffix == ".trr":
+                traj_file_cls = TRRFile
+            if suffix == ".xtc":
+                traj_file_cls = XTCFile
+            if suffix == ".tng":
+                traj_file_cls = TNGFile
+            if suffix == ".dcd":
+                traj_file_cls = DCDFile
+            if suffix == ".netcdf":
+                traj_file_cls = NetCDFFile
+            file = traj_file_cls.read(file_path, **kwargs)
+            return file.get_structure(template)
+        case unknown_suffix:
+            raise ValueError(f"Unknown file format '{unknown_suffix}'")
 
 
 def save_structure(file_path, array, **kwargs):
@@ -155,67 +167,76 @@ def save_structure(file_path, array, **kwargs):
     """
     # We only need the suffix here
     _, suffix = os.path.splitext(file_path)
-    if suffix == ".pdb":
-        from .pdb import PDBFile
-        file = PDBFile()
-        file.set_structure(array, **kwargs)
-        file.write(file_path)
-    elif suffix == ".pdbqt":
-        from .pdbqt import PDBQTFile
-        file = PDBQTFile()
-        file.set_structure(array, **kwargs)
-        file.write(file_path)
-    elif suffix == ".cif" or suffix == ".pdbx":
-        from .pdbx import CIFFile, set_structure
-        file = CIFFile()
-        set_structure(file, array, **kwargs)
-        file.write(file_path)
-    elif suffix == ".bcif":
-        from .pdbx import BinaryCIFFile, set_structure
-        file = BinaryCIFFile()
-        set_structure(file, array, **kwargs)
-        file.write(file_path)
-    elif suffix == ".gro":
-        from .gro import GROFile
-        file = GROFile()
-        file.set_structure(array, **kwargs)
-        file.write(file_path)
-    elif suffix == ".mmtf":
-        from .mmtf import MMTFFile, set_structure
-        file = MMTFFile()
-        set_structure(file, array, **kwargs)
-        file.write(file_path)
-    elif suffix == ".npz":
-        from .npz import NpzFile
-        file = NpzFile()
-        file.set_structure(array, **kwargs)
-        file.write(file_path)
-    elif suffix == ".mol" or suffix == ".sdf":
-        from .mol import MOLFile
-        file = MOLFile()
-        file.set_structure(array, **kwargs)
-        file.write(file_path)
-    elif suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
-        from .trr import TRRFile
-        from .xtc import XTCFile
-        from .tng import TNGFile
-        from .dcd import DCDFile
-        from .netcdf import NetCDFFile
-        if suffix == ".trr":
-            traj_file_cls = TRRFile
-        if suffix == ".xtc":
-            traj_file_cls = XTCFile
-        if suffix == ".tng":
-            traj_file_cls = TNGFile
-        if suffix == ".dcd":
-            traj_file_cls = DCDFile
-        if suffix == ".netcdf":
-            traj_file_cls = NetCDFFile
-        file = traj_file_cls()
-        file.set_structure(array, **kwargs)
-        file.write(file_path)
-    else:
-        raise ValueError(f"Unknown file format '{suffix}'")
+    match suffix:
+        case ".pdb":
+            from .pdb import PDBFile
+            file = PDBFile()
+            file.set_structure(array, **kwargs)
+            file.write(file_path)
+        case ".pdbqt":
+            from .pdbqt import PDBQTFile
+            file = PDBQTFile()
+            file.set_structure(array, **kwargs)
+            file.write(file_path)
+        case ".cif" | ".pdbx":
+            from .pdbx import CIFFile, set_structure
+            file = CIFFile()
+            set_structure(file, array, **kwargs)
+            file.write(file_path)
+        case ".bcif":
+            from .pdbx import BinaryCIFFile, set_structure
+            file = BinaryCIFFile()
+            set_structure(file, array, **kwargs)
+            file.write(file_path)
+        case ".gro":
+            from .gro import GROFile
+            file = GROFile()
+            file.set_structure(array, **kwargs)
+            file.write(file_path)
+        case ".mmtf":
+            from .mmtf import MMTFFile, set_structure
+            file = MMTFFile()
+            set_structure(file, array, **kwargs)
+            file.write(file_path)
+        case ".npz":
+            from .npz import NpzFile
+            file = NpzFile()
+            file.set_structure(array, **kwargs)
+            file.write(file_path)
+        case ".mol":
+            from .mol import MOLFile
+            file = MOLFile()
+            file.set_structure(array, **kwargs)
+            file.header = _mol_header()
+            file.write(file_path)
+        case ".sdf" | ".sd":
+            from .mol import SDFile, SDRecord, set_structure
+            record = SDRecord()
+            record.set_structure(array, **kwargs)
+            record.header = _mol_header()
+            file = SDFile({"Molecule": record})
+            file.write(file_path)
+        case ".trr" | ".xtc" | ".tng" | ".dcd" | ".netcdf":
+            from .trr import TRRFile
+            from .xtc import XTCFile
+            from .tng import TNGFile
+            from .dcd import DCDFile
+            from .netcdf import NetCDFFile
+            if suffix == ".trr":
+                traj_file_cls = TRRFile
+            if suffix == ".xtc":
+                traj_file_cls = XTCFile
+            if suffix == ".tng":
+                traj_file_cls = TNGFile
+            if suffix == ".dcd":
+                traj_file_cls = DCDFile
+            if suffix == ".netcdf":
+                traj_file_cls = NetCDFFile
+            file = traj_file_cls()
+            file.set_structure(array, **kwargs)
+            file.write(file_path)
+        case unknown_suffix:
+            raise ValueError(f"Unknown file format '{unknown_suffix}'")
 
 
 def _as_single_model_if_possible(atoms):
@@ -224,3 +245,13 @@ def _as_single_model_if_possible(atoms):
         return atoms[0]
     else:
         return atoms
+
+
+def _mol_header():
+    from .mol import Header
+    return Header(
+        mol_name="Molecule",
+        program="Biotite",
+        time=datetime.datetime.now(),
+        dimensions="3D",
+    )

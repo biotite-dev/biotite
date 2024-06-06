@@ -14,5 +14,7 @@ around MOL, is also supported.
 __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 
-from .file import *
 from .convert import *
+from .header import *
+from .mol import *
+from .sdf import *

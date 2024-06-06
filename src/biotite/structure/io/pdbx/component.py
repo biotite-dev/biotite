@@ -14,7 +14,7 @@ __all__ = ["MaskValue"]
 from enum import IntEnum
 from abc import ABCMeta, abstractmethod
 from collections.abc import MutableMapping
-from .error import SerializationError, DeserializationError
+from ....file import SerializationError, DeserializationError
 
 
 class MaskValue(IntEnum):
@@ -104,6 +104,9 @@ class _Component(metaclass=ABCMeta):
             that can be encoded into *MessagePack*.
         """
         raise NotImplementedError()
+
+    def __str__(self):
+        return str(self.serialize())
 
 
 class _HierarchicalContainer(_Component, MutableMapping,

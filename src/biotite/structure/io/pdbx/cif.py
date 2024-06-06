@@ -11,8 +11,8 @@ import shlex
 from collections.abc import MutableMapping, Sequence
 import numpy as np
 from .component import _Component, MaskValue
-from .error import DeserializationError, SerializationError
-from ....file import File, is_open_compatible, is_text
+from ....file import File, is_open_compatible, is_text, DeserializationError, \
+                     SerializationError
 
 
 UNICODE_CHAR_SIZE = 4
@@ -768,7 +768,7 @@ class CIFFile(_Component, File, MutableMapping):
 
     @property
     def lines(self):
-        return "\n".join(self.serialize())
+        return self.serialize().splitlines()
 
     @property
     def block(self):

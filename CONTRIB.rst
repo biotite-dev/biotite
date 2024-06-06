@@ -15,3 +15,4 @@ CONTRIBUTORS
 - Daniel Ferrer Vinals <https://github.com/ferrervi>
 - Jincai Yang <https://github.com/0ut0fcontrol>
 - Tom Eulenfeld <https://github.com/trichter>
+- Benjamin E. Mayer <https://github.com/entropybit>

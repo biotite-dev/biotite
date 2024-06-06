@@ -4,7 +4,8 @@
 
 __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
-__all__ = ["File", "TextFile", "InvalidFileError"]
+__all__ = ["File", "TextFile", "InvalidFileError",
+           "SerializationError", "DeserializationError"]
 
 import abc
 import io
@@ -38,13 +39,13 @@ class File(Copyable, metaclass=abc.ABCMeta):
     def read(cls, file):
         """
         Parse a file (or file-like object).
-        
+
         Parameters
         ----------
         file : file-like object or str
             The file to be read.
             Alternatively a file path can be supplied.
-        
+
         Returns
         -------
         file_object : File
@@ -74,7 +75,7 @@ class File(Copyable, metaclass=abc.ABCMeta):
     def write(self, file):
         """
         Write the contents of this :class:`File` object into a file.
-        
+
         Parameters
         ----------
         file_name : file-like object or str
@@ -90,7 +91,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
     When reading a file, the text content is saved as list of strings,
     one for each line.
     When writing a file, this list is written into the file.
-    
+
     Attributes
     ----------
     lines : list
@@ -121,13 +122,13 @@ class TextFile(File, metaclass=abc.ABCMeta):
     def read_iter(file):
         """
         Create an iterator over each line of the given text file.
-        
+
         Parameters
         ----------
         file : file-like object or str
             The file to be read.
             Alternatively a file path can be supplied.
-        
+
         Yields
         ------
         line : str
@@ -147,7 +148,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         """
         Write the contents of this object into a file
         (or file-like object).
-        
+
         Parameters
         ----------
         file : file-like object or str
@@ -174,7 +175,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         Hence, this static method may save a large amount of memory if
         a large file should be written, especially if the `lines`
         are provided as generator.
-        
+
         Parameters
         ----------
         file : file-like object or str
@@ -208,6 +209,13 @@ class InvalidFileError(Exception):
     either because the file does not contain the required data or
     because the file is malformed.
     """
+    pass
+
+
+class SerializationError(Exception):
+    pass
+
+class DeserializationError(Exception):
     pass
 
 

@@ -20,5 +20,4 @@ from .bcif import *
 from .cif import *
 from .component import *
 from .encoding import *
-from .error import *
 from .legacy import *
