@@ -23,6 +23,9 @@ from ...util import matrix_rotate
 from .hybrid36 import encode_hybrid36, decode_hybrid36, max_hybrid36_number
 
 
+_PDB_MAX_ATOMS = 99999
+_PDB_MAX_RESIDUES = 9999
+
 # slice objects for readability
 # ATOM/HETATM
 _record = slice(0, 6)
@@ -573,6 +576,8 @@ class PDBFile(TextFile):
         records are also written for all non-water hetero residues
         and all inter-residue connections.
         """
+        _check_pdb_compatibility(array, hybrid36)
+
         natoms = array.array_length()
         annot_categories = array.get_annotation_categories()
         record = np.char.array(np.where(array.hetero, "HETATM", "ATOM"))
@@ -598,25 +603,6 @@ class PDBFile(TextFile):
         else:
             charge = np.char.array(np.full(natoms, "  ", dtype="U2"))
 
-        # Do checks on atom array (stack)
-        if hybrid36:
-            max_atoms = max_hybrid36_number(5)
-            max_residues = max_hybrid36_number(4)
-        else:
-            max_atoms, max_residues = 99999, 9999
-        if array.array_length() > max_atoms:
-            warnings.warn(f"More then {max_atoms:,} atoms per model")
-        if (array.res_id > max_residues).any():
-            warnings.warn(f"Residue IDs exceed {max_residues:,}")
-        if np.isnan(array.coord).any():
-            raise BadStructureError("Coordinates contain 'NaN' values")
-        if any([len(name) > 1 for name in array.chain_id]):
-            raise BadStructureError("Some chain IDs exceed 1 character")
-        if any([len(name) > 3 for name in array.res_name]):
-            raise BadStructureError("Some residue names exceed 3 characters")
-        if any([len(name) > 4 for name in array.atom_name]):
-            raise BadStructureError("Some atom names exceed 4 characters")
-
         if hybrid36:
             pdb_atom_id = np.char.array(
                 [encode_hybrid36(i, 5) for i in atom_id]
@@ -629,14 +615,14 @@ class PDBFile(TextFile):
             # but negative IDs are also possible
             pdb_atom_id = np.char.array(np.where(
                 atom_id > 0,
-                ((atom_id - 1) % 99999) + 1,
+                ((atom_id - 1) % _PDB_MAX_ATOMS) + 1,
                 atom_id
             ).astype(str))
             # Residue IDs are supported up to 9999,
             # but negative IDs are also possible
             pdb_res_id = np.char.array(np.where(
                 array.res_id > 0,
-                ((array.res_id - 1) % 9999) + 1,
+                ((array.res_id - 1) % _PDB_MAX_RESIDUES) + 1,
                 array.res_id
             ).astype(str))
 
@@ -1184,3 +1170,71 @@ def _apply_transformations(structure, rotations, translations):
         assembly_coord[i] = coord
 
     return repeat(structure, assembly_coord)
+
+
+def _check_pdb_compatibility(array, hybrid36):
+    annot_categories = array.get_annotation_categories()
+
+    if hybrid36:
+        max_atoms = max_hybrid36_number(5)
+        max_residues = max_hybrid36_number(4)
+    else:
+        max_atoms, max_residues = _PDB_MAX_ATOMS, _PDB_MAX_RESIDUES
+    if "atom_id" in annot_categories:
+        max_atom_id = np.max(array.atom_id)
+    else:
+        max_atom_id = array.array_length()
+
+    if max_atom_id > max_atoms:
+        warnings.warn(f"Atom IDs exceed {max_atoms:,}, will be wrapped")
+    if (array.res_id > max_residues).any():
+        warnings.warn(f"Residue IDs exceed {max_residues:,}, will be wrapped")
+    if np.isnan(array.coord).any():
+        raise BadStructureError("Coordinates contain 'NaN' values")
+    if any([len(name) > 1 for name in array.chain_id]):
+        raise BadStructureError("Some chain IDs exceed 1 character")
+    if any([len(name) > 3 for name in array.res_name]):
+        raise BadStructureError("Some residue names exceed 3 characters")
+    if any([len(name) > 4 for name in array.atom_name]):
+        raise BadStructureError("Some atom names exceed 4 characters")
+    for i, coord_name in enumerate(["x", "y", "z"]):
+        n_coord_digits = _number_of_integer_digits(array.coord[..., i])
+        if n_coord_digits > 4:
+            raise BadStructureError(
+                f"4 pre-decimal columns for {coord_name}-coordinates are "
+                f"available, but array would require {n_coord_digits}"
+            )
+    if "b_factor" in annot_categories:
+        n_b_factor_digits = _number_of_integer_digits(array.b_factor)
+        if n_b_factor_digits > 3:
+            raise BadStructureError(
+                "3 pre-decimal columns for B-factor are available, "
+                f"but array would require {n_b_factor_digits}"
+            )
+    if "occupancy" in annot_categories:
+        n_occupancy_digits = _number_of_integer_digits(array.occupancy)
+        if n_occupancy_digits > 3:
+            raise BadStructureError(
+                "3 pre-decimal columns for occupancy are available, "
+                f"but array would require {n_occupancy_digits}"
+            )
+    if "charge" in annot_categories:
+        # The sign can be omitted is it is put into the adjacent column
+        n_charge_digits = _number_of_integer_digits(np.abs(array.charge))
+        if n_charge_digits > 1:
+            raise BadStructureError(
+                "1 column for charge is available, "
+                f"but array would require {n_charge_digits}"
+            )
+
+
+def _number_of_integer_digits(values):
+    """
+    Get the maximum number of characters needed to represent the
+    pre-decimal positions of the given numeric values.
+    """
+    values = values.astype(int, copy=False)
+    n_digits = 0
+    n_digits = max(n_digits, len(str(np.min(values))))
+    n_digits = max(n_digits, len(str(np.max(values))))
+    return n_digits
