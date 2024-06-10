@@ -10,7 +10,9 @@
     np.set_printoptions(precision=2)
 
     # Use API key to increase request limit
-    entrez.set_api_key(os.environ.get("NCBI_API_KEY"))
+    ncbi_api_key = os.environ.get("NCBI_API_KEY")
+    if ncbi_api_key is not None and ncbi_api_key != "":
+        entrez.set_api_key(ncbi_api_key)
 
     # Mock the BlastWebApp class
     # to allow subsequent BLAST calls when building the tutorial
