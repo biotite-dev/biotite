@@ -352,7 +352,7 @@ class LetterAlphabet(Alphabet):
             raise AlphabetError(
                 f"Symbol {repr(symbol)} is not in the alphabet"
             )
-        return indices[0]
+        return indices[0].item()
 
     def decode(self, code, as_bytes=False):
         if code < 0 or code >= len(self._symbols):
