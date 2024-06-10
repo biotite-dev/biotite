@@ -50,7 +50,7 @@ switcher.create_switcher_json(
     n_versions=5
 )
 
-# Use custom citation sytle
+# Use custom citation style
 pybtex.plugin.register_plugin(
     "pybtex.style.formatting", "ieee", bibliography.IEEEStyle
 )
