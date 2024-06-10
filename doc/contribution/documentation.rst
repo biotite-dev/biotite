@@ -73,7 +73,7 @@ would be a better name than
 
 Building the example gallery for the first time may take a while, as all
 scripts are executed.
-To build the documentation without the gallery, run
+To build the documentation without the gallery and the tutorial, run
 
 .. code-block:: console
 

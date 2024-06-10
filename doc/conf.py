@@ -101,6 +101,9 @@ exclude_patterns = [
     # Execution times are not reported to the user
     "sg_execution_times.rst",
 ]
+# Do not run tutorial code if gallery generation is disabled
+if "plot_gallery=0" in sys.argv:
+    exclude_patterns.append("tutorial/**/*.rst")
 
 pygments_style = "sphinx"
 
