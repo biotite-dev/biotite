@@ -147,8 +147,9 @@ class CodonTable(object):
         elif isinstance(item, int):
             # Code for amino acid -> return possible codon codes
             codon_numbers = np.where(self._codons == item)[0]
-            codon_codes = tuple(CodonTable._to_codon(codon_numbers))
-            codon_codes = tuple([tuple(code) for code in codon_codes])
+            codon_codes = tuple(
+                [tuple(code.tolist()) for code in CodonTable._to_codon(codon_numbers)]
+            )
             return codon_codes
         else:
             # Code for codon as any iterable object
