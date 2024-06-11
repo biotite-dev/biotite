@@ -7,6 +7,7 @@ __author__ = "Patrick Kunzmann, Benjamin Mayer"
 __all__ = ["SDFile", "SDRecord", "Metadata"]
 
 import re
+import warnings
 from dataclasses import dataclass
 from collections.abc import MutableMapping, Mapping
 import numpy as np
@@ -738,11 +739,17 @@ class SDFile(File, MutableMapping):
         record_ends = np.array([
             i for i, line in enumerate(lines)
             if line.startswith(_RECORD_DELIMITER)
-        ])
+        ], dtype=int)
+        if len(record_ends) == 0:
+            warnings.warn(
+                "Final record delimiter missing, "
+                "maybe this is a MOL file instead of a SD file"
+            )
+            record_ends = np.array([len(lines)-1], dtype=int)
         # The first record starts at the first line and the last
         # delimiter is at the end of the file
         # Records in the middle start directly after the delimiter
-        record_starts = np.concatenate(([0], record_ends[:-1] + 1))
+        record_starts = np.concatenate(([0], record_ends[:-1] + 1), dtype=int)
         record_names = [lines[start].strip() for start in record_starts]
         return SDFile({
             # Do not include the delimiter
