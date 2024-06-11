@@ -74,10 +74,39 @@ def get_locus(gb_file):
     length = int(fields[1])
 
     # The third field *should* be the molecular type 
-    # but sometimes this is missing
+    # but sometimes this is missing.  This gets tricky
+    # because sometimes the next field, circular/linear,
+    # is missing, too. The field after that, division,
+    # is a 3 letter all caps token. Unfortunately, mol_type
+    # is also often a 3 letter all caps token (eg DNA)! 
+    # Fortunately, GenBank publishes the set list of divisions,
+    # so we can check against that set when determining whether
+    # the current token represents the molecular type.
     # NOTE: remember that fields[2] is the unit for length, 
     #       eg bp or aa, so we move to fields[3] here.
-    if fields[3] not in ('linear', 'circular'):
+    divisions = (
+        'PRI', # primate sequences
+        'ROD', # rodent sequences
+        'MAM', # other mammalian sequences
+        'VRT', # other vertebrate sequences
+        'INV', # invertebrate sequences
+        'PLN', # plant, fungal, and algal sequences
+        'BCT', # bacterial sequences
+        'VRL', # viral sequences
+        'PHG', # bacteriophage sequences
+        'SYN', # synthetic sequences
+        'UNA', # unannotated sequences
+        'EST', # EST sequences (expressed sequence tags)
+        'PAT', # patent sequences
+        'STS', # STS sequences (sequence tagged sites)
+        'GSS', # GSS sequences (genome survey sequences)
+        'HTG', # HTG sequences (high-throughput genomic sequences)
+        'HTC', # unfinished high-throughput cDNA sequencing
+        'ENV', # environmental sampling sequences
+        'CON',
+    )
+    if fields[3] not in ('linear', 'circular') \
+        and fields[3] not in divisions:
         mol_type = fields[3]
         next_idx = 4
     else:
@@ -96,9 +125,10 @@ def get_locus(gb_file):
     else:
         is_circular = False
 
-    # The next field is the division, an all caps 3 letter token
-    division = fields[next_idx]
-    next_idx += 1
+    # The next field should be the division
+    if fields[next_idx] in divisions:
+        division = fields[next_idx]
+        next_idx += 1
 
     # The last field is a date in the format DD-M-YYYY
     date = fields[next_idx]

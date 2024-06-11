@@ -190,6 +190,10 @@ def test_multi_file():
         (
              "SCU49845     5028 bp    DNA             PLN       21-JUN-1999",
              ("SCU49845", 5028, "DNA", False, "PLN", "21-JUN-1999")
+        ),
+        (
+             "123MissingMolTypeAndCircular     5028 bp                 PLN       21-JUN-1999",
+             ("123MissingMolTypeAndCircular", 5028, None, False, "PLN", "21-JUN-1999")
         )
     ]
 )
