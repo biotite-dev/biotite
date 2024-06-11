@@ -179,13 +179,22 @@ def test_multi_file():
     accessions = [gb.get_accession(f) for f in multi_file]
     assert accessions == ["1L2Y_A", "3O5R_A", "5UGO_A"]
 
-def test_long_locus_id():
-     gb_file = gb.GenBankFile.read(join(data_dir("sequence"), "long_locus_id.gb"))
-     assert gb.get_locus(gb_file) \
-        == ("AJ311647LOOOOOOOOOOOOOOOOOOOOOOOOOONGID", 1224, "DNA", False, "VRT", "14-NOV-2006")
-     
-def test_missing_linear_vs_circular():
-     gb_file = gb.GenBankFile.read(join(data_dir("sequence"), "missing_linear_vs_circular.gb"))
-     assert gb.get_locus(gb_file) \
-        == ("SCU49845", 5028, "DNA", False, "PLN", "21-JUN-1999")
+
+@pytest.mark.parametrize(
+    "locus_content, expected_result",
+    [
+        (
+             "AJ311647LOOOOOOOOOOOOOOOOOOOOOOOOOONGID                1224 bp    DNA     linear   VRT 14-NOV-2006",
+             ("AJ311647LOOOOOOOOOOOOOOOOOOOOOOOOOONGID", 1224, "DNA", False, "VRT", "14-NOV-2006")
+        ),
+        (
+             "SCU49845     5028 bp    DNA             PLN       21-JUN-1999",
+             ("SCU49845", 5028, "DNA", False, "PLN", "21-JUN-1999")
+        )
+    ]
+)
+def test_parse_locus(locus_content, expected_result):
+    gb_file = gb.GenBankFile()
+    gb_file.append("LOCUS", [locus_content])
+    assert gb.get_locus(gb_file) == expected_result
      
