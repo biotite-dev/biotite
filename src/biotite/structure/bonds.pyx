@@ -1722,7 +1722,8 @@ def _connect_inter_residue(atoms, residue_starts):
             continue
         # Check if the current and next residue
         # have consecutive residue IDs
-        if res_ids[next_start_i] != res_ids[curr_start_i] + 1:
+        # (Same residue ID is also possible if insertion code is used)
+        if res_ids[next_start_i] - res_ids[curr_start_i] > 1:
             continue
 
         # Get link type for this residue from RCSB components.cif
