@@ -81,7 +81,7 @@ def get_locus(gb_file):
         mol_type = fields[3]
         next_idx = 4
     else:
-        mol_type = ''
+        mol_type = None
         next_idx = 3
 
 

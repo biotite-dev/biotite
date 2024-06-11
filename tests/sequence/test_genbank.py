@@ -151,7 +151,7 @@ def test_genbank_utility_gp():
     gp_file = gb.GenBankFile.read(join(data_dir("sequence"), "bt_lysozyme.gp"))
     #[print(e) for e in gp_file._field_pos]
     assert gb.get_locus(gp_file) \
-        == ("AAC37312", 147, "", False, "MAM", "27-APR-1993")
+        == ("AAC37312", 147, None, False, "MAM", "27-APR-1993")
     assert gb.get_definition(gp_file) == "lysozyme [Bos taurus]."
     assert gb.get_version(gp_file) == "AAC37312.1"
     assert gb.get_gi(gp_file) == 163334
