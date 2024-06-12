@@ -14,7 +14,6 @@ __all__ = ["get_locus", "get_definition", "get_accession", "get_version",
 
 from ....file import InvalidFileError
 from .file import GenBankFile
-import re
 
 def get_locus(gb_file):
     """
@@ -79,11 +78,10 @@ def get_locus(gb_file):
     # is missing, too. The field after that, division,
     # is a 3 letter all caps token. Unfortunately, mol_type
     # is also often a 3 letter all caps token (eg DNA)! 
-    # Fortunately, GenBank publishes the set list of divisions,
+    # Fortunately, GenBank publishes the set list of divisions
+    # here: https://www.ncbi.nlm.nih.gov/genbank/samplerecord ,
     # so we can check against that set when determining whether
     # the current token represents the molecular type.
-    # NOTE: remember that fields[2] is the unit for length, 
-    #       eg bp or aa, so we move to fields[3] here.
     divisions = (
         'PRI', # primate sequences
         'ROD', # rodent sequences
@@ -105,6 +103,9 @@ def get_locus(gb_file):
         'ENV', # environmental sampling sequences
         'CON',
     )
+
+    # NOTE: Remember that fields[2] is the unit for length, 
+    #       eg bp or aa, so we move to fields[3] here.
     if fields[3] not in ('linear', 'circular') \
         and fields[3] not in divisions:
         mol_type = fields[3]
