@@ -7,7 +7,7 @@ Functions for obtaining metadata fields of a GenBank file.
 """
 
 __name__ = "biotite.sequence.io.genbank"
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann, Natasha Jaffe"
 __all__ = ["get_locus", "get_definition", "get_accession", "get_version",
            "get_gi", "get_db_link", "get_source",
            "set_locus"]
