@@ -7,9 +7,11 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["ThrottleStatus"]
 
 
+from dataclasses import dataclass
 import time
 
 
+@dataclass(frozen=True)
 class ThrottleStatus:
     """
     This class gives information about the dynamic request throttling
@@ -44,22 +46,9 @@ class ThrottleStatus:
         Read-only attributes for the parameters given above.
     """
 
-    def __init__(self, count, time, service):
-        self._count = count
-        self._time = time
-        self._service = service
-    
-    @property
-    def count(self):
-        return self._count
-
-    @property
-    def time(self):
-        return self._time
-    
-    @property
-    def service(self):
-        return self._service
+    count: ...
+    time: ...
+    service: ...
 
     @staticmethod
     def from_response(response):
@@ -70,7 +59,7 @@ class ThrottleStatus:
         ----------
         response : requests.Response
             The response from the request to the *Pubchem* server.
-        
+
         Returns
         -------
         throttle_status : ThrottleStatus
@@ -106,5 +95,5 @@ class ThrottleStatus:
             The time in seconds the execution will halt, if the
             threshold is exceeded.
         """
-        if self._count > threshold or self._time > threshold:
+        if self.count > threshold or self.time > threshold:
             time.sleep(wait_time)
