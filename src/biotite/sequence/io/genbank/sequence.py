@@ -33,7 +33,7 @@ def get_raw_sequence(gb_file):
     ----------
     gb_file : GenBankFile
         The GenBank file to read the *ORIGIN* field from.
-    
+
     Returns
     -------
     seq_str: str
@@ -61,7 +61,7 @@ def get_sequence(gb_file, format="gb"):
         Indicates whether the file is a GenBank or a GenPept file.
         Depending on this parameter a :class:`NucleotideSequence` or a
         :class:`ProteinSequence` is returned.
-    
+
     Returns
     -------
     sequence : NucleotideSequence or ProteinSequence
@@ -74,7 +74,7 @@ def get_annotated_sequence(gb_file, format="gb", include_only=None):
     """
     Get an annotated sequence by combining the *ANNOTATION* and
     *ORIGIN* fields of a GenBank file.
-    
+
     Parameters
     ----------
     gb_file : GenBankFile
@@ -82,7 +82,7 @@ def get_annotated_sequence(gb_file, format="gb", include_only=None):
     include_only : iterable object of str, optional
         List of names of feature keys, which should included
         in the annotation. By default all features are included.
-    
+
     Returns
     -------
     annot_seq : AnnotatedSequence
@@ -114,16 +114,10 @@ def _convert_seq_str(seq_str, format):
     if format == "gb":
         return NucleotideSequence(seq_str.replace("U","T").replace("X","N"))
     elif format == "gp":
-        if "U" in seq_str:
-            warnings.warn(
-                "ProteinSequence objects do not support selenocysteine (U), "
-                "occurrences were substituted by cysteine (C)"
-            )
-            seq_str = seq_str.replace("U", "C")
-        return ProteinSequence(seq_str)
+        return ProteinSequence(seq_str.replace("U", "C").replace("O", "K"))
     else:
         raise ValueError(f"Unknown format '{format}'")
-    
+
 
 def _get_seq_start(origin_content):
     # Start of sequence is the sequence position indicator
@@ -136,7 +130,7 @@ def _get_seq_start(origin_content):
 def set_sequence(gb_file, sequence, sequence_start=1):
     """
     Set the *ORIGIN* field of a GenBank file with a sequence.
-    
+
     Parameters
     ----------
     gb_file : GenBankFile
@@ -164,7 +158,7 @@ def set_annotated_sequence(gb_file, annot_sequence):
     """
     Set the *FEATURES* and *ORIGIN* fields of a GenBank file with the
     annotation and sequence of an annotated sequence.
-    
+
     Parameters
     ----------
     gb_file : GenBankFile
