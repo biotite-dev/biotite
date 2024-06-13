@@ -16,3 +16,4 @@ CONTRIBUTORS
 - Jincai Yang <https://github.com/0ut0fcontrol>
 - Tom Eulenfeld <https://github.com/trichter>
 - Benjamin E. Mayer <https://github.com/entropybit>
+- Natasha Jaffe <https://github.com/tcjaffe>

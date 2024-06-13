@@ -151,7 +151,7 @@ def test_genbank_utility_gp():
     gp_file = gb.GenBankFile.read(join(data_dir("sequence"), "bt_lysozyme.gp"))
     #[print(e) for e in gp_file._field_pos]
     assert gb.get_locus(gp_file) \
-        == ("AAC37312", 147, "", False, "MAM", "27-APR-1993")
+        == ("AAC37312", 147, None, False, "MAM", "27-APR-1993")
     assert gb.get_definition(gp_file) == "lysozyme [Bos taurus]."
     assert gb.get_version(gp_file) == "AAC37312.1"
     assert gb.get_gi(gp_file) == 163334
@@ -178,3 +178,27 @@ def test_multi_file():
     multi_file = gb.MultiFile.read(join(data_dir("sequence"), "multifile.gp"))
     accessions = [gb.get_accession(f) for f in multi_file]
     assert accessions == ["1L2Y_A", "3O5R_A", "5UGO_A"]
+
+
+@pytest.mark.parametrize(
+    "locus_content, expected_result",
+    [
+        (
+             "AJ311647LOOOOOOOOOOOOOOOOOOOOOOOOOONGID                1224 bp    DNA     linear   VRT 14-NOV-2006",
+             ("AJ311647LOOOOOOOOOOOOOOOOOOOOOOOOOONGID", 1224, "DNA", False, "VRT", "14-NOV-2006")
+        ),
+        (
+             "SCU49845     5028 bp    DNA             PLN       21-JUN-1999",
+             ("SCU49845", 5028, "DNA", False, "PLN", "21-JUN-1999")
+        ),
+        (
+             "123MissingMolTypeAndCircular     5028 bp                 PLN       21-JUN-1999",
+             ("123MissingMolTypeAndCircular", 5028, None, False, "PLN", "21-JUN-1999")
+        )
+    ]
+)
+def test_parse_locus(locus_content, expected_result):
+    gb_file = gb.GenBankFile()
+    gb_file.append("LOCUS", [locus_content])
+    assert gb.get_locus(gb_file) == expected_result
+     
