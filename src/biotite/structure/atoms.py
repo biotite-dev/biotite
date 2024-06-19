@@ -497,6 +497,7 @@ class Atom(Copyable):
         self.coord = coord
 
     def __repr__(self):
+        """Represent Atom as a string for debugging."""
         # print out key-value pairs and format strings in quotation marks
         annot_parts = [
             f'{key}="{value}"' if isinstance(value, str) else f'{key}={value}'
