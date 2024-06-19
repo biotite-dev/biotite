@@ -157,7 +157,6 @@ def get_sequence(pdbx_file, data_block=None):
     sequences = [
         _convert_string_to_sequence(string, stype)
         for string, stype in zip(seq_string, seq_type)
-        if _convert_string_to_sequence(string, stype) is not None
     ]
     
     strand_ids = poly_category['pdbx_strand_id'].as_array(str)
@@ -167,6 +166,7 @@ def get_sequence(pdbx_file, data_block=None):
         strand_id: sequence
         for sequence, strand_ids in zip(sequences, strand_ids)
         for strand_id in strand_ids
+        if sequence is not None
     }
 
     return sequence_dict

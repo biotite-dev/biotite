@@ -142,7 +142,7 @@ def test_search_field(field, molecular_definition, params, ref_ids):
 def test_search_sequence():
     IDENTIY_CUTOFF = 0.9
     pdbx_file = pdbx.PDBxFile.read(join(data_dir("structure"), "1l2y.cif"))
-    ref_sequence = pdbx.get_sequence(pdbx_file)[0]
+    ref_sequence = pdbx.get_sequence(pdbx_file)['A']
     query = rcsb.SequenceQuery(
         ref_sequence, "protein", min_identity=IDENTIY_CUTOFF
     )
