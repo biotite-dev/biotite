@@ -24,7 +24,7 @@ dependencies:
   # Testing
   - mdtraj >=1.9.3
   - pytest >=7.0
-  # Interfaced software in biotite.application
+  # Interfaced software in biotite.application (can also be installed separately)
   - autodock-vina
   - clustalo
   - dssp
@@ -34,11 +34,16 @@ dependencies:
   - tantan
   - viennarna >=2.5.0
   # Documentation building
+  - pydata-sphinx-theme =0.15
   - matplotlib >=3.3
   - numpydoc >=0.8
-  - sphinx >=5.0
+  - jupyter-sphinx >=0.5.3
+  - sphinx >=7.0
   - sphinxcontrib-bibtex >=2.3
+  - sphinx-copybutton >=0.5
+  - sphinx-design >=0.5
   - sphinx-gallery =0.15.0
+  - sphinx-notfound-page >=1.0
   # Extra packages used in example gallery
   - pandas >=1.5.2
   - pydot >=1.4

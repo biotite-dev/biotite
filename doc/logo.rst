@@ -2,8 +2,8 @@
    under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
    information.
 
-Biotite logo
-============
+Logo
+====
 
 The Biotite logo and icon was created by Patrick Kunzmann in 2017.
 

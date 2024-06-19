@@ -13,44 +13,44 @@ pyximport.install(
     language_level=3
 )
 
-from os.path import realpath, dirname, join, basename
+from os.path import realpath, dirname, join
 import sys
 import warnings
 import pybtex
-from sphinx_gallery.sorting import FileNameSortKey
+from sphinx_gallery.sorting import FileNameSortKey, ExplicitOrder
 import matplotlib
 
 import biotite
 
-doc_path = dirname(realpath(__file__))
-package_path = join(dirname(doc_path), "src")
+
+BIOTITE_DOMAIN = "www.biotite-python.org"
+DOC_PATH = dirname(realpath(__file__))
+PACKAGE_PATH = join(dirname(DOC_PATH), "src")
+
 
 # Include biotite/doc in PYTHONPATH
 # in order to import modules for API doc generation etc.
-sys.path.insert(0, doc_path)
+sys.path.insert(0, DOC_PATH)
 import apidoc
 import viewcode
-import tutorial
 import scraper
 import bibliography
 import key
+import switcher
 
 
 # Reset matplotlib params
 matplotlib.rcdefaults()
 
-# Creation of API documentation
-apidoc.create_api_doc(package_path, join(doc_path, "apidoc"))
+# Pregeneration of files
+apidoc.create_api_doc(PACKAGE_PATH, join(DOC_PATH, "apidoc"))
+switcher.create_switcher_json(
+    join("static", "switcher.json"),
+    "v0.41.0",
+    n_versions=5
+)
 
-# Creation of tutorial *.rst files from Python script
-if not "plot_gallery=0" in sys.argv:
-    tutorial.create_tutorial(
-        join("tutorial", "src"),
-        join("tutorial", "target")
-    )
-
-
-# Use custom citation sytle
+# Use custom citation style
 pybtex.plugin.register_plugin(
     "pybtex.style.formatting", "ieee", bibliography.IEEEStyle
 )
@@ -71,25 +71,39 @@ warnings.filterwarnings(
             "so cannot show the figure."
 )
 
-extensions = ["sphinx.ext.autodoc",
-              "sphinx.ext.autosummary",
-              "sphinx.ext.doctest",
-              "sphinx.ext.mathjax",
-              "sphinx.ext.linkcode",
-              "sphinxcontrib.bibtex",
-              "sphinx_gallery.gen_gallery",
-              "numpydoc"]
+extensions = [
+    "jupyter_sphinx",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.doctest",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.linkcode",
+    "sphinxcontrib.bibtex",
+    "sphinx_gallery.gen_gallery",
+    "sphinx_design",
+    "sphinx_copybutton",
+    "notfound.extension",
+    "numpydoc",
+]
 
 templates_path = ["templates"]
 source_suffix = [".rst"]
 master_doc = "index"
 
 project = "Biotite"
-copyright = "2017-2020, the Biotite contributors"
+copyright = "The Biotite contributors"
 version = biotite.__version__
 release = biotite.__version__
 
-exclude_patterns = ["build"]
+exclude_patterns = [
+    # These are automatically incorporated by sphinx_gallery
+    "examples/scripts/**/README.rst",
+    # Execution times are not reported to the user
+    "sg_execution_times.rst",
+]
+# Do not run tutorial code if gallery generation is disabled
+if "plot_gallery=0" in sys.argv:
+    exclude_patterns.append("tutorial/**/*.rst")
 
 pygments_style = "sphinx"
 
@@ -103,46 +117,93 @@ numpydoc_show_class_members = False
 # overwrite the document structure given by apidoc.json
 autosummary_generate = False
 
-autodoc_member_order = "bysource"
-
 bibtex_bibfiles = ["references.bib"]
 bibtex_default_style = "ieee"
 
+notfound_urls_prefix = "/latest/"
 
 #### HTML ####
 
-html_theme = "alabaster"
+html_theme = "pydata_sphinx_theme"
+
 html_static_path = ["static"]
 html_css_files = [
     "biotite.css",
     "fonts.css"
 ]
+html_title = "Biotite"
+html_logo = "static/assets/general/biotite_logo.svg"
 html_favicon = "static/assets/general/biotite_icon_32p.png"
-htmlhelp_basename = "BiotiteDoc"
-html_sidebars = {"**": ["about.html",
-                        "navigation.html",
-                        "searchbox.html",
-                        "buttons.html"]}
+html_baseurl = f"https://{BIOTITE_DOMAIN}/latest/"
 html_theme_options = {
-    "description"   : "A comprehensive library for " \
-                      "computational molecular biology",
-    "logo"          : "assets/general/biotite_logo_s.png",
-    "logo_name"     : "false",
-    "github_user"   : "biotite-dev",
-    "github_repo"   : "biotite",
-    "github_banner" : "true",
-    "github_button" : "true",
-    "github_type"   : "star",
-    "page_width"    : "1200px",
-    "fixed_sidebar" : "true",
-
-    "sidebar_link_underscore" : "#FFFFFF",
-    "link"                    : "#006B99",
+    "navbar_start": ["navbar-logo", "version-switcher"],
+    "switcher": {
+        "json_url": f"https://{BIOTITE_DOMAIN}/latest/_static/switcher.json",
+        "version_match": version,
+    },
+    "show_version_warning_banner": True,
+    "header_links_before_dropdown": 7,
+    "pygment_light_style": "friendly",
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/biotite-dev/biotite",
+            "icon": "fa-brands fa-github",
+            "type": "fontawesome",
+        },
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/biotite/",
+            "icon": "fa-solid fa-box-open",
+            "type": "fontawesome",
+        },
+        {
+            "name": "News",
+            "url": "https://biotite.bsky.social",
+            "icon": "fa-brands fa-bluesky",
+            "type": "fontawesome",
+        }
+   ],
+   "use_edit_page_button": True,
+   "show_prev_next": False,
+   "show_toc_level": 2,
+}
+html_sidebars = {
+    # No primary sidebar for these pages
+    "extensions": [],
+    "install": [],
+    "contribute": [],
+    "logo": [],
+}
+html_context = {
+    "github_user": "biotite-dev",
+    "github_repo": "biotite",
+    "github_version": "master",
+    "doc_path": "doc",
 }
 
 sphinx_gallery_conf = {
-    "examples_dirs"             : "examples/scripts",
-    "gallery_dirs"              : "examples/gallery",
+    "examples_dirs"             : [
+        "examples/scripts/sequence",
+        "examples/scripts/structure"
+    ],
+    "gallery_dirs"              : [
+        "examples/gallery/sequence",
+        "examples/gallery/structure"
+    ],
+    "subsection_order": ExplicitOrder([
+        "examples/scripts/sequence/homology",
+        "examples/scripts/sequence/sequencing",
+        "examples/scripts/sequence/profile",
+        "examples/scripts/sequence/annotation",
+        "examples/scripts/sequence/misc",
+        "examples/scripts/structure/protein",
+        "examples/scripts/structure/nucleotide",
+        "examples/scripts/structure/molecule",
+        "examples/scripts/structure/contacts",
+        "examples/scripts/structure/modeling",
+        "examples/scripts/structure/misc",
+    ]),
     "within_subsection_order"   : FileNameSortKey,
     # Do not run example scripts with a trailing '_noexec'
     "filename_pattern"          : "^((?!_noexec).)*$",
@@ -152,7 +213,7 @@ sphinx_gallery_conf = {
     # Never report run time
     "min_reported_time"         : sys.maxsize,
     "default_thumb_file"        : join(
-        doc_path, "static/assets/general/biotite_icon_thumb.png"
+        DOC_PATH, "static/assets/general/biotite_icon_thumb.png"
     ),
     "image_scrapers"            : (
         "matplotlib",
@@ -171,4 +232,4 @@ sphinx_gallery_conf = {
 #### App setup ####
 
 def setup(app):
-    app.connect("autodoc-skip-member", apidoc.skip_non_methods)
+    app.connect("autodoc-skip-member", apidoc.skip_nonrelevant)

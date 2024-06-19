@@ -2,20 +2,23 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="64"
    height="64"
    viewBox="0 0 16.933333 16.933334"
    version="1.1"
    id="svg1448"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)"
-   sodipodi:docname="button_pypi.svg">
+   inkscape:version="1.3 (1:1.3+202307231459+0e150ed6c4)"
+   sodipodi:docname="button_pypi.svg"
+   inkscape:export-filename="button_pypi.png"
+   inkscape:export-xdpi="30"
+   inkscape:export-ydpi="30"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <defs
      id="defs1442" />
   <sodipodi:namedview
@@ -26,17 +29,20 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="5.6"
-     inkscape:cx="-34.09355"
-     inkscape:cy="52.205937"
+     inkscape:cx="-34.017857"
+     inkscape:cy="52.321429"
      inkscape:document-units="px"
-     inkscape:current-layer="g4506"
+     inkscape:current-layer="layer1"
      showgrid="false"
      units="px"
-     inkscape:window-width="1920"
-     inkscape:window-height="990"
+     inkscape:window-width="1846"
+     inkscape:window-height="1016"
      inkscape:window-x="0"
-     inkscape:window-y="25"
-     inkscape:window-maximized="1" />
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
   <metadata
      id="metadata1445">
     <rdf:RDF>
@@ -54,31 +60,25 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-280.06665)">
-    <circle
-       style="fill:#1b1817;fill-opacity:1;stroke-width:0.86861795"
-       id="path1993"
-       cx="8.4666672"
-       cy="288.53333"
-       r="8.4666672" />
     <g
        id="g4506"
-       transform="matrix(0.34369668,0,0,0.34369919,-224.01958,131.03127)"
+       transform="matrix(0.52733905,0,0,0.5273429,-348.24054,46.957386)"
        inkscape:export-xdpi="98.922112"
        inkscape:export-ydpi="98.922112">
       <path
-         style="fill:#ffffff;fill-opacity:1;stroke:#1b1817;stroke-width:0.76981357;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="fill:#ffffff;fill-opacity:1;stroke:#888888;stroke-width:0.769814;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:connector-curvature="0"
          id="path5201-0-9"
          stroke-miterlimit="4"
          d="m 660.75803,449.15562 15.55544,5.66172 15.78565,-5.74552 -15.55544,-5.66172 z" />
       <path
-         style="fill:#ffffff;fill-opacity:1;stroke:#1b1817;stroke-width:0.76981357;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="fill:#ffffff;fill-opacity:1;stroke:#888888;stroke-width:0.769814;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:connector-curvature="0"
          id="path5203-3-8"
          stroke-miterlimit="4"
          d="m 676.31347,454.81734 v 18.28268 l 15.78565,-5.74551 v -18.28269 z" />
       <path
-         style="fill:#ffffff;fill-opacity:1;stroke:#1b1817;stroke-width:0.76981357;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="fill:#ffffff;fill-opacity:1;stroke:#888888;stroke-width:0.769814;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:connector-curvature="0"
          id="path5205-3-0"
          stroke-miterlimit="4"

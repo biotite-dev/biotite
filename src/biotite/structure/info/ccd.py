@@ -24,12 +24,20 @@ _residue_index = {}
 
 def get_ccd():
     """
-    Get the PDB *Chemical Component Dictionary* (CCD).
+    Get the internal subset of the PDB
+    *Chemical Component Dictionary* (CCD).
+    :footcite:`Westbrook2015`
 
     Returns
     -------
     ccd : BinaryCIFFile
         The CCD.
+
+    References
+    ----------
+
+    .. footbibliography::
+
     """
     # Avoid circular import
     from ..io.pdbx.bcif import BinaryCIFFile
@@ -44,7 +52,8 @@ def get_ccd():
 def get_from_ccd(category_name, comp_id, column_name=None):
     """
     Get the rows for the given residue in the given category from the
-    PDB *Chemical Component Dictionary* (CCD).
+    internal subset of the PDB *Chemical Component Dictionary* (CCD).
+    :footcite:`Westbrook2015`
 
     Parameters
     ----------
@@ -62,6 +71,12 @@ def get_from_ccd(category_name, comp_id, column_name=None):
     value : ndarray or dict or None
         The array of the given column or all columns as dictionary.
         ``None`` if the `comp_id` is not found in the category.
+
+    References
+    ----------
+
+    .. footbibliography::
+
     """
     global _residue_index
     ccd = get_ccd()

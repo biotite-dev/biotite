@@ -19,7 +19,8 @@ group_lists = {}
 def amino_acid_names():
     """
     Get a tuple of amino acid three-letter codes according to the
-    PDB *Chemical Component Dictionary* :footcite:`Westbrook2015`.
+    PDB *Chemical Component Dictionary*.
+    :footcite:`Westbrook2015`
 
     Returns
     -------
@@ -27,13 +28,11 @@ def amino_acid_names():
         A list of three-letter-codes containing residues that are
         peptide monomers.
 
-    Notes
-    -----
-
     References
     ----------
 
     .. footbibliography::
+
     """
     return _get_group_members("amino_acids")
 
@@ -41,7 +40,8 @@ def amino_acid_names():
 def nucleotide_names():
     """
     Get a tuple of nucleotide three-letter codes according to the
-    PDB *Chemical Component Dictionary* :footcite:`Westbrook2015`.
+    PDB *Chemical Component Dictionary*.
+    :footcite:`Westbrook2015`
 
     Returns
     -------
@@ -49,13 +49,11 @@ def nucleotide_names():
         A list of three-letter-codes containing residues that are
         DNA/RNA monomers.
 
-    Notes
-    -----
-
     References
     ----------
 
     .. footbibliography::
+
     """
     return _get_group_members("nucleotides")
 
@@ -63,7 +61,8 @@ def nucleotide_names():
 def carbohydrate_names():
     """
     Get a tuple of carbohydrate three-letter codes according to the
-    PDB *Chemical Component Dictionary* :footcite:`Westbrook2015`.
+    PDB *Chemical Component Dictionary*.
+    :footcite:`Westbrook2015`
 
     Returns
     -------
@@ -71,13 +70,11 @@ def carbohydrate_names():
         A list of three-letter-codes containing residues that are
         saccharide monomers.
 
-    Notes
-    -----
-
     References
     ----------
 
     .. footbibliography::
+
     """
     return _get_group_members("carbohydrates")
 
