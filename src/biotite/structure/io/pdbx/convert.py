@@ -110,11 +110,7 @@ def _filter(category, index):
     })
 
 
-<<<<<<< HEAD
 def get_sequence(pdbx_file, data_block=None):
-=======
-def get_sequence(pdbx_file, data_block=None, chain_ids=False):
->>>>>>> master
     """""
     Get the protein and nucleotide sequences from the
     ``entity_poly.pdbx_seq_one_letter_code_can`` entry.
@@ -135,14 +131,9 @@ def get_sequence(pdbx_file, data_block=None, chain_ids=False):
         file.
         If the data block object is passed directly to `pdbx_file`,
         this parameter is ignored.
-    chain_ids : bool, optional
-        If True, a dictionary mapping chain IDs to sequences is returned.
-        If False or not given, all sequences are returned.
-        Default is False.
 
     Returns
     -------
-<<<<<<< HEAD
     sequence_dict : Dictionary of Sequences 
         Dictionary keys are derived from ``entity_poly.pdbx_strand_id``
         (often equivalent to chain_id and atom_site.auth_asym_id
@@ -155,20 +146,13 @@ def get_sequence(pdbx_file, data_block=None, chain_ids=False):
     version of this initial sequence, it will include only a subset of the 
     initial sequence. Use biotite.structure.get_residues to retrieve only 
     the residues that are represented in the structure.
-=======
-    sequences : list of Sequence or dict
-        If `chain_ids` is False, returns a list of protein and nucleotide 
-        sequences for each entity.
-        If `chain_ids` is True, returns a dictionary where each key is a 
-        chain ID and each value is the corresponding sequence.
->>>>>>> master
     """
+    
     block = _get_block(pdbx_file, data_block)
     poly_category= block["entity_poly"]
 
     seq_string = poly_category["pdbx_seq_one_letter_code_can"].as_array(str)
     seq_type = poly_category["type"].as_array(str)
-<<<<<<< HEAD
 
     sequences = [
         _convert_string_to_sequence(string, stype)
@@ -186,27 +170,6 @@ def get_sequence(pdbx_file, data_block=None, chain_ids=False):
     }
 
     return sequence_dict
-=======
-    sequences = []
-    for string, stype in zip(seq_string, seq_type):
-        sequence = _convert_string_to_sequence(string, stype)
-        if sequence is not None:
-            sequences.append(sequence)
-            
-    if chain_ids:
-        strand_ids = poly_category['pdbx_strand_id'].as_array(str)
-        strand_ids = [strand_id.split(",") for strand_id in strand_ids]
-
-        strand_ids_to_seq_dict = {}
-        for entity, strand_ids in enumerate(strand_ids):
-            for strand_id in strand_ids:
-                strand_ids_to_seq_dict[strand_id] = sequences[entity-1]
-
-        return strand_ids_to_seq_dict
-    
-    else:
-        return sequences
->>>>>>> master
 
 
 def get_model_count(pdbx_file, data_block=None):
