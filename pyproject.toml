@@ -24,7 +24,7 @@ classifiers = [
 # this should be manually updated as the minimum python version increases
 dependencies = [
   "requests >= 2.12",
-  "numpy >= 1.14.5, <= 2.0",
+  "numpy >= 1.14.5, < 2.0",
   "msgpack >= 0.5.6",
   "networkx >= 2.0",
 ]

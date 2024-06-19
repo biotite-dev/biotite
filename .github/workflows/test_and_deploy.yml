@@ -40,17 +40,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install cibuildwheel
         # MAKE SURE THIS STAYS IN SYNC WITH THE LOWER GHA cibuildwheel
-        run: pipx install cibuildwheel==2.16.5
+        run: pipx install cibuildwheel==2.19.1
       - id: set-matrix
         run: |
           MATRIX=$(
             {
               cibuildwheel --print-build-identifiers --platform linux \
-              | jq -nRc '{"only": inputs, "os": "ubuntu-20.04"}' \
+              | jq -nRc '{"dist": inputs, "os": "ubuntu-latest"}' \
               && cibuildwheel --print-build-identifiers --platform macos \
-              | jq -nRc '{"only": inputs, "os": "macos-11"}' \
+              | jq -nRc '{"dist": inputs, "os": "macos-latest"}' \
               && cibuildwheel --print-build-identifiers --platform windows \
-              | jq -nRc '{"only": inputs, "os": "windows-2019"}'
+              | jq -nRc '{"dist": inputs, "os": "windows-latest"}'
             } | jq -sc
           )
           echo "include=$MATRIX" | tee -a $GITHUB_OUTPUT
@@ -78,38 +78,36 @@ jobs:
       # at the cost of speed
       - name: Set up QEMU
         if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
         with:
           platforms: all
 
       - name: Build & (optionally) test wheels
         # MAKE SURE THIS STAYS IN SYNC WITH THE UPPER pipx call to cibuildwheel
-        uses: pypa/cibuildwheel@v2.16.5
+        uses: pypa/cibuildwheel@v2.19.1
         with:
-          only: ${{ matrix.only }}
+          only: ${{ matrix.dist }}
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: release
+          name: release-${{ matrix.dist }}
           path: ./wheelhouse/*.whl
 
 
   test-interfaces:
     name: Test interfaces to databases and applications
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -l {0}
 
     steps:
       - uses: actions/checkout@v4
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v3
         with:
+          mamba-version: "*"
           environment-file: environment.yml
-          # Use Mambaforge to circumvent conflict issue:
-          # https://github.com/conda-incubator/setup-miniconda/issues/274
-          miniforge-variant: Mambaforge
       - name: Build distribution
         run: pip wheel --no-deps -w dist .
       - name: Install distribution
@@ -132,14 +130,14 @@ jobs:
   test-muscle5:
     name: Test interface to Muscle 5
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -l {0}
 
     steps:
       - uses: actions/checkout@v4
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: biotite-dev
           miniforge-variant: Mambaforge
@@ -162,9 +160,9 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build source distribution
       run: pipx run build --sdist
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: release
+        name: release-${{ matrix.dist }}
         path: dist//*.tar.gz
 
 
@@ -195,7 +193,7 @@ jobs:
           cd src/biotite/structure/info
           zip -r ${{ github.workspace }}//dist//ccd.zip ccd
           cd ${{ github.workspace }}
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: ccd
         path: dist//ccd.zip
@@ -236,7 +234,7 @@ jobs:
           cd build
           zip -r ..//dist//doc.zip doc
           cd ..
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: documentation
         path: dist//doc.zip
@@ -253,19 +251,20 @@ jobs:
     - test-muscle5
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
-        name: release
+        pattern: release-*
+        merge-multiple: true
         path: dist
     - name: List distributions to be uploaded
       run: ls dist
     - name: Upload to GitHub Releases
-      uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+      uses: softprops/action-gh-release@v2.0.5
       if: github.event_name == 'release' && github.event.action == 'published'
       with:
         files: dist//*
     - name: Upload to PyPI
-      uses: pypa/gh-action-pypi-publish@c7f29f7adef1a245bd91520e94867e5c6eedddcc
+      uses: pypa/gh-action-pypi-publish@v1.9.0
       if: github.event_name == 'release' && github.event.action == 'published'
       with:
         password: ${{ secrets.PYPI_TOKEN }}
@@ -279,11 +278,11 @@ jobs:
     - make-docs
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: documentation
         path: dist
-    - uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+    - uses: softprops/action-gh-release@v2.0.5
       if: github.event_name == 'release' && github.event.action == 'published'
       with:
         files: dist//doc.zip
