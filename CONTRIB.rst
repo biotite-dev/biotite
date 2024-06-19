@@ -4,6 +4,7 @@ CONTRIBUTORS
 - Fabrice Allain <https://github.com/f-allain>
 - Jacob Marcel Anter <https://github.com/JacobAnter>
 - Daniel Bauer <https://github.com/dnlbauer>
+- Lukas Jarosch <https://github.com/ljarosch>
 - Patrick Kunzmann <https://github.com/padix-key>
 - Tom David Müller <https://github.com/t0mdavid-m>
 - Thomas Nevolianis <https://github.com/thomasnevolianis>
