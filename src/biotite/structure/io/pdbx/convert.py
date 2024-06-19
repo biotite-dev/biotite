@@ -110,8 +110,8 @@ def _filter(category, index):
     })
 
 
-def get_sequence(pdbx_file, data_block=None):
-    """
+def get_sequence(pdbx_file, data_block=None, chain_ids=False):
+    """""
     Get the protein and nucleotide sequences from the
     ``entity_poly.pdbx_seq_one_letter_code_can`` entry.
 
@@ -131,12 +131,18 @@ def get_sequence(pdbx_file, data_block=None):
         file.
         If the data block object is passed directly to `pdbx_file`,
         this parameter is ignored.
+    chain_ids : bool, optional
+        If True, a dictionary mapping chain IDs to sequences is returned.
+        If False or not given, all sequences are returned.
+        Default is False.
 
     Returns
     -------
-    sequences : list of Sequence
-        The protein and nucleotide sequences for each entity
-        (equivalent to chains in most cases).
+    sequences : list of Sequence or dict
+        If `chain_ids` is False, returns a list of protein and nucleotide 
+        sequences for each entity.
+        If `chain_ids` is True, returns a dictionary where each key is a 
+        chain ID and each value is the corresponding sequence.
     """
     block = _get_block(pdbx_file, data_block)
 
@@ -148,7 +154,20 @@ def get_sequence(pdbx_file, data_block=None):
         sequence = _convert_string_to_sequence(string, stype)
         if sequence is not None:
             sequences.append(sequence)
-    return sequences
+            
+    if chain_ids:
+        strand_ids = poly_category['pdbx_strand_id'].as_array(str)
+        strand_ids = [strand_id.split(",") for strand_id in strand_ids]
+
+        strand_ids_to_seq_dict = {}
+        for entity, strand_ids in enumerate(strand_ids):
+            for strand_id in strand_ids:
+                strand_ids_to_seq_dict[strand_id] = sequences[entity-1]
+
+        return strand_ids_to_seq_dict
+    
+    else:
+        return sequences
 
 
 def get_model_count(pdbx_file, data_block=None):
