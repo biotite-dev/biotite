@@ -227,6 +227,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
             self._command, stdin=self._stdin_file, stdout=PIPE, stderr=PIPE,
             encoding="UTF-8"
         )
+        
         chdir(cwd)
     
     def is_finished(self):
