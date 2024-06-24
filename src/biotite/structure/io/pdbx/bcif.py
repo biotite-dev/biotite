@@ -389,14 +389,6 @@ class BinaryCIFCategory(_HierarchicalContainer):
     def supercomponent_class():
         return BinaryCIFBlock
 
-    def filter(self, index):
-        return BinaryCIFCategory(
-            {key: column.filter(index) for key, column in self.items()},
-            # Create placeholder array just to check how many elements
-            # remain after filtering
-            len(np.empty(self.row_count, dtype=bool)[index]),
-        )
-
     @staticmethod
     def deserialize(content):
         return BinaryCIFCategory(

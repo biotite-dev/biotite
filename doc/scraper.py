@@ -46,7 +46,7 @@ def static_image_scraper(block, block_vars, gallery_conf):
 def pymol_scraper(block, block_vars, gallery_conf):
     _, code, _ = block
     block_conf = extract_file_config(code)
-    # Search for a `sphinx_gallery_pymol_image` command
+    # Search for a `sphinx_gallery_ammolite_script` command
     if PYMOL_IMAGE_COMMAND not in block_conf:
         return figure_rst([], gallery_conf['src_dir'])
 
@@ -63,22 +63,20 @@ def pymol_scraper(block, block_vars, gallery_conf):
             f"'{pymol_script_path}' file"
         )
 
-    # If PyMOL image is already created, do not run PyMOL script,
-    # as this should not be required for building the documentation
-    if not isfile(pymol_image_path):
+    try:
+        import pymol
+        import ammolite
+    except ImportError:
+        # If Ammolite is not installed, fall back to the image file,
+        # if already existing
+        if not isfile(pymol_image_path):
+            raise ExtensionError("PyMOL or Ammolite is not installed")
+    else:
         # Create a shallow copy,
-        # to avoid ading new variables to example script
+        # to avoid adding new variables to example script
         script_globals = copy.copy(block_vars["example_globals"])
         script_globals["__image_destination__"] = pymol_image_path
 
-        try:
-            import pymol
-        except ImportError:
-            raise ExtensionError("PyMOL is not installed")
-        try:
-            import ammolite
-        except ImportError:
-            raise ExtensionError("Ammolite is not installed")
         with open(pymol_script_path, "r") as script:
             # Prevent PyMOL from writing stuff (splash screen, etc.)
             # to STDOUT or STDERR

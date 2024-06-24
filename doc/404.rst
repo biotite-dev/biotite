@@ -1,0 +1,29 @@
+:orphan:
+:html_theme.sidebar_secondary.remove:
+
+.. raw:: html
+
+    <style>
+        .bd-main .bd-content .bd-article-container {
+            text-align: center;
+        }
+    </style>
+
+.. image:: /static/assets/general/biotite_icon_404.svg
+    :class: no-scaled-link
+    :width: 25%
+    :align: center
+
+|
+|
+
+404 - Page not found
+====================
+
+This page does not exist (anymore).
+
+.. button-link:: https://www.biotite-python.org
+    :color: primary
+    :shadow:
+
+    Back to homepage

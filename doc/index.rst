@@ -2,146 +2,243 @@
    under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
    information.
 
+:html_theme.sidebar_secondary.remove:
+:sd_hide_title: true
+
+.. raw:: html
+
+    <style>
+        .bd-main .bd-content .bd-article-container {
+            /* Wider page */
+            max-width: 80rem;
+        }
+        h1 {
+            font-size: 48px;
+            text-align: center;
+            margin-top: 6rem;
+            margin-bottom: 2rem;
+        }
+        /* Make the hero h/v centered in the window */
+        .hero {
+            align-items: center;
+            justify-content: center;
+            display: flex;
+            /* Due to navigation bar not the complete window height is required */
+            min-height: 80vh;
+        }
+        /* Avoid truncated hero section on small mobile screens */
+        @media screen and (max-width: 768px) {
+            .hero {
+                display: block;
+            }
+        }
+
+    </style>
+
+
 #####################
 Biotite documentation
 #####################
 
-.. sidebar:: Name origin
+.. raw:: html
 
-   Biotite is a mineral within the mica group.
-   It usually forms brownish pseudohexagonal crystals.
+    <div class="hero">
 
-   .. image:: https://upload.wikimedia.org/wikipedia/commons/3/3b/Biotite%2C_Sanidine_and_Nepheline_-_Ochtendung%2C_Eifel%2C_Germany.jpg
-      :alt: Biotite image
+.. grid:: 1 1 2 2
 
-*Biotite* is your Swiss army knife for bioinformatics.
-Whether you want to identify homologous sequence regions in a protein family
-or you would like to find disulfide bonds in a protein structure: *Biotite*
-has the right tool for you.
-This package bundles popular tasks in computational molecular biology
-into a uniform *Python* library.
-It can handle a major part of the typical workflow
-for sequence and biomolecular structure data:
+    .. grid-item::
 
-   - Searching and fetching data from biological databases
-   - Reading and writing popular sequence/structure file formats
-   - Analyzing and editing sequence/structure data
-   - Visualizing sequence/structure data
-   - Interfacing external applications for further analysis
+        .. image:: /static/assets/general/biotite_logo.svg
+            :alt: Biotite
+            :class: no-scaled-link
+            :width: 50%
+            :align: center
 
-*Biotite* internally stores most of the data as *NumPy* `ndarray` objects,
-enabling
+        .. raw:: html
 
-   - fast C-accelerated analysis,
-   - intuitive usability through *NumPy*-like indexing syntax,
-   - extensibility through direct access of the internal *NumPy* arrays.
+            <h2>Your multitool for bioinformatics</h2>
 
-As a result the user can skip writing code for basic functionality (like
-file parsers) and can focus on what their code makes unique - from
-small analysis scripts to entire bioinformatics software packages.
+        Whether you want to find homologous sequence regions in a protein
+        family or would like to identify secondary structure elements in a
+        protein structure:
+        *Biotite* has the right tool for you.
+        This package bundles popular tasks in computational molecular biology
+        into a uniform and fast *Python* library.
 
-If you use *Biotite* in a scientific publication, please cite one of the
-following articles:
+        Skip writing code for basic functionality and focus on what your code
+        makes unique -
+        from small analysis scripts to entire bioinformatics software packages.
 
-.. bibliography::
 
-   Kunzmann2018
-   Kunzmann2023
 
-----
+        .. grid:: 3
 
-**Sequence** subpackage
------------------------
-This subpackage contains functionality for working with sequence information
-of any kind.
-The package contains by default sequence types for nucleotides and proteins,
-but the alphabet-based implementation allows simple integration of own sequence
-types, even if they do not rely on letters.
-Besides the standard I/O operations, the package includes general purpose
-functions for sequence manipulations and global/local alignments.
-On top of the actual sequence data, the subpackage can also handle sequence
-features, to annotate your sequences with the respective functionality.
-Eventually, the data can be visualized in different *Matplotlib* based
-representations, ranging from sequence alignments to feature maps.
+            .. grid-item::
 
-.. image:: /examples/gallery/sequence/images/sphx_glr_hcn_hydropathy_001.png
-   :width: 48 %
-   :target: examples/gallery/sequence/hcn_hydropathy.html
+                .. button-ref:: tutorial/index
+                    :color: primary
+                    :expand:
+                    :shadow:
 
-.. image:: /examples/gallery/sequence/images/sphx_glr_avidin_alignment_001.png
-   :width: 48 %
-   :target: examples/gallery/sequence/avidin_alignment.html
+                    Get started
 
-----
+            .. grid-item::
 
-**Structure** subpackage
-------------------------
-This subpackage enables handling of 3D structures of biomolecules.
-Simplified, a structure is represented by a list of atoms and their properties,
-based on `ndarray` objects.
-Optionally, this representation can be enriched with chemical bond information.
-*Biotite* supports different structure formats, including the ones provided
-by the *RCSB* and *Gromacs* trajectory formats.
-The subpackage offers a wide range of functions for atom filtering,
-coordinate transformations, angle and bond measurements,
-accessible surface area calculation, structure superimposition and more.
+                .. button-ref:: examples/index
+                    :color: primary
+                    :outline:
+                    :expand:
+                    :shadow:
 
-.. image:: /examples/gallery/structure/images/sphx_glr_ramachandran_001.png
-   :width: 48 %
-   :target: examples/gallery/structure/ramachandran.html
+                    More examples
 
-.. image:: /examples/gallery/structure/images/sphx_glr_sheet_arrangement_001.png
-   :width: 48 %
-   :target: examples/gallery/structure/sheet_arrangement.html
+    .. grid-item::
 
-----
+       .. grid:: 1
+           :gutter: 2
 
-**Application** subpackage
---------------------------
-This subpackage provides interfaces for external software, in case *Biotite*'s
-integrated functionality is not sufficient for your tasks.
-These interfaces range from locally installed software (e.g. MSA software) to
-web services (e.g. BLAST).
-The speciality is that the interfaces are seamless:
-You do not have to write input files and read output files, you only have to
-input *Python* objects and you get *Python* objects.
-It is basically very similar to using normal *Python* functions.
+           .. grid-item-card::
+               :link: examples/gallery/sequence/homology/lexa_conservation.html
+               :img-background: /examples/gallery/sequence/homology/images/sphx_glr_lexa_conservation_002.png
 
-.. image:: /examples/gallery/sequence/images/sphx_glr_lexa_conservation_002.png
-   :width: 48 %
-   :target: examples/gallery/sequence/lexa_conservation.html
+           .. grid-item-card::
+               :link: examples/gallery/structure/protein/transketolase_sse.html
+               :img-background: /examples/gallery/structure/protein/images/sphx_glr_transketolase_sse_004.png
 
-.. image:: /examples/gallery/structure/images/sphx_glr_transketolase_sse_004.png
-   :width: 48 %
-   :target: examples/gallery/structure/transketolase_sse.html
+.. raw:: html
 
-----
+    </div>
 
-**Database** subpackage
------------------------
-This subpackage is all about searching and downloading data from biological
-databases, including the arguably most important ones: the *RCSB PDB* and the
-*NCBI Entrez* database.
 
-.. image:: /examples/gallery/structure/images/sphx_glr_pdb_statistics_001.png
-   :width: 48 %
-   :target: examples/gallery/structure/pdb_statistics.html
+.. raw:: html
 
-.. image:: /examples/gallery/structure/images/sphx_glr_alkane_isomers_002.png
-   :width: 48 %
-   :target: examples/gallery/structure/alkane_isomers.html
+    <h1>Features</h1>
 
+.. grid:: 1 1 2 2
+    :gutter: 5
+
+    .. grid-item::
+
+        .. raw:: html
+
+            <h2>Analyze sequence data</h2>
+
+        Work with sequences of any kind: from the usual nucleotide and protein
+        sequences to your own sequence types created from a custom alphabet.
+        Use the rapid and modular alignment tools to identify homologous
+        regions or to map reads.
+        Eventually, visualize your results in different *Matplotlib* based
+        representations, ranging from sequence alignments to feature maps.
+
+        .. card::
+            :img-background: /examples/gallery/sequence/homology/images/sphx_glr_avidin_alignment_001.png
+            :link: examples/gallery/sequence/homology/avidin_alignment.html
+
+    .. grid-item::
+
+        .. raw:: html
+
+            <h2>Explore molecular 3D structures</h2>
+
+        Handle 3D structures of large biomolecules as well as small molecules
+        in an intuitive *NumPy*-like way.
+        Explore a variety of functions to filter, transform and analyze your
+        structure data - from surface area calculation to structure
+        superimposition.
+        Interfaces to a multitude of popular file formats such as PDB,
+        CIF/BinaryCIF, MOL/SDF, trajectory formats and more are available.
+
+
+        .. card::
+            :img-background: /examples/gallery/structure/contacts/images/sphx_glr_contact_sites_001.png
+            :link: examples/gallery/structure/contacts/contact_sites.html
+
+    .. grid-item::
+
+        .. raw:: html
+
+            <h2>Access data in biological databases</h2>
+
+        Obtain data from biological sequence and structure databases,
+        such as *NCBI Entrez*, *UniProt*, *PDB* and *PubChem*.
+        Craft your queries with the help of *Pythonic* logical operators
+        instead of learning the respective REST API.
+
+        .. card::
+            :img-background: /examples/gallery/structure/misc/images/sphx_glr_pdb_statistics_001.png
+            :link: examples/gallery/structure/misc/pdb_statistics.html
+
+    .. grid-item::
+
+        .. raw:: html
+
+            <h2>Integrate popular software seamlessly</h2>
+
+        In case *Biotite*'s integrated functionality is not sufficient for your
+        tasks, you can use interfaces to prominent external software ranging
+        from multiple sequence alignment to secondary structure annotation
+        tools.
+        These interfaces are seamless:
+        You can input *Python* objects and you get *Python* objects.
+        File creation and command line execution are handled under the hood.
+
+        .. card::
+            :img-background: /examples/gallery/structure/modeling/images/sphx_glr_docking_002.png
+            :link: examples/gallery/structure/modeling/docking.html
+
+
+.. raw:: html
+
+    <h1>Support</h1>
+
+.. grid:: 1 1 2 2
+    :gutter: 5
+
+    .. grid-item::
+
+        .. raw:: html
+
+            <h2>Contributors</h2>
+
+        .. raw:: html
+
+            <a href="https://github.com/biotite-dev/biotite/graphs/contributors" style="margin-top: 20px; margin-bottom: 20px;">
+                <img src="https://contrib.rocks/image?repo=biotite-dev/biotite&columns=8" />
+            </a>
+
+        Interested in contributing to the project?
+
+        .. button-ref:: contribution/index
+            :color: primary
+            :outline:
+            :shadow:
+
+            More information
+
+    .. grid-item::
+
+        .. raw:: html
+
+            <h2>Citation</h2>
+
+        If you use *Biotite* in a scientific publication, please cite one of the
+        following articles:
+
+        .. bibliography::
+            :list: bullet
+
+            Kunzmann2018
+            Kunzmann2023
 
 
 .. toctree::
-   :maxdepth: 1
-   :hidden:
+    :maxdepth: 1
+    :hidden:
 
-   install
-   tutorial/target/index
-   apidoc/index
-   examples/gallery/index
-   extensions
-   contribute
-   logo
-
+    tutorial/index
+    install
+    apidoc/index
+    examples/index
+    extensions
+    contribution/index
+    logo

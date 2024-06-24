@@ -45,7 +45,9 @@ exclude = [
   "tests",
   "doc",
   "environment.yml",
-  "setup_ccd.py"
+  "setup_ccd.py",
+  # .github, .gitignore, .gitattributes
+  ".git*",
 ]
 
 [tool.hatch.version]

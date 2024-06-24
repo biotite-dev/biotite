@@ -25,7 +25,7 @@ _size_uint32 = np.iinfo(np.uint32).max +1
 class Sequence(Copyable, metaclass=abc.ABCMeta):
     """
     The abstract base class for all sequence types.
-    
+
     A :class:`Sequence` can be seen as a succession of symbols, that are
     elements in the allowed set of symbols, the :class:`Alphabet`.
     Internally, a :class:`Sequence` object uses a *NumPy*
@@ -36,35 +36,35 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     :class:`Sequence`, into an integer. These integer values are called
     symbol code, the encoding of an entire sequence of symbols is
     called sequence code.
-    
-    The size of the symbol code type in the array is determined by the 
+
+    The size of the symbol code type in the array is determined by the
     size of the :class:`Alphabet`:
     If the :class:`Alphabet` contains 256 symbols or less, one byte is
     used per array element; if the :class:`Alphabet` contains
     between 257 and 65536 symbols, two bytes are used, and so on.
-    
+
     Two :class:`Sequence` objects are equal if they are instances of the
     same class, have the same :class:`Alphabet` and have equal sequence
     codes.
     Comparison with a string or list of symbols evaluates always to
     false.
-    
+
     A :class:`Sequence` can be indexed by any 1-D index a
     :class:`ndarray` accepts.
     If the index is a single integer, the decoded symbol at that
     position is returned, otherwise a subsequence is returned.
-    
+
     Individual symbols of the sequence can also be exchanged in indexed
     form: If the an integer is used as index, the item is treated as a
     symbol. Any other index (slice, index list, boolean mask) expects
     multiple symbols, either as list of symbols, as :class:`ndarray`
     containing a sequence code or another :class:`Sequence` instance.
     Concatenation of two sequences is achieved with the '+' operator.
-    
+
     Each subclass of :class:`Sequence` needs to overwrite the abstract
     method :func:`get_alphabet()`, which specifies the alphabet the
     :class:`Sequence` uses.
-    
+
     Parameters
     ----------
     sequence : iterable object, optional
@@ -72,7 +72,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         For alphabets containing single letter strings, this parameter
         may also be a :class`str` object.
         By default the sequence is empty.
-    
+
     Attributes
     ----------
     code : ndarray
@@ -85,12 +85,12 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     alphabet : Alphabet
         The alphabet of this sequence. Cannot be set.
         Equal to `get_alphabet()`.
-    
+
     Examples
     --------
     Creating a DNA sequence from string and print the symbols and the
     code:
-    
+
     >>> dna_seq = NucleotideSequence("ACGTA")
     >>> print(dna_seq)
     ACGTA
@@ -100,18 +100,18 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     ['A' 'C' 'G' 'T' 'A']
     >>> print(list(dna_seq))
     ['A', 'C', 'G', 'T', 'A']
-    
+
     Sequence indexing:
-        
+
     >>> print(dna_seq[1:3])
     CG
     >>> print(dna_seq[[0,2,4]])
     AGA
     >>> print(dna_seq[np.array([False,False,True,True,True])])
     GTA
-    
+
     Sequence manipulation:
-        
+
     >>> dna_copy = dna_seq.copy()
     >>> dna_copy[2] = "C"
     >>> print(dna_copy)
@@ -134,28 +134,28 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     >>> dna_seq_rev = dna_seq.reverse()
     >>> print(dna_seq_rev)
     ATGCA
-    
+
     Concatenate the two sequences:
-        
+
     >>> dna_seq_concat = dna_seq + dna_seq_rev
     >>> print(dna_seq_concat)
     ACGTAATGCA
-        
+
     """
-    
+
     def __init__(self, sequence=()):
         self.symbols = sequence
 
     def copy(self, new_seq_code=None):
         """
         Copy the object.
-        
+
         Parameters
         ----------
         new_seq_code : ndarray, optional
             If this parameter is set, the sequence code is set to this
             value, rather than the original sequence code.
-        
+
         Returns
         -------
         copy
@@ -171,51 +171,51 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
             clone.code = new_seq_code
         self.__copy_fill__(clone)
         return clone
-    
+
     @property
     def symbols(self):
         return self.get_alphabet().decode_multiple(self.code)
-    
+
     @symbols.setter
     def symbols(self, value):
         alph = self.get_alphabet()
         dtype = Sequence.dtype(len(alph))
         self._seq_code = alph.encode_multiple(value, dtype)
-    
+
     @property
     def code(self):
         return self._seq_code
-    
+
     @code.setter
     def code(self, value):
         dtype = Sequence.dtype(len(self.get_alphabet()))
         if not isinstance(value, np.ndarray):
             raise TypeError("Sequence code must be an integer ndarray")
         self._seq_code = value.astype(dtype, copy=False)
-    
+
     @property
     def alphabet(self):
         return self.get_alphabet()
-    
+
     @abc.abstractmethod
     def get_alphabet(self):
         """
         Get the :class:`Alphabet` of the :class:`Sequence`.
-        
+
         This method must be overwritten, when subclassing
         :class:`Sequence`.
-        
+
         Returns
         -------
         alphabet : Alphabet
             :class:`Sequence` alphabet.
         """
         pass
-    
+
     def reverse(self, copy=True):
         """
         Reverse the :class:`Sequence`.
-        
+
         Parameters
         ----------
         copy : bool, optional
@@ -225,15 +225,15 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
             In this case, manipulations on the returned sequence would
             also affect this object.
             Otherwise, the sequence code is copied.
-        
+
         Returns
         -------
         reversed : Sequence
             The reversed :class:`Sequence`.
-            
+
         Examples
         --------
-            
+
         >>> dna_seq = NucleotideSequence("ACGTA")
         >>> dna_seq_rev = dna_seq.reverse()
         >>> print(dna_seq_rev)
@@ -243,33 +243,33 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         if copy:
             reversed_code = np.copy(reversed_code)
         return self.copy(reversed_code)
-    
+
     def is_valid(self):
         """
         Check, if the sequence contains a valid sequence code.
-        
+
         A sequence code is valid, if at each sequence position the
         code is smaller than the size of the alphabet.
-        
+
         Invalid code means that the code cannot be decoded into
         symbols. Furthermore invalid code can lead to serious
         errors in alignments, since the substitution matrix
         is indexed with an invalid index.
-        
+
         Returns
         -------
         valid : bool
             True, if the sequence is valid, false otherwise.
         """
         return (self.code < len(self.get_alphabet())).all()
-    
+
     def get_symbol_frequency(self):
         """
         Get the number of occurences of each symbol in the sequence.
-        
+
         If a symbol does not occur in the sequence, but it is in the
         alphabet, its number of occurences is 0.
-        
+
         Returns
         -------
         frequency : dict
@@ -284,7 +284,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
             symbol: count for symbol, count
             in zip(self.get_alphabet().get_symbols(), counts)
         }
-    
+
     def __getitem__(self, index):
         alph = self.get_alphabet()
         sub_seq = self._seq_code.__getitem__(index)
@@ -292,7 +292,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
             return self.copy(sub_seq)
         else:
             return alph.decode(sub_seq)
-    
+
     def __setitem__(self, index, item):
         alph = self.get_alphabet()
         if isinstance(index, numbers.Integral):
@@ -308,32 +308,34 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
                 # Default: item is iterable object of symbols
                 code = alph.encode_multiple(item)
         self._seq_code.__setitem__(index, code)
-    
+
     def __len__(self):
         return len(self._seq_code)
-    
+
     def __iter__(self):
         alph = self.get_alphabet()
         i = 0
         while i < len(self):
             yield alph.decode(self._seq_code[i])
             i += 1
-    
+
     def __eq__(self, item):
         if not isinstance(item, type(self)):
             return False
         if self.get_alphabet() != item.get_alphabet():
             return False
         return np.array_equal(self._seq_code, item._seq_code)
-    
+
     def __str__(self):
         alph = self.get_alphabet()
         if isinstance(alph, LetterAlphabet):
             return alph.decode_multiple(self._seq_code, as_bytes=True)\
                    .tobytes().decode("ASCII")
         else:
-            return "".join(alph.decode_multiple(self._seq_code))
-    
+            return ", ".join(
+                [str(e) for e in alph.decode_multiple(self._seq_code)]
+            )
+
     def __add__(self, sequence):
         if self.get_alphabet().extends(sequence.get_alphabet()):
             new_code = np.concatenate((self._seq_code, sequence._seq_code))
@@ -356,7 +358,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
         ----------
         alpahabet_size : int
             The size of the alphabet.
-        
+
         Returns
         -------
         dtype
