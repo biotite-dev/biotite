@@ -498,14 +498,14 @@ class Atom(Copyable):
 
     def __repr__(self):
         """Represent Atom as a string for debugging."""
-        annot = 'chain_id="' + self._annot["chain_id"] + '"'
-        annot = annot + ', res_id=' + str(self._annot["res_id"])
-        annot = annot + ', ins_code="' + self._annot["ins_code"] + '"'
-        annot = annot + ', res_name="' + self._annot["res_name"] + '"'
-        annot = annot + ', hetero=' + str(self._annot["hetero"])
-        annot = annot + ', atom_name="' + self._annot["atom_name"] + '"'
-        annot = annot + ', element="' + self._annot["element"] + '"'
-        return f'Atom(np.{np.array_repr(self.coord)}, {annot})'
+        # print out key-value pairs and format strings in quotation marks
+        annot_parts = [
+            f'{key}="{value}"' if isinstance(value, str) else f'{key}={value}'
+            for key, value in self._annot.items()
+        ]
+
+        annot = ', '.join(annot_parts)
+        return f'Atom(np.{np.array_repr(self.coord)}, {annot})'    
 
     @property
     def shape(self):

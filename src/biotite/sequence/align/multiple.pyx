@@ -39,9 +39,9 @@ cdef float32 MAX_FLOAT = np.finfo(np.float32).max
 
 
 class GapSymbol:
-    
+
     _instance = None
-    
+
     def __init__(self):
         if GapSymbol._instance is not None:
             raise ValueError(
@@ -49,16 +49,16 @@ class GapSymbol:
             )
         else:
             GapSymbol._instance = self
-    
+
     @staticmethod
     def instance():
         if GapSymbol._instance is None:
             GapSymbol._instance = GapSymbol()
         return GapSymbol._instance
-    
+
     def __str__(self):
         return "-"
-    
+
     def __hash__(self):
         return 0
 
@@ -69,13 +69,13 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     align_multiple(sequences, matrix, gap_penalty=-10,
                    terminal_penalty=True, distances=None,
                    guide_tree=None)
-    
+
     Perform a multiple sequence alignment using a progressive
     alignment algorithm. :footcite:`Feng1987`
 
     Based on pairwise sequence distances a guide tree is constructed.
     The sequences are progessively aligned according to the tree,
-    following the rule 'Once a gap, always a gap'. 
+    following the rule 'Once a gap, always a gap'.
 
     Parameters
     ----------
@@ -124,7 +124,7 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     distance_matrix : ndarray, shape=(n,n), dtype=float32
         The pairwise distance matrix used to construct the guide tree.
         Equal to `distances` if provided.
-    
+
     Notes
     -----
     The similarity to distance conversion is performed according to the
@@ -137,14 +137,14 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
               \right)
 
     .. math:: S_{a,b}^{max} = \frac{ S_{a,a} + S_{b,b} }{ 2 }
-    
+
     .. math:: S_{a,b}^{rand} = \frac{1}{L_{a,b}}
               \left(
                  \sum_{x \in \Omega} \sum_{y \in \Omega}
                  s_{x,y} \cdot N_a(x) \cdot N_b(y)
               \right)
               + N_{a,b}^{open} \cdot p^{open} + N_{a,b}^{ext} \cdot p^{ext}
-    
+
     :math:`D_{a,b}` - The distance between the sequences *a* and *b*.
 
     :math:`S_{a,b}` - The similarity score between the sequences *a* and *b*.
@@ -164,17 +164,17 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
 
     In rare cases of extremely unrelated sequences, :math:`S_{a,b}`
     can be lower than :math:`S_{a,b}^{rand}`.
-    In this case the logaritmus cannot be calculated and a
+    In this case the logarithm cannot be calculated and a
     :class:`ValueError` is raised.
 
     References
     ----------
-    
+
     .. footbibliography::
 
     Examples
     --------
-    
+
     >>> seq1 = ProteinSequence("BIQTITE")
     >>> seq2 = ProteinSequence("TITANITE")
     >>> seq3 = ProteinSequence("BISMITE")
@@ -232,7 +232,7 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     else:
         # Assure that every node in the guide tree is binary
         guide_tree = as_binary(guide_tree)
-    
+
     # Create new matrix with neutral gap symbol
     gap_symbol = GapSymbol.instance()
     new_alphabet = Alphabet(
@@ -275,7 +275,7 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     ]
     for i in range(len(aligned_seqs)):
         aligned_seqs[i].code = aligned_seq_codes[i]
-    
+
     # Reorder alignmets into original alignemnt
     new_order = np.argsort(order)
     aligned_seqs = [aligned_seqs[pos] for pos in new_order]
@@ -290,7 +290,7 @@ def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
     Create all pairwise alignments for the given sequences and use the
     method proposed by Feng & Doolittle to calculate the pairwise
     distance matrix
-    
+
     Parameters
     ----------
     _T : ndarray, dtype=VARAIBLE
@@ -306,7 +306,7 @@ def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
     terminal_penalty : bool
         Whether to or not count terminal gap penalties for the
         alignments.
-    
+
     Returns
     -------
     distances : ndarray, shape=(n,n), dtype=float32
@@ -332,7 +332,7 @@ def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
             )[0]
             scores[i,j] = alignment.score
             alignments[i,j] = alignment
-    
+
     ### Distance calculation from similarity scores ###
     # Calculate the occurences of each symbol code in each sequence
     # This is used later for the random score
@@ -364,7 +364,7 @@ def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
     cdef CodeType[:] seq_code1, seq_code2
     cdef CodeType code1, code2
     cdef float32 score_rand, score_max
-    
+
     # Calculate distance
     # i and j are indicating the alignment between the sequences i and j
     for i in range(scores_v.shape[0]):
@@ -405,14 +405,14 @@ def _count_gaps(int64[:,:] trace_v, bint terminal_penalty):
     """
     Count the number of gap openings and gap extensions in an alignment
     trace.
-    
+
     Parameters
     ----------
     trace_v : ndarary, shape=(n,2), dtype=int
         The alignemnt trace.
     terminal_penalty : bool
         Whether to or not count terminal gap penalties.
-    
+
     Returns
     -------
     gap_open_count, gap_ext_count: int
@@ -440,7 +440,7 @@ def _count_gaps(int64[:,:] trace_v, bint terminal_penalty):
         if start_index == -1 or stop_index == -1:
             return 0, 0
         trace_v = trace_v[start_index : stop_index]
-    
+
     if trace_v[0,0] == -1:
         gap_open_count += 1
     if trace_v[0,1] == -1:
@@ -471,7 +471,7 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
     The gaps inserted in this pairwise alignment are also inserted
     into all other sequences in the respective sub-MSA at the same
     position.
-    
+
     Parameters
     ----------
     _T : ndarray, dtype=VARAIBLE
@@ -490,13 +490,13 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
     matrix : SubstitutionMatrix
         The substitution matrix used for the alignments.
     gap_symbol_code : int
-        The symbol code for the gap symbol. 
+        The symbol code for the gap symbol.
     gap_penalty : int or tuple(int, int)
         A linear or affine gap penalty for the alignments.
     terminal_penalty : bool
         Whether to or not count terminal gap penalties for the
         alignments.
-    
+
     Returns
     -------
     order : ndarray, shape=(m,), dtype=int
@@ -515,7 +515,7 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
     cdef int32[:] indices1_v, indices2_v
     cdef np.ndarray incides1, incides2
     cdef list aligned_seqs1, aligned_seqs2
-    
+
     if tree_node.is_leaf():
         # Child node -> Cannot do an alignment
         # -> Just return the sequence corresponding to the leaf node
@@ -523,7 +523,7 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
         # when neutral gap character is inserted
         return np.array([tree_node.index], dtype=np.int32), \
                [sequences[tree_node.index].copy()]
-    
+
     else:
         # Multiple alignment of sequences corresponding to both child nodes
         child1, child2 = tree_node.children
@@ -537,7 +537,7 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
             gap_symbol_code, gap_penalty, terminal_penalty
         )
         indices2_v = incides2
-        
+
         # Find sequence pair with lowest distance
         dist_min = MAX_FLOAT
         for i in range(indices1_v.shape[0]):
@@ -554,7 +554,7 @@ def _progressive_align(CodeType[:] _T, sequences, tree_node,
             gap_penalty, terminal_penalty, max_number=1
         )[0]
         # Place neutral gap symbol for position of new gaps
-        # in both sequence groups 
+        # in both sequence groups
         for i in range(len(aligned_seqs1)):
             seq = aligned_seqs1[i]
             seq.code = _replace_gaps(
@@ -580,7 +580,7 @@ def _replace_gaps(CodeType[:] _T,
 
     The replacement is required by the progressive alignment algorithm
     to be able to align gapped sequences with each other.
-    
+
     Parameters
     ----------
     _T : ndarray, dtype=VARAIBLE
@@ -592,8 +592,8 @@ def _replace_gaps(CodeType[:] _T,
     seq_code : ndarary, shape=(n,)
         The sequence code representing the given sequence.
     gap_symbol_code : int
-        The symbol code for the gap symbol. 
-    
+        The symbol code for the gap symbol.
+
     Returns
     -------
     new_seq_code : ndarary, shape=(m,)
@@ -609,12 +609,12 @@ def _replace_gaps(CodeType[:] _T,
         partial_trace_v.shape[0], dtype=seq_code.dtype
     )
     cdef CodeType[:] new_seq_code_v = new_seq_code
-    
+
     for i in range(partial_trace_v.shape[0]):
         index = partial_trace_v[i]
         if index == -1:
             new_seq_code_v[i] = gap_symbol_code
         else:
             new_seq_code_v[i] = seq_code[index]
-    
+
     return new_seq_code

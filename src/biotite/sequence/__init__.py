@@ -24,7 +24,15 @@ For example, ``'A'``, ``'C'``, ``'G'`` and ``'T'`` would be encoded into
 These integer values are called *symbol code*, the encoding of an entire
 sequence of symbols is called *sequence code*.
 
-The size of the symbol code type in the array is determined by the 
+.. figure:: /static/assets/figures/symbol_encoding.png
+    :alt: Symbol encoding in Biotite
+    :scale: 50%
+
+    Taken from
+    `Kunzmann & Hamacher 2018 <https://doi.org/10.1186/s12859-018-2367-z>`_
+    licensed under `CC BY 4.0 <https://creativecommons.org/licenses/by/4.0/>`_.
+
+The size of the symbol code type in the array is determined by the
 size of the :class:`Alphabet`:
 If the :class:`Alphabet` contains 256 symbols or less, one byte is used
 per array element, between 257 and 65536 symbols, two bytes are used,
@@ -41,6 +49,7 @@ This approach has multiple advantages:
       indifferent to the actual type of sequence.
     - Symbol codes are directly indices for substitution matrices in
       alignments
+    - *k-mers* can be computed fast
 
 The abstract :class:`Sequence` superclass cannot be instantiated
 directly, as it does not define an :class:`Alphabet` by itself.
@@ -55,10 +64,12 @@ The class :class:`GeneralSequence` allows the usage of a custom
 Additionally, this subpackage provides support for sequence features,
 as used in e.g. GenBank or GFF files.
 A :class:`Feature` stores its key name, its qualifiers and locations.
-An :class:`Annotation` is a group of multiple :class:`Feataure` objects
+An :class:`Annotation` is a group of multiple :class:`Feature` objects
 and offers convenient location based indexing.
 An :class:`AnnotatedSequence` combines an :class:`Annotation` and a
 :class:`Sequence`.
+
+Sequence profiles can be created with the :class:`SequenceProfile` class.
 """
 
 __name__ = "biotite.sequence"

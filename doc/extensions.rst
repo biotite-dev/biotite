@@ -2,6 +2,16 @@
    under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
    information.
 
+.. raw:: html
+
+    <style>
+    /* Custom class to get border around logos */
+    .extension-logo {
+        padding: 20px;
+        height: 150px;
+    }
+    </style>
+
 Extensions
 ==========
 
@@ -9,119 +19,47 @@ This page shows *Biotite*'s extension packages:
 These are packages that build upon *Biotite*'s functionality, but are separate
 Python packages that are developed independently.
 
+.. grid:: 1 2 3 3
+    :gutter: 2
 
+    .. grid-item-card:: Gecos
+        :link: https://gecos.biotite-python.org/
+        :img-top: https://raw.githubusercontent.com/biotite-dev/gecos/master/doc/static/assets/general/gecos_icon.svg
+        :class-img-top: extension-logo
 
-.. raw:: html
+        An automatic generator for alignment color schemes based on substitution matrices
 
-    <div class="sphx-glr-thumbnails">
+    .. grid-item-card:: Hydride
+        :link: https://hydride.biotite-python.org/
+        :img-top: https://raw.githubusercontent.com/biotite-dev/hydride/master/doc/static/assets/hydride_icon.svg
+        :class-img-top: extension-logo
 
+        Prediction of hydrogen positions in arbitrary molecular models
 
+    .. grid-item-card:: fastpdb
+        :link: https://github.com/biotite-dev/fastpdb
+        :img-top: https://raw.githubusercontent.com/biotite-dev/fastpdb/main/icon.svg
+        :class-img-top: extension-logo
 
-.. raw:: html
+        A high performance drop-in replacement for Biotite's PDBFile
 
-    <a style="text-decoration: none;" href="https://ammolite.biotite-python.org/">
-    <div
-        class="sphx-glr-thumbcontainer"
-        tooltip="An interface between Biotite and the PyMOL biomolecular visualization software"
-    >
+    .. grid-item-card:: Springcraft
+        :link: https://springcraft.biotite-python.org/
+        :img-top: https://raw.githubusercontent.com/biotite-dev/springcraft/master/doc/static/assets/springcraft_logo.svg
+        :class-img-top: extension-logo
 
-.. only:: html
+        Investigation of molecular dynamics using elastic network models
 
-  .. image:: https://ammolite.biotite-python.org/_static/assets/ammolite_logo.svg
-    :alt: Ammolite logo
+    .. grid-item-card:: Ammolite
+        :link: https://ammolite.biotite-python.org/
+        :img-top: https://raw.githubusercontent.com/biotite-dev/ammolite/master/doc/static/assets/ammolite_logo.svg
+        :class-img-top: extension-logo
 
-.. raw:: html
+        An interface between Biotite and the *PyMOL* biomolecular visualization software
 
-      <div class="sphx-glr-thumbnail-title">Ammolite - From Biotite to PyMOL and back again</div>
-    </div>
-    </a>
+    .. grid-item-card:: Molmarbles
+        :link: https://github.com/biotite-dev/molmarbles
+        :img-top: https://raw.githubusercontent.com/biotite-dev/molmarbles/master/logo.svg
+        :class-img-top: extension-logo
 
-
-
-.. raw:: html
-
-    <a style="text-decoration: none;" href="https://gecos.biotite-python.org/">
-    <div
-        class="sphx-glr-thumbcontainer"
-        tooltip="An automatic generator for alignment color schemes based on substitution matrices"
-    >
-
-.. only:: html
-
-  .. image:: https://gecos.biotite-python.org/_static/assets/general/gecos_icon.svg
-    :alt: Gecos logo
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Gecos - Generated color schemes</div>
-    </div>
-    </a>
-
-
-
-.. raw:: html
-
-    <a style="text-decoration: none;" href="https://hydride.biotite-python.org/">
-    <div
-        class="sphx-glr-thumbcontainer"
-        tooltip="Adding hydrogen atoms to molecular models"
-    >
-
-.. only:: html
-
-  .. image:: https://raw.githubusercontent.com/biotite-dev/hydride/master/doc/static/assets/hydride_icon.svg
-    :alt: Hydride logo
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Hydride - Predict hydrogen positions</div>
-    </div>
-    </a>
-
-
-
-.. raw:: html
-
-    <a style="text-decoration: none;" href="https://github.com/biotite-dev/fastpdb">
-    <div
-        class="sphx-glr-thumbcontainer"
-        tooltip="A high performance drop-in replacement for Biotite's PDBFile"
-    >
-
-.. only:: html
-
-  .. image:: https://raw.githubusercontent.com/biotite-dev/fastpdb/main/icon.svg
-    :alt: fastpdb logo
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">fastpdb - A high performance PDB parser</div>
-    </div>
-    </a>
-
-
-
-.. raw:: html
-
-    <a style="text-decoration: none;" href=" https://springcraft.biotite-python.org/">
-    <div
-        class="sphx-glr-thumbcontainer"
-        tooltip="An extension to compute elastic network models"
-    >
-
-.. only:: html
-
-  .. image:: https://springcraft.biotite-python.org/_static/assets/springcraft_logo.svg
-    :alt: Springcraft logo
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Springcraft - Investigate molecular dynamics with elastic network models</div>
-    </div>
-    </a>
-
-
-
-.. raw:: html
-
-    </div>
+        An interface between Biotite and the *OpenMM* molecular dynamics simulation library

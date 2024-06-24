@@ -7,42 +7,27 @@ Installation
 
 Requirements
 ------------
+*Biotite* requires a modern *Python* installation (at least the last two years are
+supported) and the following packages:
 
-*Biotite* requires at least *Python* version 3.7 and the following packages:
+   - ``numpy``
+   - ``requests``
+   - ``msgpack``
+   - ``networkx``
 
-   - **numpy**
-   - **requests**
-   - **msgpack**
+Installation of the ``biotite`` package will also automatically install these
+dependencies if not already present.
 
-If you are a Linux user, you should be able to install these packages simply
-via *pip* (Tip: Use ``--only-binary :all:`` to ensure precompiled versions are
-installed).
-In case you are using Windows, it is recommended to install *numpy* and
-*matplotlib* via `Conda <https://conda.io/docs/>`_, or alternatively
-`Anaconda <https://www.anaconda.com/download/>`_ which already contains the
-aforementioned packages.
+Some functionalities require extra packages:
 
-Some functions require some extra packages:
-
-   - **mdtraj** - Required for trajetory file I/O operations.
-   - **matplotlib** - Required for plotting purposes.
+   - ``mdtraj`` - Required for trajectory file I/O operations.
+   - ``matplotlib`` - Required for plotting purposes.
 
 
-Install via Conda
-------------------
-
-For *Conda* users, for example *Windows* users who use the *Anaconda* Python
-distribution, the simplest way for installing *Biotite* is
-
-.. code-block:: console
-
-   $ conda install -c conda-forge biotite
-
-
-Install from PyPI
------------------
-
-By default, *Biotite* uses *wheels* for its package distribution.
+Installation from PyPI
+----------------------
+*Biotite* is available as *wheels* for a variety of platforms
+(Windows, Linux, OS X).
 Simply type
 
 .. code-block:: console
@@ -51,28 +36,23 @@ Simply type
 
 If *pip* finds an appropriate *wheel* for your system configuration on *PyPI*,
 it will download and install it.
-Congratulations, you just installed *Biotite*!
 If no fitting *wheel* is found, *pip* will fall back to the source
 distribution.
-If you want to prevent *pip* from doing that, use the following command:
+In this case, installation will take longer, because extension modules need
+to be compiled first.
+Note that this requires a C-compiler (typically GCC) installed on your system.
+
+Installation via Conda
+----------------------
+*Biotite* is also available via Conda.
 
 .. code-block:: console
 
-  $ pip install biotite --only-binary :all:
-
-The source distribution can be used if there is no *wheel* available for you or
-you want to compile the package on your own for other reasons:
-
-.. code-block:: console
-
-   $ pip install biotite --no-binary :all:
-
-Note that installing from source distribution requires a C-compiler
-(typically GCC).
+   $ conda install -c conda-forge biotite
 
 
-Install from source
--------------------
+Installation from source
+------------------------
 
 You can also install Biotite from the
 `project repository <https://github.com/biotite-dev/biotite>`_.
@@ -83,8 +63,8 @@ After cloning the repository, navigate to its top-level directory (the one
 
    $ pip install .
 
-Having the *Biotite* package always pointing to your directory containing the
-repository is also possible.
+Having the *Biotite* installation always pointing to your repository clone is
+also possible.
 Type the following in the top-level directory:
 
 .. code-block:: console
