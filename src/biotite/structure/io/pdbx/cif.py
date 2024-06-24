@@ -6,6 +6,7 @@ __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 __all__ = ["CIFFile", "CIFBlock", "CIFCategory", "CIFColumn", "CIFData"]
 
+import re
 import itertools
 import shlex
 from collections.abc import MutableMapping, Sequence
@@ -449,7 +450,7 @@ class CIFCategory(_Component, MutableMapping):
         """
         category_dict = {}
         for line in lines:
-            parts = shlex.split(line)
+            parts = _split_one_line(line)
             column_name = parts[0].split(".")[1]
             column = parts[1]
             category_dict[column_name] = CIFColumn(column)
@@ -485,7 +486,7 @@ class CIFCategory(_Component, MutableMapping):
             # and quote removal if applicable,
             # bypassing the slow shlex module
             if expect_whitespace:
-                values = shlex.split(data_line)
+                values = _split_one_line(data_line)
             else:
                 values = data_line.split()
                 for k in range(len(values)):
@@ -652,7 +653,7 @@ class CIFBlock(_Component, MutableMapping):
                 # Special optimization for "atom_site":
                 # Even if the values are quote protected,
                 # no whitespace is expected in escaped values
-                # Therefore slow shlex.split() call is not necessary
+                # Therefore slow regex-based _split_one_line() call is not necessary
                 if key == "atom_site":
                     expect_whitespace = False
                 else:
@@ -1022,6 +1023,34 @@ def _multiline(value):
     if "\n" in value:
         return "\n;" + value + "\n;\n"
     return value
+
+
+def _split_one_line(line):
+    """
+    Split a line into its fields.
+    Supporting embedded quotes (' or "), like `'a dog's life'` to  `a dog's life`
+    """
+    # Define the patterns for different types of fields
+    single_quote_pattern = r"('(?:'(?! )|[^'])*')(?:\s|$)"
+    double_quote_pattern = r'("(?:"(?! )|[^"])*")(?:\s|$)'
+    unquoted_pattern = r"([^\s]+)"
+
+    # Combine the patterns using alternation
+    combined_pattern = (
+        f"{single_quote_pattern}|{double_quote_pattern}|{unquoted_pattern}"
+    )
+
+    # Find all matches
+    matches = re.findall(combined_pattern, line)
+
+    # Extract non-empty groups from the matches
+    fields = []
+    for match in matches:
+        field = next(group for group in match if group)
+        if field[0] == field[-1] == "'" or field[0] == field[-1] == '"':
+            field = field[1:-1]
+        fields.append(field)
+    return fields
 
 
 def _arrayfy(data):
