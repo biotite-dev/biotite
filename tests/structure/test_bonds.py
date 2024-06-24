@@ -205,6 +205,13 @@ def test_indexing(bond_list):
     """
     sub_list = bond_list[:]
     assert sub_list.as_array().tolist() == bond_list.as_array().tolist()
+    sub_list = bond_list[::-1]
+    assert sub_list.as_array().tolist() == [[5, 6, 0],
+                                            [4, 5, 0],
+                                            [3, 5, 0],
+                                            [2, 3, 0],
+                                            [2, 6, 0],
+                                            [0, 2, 0]]
     sub_list = bond_list[1:6:2]
     assert sub_list.as_array().tolist() == [[0, 1, 0]]
     sub_list = bond_list[:4]
@@ -223,7 +230,6 @@ def test_indexing(bond_list):
     assert sub_list.as_array().tolist() == [[1, 2, 0],
                                             [0, 2, 0],
                                             [2, 3, 0]]
-
 
 def test_get_all_bonds():
     """
