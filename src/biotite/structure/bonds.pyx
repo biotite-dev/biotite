@@ -1012,7 +1012,6 @@ class BondList(Copyable):
     def __getitem__(self, index):
         ## Variables for both, integer and boolean index arrays
         cdef uint32[:,:] all_bonds_v
-        cdef int32 new_index
         cdef int i
         cdef uint32* index1_ptr
         cdef uint32* index2_ptr
@@ -1020,7 +1019,7 @@ class BondList(Copyable):
         cdef uint8[:] removal_filter_v
 
         ## Variables for integer arrays
-        cdef int32[:] index_v, inverse_index
+        cdef int32[:] inverse_index_v
         cdef int32 new_index1, new_index2
 
         ## Variables for boolean mask
@@ -1035,54 +1034,13 @@ class BondList(Copyable):
             ## Handle single index
             return self.get_bonds(index)
 
-        elif isinstance(index, np.ndarray) \
-            and np.issubdtype(index.dtype, np.integer):
-                ## Handle index array
-                copy = self.copy()
-                all_bonds_v = copy._bonds
-
-                index = _to_positive_index_array(index, self._atom_count)
-                # The inverse index is required to efficiently obtain
-                # the new index of an atom in case of an unsorted index
-                # array
-                inverse_index_v = _invert_index(index, self._atom_count)
-                removal_filter = np.ones(all_bonds_v.shape[0], dtype=np.uint8)
-                removal_filter_v = removal_filter
-                for i in range(all_bonds_v.shape[0]):
-                    # Usage of pointer to increase performance
-                    # as redundant indexing is avoided
-                    index1_ptr = &all_bonds_v[i,0]
-                    index2_ptr = &all_bonds_v[i,1]
-                    new_index1 = inverse_index_v[index1_ptr[0]]
-                    new_index2 = inverse_index_v[index2_ptr[0]]
-                    if new_index1 != -1 and new_index2 != -1:
-                        # Both atoms involved in bond are included
-                        # by index array
-                        # -> assign new atom indices
-                        index1_ptr[0] = <int32>new_index1
-                        index2_ptr[0] = <int32>new_index2
-                    else:
-                        # At least one atom in bond is not included
-                        # -> remove bond
-                        removal_filter_v[i] = False
-
-                copy._bonds = copy._bonds[
-                    removal_filter.astype(bool, copy=False)
-                ]
-                # Again, sort indices per bond
-                # as the correct order is not guaranteed anymore
-                # for unsorted index arrays
-                copy._bonds[:,:2] = np.sort(copy._bonds[:,:2], axis=1)
-                copy._atom_count = len(index)
-                copy._max_bonds_per_atom = copy._get_max_bonds_per_atom()
-                return copy
-
-        else:
-            ## Handle all other arrays as boolean mask
+        elif isinstance(index, np.ndarray) and index.dtype == bool:
+            ## Handle boolean masks
             copy = self.copy()
             all_bonds_v = copy._bonds
+            # Use 'uint8' instead of 'bool' for memory view
+            mask = np.frombuffer(index, dtype=np.uint8)
 
-            mask = _to_bool_mask(index, length=copy._atom_count)
             # Each time an atom is missing in the mask,
             # the offset is increased by one
             offsets = np.cumsum(
@@ -1115,6 +1073,48 @@ class BondList(Copyable):
             # Apply the bond removal filter
             copy._bonds = copy._bonds[removal_filter.astype(bool, copy=False)]
             copy._atom_count = len(np.nonzero(mask)[0])
+            copy._max_bonds_per_atom = copy._get_max_bonds_per_atom()
+            return copy
+
+        else:
+            ## Convert any other type of index into index array, as it preserves order
+            copy = self.copy()
+            all_bonds_v = copy._bonds
+            index = _to_index_array(index, self._atom_count)
+            index = _to_positive_index_array(index, self._atom_count)
+
+            # The inverse index is required to efficiently obtain
+            # the new index of an atom in case of an unsorted index
+            # array
+            inverse_index_v = _invert_index(index, self._atom_count)
+            removal_filter = np.ones(all_bonds_v.shape[0], dtype=np.uint8)
+            removal_filter_v = removal_filter
+            for i in range(all_bonds_v.shape[0]):
+                # Usage of pointer to increase performance
+                # as redundant indexing is avoided
+                index1_ptr = &all_bonds_v[i,0]
+                index2_ptr = &all_bonds_v[i,1]
+                new_index1 = inverse_index_v[index1_ptr[0]]
+                new_index2 = inverse_index_v[index2_ptr[0]]
+                if new_index1 != -1 and new_index2 != -1:
+                    # Both atoms involved in bond are included
+                    # by index array
+                    # -> assign new atom indices
+                    index1_ptr[0] = <int32>new_index1
+                    index2_ptr[0] = <int32>new_index2
+                else:
+                    # At least one atom in bond is not included
+                    # -> remove bond
+                    removal_filter_v[i] = False
+
+            copy._bonds = copy._bonds[
+                removal_filter.astype(bool, copy=False)
+            ]
+            # Again, sort indices per bond
+            # as the correct order is not guaranteed anymore
+            # for unsorted index arrays
+            copy._bonds[:,:2] = np.sort(copy._bonds[:,:2], axis=1)
+            copy._atom_count = len(index)
             copy._max_bonds_per_atom = copy._get_max_bonds_per_atom()
             return copy
 
@@ -1266,6 +1266,18 @@ def _to_positive_index_array(index_array, length):
     return index_array.reshape(orig_shape)
 
 
+def _to_index_array(object index, uint32 length):
+    """
+    Convert an index of arbitrary type into an index array.
+    """
+    if isinstance(index, np.ndarray) and np.issubdtype(index.dtype, np.integer):
+        return index
+    else:
+        # Convert into index array
+        all_indices = np.arange(length, dtype=np.uint32)
+        return all_indices[index]
+
+
 cdef inline bint _in_array(uint32* array, uint32 atom_index, int array_length):
     """
     Test whether a value (`atom_index`) is in a C-array `array`.
@@ -1314,27 +1326,6 @@ def _invert_index(IndexType[:] index_v, uint32 length):
 
 
     return inverse_index
-
-
-def _to_bool_mask(object index, uint32 length):
-    """
-    Convert an index of arbitrary type into a boolean mask
-    with given length.
-    """
-    if isinstance(index, np.ndarray) and index.dtype == bool:
-        # Index is already boolean mask -> simply return as uint8
-        if len(index) != length:
-            raise IndexError(
-                f"Boolean mask has length {len(index)}, expected {length}"
-            )
-        # Use 'uint8' instead of 'bool' for memory view
-        return index.astype(np.uint8, copy=False)
-    else:
-        # Use 'uint8' instead of 'bool' for memory view
-        mask = np.zeros(length, dtype=np.uint8)
-        # 1 -> True
-        mask[index] = 1
-        return mask
 
 
 
