@@ -111,7 +111,7 @@ def _filter(category, index):
 
 
 def get_sequence(pdbx_file, data_block=None):
-    """""
+    """
     Get the protein and nucleotide sequences from the
     ``entity_poly.pdbx_seq_one_letter_code_can`` entry.
 
