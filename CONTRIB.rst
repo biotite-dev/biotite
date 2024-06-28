@@ -18,3 +18,4 @@ CONTRIBUTORS
 - Tom Eulenfeld <https://github.com/trichter>
 - Benjamin E. Mayer <https://github.com/entropybit>
 - Natasha Jaffe <https://github.com/tcjaffe>
+- Tristen J. Mier  <https://github.com/tjmier>

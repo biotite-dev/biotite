@@ -134,21 +134,42 @@ def get_sequence(pdbx_file, data_block=None):
 
     Returns
     -------
-    sequences : list of Sequence
-        The protein and nucleotide sequences for each entity
-        (equivalent to chains in most cases).
+    sequence_dict : Dictionary of Sequences 
+        Dictionary keys are derived from ``entity_poly.pdbx_strand_id``
+        (often equivalent to chain_id and atom_site.auth_asym_id
+        in most cases). Dictionary values are sequences.
+        
+    Notes
+    -----
+    The ``entity_poly.pdbx_seq_one_letter_code_can`` field contains the initial 
+    complete sequence. If the structure represents a truncated or spliced 
+    version of this initial sequence, it will include only a subset of the 
+    initial sequence. Use biotite.structure.get_residues to retrieve only 
+    the residues that are represented in the structure.
     """
+    
     block = _get_block(pdbx_file, data_block)
-
     poly_category= block["entity_poly"]
+
     seq_string = poly_category["pdbx_seq_one_letter_code_can"].as_array(str)
     seq_type = poly_category["type"].as_array(str)
-    sequences = []
-    for string, stype in zip(seq_string, seq_type):
-        sequence = _convert_string_to_sequence(string, stype)
-        if sequence is not None:
-            sequences.append(sequence)
-    return sequences
+
+    sequences = [
+        _convert_string_to_sequence(string, stype)
+        for string, stype in zip(seq_string, seq_type)
+    ]
+    
+    strand_ids = poly_category['pdbx_strand_id'].as_array(str)
+    strand_ids = [strand_id.split(",") for strand_id in strand_ids]
+    
+    sequence_dict = {
+        strand_id: sequence
+        for sequence, strand_ids in zip(sequences, strand_ids)
+        for strand_id in strand_ids
+        if sequence is not None
+    }
+
+    return sequence_dict
 
 
 def get_model_count(pdbx_file, data_block=None):

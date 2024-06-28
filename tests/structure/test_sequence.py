@@ -53,7 +53,7 @@ def test_pdbx_sequence_consistency(path):
 def _find_best_match(sequence, ref_sequences):
     best_alignment = None
     best_identity = 0.0
-    for ref_sequence in ref_sequences:
+    for ref_sequence in ref_sequences.values():
         if type(sequence) != type(ref_sequence):
             continue
         if isinstance(sequence, seq.ProteinSequence):

@@ -457,17 +457,17 @@ def test_get_sequence(format):
         File = pdbx.BinaryCIFFile
 
     pdbx_file = File.read(join(data_dir("structure"), f"5ugo.{format}"))
-    sequences = pdbx.get_sequence(pdbx_file)
+    sequences_1 = pdbx.get_sequence(pdbx_file)
     pdbx_file = File.read(join(data_dir("structure"), f"4gxy.{format}"))
-    sequences += pdbx.get_sequence(pdbx_file)
-    assert str(sequences[0]) == "CCGACGGCGCATCAGC"
-    assert type(sequences[0]) is seq.NucleotideSequence
-    assert str(sequences[1]) == "GCTGATGCGCC"
-    assert type(sequences[1]) is seq.NucleotideSequence
-    assert str(sequences[2]) == "GTCGG"
-    assert type(sequences[2]) is seq.NucleotideSequence
+    sequences_2 = pdbx.get_sequence(pdbx_file)
+    assert str(sequences_1['T']) == "CCGACGGCGCATCAGC"
+    assert type(sequences_1['T']) is seq.NucleotideSequence
+    assert str(sequences_1['P']) == "GCTGATGCGCC"
+    assert type(sequences_1['P']) is seq.NucleotideSequence
+    assert str(sequences_1['D']) == "GTCGG"
+    assert type(sequences_1['D']) is seq.NucleotideSequence
     assert (
-        str(sequences[3]) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
+        str(sequences_1['A']) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
         "AYRKAASVIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQD"
         "DTSSSINFLTRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGD"
         "FEKRIPREEMLQMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPS"
@@ -475,14 +475,14 @@ def test_get_sequence(format):
         "RIDIRLIPKDQYYCGVLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVA"
         "GEPLPVDSEKDIFDYIQWKYREPKDRSE"
     )
-    assert type(sequences[3]) is seq.ProteinSequence
+    assert type(sequences_1['A']) is seq.ProteinSequence
     assert (
-        str(sequences[4]) == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAA"
+        str(sequences_2['A']) == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAA"
         "AAGGGAAGCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCC"
         "CCTCGGGATGTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCGAGGAT"
         "CCGGAGTCAGGAAACCTGCCTGCCGTC"
     )
-    assert type(sequences[4]) is seq.NucleotideSequence
+    assert type(sequences_2['A']) is seq.NucleotideSequence
 
 
 def test_bcif_encoding():
