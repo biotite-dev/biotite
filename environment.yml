@@ -22,7 +22,7 @@ dependencies:
   - numpy >=2.0
   - requests >=2.12
   # Testing
-  - mdtraj >=1.9.3, <1.10
+  # - mdtraj >=1.9.3, <1.10  # tempoarily disabled due to incompatibility with numpy 2.0
   - pytest >=7.0
   # Interfaced software in biotite.application (can also be installed separately)
   - autodock-vina
