@@ -31,6 +31,22 @@ env:
 
 
 jobs:
+  lint:
+    name: Check code style
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Install ruff
+      run: pip install ruff
+    - name: Check code formatting
+      run: ruff format --diff
+    - name: Lint code base
+      run: ruff check
+
+
   generate-wheels-matrix:
     name: "Generate wheels matrix"
     runs-on: "ubuntu-latest"
@@ -245,6 +261,7 @@ jobs:
     permissions:
       contents: write
     needs:
+    - lint
     - test-and-build
     - make-sdist
     - test-interfaces
