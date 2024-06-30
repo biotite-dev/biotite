@@ -1005,7 +1005,7 @@ class BondList(Copyable):
         # maximum and redundant bond calculation
         merged_bond_list._bonds = merged_bonds
         merged_bond_list._max_bonds_per_atom = max(
-            self._max_bonds_per_atom, merged_bond_list._max_bonds_per_atom
+            self._max_bonds_per_atom, bond_list._max_bonds_per_atom
         )
         return merged_bond_list
 

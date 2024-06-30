@@ -133,6 +133,19 @@ def test_modification(bond_list):
                                              [1, 4, 0]]
 
 
+def test_add_two_bond_list():
+    """
+    Test adding two `BondList` objects.
+    """
+    bond_list1 = struc.BondList(2, np.array([(0,1)])) # max_bond_per_atom=1
+    bond_list2 = struc.BondList(3, np.array([(0,1),(0,2)])) # max_bond_per_atom=2
+    added_list = bond_list1 + bond_list2
+    assert added_list._max_bonds_per_atom == 2
+    assert added_list.get_bonds(2)[0].tolist() == [3, 4]
+    assert added_list.as_array().tolist() == [[0, 1, 0],
+                                              [2, 3, 0],
+                                              [2, 4, 0]]
+
 def test_contains(bond_list):
     """
     Test whether `BondList` correctly identifies whether it contains a
