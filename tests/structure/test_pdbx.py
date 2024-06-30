@@ -59,6 +59,29 @@ def test_escape(string, looped):
     assert test_value == ref_value
 
 
+def test_embedded_quote():
+    """
+    Test whether values that have an embedded quote are properly escaped.
+    """
+    text_loop = (
+        "loop_\n"
+        "_entity.id\n" 
+        "_entity.type\n"
+        "_entity.src_method\n"
+        "_entity.pdbx_description\n"
+        "_entity.formula_weight\n"
+        "4 non-polymer syn 'HEXAETHYLENE GLYCOL'                                                    282.331\n"
+        """5 non-polymer syn '2,2',2"-[1,2,3-BENZENE-TRIYLTRIS(OXY)]TRIS[N,N,N-TRIETHYLETHANAMINIUM]' 510.816\n"""
+    )
+    test_category = pdbx.CIFCategory.deserialize(text_loop)
+    assert test_category["pdbx_description"].as_array(str).tolist() == [
+        'HEXAETHYLENE GLYCOL',
+        """2,2',2"-[1,2,3-BENZENE-TRIYLTRIS(OXY)]TRIS[N,N,N-TRIETHYLETHANAMINIUM]""",
+    ]
+    text_single = """_entity.pdbx_description '2,2',2"-[1,2,3-BENZENE-TRIYLTRIS(OXY)]TRIS[N,N,N-TRIETHYLETHANAMINIUM]'\n"""
+    test_category = pdbx.CIFCategory.deserialize(text_single)
+    assert test_category["pdbx_description"].as_item() == """2,2',2"-[1,2,3-BENZENE-TRIYLTRIS(OXY)]TRIS[N,N,N-TRIETHYLETHANAMINIUM]"""
+
 @pytest.mark.parametrize(
     "format, path, model",
     itertools.product(
