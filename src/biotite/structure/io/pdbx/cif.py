@@ -8,7 +8,6 @@ __all__ = ["CIFFile", "CIFBlock", "CIFCategory", "CIFColumn", "CIFData"]
 
 import re
 import itertools
-import shlex
 from collections.abc import MutableMapping, Sequence
 import numpy as np
 from .component import _Component, MaskValue
@@ -481,10 +480,9 @@ class CIFCategory(_Component, MutableMapping):
         column_names = itertools.cycle(column_names)
         for data_line in data_lines:
             # If whitespace is expected in quote protected values,
-            # use standard shlex split
+            # use regex-based _split_one_line() to split
             # Otherwise use much more faster whitespace split
-            # and quote removal if applicable,
-            # bypassing the slow shlex module
+            # and quote removal if applicable.
             if expect_whitespace:
                 values = _split_one_line(data_line)
             else:
@@ -974,11 +972,11 @@ def _to_single(lines, is_looped):
                 j += 1
             if is_looped:
                 # Create a line for the multiline string only
-                processed_lines[out_i] = shlex.quote(multi_line_str)
+                processed_lines[out_i] = _quote(multi_line_str)
                 out_i += 1
             else:
                 # Append multiline string to previous line
-                processed_lines[out_i - 1] += " " + shlex.quote(multi_line_str)
+                processed_lines[out_i - 1] += " " + _quote(multi_line_str)
             in_i = j + 1
 
         elif not is_looped and lines[in_i][0] != "_":
@@ -1001,6 +999,10 @@ def _quote(value):
     """
     if len(value) == 0:
         return "''"
+    elif len(value) >= 2 and value[0] == value[-1] == "'":
+        return value
+    elif len(value) >= 2 and value[0] == value[-1] == '"':
+        return value
     elif value[0] == "_":
         return "'" + value + "'"
     elif "'" in value:
@@ -1010,6 +1012,8 @@ def _quote(value):
     elif " " in value:
         return "'" + value + "'"
     elif "\t" in value:
+        return "'" + value + "'"
+    elif "\n" in value:
         return "'" + value + "'"
     else:
         return value
