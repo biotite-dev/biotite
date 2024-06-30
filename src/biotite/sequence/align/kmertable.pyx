@@ -1352,7 +1352,8 @@ cdef class KmerTable:
 
 
     def __iter__(self):
-        return iter(self.get_kmers())
+        for kmer in self.get_kmers():
+            yield kmer.item()
 
 
     def __reversed__(self):
@@ -3394,7 +3395,7 @@ def _to_string(table):
         else:
             symbols = str(tuple(symbols))
         line = symbols + ": " + ", ".join(
-            [str(tuple(pos)) for pos in table[kmer]]
+            [str((ref_id.item(), pos.item())) for ref_id, pos in table[kmer]]
         )
         lines.append(line)
     return "\n".join(lines)
