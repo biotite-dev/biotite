@@ -186,6 +186,9 @@ class FrequencyPermutation(Permutation):
         The minimum and maximum value, the permutated value
         (i.e. the return value of :meth:`permute()`)
         can take.
+    kmer_alphabet : KmerAlphabet
+        The *k-mer* alphabet that defines the range of possible *k-mers*
+        that should be permuted.
 
     Notes
     -----
@@ -226,11 +229,11 @@ class FrequencyPermutation(Permutation):
     >>> permutation = FrequencyPermutation.from_table(kmer_table)
     >>> order = permutation.permute(kmer_codes)
     >>> print(order)
-    [ 0 24 20 19 16 15 14 13 12 22 21 10 11  8  7 18  6  5  4  3 23  2  1  9
+    [ 0 22 18 19  1  2  3  4  5 23 20  6  7  8  9 21 10 11 12 13 24 14 15 16
      17]
     >>> kmer_codes = kmer_codes[np.argsort(order)]
     >>> print(["..."] + ["".join(kmer_alph.decode(c)) for c in kmer_codes[-10:]])
-    ['...', 'ba', 'ar', 'rr', 'da', 'ad', 'ac', 'ca', 'br', 'ra', 'ab']
+    ['...', 'rc', 'rd', 'rr', 'ac', 'ad', 'ca', 'da', 'ab', 'br', 'ra']
     """
 
     def __init__(self, kmer_alphabet, counts):
@@ -240,7 +243,9 @@ class FrequencyPermutation(Permutation):
                 f"but {len(counts)} counts were given"
             )
         # 'order' maps a permutation to a k-mer
-        order = np.argsort(counts)
+        # Stability is important to get the same k-mer subset selection
+        # on different architectures
+        order = np.argsort(counts, stable=True)
         # '_permutation_table' should perform the reverse mapping
         self._permutation_table = _invert_mapping(order)
         self._kmer_alph = kmer_alphabet
@@ -259,8 +264,11 @@ class FrequencyPermutation(Permutation):
         return self._kmer_alph
 
 
+    @staticmethod
     def from_table(kmer_table):
         """
+        from_table(kmer_table)
+
         Create a :class:`FrequencyPermutation` from the *k-mer* counts
         of a :class:`KmerTable`.
 

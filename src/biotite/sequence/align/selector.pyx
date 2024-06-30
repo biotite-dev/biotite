@@ -10,10 +10,8 @@ __all__ = ["MinimizerSelector", "SyncmerSelector", "CachedSyncmerSelector",
 cimport cython
 cimport numpy as np
 
-from numbers import Integral
 import numpy as np
 from .kmeralphabet import KmerAlphabet
-from ..alphabet import AlphabetError
 
 
 ctypedef np.int64_t int64
@@ -21,7 +19,7 @@ ctypedef np.uint32_t uint32
 
 
 # Obtained from 'np.iinfo(np.int64).max'
-DEF MAX_INT_64 = 9223372036854775807
+cdef int64 MAX_INT_64 = 9223372036854775807
 
 
 class MinimizerSelector:
@@ -54,7 +52,7 @@ class MinimizerSelector:
         This standard order is often the lexicographical order, which is
         known to yield suboptimal *density* in many cases
         :footcite:`Roberts2004`.
-    
+
     Attributes
     ----------
     kmer_alphabet : KmerAlphabet
@@ -73,7 +71,7 @@ class MinimizerSelector:
 
     References
     ----------
-    
+
     .. footbibliography::
 
     Examples
@@ -122,12 +120,12 @@ class MinimizerSelector:
         self._window = window
         self._kmer_alph = kmer_alphabet
         self._permutation = permutation
-    
+
 
     @property
     def kmer_alphabet(self):
         return self._kmer_alph
-    
+
     @property
     def window(self):
         return self._window
@@ -135,7 +133,7 @@ class MinimizerSelector:
     @property
     def permutation(self):
         return self._permutation
-    
+
 
     def select(self, sequence, bint alphabet_check=True):
         """
@@ -154,7 +152,7 @@ class MinimizerSelector:
             of the sequence and the alphabet of the
             :class:`MinimizerSelector`
             is not checked to gain additional performance.
-        
+
         Returns
         -------
         minimizer_indices : ndarray, dtype=np.uint32
@@ -162,7 +160,7 @@ class MinimizerSelector:
         minimizers : ndarray, dtype=np.int64
             The *k-mers* that are the selected minimizers, returned as
             *k-mer* code.
-        
+
         Notes
         -----
         Duplicate minimizers are omitted, i.e. if two windows have the
@@ -176,7 +174,7 @@ class MinimizerSelector:
                 )
         kmers = self._kmer_alph.create_kmers(sequence.code)
         return self.select_from_kmers(kmers)
-    
+
 
     def select_from_kmers(self, kmers):
         """
@@ -191,7 +189,7 @@ class MinimizerSelector:
             minimizers in.
             The *k-mer* codes correspond to the *k-mers* encoded by the
             given `kmer_alphabet`.
-        
+
         Returns
         -------
         minimizer_indices : ndarray, dtype=np.uint32
@@ -199,7 +197,7 @@ class MinimizerSelector:
             appears.
         minimizers : ndarray, dtype=np.int64
             The corresponding *k-mers* codes of the minimizers.
-        
+
         Notes
         -----
         Duplicate minimizers are omitted, i.e. if two windows have the
@@ -267,7 +265,7 @@ class SyncmerSelector:
         *k-mer*.
         By default, the minimum position needs to be at the start of the
         *k-mer*, which is termed *open syncmer*.
-    
+
     Attributes
     ----------
     alphabet : Alphabet
@@ -276,7 +274,7 @@ class SyncmerSelector:
         The :class:`KmerAlphabet` for *k* and *s*, respectively.
     permutation : Permutation
         The permutation.
-    
+
     See also
     --------
     CachedSyncmerSelector
@@ -291,7 +289,7 @@ class SyncmerSelector:
 
     References
     ----------
-    
+
     .. footbibliography::
 
     Examples
@@ -337,7 +335,7 @@ class SyncmerSelector:
         self._alphabet = alphabet
         self._kmer_alph = KmerAlphabet(alphabet, k)
         self._smer_alph = KmerAlphabet(alphabet, s)
-        
+
         self._permutation = permutation
 
         self._offset = np.asarray(offset, dtype=np.int64)
@@ -353,7 +351,7 @@ class SyncmerSelector:
             )
         if len(np.unique(self._offset)) != len(self._offset):
             raise ValueError("Offset must contain unique values")
-    
+
 
     @property
     def alphabet(self):
@@ -362,7 +360,7 @@ class SyncmerSelector:
     @property
     def kmer_alphabet(self):
         return self._kmer_alph
-    
+
     @property
     def smer_alphabet(self):
         return self._smer_alph
@@ -370,7 +368,7 @@ class SyncmerSelector:
     @property
     def permutation(self):
         return self._permutation
-    
+
 
     def select(self, sequence, bint alphabet_check=True):
         """
@@ -389,7 +387,7 @@ class SyncmerSelector:
             of the sequence and the alphabet of the
             :class:`SyncmerSelector`
             is not checked to gain additional performance.
-        
+
         Returns
         -------
         syncmer_indices : ndarray, dtype=np.uint32
@@ -428,7 +426,7 @@ class SyncmerSelector:
         relative_min_pos = min_pos - np.arange(len(kmers))
         syncmer_pos = self._filter_syncmer_pos(relative_min_pos)
         return syncmer_pos, kmers[syncmer_pos]
-    
+
 
     def select_from_kmers(self, kmers):
         """
@@ -442,7 +440,7 @@ class SyncmerSelector:
         ----------
         kmers : ndarray, dtype=np.int64
             The *k-mer* codes to select the syncmers from.
-        
+
         Returns
         -------
         syncmer_indices : ndarray, dtype=np.uint32
@@ -459,9 +457,9 @@ class SyncmerSelector:
         :class:`Sequence` objects.
         """
         cdef int64 i
-        
+
         symbol_codes_for_each_kmer = self._kmer_alph.split(kmers)
-        
+
         cdef int64[:] min_pos = np.zeros(
             len(symbol_codes_for_each_kmer), dtype=np.int64
         )
@@ -477,10 +475,10 @@ class SyncmerSelector:
                         f"sort keys for {len(smers)} s-mers"
                     )
             min_pos[i] = np.argmin(ordering)
-        
+
         syncmer_pos = self._filter_syncmer_pos(min_pos)
         return syncmer_pos, kmers[syncmer_pos]
-    
+
 
     def _filter_syncmer_pos(self, min_pos):
         """
@@ -538,7 +536,7 @@ class CachedSyncmerSelector(SyncmerSelector):
         *k-mer*.
         By default, the minimum position needs to be at the start of the
         *k-mer*, which is termed *open syncmer*.
-    
+
     Attributes
     ----------
     alphabet : Alphabet
@@ -547,7 +545,7 @@ class CachedSyncmerSelector(SyncmerSelector):
         The :class:`KmerAlphabet` for *k* and *s*, respectively.
     permutation : Permutation
         The permutation.
-    
+
     See also
     --------
     SyncmerSelector
@@ -562,7 +560,7 @@ class CachedSyncmerSelector(SyncmerSelector):
 
     References
     ----------
-    
+
     .. footbibliography::
 
     Examples
@@ -584,7 +582,7 @@ class CachedSyncmerSelector(SyncmerSelector):
     >>> print(["".join(kmer_alph.decode(kmer)) for kmer in syncmers])
     ['GGCAA', 'AAGTG', 'AGTGA', 'GTGAC']
     """
-    
+
     def __init__(self, alphabet, k, s, permutation=None, offset=(0,)):
         super().__init__(alphabet, k, s, permutation, offset)
         # Check for all possible *k-mers*, whether they are syncmers
@@ -593,7 +591,7 @@ class CachedSyncmerSelector(SyncmerSelector):
         # Convert the index array into a boolean mask
         self._syncmer_mask = np.zeros(len(self.kmer_alphabet), dtype=bool)
         self._syncmer_mask[syncmer_indices] = True
-    
+
 
     def select(self, sequence, bint alphabet_check=True):
         """
@@ -612,7 +610,7 @@ class CachedSyncmerSelector(SyncmerSelector):
             of the sequence and the alphabet of the
             :class:`CachedSyncmerSelector`
             is not checked to gain additional performance.
-        
+
         Returns
         -------
         syncmer_indices : ndarray, dtype=np.uint32
@@ -628,7 +626,7 @@ class CachedSyncmerSelector(SyncmerSelector):
                 )
         kmers = self.kmer_alphabet.create_kmers(sequence.code)
         return self.select_from_kmers(kmers)
-    
+
 
     def select_from_kmers(self, kmers):
         """
@@ -642,7 +640,7 @@ class CachedSyncmerSelector(SyncmerSelector):
         ----------
         kmers : ndarray, dtype=np.int64
             The *k-mer* codes to select the syncmers from.
-        
+
         Returns
         -------
         syncmer_indices : ndarray, dtype=np.uint32
@@ -660,7 +658,7 @@ class MincodeSelector:
 
     Selects the :math:`1/\text{compression}` *smallest* *k-mers* from
     :class:`KmerAlphabet`. :footcite:`Edgar2021`
-    
+
     '*Small*' refers to the lexicographical order, or alternatively a
     custom order if `permutation` is given.
     The *Mincode* approach tries to reduce the number of *k-mers* from a
@@ -682,7 +680,7 @@ class MincodeSelector:
         By default, the standard order of the :class:`KmerAlphabet` is
         used.
         This standard order is often the lexicographical order.
-    
+
     Attributes
     ----------
     kmer_alphabet : KmerAlphabet
@@ -695,10 +693,10 @@ class MincodeSelector:
         All *k-mers*, that are smaller than this value are selected.
     permutation : Permutation
         The permutation.
-    
+
     References
     ----------
-    
+
     .. footbibliography::
 
     Examples
@@ -735,12 +733,12 @@ class MincodeSelector:
             permutation_offset = permutation.min
             permutation_range = permutation.max - permutation.min + 1
         self._threshold = permutation_offset + permutation_range / compression
-    
+
 
     @property
     def kmer_alphabet(self):
         return self._kmer_alph
-    
+
     @property
     def compression(self):
         return self._compression
@@ -752,7 +750,7 @@ class MincodeSelector:
     @property
     def permutation(self):
         return self._permutation
-    
+
 
     def select(self, sequence, bint alphabet_check=True):
         """
@@ -771,7 +769,7 @@ class MincodeSelector:
             of the sequence and the alphabet of the
             :class:`MincodeSelector`
             is not checked to gain additional performance.
-        
+
         Returns
         -------
         mincode_indices : ndarray, dtype=np.uint32
@@ -786,7 +784,7 @@ class MincodeSelector:
                 )
         kmers = self._kmer_alph.create_kmers(sequence.code)
         return self.select_from_kmers(kmers)
-    
+
 
     def select_from_kmers(self, kmers):
         """
@@ -800,7 +798,7 @@ class MincodeSelector:
         ----------
         kmers : ndarray, dtype=np.int64
             The *k-mer* codes to select the *Mincode k-mers* from.
-        
+
         Returns
         -------
         mincode_indices : ndarray, dtype=np.uint32
@@ -820,7 +818,7 @@ class MincodeSelector:
 
         mincode_pos = ordering < self._threshold
         return mincode_pos, kmers[mincode_pos]
-    
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -835,7 +833,7 @@ def _minimize(int64[:] kmers, int64[:] ordering, uint32 window,
     instead of 'x - (window-1)/2' to 'x + (window-1)/2'.
     """
     cdef uint32 seq_i
-    
+
     cdef uint32 n_windows = kmers.shape[0] - (window - 1)
     # Pessimistic array allocation size
     # -> Expect that every window has a new minimizer
@@ -865,14 +863,14 @@ def _minimize(int64[:] kmers, int64[:] ordering, uint32 window,
         reverse_argcummin = reverse_argcummins[seq_i]
         forward_cummin = ordering[forward_argcummin]
         reverse_cummin = ordering[reverse_argcummin]
-        
+
         # At ties the leftmost position is taken,
         # which stems from the reverse pass
         if forward_cummin < reverse_cummin:
             combined_argcummin = forward_argcummin
         else:
             combined_argcummin = reverse_argcummin
-        
+
         # If the same minimizer position was observed before, the
         # duplicate is simply ignored, if 'include_duplicates' is false
         if include_duplicates or combined_argcummin != prev_argcummin:
@@ -899,7 +897,7 @@ cdef _chunk_wise_forward_argcummin(int64[:] values, uint32 chunk_size):
     cdef uint32 current_min_i = 0
     cdef int64 current_min, current_val
     cdef uint32[:] min_pos = np.empty(values.shape[0], dtype=np.uint32)
-    
+
     # Any actual value will be smaller than this placeholder
     current_min = MAX_INT_64
     for seq_i in range(values.shape[0]):
@@ -911,7 +909,7 @@ cdef _chunk_wise_forward_argcummin(int64[:] values, uint32 chunk_size):
             current_min_i = seq_i
             current_min = current_val
         min_pos[seq_i] = current_min_i
-    
+
     return min_pos
 
 @cython.boundscheck(False)
@@ -930,7 +928,7 @@ cdef _chunk_wise_reverse_argcummin(int64[:] values, uint32 chunk_size):
     - There are issues in selecting the leftmost argument
     - An offset is necessary to ensure alignment of chunks with forward
       pass
-    
+
     Hence, a separate 'reverse' variant of the function was implemented.
     """
     cdef uint32 seq_i
@@ -938,7 +936,7 @@ cdef _chunk_wise_reverse_argcummin(int64[:] values, uint32 chunk_size):
     cdef uint32 current_min_i = 0
     cdef int64 current_min, current_val
     cdef uint32[:] min_pos = np.empty(values.shape[0], dtype=np.uint32)
-    
+
     current_min = MAX_INT_64
     for seq_i in reversed(range(values.shape[0])):
         # The chunk beginning is a small difference to forward
@@ -952,5 +950,5 @@ cdef _chunk_wise_reverse_argcummin(int64[:] values, uint32 chunk_size):
             current_min_i = seq_i
             current_min = current_val
         min_pos[seq_i] = current_min_i
-    
+
     return min_pos
