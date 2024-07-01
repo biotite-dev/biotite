@@ -69,6 +69,9 @@ def create_switcher_json(file_path, min_tag, n_versions):
     """
     version_config = []
     for version in _get_previous_versions(min_tag, n_versions)[::-1]:
+        if version.patch != 0:
+            # Documentation is not uploaded for patch versions
+            continue
         version_config.append({
             "name": f"{version.major}.{version.minor}",
             "version": str(version),
