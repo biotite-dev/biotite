@@ -498,7 +498,7 @@ def test_find_connected(bond_list):
             ("C17",  "C22"),
         ]),
     ]
-)
+) # fmt: skip
 def test_find_rotatable_bonds(res_name, expected_bonds):
     """
     Check the :func:`find_rotatable_bonds()` function based on

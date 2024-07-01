@@ -209,7 +209,7 @@ def test_search_composite():
         ("non_polymer_entity", []        ),
         ("polymer_instance",   ["1L2Y.A"]),
     ]
-)
+) # fmt: skip
 @pytest.mark.skipif(
     cannot_connect_to(RCSB_URL),
     reason="RCSB PDB is not available"

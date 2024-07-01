@@ -433,7 +433,7 @@ def test_match_equivalence(k, random_sequences, table_class, use_mask):
         ),
     ],
     ids = idfn
-)
+)# fmt: skip
 def test_masking(k, input_mask, ref_output_mask):
     """
     Explicitly test the conversion of removal masks to k-mer masks
