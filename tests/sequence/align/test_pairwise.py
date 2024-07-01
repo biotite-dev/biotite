@@ -26,28 +26,29 @@ def test_align_ungapped():
 
 
 # [local, gap_penalty, input1, input2, expect]
-align_cases = [(False,True, -7,      "TATGGGTATCC","TATGTATAA",
-                    ("TATGGGTATCC\nTATG--TATAA",
-                     "TATGGGTATCC\nTAT-G-TATAA",
-                     "TATGGGTATCC\nTAT--GTATAA",)),
-               (True, True, -6,      "TATGGGTATCC","TATGTATAA",
-                    ("TATGGGTAT\nTATG--TAT",
-                     "TATGGGTAT\nTAT-G-TAT",
-                     "TATGGGTAT\nTAT--GTAT",)),
-               (False,True, (-7,-1), "TACTATGGGTATCC","TCATATGTATAA",
-                    ("TACTATGGGTATCC\nTCATATG--TATAA",
-                     "TACTATGGGTATCC\nTCATAT--GTATAA",)),
-               (True, True, (-7,-1), "TACTATGGGTATCC","TCATATGTATAA",
-                    ("TATGGGTAT\nTATG--TAT",
-                     "TATGGGTAT\nTAT--GTAT",)),
-               (False,True, (-7,-1), "T","TTT",
-                    ("T--\nTTT",
-                     "--T\nTTT",)),
-               (False,True, -7, "TAAAGCGAAAT","TGCGT",
-                    ("TAAAGCGAAAT\nT---GCG---T")),
-               (False,False,-7, "TAAAGCGAAAT","TGCGT",
-                    ("TAAAGCGAAAT\n---TGCGT---"))
-              ]
+align_cases = [
+    (False,True, -7,      "TATGGGTATCC","TATGTATAA",
+        ("TATGGGTATCC\nTATG--TATAA",
+         "TATGGGTATCC\nTAT-G-TATAA",
+         "TATGGGTATCC\nTAT--GTATAA",)),
+    (True, True, -6,      "TATGGGTATCC","TATGTATAA",
+        ("TATGGGTAT\nTATG--TAT",
+         "TATGGGTAT\nTAT-G-TAT",
+         "TATGGGTAT\nTAT--GTAT",)),
+    (False,True, (-7,-1), "TACTATGGGTATCC","TCATATGTATAA",
+        ("TACTATGGGTATCC\nTCATATG--TATAA",
+         "TACTATGGGTATCC\nTCATAT--GTATAA",)),
+    (True, True, (-7,-1), "TACTATGGGTATCC","TCATATGTATAA",
+        ("TATGGGTAT\nTATG--TAT",
+         "TATGGGTAT\nTAT--GTAT",)),
+    (False,True, (-7,-1), "T","TTT",
+        ("T--\nTTT",
+         "--T\nTTT",)),
+    (False,True, -7, "TAAAGCGAAAT","TGCGT",
+        ("TAAAGCGAAAT\nT---GCG---T")),
+    (False,False,-7, "TAAAGCGAAAT","TGCGT",
+        ("TAAAGCGAAAT\n---TGCGT---"))
+] # fmt: skip
 @pytest.mark.parametrize("local, term, gap_penalty, input1, input2, expect",
                          align_cases)
 def test_align_optimal_simple(local, term, gap_penalty,
@@ -63,7 +64,7 @@ def test_align_optimal_simple(local, term, gap_penalty,
                        matrix,
                        gap_penalty=gap_penalty, terminal_penalty=term,
                        local=local)
-    
+
     for ali in alignments:
         assert str(ali) in expect
     # Test if separate score function calculates the same score
@@ -148,7 +149,7 @@ def test_affine_gap_penalty(local, term, gap_penalty, seed):
             len(sequence.alphabet), size=length
         )
         sequences.append(sequence)
-    
+
     matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
 
     ref_alignments = align.align_optimal(

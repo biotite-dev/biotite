@@ -16,8 +16,10 @@ def test_alignment_str():
     """
     seq1 = seq.NucleotideSequence("ACCTGA")
     seq2 = seq.NucleotideSequence("TATGCT")
-    ali_str = ["A-CCTGA----",
-               "----T-ATGCT"]
+    ali_str = [
+        "A-CCTGA----",
+        "----T-ATGCT"
+    ] # fmt: skip
     trace = align.Alignment.trace_from_strings(ali_str)
     alignment = align.Alignment([seq1, seq2], trace, None)
     assert str(alignment).split("\n") == ali_str
@@ -69,16 +71,16 @@ def test_pairwise_identity(sequences, mode):
         sequences,
         matrix=align.SubstitutionMatrix.std_protein_matrix()
     )
-    
+
     ref_identity_matrix = np.zeros((len(sequences), len(sequences)))
     for i in range(len(sequences)):
         for j in range(len(sequences)):
             ref_identity_matrix[i,j] = align.get_sequence_identity(
                 msa[:, [i,j]], mode=mode
             )
-    
+
     test_identity_matrix = align.get_pairwise_sequence_identity(msa, mode=mode)
-    
+
     # Identity of two equal sequences should be 1, if only the length of
     # the sequence is counted
     if mode == "shortest":

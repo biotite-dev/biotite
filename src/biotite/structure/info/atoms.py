@@ -9,12 +9,14 @@ __all__ = ["residue"]
 from .ccd import get_ccd
 
 
-non_hetero_residues = set([
-    "ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS",
-    "ILE","LEU","LYS","MET","PHE","PRO","PYL","SER","THR",
-    "TRP","TYR","VAL", "SEC",
+# fmt: off
+NON_HETERO_RESIDUES = set([
+    "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS",
+    "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "PYL", "SER", "THR",
+    "TRP", "TYR", "VAL", "SEC",
     "A", "DA", "G", "DG", "C", "DC", "U", "DT",
 ])
+# fmt: on
 
 
 def residue(res_name):
@@ -78,5 +80,5 @@ def residue(res_name):
         raise KeyError(
             f"No atom information found for residue '{res_name}' in CCD"
         )
-    component.hetero[:] = res_name not in non_hetero_residues
+    component.hetero[:] = res_name not in NON_HETERO_RESIDUES
     return component
