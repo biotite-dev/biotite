@@ -60,7 +60,7 @@ def test_neighbor_joining():
         [ 7, 10,  7,  0,  5,  9],
         [ 6,  9,  6,  5,  0,  8],
         [ 8, 11,  8,  9,  8,  0],
-    ])
+    ]) # fmt: skip
 
     ref_tree = phylo.Tree(phylo.TreeNode(
         [
@@ -107,7 +107,7 @@ def test_node_distance(tree):
     # Example topological distances
     assert tree.get_distance(0, 19, True) == 9
     assert tree.get_distance(4,  2, True) == 10
-    
+
     # All pairwise leaf node distances should be sufficient
     # to reconstruct the same tree via UPGMA
     ref_dist_mat = np.zeros((len(tree), len(tree)))
@@ -148,7 +148,7 @@ def test_get_leaves(tree):
     assert set(tree.leaves[10].get_indices()) == set([10])
     assert tree.root.get_leaf_count() == 20
 
- 
+
 def test_copy(tree):
     assert tree is not tree.copy()
     assert tree == tree.copy()
@@ -297,7 +297,7 @@ def test_as_binary_distances():
     for i in range(len(tree)):
         for j in range(len(tree)):
             ref_dist_mat[i,j] = tree.get_distance(i,j)
-    
+
     bin_tree = phylo.as_binary(tree)
     test_dist_mat = np.zeros((len(tree), len(tree)))
     for i in range(len(tree)):

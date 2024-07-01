@@ -66,12 +66,12 @@ from biotite.sequence.seqtypes import ProteinSequence
         ],
 
         [["both"], ["upstream"], ["downstream"]],  # direction
-        
+
         [[False], [True]],  # score_only
 
         [[False], [True]],  # uint8_code
     )]
-)
+) # fmt: skip
 def test_simple_alignments(seq_type, seq1, seq2, seed, threshold,
                            ref_range1, ref_range2,
                            direction, score_only, uint8_code):
@@ -90,16 +90,16 @@ def test_simple_alignments(seq_type, seq1, seq2, seed, threshold,
 
     seq1 = seq_type(seq1)
     seq2 = seq_type(seq2)
-    
+
     if seq_type == seq.NucleotideSequence:
         matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
     else:
         matrix = align.SubstitutionMatrix.std_protein_matrix()
-    
+
     if not uint8_code:
         seq1, seq2, matrix = _convert_to_uint16_code(seq1, seq2, matrix)
 
-    
+
     ref_alignment = align.Alignment(
         [seq1, seq2],
         np.stack([
@@ -112,7 +112,7 @@ def test_simple_alignments(seq_type, seq1, seq2, seed, threshold,
 
     test_result = align.align_local_ungapped(
         seq1, seq2, matrix, seed, threshold, direction, score_only)
-    
+
     if score_only:
         assert test_result == ref_score
     else:
@@ -141,7 +141,7 @@ def test_random_alignment(seed, uint8_code):
     CONSERVED_ENDS = 5
     MUTATION_PROB = 0.1
     THRESHOLD = 100
-    
+
     np.random.seed(seed)
 
     # Create conserved regions
@@ -193,10 +193,10 @@ def test_random_alignment(seed, uint8_code):
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     if not uint8_code:
         seq1, seq2, matrix = _convert_to_uint16_code(seq1, seq2, matrix)
-    
+
     ref_score = align.align_optimal(
         seq1, seq2, matrix, local=True, max_number=1,
-        # High gap penalty to prevent introduction of gaps, 
+        # High gap penalty to prevent introduction of gaps,
         # since 'align_local_ungapped()' is also no able to place gaps
         gap_penalty=-1000
     )[0].score
