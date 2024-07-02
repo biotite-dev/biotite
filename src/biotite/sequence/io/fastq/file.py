@@ -47,7 +47,7 @@ class FastqFile(TextFile, MutableMapping):
     An identifier string (without the leading ``@``) is used as index
     to get and set the corresponding sequence and quality.
     ``del`` removes an entry in the file.
-    
+
     Parameters
     ----------
     offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}
@@ -61,10 +61,10 @@ class FastqFile(TextFile, MutableMapping):
         Only relevant, when adding sequences to a file.
         By default each sequence (and score string)
         is put into one line.
-    
+
     Examples
     --------
-    
+
     >>> import os.path
     >>> file = FastqFile(offset="Sanger")
     >>> file["seq1"] = str(NucleotideSequence("ATACT")), [0,3,10,7,12]
@@ -91,18 +91,18 @@ class FastqFile(TextFile, MutableMapping):
     0.96=GD
     >>> file.write(os.path.join(path_to_directory, "test.fastq"))
     """
-    
+
     def __init__(self, offset, chars_per_line=None):
         super().__init__()
         self._chars_per_line = chars_per_line
         self._entries = OrderedDict()
         self._offset = _convert_offset(offset)
-    
+
     @classmethod
     def read(cls, file, offset, chars_per_line=None):
         """
         Read a FASTQ file.
-        
+
         Parameters
         ----------
         file : file-like object or str
@@ -119,7 +119,7 @@ class FastqFile(TextFile, MutableMapping):
             Only relevant, when adding sequences to a file.
             By default each sequence (and score string)
             is put into one line.
-        
+
         Returns
         -------
         file_object : FastqFile
@@ -134,31 +134,7 @@ class FastqFile(TextFile, MutableMapping):
             raise InvalidFileError("File is empty")
         file._find_entries()
         return file
-    
-    def get_sequence(self, identifier):
-        """
-        Get the sequence for the specified identifier.
 
-        DEPRECATED: Use :meth:`get_seq_string()` or
-        :func:`get_sequence()` instead.
-
-        Parameters
-        ----------
-        identifier : str
-            The identifier of the sequence.
-        
-        Returns
-        -------
-        sequence : NucleotideSequence
-            The sequence corresponding to the identifier.
-        """
-        warnings.warn(
-            "'get_sequence()' is deprecated, use the 'get_seq_string()'"
-            "method or 'fasta.get_sequence()' function instead",
-            DeprecationWarning
-        )
-        return NucleotideSequence(self.get_seq_string(identifier))
-    
     def get_seq_string(self, identifier):
         """
         Get the string representing the sequence for the specified
@@ -168,7 +144,7 @@ class FastqFile(TextFile, MutableMapping):
         ----------
         identifier : str
             The identifier of the sequence.
-        
+
         Returns
         -------
         sequence : str
@@ -183,7 +159,7 @@ class FastqFile(TextFile, MutableMapping):
         # Concatenate sequence string from the sequence lines
         seq_str = "".join(self.lines[seq_start : seq_stop])
         return seq_str
-    
+
     def get_quality(self, identifier):
         """
         Get the quality scores for the specified identifier.
@@ -192,7 +168,7 @@ class FastqFile(TextFile, MutableMapping):
         ----------
         identifier : str
             The identifier of the quality scores.
-        
+
         Returns
         -------
         scores : ndarray, dtype=int
@@ -209,7 +185,7 @@ class FastqFile(TextFile, MutableMapping):
             "".join(self.lines[score_start : score_stop]),
             self._offset
         )
-        
+
     def __setitem__(self, identifier, item):
         sequence, scores = item
         if len(sequence) != len(scores):
@@ -225,7 +201,7 @@ class FastqFile(TextFile, MutableMapping):
         # if already existing
         if identifier in self:
             del self[identifier]
-        
+
         # Create new lines
         # Start with identifier line
         new_lines = ["@" + identifier.replace("\n","").strip()]
@@ -264,26 +240,26 @@ class FastqFile(TextFile, MutableMapping):
                 len(self.lines) + score_stop_i
             )
             self.lines += new_lines
-    
+
     def __getitem__(self, identifier):
         return self.get_seq_string(identifier), self.get_quality(identifier)
-    
+
     def __delitem__(self, identifier):
         seq_start, seq_stop, score_start, score_stop \
             = self._entries[identifier]
         del self.lines[seq_start-1 : score_stop]
         del self._entries[identifier]
         self._find_entries()
-    
+
     def __len__(self):
         return len(self._entries)
-    
+
     def __iter__(self):
         return self._entries.__iter__()
-    
+
     def __contains__(self, identifer):
         return identifer in self._entries
-    
+
     def _find_entries(self):
         self._entries = OrderedDict()
         in_sequence = False
@@ -343,14 +319,14 @@ class FastqFile(TextFile, MutableMapping):
         # must have properly ended
         if in_sequence or in_scores:
             raise InvalidFileError("The last entry in the file is incomplete")
-    
+
 
     @staticmethod
     def read_iter(file, offset):
         """
         Create an iterator over each sequence (and corresponding scores)
         of the given FASTQ file.
-        
+
         Parameters
         ----------
         file : file-like object or str
@@ -361,7 +337,7 @@ class FastqFile(TextFile, MutableMapping):
             ASCII code.
             Can either be directly the value, or a string that indicates
             the score format.
-        
+
         Yields
         ------
         identifier : str
@@ -369,7 +345,7 @@ class FastqFile(TextFile, MutableMapping):
         sequence : tuple(str, ndarray)
             The current sequence as string and its corresponding quality
             scores as :class:`ndarray`.
-        
+
         Notes
         -----
         This approach gives the same results as
@@ -377,7 +353,7 @@ class FastqFile(TextFile, MutableMapping):
         and much more memory efficient.
         """
         offset = _convert_offset(offset)
-        
+
         identifier = None
         seq_str_list = []
         score_str_list = []
@@ -391,7 +367,7 @@ class FastqFile(TextFile, MutableMapping):
             # Ignore empty lines
             if len(line) == 0:
                 continue
-            
+
             if not in_scores and not in_sequence and line[0] == "@":
                 # Track new entry
                 identifier = line[1:]
@@ -401,7 +377,7 @@ class FastqFile(TextFile, MutableMapping):
                 score_len = 0
                 seq_str_list = []
                 score_str_list = []
-            
+
             elif in_sequence:
                 if line[0] == "+":
                     # End of sequence start of scores
@@ -411,7 +387,7 @@ class FastqFile(TextFile, MutableMapping):
                     # Still in sequence
                     seq_len += len(line)
                     seq_str_list.append(line)
-            
+
             elif in_scores:
                 score_len += len(line)
                 score_str_list.append(line)
@@ -432,10 +408,10 @@ class FastqFile(TextFile, MutableMapping):
                         f"The amount of scores is not equal to the sequence "
                         f"length"
                     )
-            
+
             else:
                 raise InvalidFileError(f"FASTQ file is invalid")
-    
+
 
     @staticmethod
     def write_iter(file, items, offset, chars_per_line=None):
@@ -449,7 +425,7 @@ class FastqFile(TextFile, MutableMapping):
         Hence, this static method may save a large amount of memory if
         a large file should be written, especially if the `items`
         are provided as generator.
-        
+
         Parameters
         ----------
         file : file-like object or str
@@ -490,7 +466,7 @@ class FastqFile(TextFile, MutableMapping):
                     raise IndexError(
                         "'FastqFile' only supports strings as identifier"
                     )
-                
+
                 # Yield identifier line
                 yield "@" + identifier.replace("\n","").strip()
 
@@ -500,10 +476,10 @@ class FastqFile(TextFile, MutableMapping):
                 else:
                     for line in wrap_string(sequence, width=chars_per_line):
                         yield line
-                
+
                 # Yield separator
                 yield "+"
-                
+
                 # Yield scores
                 score_chars = _scores_to_score_str(scores, offset)
                 if chars_per_line is None:
@@ -511,7 +487,7 @@ class FastqFile(TextFile, MutableMapping):
                 else:
                     for line in wrap_string(score_chars, width=chars_per_line):
                         yield line
-    
+
         TextFile.write_iter(file, line_generator())
 
 

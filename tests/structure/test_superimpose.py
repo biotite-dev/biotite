@@ -131,7 +131,7 @@ def test_superimposition_array(path, coord_only):
         assert isinstance(fitted, np.ndarray)
     assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=6e-4)
 
-    fitted = struc.superimpose_apply(mobile, transformation)
+    fitted = transformation.apply(mobile)
 
     if coord_only:
         assert isinstance(fitted, np.ndarray)
@@ -198,7 +198,7 @@ def test_masked_superimposition(seed):
     assert struc.distance(fixed[mask], fitted[mask])[0] \
         == pytest.approx(0, abs=5e-4)
 
-    fitted = struc.superimpose_apply(mobile, transformation)
+    fitted = transformation.apply(mobile)
 
     struc.distance(fixed[mask], fitted[mask])[0] \
         == pytest.approx(0, abs=5e-4)

@@ -13,7 +13,6 @@ __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
 
 from .file import *
-from .temp import *
 from .copyable import *
 from .visualize import *
 from .version import __version__, __version_tuple__

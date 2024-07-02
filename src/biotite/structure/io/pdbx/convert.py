@@ -27,7 +27,6 @@ from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
 from ...residues import get_residue_count, get_residue_starts_for
 from ...error import BadStructureError
 from ...util import matrix_rotate
-from .legacy import PDBxFile
 from .component import MaskValue
 from .cif import CIFFile, CIFBlock
 from .bcif import BinaryCIFFile, BinaryCIFBlock, BinaryCIFColumn
@@ -134,20 +133,20 @@ def get_sequence(pdbx_file, data_block=None):
 
     Returns
     -------
-    sequence_dict : Dictionary of Sequences 
+    sequence_dict : Dictionary of Sequences
         Dictionary keys are derived from ``entity_poly.pdbx_strand_id``
         (often equivalent to chain_id and atom_site.auth_asym_id
         in most cases). Dictionary values are sequences.
-        
+
     Notes
     -----
-    The ``entity_poly.pdbx_seq_one_letter_code_can`` field contains the initial 
-    complete sequence. If the structure represents a truncated or spliced 
-    version of this initial sequence, it will include only a subset of the 
-    initial sequence. Use biotite.structure.get_residues to retrieve only 
+    The ``entity_poly.pdbx_seq_one_letter_code_can`` field contains the initial
+    complete sequence. If the structure represents a truncated or spliced
+    version of this initial sequence, it will include only a subset of the
+    initial sequence. Use biotite.structure.get_residues to retrieve only
     the residues that are represented in the structure.
     """
-    
+
     block = _get_block(pdbx_file, data_block)
     poly_category= block["entity_poly"]
 
@@ -158,10 +157,10 @@ def get_sequence(pdbx_file, data_block=None):
         _convert_string_to_sequence(string, stype)
         for string, stype in zip(seq_string, seq_type)
     ]
-    
+
     strand_ids = poly_category['pdbx_strand_id'].as_array(str)
     strand_ids = [strand_id.split(",") for strand_id in strand_ids]
-    
+
     sequence_dict = {
         strand_id: sequence
         for sequence, strand_ids in zip(sequences, strand_ids)
@@ -174,7 +173,7 @@ def get_sequence(pdbx_file, data_block=None):
 
 def get_model_count(pdbx_file, data_block=None):
     """
-    Get the number of models contained in a :class:`PDBxFile`.
+    Get the number of models contained in a file.
 
     Parameters
     ----------
@@ -203,7 +202,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
                   include_bonds=False):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from the
-    ``atom_site`` category in a :class:`PDBxFile`.
+    ``atom_site`` category in a file.
 
     Parameters
     ----------
@@ -249,7 +248,7 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         for example both, ``label_seq_id`` and ``auth_seq_id`` describe
         the ID of the residue.
         While, the ``label_xxx`` fields can be used as official pointers
-        to other categories in the :class:`PDBxFile`, the ``auth_xxx``
+        to other categories in the file, the ``auth_xxx``
         fields are set by the author(s) of the structure and are
         consistent with the corresponding values in PDB files.
         If `use_author_fields` is true, the annotation arrays will be
@@ -378,10 +377,6 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
 
 
 def _get_block(pdbx_component, block_name):
-    if isinstance(pdbx_component, PDBxFile):
-        # The deprecated 'PDBxFile' is a thin wrapper around 'CIFFile'
-        pdbx_component = pdbx_component.cif_file
-
     if not isinstance(pdbx_component, (CIFBlock, BinaryCIFBlock)):
         # Determine block
         if block_name is None:
@@ -891,10 +886,6 @@ def _check_non_empty(array):
 
 
 def _get_or_create_block(pdbx_component, block_name):
-    if isinstance(pdbx_component, PDBxFile):
-        # The deprecated 'PDBxFile' is a thin wrapper around 'CIFFile'
-        pdbx_component = pdbx_component.cif_file
-
     Block = pdbx_component.subcomponent_class()
 
     if isinstance(pdbx_component, (CIFFile, BinaryCIFFile)):
@@ -1079,7 +1070,7 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True,
     """
     Create an :class:`AtomArray` for a chemical component from the
     ``chem_comp_atom`` and, if available, the ``chem_comp_bond``
-    category in a :class:`PDBxFile`.
+    category in a file.
 
     Parameters
     ----------
@@ -1410,7 +1401,7 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
         for example both, ``label_seq_id`` and ``auth_seq_id`` describe
         the ID of the residue.
         While, the ``label_xxx`` fields can be used as official pointers
-        to other categories in the :class:`PDBxFile`, the ``auth_xxx``
+        to other categories in the file, the ``auth_xxx``
         fields are set by the author(s) of the structure and are
         consistent with the corresponding values in PDB files.
         If `use_author_fields` is true, the annotation arrays will be
