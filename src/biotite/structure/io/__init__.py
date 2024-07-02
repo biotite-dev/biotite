@@ -25,6 +25,5 @@ loaded, if `mdtraj` is installed.
 __name__ = "biotite.structure.io"
 __author__ = "Patrick Kunzmann"
 
-from .ctab import *
 from .general import *
 from .trajfile import *

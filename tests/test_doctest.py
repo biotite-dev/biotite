@@ -98,14 +98,6 @@ TEST_PARAMETERS = [
         ["biotite.structure", "biotite.structure.info"]
     ),
     pytest.param(
-        "biotite.structure.io.npz",
-        ["biotite.structure"]
-    ),
-    pytest.param(
-        "biotite.structure.io.mmtf",
-        ["biotite.structure"]
-    ),
-    pytest.param(
         "biotite.structure.io.mol",
         ["biotite.structure", "biotite.structure.info"]
     ),

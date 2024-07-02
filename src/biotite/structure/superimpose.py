@@ -10,7 +10,7 @@ __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Claude J. Rogers"
 __all__ = ["superimpose", "superimpose_homologs",
            "superimpose_without_outliers",
-           "AffineTransformation", "superimpose_apply"]
+           "AffineTransformation"]
 
 
 import numpy as np
@@ -573,38 +573,6 @@ def superimpose_homologs(fixed, mobile, substitution_matrix=None,
         fixed_anchor_indices,
         mobile_anchor_indices,
     )
-
-
-def superimpose_apply(atoms, transformation):
-    """
-    Superimpose structures using a given :class:`AffineTransformation`.
-
-    The :class:`AffineTransformation` can be obtained by prior
-    superimposition.
-
-    DEPRECATED: Use :func:`AffineTransformation.apply()` instead.
-
-    Parameters
-    ----------
-    atoms : AtomArray or ndarray, shape(n,), dtype=float
-        The structure to apply the transformation on.
-        Alternatively coordinates can be given.
-    transformation: AffineTransformation
-        The transformation, obtained by :func:`superimpose()`.
-
-    Returns
-    -------
-    fitted : AtomArray or AtomArrayStack
-        A copy of the `atoms` structure,
-        with transformations applied.
-        Only coordinates are returned, if coordinates were given in
-        `atoms`.
-
-    See Also
-    --------
-    superimpose
-    """
-    return transformation.apply(atoms)
 
 
 def _reshape_to_3d(coord):

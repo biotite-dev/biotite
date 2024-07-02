@@ -88,16 +88,6 @@ def load_structure(file_path, template=None, **kwargs):
             file = GROFile.read(file_path)
             array = file.get_structure(**kwargs)
             return _as_single_model_if_possible(array)
-        case ".mmtf":
-            from .mmtf import MMTFFile, get_structure
-            file = MMTFFile.read(file_path)
-            array = get_structure(file, **kwargs)
-            return _as_single_model_if_possible(array)
-        case ".npz":
-            from .npz import NpzFile
-            file = NpzFile.read(file_path)
-            array = file.get_structure(**kwargs)
-            return _as_single_model_if_possible(array)
         case ".mol":
             from .mol import MOLFile
             file = MOLFile.read(file_path)
@@ -191,16 +181,6 @@ def save_structure(file_path, array, **kwargs):
         case ".gro":
             from .gro import GROFile
             file = GROFile()
-            file.set_structure(array, **kwargs)
-            file.write(file_path)
-        case ".mmtf":
-            from .mmtf import MMTFFile, set_structure
-            file = MMTFFile()
-            set_structure(file, array, **kwargs)
-            file.write(file_path)
-        case ".npz":
-            from .npz import NpzFile
-            file = NpzFile()
             file.set_structure(array, **kwargs)
             file.write(file_path)
         case ".mol":

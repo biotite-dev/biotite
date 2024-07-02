@@ -27,13 +27,6 @@ class File(Copyable, metaclass=abc.ABCMeta):
     :func:`write()` method is used.
     """
 
-    def __init__(self):
-        # Support for deprecated instance method 'read()':
-        # When creating an instance, the 'read()' class method is
-        # replaced by the instance method, so that subsequent
-        # 'read()' calls are delegated to the instance method
-        self.read = self._deprecated_read
-
     @classmethod
     @abc.abstractmethod
     def read(cls, file):
@@ -53,23 +46,6 @@ class File(Copyable, metaclass=abc.ABCMeta):
             representing the parsed file.
         """
         pass
-
-    def _deprecated_read(self, file, *args, **kwargs):
-        """
-        Support for deprecated instance method :func:`read()`.
-
-        Internally this calls the :func:`read()` class method and
-        replaces the data in `self` with the data from the newly created
-        :class:`File` object
-        """
-        warnings.warn(
-            "Instance method 'read()' is deprecated, "
-            "use class method instead",
-            DeprecationWarning
-        )
-        cls = type(self)
-        new_file = cls.read(file, *args, **kwargs)
-        self.__dict__.update(new_file.__dict__)
 
     @abc.abstractmethod
     def write(self, file):

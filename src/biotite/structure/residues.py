@@ -197,7 +197,7 @@ def spread_residue_wise(array, input_data):
     Spread secondary structure annotation to every atom of a 20 residue
     peptide (with 304 atoms).
 
-        >>> sse = annotate_sse(atom_array, "A")
+        >>> sse = annotate_sse(atom_array)
         >>> print(len(sse))
         20
         >>> print(sse)

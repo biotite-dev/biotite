@@ -7,7 +7,7 @@ from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io.npz as npz
+import biotite.structure.io.pdbx as pdbx
 from ..util import data_dir
 
 
@@ -20,16 +20,16 @@ from ..util import data_dir
 def input_atoms(request):
     ndim, as_coord = request.param
 
-    file = npz.NpzFile.read(join(data_dir("structure"), "1l2y.npz"))
-    atoms = file.get_structure()
-    
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    atoms = pdbx.get_structure(pdbx_file)
+
     if ndim == 2:
         # Only one model
         atoms = atoms[0]
     elif ndim == 1:
         # Only one atom
         atoms = atoms[0,0]
-    
+
     if as_coord:
         return atoms.coord
     else:
@@ -48,7 +48,7 @@ def test_translate(input_atoms, ndim, as_list, random_seed):
         # Cannot run tests if translation vector has more dimensions
         # as input coordinates/atoms
         return
-    
+
     np.random.seed(random_seed)
     vectors = np.random.rand(*struc.coord(input_atoms).shape[-ndim:])
     vectors *= 10
@@ -56,7 +56,7 @@ def test_translate(input_atoms, ndim, as_list, random_seed):
     if as_list:
         vectors = vectors.tolist()
         neg_vectors = neg_vectors.tolist()
-    
+
     translated = struc.translate(input_atoms, vectors)
     restored = struc.translate(translated, neg_vectors)
 
@@ -83,7 +83,7 @@ def test_rotate(input_atoms, as_list, axis, random_seed, centered):
     if as_list:
         angles = angles.tolist()
         neg_angles = neg_angles.tolist()
-    
+
     func = struc.rotate_centered if centered else struc.rotate
     rotated = func(input_atoms, angles)
     restored = func(rotated, neg_angles)
@@ -111,7 +111,7 @@ def test_rotate_360(input_atoms, x, y, z, centered):
     """
     func = struc.rotate_centered if centered else struc.rotate
     rotated = func(input_atoms, [x, y, z])
-    
+
     assert type(rotated) == type(input_atoms)
     assert struc.coord(rotated).shape == struc.coord(input_atoms).shape
     assert np.allclose(
@@ -138,7 +138,7 @@ def test_rotate_known(ndim):
 
     # Rotation by 90 degrees
     test_rotated = struc.rotate(vector, [0.5 * np.pi, 0, 0])
-    
+
     assert test_rotated.shape == exp_rotated.shape
     assert np.allclose(test_rotated, exp_rotated, atol=1e-5)
 
@@ -158,13 +158,13 @@ def test_rotate_measure(axis, random_seed):
     angles[axis] = ref_angle
 
     # The measured angle is only equal to the input angle,
-    # if the input coordinates have no component on the rotation axis 
+    # if the input coordinates have no component on the rotation axis
     input_coord = np.ones(3)
     input_coord[axis] = 0
 
     rotated = struc.rotate(input_coord, angles)
     test_angle = struc.angle(rotated, 0, input_coord)
-    
+
     # Vector length should be unchanged
     assert np.linalg.norm(rotated) \
         == pytest.approx(np.linalg.norm(input_coord))
@@ -207,7 +207,7 @@ def test_rotate_about_axis_consistency(input_atoms, axis, random_seed):
     """
     np.random.seed(random_seed)
     angle = np.random.rand() * 2 * np.pi
-    
+
     angles = np.zeros(3)
     angles[axis] = angle
     ref_rotated = struc.rotate(input_atoms, angles)
@@ -234,7 +234,7 @@ def test_rotate_about_axis_360(input_atoms, random_seed, use_support):
     np.random.seed(random_seed)
     axis = np.random.rand(3)
     support  = np.random.rand(3) if use_support else None
-    
+
     rotated = struc.rotate_about_axis(input_atoms, axis, 2*np.pi, support)
 
     assert type(rotated) == type(input_atoms)
@@ -300,14 +300,14 @@ def test_align_vectors(input_atoms, as_list, use_support, random_seed):
     else:
         source_position = None
         target_position = None
-    
+
     if as_list:
         source_direction = source_direction.tolist()
         target_direction = target_direction.tolist()
         if use_support:
             source_position = source_position.tolist()
             target_position = target_position.tolist()
-    
+
     transformed = struc.align_vectors(
         input_atoms,
         source_direction, target_direction,
@@ -315,7 +315,7 @@ def test_align_vectors(input_atoms, as_list, use_support, random_seed):
     )
     restored = struc.align_vectors(
         transformed,
-        target_direction, source_direction, 
+        target_direction, source_direction,
         target_position, source_position
     )
 

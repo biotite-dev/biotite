@@ -48,12 +48,6 @@ def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
 
     .. footbibliography::
     """
-    from matplotlib.text import Text
-
-    if isinstance(profile, Alignment):
-        warnings.warn("Using an alignment for this method is deprecated; use a profile instead", DeprecationWarning)
-        profile = SequenceProfile.from_alignment(profile)
-
     alphabet = profile.alphabet
     if not isinstance(alphabet, LetterAlphabet):
         raise TypeError("The sequences' alphabet must be a letter alphabet")

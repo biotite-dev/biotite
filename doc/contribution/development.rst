@@ -53,13 +53,19 @@ Official support for PyPy might be added someday.
 
 Code style
 ----------
-*Biotite* is in compliance with PEP 8.
-The maximum line length is 79 for code lines and 72 for docstring and
-comment lines.
+*Biotite* is compliant with :pep:`8` and uses `Ruff <https://docs.astral.sh/ruff/>`_ for
+code formatting and linting.
+The maximum line length is 88 characters.
 An exception is made for docstring lines, if it is not possible to use a
-maximum of 72 characters (e.g. tables), and for
-`doctest <https://docs.python.org/3/library/doctest.html>`_ lines,
-where the actual code may take up to 79 characters.
+maximum of 88 characters (e.g. tables and parameter type descriptions).
+To make code changes ready for a pull request, simply run
+
+.. code-block:: console
+
+   $ ruff format
+   $ ruff check --fix
+
+and fix the remaining linter complaints.
 
 Dependencies
 ------------
@@ -124,14 +130,14 @@ accessible, in a relative manner.
 Import statements should be the only statements in a ``__init__.py`` file.
 
 In case a module needs functionality from another subpackage of *Biotite*,
-use a relative import.
+use an absolute import as suggested by PEP 8.
 This import should target the module directly and not the package to avoid
 circular imports and thus an ``ImportError``.
 So import statements like the following are totally OK:
 
 .. code-block:: python
 
-   from ...package.subpackage.module import foo
+   from biotite.subpackage.module import foo
 
 In order to prevent namespace pollution, all modules must define the `__all__`
 variable with all publicly accessible attributes of the module.

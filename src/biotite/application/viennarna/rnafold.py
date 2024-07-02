@@ -65,7 +65,7 @@ class RNAfoldApp(LocalApp):
             fasta_file.lines.append(self._constraints)
         fasta_file.write(self._in_file)
         self._in_file.flush()
-        
+
         options = [
             "--noPS",
             "-T", self._temperature,
@@ -87,11 +87,11 @@ class RNAfoldApp(LocalApp):
 
         self._free_energy = free_energy
         self._dotbracket = dotbracket
-    
+
     def clean_up(self):
         super().clean_up()
         cleanup_tempfile(self._in_file)
-    
+
     @requires_state(AppState.CREATED)
     def set_temperature(self, temperature):
         """
@@ -104,7 +104,7 @@ class RNAfoldApp(LocalApp):
             The temperature.
         """
         self._temperature = str(temperature)
-    
+
     @requires_state(AppState.CREATED)
     def set_constraints(self, pairs=None, paired=None, unpaired=None,
                         downstream=None, upstream=None, enforce=False):
@@ -138,7 +138,7 @@ class RNAfoldApp(LocalApp):
             pairs, paired, unpaired, downstream, upstream
         )
         self._enforce = enforce
-    
+
     @requires_state(AppState.JOINED)
     def get_free_energy(self):
         """
@@ -161,25 +161,6 @@ class RNAfoldApp(LocalApp):
         -1.3
         """
         return self._free_energy
-
-    @requires_state(AppState.JOINED)
-    def get_mfe(self):
-        """
-        Get the free energy (kcal/mol) of the suggested
-        secondary structure.
-
-        DEPRECATED: Use :meth:`get_free_energy()` instead.
-
-        Returns
-        -------
-        mfe : float
-            The minimum free energy.
-        """
-        warnings.warn(
-            "'get_mfe()' is deprecated, use 'get_free_energy()' instead",
-            DeprecationWarning
-        )
-        return self.get_free_energy()
 
     @requires_state(AppState.JOINED)
     def get_dot_bracket(self):
@@ -243,7 +224,7 @@ class RNAfoldApp(LocalApp):
     @staticmethod
     def compute_secondary_structure(sequence, bin_path="RNAfold"):
         """
-        Compute the minimum free energy secondary structure of a 
+        Compute the minimum free energy secondary structure of a
         ribonucleic acid sequence using *ViennaRNA's* *RNAfold* software.
 
         This is a convenience function, that wraps the

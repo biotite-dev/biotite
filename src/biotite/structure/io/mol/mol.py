@@ -101,45 +101,6 @@ class MOLFile(TextFile):
         self.lines[0:3] = self._header.serialize().splitlines()
 
 
-    def get_header(self):
-        """
-        Get the header from the MOL file.
-
-        DEPRECATED: Use the :attr:`header` property instead.
-
-        Returns
-        -------
-        header_attributes
-            See :class:`Header`.
-        """
-        header = self.header
-        return (
-            header.mol_name,
-            header.initials,
-            header.program,
-            header.time,
-            header.dimensions,
-            header.scaling_factors,
-            header.energy,
-            header.registry_number,
-            header.comments
-        )
-
-
-    def set_header(self, *args, **kwargs):
-        """
-        Set the header for the MOL file.
-
-        DEPRECATED: Use the :attr:`header` property instead.
-
-        Parameters
-        ----------
-        **args, **kwars
-            See :class:`Header`.
-        """
-        self.header = Header(*args, **kwargs)
-
-
     def get_structure(self):
         """
         Get an :class:`AtomArray` from the MOL file.
