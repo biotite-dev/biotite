@@ -9,7 +9,7 @@ in the different color schemes available in *Biotite*.
     - **clustalx** - Default color scheme of the *ClustalX* software
     - Color schemes generated with the software *Gecos*
       :footcite:`Kunzmann2020`:
-      
+
       - **flower** - Light color scheme, based on *BLOSUM62*
       - **blossom** - Light color scheme with high contrast, based on
         *BLOSUM62*, depicts symbol similarity worse than *flower*
@@ -21,12 +21,12 @@ in the different color schemes available in *Biotite*.
         scheme, based on *BLOSUM62*
       - **ocean** - Blue shifted, light color scheme, based on
         *BLOSUM62*
-    
+
     - Color schemes adapted from *JalView* :footcite:`Clamp2004`:
-      
+
       - **zappo** - Color scheme that depicts physicochemical properties
       - **taylor** - Color scheme invented by Willie Taylor
-      - **buried** - Color scheme depicting the *buried index* 
+      - **buried** - Color scheme depicting the *buried index*
       - **hydrophobicity** - Color scheme depicting hydrophobicity
       - **prophelix** - Color scheme depicting secondary structure
         propensities
@@ -70,8 +70,8 @@ alignment = alignment[220:300]
 # Get color scheme names
 alphabet = seq.ProteinSequence.alphabet
 schemes = [
-    "rainbow", "clustalx",
     "flower", "blossom", "spring", "wither", "autumn", "sunset", "ocean",
+    "rainbow", "clustalx",
     "zappo", "taylor", "buried", "hydrophobicity",
     "prophelix", "propstrand", "propturn"
 ]

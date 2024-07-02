@@ -36,16 +36,16 @@ def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
         The logo is created based on this profile.
     scheme : str or list of (tuple or str)
         Either a valid color scheme name
-        (e.g. ``"rainbow"``, ``"clustalx"``, ``blossom``, etc.)
+        (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.)
         or a list of *Matplotlib* compatible colors.
         The list length must be at least as long as the
         length of the alphabet used by the `profile`.
     **kwargs
         Additional `text parameters <https://matplotlib.org/api/text_api.html#matplotlib.text.Text>`_.
-    
+
     References
     ----------
-    
+
     .. footbibliography::
     """
     from matplotlib.text import Text
@@ -59,16 +59,16 @@ def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
         raise TypeError("The sequences' alphabet must be a letter alphabet")
 
     if scheme is None:
-        colors = get_color_scheme("rainbow", alphabet)
+        colors = get_color_scheme("flower", alphabet)
     elif isinstance(scheme, str):
         colors = get_color_scheme(scheme, alphabet)
     else:
         colors = scheme
-    
+
     # 'color' and 'size' property is not passed on to text
     kwargs.pop("color", None)
     kwargs.pop("size",  None)
-    
+
     frequencies, entropies, max_entropy = _get_entropy(profile)
     stack_heights = (max_entropy - entropies)
     symbols_heights = stack_heights[:, np.newaxis] * frequencies
