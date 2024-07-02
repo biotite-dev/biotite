@@ -10,7 +10,6 @@ import numpy as np
 import biotite.database.rcsb as rcsb
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
-import biotite.structure.io.mmtf as mmtf
 import biotite.sequence.io.fasta as fasta
 import biotite.sequence.align as align
 from biotite.database import RequestError
@@ -28,7 +27,7 @@ TC5B_TERM = "Miniprotein Construct TC5b"
 )
 @pytest.mark.parametrize(
     "format, as_file_like",
-    itertools.product(["pdb", "cif", "bcif", "mmtf", "fasta"], [False, True])
+    itertools.product(["pdb", "cif", "bcif", "fasta"], [False, True])
 )
 def test_fetch(format, as_file_like):
     path = None if as_file_like else tempfile.gettempdir()
@@ -37,14 +36,11 @@ def test_fetch(format, as_file_like):
         file = pdb.PDBFile.read(file_path_or_obj)
         pdb.get_structure(file)
     elif format == "pdbx":
-        file = pdbx.PDBxFile.read(file_path_or_obj)
+        file = pdbx.CIFFile.read(file_path_or_obj)
         pdbx.get_structure(file)
     elif format == "bcif":
         file = pdbx.BinaryCIFFile.read(file_path_or_obj)
         pdbx.get_structure(file)
-    elif format == "mmtf":
-        file = mmtf.MMTFFile.read(file_path_or_obj)
-        mmtf.get_structure(file)
     elif format == "fasta":
         file = fasta.FastaFile.read(file_path_or_obj)
         # Test if the file contains any sequences
@@ -55,7 +51,7 @@ def test_fetch(format, as_file_like):
     cannot_connect_to(RCSB_URL),
     reason="RCSB PDB is not available"
 )
-@pytest.mark.parametrize("format", ["pdb", "cif", "bcif", "mmtf", "fasta"])
+@pytest.mark.parametrize("format", ["pdb", "cif", "bcif", "fasta"])
 def test_fetch_invalid(format):
     with pytest.raises(RequestError):
         rcsb.fetch(
@@ -141,7 +137,7 @@ def test_search_field(field, molecular_definition, params, ref_ids):
 )
 def test_search_sequence():
     IDENTIY_CUTOFF = 0.9
-    pdbx_file = pdbx.PDBxFile.read(join(data_dir("structure"), "1l2y.cif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
     ref_sequence = pdbx.get_sequence(pdbx_file)['A']
     query = rcsb.SequenceQuery(
         ref_sequence, "protein", min_identity=IDENTIY_CUTOFF
@@ -263,8 +259,8 @@ def test_search_sort(as_sorting_object):
 
     resolutions = []
     for pdb_id in entries[:5]:
-        pdbx_file = pdbx.PDBxFile.read(rcsb.fetch(pdb_id, "pdbx"))
-        resolutions.append(float(pdbx_file["reflns"]["d_resolution_high"]))
+        pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch(pdb_id, "bcif"))
+        resolutions.append(pdbx_file.block["reflns"]["d_resolution_high"].as_item())
 
     if as_sorting_object:
         # In the tested case the Sorting object uses ascending order

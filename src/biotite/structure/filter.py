@@ -12,7 +12,7 @@ __author__ = "Patrick Kunzmann, Tom David Müller"
 __all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
            "filter_canonical_nucleotides", "filter_amino_acids",
            "filter_canonical_amino_acids", "filter_carbohydrates",
-           "filter_backbone", "filter_intersection", "filter_first_altloc",
+           "filter_intersection", "filter_first_altloc",
            "filter_highest_occupancy_altloc", "filter_peptide_backbone",
            "filter_phosphate_backbone", "filter_linear_bond_continuity",
            "filter_polymer"]
@@ -204,37 +204,6 @@ def filter_carbohydrates(array):
     ``SACCHARIDE``
     """
     return np.isin(array.res_name, carbohydrate_names())
-
-
-def filter_backbone(array):
-    """
-    Filter all peptide backbone atoms of one array.
-
-    This includes the "N", "CA" and "C" atoms of amino acids.
-
-    DEPRECATED: Please use :func:`filter_peptide_backbone` to filter
-    for protein backbone atoms.
-
-    Parameters
-    ----------
-    array : AtomArray or AtomArrayStack
-        The array to be filtered.
-
-    Returns
-    -------
-    filter : ndarray, dtype=bool
-        This array is `True` for all indices in `array`, where the atom
-        as an backbone atom.
-    """
-    warnings.warn(
-        "Please use `filter_peptide_backbone()` to filter "
-        "for protein backbone atoms.",
-        DeprecationWarning
-    )
-    return ( ((array.atom_name == "N") |
-              (array.atom_name == "CA") |
-              (array.atom_name == "C")) &
-              filter_amino_acids(array) )
 
 
 def _filter_atom_names(array, atom_names):
