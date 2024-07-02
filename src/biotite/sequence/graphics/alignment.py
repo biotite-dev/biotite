@@ -310,7 +310,7 @@ class LetterTypePlotter(LetterPlotter):
         The alphabet of the alignment(s) to be plotted
     color_scheme : str or list of (tuple or str), optional
         Either a valid color scheme name
-        (e.g. ``"rainbow"``, ``"clustalx"``, ``blossom``, etc.)
+        (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.)
         or a list of *Matplotlib* compatible colors.
         The list length must be at least as long as the
         length of the alphabet used by the sequences.
@@ -330,7 +330,7 @@ class LetterTypePlotter(LetterPlotter):
         super().__init__(axes, color_symbols, font_size, font_param)
 
         if color_scheme is None:
-            self._colors = get_color_scheme("rainbow", alphabet)
+            self._colors = get_color_scheme("flower", alphabet)
         elif isinstance(color_scheme, str):
             self._colors = get_color_scheme(color_scheme, alphabet)
         else:
@@ -873,7 +873,7 @@ def plot_alignment_type_based(axes, alignment, symbols_per_line=50,
         is equal to the size of a symbol box.
     color_scheme : str or list of (tuple or str), optional
         Either a valid color scheme name
-        (e.g. ``"rainbow"``, ``"clustalx"``, ``blossom``, etc.)
+        (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.)
         or a list of *Matplotlib* compatible colors.
         The list length must be at least as long as the
         length of the alphabet used by the sequences.
