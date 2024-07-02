@@ -2,7 +2,6 @@ import argparse
 import subprocess
 from os.path import join
 import logging
-import os
 import sys
 import biotite
 from biotite.database import RequestError
@@ -11,8 +10,8 @@ import biotite.structure.io as strucio
 
 
 def create(pdb_id, directory, include_gro):
-    # Create *.pdb", *.cif and *.mmtf
-    for file_format in ["pdb", "cif", "bcif", "mmtf"]:
+    # Create *.pdb", *.cif and *.bcif
+    for file_format in ["pdb", "cif", "bcif"]:
         try:
             rcsb.fetch(pdb_id, file_format, directory, overwrite=True)
         except RequestError:
@@ -24,10 +23,8 @@ def create(pdb_id, directory, include_gro):
         # Structure probably contains multiple models with different
         # number of atoms
         # -> Cannot load AtomArrayStack
-        # -> Skip writing GRO and NPZ file
+        # -> Skip writing GRO file
         return
-    # Create *.gro file
-    strucio.save_structure(join(directory, pdb_id+".npz"), array)
     # Create *.gro files using GROMACS
     # Clean PDB file -> remove inscodes and altlocs
     if include_gro:
