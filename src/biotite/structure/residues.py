@@ -22,7 +22,14 @@ __all__ = [
 ]
 
 import numpy as np
-from biotite.structure.resutil import *
+from biotite.structure.segments import (
+    apply_segment_wise,
+    get_segment_masks,
+    get_segment_positions,
+    get_segment_starts_for,
+    segment_iter,
+    spread_segment_wise,
+)
 
 
 def get_residue_starts(array, add_exclusive_stop=False):

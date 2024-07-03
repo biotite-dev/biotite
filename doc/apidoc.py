@@ -3,7 +3,7 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["create_api_doc", "skip_non_methods"]
+__all__ = ["create_api_doc", "skip_nonrelevant"]
 
 import enum
 import json

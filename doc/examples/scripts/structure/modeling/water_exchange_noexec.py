@@ -27,6 +27,7 @@ of the open (PDB: 7NP3) and closed (PDB: 7NP4) state.
 
 import matplotlib.pyplot as plt
 import numpy as np
+from pylab import polyfit
 import biotite
 import biotite.structure as struct
 import biotite.structure.io.gro as gro
@@ -83,11 +84,8 @@ time = np.arange(len(counts[0])) * 40 / 1000
 
 
 # Linear fitting
-from pylab import polyfit
-
 open_fit = polyfit(time, counts[0], 1)
 closed_fit = polyfit(time, counts[1], 1)
-
 
 fig, ax = plt.subplots(figsize=(8.0, 4.0))
 ax.plot(time, counts[0], label="open pore", color=biotite.colors["dimgreen"])

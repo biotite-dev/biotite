@@ -392,7 +392,7 @@ class SDRecord:
         if isinstance(self._header, str):
             try:
                 self._header = Header.deserialize(self._header)
-            except:
+            except Exception:
                 raise DeserializationError("Failed to deserialize header")
         return self._header
 
@@ -410,7 +410,7 @@ class SDRecord:
         if isinstance(self._metadata, str):
             try:
                 self._metadata = Metadata.deserialize(self._metadata)
-            except:
+            except Exception:
                 raise DeserializationError("Failed to deserialize metadata")
         return self._metadata
 
@@ -780,7 +780,7 @@ class SDFile(File, MutableMapping):
             else:
                 try:
                     text_blocks.append(record.serialize())
-                except:
+                except Exception:
                     raise SerializationError(
                         f"Failed to serialize record '{record_name}'"
                     )
@@ -839,7 +839,7 @@ class SDFile(File, MutableMapping):
             # -> must be deserialized first
             try:
                 record = SDRecord.deserialize(record)
-            except:
+            except Exception:
                 raise DeserializationError(f"Failed to deserialize record '{key}'")
             # Update with deserialized object
             self._records[key] = record

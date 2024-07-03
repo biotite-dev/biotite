@@ -85,11 +85,11 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
             self._width = width
             self._height = height
 
-        def draw_path(self, renderer, gc, tpath, affine, rgbFace=None):
+        def draw_path(self, renderer, gc, tpath, affine, rgbFace=None):  # noqa: N803
             ax = self._text.axes
             try:
                 renderer = ax.get_figure().canvas.get_renderer()
-            except:
+            except Exception:
                 # Use cached renderer for backends, where
                 # `get_renderer()` is not available
                 # Based on the strategy from `Text.get_window_extent()`

@@ -181,7 +181,7 @@ class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
             if isinstance(element, self.subcomponent_class()):
                 try:
                     serialized_element = element.serialize()
-                except:
+                except Exception:
                     raise SerializationError(f"Failed to serialize element '{key}'")
             else:
                 # Element is already stored in serialized form
@@ -198,7 +198,7 @@ class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
             # -> must be deserialized first
             try:
                 element = self.subcomponent_class().deserialize(element)
-            except:
+            except Exception:
                 raise DeserializationError(f"Failed to deserialize element '{key}'")
             # Update container with deserialized object
             self._elements[key] = element
@@ -216,7 +216,7 @@ class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
         else:
             try:
                 element = self.subcomponent_class().deserialize(element)
-            except:
+            except Exception:
                 raise DeserializationError("Failed to deserialize given value")
         self._elements[key] = element
 

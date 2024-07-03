@@ -252,7 +252,7 @@ try:
                     bbox = Bbox.from_extents(0, 0, 0, 0)
                     # Draw features as curved arrows (feature indicator)
                     indicator = axes.add_artist(
-                        Feature_Indicator(
+                        FeatureIndicator(
                             axes,
                             self.zorder + 1,
                             feature,
@@ -340,7 +340,7 @@ try:
                         )
                         indicator.set_bbox(bbox)
 
-    class Feature_Indicator(Artist):
+    class FeatureIndicator(Artist):
         def __init__(
             self,
             axes,

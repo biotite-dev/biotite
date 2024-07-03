@@ -58,7 +58,7 @@ def test_mass():
     assert np.all(np.round(multiple_of_h_masses, decimals=2) % 1 == 0)
 
 
-def test_protOr_radii():
+def test_protor_radii():
     """
     Assert that ProtOr VdW radii (except hydrogen) can be calculated for
     all atoms in the given structure, since the structure (1GYA)

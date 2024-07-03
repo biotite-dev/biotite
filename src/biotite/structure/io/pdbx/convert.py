@@ -895,7 +895,7 @@ def _determine_entity_id(chain_id):
     for i in range(len(chain_id)):
         try:
             entity_id[i] = id_translation[chain_id[i]]
-        except:
+        except KeyError:
             # chain_id is not in dictionary -> new entry
             id_translation[chain_id[i]] = id
             entity_id[i] = id_translation[chain_id[i]]

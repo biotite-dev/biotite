@@ -106,9 +106,9 @@ fig.tight_layout()
 
 
 # The probability density function of the extreme value distribution
-def pdf(x, l, u):
-    t = np.exp(-l * (x - u))
-    return l * t * np.exp(-t)
+def pdf(x, lam, u):
+    t = np.exp(-lam * (x - u))
+    return lam * t * np.exp(-t)
 
 
 x = np.linspace(-5, 10, 1000)
@@ -240,15 +240,15 @@ for i in range(SAMPLE_SIZE):
 # respectively.
 
 # Use method of moments to estimate distribution parameters
-l = np.pi / np.sqrt(6 * np.var(sample_scores))
-u = np.mean(sample_scores) - np.euler_gamma / l
+lam = np.pi / np.sqrt(6 * np.var(sample_scores))
+u = np.mean(sample_scores) - np.euler_gamma / lam
 
 # Score frequencies for the histogram
 freqs = np.bincount(sample_scores) / SAMPLE_SIZE
 
 # Coordinates for the fit
 x = np.linspace(0, len(freqs) - 1, 1000)
-y = pdf(x, l, u)
+y = pdf(x, lam, u)
 
 fig, ax = plt.subplots(figsize=(8.0, 4.0))
 ax.scatter(
@@ -291,7 +291,7 @@ SAMPLE_SIZE_PER_LENGTH = 1000
 # The sequence lengths to be sampled
 length_samples = np.logspace(*np.log10(LENGTH_RANGE), LENGTH_SAMPLE_SIZE).astype(int)
 u_series = np.zeros(LENGTH_SAMPLE_SIZE)
-l_series = np.zeros(LENGTH_SAMPLE_SIZE)
+lam_series = np.zeros(LENGTH_SAMPLE_SIZE)
 for i, length in enumerate(length_samples):
     # The same procedure from above
     random_sequence_code = np.random.choice(
@@ -311,8 +311,8 @@ for i, length in enumerate(length_samples):
         )[0]
         scores[j] = sample_alignment.score
 
-    l_series[i] = np.pi / np.sqrt(6 * np.var(scores))
-    u_series[i] = np.mean(scores) - np.euler_gamma / l_series[i]
+    lam_series[i] = np.pi / np.sqrt(6 * np.var(scores))
+    u_series[i] = np.mean(scores) - np.euler_gamma / lam_series[i]
 
 ########################################################################
 # Now we use a linear fit of :math:`u` to check if there is a linear
@@ -325,8 +325,8 @@ ln_mn = np.log(length_samples**2)
 
 slope, intercept, r, _, _ = linregress(ln_mn, u_series)
 # More precise parameter estimation from fit
-l = 1 / slope
-k = np.exp(intercept * l)
+lam = 1 / slope
+k = np.exp(intercept * lam)
 
 # Coordinates for fit
 x_fit = np.linspace(0, 16, 100)
@@ -347,12 +347,12 @@ ax.annotate(
 )
 
 ax2 = ax.twinx()
-ax2.scatter(ln_mn, l_series, color=biotite.colors["lightgreen"], s=8)
-ax2.axhline(l, color=biotite.colors["darkgreen"], linestyle=":")
+ax2.scatter(ln_mn, lam_series, color=biotite.colors["lightgreen"], s=8)
+ax2.axhline(lam, color=biotite.colors["darkgreen"], linestyle=":")
 x_annot = 2
 ax2.annotate(
-    f"λ = {l:.3f}",
-    xy=(x_annot, l),
+    f"λ = {lam:.3f}",
+    xy=(x_annot, lam),
     xytext=(0, -50),
     textcoords="offset pixels",
     arrowprops=arrowprops,
@@ -438,11 +438,11 @@ plt.show()
 DATABASE_SIZE = 1_000_000
 
 
-def e_value(score, length1, length2, k, l):
-    return k * length1 * length2 * np.exp(-l * score)
+def e_value(score, length1, length2, k, lam):
+    return k * length1 * length2 * np.exp(-lam * score)
 
 
-e = e_value(alignment.score, len(query_seq), len(hit_seq) * DATABASE_SIZE, k, l)
+e = e_value(alignment.score, len(query_seq), len(hit_seq) * DATABASE_SIZE, k, lam)
 print(f"E-value = {e:.2e}")
 
 ########################################################################

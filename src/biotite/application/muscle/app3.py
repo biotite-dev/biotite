@@ -10,6 +10,7 @@ import numbers
 import re
 import subprocess
 import warnings
+from collections.abc import Sequence
 from tempfile import NamedTemporaryFile
 from biotite.application.application import AppState, VersionError, requires_state
 from biotite.application.localapp import cleanup_tempfile
@@ -136,7 +137,7 @@ class MuscleApp(MSAApp):
                 raise ValueError("Gap penalty must be negative")
             self._gap_open = gap_penalty
             self._gap_ext = gap_penalty
-        elif type(gap_penalty) == tuple:
+        elif isinstance(gap_penalty, Sequence):
             if gap_penalty[0] > 0 or gap_penalty[1] > 0:
                 raise ValueError("Gap penalty must be negative")
             self._gap_open = gap_penalty[0]
