@@ -10,7 +10,7 @@ import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
 from biotite.structure.superimpose import _multi_matmul as multi_matmul
-from ..util import data_dir
+from tests.util import data_dir
 
 
 def test_transform_as_matrix():

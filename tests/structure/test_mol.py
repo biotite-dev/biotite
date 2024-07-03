@@ -14,7 +14,7 @@ import biotite.structure.io.mol as mol
 import biotite.structure.io.pdbx as pdbx
 from biotite.structure.bonds import BondType
 from biotite.structure.io.mol.ctab import BOND_TYPE_MAPPING_REV
-from ..util import data_dir
+from tests.util import data_dir
 
 
 def list_v2000_sdf_files():

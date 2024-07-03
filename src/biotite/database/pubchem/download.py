@@ -11,9 +11,9 @@ import numbers
 import os
 from os.path import getsize, isdir, isfile, join
 import requests
-from ..error import RequestError
-from .error import parse_error_details
-from .throttle import ThrottleStatus
+from biotite.database.error import RequestError
+from biotite.database.pubchem.error import parse_error_details
+from biotite.database.pubchem.throttle import ThrottleStatus
 
 _base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
 _binary_formats = ["png", "asnb"]

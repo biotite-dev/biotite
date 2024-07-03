@@ -10,7 +10,7 @@ import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
 from biotite.structure.io import load_structure
-from ..util import cannot_import, data_dir
+from tests.util import cannot_import, data_dir
 
 SAMPLE_BOXES = [
     (1, 1, 1,  90,  90,  90),

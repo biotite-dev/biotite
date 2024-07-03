@@ -10,7 +10,7 @@ import pytest
 import biotite.database.pubchem as pubchem
 import biotite.structure.io.mol as mol
 from biotite.database import RequestError
-from ..util import cannot_connect_to
+from tests.util import cannot_connect_to
 
 PUBCHEM_URL = "https://pubchem.ncbi.nlm.nih.gov/"
 

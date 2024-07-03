@@ -12,9 +12,9 @@ __author__ = "Tom David Müller"
 __all__ = ["dot_bracket_from_structure", "dot_bracket", "base_pairs_from_dot_bracket"]
 
 import numpy as np
-from .basepairs import base_pairs
-from .pseudoknots import pseudoknots
-from .residues import get_residue_count, get_residue_positions
+from biotite.structure.basepairs import base_pairs
+from biotite.structure.pseudoknots import pseudoknots
+from biotite.structure.residues import get_residue_count, get_residue_positions
 
 _OPENING_BRACKETS = "([{<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 _OPENING_BRACKETS_BYTES = _OPENING_BRACKETS.encode()

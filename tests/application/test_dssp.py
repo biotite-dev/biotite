@@ -10,7 +10,7 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.pdbx as pdbx
 from biotite.application.dssp import DsspApp
-from ..util import data_dir, is_not_installed
+from tests.util import data_dir, is_not_installed
 
 
 @pytest.mark.skipif(is_not_installed("mkdssp"), reason="DSSP is not installed")

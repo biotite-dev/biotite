@@ -12,9 +12,9 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["rmsd", "rmspd", "rmsf", "average"]
 
 import numpy as np
-from .atoms import AtomArrayStack, coord
-from .geometry import index_distance
-from .util import vector_dot
+from biotite.structure.atoms import AtomArrayStack, coord
+from biotite.structure.geometry import index_distance
+from biotite.structure.util import vector_dot
 
 
 def rmsd(reference, subject):

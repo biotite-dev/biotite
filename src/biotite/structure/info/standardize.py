@@ -8,9 +8,9 @@ __all__ = ["standardize_order"]
 
 import warnings
 import numpy as np
-from ..error import BadStructureError
-from ..residues import get_residue_starts
-from .ccd import get_from_ccd
+from biotite.structure.error import BadStructureError
+from biotite.structure.info.ccd import get_from_ccd
+from biotite.structure.residues import get_residue_starts
 
 
 def standardize_order(atoms):

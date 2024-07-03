@@ -18,8 +18,8 @@ __all__ = [
 ]
 
 import numpy as np
-from .box import coord_to_fraction
-from .filter import (
+from biotite.structure.box import coord_to_fraction
+from biotite.structure.filter import (
     filter_linear_bond_continuity,
     filter_peptide_backbone,
     filter_phosphate_backbone,

@@ -23,8 +23,8 @@ __all__ = [
 import abc
 import numbers
 import numpy as np
-from ..copyable import Copyable
-from .bonds import BondList
+from biotite.copyable import Copyable
+from biotite.structure.bonds import BondList
 
 
 class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):

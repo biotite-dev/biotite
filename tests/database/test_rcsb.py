@@ -13,7 +13,7 @@ import biotite.sequence.io.fasta as fasta
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
 from biotite.database import RequestError
-from ..util import cannot_connect_to, data_dir
+from tests.util import cannot_connect_to, data_dir
 
 RCSB_URL = "https://www.rcsb.org/"
 # Search term that should only find the entry 1L2Y

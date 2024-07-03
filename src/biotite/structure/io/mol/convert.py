@@ -6,9 +6,9 @@ __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_structure", "set_structure"]
 
-from ...bonds import BondType
-from .mol import MOLFile
-from .sdf import SDFile, SDRecord
+from biotite.structure.bonds import BondType
+from biotite.structure.io.mol.mol import MOLFile
+from biotite.structure.io.mol.sdf import SDFile, SDRecord
 
 
 def get_structure(mol_file, record_name=None):

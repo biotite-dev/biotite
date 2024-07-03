@@ -11,12 +11,17 @@ import glob
 from os.path import join
 from subprocess import PIPE, Popen, SubprocessError, TimeoutExpired
 from tempfile import TemporaryDirectory
-from ...sequence.io.fasta.convert import get_sequences
-from ...sequence.io.fasta.file import FastaFile
-from ...sequence.io.fastq.convert import get_sequences as get_sequences_and_scores
-from ...sequence.io.fastq.file import FastqFile
-from ...sequence.seqtypes import NucleotideSequence
-from ..application import Application, AppState, AppStateError, requires_state
+from biotite.application.application import (
+    Application,
+    AppState,
+    AppStateError,
+    requires_state,
+)
+from biotite.sequence.io.fasta.convert import get_sequences
+from biotite.sequence.io.fasta.file import FastaFile
+from biotite.sequence.io.fastq.convert import get_sequences as get_sequences_and_scores
+from biotite.sequence.io.fastq.file import FastqFile
+from biotite.sequence.seqtypes import NucleotideSequence
 
 
 # Do not use LocalApp, as two programs are executed

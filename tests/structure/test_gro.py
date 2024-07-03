@@ -13,7 +13,7 @@ import biotite
 import biotite.structure.io.gro as gro
 import biotite.structure.io.pdb as pdb
 from biotite.structure import Atom, array
-from ..util import data_dir
+from tests.util import data_dir
 
 
 def test_get_model_count():

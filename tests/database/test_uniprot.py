@@ -8,7 +8,7 @@ import pytest
 import biotite.database.uniprot as uniprot
 import biotite.sequence.io.fasta as fasta
 from biotite.database import RequestError
-from ..util import cannot_connect_to
+from tests.util import cannot_connect_to
 
 UNIPROT_URL = "https://www.uniprot.org/"
 

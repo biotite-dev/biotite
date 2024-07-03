@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from .util import cannot_connect_to, cannot_import, is_not_installed
+from tests.util import cannot_connect_to, cannot_import, is_not_installed
 
 NCBI_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/"
 RCSB_URL = "https://www.rcsb.org/"

@@ -6,8 +6,8 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["bond_type", "bonds_in_residue"]
 
-from ..bonds import BondType
-from .ccd import get_from_ccd
+from biotite.structure.bonds import BondType
+from biotite.structure.info.ccd import get_from_ccd
 
 BOND_TYPES = {
     ("SING", "N"): BondType.SINGLE,

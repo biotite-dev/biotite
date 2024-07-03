@@ -10,7 +10,7 @@ import copy
 from numbers import Integral
 from os.path import dirname, join, realpath
 import numpy as np
-from .seqtypes import NucleotideSequence, ProteinSequence
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
 # Abbreviations
 _NUC_ALPH = NucleotideSequence.alphabet_unamb

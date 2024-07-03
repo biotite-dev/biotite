@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 import numpy as np
-from .resutil import *
+from biotite.structure.resutil import *
 
 
 def get_residue_starts(array, add_exclusive_stop=False):

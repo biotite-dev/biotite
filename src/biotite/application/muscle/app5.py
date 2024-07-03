@@ -6,9 +6,9 @@ __name__ = "biotite.application.muscle"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Muscle5App"]
 
-from ..application import AppState, VersionError, requires_state
-from ..msaapp import MSAApp
-from .app3 import get_version
+from biotite.application.application import AppState, VersionError, requires_state
+from biotite.application.msaapp import MSAApp
+from biotite.application.muscle.app3 import get_version
 
 
 class Muscle5App(MSAApp):

@@ -8,8 +8,8 @@ __all__ = ["mass"]
 
 import json
 from pathlib import Path
-from ..atoms import Atom, AtomArray, AtomArrayStack
-from .ccd import get_from_ccd
+from biotite.structure.atoms import Atom, AtomArray, AtomArrayStack
+from biotite.structure.info.ccd import get_from_ccd
 
 # Masses are taken from http://www.sbcs.qmul.ac.uk/iupac/AtWt/ (2018/03/01)
 ATOM_MASSES_FILE = Path(__file__).parent / "atom_masses.json"

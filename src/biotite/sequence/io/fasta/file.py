@@ -8,7 +8,7 @@ __all__ = ["FastaFile"]
 
 from collections import OrderedDict
 from collections.abc import MutableMapping
-from ....file import InvalidFileError, TextFile, wrap_string
+from biotite.file import InvalidFileError, TextFile, wrap_string
 
 
 class FastaFile(TextFile, MutableMapping):

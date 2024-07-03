@@ -9,14 +9,14 @@ __all__ = ["BlastWebApp"]
 import time
 from xml.etree import ElementTree
 import requests
-from ...sequence.align.alignment import Alignment
-from ...sequence.io.fasta.convert import get_sequence
-from ...sequence.io.fasta.file import FastaFile
-from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
-from ...sequence.sequence import Sequence
-from ..application import AppState, requires_state
-from ..webapp import WebApp
-from .alignment import BlastAlignment
+from biotite.application.application import AppState, requires_state
+from biotite.application.blast.alignment import BlastAlignment
+from biotite.application.webapp import WebApp
+from biotite.sequence.align.alignment import Alignment
+from biotite.sequence.io.fasta.convert import get_sequence
+from biotite.sequence.io.fasta.file import FastaFile
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
+from biotite.sequence.sequence import Sequence
 
 _ncbi_url = "https://blast.ncbi.nlm.nih.gov/Blast.cgi"
 

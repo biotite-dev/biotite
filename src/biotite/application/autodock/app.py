@@ -9,12 +9,12 @@ __all__ = ["VinaApp"]
 import copy
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ...structure.bonds import find_connected
-from ...structure.error import BadStructureError
-from ...structure.io.pdbqt import PDBQTFile
-from ...structure.residues import get_residue_masks, get_residue_starts_for
-from ..application import AppState, requires_state
-from ..localapp import LocalApp, cleanup_tempfile
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.structure.bonds import find_connected
+from biotite.structure.error import BadStructureError
+from biotite.structure.io.pdbqt import PDBQTFile
+from biotite.structure.residues import get_residue_masks, get_residue_starts_for
 
 
 class VinaApp(LocalApp):

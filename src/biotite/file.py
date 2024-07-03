@@ -16,7 +16,7 @@ import abc
 import copy
 import io
 from os import PathLike
-from .copyable import Copyable
+from biotite.copyable import Copyable
 
 
 class File(Copyable, metaclass=abc.ABCMeta):

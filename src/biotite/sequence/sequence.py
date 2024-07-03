@@ -13,8 +13,8 @@ __all__ = ["Sequence"]
 import abc
 import numbers
 import numpy as np
-from ..copyable import Copyable
-from .alphabet import LetterAlphabet
+from biotite.copyable import Copyable
+from biotite.sequence.alphabet import LetterAlphabet
 
 _size_uint8 = np.iinfo(np.uint8).max + 1
 _size_uint16 = np.iinfo(np.uint16).max + 1

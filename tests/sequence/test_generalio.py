@@ -7,7 +7,7 @@ from os.path import join
 from tempfile import NamedTemporaryFile
 import pytest
 import biotite.sequence.io as seqio
-from ..util import data_dir
+from tests.util import data_dir
 
 
 @pytest.mark.parametrize("path", glob.glob(join(data_dir("sequence"), "random.*")))

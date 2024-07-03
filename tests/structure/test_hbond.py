@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import biotite.structure as struc
 from biotite.structure.io import load_structure, save_structure
-from ..util import cannot_import, data_dir
+from tests.util import cannot_import, data_dir
 
 
 @pytest.fixture()

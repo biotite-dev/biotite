@@ -4,9 +4,13 @@
 
 import warnings
 import numpy as np
-from .align.alignment import get_codes
-from .alphabet import LetterAlphabet
-from .seqtypes import GeneralSequence, NucleotideSequence, ProteinSequence
+from biotite.sequence.align.alignment import get_codes
+from biotite.sequence.alphabet import LetterAlphabet
+from biotite.sequence.seqtypes import (
+    GeneralSequence,
+    NucleotideSequence,
+    ProteinSequence,
+)
 
 __name__ = "biotite.sequence"
 __author__ = "Maximilian Greil"

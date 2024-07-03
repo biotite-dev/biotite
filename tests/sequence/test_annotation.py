@@ -6,7 +6,7 @@ from os.path import join
 import biotite.sequence as seq
 import biotite.sequence.io.genbank as gb
 from biotite.sequence import AnnotatedSequence, Annotation, Feature, Location
-from ..util import data_dir
+from tests.util import data_dir
 
 
 def test_annotation_creation():

@@ -12,11 +12,11 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["annotate_sse"]
 
 import numpy as np
-from .celllist import CellList
-from .filter import filter_amino_acids
-from .geometry import angle, dihedral, distance
-from .integrity import check_res_id_continuity
-from .residues import get_residue_starts
+from biotite.structure.celllist import CellList
+from biotite.structure.filter import filter_amino_acids
+from biotite.structure.geometry import angle, dihedral, distance
+from biotite.structure.integrity import check_res_id_continuity
+from biotite.structure.residues import get_residue_starts
 
 _r_helix = (np.deg2rad(89 - 12), np.deg2rad(89 + 12))
 _a_helix = (np.deg2rad(50 - 20), np.deg2rad(50 + 20))

@@ -11,10 +11,10 @@ import re
 import subprocess
 import warnings
 from tempfile import NamedTemporaryFile
-from ...sequence.phylo.tree import Tree
-from ..application import AppState, VersionError, requires_state
-from ..localapp import cleanup_tempfile
-from ..msaapp import MSAApp
+from biotite.application.application import AppState, VersionError, requires_state
+from biotite.application.localapp import cleanup_tempfile
+from biotite.application.msaapp import MSAApp
+from biotite.sequence.phylo.tree import Tree
 
 
 class MuscleApp(MSAApp):

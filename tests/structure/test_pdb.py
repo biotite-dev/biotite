@@ -16,7 +16,7 @@ import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdb.hybrid36 as hybrid36
 import biotite.structure.io.pdbx as pdbx
-from ..util import data_dir
+from tests.util import data_dir
 
 
 def test_get_model_count():

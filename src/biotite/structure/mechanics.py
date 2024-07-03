@@ -12,8 +12,8 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["mass_center", "gyration_radius"]
 
 import numpy as np
-from .geometry import distance
-from .info.masses import mass
+from biotite.structure.geometry import distance
+from biotite.structure.info.masses import mass
 
 
 def gyration_radius(array, masses=None):

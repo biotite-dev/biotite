@@ -8,9 +8,9 @@ __all__ = ["MafftApp"]
 
 import os
 import re
-from ...sequence.phylo.tree import Tree
-from ..application import AppState, requires_state
-from ..msaapp import MSAApp
+from biotite.application.application import AppState, requires_state
+from biotite.application.msaapp import MSAApp
+from biotite.sequence.phylo.tree import Tree
 
 _prefix_pattern = re.compile(r"\d*_")
 

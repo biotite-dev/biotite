@@ -13,9 +13,9 @@ __all__ = ["create_continuous_res_ids", "infer_elements", "create_atom_names"]
 import warnings
 from collections import Counter
 import numpy as np
-from .atoms import AtomArray, AtomArrayStack
-from .chains import get_chain_starts
-from .residues import get_residue_starts
+from biotite.structure.atoms import AtomArray, AtomArrayStack
+from biotite.structure.chains import get_chain_starts
+from biotite.structure.residues import get_residue_starts
 
 
 def create_continuous_res_ids(atoms, restart_each_chain=True):

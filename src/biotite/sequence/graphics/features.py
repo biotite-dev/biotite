@@ -15,8 +15,8 @@ __all__ = [
 ]
 
 import abc
-from ...visualize import AdaptiveFancyArrow, colors
-from ..annotation import Location
+from biotite.sequence.annotation import Location
+from biotite.visualize import AdaptiveFancyArrow, colors
 
 
 def plot_feature_map(

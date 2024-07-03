@@ -9,7 +9,7 @@ from collections import OrderedDict
 from collections.abc import MutableMapping
 from numbers import Integral
 import numpy as np
-from ....file import InvalidFileError, TextFile, wrap_string
+from biotite.file import InvalidFileError, TextFile, wrap_string
 
 __all__ = ["FastqFile"]
 

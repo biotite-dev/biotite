@@ -7,7 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["TNGFile"]
 
 import numpy as np
-from ..trajfile import TrajectoryFile
+from biotite.structure.io.trajfile import TrajectoryFile
 
 
 class TNGFile(TrajectoryFile):

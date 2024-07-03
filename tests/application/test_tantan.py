@@ -7,7 +7,7 @@ import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
 from biotite.application.tantan import TantanApp
-from ..util import is_not_installed
+from tests.util import is_not_installed
 
 
 @pytest.fixture

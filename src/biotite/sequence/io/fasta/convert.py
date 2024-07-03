@@ -7,9 +7,9 @@ __author__ = "Patrick Kunzmann"
 
 import warnings
 from collections import OrderedDict
-from ...align.alignment import Alignment
-from ...alphabet import AlphabetError, LetterAlphabet
-from ...seqtypes import NucleotideSequence, ProteinSequence
+from biotite.sequence.align.alignment import Alignment
+from biotite.sequence.alphabet import AlphabetError, LetterAlphabet
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
 __all__ = [
     "get_sequence",

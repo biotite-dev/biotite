@@ -21,20 +21,20 @@ __all__ = [
 import warnings
 from enum import IntEnum
 import numpy as np
-from .atoms import Atom, array
-from .celllist import CellList
-from .compare import rmsd
-from .error import (
+from biotite.structure.atoms import Atom, array
+from biotite.structure.celllist import CellList
+from biotite.structure.compare import rmsd
+from biotite.structure.error import (
     BadStructureError,
     IncompleteStructureWarning,
     UnexpectedStructureWarning,
 )
-from .filter import filter_nucleotides
-from .hbond import hbond
-from .info.standardize import standardize_order
-from .residues import get_residue_masks, get_residue_starts_for
-from .superimpose import superimpose
-from .util import distance, norm_vector
+from biotite.structure.filter import filter_nucleotides
+from biotite.structure.hbond import hbond
+from biotite.structure.info.standardize import standardize_order
+from biotite.structure.residues import get_residue_masks, get_residue_starts_for
+from biotite.structure.superimpose import superimpose
+from biotite.structure.util import distance, norm_vector
 
 
 def _get_std_adenine():

@@ -18,8 +18,8 @@ __all__ = [
 
 import abc
 import numpy as np
-from ...visualize import colors
-from .colorschemes import get_color_scheme
+from biotite.sequence.graphics.colorschemes import get_color_scheme
+from biotite.visualize import colors
 
 
 class SymbolPlotter(metaclass=abc.ABCMeta):

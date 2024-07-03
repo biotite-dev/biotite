@@ -9,10 +9,10 @@ __all__ = ["Query", "SimpleQuery", "CompositeQuery", "search"]
 import abc
 from xml.etree import ElementTree
 import requests
-from ..error import RequestError
-from .check import check_for_errors
-from .dbnames import sanitize_database_name
-from .key import get_api_key
+from biotite.database.entrez.check import check_for_errors
+from biotite.database.entrez.dbnames import sanitize_database_name
+from biotite.database.entrez.key import get_api_key
+from biotite.database.error import RequestError
 
 _search_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 

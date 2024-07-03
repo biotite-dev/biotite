@@ -10,7 +10,7 @@ import io
 import os
 from os.path import getsize, isdir, isfile, join
 import requests
-from .check import assert_valid_response
+from biotite.database.uniprot.check import assert_valid_response
 
 _fetch_url = "https://rest.uniprot.org/"
 

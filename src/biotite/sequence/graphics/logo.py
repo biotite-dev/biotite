@@ -7,9 +7,9 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["plot_sequence_logo"]
 
 import numpy as np
-from ...visualize import set_font_size_in_coord
-from ..alphabet import LetterAlphabet
-from .colorschemes import get_color_scheme
+from biotite.sequence.alphabet import LetterAlphabet
+from biotite.sequence.graphics.colorschemes import get_color_scheme
+from biotite.visualize import set_font_size_in_coord
 
 
 def plot_sequence_logo(axes, profile, scheme=None, **kwargs):

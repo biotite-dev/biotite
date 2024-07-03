@@ -11,7 +11,7 @@ __author__ = "Daniel Bauer"
 __all__ = ["density"]
 
 import numpy as np
-from .atoms import coord
+from biotite.structure.atoms import coord
 
 
 def density(atoms, selection=None, delta=1.0, bins=None, density=False, weights=None):

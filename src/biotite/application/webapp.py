@@ -7,7 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["WebApp", "RuleViolationError"]
 
 import abc
-from .application import Application
+from biotite.application.application import Application
 
 
 class WebApp(Application, metaclass=abc.ABCMeta):

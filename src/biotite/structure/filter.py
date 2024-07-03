@@ -29,9 +29,13 @@ __all__ = [
 
 from functools import partial
 import numpy as np
-from .atoms import array as atom_array
-from .info.groups import amino_acid_names, carbohydrate_names, nucleotide_names
-from .residues import get_residue_count, get_residue_starts
+from biotite.structure.atoms import array as atom_array
+from biotite.structure.info.groups import (
+    amino_acid_names,
+    carbohydrate_names,
+    nucleotide_names,
+)
+from biotite.structure.residues import get_residue_count, get_residue_starts
 
 _canonical_aa_list = [
     "ALA",
@@ -363,7 +367,7 @@ def filter_polymer(array, min_size=2, pol_type="peptide"):
 
     """
     # Import `check_res_id_continuity` here to avoid circular imports
-    from .integrity import check_res_id_continuity
+    from biotite.structure.integrity import check_res_id_continuity
 
     split_idx = check_res_id_continuity(array)
 

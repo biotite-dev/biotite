@@ -9,8 +9,8 @@ __all__ = ["plot_plasmid_map"]
 import re
 import warnings
 import numpy as np
-from ...visualize import colors
-from ..annotation import Feature, Location
+from biotite.sequence.annotation import Feature, Location
+from biotite.visualize import colors
 
 
 def plot_plasmid_map(

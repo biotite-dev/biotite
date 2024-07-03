@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import biotite.sequence as seq
 from biotite.application.viennarna import RNAfoldApp
-from ..util import is_not_installed
+from tests.util import is_not_installed
 
 
 @pytest.fixture

@@ -39,7 +39,7 @@ def get_ccd():
 
     """
     # Avoid circular import
-    from ..io.pdbx.bcif import BinaryCIFFile
+    from biotite.structure.io.pdbx.bcif import BinaryCIFFile
 
     global _ccd_block
     if _ccd_block is None:

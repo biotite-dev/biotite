@@ -8,11 +8,11 @@ __all__ = ["RNAfoldApp"]
 
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ...sequence.io.fasta import FastaFile, set_sequence
-from ...structure.dotbracket import base_pairs_from_dot_bracket
-from ..application import AppState, requires_state
-from ..localapp import LocalApp, cleanup_tempfile
-from .util import build_constraint_string
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.application.viennarna.util import build_constraint_string
+from biotite.sequence.io.fasta import FastaFile, set_sequence
+from biotite.structure.dotbracket import base_pairs_from_dot_bracket
 
 
 class RNAfoldApp(LocalApp):

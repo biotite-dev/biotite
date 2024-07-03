@@ -11,7 +11,7 @@ import numbers
 import sys
 from enum import Enum, Flag, auto
 import numpy as np
-from ..copyable import Copyable
+from biotite.copyable import Copyable
 
 
 class Location:

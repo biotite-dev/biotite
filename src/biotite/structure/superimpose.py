@@ -17,13 +17,13 @@ __all__ = [
 
 
 import numpy as np
-from ..sequence.align import SubstitutionMatrix, align_optimal, get_codes
-from ..sequence.alphabet import common_alphabet
-from ..sequence.seqtypes import ProteinSequence
-from .atoms import coord
-from .filter import filter_amino_acids, filter_nucleotides
-from .geometry import centroid, distance
-from .sequence import to_sequence
+from biotite.sequence.align import SubstitutionMatrix, align_optimal, get_codes
+from biotite.sequence.alphabet import common_alphabet
+from biotite.sequence.seqtypes import ProteinSequence
+from biotite.structure.atoms import coord
+from biotite.structure.filter import filter_amino_acids, filter_nucleotides
+from biotite.structure.geometry import centroid, distance
+from biotite.structure.sequence import to_sequence
 
 
 class AffineTransformation:

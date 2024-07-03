@@ -9,7 +9,7 @@ import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io as strucio
 import biotite.structure.io.pdbx as pdbx
-from ..util import data_dir
+from tests.util import data_dir
 
 
 def generate_random_bond_list(atom_count, bond_count, seed=0):

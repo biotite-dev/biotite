@@ -9,8 +9,8 @@ __all__ = ["TrajectoryFile"]
 import abc
 import itertools
 import numpy as np
-from ...file import File
-from ..atoms import AtomArray, AtomArrayStack, from_template
+from biotite.file import File
+from biotite.structure.atoms import AtomArray, AtomArrayStack, from_template
 
 
 class TrajectoryFile(File, metaclass=abc.ABCMeta):

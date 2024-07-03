@@ -7,7 +7,7 @@ __author__ = "Patrick Kunzmann"
 
 import os
 import numpy as np
-from ..seqtypes import NucleotideSequence, ProteinSequence
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
 __all__ = ["SubstitutionMatrix"]
 

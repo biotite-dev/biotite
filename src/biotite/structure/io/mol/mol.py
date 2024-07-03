@@ -6,10 +6,13 @@ __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["MOLFile"]
 
-from ....file import InvalidFileError, TextFile
-from ...bonds import BondType
-from .ctab import read_structure_from_ctab, write_structure_to_ctab
-from .header import Header
+from biotite.file import InvalidFileError, TextFile
+from biotite.structure.bonds import BondType
+from biotite.structure.io.mol.ctab import (
+    read_structure_from_ctab,
+    write_structure_to_ctab,
+)
+from biotite.structure.io.mol.header import Header
 
 # Number of header lines
 N_HEADER = 3

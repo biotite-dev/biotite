@@ -10,14 +10,14 @@ import re
 import itertools
 from collections.abc import MutableMapping, Sequence
 import numpy as np
-from ....file import (
+from biotite.file import (
     DeserializationError,
     File,
     SerializationError,
     is_open_compatible,
     is_text,
 )
-from .component import MaskValue, _Component
+from biotite.structure.io.pdbx.component import MaskValue, _Component
 
 UNICODE_CHAR_SIZE = 4
 

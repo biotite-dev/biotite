@@ -6,7 +6,7 @@ import pytest
 import biotite.application.muscle as muscle
 import biotite.sequence.align as align
 from biotite.application import VersionError
-from ...util import is_not_installed
+from tests.util import is_not_installed
 
 
 @pytest.mark.skipif(is_not_installed("muscle"), reason="MUSCLE is not installed")

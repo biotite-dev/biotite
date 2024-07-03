@@ -11,7 +11,7 @@ from biotite.application import VersionError
 from biotite.application.clustalo import ClustalOmegaApp
 from biotite.application.mafft import MafftApp
 from biotite.application.muscle import Muscle5App, MuscleApp
-from ..util import is_not_installed
+from tests.util import is_not_installed
 
 BIN_PATH = {
     MuscleApp: "muscle",

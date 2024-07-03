@@ -6,7 +6,7 @@ __name__ = "biotite.sequence.io.fastq"
 __author__ = "Patrick Kunzmann"
 
 from collections import OrderedDict
-from ...seqtypes import NucleotideSequence
+from biotite.sequence.seqtypes import NucleotideSequence
 
 __all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences"]
 

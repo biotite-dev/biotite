@@ -9,7 +9,7 @@ import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io.pdbx as pdbx
 from biotite.application.autodock import VinaApp
-from ..util import data_dir, is_not_installed
+from tests.util import data_dir, is_not_installed
 
 
 @pytest.mark.skipif(is_not_installed("vina"), reason="Autodock Vina is not installed")

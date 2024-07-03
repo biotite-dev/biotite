@@ -9,7 +9,7 @@ from tempfile import NamedTemporaryFile
 import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from ..util import cannot_import, data_dir
+from tests.util import cannot_import, data_dir
 
 
 @pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")

@@ -23,12 +23,12 @@ __all__ = [
 ]
 
 import numpy as np
-from .atoms import AtomArray, AtomArrayStack, coord
-from .box import coord_to_fraction, fraction_to_coord, is_orthogonal
-from .chains import chain_iter
-from .error import BadStructureError
-from .filter import filter_peptide_backbone
-from .util import norm_vector, vector_dot
+from biotite.structure.atoms import AtomArray, AtomArrayStack, coord
+from biotite.structure.box import coord_to_fraction, fraction_to_coord, is_orthogonal
+from biotite.structure.chains import chain_iter
+from biotite.structure.error import BadStructureError
+from biotite.structure.filter import filter_peptide_backbone
+from biotite.structure.util import norm_vector, vector_dot
 
 
 def displacement(atoms1, atoms2, box=None):

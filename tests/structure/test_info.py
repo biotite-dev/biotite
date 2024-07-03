@@ -9,7 +9,7 @@ import pytest
 import biotite.structure as struc
 import biotite.structure.info as strucinfo
 from biotite.structure.io import load_structure
-from ..util import data_dir
+from tests.util import data_dir
 
 
 @pytest.mark.parametrize(
