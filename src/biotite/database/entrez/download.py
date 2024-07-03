@@ -10,10 +10,10 @@ import io
 import os
 from os.path import getsize, isdir, isfile, join
 import requests
-from ..error import RequestError
-from .check import check_for_errors
-from .dbnames import sanitize_database_name
-from .key import get_api_key
+from biotite.database.entrez.check import check_for_errors
+from biotite.database.entrez.dbnames import sanitize_database_name
+from biotite.database.entrez.key import get_api_key
+from biotite.database.error import RequestError
 
 _fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 

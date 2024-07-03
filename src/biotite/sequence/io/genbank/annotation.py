@@ -12,8 +12,8 @@ __all__ = ["get_annotation", "set_annotation"]
 
 import re
 import warnings
-from ....file import InvalidFileError
-from ...annotation import Annotation, Feature, Location
+from biotite.file import InvalidFileError
+from biotite.sequence.annotation import Annotation, Feature, Location
 
 _KEY_START = 5
 _QUAL_START = 21

@@ -10,7 +10,7 @@ import io
 import os
 from os.path import getsize, isfile, join
 import requests
-from ..error import RequestError
+from biotite.database.error import RequestError
 
 _standard_url = "https://files.rcsb.org/download/"
 _bcif_url = "https://models.rcsb.org/"

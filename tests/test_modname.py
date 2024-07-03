@@ -6,7 +6,7 @@ import importlib
 import pkgutil
 from os.path import dirname, join
 import pytest
-from .util import cannot_import
+from tests.util import cannot_import
 
 
 def find_all_modules(package_name, src_dir):

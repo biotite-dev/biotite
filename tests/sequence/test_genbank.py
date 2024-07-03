@@ -8,7 +8,7 @@ from tempfile import TemporaryFile
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.io.genbank as gb
-from ..util import data_dir
+from tests.util import data_dir
 
 
 @pytest.mark.parametrize(

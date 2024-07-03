@@ -12,7 +12,7 @@ import copy
 # import re
 import io
 from collections import OrderedDict
-from ....file import InvalidFileError, TextFile
+from biotite.file import InvalidFileError, TextFile
 
 # from ...annotation import Location, Feature, Annotation, AnnotatedSequence
 # from ...seqtypes import NucleotideSequence, ProteinSequence

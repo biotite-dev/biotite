@@ -8,11 +8,16 @@ __all__ = ["PDBQTFile"]
 
 import warnings
 import numpy as np
-from ....file import InvalidFileError, TextFile
-from ...atoms import AtomArray, AtomArrayStack
-from ...bonds import BondList, BondType, find_connected, find_rotatable_bonds
-from ...charges import partial_charges
-from ...error import BadStructureError
+from biotite.file import InvalidFileError, TextFile
+from biotite.structure.atoms import AtomArray, AtomArrayStack
+from biotite.structure.bonds import (
+    BondList,
+    BondType,
+    find_connected,
+    find_rotatable_bonds,
+)
+from biotite.structure.charges import partial_charges
+from biotite.structure.error import BadStructureError
 
 PARAMETRIZED_ELEMENTS = [
     "H",

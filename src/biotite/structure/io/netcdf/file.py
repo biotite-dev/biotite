@@ -7,8 +7,8 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["NetCDFFile"]
 
 import numpy as np
-from ...box import unitcell_from_vectors, vectors_from_unitcell
-from ..trajfile import TrajectoryFile
+from biotite.structure.box import unitcell_from_vectors, vectors_from_unitcell
+from biotite.structure.io.trajfile import TrajectoryFile
 
 
 class NetCDFFile(TrajectoryFile):

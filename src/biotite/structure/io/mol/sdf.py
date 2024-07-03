@@ -11,7 +11,7 @@ import warnings
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 import numpy as np
-from ....file import (
+from biotite.file import (
     DeserializationError,
     File,
     InvalidFileError,
@@ -19,10 +19,13 @@ from ....file import (
     is_open_compatible,
     is_text,
 )
-from ...atoms import AtomArray
-from ...bonds import BondList, BondType
-from .ctab import read_structure_from_ctab, write_structure_to_ctab
-from .header import Header
+from biotite.structure.atoms import AtomArray
+from biotite.structure.bonds import BondList, BondType
+from biotite.structure.io.mol.ctab import (
+    read_structure_from_ctab,
+    write_structure_to_ctab,
+)
+from biotite.structure.io.mol.header import Header
 
 _N_HEADER = 3
 # Number of header lines

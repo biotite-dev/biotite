@@ -7,8 +7,8 @@ __author__ = "Patrick Kunzmann", "Thomas Nevolianis"
 __all__ = ["GeneralSequence", "NucleotideSequence", "ProteinSequence"]
 
 import numpy as np
-from .alphabet import AlphabetError, AlphabetMapper, LetterAlphabet
-from .sequence import Sequence
+from biotite.sequence.alphabet import AlphabetError, AlphabetMapper, LetterAlphabet
+from biotite.sequence.sequence import Sequence
 
 
 class GeneralSequence(Sequence):
@@ -261,7 +261,7 @@ class NucleotideSequence(Sequence):
         # Determine codon_table
         if codon_table is None:
             # Import at this position to avoid circular import
-            from .codon import CodonTable
+            from biotite.sequence.codon import CodonTable
 
             codon_table = CodonTable.default_table()
 

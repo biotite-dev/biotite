@@ -9,7 +9,7 @@ import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-from ..util import data_dir
+from tests.util import data_dir
 
 
 @pytest.mark.parametrize("path", glob.glob(join(data_dir("structure"), "*.bcif")))

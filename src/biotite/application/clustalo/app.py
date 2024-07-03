@@ -8,10 +8,10 @@ __all__ = ["ClustalOmegaApp"]
 
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ...sequence.phylo.tree import Tree
-from ..application import AppState, requires_state
-from ..localapp import cleanup_tempfile
-from ..msaapp import MSAApp
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import cleanup_tempfile
+from biotite.application.msaapp import MSAApp
+from biotite.sequence.phylo.tree import Tree
 
 
 class ClustalOmegaApp(MSAApp):

@@ -18,19 +18,26 @@ __all__ = [
 import itertools
 import warnings
 import numpy as np
-from ....file import InvalidFileError
-from ....sequence.seqtypes import NucleotideSequence, ProteinSequence
-from ...atoms import AtomArray, AtomArrayStack, repeat
-from ...bonds import BondList, BondType, connect_via_residue_names
-from ...box import unitcell_from_vectors, vectors_from_unitcell
-from ...error import BadStructureError
-from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
-from ...residues import get_residue_count, get_residue_starts_for
-from ...util import matrix_rotate
-from .bcif import BinaryCIFBlock, BinaryCIFColumn, BinaryCIFFile
-from .cif import CIFBlock, CIFFile
-from .component import MaskValue
-from .encoding import StringArrayEncoding
+from biotite.file import InvalidFileError
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
+from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
+from biotite.structure.bonds import BondList, BondType, connect_via_residue_names
+from biotite.structure.box import unitcell_from_vectors, vectors_from_unitcell
+from biotite.structure.error import BadStructureError
+from biotite.structure.filter import (
+    filter_first_altloc,
+    filter_highest_occupancy_altloc,
+)
+from biotite.structure.io.pdbx.bcif import (
+    BinaryCIFBlock,
+    BinaryCIFColumn,
+    BinaryCIFFile,
+)
+from biotite.structure.io.pdbx.cif import CIFBlock, CIFFile
+from biotite.structure.io.pdbx.component import MaskValue
+from biotite.structure.io.pdbx.encoding import StringArrayEncoding
+from biotite.structure.residues import get_residue_count, get_residue_starts_for
+from biotite.structure.util import matrix_rotate
 
 # Cond types in `struct_conn` category that refer to covalent bonds
 PDBX_COVALENT_TYPES = [

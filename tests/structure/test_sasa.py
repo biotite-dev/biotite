@@ -8,7 +8,7 @@ import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
-from ..util import cannot_import, data_dir
+from tests.util import cannot_import, data_dir
 
 
 # Ignore warning about dummy unit cell vector

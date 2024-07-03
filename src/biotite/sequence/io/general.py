@@ -14,7 +14,7 @@ __all__ = ["load_sequence", "save_sequence", "load_sequences", "save_sequences"]
 import os.path
 from collections import OrderedDict
 import numpy as np
-from ..seqtypes import NucleotideSequence
+from biotite.sequence.seqtypes import NucleotideSequence
 
 
 def load_sequence(file_path):
@@ -38,12 +38,12 @@ def load_sequence(file_path):
     # We only need the suffix here
     filename, suffix = os.path.splitext(file_path)
     if suffix in [".fasta", ".fa", ".mpfa", ".fna", ".fsa"]:
-        from .fasta import FastaFile, get_sequence
+        from biotite.sequence.io.fasta import FastaFile, get_sequence
 
         file = FastaFile.read(file_path)
         return get_sequence(file)
     elif suffix in [".fastq", ".fq"]:
-        from .fastq import FastqFile
+        from biotite.sequence.io.fastq import FastqFile
 
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
@@ -54,7 +54,7 @@ def load_sequence(file_path):
             break
         return sequence
     elif suffix in [".gb", ".gbk", ".gp"]:
-        from .genbank import GenBankFile, get_sequence
+        from biotite.sequence.io.genbank import GenBankFile, get_sequence
 
         format = "gp" if suffix == ".gp" else "gb"
         file = GenBankFile.read(file_path)
@@ -81,13 +81,13 @@ def save_sequence(file_path, sequence):
     # We only need the suffix here
     filename, suffix = os.path.splitext(file_path)
     if suffix in [".fasta", ".fa", ".mpfa", ".fna", ".fsa"]:
-        from .fasta import FastaFile, set_sequence
+        from biotite.sequence.io.fasta import FastaFile, set_sequence
 
         file = FastaFile()
         set_sequence(file, sequence)
         file.write(file_path)
     elif suffix in [".fastq", ".fq"]:
-        from .fastq import FastqFile
+        from biotite.sequence.io.fastq import FastqFile
 
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
@@ -97,7 +97,7 @@ def save_sequence(file_path, sequence):
         file["sequence"] = str(sequence), scores
         file.write(file_path)
     elif suffix in [".gb", ".gbk", ".gp"]:
-        from .genbank import GenBankFile, set_locus, set_sequence
+        from biotite.sequence.io.genbank import GenBankFile, set_locus, set_sequence
 
         file = GenBankFile()
         set_locus(file, "sequence", len(sequence))
@@ -130,12 +130,12 @@ def load_sequences(file_path):
     # We only need the suffix here
     filename, suffix = os.path.splitext(file_path)
     if suffix in [".fasta", ".fa", ".mpfa", ".fna", ".fsa"]:
-        from .fasta import FastaFile, get_sequences
+        from biotite.sequence.io.fasta import FastaFile, get_sequences
 
         file = FastaFile.read(file_path)
         return get_sequences(file)
     elif suffix in [".fastq", ".fq"]:
-        from .fastq import FastqFile
+        from biotite.sequence.io.fastq import FastqFile
 
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
@@ -145,7 +145,7 @@ def load_sequences(file_path):
             for identifier, (seq_str, scores) in file.items()
         }
     elif suffix in [".gb", ".gbk", ".gp"]:
-        from .genbank import MultiFile, get_definition, get_sequence
+        from biotite.sequence.io.genbank import MultiFile, get_definition, get_sequence
 
         file = MultiFile.read(file_path)
         format = "gp" if suffix == ".gp" else "gb"
@@ -176,13 +176,13 @@ def save_sequences(file_path, sequences):
     # We only need the suffix here
     filename, suffix = os.path.splitext(file_path)
     if suffix in [".fasta", ".fa", ".mpfa", ".fna", ".fsa"]:
-        from .fasta import FastaFile, set_sequences
+        from biotite.sequence.io.fasta import FastaFile, set_sequences
 
         file = FastaFile()
         set_sequences(file, sequences)
         file.write(file_path)
     elif suffix in [".fastq", ".fq"]:
-        from .fastq import FastqFile
+        from biotite.sequence.io.fastq import FastqFile
 
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant

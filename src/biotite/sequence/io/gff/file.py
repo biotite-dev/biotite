@@ -9,8 +9,8 @@ __all__ = ["GFFFile"]
 import string
 import warnings
 from urllib.parse import quote, unquote
-from ....file import InvalidFileError, TextFile
-from ...annotation import Location
+from biotite.file import InvalidFileError, TextFile
+from biotite.sequence.annotation import Location
 
 # All punctuation characters except
 # percent, semicolon, equals, ampersand, comma

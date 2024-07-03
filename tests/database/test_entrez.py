@@ -8,7 +8,7 @@ import pytest
 import biotite.database.entrez as entrez
 import biotite.sequence.io.fasta as fasta
 from biotite.database import RequestError
-from ..util import cannot_connect_to
+from tests.util import cannot_connect_to
 
 NCBI_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/"
 

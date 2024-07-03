@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-from ..util import data_dir
+from tests.util import data_dir
 
 
 @pytest.fixture(

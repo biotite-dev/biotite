@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 import biotite
 import biotite.sequence.phylo as phylo
-from ..util import data_dir
+from tests.util import data_dir
 
 
 @pytest.fixture

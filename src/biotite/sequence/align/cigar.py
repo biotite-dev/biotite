@@ -8,7 +8,7 @@ __all__ = ["CigarOp", "read_alignment_from_cigar", "write_alignment_to_cigar"]
 
 import enum
 import numpy as np
-from .alignment import Alignment, get_codes
+from biotite.sequence.align.alignment import Alignment, get_codes
 
 
 class CigarOp(enum.IntEnum):

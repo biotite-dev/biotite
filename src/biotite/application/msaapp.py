@@ -10,12 +10,12 @@ import abc
 from collections import OrderedDict
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ..sequence.align.alignment import Alignment
-from ..sequence.io.fasta.file import FastaFile
-from ..sequence.seqtypes import NucleotideSequence, ProteinSequence
-from .application import AppState, requires_state
-from .localapp import LocalApp, cleanup_tempfile
-from .util import map_matrix, map_sequence
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.application.util import map_matrix, map_sequence
+from biotite.sequence.align.alignment import Alignment
+from biotite.sequence.io.fasta.file import FastaFile
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
 
 class MSAApp(LocalApp, metaclass=abc.ABCMeta):

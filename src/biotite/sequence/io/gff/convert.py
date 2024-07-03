@@ -6,7 +6,7 @@ __name__ = "biotite.sequence.io.gff"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_annotation", "set_annotation"]
 
-from ...annotation import Annotation, Feature, Location
+from biotite.sequence.annotation import Annotation, Feature, Location
 
 
 def get_annotation(gff_file):

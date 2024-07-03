@@ -10,11 +10,11 @@ import io
 from collections.abc import Sequence as SequenceABC
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ...sequence.alphabet import common_alphabet
-from ...sequence.io.fasta.file import FastaFile
-from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
-from ..application import AppState, requires_state
-from ..localapp import LocalApp, cleanup_tempfile
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.sequence.alphabet import common_alphabet
+from biotite.sequence.io.fasta.file import FastaFile
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
 MASKING_LETTER = "!"
 

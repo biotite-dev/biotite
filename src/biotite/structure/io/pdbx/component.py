@@ -14,7 +14,7 @@ __all__ = ["MaskValue"]
 from abc import ABCMeta, abstractmethod
 from collections.abc import MutableMapping
 from enum import IntEnum
-from ....file import DeserializationError, SerializationError
+from biotite.file import DeserializationError, SerializationError
 
 
 class MaskValue(IntEnum):

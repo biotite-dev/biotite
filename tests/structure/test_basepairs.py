@@ -17,7 +17,7 @@ import biotite.structure.io as strucio
 from biotite.structure.basepairs import _get_edge_matrix
 from biotite.structure.info import residue
 from biotite.structure.residues import get_residue_masks
-from ..util import data_dir
+from tests.util import data_dir
 
 
 def reversed_iterator(iter):

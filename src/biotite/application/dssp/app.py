@@ -8,10 +8,10 @@ __all__ = ["DsspApp"]
 
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ...structure.io.pdbx.cif import CIFFile
-from ...structure.io.pdbx.convert import set_structure
-from ..application import AppState, requires_state
-from ..localapp import LocalApp, cleanup_tempfile
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.structure.io.pdbx.cif import CIFFile
+from biotite.structure.io.pdbx.convert import set_structure
 
 
 class DsspApp(LocalApp):

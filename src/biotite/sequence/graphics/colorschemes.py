@@ -10,7 +10,7 @@ import glob
 import json
 import os
 from os.path import dirname, join, realpath
-from ..alphabet import Alphabet
+from biotite.sequence.alphabet import Alphabet
 
 
 def load_color_scheme(file_name):

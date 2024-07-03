@@ -15,9 +15,13 @@ __all__ = [
 from collections.abc import Sequence
 import msgpack
 import numpy as np
-from ....file import File, SerializationError, is_binary, is_open_compatible
-from .component import MaskValue, _Component, _HierarchicalContainer
-from .encoding import (
+from biotite.file import File, SerializationError, is_binary, is_open_compatible
+from biotite.structure.io.pdbx.component import (
+    MaskValue,
+    _Component,
+    _HierarchicalContainer,
+)
+from biotite.structure.io.pdbx.encoding import (
     create_uncompressed_encoding,
     decode_stepwise,
     deserialize_encoding,

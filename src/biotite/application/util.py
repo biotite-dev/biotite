@@ -8,8 +8,8 @@ __all__ = ["map_sequence", "map_matrix"]
 
 
 import numpy as np
-from ..sequence.align.matrix import SubstitutionMatrix
-from ..sequence.seqtypes import ProteinSequence
+from biotite.sequence.align.matrix import SubstitutionMatrix
+from biotite.sequence.seqtypes import ProteinSequence
 
 
 def map_sequence(sequence):

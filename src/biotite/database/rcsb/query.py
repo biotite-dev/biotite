@@ -28,8 +28,8 @@ import json
 from datetime import datetime
 import numpy as np
 import requests
-from ...sequence.seqtypes import NucleotideSequence
-from ..error import RequestError
+from biotite.database.error import RequestError
+from biotite.sequence.seqtypes import NucleotideSequence
 
 _search_url = "https://search.rcsb.org/rcsbsearch/v2/query"
 _scope_to_target = {

@@ -16,7 +16,7 @@ import copy
 import string
 from numbers import Integral
 import numpy as np
-from .codec import decode_to_chars, encode_chars, map_sequence_code
+from biotite.sequence.codec import decode_to_chars, encode_chars, map_sequence_code
 
 
 class Alphabet(object):

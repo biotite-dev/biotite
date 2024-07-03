@@ -22,10 +22,10 @@ import abc
 import collections
 import copy
 import requests
-from ...structure.io.mol.mol import MOLFile
-from ..error import RequestError
-from .error import parse_error_details
-from .throttle import ThrottleStatus
+from biotite.database.error import RequestError
+from biotite.database.pubchem.error import parse_error_details
+from biotite.database.pubchem.throttle import ThrottleStatus
+from biotite.structure.io.mol.mol import MOLFile
 
 _base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
 

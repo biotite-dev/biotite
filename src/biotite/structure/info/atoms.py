@@ -6,7 +6,7 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["residue"]
 
-from .ccd import get_ccd
+from biotite.structure.info.ccd import get_ccd
 
 # fmt: off
 NON_HETERO_RESIDUES = set([
@@ -71,7 +71,7 @@ def residue(res_name):
      ['OXT' 'HXT']]
     """
     # Avoid circular import
-    from ..io.pdbx import get_component
+    from biotite.structure.io.pdbx import get_component
 
     try:
         component = get_component(get_ccd(), res_name=res_name)

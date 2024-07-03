@@ -10,9 +10,9 @@ from enum import IntEnum
 from os import remove
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ...structure.dotbracket import dot_bracket as dot_bracket_
-from ..application import AppState, requires_state
-from ..localapp import LocalApp, cleanup_tempfile
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.structure.dotbracket import dot_bracket as dot_bracket_
 
 
 class RNAplotApp(LocalApp):

@@ -6,7 +6,7 @@ __name__ = "biotite.application.blast"
 __author__ = "Patrick Kunzmann"
 __all__ = ["BlastAlignment"]
 
-from ...sequence.align.alignment import Alignment
+from biotite.sequence.align.alignment import Alignment
 
 
 class BlastAlignment(Alignment):

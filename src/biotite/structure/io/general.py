@@ -14,7 +14,7 @@ __all__ = ["load_structure", "save_structure"]
 import datetime
 import io
 import os.path
-from ..atoms import AtomArrayStack
+from biotite.structure.atoms import AtomArrayStack
 
 
 def load_structure(file_path, template=None, **kwargs):
@@ -64,44 +64,44 @@ def load_structure(file_path, template=None, **kwargs):
     _, suffix = os.path.splitext(file_path)
     match suffix:
         case ".pdb":
-            from .pdb import PDBFile
+            from biotite.structure.io.pdb import PDBFile
 
             file = PDBFile.read(file_path)
             array = file.get_structure(**kwargs)
             return _as_single_model_if_possible(array)
         case ".pdbqt":
-            from .pdbqt import PDBQTFile
+            from biotite.structure.io.pdbqt import PDBQTFile
 
             file = PDBQTFile.read(file_path)
             array = file.get_structure(**kwargs)
             return _as_single_model_if_possible(array)
         case ".cif" | ".pdbx":
-            from .pdbx import CIFFile, get_structure
+            from biotite.structure.io.pdbx import CIFFile, get_structure
 
             file = CIFFile.read(file_path)
             array = get_structure(file, **kwargs)
             return _as_single_model_if_possible(array)
         case ".bcif":
-            from .pdbx import BinaryCIFFile, get_structure
+            from biotite.structure.io.pdbx import BinaryCIFFile, get_structure
 
             file = BinaryCIFFile.read(file_path)
             array = get_structure(file, **kwargs)
             return _as_single_model_if_possible(array)
         case ".gro":
-            from .gro import GROFile
+            from biotite.structure.io.gro import GROFile
 
             file = GROFile.read(file_path)
             array = file.get_structure(**kwargs)
             return _as_single_model_if_possible(array)
         case ".mol":
-            from .mol import MOLFile
+            from biotite.structure.io.mol import MOLFile
 
             file = MOLFile.read(file_path)
             array = file.get_structure(**kwargs)
             # MOL and SDF files only contain a single model
             return array
         case ".sdf" | ".sd":
-            from .mol import SDFile, get_structure
+            from biotite.structure.io.mol import SDFile, get_structure
 
             file = SDFile.read(file_path)
             array = get_structure(file, **kwargs)
@@ -112,11 +112,11 @@ def load_structure(file_path, template=None, **kwargs):
             # Filter template for atom ids, if an unfiltered template
             if "atom_i" in kwargs and template.shape[-1] != len(kwargs["atom_i"]):
                 template = template[..., kwargs["atom_i"]]
-            from .dcd import DCDFile
-            from .netcdf import NetCDFFile
-            from .tng import TNGFile
-            from .trr import TRRFile
-            from .xtc import XTCFile
+            from biotite.structure.io.dcd import DCDFile
+            from biotite.structure.io.netcdf import NetCDFFile
+            from biotite.structure.io.tng import TNGFile
+            from biotite.structure.io.trr import TRRFile
+            from biotite.structure.io.xtc import XTCFile
 
             if suffix == ".trr":
                 traj_file_cls = TRRFile
@@ -162,44 +162,44 @@ def save_structure(file_path, array, **kwargs):
     _, suffix = os.path.splitext(file_path)
     match suffix:
         case ".pdb":
-            from .pdb import PDBFile
+            from biotite.structure.io.pdb import PDBFile
 
             file = PDBFile()
             file.set_structure(array, **kwargs)
             file.write(file_path)
         case ".pdbqt":
-            from .pdbqt import PDBQTFile
+            from biotite.structure.io.pdbqt import PDBQTFile
 
             file = PDBQTFile()
             file.set_structure(array, **kwargs)
             file.write(file_path)
         case ".cif" | ".pdbx":
-            from .pdbx import CIFFile, set_structure
+            from biotite.structure.io.pdbx import CIFFile, set_structure
 
             file = CIFFile()
             set_structure(file, array, **kwargs)
             file.write(file_path)
         case ".bcif":
-            from .pdbx import BinaryCIFFile, set_structure
+            from biotite.structure.io.pdbx import BinaryCIFFile, set_structure
 
             file = BinaryCIFFile()
             set_structure(file, array, **kwargs)
             file.write(file_path)
         case ".gro":
-            from .gro import GROFile
+            from biotite.structure.io.gro import GROFile
 
             file = GROFile()
             file.set_structure(array, **kwargs)
             file.write(file_path)
         case ".mol":
-            from .mol import MOLFile
+            from biotite.structure.io.mol import MOLFile
 
             file = MOLFile()
             file.set_structure(array, **kwargs)
             file.header = _mol_header()
             file.write(file_path)
         case ".sdf" | ".sd":
-            from .mol import SDFile, SDRecord, set_structure
+            from biotite.structure.io.mol import SDFile, SDRecord, set_structure
 
             record = SDRecord()
             record.set_structure(array, **kwargs)
@@ -207,11 +207,11 @@ def save_structure(file_path, array, **kwargs):
             file = SDFile({"Molecule": record})
             file.write(file_path)
         case ".trr" | ".xtc" | ".tng" | ".dcd" | ".netcdf":
-            from .dcd import DCDFile
-            from .netcdf import NetCDFFile
-            from .tng import TNGFile
-            from .trr import TRRFile
-            from .xtc import XTCFile
+            from biotite.structure.io.dcd import DCDFile
+            from biotite.structure.io.netcdf import NetCDFFile
+            from biotite.structure.io.tng import TNGFile
+            from biotite.structure.io.trr import TRRFile
+            from biotite.structure.io.xtc import XTCFile
 
             if suffix == ".trr":
                 traj_file_cls = TRRFile
@@ -239,7 +239,7 @@ def _as_single_model_if_possible(atoms):
 
 
 def _mol_header():
-    from .mol import Header
+    from biotite.structure.io.mol import Header
 
     return Header(
         mol_name="Molecule",

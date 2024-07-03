@@ -9,11 +9,11 @@ __all__ = ["GROFile"]
 import copy
 from datetime import datetime
 import numpy as np
-from ....file import InvalidFileError, TextFile
-from ...atoms import AtomArray, AtomArrayStack
-from ...box import is_orthogonal
-from ...error import BadStructureError
-from ...repair import infer_elements
+from biotite.file import InvalidFileError, TextFile
+from biotite.structure.atoms import AtomArray, AtomArrayStack
+from biotite.structure.box import is_orthogonal
+from biotite.structure.error import BadStructureError
+from biotite.structure.repair import infer_elements
 
 _atom_records = {
     "res_id": (0, 5),

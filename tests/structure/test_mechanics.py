@@ -2,7 +2,7 @@ from os.path import join
 import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from ..util import data_dir
+from tests.util import data_dir
 
 
 def test_gyration_radius():

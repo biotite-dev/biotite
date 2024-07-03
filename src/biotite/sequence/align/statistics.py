@@ -7,8 +7,8 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["EValueEstimator"]
 
 import numpy as np
-from ..seqtypes import GeneralSequence
-from .pairwise import align_optimal
+from biotite.sequence.align.pairwise import align_optimal
+from biotite.sequence.seqtypes import GeneralSequence
 
 
 class EValueEstimator:

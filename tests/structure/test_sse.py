@@ -9,7 +9,7 @@ import pytest
 import biotite.sequence.io.fasta as fasta
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-from ..util import data_dir
+from tests.util import data_dir
 
 
 def test_sse():

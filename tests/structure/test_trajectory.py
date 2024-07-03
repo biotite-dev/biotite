@@ -14,7 +14,7 @@ import biotite.structure.io.netcdf as netcdf
 import biotite.structure.io.tng as tng
 import biotite.structure.io.trr as trr
 import biotite.structure.io.xtc as xtc
-from ..util import cannot_import, data_dir
+from tests.util import cannot_import, data_dir
 
 
 @pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")

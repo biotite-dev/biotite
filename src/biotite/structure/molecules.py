@@ -12,8 +12,8 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["get_molecule_indices", "get_molecule_masks", "molecule_iter"]
 
 import numpy as np
-from .atoms import AtomArray, AtomArrayStack
-from .bonds import BondList, find_connected
+from biotite.structure.atoms import AtomArray, AtomArrayStack
+from biotite.structure.bonds import BondList, find_connected
 
 
 def get_molecule_indices(array):

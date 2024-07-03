@@ -7,7 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["build_constraint_string"]
 
 import numpy as np
-from ...structure.pseudoknots import pseudoknots
+from biotite.structure.pseudoknots import pseudoknots
 
 
 def build_constraint_string(

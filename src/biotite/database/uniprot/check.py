@@ -6,7 +6,7 @@ __name__ = "biotite.database.uniprot"
 __author__ = "Maximilian Greil"
 __all__ = ["assert_valid_response"]
 
-from ..error import RequestError
+from biotite.database.error import RequestError
 
 
 # Taken from https://www.uniprot.org/help/api_retrieve_entries

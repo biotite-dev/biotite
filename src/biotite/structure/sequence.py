@@ -11,12 +11,12 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["to_sequence"]
 
 import numpy as np
-from ..sequence.seqtypes import NucleotideSequence, ProteinSequence
-from .chains import get_chain_starts
-from .error import BadStructureError
-from .info.groups import amino_acid_names, nucleotide_names
-from .info.misc import one_letter_code
-from .residues import get_residues
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
+from biotite.structure.chains import get_chain_starts
+from biotite.structure.error import BadStructureError
+from biotite.structure.info.groups import amino_acid_names, nucleotide_names
+from biotite.structure.info.misc import one_letter_code
+from biotite.structure.residues import get_residues
 
 HETERO_PLACEHOLDER = "."
 

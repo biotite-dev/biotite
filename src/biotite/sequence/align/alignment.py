@@ -8,7 +8,7 @@ __author__ = "Patrick Kunzmann"
 import numbers
 import textwrap
 import numpy as np
-from ..alphabet import LetterAlphabet
+from biotite.sequence.alphabet import LetterAlphabet
 
 __all__ = [
     "Alignment",

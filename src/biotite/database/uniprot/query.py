@@ -8,7 +8,7 @@ __all__ = ["Query", "SimpleQuery", "CompositeQuery", "search"]
 
 import abc
 import requests
-from .check import assert_valid_response
+from biotite.database.uniprot.check import assert_valid_response
 
 _base_url = "https://rest.uniprot.org/uniprotkb/search/"
 

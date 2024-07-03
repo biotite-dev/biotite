@@ -12,9 +12,9 @@ __all__ = ["hbond", "hbond_frequency"]
 
 import warnings
 import numpy as np
-from .atoms import AtomArrayStack, stack
-from .celllist import CellList
-from .geometry import angle, distance
+from biotite.structure.atoms import AtomArrayStack, stack
+from biotite.structure.celllist import CellList
+from biotite.structure.geometry import angle, distance
 
 
 def hbond(

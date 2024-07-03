@@ -8,7 +8,7 @@ import pytest
 import biotite.sequence as seq
 import biotite.sequence.io.genbank as gb
 import biotite.sequence.io.gff as gff
-from ..util import data_dir
+from tests.util import data_dir
 
 
 @pytest.mark.parametrize(

@@ -17,10 +17,10 @@ __all__ = [
 ]
 
 import re
-from ....file import InvalidFileError
-from ...annotation import AnnotatedSequence
-from ...seqtypes import NucleotideSequence, ProteinSequence
-from .annotation import get_annotation, set_annotation
+from biotite.file import InvalidFileError
+from biotite.sequence.annotation import AnnotatedSequence
+from biotite.sequence.io.genbank.annotation import get_annotation, set_annotation
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
 _SYMBOLS_PER_CHUNK = 10
 _SEQ_CHUNKS_PER_LINE = 6

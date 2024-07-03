@@ -26,11 +26,11 @@ __all__ = [
 from numbers import Integral
 import numpy as np
 import numpy.linalg as linalg
-from .atoms import repeat
-from .chains import get_chain_masks, get_chain_starts
-from .error import BadStructureError
-from .molecules import get_molecule_masks
-from .util import vector_dot
+from biotite.structure.atoms import repeat
+from biotite.structure.chains import get_chain_masks, get_chain_starts
+from biotite.structure.error import BadStructureError
+from biotite.structure.molecules import get_molecule_masks
+from biotite.structure.util import vector_dot
 
 
 def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
@@ -395,7 +395,7 @@ def remove_pbc(atoms, selection=None):
     half box size.
     """
     # Avoid circular import
-    from .geometry import centroid
+    from biotite.structure.geometry import centroid
 
     if atoms.box is None:
         raise BadStructureError("The 'box' attribute must be set in the structure")
@@ -462,7 +462,7 @@ def remove_pbc_from_coord(coord, box):
     """
 
     # Import in function to avoid circular import
-    from .geometry import index_displacement
+    from biotite.structure.geometry import index_displacement
 
     # Get the PBC-sanitized displacements of all coordinates
     # to the respective next coordinate

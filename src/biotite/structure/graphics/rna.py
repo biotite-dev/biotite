@@ -9,8 +9,8 @@ __all__ = ["plot_nucleotide_secondary_structure"]
 import shutil
 from itertools import repeat
 import numpy as np
-from ...application.viennarna import RNAplotApp
-from .. import pseudoknots
+from biotite.application.viennarna import RNAplotApp
+from biotite.structure import pseudoknots
 
 
 def plot_nucleotide_secondary_structure(

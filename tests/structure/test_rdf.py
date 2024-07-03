@@ -5,7 +5,7 @@ import pytest
 from biotite.structure.box import vectors_from_unitcell
 from biotite.structure.io import load_structure
 from biotite.structure.rdf import rdf
-from ..util import cannot_import, data_dir
+from tests.util import cannot_import, data_dir
 
 TEST_FILE = join(data_dir("structure"), "waterbox.gro")
 

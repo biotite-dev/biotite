@@ -19,7 +19,7 @@ __all__ = [
     "set_locus",
 ]
 
-from ....file import InvalidFileError
+from biotite.file import InvalidFileError
 
 
 def get_locus(gb_file):

@@ -12,11 +12,11 @@ __all__ = ["rdf"]
 
 from numbers import Integral
 import numpy as np
-from .atoms import AtomArray, coord, stack
-from .box import box_volume
-from .celllist import CellList
-from .geometry import displacement
-from .util import vector_dot
+from biotite.structure.atoms import AtomArray, coord, stack
+from biotite.structure.box import box_volume
+from biotite.structure.celllist import CellList
+from biotite.structure.geometry import displacement
+from biotite.structure.util import vector_dot
 
 
 def rdf(

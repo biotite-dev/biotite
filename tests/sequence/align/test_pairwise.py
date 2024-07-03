@@ -9,7 +9,7 @@ import biotite.application.muscle as muscle
 import biotite.sequence as seq
 import biotite.sequence.align as align
 from biotite.application import VersionError
-from ...util import is_not_installed
+from tests.util import is_not_installed
 
 
 def test_align_ungapped():

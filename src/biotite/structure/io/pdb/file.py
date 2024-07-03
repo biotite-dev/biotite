@@ -8,19 +8,23 @@ __all__ = ["PDBFile"]
 
 import warnings
 import numpy as np
-from ....file import InvalidFileError, TextFile
-from ...atoms import AtomArray, AtomArrayStack, repeat
-from ...bonds import BondList, connect_via_residue_names
-from ...box import unitcell_from_vectors, vectors_from_unitcell
-from ...error import BadStructureError
-from ...filter import (
+from biotite.file import InvalidFileError, TextFile
+from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
+from biotite.structure.bonds import BondList, connect_via_residue_names
+from biotite.structure.box import unitcell_from_vectors, vectors_from_unitcell
+from biotite.structure.error import BadStructureError
+from biotite.structure.filter import (
     filter_first_altloc,
     filter_highest_occupancy_altloc,
     filter_solvent,
 )
-from ...repair import infer_elements
-from ...util import matrix_rotate
-from .hybrid36 import decode_hybrid36, encode_hybrid36, max_hybrid36_number
+from biotite.structure.io.pdb.hybrid36 import (
+    decode_hybrid36,
+    encode_hybrid36,
+    max_hybrid36_number,
+)
+from biotite.structure.repair import infer_elements
+from biotite.structure.util import matrix_rotate
 
 _PDB_MAX_ATOMS = 99999
 _PDB_MAX_RESIDUES = 9999

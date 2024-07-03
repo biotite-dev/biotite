@@ -19,9 +19,9 @@ __all__ = [
 ]
 
 import numpy as np
-from .atoms import Atom, AtomArray, AtomArrayStack, coord
-from .geometry import centroid
-from .util import matrix_rotate, norm_vector, vector_dot
+from biotite.structure.atoms import Atom, AtomArray, AtomArrayStack, coord
+from biotite.structure.geometry import centroid
+from biotite.structure.util import matrix_rotate, norm_vector, vector_dot
 
 
 def translate(atoms, vector):

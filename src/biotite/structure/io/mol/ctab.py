@@ -15,10 +15,10 @@ import itertools
 import shlex
 import warnings
 import numpy as np
-from ....file import InvalidFileError
-from ...atoms import AtomArray, AtomArrayStack
-from ...bonds import BondList, BondType
-from ...error import BadStructureError
+from biotite.file import InvalidFileError
+from biotite.structure.atoms import AtomArray, AtomArrayStack
+from biotite.structure.bonds import BondList, BondType
+from biotite.structure.error import BadStructureError
 
 BOND_TYPE_MAPPING = {
     1: BondType.SINGLE,

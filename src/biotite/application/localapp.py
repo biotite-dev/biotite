@@ -10,7 +10,12 @@ import abc
 import copy
 from os import chdir, getcwd, remove
 from subprocess import PIPE, Popen, SubprocessError, TimeoutExpired
-from .application import Application, AppState, AppStateError, requires_state
+from biotite.application.application import (
+    Application,
+    AppState,
+    AppStateError,
+    requires_state,
+)
 
 
 class LocalApp(Application, metaclass=abc.ABCMeta):

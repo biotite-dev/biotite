@@ -6,7 +6,7 @@ import glob
 from os.path import abspath, dirname, join
 import pytest
 import biotite.sequence as seq
-from ..util import cannot_import
+from tests.util import cannot_import
 
 
 @pytest.mark.skipif(cannot_import("matplotlib"), reason="Matplotlib is not installed")

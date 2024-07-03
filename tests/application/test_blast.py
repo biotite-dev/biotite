@@ -7,7 +7,7 @@ import pytest
 import biotite.application.blast as blast
 import biotite.sequence as seq
 import biotite.sequence.io as seqio
-from ..util import cannot_connect_to, data_dir
+from tests.util import cannot_connect_to, data_dir
 
 BLAST_URL = "https://blast.ncbi.nlm.nih.gov/Blast.cgi"
 
