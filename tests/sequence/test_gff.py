@@ -161,8 +161,8 @@ def test_percent_encoding():
     }
 
     file2 = gff.GFFFile()
-    file.append(seqid, source, type, start, end, score, strand, phase, attrib)
-    assert (seqid, source, type, start, end, score, strand, phase, attrib) == file[0]
+    file2.append(seqid, source, type, start, end, score, strand, phase, attrib)
+    assert (seqid, source, type, start, end, score, strand, phase, attrib) == file2[0]
 
 
 def test_error():

@@ -564,7 +564,7 @@ class BinaryCIFFile(File, _HierarchicalContainer):
         return {"dataBlocks": self._serialize_elements("header")}
 
     @classmethod
-    def read(self, file):
+    def read(cls, file):
         """
         Read a *BinaryCIF* file.
 

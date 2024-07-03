@@ -72,7 +72,7 @@ def test_protOr_radii():
     for res_name, atom_name in zip(array.res_name, array.atom_name):
         radius = strucinfo.vdw_radius_protor(res_name, atom_name)
         assert isinstance(radius, float)
-        assert radius != None
+        assert radius is not None
 
 
 def test_protor_radii_invalid():
@@ -83,7 +83,7 @@ def test_protor_radii_invalid():
         # Expect raised exception when a residue does not contain an atom
         strucinfo.vdw_radius_protor("ALA", "K")
     # For all other unknown radii expect None
-    assert strucinfo.vdw_radius_protor("HOH", "O") == None
+    assert strucinfo.vdw_radius_protor("HOH", "O") is None
 
 
 def test_single_radii():

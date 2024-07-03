@@ -41,7 +41,7 @@ def test_fetch(as_file_like):
 @pytest.mark.parametrize("format", ["fasta", "gff", "txt", "xml", "rdf", "tab"])
 def test_fetch_invalid(format):
     with pytest.raises(RequestError):
-        file = uniprot.fetch("xxxx", format, tempfile.gettempdir(), overwrite=True)
+        uniprot.fetch("xxxx", format, tempfile.gettempdir(), overwrite=True)
 
 
 @pytest.mark.skipif(cannot_connect_to(UNIPROT_URL), reason="UniProt is not available")

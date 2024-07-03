@@ -145,7 +145,6 @@ def test_distances(tree):
 
 def test_get_leaves(tree):
     # Manual example cases
-    node = tree.leaves[6]
     assert set(tree.leaves[6].parent.get_indices()) == set(
         [6, 11, 2, 3, 13, 8, 14, 5, 0, 15, 16]
     )

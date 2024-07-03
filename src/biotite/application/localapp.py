@@ -236,7 +236,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
 
     def is_finished(self):
         code = self._process.poll()
-        if code == None:
+        if code is None:
             return False
         else:
             self._stdout, self._stderr = self._process.communicate()

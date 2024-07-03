@@ -32,7 +32,7 @@ def apply_segment_wise(starts, data, function, axis):
     processed_data = None
     for i in range(len(starts) - 1):
         segment = data[starts[i] : starts[i + 1]]
-        if axis == None:
+        if axis is None:
             value = function(segment)
         else:
             value = function(segment, axis=axis)

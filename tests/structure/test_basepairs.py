@@ -181,19 +181,19 @@ def test_map_nucleotide():
     # pyrimidine/purine references
     psu_tuple = struc.map_nucleotide(residue("PSU"))
     assert psu_tuple[0] in pyrimidines
-    assert psu_tuple[1] == False
+    assert psu_tuple[1] is False
 
     psu_tuple = struc.map_nucleotide(residue("3MC"))
     assert psu_tuple[0] in pyrimidines
-    assert psu_tuple[1] == False
+    assert psu_tuple[1] is False
 
     i_tuple = struc.map_nucleotide(residue("I"))
     assert i_tuple[0] in purines
-    assert i_tuple[1] == False
+    assert i_tuple[1] is False
 
     m7g_tuple = struc.map_nucleotide(residue("M7G"))
     assert m7g_tuple[0] in purines
-    assert m7g_tuple[1] == False
+    assert m7g_tuple[1] is False
 
     with pytest.warns(struc.IncompleteStructureWarning):
         assert struc.map_nucleotide(residue("ALA")) == (None, False)

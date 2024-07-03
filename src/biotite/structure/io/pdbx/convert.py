@@ -676,10 +676,6 @@ def _filter_model(atom_site, model_starts, model):
     Reduce the ``atom_site`` category to the values for the given
     model.
     """
-    Category = type(atom_site)
-    Column = Category.subcomponent_class()
-    Data = Column.subcomponent_class()
-
     # Append exclusive stop
     model_starts = np.append(model_starts, [atom_site.row_count])
     # Indexing starts at 0, but model number starts at 1

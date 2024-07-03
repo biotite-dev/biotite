@@ -84,14 +84,14 @@ def test_tblastn():
 
 def test_file_input():
     path = os.path.join(data_dir("sequence"), "prot.fasta")
-    app = blast.BlastWebApp("blastp", path, obey_rules=False)
+    blast.BlastWebApp("blastp", path, obey_rules=False)
 
 
 def test_invalid_query():
     with pytest.raises(ValueError):
-        app = blast.BlastWebApp("blastn", "ABCDEFGHIJKLMNOP", obey_rules=False)
+        blast.BlastWebApp("blastn", "ABCDEFGHIJKLMNOP", obey_rules=False)
     with pytest.raises(ValueError):
-        app = blast.BlastWebApp("blastp", "ABCDEFGHIJKLMNOP", obey_rules=False)
+        blast.BlastWebApp("blastp", "ABCDEFGHIJKLMNOP", obey_rules=False)
 
 
 @pytest.mark.skipif(cannot_connect_to(BLAST_URL), reason="NCBI BLAST is not available")

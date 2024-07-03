@@ -36,7 +36,7 @@ import biotite.sequence as seq
     ],
 )
 def test_table_load(table_id):
-    table = seq.CodonTable.load(table_id)
+    seq.CodonTable.load(table_id)
 
 
 def test_table_indexing():

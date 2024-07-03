@@ -165,7 +165,6 @@ def test_write_iter(chars_per_line, n_sequences):
     random sequences.
     """
     LENGTH_RANGE = (50, 150)
-    SCORE_RANGE = (10, 60)
 
     # Generate random sequences and scores
     np.random.seed(0)

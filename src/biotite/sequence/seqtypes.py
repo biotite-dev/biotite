@@ -501,7 +501,6 @@ class ProteinSequence(Sequence):
 
     def __init__(self, sequence=()):
         dict_3to1 = ProteinSequence._dict_3to1
-        alph = ProteinSequence.alphabet
         # Convert 3-letter codes to single letter codes,
         # if list contains 3-letter codes
         sequence = [

@@ -239,7 +239,7 @@ def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
         for b in range(len(lk1)):
             for a in template[x:]:
                 if c < plen - 1:
-                    if a == None:
+                    if a is None:
                         gapped.insert(x, (template[x], 0))
                         x = x + 1
                     elif a != lk1[b]:
@@ -267,7 +267,7 @@ def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
         for b in range(len(lk1)):
             for a in template[x:]:
                 if c < plen - 1 and p == 0:
-                    if a == None:
+                    if a is None:
                         gapped.insert(x, (template[x], 0))
                         x = x + 1
                     else:
@@ -280,11 +280,11 @@ def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
                     x = x + 1
                     break
                 if p != 0:
-                    if a == None and c == 0:
+                    if a is None and c == 0:
                         gapped.insert(x, (template[x], 0))
                         x = x + 1
                     elif c % 2 == 0:
-                        if a == None:
+                        if a is None:
                             gapped.insert(x, (template[x], 0))
                             x = x + 1
                         else:
@@ -292,7 +292,7 @@ def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
                             x = x + 1
                             c = c + 1
                     elif c % 2 != 0:
-                        if a == None:
+                        if a is None:
                             gapped.insert(x, (template[x], 0))
                             x = x + 1
                         elif a != lk1[b]:
@@ -305,7 +305,7 @@ def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
                             break
 
     # For terminal gaps
-    if len(gapped) < len(template) and template[len(gapped) + 1] == None:
+    if len(gapped) < len(template) and template[len(gapped) + 1] is None:
         gapped_tail = []
         for n in range(len(template) - len(gapped)):
             gapped_tail.append(("None", 0))

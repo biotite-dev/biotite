@@ -144,7 +144,6 @@ def _index_cython_code(code_lines):
             continue
 
         if line.startswith(("def")):
-            attr_type = "def"
             # Get name of the function:
             # Remove 'def' from line...
             cropped_line = stripped_line[3:].strip()
@@ -153,7 +152,6 @@ def _index_cython_code(code_lines):
             cropped_line = cropped_line[: cropped_line.index("(")].strip()
             attr_name = cropped_line
         elif line.startswith(("class", "cdef class")):
-            attr_type = "class"
             cropped_line = stripped_line
             # Get name of the class:
             # Remove potential 'cdef' from line...

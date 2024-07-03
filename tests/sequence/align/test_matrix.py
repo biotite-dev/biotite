@@ -22,7 +22,7 @@ def test_matrices(db_entry):
     """
     alph1 = seq.ProteinSequence.alphabet
     alph2 = seq.ProteinSequence.alphabet
-    matrix = align.SubstitutionMatrix(alph1, alph2, db_entry)
+    align.SubstitutionMatrix(alph1, alph2, db_entry)
 
 
 def test_matrix_str():
