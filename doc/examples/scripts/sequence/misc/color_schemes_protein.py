@@ -42,24 +42,23 @@ in the different color schemes available in *Biotite*.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
+import biotite.database.entrez as entrez
 import biotite.sequence as seq
-import biotite.sequence.io.fasta as fasta
 import biotite.sequence.align as align
 import biotite.sequence.graphics as graphics
-import biotite.database.entrez as entrez
-
+import biotite.sequence.io.fasta as fasta
 
 # Generate example alignment
 # (the same as in the bacterial luciferase example)
-query =   entrez.SimpleQuery("luxA", "Gene Name") \
-        & entrez.SimpleQuery("srcdb_swiss-prot", "Properties")
+query = entrez.SimpleQuery("luxA", "Gene Name") & entrez.SimpleQuery(
+    "srcdb_swiss-prot", "Properties"
+)
 uids = entrez.search(query, db_name="protein")
-fasta_file = fasta.FastaFile.read(entrez.fetch_single_file(
-    uids, None, db_name="protein", ret_type="fasta"
-))
+fasta_file = fasta.FastaFile.read(
+    entrez.fetch_single_file(uids, None, db_name="protein", ret_type="fasta")
+)
 sequences = [seq.ProteinSequence(seq_str) for seq_str in fasta_file.values()]
 matrix = align.SubstitutionMatrix.std_protein_matrix()
 alignment, order, _, _ = align.align_multiple(sequences, matrix)
@@ -70,10 +69,22 @@ alignment = alignment[220:300]
 # Get color scheme names
 alphabet = seq.ProteinSequence.alphabet
 schemes = [
-    "flower", "blossom", "spring", "wither", "autumn", "sunset", "ocean",
-    "rainbow", "clustalx",
-    "zappo", "taylor", "buried", "hydrophobicity",
-    "prophelix", "propstrand", "propturn"
+    "flower",
+    "blossom",
+    "spring",
+    "wither",
+    "autumn",
+    "sunset",
+    "ocean",
+    "rainbow",
+    "clustalx",
+    "zappo",
+    "taylor",
+    "buried",
+    "hydrophobicity",
+    "prophelix",
+    "propstrand",
+    "propturn",
 ]
 count = len(schemes)
 # Assert that this example displays all available amino acid color schemes
@@ -82,19 +93,23 @@ assert set(schemes) == set(all_schemes)
 
 
 # Visualize each scheme using the example alignment
-fig = plt.figure(figsize=(8.0, count*2.0))
+fig = plt.figure(figsize=(8.0, count * 2.0))
 gridspec = GridSpec(2, count)
 for i, name in enumerate(schemes):
     for j, color_symbols in enumerate([False, True]):
-        ax = fig.add_subplot(count, 2, 2*i + j + 1)
+        ax = fig.add_subplot(count, 2, 2 * i + j + 1)
         if j == 0:
             ax.set_ylabel(name)
             alignment_part = alignment[:40]
         else:
             alignment_part = alignment[40:]
         graphics.plot_alignment_type_based(
-            ax, alignment_part, symbols_per_line=len(alignment_part),
-            color_scheme=name, color_symbols=color_symbols, symbol_size=8
+            ax,
+            alignment_part,
+            symbols_per_line=len(alignment_part),
+            color_scheme=name,
+            color_symbols=color_symbols,
+            symbol_size=8,
         )
 fig.tight_layout()
 fig.subplots_adjust(wspace=0)

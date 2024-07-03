@@ -2,8 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import itertools
+from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -19,28 +19,20 @@ def test_get_atoms(cell_size):
     with known solutions.
     """
     array = struc.AtomArray(length=5)
-    array.coord = np.array([[0,0,i] for i in range(5)])
+    array.coord = np.array([[0, 0, i] for i in range(5)])
     cell_list = struc.CellList(array, cell_size=cell_size)
-    assert cell_list.get_atoms(np.array([0,0,0.1]), 1).tolist() == [0,1]
-    assert cell_list.get_atoms(np.array([0,0,1.1]), 1).tolist() == [1,2]
-    assert cell_list.get_atoms(np.array([0,0,1.1]), 2).tolist() == [0,1,2,3]
+    assert cell_list.get_atoms(np.array([0, 0, 0.1]), 1).tolist() == [0, 1]
+    assert cell_list.get_atoms(np.array([0, 0, 1.1]), 1).tolist() == [1, 2]
+    assert cell_list.get_atoms(np.array([0, 0, 1.1]), 2).tolist() == [0, 1, 2, 3]
     # Multiple positions
-    pos = np.array([[0,0,0.1],
-                    [0,0,1.1],
-                    [0,0,4.1]])
-    expected_indices = [0, 1, 2,
-                        0, 1, 2, 3,
-                        3, 4]
+    pos = np.array([[0, 0, 0.1], [0, 0, 1.1], [0, 0, 4.1]])
+    expected_indices = [0, 1, 2, 0, 1, 2, 3, 3, 4]
     indices = cell_list.get_atoms(pos, 2)
     assert indices[indices != -1].tolist() == expected_indices
     # Multiple positions and multiple radii
-    pos = np.array([[0,0,0.1],
-                    [0,0,1.1],
-                    [0,0,4.1]])
+    pos = np.array([[0, 0, 0.1], [0, 0, 1.1], [0, 0, 4.1]])
     rad = np.array([1.0, 2.0, 3.0])
-    expected_indices = [0, 1,
-                        0, 1, 2, 3,
-                        2, 3, 4]
+    expected_indices = [0, 1, 0, 1, 2, 3, 2, 3, 4]
     indices = cell_list.get_atoms(pos, rad)
     assert indices[indices != -1].tolist() == expected_indices
 
@@ -52,7 +44,7 @@ def test_get_atoms(cell_size):
         [2, 5, 10],
         [False, True],
         [False, True],
-    )
+    ),
 )
 def test_adjacency_matrix(cell_size, threshold, periodic, use_selection):
     """
@@ -64,9 +56,7 @@ def test_adjacency_matrix(cell_size, threshold, periodic, use_selection):
     if periodic:
         # Create an orthorhombic box
         # with the outer coordinates as bounds
-        array.box = np.diag(
-            np.max(array.coord, axis=-2) - np.min(array.coord, axis=-2)
-        )
+        array.box = np.diag(np.max(array.coord, axis=-2) - np.min(array.coord, axis=-2))
 
     if use_selection:
         np.random.seed(0)
@@ -83,17 +73,14 @@ def test_adjacency_matrix(cell_size, threshold, periodic, use_selection):
     distance = struc.index_distance(
         array,
         np.stack(
-            [
-                np.repeat(np.arange(length), length),
-                  np.tile(np.arange(length), length)
-            ],
-            axis=-1
+            [np.repeat(np.arange(length), length), np.tile(np.arange(length), length)],
+            axis=-1,
         ),
-        periodic
+        periodic,
     )
     distance = np.reshape(distance, (length, length))
     # Create adjacency matrix from distance matrix
-    exp_matrix = (distance <= threshold)
+    exp_matrix = distance <= threshold
     if use_selection:
         # Set rows and columns to False for filtered out atoms
         exp_matrix[~selection, :] = False
@@ -145,9 +132,7 @@ def test_empty_coordinates():
     array = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
     cell_list = struc.CellList(array, cell_size=10)
 
-    for method in (
-        struc.CellList.get_atoms, struc.CellList.get_atoms_in_cells
-    ):
+    for method in (struc.CellList.get_atoms, struc.CellList.get_atoms_in_cells):
         indices = method(cell_list, np.array([]), 1, as_mask=False)
         mask = method(cell_list, np.array([]), 1, as_mask=True)
         assert len(indices) == 0

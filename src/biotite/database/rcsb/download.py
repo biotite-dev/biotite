@@ -6,13 +6,11 @@ __name__ = "biotite.database.rcsb"
 __author__ = "Patrick Kunzmann"
 __all__ = ["fetch"]
 
-import requests
-from os.path import isdir, isfile, join, getsize
-import os
-import glob
 import io
+import os
+from os.path import getsize, isfile, join
+import requests
 from ..error import RequestError
-
 
 _standard_url = "https://files.rcsb.org/download/"
 _bcif_url = "https://models.rcsb.org/"
@@ -93,8 +91,7 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
     for i, id in enumerate(pdb_ids):
         # Verbose output
         if verbose:
-            print(f"Fetching file {i+1:d} / {len(pdb_ids):d} ({id})...",
-                  end="\r")
+            print(f"Fetching file {i+1:d} / {len(pdb_ids):d} ({id})...", end="\r")
 
         # Fetch file from database
         if target_path is not None:
@@ -103,38 +100,35 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
             # 'file = None' -> store content in a file-like object
             file = None
 
-        if file is None \
-           or not isfile(file) \
-           or getsize(file) == 0 \
-           or overwrite:
-                if format == "pdb":
-                    r = requests.get(_standard_url + id + ".pdb")
-                    content = r.text
-                    _assert_valid_file(content, id)
-                elif format in ["cif", "mmcif", "pdbx"]:
-                    r = requests.get(_standard_url + id + ".cif")
-                    content = r.text
-                    _assert_valid_file(content, id)
-                elif format in ["bcif"]:
-                    r = requests.get(_bcif_url + id + ".bcif")
-                    content = r.content
-                    _assert_valid_file(r.text, id)
-                elif format == "fasta":
-                    r = requests.get(_fasta_url + id)
-                    content = r.text
-                    _assert_valid_file(content, id)
-                else:
-                    raise ValueError(f"Format '{format}' is not supported")
+        if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
+            if format == "pdb":
+                r = requests.get(_standard_url + id + ".pdb")
+                content = r.text
+                _assert_valid_file(content, id)
+            elif format in ["cif", "mmcif", "pdbx"]:
+                r = requests.get(_standard_url + id + ".cif")
+                content = r.text
+                _assert_valid_file(content, id)
+            elif format in ["bcif"]:
+                r = requests.get(_bcif_url + id + ".bcif")
+                content = r.content
+                _assert_valid_file(r.text, id)
+            elif format == "fasta":
+                r = requests.get(_fasta_url + id)
+                content = r.text
+                _assert_valid_file(content, id)
+            else:
+                raise ValueError(f"Format '{format}' is not supported")
 
-                if file is None:
-                    if format in _binary_formats:
-                        file = io.BytesIO(content)
-                    else:
-                        file = io.StringIO(content)
+            if file is None:
+                if format in _binary_formats:
+                    file = io.BytesIO(content)
                 else:
-                    mode = "wb+" if format in _binary_formats else "w+"
-                    with open(file, mode) as f:
-                        f.write(content)
+                    file = io.StringIO(content)
+            else:
+                mode = "wb+" if format in _binary_formats else "w+"
+                with open(file, mode) as f:
+                    f.write(content)
 
         files.append(file)
     if verbose:
@@ -153,10 +147,13 @@ def _assert_valid_file(response_text, pdb_id):
     """
     # Structure file and FASTA file retrieval
     # have different error messages
-    if len(response_text) == 0 or any(err_msg in response_text for err_msg in [
-        "404 Not Found",
-        "<title>RCSB Protein Data Bank Error Page</title>",
-        "No fasta files were found.",
-        "No valid PDB IDs were submitted.",
-    ]):
+    if len(response_text) == 0 or any(
+        err_msg in response_text
+        for err_msg in [
+            "404 Not Found",
+            "<title>RCSB Protein Data Bank Error Page</title>",
+            "No fasta files were found.",
+            "No valid PDB IDs were submitted.",
+        ]
+    ):
         raise RequestError("PDB ID {:} is invalid".format(pdb_id))

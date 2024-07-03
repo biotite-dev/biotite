@@ -16,5 +16,5 @@ In all other cases, usage of the :mod:`pdbx` subpackage is encouraged.
 __name__ = "biotite.structure.io.pdb"
 __author__ = "Patrick Kunzmann"
 
-from .file import *
 from .convert import *
+from .file import *

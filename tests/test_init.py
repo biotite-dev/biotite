@@ -5,7 +5,6 @@
 __author__ = "Daniel Bauer"
 
 import biotite
-import pytest
 
 
 def test_version_number():

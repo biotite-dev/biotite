@@ -104,9 +104,11 @@ __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 
 from .atoms import *
+from .basepairs import *
 from .bonds import *
 from .box import *
 from .celllist import *
+from .chains import *
 from .charges import *
 from .compare import *
 from .density import *
@@ -122,11 +124,9 @@ from .pseudoknots import *
 from .rdf import *
 from .repair import *
 from .residues import *
-from .chains import *
 from .sasa import *
 from .sequence import *
 from .sse import *
 from .superimpose import *
 from .transform import *
-from .basepairs import *
 # util and resutil are used internally

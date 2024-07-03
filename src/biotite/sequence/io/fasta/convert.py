@@ -7,13 +7,18 @@ __author__ = "Patrick Kunzmann"
 
 import warnings
 from collections import OrderedDict
-from ...sequence import Sequence
+from ...align.alignment import Alignment
 from ...alphabet import AlphabetError, LetterAlphabet
 from ...seqtypes import NucleotideSequence, ProteinSequence
-from ...align.alignment import Alignment
 
-__all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences",
-           "get_alignment", "set_alignment"]
+__all__ = [
+    "get_sequence",
+    "get_sequences",
+    "set_sequence",
+    "set_sequences",
+    "get_alignment",
+    "set_alignment",
+]
 
 
 def get_sequence(fasta_file, header=None, seq_type=None):
@@ -180,8 +185,10 @@ def get_alignment(fasta_file, additional_gap_chars=("_",), seq_type=None):
         for i, seq_str in enumerate(seq_strings):
             seq_strings[i] = seq_str.replace(char, "-")
     # Remove gaps for creation of sequences
-    sequences = [_convert_to_sequence(seq_str.replace("-",""), seq_type)
-                 for seq_str in seq_strings]
+    sequences = [
+        _convert_to_sequence(seq_str.replace("-", ""), seq_type)
+        for seq_str in seq_strings
+    ]
     trace = Alignment.trace_from_strings(seq_strings)
     return Alignment(sequences, trace, score=None)
 
@@ -212,18 +219,15 @@ def set_alignment(fasta_file, alignment, seq_names):
 
 
 def _convert_to_sequence(seq_str, seq_type=None):
-
     # Define preprocessing of preimplemented sequence types
 
     # Replace selenocysteine with cysteine
     # and pyrrolysine with lysine
-    process_protein_sequence = (
-        lambda x : x.upper().replace("U", "C").replace("O", "K")
-    )
+    process_protein_sequence = lambda x: x.upper().replace("U", "C").replace("O", "K")
     # For nucleotides uracil is represented by thymine and there is only
     # one letter for completely unknown nucleotides
     process_nucleotide_sequence = (
-        lambda x : x.upper().replace("U","T").replace("X","N")
+        lambda x: x.upper().replace("U", "T").replace("X", "N")
     )
 
     # Set manually selected sequence type
@@ -259,15 +263,19 @@ def _convert_to_sequence(seq_str, seq_type=None):
             )
         return prot_seq
     except AlphabetError:
-        raise ValueError("FASTA data cannot be converted either to "
-                         "'NucleotideSequence' nor to 'ProteinSequence'")
+        raise ValueError(
+            "FASTA data cannot be converted either to "
+            "'NucleotideSequence' nor to 'ProteinSequence'"
+        )
 
 
 def _convert_to_string(sequence, as_rna):
     if not isinstance(sequence.get_alphabet(), LetterAlphabet):
-        raise ValueError("Only sequences using single letter alphabets "
-                         "can be stored in a FASTA file")
+        raise ValueError(
+            "Only sequences using single letter alphabets "
+            "can be stored in a FASTA file"
+        )
     if isinstance(sequence, NucleotideSequence) and as_rna:
-        return(str(sequence).replace("T", "U"))
+        return str(sequence).replace("T", "U")
     else:
-        return(str(sequence))
+        return str(sequence)

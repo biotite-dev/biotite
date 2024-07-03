@@ -9,12 +9,12 @@ __all__ = ["VinaApp"]
 import copy
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ..localapp import LocalApp, cleanup_tempfile
-from ..application import AppState, requires_state
-from ...structure.io.pdbqt import PDBQTFile
-from ...structure.residues import get_residue_starts_for, get_residue_masks
 from ...structure.bonds import find_connected
 from ...structure.error import BadStructureError
+from ...structure.io.pdbqt import PDBQTFile
+from ...structure.residues import get_residue_masks, get_residue_starts_for
+from ..application import AppState, requires_state
+from ..localapp import LocalApp, cleanup_tempfile
 
 
 class VinaApp(LocalApp):
@@ -62,8 +62,8 @@ class VinaApp(LocalApp):
     ...     flexible=(receptor.res_id == 2) | (receptor.res_id == 5)
     ... )
     """
-    def __init__(self, ligand, receptor, center, size, flexible=None,
-                 bin_path="vina"):
+
+    def __init__(self, ligand, receptor, center, size, flexible=None, bin_path="vina"):
         super().__init__(bin_path)
 
         if ligand.bonds is None:
@@ -83,23 +83,17 @@ class VinaApp(LocalApp):
 
         if self._is_flexible:
             flexible_indices = np.where(flexible)[0]
-            self._flex_res_starts = np.unique(get_residue_starts_for(
-                receptor, flexible_indices
-            ))
-        
-        self._ligand_file  = NamedTemporaryFile(
+            self._flex_res_starts = np.unique(
+                get_residue_starts_for(receptor, flexible_indices)
+            )
+
+        self._ligand_file = NamedTemporaryFile("w", suffix=".pdbqt", delete=False)
+        self._receptor_file = NamedTemporaryFile("w", suffix=".pdbqt", delete=False)
+        self._receptor_flex_file = NamedTemporaryFile(
             "w", suffix=".pdbqt", delete=False
         )
-        self._receptor_file  = NamedTemporaryFile(
-            "w", suffix=".pdbqt", delete=False
-        )
-        self._receptor_flex_file  = NamedTemporaryFile(
-            "w", suffix=".pdbqt", delete=False
-        )
-        self._out_file  = NamedTemporaryFile(
-            "r", suffix=".pdbqt", delete=False
-        )
-    
+        self._out_file = NamedTemporaryFile("r", suffix=".pdbqt", delete=False)
+
     @requires_state(AppState.CREATED)
     def set_seed(self, seed):
         """
@@ -114,7 +108,7 @@ class VinaApp(LocalApp):
             The seed for the random number generator.
         """
         self._seed = seed
-    
+
     @requires_state(AppState.CREATED)
     def set_exhaustiveness(self, exhaustiveness):
         """
@@ -131,7 +125,7 @@ class VinaApp(LocalApp):
             Must be greater than 0.
         """
         self._exhaustiveness = exhaustiveness
-    
+
     @requires_state(AppState.CREATED)
     def set_max_number_of_models(self, number):
         """
@@ -147,7 +141,7 @@ class VinaApp(LocalApp):
             The maximum number of generated modes/models.
         """
         self._number = number
-    
+
     @requires_state(AppState.CREATED)
     def set_energy_range(self, energy_range):
         """
@@ -168,34 +162,31 @@ class VinaApp(LocalApp):
         # Use different atom ID ranges for atoms in ligand and receptor
         # for unambiguous assignment, if the receptor contains flexible
         # residues
-        self._ligand.set_annotation("atom_id", np.arange(
-            1,
-            self._ligand.array_length() + 1
-        ))
-        self._receptor.set_annotation("atom_id", np.arange(
-            self._ligand.array_length() + 1,
-            self._ligand.array_length() + self._receptor.array_length() + 1
-        ))
+        self._ligand.set_annotation(
+            "atom_id", np.arange(1, self._ligand.array_length() + 1)
+        )
+        self._receptor.set_annotation(
+            "atom_id",
+            np.arange(
+                self._ligand.array_length() + 1,
+                self._ligand.array_length() + self._receptor.array_length() + 1,
+            ),
+        )
 
         ligand_file = PDBQTFile()
-        # Contains 'true' entries for all atoms that have not been 
+        # Contains 'true' entries for all atoms that have not been
         # removed from ligand
         self._ligand_mask = ligand_file.set_structure(
-            self._ligand,
-            rotatable_bonds="all"
+            self._ligand, rotatable_bonds="all"
         )
         ligand_file.write(self._ligand_file)
         self._ligand_file.flush()
-        
+
         if self._is_flexible:
-            self._rigid_mask = np.ones(
-                self._receptor.array_length(), dtype=bool
-            )
-            # Contains 'true' entries for all atoms that have not been 
+            self._rigid_mask = np.ones(self._receptor.array_length(), dtype=bool)
+            # Contains 'true' entries for all atoms that have not been
             # removed from receptor in flexible side chains
-            self._receptor_mask = np.zeros(
-                self._receptor.array_length(), dtype=bool
-            )
+            self._receptor_mask = np.zeros(self._receptor.array_length(), dtype=bool)
             for i, start in enumerate(self._flex_res_starts):
                 flex_mask, rigid_mask, root = self._get_flexible_residue(start)
                 self._rigid_mask &= rigid_mask
@@ -207,7 +198,7 @@ class VinaApp(LocalApp):
                     self._receptor[flex_mask],
                     rotatable_bonds="all",
                     root=root_in_flex_residue,
-                    include_torsdof=False
+                    include_torsdof=False,
                 )
                 # Enclose each flexible residue
                 # with BEGIN_RES and END_RES
@@ -220,7 +211,7 @@ class VinaApp(LocalApp):
             receptor_file.set_structure(
                 self._receptor[self._rigid_mask],
                 rotatable_bonds=None,
-                include_torsdof=False
+                include_torsdof=False,
             )
             receptor_file.write(self._receptor_file)
             self._receptor_file.flush()
@@ -228,23 +219,30 @@ class VinaApp(LocalApp):
         else:
             receptor_file = PDBQTFile()
             receptor_file.set_structure(
-                self._receptor,
-                rotatable_bonds=None,
-                include_torsdof=False
+                self._receptor, rotatable_bonds=None, include_torsdof=False
             )
             receptor_file.write(self._receptor_file)
             self._receptor_file.flush()
 
         arguments = [
-            "--ligand", self._ligand_file.name,
-            "--receptor", self._receptor_file.name,
-            "--out", self._out_file.name,
-            "--center_x", f"{self._center[0]:.3f}",
-            "--center_y", f"{self._center[1]:.3f}",
-            "--center_z", f"{self._center[2]:.3f}",
-            "--size_x", f"{self._size[0]:.3f}",
-            "--size_y", f"{self._size[1]:.3f}",
-            "--size_z", f"{self._size[2]:.3f}",
+            "--ligand",
+            self._ligand_file.name,
+            "--receptor",
+            self._receptor_file.name,
+            "--out",
+            self._out_file.name,
+            "--center_x",
+            f"{self._center[0]:.3f}",
+            "--center_y",
+            f"{self._center[1]:.3f}",
+            "--center_z",
+            f"{self._center[2]:.3f}",
+            "--size_x",
+            f"{self._size[0]:.3f}",
+            "--size_y",
+            f"{self._size[1]:.3f}",
+            "--size_z",
+            f"{self._size[2]:.3f}",
         ]
         if self._seed is not None:
             arguments.extend(["--seed", str(self._seed)])
@@ -259,32 +257,32 @@ class VinaApp(LocalApp):
 
         self.set_arguments(arguments)
         super().run()
-    
+
     def evaluate(self):
         super().evaluate()
         out_file = PDBQTFile.read(self._out_file)
-        
+
         models = out_file.get_structure()
 
         n_ligand_atoms = np.count_nonzero(self._ligand_mask)
         self._ligand_models = models[..., :n_ligand_atoms]
         self._flex_models = models[..., n_ligand_atoms:]
         self._n_models = models.stack_depth()
-        
+
         remarks = out_file.get_remarks()
         self._energies = np.array(
             # VINA RESULT:      -5.8      0.000      0.000
             #                     ^
             [float(remark[12:].split()[0]) for remark in remarks]
         )
-    
+
     def clean_up(self):
         super().clean_up()
         cleanup_tempfile(self._ligand_file)
         cleanup_tempfile(self._receptor_file)
         cleanup_tempfile(self._receptor_flex_file)
         cleanup_tempfile(self._out_file)
-    
+
     @requires_state(AppState.JOINED)
     def get_energies(self):
         """
@@ -302,7 +300,7 @@ class VinaApp(LocalApp):
     @requires_state(AppState.JOINED)
     def get_ligand_models(self):
         """
-        Get the ligand structure with the conformations for each 
+        Get the ligand structure with the conformations for each
         generated binding mode.
 
         Returns
@@ -312,7 +310,7 @@ class VinaApp(LocalApp):
             Each model corresponds to one binding mode.
             The models are sorted from best to worst predicted binding
             affinity.
-        
+
         Notes
         -----
         The returned structure may contain less atoms than the input
@@ -338,12 +336,11 @@ class VinaApp(LocalApp):
             atoms are set to *NaN*.
         """
         coord = np.full(
-            (self._n_models, self._ligand.array_length(), 3),
-            np.nan, dtype=np.float32
+            (self._n_models, self._ligand.array_length(), 3), np.nan, dtype=np.float32
         )
         coord[:, self._ligand_mask] = self._ligand_models.coord
         return coord
-    
+
     @requires_state(AppState.JOINED)
     def get_flexible_residue_models(self):
         """
@@ -360,7 +357,7 @@ class VinaApp(LocalApp):
             Each model corresponds to one binding mode.
             The models are sorted from best to worst predicted binding
             affinity.
-        
+
         Notes
         -----
         The returned structure may contain less atoms than the input
@@ -385,7 +382,7 @@ class VinaApp(LocalApp):
             affinity.
             Missing coordinates due to the removed nonpolar hydrogen
             atoms from flexible side chains are set to *NaN*.
-        
+
         Notes
         -----
         The output is only meaningful, if flexible side chains were
@@ -394,8 +391,7 @@ class VinaApp(LocalApp):
         of the input receptor coordinates.
         """
         coord = np.repeat(
-            self._receptor.coord[np.newaxis, ...],
-            repeats=self._n_models, axis=0
+            self._receptor.coord[np.newaxis, ...], repeats=self._n_models, axis=0
         )
         if self._is_flexible:
             # Replace original coordinates with modeled coordinates
@@ -424,16 +420,16 @@ class VinaApp(LocalApp):
         root_connect_indices, _ = self._receptor.bonds.get_bonds(root_index)
         connected_index = None
         try:
-            connected_index = root_connect_indices[np.isin(
-                self._receptor.atom_name[root_connect_indices], ("CB",)
-            )][0]
+            connected_index = root_connect_indices[
+                np.isin(self._receptor.atom_name[root_connect_indices], ("CB",))
+            ][0]
         except IndexError:
             # Residue has no appropriate connection (e.g. in glycine)
             # -> There is no atom in the flexible side chain
             flex_mask = np.zeros(self._receptor.array_length(), dtype=bool)
             rigid_mask = np.ones(self._receptor.array_length(), dtype=bool)
             return flex_mask, rigid_mask, root_index
-        
+
         # Remove the root bond from the bond list
         # to find the atoms involved in the flexible part
         bonds = self._receptor.bonds.copy()
@@ -442,7 +438,7 @@ class VinaApp(LocalApp):
         if root_index in flexible_indices:
             raise BadStructureError(
                 "There are multiple connections between the flexible and "
-                "rigid part, maybe a cyclic residue like proline was selected" 
+                "rigid part, maybe a cyclic residue like proline was selected"
             )
 
         flex_mask = np.zeros(self._receptor.array_length(), dtype=bool)
@@ -452,7 +448,6 @@ class VinaApp(LocalApp):
         flex_mask[root_index] = True
 
         return flex_mask, rigid_mask, root_index
-    
 
     @staticmethod
     def dock(ligand, receptor, center, size, flexible=None, bin_path="vina"):

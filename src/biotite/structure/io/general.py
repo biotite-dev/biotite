@@ -12,8 +12,8 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["load_structure", "save_structure"]
 
 import datetime
-import os.path
 import io
+import os.path
 from ..atoms import AtomArrayStack
 
 
@@ -65,56 +65,59 @@ def load_structure(file_path, template=None, **kwargs):
     match suffix:
         case ".pdb":
             from .pdb import PDBFile
+
             file = PDBFile.read(file_path)
             array = file.get_structure(**kwargs)
             return _as_single_model_if_possible(array)
         case ".pdbqt":
             from .pdbqt import PDBQTFile
+
             file = PDBQTFile.read(file_path)
             array = file.get_structure(**kwargs)
             return _as_single_model_if_possible(array)
         case ".cif" | ".pdbx":
             from .pdbx import CIFFile, get_structure
+
             file = CIFFile.read(file_path)
             array = get_structure(file, **kwargs)
             return _as_single_model_if_possible(array)
         case ".bcif":
             from .pdbx import BinaryCIFFile, get_structure
+
             file = BinaryCIFFile.read(file_path)
             array = get_structure(file, **kwargs)
             return _as_single_model_if_possible(array)
         case ".gro":
             from .gro import GROFile
+
             file = GROFile.read(file_path)
             array = file.get_structure(**kwargs)
             return _as_single_model_if_possible(array)
         case ".mol":
             from .mol import MOLFile
+
             file = MOLFile.read(file_path)
             array = file.get_structure(**kwargs)
             # MOL and SDF files only contain a single model
             return array
         case ".sdf" | ".sd":
             from .mol import SDFile, get_structure
+
             file = SDFile.read(file_path)
             array = get_structure(file, **kwargs)
             return array
         case ".trr" | ".xtc" | ".tng" | ".dcd" | ".netcdf":
             if template is None:
-                raise TypeError(
-                    "Template must be specified for trajectory files"
-                )
+                raise TypeError("Template must be specified for trajectory files")
             # Filter template for atom ids, if an unfiltered template
-            if (
-                "atom_i" in kwargs
-                and template.shape[-1] != len(kwargs["atom_i"])
-            ):
+            if "atom_i" in kwargs and template.shape[-1] != len(kwargs["atom_i"]):
                 template = template[..., kwargs["atom_i"]]
-            from .trr import TRRFile
-            from .xtc import XTCFile
-            from .tng import TNGFile
             from .dcd import DCDFile
             from .netcdf import NetCDFFile
+            from .tng import TNGFile
+            from .trr import TRRFile
+            from .xtc import XTCFile
+
             if suffix == ".trr":
                 traj_file_cls = TRRFile
             if suffix == ".xtc":
@@ -160,48 +163,56 @@ def save_structure(file_path, array, **kwargs):
     match suffix:
         case ".pdb":
             from .pdb import PDBFile
+
             file = PDBFile()
             file.set_structure(array, **kwargs)
             file.write(file_path)
         case ".pdbqt":
             from .pdbqt import PDBQTFile
+
             file = PDBQTFile()
             file.set_structure(array, **kwargs)
             file.write(file_path)
         case ".cif" | ".pdbx":
             from .pdbx import CIFFile, set_structure
+
             file = CIFFile()
             set_structure(file, array, **kwargs)
             file.write(file_path)
         case ".bcif":
             from .pdbx import BinaryCIFFile, set_structure
+
             file = BinaryCIFFile()
             set_structure(file, array, **kwargs)
             file.write(file_path)
         case ".gro":
             from .gro import GROFile
+
             file = GROFile()
             file.set_structure(array, **kwargs)
             file.write(file_path)
         case ".mol":
             from .mol import MOLFile
+
             file = MOLFile()
             file.set_structure(array, **kwargs)
             file.header = _mol_header()
             file.write(file_path)
         case ".sdf" | ".sd":
             from .mol import SDFile, SDRecord, set_structure
+
             record = SDRecord()
             record.set_structure(array, **kwargs)
             record.header = _mol_header()
             file = SDFile({"Molecule": record})
             file.write(file_path)
         case ".trr" | ".xtc" | ".tng" | ".dcd" | ".netcdf":
-            from .trr import TRRFile
-            from .xtc import XTCFile
-            from .tng import TNGFile
             from .dcd import DCDFile
             from .netcdf import NetCDFFile
+            from .tng import TNGFile
+            from .trr import TRRFile
+            from .xtc import XTCFile
+
             if suffix == ".trr":
                 traj_file_cls = TRRFile
             if suffix == ".xtc":
@@ -229,6 +240,7 @@ def _as_single_model_if_possible(atoms):
 
 def _mol_header():
     from .mol import Header
+
     return Header(
         mol_name="Molecule",
         program="Biotite",

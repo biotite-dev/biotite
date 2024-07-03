@@ -8,7 +8,6 @@ __all__ = ["vdw_radius_protor", "vdw_radius_single"]
 
 from .bonds import bonds_in_residue
 
-
 # fmt: off
 # Contains tuples for the different ProtOr groups:
 # Tuple contains: element, valency, H count
@@ -115,8 +114,7 @@ def vdw_radius_protor(res_name, atom_name):
         # Use cached radii for the residue, if already calculated
         if atom_name not in _protor_radii[res_name]:
             raise KeyError(
-                f"Residue '{res_name}' does not contain an atom named "
-                f"'{atom_name}'"
+                f"Residue '{res_name}' does not contain an atom named " f"'{atom_name}'"
             )
         return _protor_radii[res_name].get(atom_name)
     else:
@@ -125,6 +123,7 @@ def vdw_radius_protor(res_name, atom_name):
         # Recursive call, but this time the radii for the given residue
         # are cached
         return vdw_radius_protor(res_name, atom_name)
+
 
 def _calculate_protor_radii(res_name):
     """
@@ -161,8 +160,7 @@ def _calculate_protor_radii(res_name):
                 group[2] += 1
             groups[main_atom] = group
     # Get radii based on ProtOr groups
-    radii = {atom : _PROTOR_RADII.get(tuple(group))
-             for atom, group in groups.items()}
+    radii = {atom: _PROTOR_RADII.get(tuple(group)) for atom, group in groups.items()}
     return radii
 
 

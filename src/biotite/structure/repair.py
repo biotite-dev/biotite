@@ -10,12 +10,12 @@ __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["create_continuous_res_ids", "infer_elements", "create_atom_names"]
 
-from collections import Counter
 import warnings
+from collections import Counter
 import numpy as np
 from .atoms import AtomArray, AtomArrayStack
-from .residues import get_residue_starts
 from .chains import get_chain_starts
+from .residues import get_residue_starts
 
 
 def create_continuous_res_ids(atoms, restart_each_chain=True):
@@ -151,18 +151,131 @@ def create_atom_names(atoms):
     return atom_names
 
 
-_elements = [elem.upper() for elem in
-["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg",
-"Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe",
-"Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr", "Rb", "Sr", "Y",
-"Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te",
-"I", "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb",
-"Dy", "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt",
-"Au", "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", "Pa",
-"U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", "Md", "No", "Lr", "Rf",
-"Db", "Sg", "Bh", "Hs", "Mt", "Ds", "Rg", "Cn", "Nh", "Fl", "Mc", "Lv", "Ts",
-"Og"]
+_elements = [
+    elem.upper()
+    for elem in [
+        "H",
+        "He",
+        "Li",
+        "Be",
+        "B",
+        "C",
+        "N",
+        "O",
+        "F",
+        "Ne",
+        "Na",
+        "Mg",
+        "Al",
+        "Si",
+        "P",
+        "S",
+        "Cl",
+        "Ar",
+        "K",
+        "Ca",
+        "Sc",
+        "Ti",
+        "V",
+        "Cr",
+        "Mn",
+        "Fe",
+        "Co",
+        "Ni",
+        "Cu",
+        "Zn",
+        "Ga",
+        "Ge",
+        "As",
+        "Se",
+        "Br",
+        "Kr",
+        "Rb",
+        "Sr",
+        "Y",
+        "Zr",
+        "Nb",
+        "Mo",
+        "Tc",
+        "Ru",
+        "Rh",
+        "Pd",
+        "Ag",
+        "Cd",
+        "In",
+        "Sn",
+        "Sb",
+        "Te",
+        "I",
+        "Xe",
+        "Cs",
+        "Ba",
+        "La",
+        "Ce",
+        "Pr",
+        "Nd",
+        "Pm",
+        "Sm",
+        "Eu",
+        "Gd",
+        "Tb",
+        "Dy",
+        "Ho",
+        "Er",
+        "Tm",
+        "Yb",
+        "Lu",
+        "Hf",
+        "Ta",
+        "W",
+        "Re",
+        "Os",
+        "Ir",
+        "Pt",
+        "Au",
+        "Hg",
+        "Tl",
+        "Pb",
+        "Bi",
+        "Po",
+        "At",
+        "Rn",
+        "Fr",
+        "Ra",
+        "Ac",
+        "Th",
+        "Pa",
+        "U",
+        "Np",
+        "Pu",
+        "Am",
+        "Cm",
+        "Bk",
+        "Cf",
+        "Es",
+        "Fm",
+        "Md",
+        "No",
+        "Lr",
+        "Rf",
+        "Db",
+        "Sg",
+        "Bh",
+        "Hs",
+        "Mt",
+        "Ds",
+        "Rg",
+        "Cn",
+        "Nh",
+        "Fl",
+        "Mc",
+        "Lv",
+        "Ts",
+        "Og",
+    ]
 ]
+
+
 def _guess_element(atom_name):
     # remove digits (1H -> H)
     elem = "".join([i for i in atom_name if not i.isdigit()])
@@ -171,9 +284,13 @@ def _guess_element(atom_name):
         return ""
 
     # Some often used elements for biomolecules
-    if elem.startswith("C") or elem.startswith("N") or \
-        elem.startswith("O") or elem.startswith("S") or \
-        elem.startswith("H"):
+    if (
+        elem.startswith("C")
+        or elem.startswith("N")
+        or elem.startswith("O")
+        or elem.startswith("S")
+        or elem.startswith("H")
+    ):
         return elem[0]
 
     # Exactly match element abbreviations

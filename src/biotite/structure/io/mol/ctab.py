@@ -12,13 +12,13 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["read_structure_from_ctab", "write_structure_to_ctab"]
 
 import itertools
-import warnings
 import shlex
+import warnings
 import numpy as np
 from ....file import InvalidFileError
-from ...error import BadStructureError
 from ...atoms import AtomArray, AtomArrayStack
 from ...bonds import BondList, BondType
+from ...error import BadStructureError
 
 BOND_TYPE_MAPPING = {
     1: BondType.SINGLE,
@@ -84,8 +84,7 @@ def read_structure_from_ctab(ctab_lines):
             raise InvalidFileError(f"Unknown CTAB version '{unkown_version}'")
 
 
-def write_structure_to_ctab(atoms, default_bond_type=BondType.ANY,
-                            version=None):
+def write_structure_to_ctab(atoms, default_bond_type=BondType.ANY, version=None):
     """
     Convert an :class:`AtomArray` into a
     *MDL* connection table (Ctab).
@@ -124,8 +123,7 @@ def write_structure_to_ctab(atoms, default_bond_type=BondType.ANY,
     """
     if isinstance(atoms, AtomArrayStack):
         raise TypeError(
-            "An 'AtomArrayStack' was given, "
-            "but only a single model can be written"
+            "An 'AtomArrayStack' was given, " "but only a single model can be written"
         )
     if atoms.bonds is None:
         raise BadStructureError("Input AtomArray has no associated BondList")
@@ -134,9 +132,7 @@ def write_structure_to_ctab(atoms, default_bond_type=BondType.ANY,
 
     match version:
         case None:
-            if _is_v2000_compatible(
-                atoms.array_length(), atoms.bonds.get_bond_count()
-            ):
+            if _is_v2000_compatible(atoms.array_length(), atoms.bonds.get_bond_count()):
                 return _write_structure_to_ctab_v2000(atoms, default_bond_type)
             else:
                 return _write_structure_to_ctab_v3000(atoms, default_bond_type)
@@ -160,7 +156,8 @@ def _read_structure_from_ctab_v2000(ctab_lines):
     atom_lines = ctab_lines[1 : 1 + n_atoms]
     bond_lines = ctab_lines[1 + n_atoms : 1 + n_atoms + n_bonds]
     charge_lines = [
-        line for line in ctab_lines[1 + n_atoms + n_bonds:]
+        line
+        for line in ctab_lines[1 + n_atoms + n_bonds :]
         if line.startswith("M  CHG")
     ]
 
@@ -208,10 +205,9 @@ def _read_structure_from_ctab_v2000(ctab_lines):
 
     return atoms
 
+
 def _read_structure_from_ctab_v3000(ctab_lines):
-    v30_lines = [
-        line[6:].strip() for line in ctab_lines if line.startswith("M  V30")
-    ]
+    v30_lines = [line[6:].strip() for line in ctab_lines if line.startswith("M  V30")]
 
     atom_lines = _get_block_v3000(v30_lines, "ATOM")
     if len(atom_lines) == 0:
@@ -262,15 +258,19 @@ def _read_structure_from_ctab_v3000(ctab_lines):
 
     return atoms
 
+
 def _get_version(counts_line):
     return counts_line[33:39].strip()
+
 
 def _is_v2000_compatible(n_atoms, n_bonds):
     # The format uses a maximum of 3 digits for the atom and bond count
     return n_atoms < 1000 and n_bonds < 1000
 
+
 def _get_counts_v2000(counts_line):
     return int(counts_line[0:3]), int(counts_line[3:6])
+
 
 def _get_block_v3000(v30_lines, block_name):
     block_lines = []
@@ -282,12 +282,11 @@ def _get_block_v3000(v30_lines, block_name):
             if in_block:
                 return block_lines
             else:
-                raise InvalidFileError(
-                    f"Block '{block_name}' ended before it began"
-                )
+                raise InvalidFileError(f"Block '{block_name}' ended before it began")
         elif in_block:
             block_lines.append(line)
     return block_lines
+
 
 def create_property_dict_v3000(property_strings):
     properties = {}
@@ -315,7 +314,8 @@ def _write_structure_to_ctab_v2000(atoms, default_bond_type):
         f" {atoms.element[i].capitalize():3}"
         f"{0:>2}"  # Mass difference -> unused
         f"{CHARGE_MAPPING_REV.get(charge[i], 0):>3d}"
-        + f"{0:>3d}" * 10  # More unused fields
+        + f"{0:>3d}"
+        * 10  # More unused fields
         for i in range(atoms.array_length())
     ]
 
@@ -323,7 +323,8 @@ def _write_structure_to_ctab_v2000(atoms, default_bond_type):
     bond_lines = [
         f"{i+1:>3d}{j+1:>3d}"
         f"{BOND_TYPE_MAPPING_REV.get(bond_type, default_bond_value):>3d}"
-        + f"{0:>3d}" * 4
+        + f"{0:>3d}"
+        * 4
         for i, j, bond_type in atoms.bonds.as_array()
     ]
 
@@ -332,8 +333,7 @@ def _write_structure_to_ctab_v2000(atoms, default_bond_type):
     charge_lines = []
     # Each `M  CHG` line can contain up to 8 charges
     for batch in _batched(
-        [(atom_i, c) for atom_i, c in enumerate(charge) if c != 0],
-        N_CHARGES_PER_LINE
+        [(atom_i, c) for atom_i, c in enumerate(charge) if c != 0], N_CHARGES_PER_LINE
     ):
         charge_lines.append(
             f"M  CHG{len(batch):>3d}"
@@ -349,9 +349,7 @@ def _write_structure_to_ctab_v3000(atoms, default_bond_type):
     except AttributeError:
         charges = np.zeros(atoms.array_length(), dtype=int)
 
-    counts_line = (
-        f"COUNTS {atoms.array_length()} {atoms.bonds.get_bond_count()} 0 0 0"
-    )
+    counts_line = f"COUNTS {atoms.array_length()} {atoms.bonds.get_bond_count()} 0 0 0"
 
     atom_lines = [
         f"{i + 1}"
@@ -375,19 +373,20 @@ def _write_structure_to_ctab_v3000(atoms, default_bond_type):
     ]
 
     lines = (
-        ["BEGIN CTAB"] +
-        [counts_line] +
-        ["BEGIN ATOM"] +
-        atom_lines +
-        ["END ATOM"] +
-        ["BEGIN BOND"] +
-        bond_lines +
-        ["END BOND"] +
-        ["END CTAB"]
+        ["BEGIN CTAB"]
+        + [counts_line]
+        + ["BEGIN ATOM"]
+        + atom_lines
+        + ["END ATOM"]
+        + ["BEGIN BOND"]
+        + bond_lines
+        + ["END BOND"]
+        + ["END CTAB"]
     )
     # Mark lines as V3000 CTAB
     lines = ["M  V30 " + line for line in lines]
     return [V2000_COMPATIBILITY_LINE] + lines + ["M  END"]
+
 
 def _to_property(charge):
     if charge == 0:
@@ -395,11 +394,13 @@ def _to_property(charge):
     else:
         return f"CHG={charge}"
 
+
 def _quote(string):
     if " " in string or len(string) == 0:
         return f'"{string}"'
     else:
         return string
+
 
 def _batched(iterable, n):
     """

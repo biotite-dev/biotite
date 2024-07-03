@@ -12,15 +12,16 @@ __all__ = ["rdf"]
 
 from numbers import Integral
 import numpy as np
-from .atoms import Atom, AtomArray, stack, array, coord, AtomArrayStack
+from .atoms import AtomArray, coord, stack
 from .box import box_volume
+from .celllist import CellList
 from .geometry import displacement
 from .util import vector_dot
-from .celllist import CellList
 
 
-def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
-        periodic=False):
+def rdf(
+    center, atoms, selection=None, interval=(0, 10), bins=100, box=None, periodic=False
+):
     r"""
     Compute the radial distribution function *g(r)* (RDF) for one or
     multiple given central positions based on a given system of
@@ -155,7 +156,7 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
     Find the radius for the first solvation shell.
     In this simple case, the density peak is identified by finding
     the maximum of the function.
-    
+
     >>> peak_position = np.argmax(g_r)
     >>> print(f"{bins[peak_position]/10:.2f} nm")
     0.29 nm
@@ -165,9 +166,9 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         atoms = stack([atoms])
     if selection is not None:
         atoms = atoms[..., selection]
-    
+
     atom_coord = atoms.coord
-    
+
     if box is None:
         if atoms.box is None:
             raise ValueError("A box must be supplied")
@@ -175,17 +176,15 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
             box = atoms.box
     elif box.ndim == 2 and atoms.stack_depth() == 1:
         box = box[np.newaxis, :, :]
-    
+
     center = coord(center)
     if center.ndim == 1:
         center = center.reshape((1, 1) + center.shape)
     elif center.ndim == 2:
         center = center.reshape((1,) + center.shape)
-    
+
     if box.shape[0] != center.shape[0] or box.shape[0] != atom_coord.shape[0]:
-        raise ValueError(
-            "Center, box, and atoms must have the same model count"
-        )
+        raise ValueError("Center, box, and atoms must have the same model count")
 
     # Calculate distance histogram
     edges = _calculate_edges(interval, bins)
@@ -209,17 +208,20 @@ def rdf(center, atoms, selection=None, interval=(0, 10), bins=100, box=None,
         for j in range(center.shape[1]):
             dist_box = box[i] if periodic else None
             # Calculate squared distances
-            disp.append(displacement(
-                center[i,j], atom_coord[i, near_atom_mask[j]], box=dist_box
-            ))
+            disp.append(
+                displacement(
+                    center[i, j], atom_coord[i, near_atom_mask[j]], box=dist_box
+                )
+            )
     # Make one array from multiple arrays with different length
     disp = np.concatenate(disp)
     sq_distances = vector_dot(disp, disp)
     hist, _ = np.histogram(sq_distances, bins=sq_edges)
 
     # Normalize with average particle density (N/V) in each bin
-    bin_volume =   (4 / 3 * np.pi * np.power(edges[1: ], 3)) \
-                 - (4 / 3 * np.pi * np.power(edges[:-1], 3))
+    bin_volume = (4 / 3 * np.pi * np.power(edges[1:], 3)) - (
+        4 / 3 * np.pi * np.power(edges[:-1], 3)
+    )
     n_frames = len(atoms)
     volume = box_volume(box).mean()
     density = atoms.array_length() / volume
@@ -237,7 +239,7 @@ def _calculate_edges(interval, bins):
     if isinstance(bins, Integral):
         if bins < 1:
             raise ValueError("At least one bin is required")
-        return np.linspace(*interval, bins+1)
+        return np.linspace(*interval, bins + 1)
     else:
         # 'bins' contains edges
         return np.array(bins, dtype=float)

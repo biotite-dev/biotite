@@ -8,23 +8,33 @@ This module provides functions for base pair identification.
 
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
-__all__ = ["base_pairs", "map_nucleotide", "base_stacking", "base_pairs_edge",
-           "Edge", "base_pairs_glycosidic_bond", "GlycosidicBond"]
+__all__ = [
+    "base_pairs",
+    "map_nucleotide",
+    "base_stacking",
+    "base_pairs_edge",
+    "Edge",
+    "base_pairs_glycosidic_bond",
+    "GlycosidicBond",
+]
 
-import numpy as np
 import warnings
 from enum import IntEnum
+import numpy as np
 from .atoms import Atom, array
-from .superimpose import superimpose
-from .filter import filter_nucleotides
 from .celllist import CellList
-from .hbond import hbond
-from .error import IncompleteStructureWarning, UnexpectedStructureWarning, \
-    BadStructureError
-from .util import distance, norm_vector
-from .residues import get_residue_starts_for, get_residue_masks
-from .info.standardize import standardize_order
 from .compare import rmsd
+from .error import (
+    BadStructureError,
+    IncompleteStructureWarning,
+    UnexpectedStructureWarning,
+)
+from .filter import filter_nucleotides
+from .hbond import hbond
+from .info.standardize import standardize_order
+from .residues import get_residue_masks, get_residue_starts_for
+from .superimpose import superimpose
+from .util import distance, norm_vector
 
 
 def _get_std_adenine():
@@ -43,31 +53,29 @@ def _get_std_adenine():
         ring center, :class:`ndarray` containing the coordinates of the
         imidazole ring center
     """
-    atom1 =  Atom([-1.291, 4.498, 0.000], atom_name="N9",  res_name="A")
-    atom2 =  Atom([0.024, 4.897, 0.000],  atom_name="C8",  res_name="A")
-    atom3 =  Atom([0.877, 3.902, 0.000],  atom_name="N7",  res_name="A")
-    atom4 =  Atom([0.071, 2.771, 0.000],  atom_name="C5",  res_name="A")
-    atom5 =  Atom([0.369, 1.398, 0.000],  atom_name="C6",  res_name="A")
-    atom6 =  Atom([1.611, 0.909, 0.000],  atom_name="N6",  res_name="A")
-    atom7 =  Atom([-0.668, 0.532, 0.000], atom_name="N1",  res_name="A")
-    atom8 =  Atom([-1.912, 1.023, 0.000], atom_name="C2",  res_name="A")
-    atom9 =  Atom([-2.320, 2.290, 0.000], atom_name="N3",  res_name="A")
-    atom10 = Atom([-1.267, 3.124, 0.000], atom_name="C4",  res_name="A")
+    atom1 = Atom([-1.291, 4.498, 0.000], atom_name="N9", res_name="A")
+    atom2 = Atom([0.024, 4.897, 0.000], atom_name="C8", res_name="A")
+    atom3 = Atom([0.877, 3.902, 0.000], atom_name="N7", res_name="A")
+    atom4 = Atom([0.071, 2.771, 0.000], atom_name="C5", res_name="A")
+    atom5 = Atom([0.369, 1.398, 0.000], atom_name="C6", res_name="A")
+    atom6 = Atom([1.611, 0.909, 0.000], atom_name="N6", res_name="A")
+    atom7 = Atom([-0.668, 0.532, 0.000], atom_name="N1", res_name="A")
+    atom8 = Atom([-1.912, 1.023, 0.000], atom_name="C2", res_name="A")
+    atom9 = Atom([-2.320, 2.290, 0.000], atom_name="N3", res_name="A")
+    atom10 = Atom([-1.267, 3.124, 0.000], atom_name="C4", res_name="A")
     adenine = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8,
-         atom9, atom10]
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10]
     )
 
     # Get the midpoint between the N1 and C4 atoms
     midpoint = np.mean([atom7.coord, atom10.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring centers
     pyrimidine_center = np.mean(
-        [atom4.coord, atom5.coord, atom7.coord,
-         atom8.coord, atom9.coord, atom10.coord], axis=-2
+        [atom4.coord, atom5.coord, atom7.coord, atom8.coord, atom9.coord, atom10.coord],
+        axis=-2,
     )
     imidazole_center = np.mean(
-        [atom1.coord, atom2.coord, atom3.coord,
-         atom4.coord, atom10.coord], axis=-2
+        [atom1.coord, atom2.coord, atom3.coord, atom4.coord, atom10.coord], axis=-2
     )
 
     return adenine, (midpoint, pyrimidine_center, imidazole_center)
@@ -75,37 +83,35 @@ def _get_std_adenine():
 
 def _get_std_cytosine():
     """
-    Get standard base variables for cytosine.
+     Get standard base variables for cytosine.
 
-    Returns
-    -------
-   standard_base : AtomArray
-        Standard coordinates nomenclature of the cytosine base as
-        :class:`AtomArray` with nomenclature of PDB File Format V3
-    coordinates : tuple (ndarray, ndarray, dtype=float)
-        :class:`ndarray` containing the center according to the SCHNaP-
-        paper referenced in the function ``base_pairs``,
-        :class:`ndarray` containing the coordinates of the pyrimidine
-        ring center
+     Returns
+     -------
+    standard_base : AtomArray
+         Standard coordinates nomenclature of the cytosine base as
+         :class:`AtomArray` with nomenclature of PDB File Format V3
+     coordinates : tuple (ndarray, ndarray, dtype=float)
+         :class:`ndarray` containing the center according to the SCHNaP-
+         paper referenced in the function ``base_pairs``,
+         :class:`ndarray` containing the coordinates of the pyrimidine
+         ring center
     """
-    atom1 = Atom([-1.285, 4.542, 0.000], atom_name="N1",  res_name="C")
-    atom2 = Atom([-1.472, 3.158, 0.000], atom_name="C2",  res_name="C")
-    atom3 = Atom([-2.628, 2.709, 0.000], atom_name="O2",  res_name="C")
-    atom4 = Atom([-0.391, 2.344, 0.000], atom_name="N3",  res_name="C")
-    atom5 = Atom([0.837, 2.868, 0.000],  atom_name="C4",  res_name="C")
-    atom6 = Atom([1.875, 2.027, 0.000],  atom_name="N4",  res_name="C")
-    atom7 = Atom([1.056, 4.275, 0.000],  atom_name="C5",  res_name="C")
-    atom8 = Atom([-0.023, 5.068, 0.000], atom_name="C6",  res_name="C")
-    cytosine = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8]
-    )
+    atom1 = Atom([-1.285, 4.542, 0.000], atom_name="N1", res_name="C")
+    atom2 = Atom([-1.472, 3.158, 0.000], atom_name="C2", res_name="C")
+    atom3 = Atom([-2.628, 2.709, 0.000], atom_name="O2", res_name="C")
+    atom4 = Atom([-0.391, 2.344, 0.000], atom_name="N3", res_name="C")
+    atom5 = Atom([0.837, 2.868, 0.000], atom_name="C4", res_name="C")
+    atom6 = Atom([1.875, 2.027, 0.000], atom_name="N4", res_name="C")
+    atom7 = Atom([1.056, 4.275, 0.000], atom_name="C5", res_name="C")
+    atom8 = Atom([-0.023, 5.068, 0.000], atom_name="C6", res_name="C")
+    cytosine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8])
 
     # Get the midpoint between the N3 and C6 atoms
     midpoint = np.mean([atom4.coord, atom8.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring center
     pyrimidine_center = np.mean(
-        [atom1.coord, atom2.coord, atom4.coord,
-         atom5.coord, atom7.coord, atom8.coord], axis=-2
+        [atom1.coord, atom2.coord, atom4.coord, atom5.coord, atom7.coord, atom8.coord],
+        axis=-2,
     )
 
     return cytosine, (midpoint, pyrimidine_center)
@@ -127,32 +133,37 @@ def _get_std_guanine():
         ring center, :class:`ndarray` containing the coordinates of the
         imidazole ring center
     """
-    atom1 =  Atom([-1.289, 4.551, 0.000],  atom_name="N9",  res_name="G")
-    atom2 =  Atom([0.023, 4.962, 0.000],   atom_name="C8",  res_name="G")
-    atom3 =  Atom([0.870, 3.969, 0.000],   atom_name="N7",  res_name="G")
-    atom4 =  Atom([0.071, 2.833, 0.000],   atom_name="C5",  res_name="G")
-    atom5 =  Atom([0.424, 1.460, 0.000],   atom_name="C6",  res_name="G")
-    atom6 =  Atom([1.554, 0.955, 0.000],   atom_name="O6",  res_name="G")
-    atom7 =  Atom([-0.700, 0.641, 0.000],  atom_name="N1",  res_name="G")
-    atom8 =  Atom([-1.999, 1.087, 0.000],  atom_name="C2",  res_name="G")
-    atom9 =  Atom([-2.949, 0.139, -0.001], atom_name="N2",  res_name="G")
-    atom10 = Atom([-2.342, 2.364, 0.001],  atom_name="N3",  res_name="G")
-    atom11 = Atom([-1.265, 3.177, 0.000],  atom_name="C4",  res_name="G")
+    atom1 = Atom([-1.289, 4.551, 0.000], atom_name="N9", res_name="G")
+    atom2 = Atom([0.023, 4.962, 0.000], atom_name="C8", res_name="G")
+    atom3 = Atom([0.870, 3.969, 0.000], atom_name="N7", res_name="G")
+    atom4 = Atom([0.071, 2.833, 0.000], atom_name="C5", res_name="G")
+    atom5 = Atom([0.424, 1.460, 0.000], atom_name="C6", res_name="G")
+    atom6 = Atom([1.554, 0.955, 0.000], atom_name="O6", res_name="G")
+    atom7 = Atom([-0.700, 0.641, 0.000], atom_name="N1", res_name="G")
+    atom8 = Atom([-1.999, 1.087, 0.000], atom_name="C2", res_name="G")
+    atom9 = Atom([-2.949, 0.139, -0.001], atom_name="N2", res_name="G")
+    atom10 = Atom([-2.342, 2.364, 0.001], atom_name="N3", res_name="G")
+    atom11 = Atom([-1.265, 3.177, 0.000], atom_name="C4", res_name="G")
     guanine = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8,
-         atom9, atom10, atom11]
+        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9, atom10, atom11]
     )
 
     # Get the midpoint between the N1 and C4 atoms
     midpoint = np.mean([atom7.coord, atom11.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring centers
     pyrimidine_center = np.mean(
-        [atom4.coord, atom5.coord, atom7.coord,
-         atom8.coord, atom10.coord, atom11.coord], axis=-2
+        [
+            atom4.coord,
+            atom5.coord,
+            atom7.coord,
+            atom8.coord,
+            atom10.coord,
+            atom11.coord,
+        ],
+        axis=-2,
     )
     imidazole_center = np.mean(
-        [atom1.coord, atom2.coord, atom3.coord,
-         atom4.coord, atom11.coord], axis=-2
+        [atom1.coord, atom2.coord, atom3.coord, atom4.coord, atom11.coord], axis=-2
     )
 
     return guanine, (midpoint, pyrimidine_center, imidazole_center)
@@ -173,25 +184,23 @@ def _get_std_thymine():
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center
     """
-    atom1 = Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="T")
-    atom2 = Atom([-1.462, 3.135, 0.000], atom_name="C2",  res_name="T")
-    atom3 = Atom([-2.562, 2.608, 0.000], atom_name="O2",  res_name="T")
-    atom4 = Atom([-0.298, 2.407, 0.000], atom_name="N3",  res_name="T")
-    atom5 = Atom([0.994, 2.897, 0.000],  atom_name="C4",  res_name="T")
-    atom6 = Atom([1.944, 2.119, 0.000],  atom_name="O4",  res_name="T")
-    atom7 = Atom([1.106, 4.338, 0.000],  atom_name="C5",  res_name="T")
-    atom8 = Atom([2.466, 4.961, 0.001],  atom_name="C7", res_name="T")
-    atom9 = Atom([-0.024, 5.057, 0.000], atom_name="C6",  res_name="T")
-    thymine = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9]
-    )
+    atom1 = Atom([-1.284, 4.500, 0.000], atom_name="N1", res_name="T")
+    atom2 = Atom([-1.462, 3.135, 0.000], atom_name="C2", res_name="T")
+    atom3 = Atom([-2.562, 2.608, 0.000], atom_name="O2", res_name="T")
+    atom4 = Atom([-0.298, 2.407, 0.000], atom_name="N3", res_name="T")
+    atom5 = Atom([0.994, 2.897, 0.000], atom_name="C4", res_name="T")
+    atom6 = Atom([1.944, 2.119, 0.000], atom_name="O4", res_name="T")
+    atom7 = Atom([1.106, 4.338, 0.000], atom_name="C5", res_name="T")
+    atom8 = Atom([2.466, 4.961, 0.001], atom_name="C7", res_name="T")
+    atom9 = Atom([-0.024, 5.057, 0.000], atom_name="C6", res_name="T")
+    thymine = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8, atom9])
 
     # Get the midpoint between the N3 and C6 atoms
     midpoint = np.mean([atom4.coord, atom9.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring center
     pyrimidine_center = np.mean(
-        [atom1.coord, atom2.coord, atom4.coord,
-         atom5.coord, atom7.coord, atom9.coord], axis=-2
+        [atom1.coord, atom2.coord, atom4.coord, atom5.coord, atom7.coord, atom9.coord],
+        axis=-2,
     )
 
     return thymine, (midpoint, pyrimidine_center)
@@ -212,30 +221,28 @@ def _get_std_uracil():
         :class:`ndarray` containing the coordinates of the pyrimidine
         ring center
     """
-    atom1 = Atom([-1.284, 4.500, 0.000], atom_name="N1",  res_name="U")
-    atom2 = Atom([-1.462, 3.131, 0.000], atom_name="C2",  res_name="U")
-    atom3 = Atom([-2.563, 2.608, 0.000], atom_name="O2",  res_name="U")
-    atom4 = Atom([-0.302, 2.397, 0.000], atom_name="N3",  res_name="U")
-    atom5 = Atom([0.989, 2.884, 0.000],  atom_name="C4",  res_name="U")
-    atom6 = Atom([1.935, 2.094, -0.001], atom_name="O4",  res_name="U")
-    atom7 = Atom([1.089, 4.311, 0.000],  atom_name="C5",  res_name="U")
-    atom8 = Atom([-0.024, 5.053, 0.000], atom_name="C6",  res_name="U")
-    uracil = array(
-        [atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8]
-    )
+    atom1 = Atom([-1.284, 4.500, 0.000], atom_name="N1", res_name="U")
+    atom2 = Atom([-1.462, 3.131, 0.000], atom_name="C2", res_name="U")
+    atom3 = Atom([-2.563, 2.608, 0.000], atom_name="O2", res_name="U")
+    atom4 = Atom([-0.302, 2.397, 0.000], atom_name="N3", res_name="U")
+    atom5 = Atom([0.989, 2.884, 0.000], atom_name="C4", res_name="U")
+    atom6 = Atom([1.935, 2.094, -0.001], atom_name="O4", res_name="U")
+    atom7 = Atom([1.089, 4.311, 0.000], atom_name="C5", res_name="U")
+    atom8 = Atom([-0.024, 5.053, 0.000], atom_name="C6", res_name="U")
+    uracil = array([atom1, atom2, atom3, atom4, atom5, atom6, atom7, atom8])
 
     # Get the midpoint between the N3 and C6 atoms
     midpoint = np.mean([atom4.coord, atom8.coord], axis=-2)
     # Calculate the coordinates of the aromatic ring center
     pyrimidine_center = np.mean(
-        [atom1.coord, atom2.coord, atom4.coord,
-         atom5.coord, atom7.coord, atom8.coord], axis=-2
+        [atom1.coord, atom2.coord, atom4.coord, atom5.coord, atom7.coord, atom8.coord],
+        axis=-2,
     )
 
     return uracil, (midpoint, pyrimidine_center)
 
 
-_STD_ADENINE, _STD_ADENINE_RING_CENTERS  = _get_std_adenine()
+_STD_ADENINE, _STD_ADENINE_RING_CENTERS = _get_std_adenine()
 _STD_CYTOSINE, _STD_CYTOSINE_RING_CENTERS = _get_std_cytosine()
 _STD_GUANINE, _STD_GUANINE_RING_CENTERS = _get_std_guanine()
 _STD_THYMINE, _STD_THYMINE_RING_CENTERS = _get_std_thymine()
@@ -247,35 +254,35 @@ _CYTOSINE_CONTAINING_NUCLEOTIDES = ["C", "DC"]
 _GUANINE_CONTAINING_NUCLEOTIDES = ["G", "DG"]
 _URACIL_CONTAINING_NUCLEOTIDES = ["U", "DU"]
 _REFERENCE_NUCLEOTIDE_NAMES = (
-    _ADENINE_CONTAINING_NUCLEOTIDES +
-    _THYMINE_CONTAINING_NUCLEOTIDES +
-    _CYTOSINE_CONTAINING_NUCLEOTIDES +
-    _GUANINE_CONTAINING_NUCLEOTIDES +
-    _URACIL_CONTAINING_NUCLEOTIDES
+    _ADENINE_CONTAINING_NUCLEOTIDES
+    + _THYMINE_CONTAINING_NUCLEOTIDES
+    + _CYTOSINE_CONTAINING_NUCLEOTIDES
+    + _GUANINE_CONTAINING_NUCLEOTIDES
+    + _URACIL_CONTAINING_NUCLEOTIDES
 )
 
 # Atoms that are part of respective base edges according to the
 # Leontis-Westhof nomenclature
 _WATSON_CRICK_EDGE = {
-    "A" : ["N6", "N1"],
-    "G" : ["O6", "N1", "N2"],
-    "U" : ["O4", "N3", "O2"],
-    "T" : ["O4", "N3", "O2"],
-    "C" : ["N4", "N3", "O2"]
+    "A": ["N6", "N1"],
+    "G": ["O6", "N1", "N2"],
+    "U": ["O4", "N3", "O2"],
+    "T": ["O4", "N3", "O2"],
+    "C": ["N4", "N3", "O2"],
 }
 _HOOGSTEEN_EDGE = {
-    "A" : ["N6", "N7"],
-    "G" : ["O6", "N7"],
-    "U" : ["O4"],
-    "T" : ["O4"],
-    "C" : ["N4"]
+    "A": ["N6", "N7"],
+    "G": ["O6", "N7"],
+    "U": ["O4"],
+    "T": ["O4"],
+    "C": ["N4"],
 }
 _SUGAR_EDGE = {
-    "A" : ["N3", "O2'"],
-    "G" : ["N2", "N3", "O2'"],
-    "U" : ["O2", "O2'"],
-    "T" : ["O2", "O2'"],
-    "C" : ["O2", "O2'"]
+    "A": ["N3", "O2'"],
+    "G": ["N2", "N3", "O2'"],
+    "U": ["O2", "O2'"],
+    "T": ["O2", "O2'"],
+    "C": ["O2", "O2'"],
 }
 _EDGES = [_WATSON_CRICK_EDGE, _HOOGSTEEN_EDGE, _SUGAR_EDGE]
 
@@ -284,9 +291,10 @@ class Edge(IntEnum):
     """
     This enum type represents the interacting edge for a given base.
     """
-    INVALID = 0,
-    WATSON_CRICK = 1,
-    HOOGSTEEN = 2,
+
+    INVALID = (0,)
+    WATSON_CRICK = (1,)
+    HOOGSTEEN = (2,)
     SUGAR = 3
 
 
@@ -295,9 +303,10 @@ class GlycosidicBond(IntEnum):
     This enum type represents the relative glycosidic bond orientation
     for a given base pair.
     """
+
     INVALID = 0
-    CIS = 1,
-    TRANS = 2,
+    CIS = (1,)
+    TRANS = (2,)
 
 
 def base_pairs_edge(atom_array, base_pairs):
@@ -390,7 +399,7 @@ def base_pairs_edge(atom_array, base_pairs):
     .. footbibliography::
     """
     # Result-``ndarray`` matches the dimensions of the input array
-    results = np.zeros_like(base_pairs, dtype='uint8')
+    results = np.zeros_like(base_pairs, dtype="uint8")
 
     # Get the residue masks for each residue
     base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
@@ -441,16 +450,15 @@ def _get_edge_matrix(atom_array, base_masks):
         )
     # filter out donor/acceptor heteroatoms and flatten for easy
     # iteration
-    hbonds = hbonds[:, (0,2)].flatten()
+    hbonds = hbonds[:, (0, 2)].flatten()
 
     # ``ndarray`` with one row for each base and the number of
     # bonded edge heteroatoms as in ``_edge`` as columns
-    matrix = np.zeros((2, 3), dtype='int32')
+    matrix = np.zeros((2, 3), dtype="int32")
 
     # Iterate through the atoms and corresponding atoms indices
     # that are part of the hydrogen bonds
     for atom, atom_index in zip(atom_array[hbonds], hbonds):
-
         if atom.res_name not in _REFERENCE_NUCLEOTIDE_NAMES:
             continue
 
@@ -460,8 +468,10 @@ def _get_edge_matrix(atom_array, base_masks):
             for base_index, base_mask in enumerate(base_masks):
                 # If a donor/acceptor atom name matches a name in
                 # the corresponding edge list increase the tally
-                if (base_mask[atom_index] and
-                    atom.atom_name in edge_type[atom.res_name[-1]]):
+                if (
+                    base_mask[atom_index]
+                    and atom.atom_name in edge_type[atom.res_name[-1]]
+                ):
                     matrix[base_index, edge_type_index] += 1
     return matrix
 
@@ -540,7 +550,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
 
     .. footbibliography::
     """
-    results = np.zeros(len(base_pairs), dtype='uint8')
+    results = np.zeros(len(base_pairs), dtype="uint8")
 
     # Get the residue masks for each residue
     base_pairs_masks = get_residue_masks(atom_array, base_pairs.flatten())
@@ -552,7 +562,6 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
     )
 
     for i, pair_masks in enumerate(base_pairs_masks):
-
         # position vectors of each bases geometric center
         geometric_centers = np.zeros((2, 3))
         # direction vectors of the glycosidic bonds
@@ -565,23 +574,22 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
             # For Purines the glycosidic bond is between the C1' and the
             # N9 atoms, for pyrimidines it is between the C1' atom and
             # the N1 atom
-            if (base.res_name[0] in _ADENINE_CONTAINING_NUCLEOTIDES or
-                base.res_name[0] in _GUANINE_CONTAINING_NUCLEOTIDES):
-
-                geometric_centers[base_index] = (
-                    (ring_center[0] + ring_center[1]) / 2
-                )
+            if (
+                base.res_name[0] in _ADENINE_CONTAINING_NUCLEOTIDES
+                or base.res_name[0] in _GUANINE_CONTAINING_NUCLEOTIDES
+            ):
+                geometric_centers[base_index] = (ring_center[0] + ring_center[1]) / 2
                 base_atom = base[base.atom_name == "N9"][0]
 
-            elif (base.res_name[0] in _THYMINE_CONTAINING_NUCLEOTIDES or
-                base.res_name[0] in _URACIL_CONTAINING_NUCLEOTIDES or
-                base.res_name[0] in _CYTOSINE_CONTAINING_NUCLEOTIDES):
-
+            elif (
+                base.res_name[0] in _THYMINE_CONTAINING_NUCLEOTIDES
+                or base.res_name[0] in _URACIL_CONTAINING_NUCLEOTIDES
+                or base.res_name[0] in _CYTOSINE_CONTAINING_NUCLEOTIDES
+            ):
                 geometric_centers[base_index] = ring_center[0]
                 base_atom = base[base.atom_name == "N1"][0]
 
             else:
-
                 results[i] = GlycosidicBond.INVALID
                 break
 
@@ -596,15 +604,16 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
             geometric_centers_dir = geometric_centers[1] - geometric_centers[0]
 
             # Check the orientation of the glycosidic bonds
-            if np.dot(
-                np.cross(geometric_centers_dir, glycosidic_bonds[0]),
-                np.cross(geometric_centers_dir, glycosidic_bonds[1])
-            ) < 0:
-
+            if (
+                np.dot(
+                    np.cross(geometric_centers_dir, glycosidic_bonds[0]),
+                    np.cross(geometric_centers_dir, glycosidic_bonds[1]),
+                )
+                < 0
+            ):
                 results[i] = GlycosidicBond.TRANS
 
             else:
-
                 results[i] = GlycosidicBond.CIS
 
     return results
@@ -723,15 +732,18 @@ def base_stacking(atom_array, min_atoms_per_base=3):
         for i in range(2):
             base_tuple = _match_base(bases[i], min_atoms_per_base)
 
-            if(base_tuple is None):
+            if base_tuple is None:
                 break
 
             transformed_std_vectors[i] = base_tuple
 
-        normal_vectors = np.vstack((transformed_std_vectors[0][1],
-                                    transformed_std_vectors[1][1]))
-        aromatic_ring_centers = [transformed_std_vectors[0][3:],
-                                        transformed_std_vectors[1][3:]]
+        normal_vectors = np.vstack(
+            (transformed_std_vectors[0][1], transformed_std_vectors[1][1])
+        )
+        aromatic_ring_centers = [
+            transformed_std_vectors[0][3:],
+            transformed_std_vectors[1][3:],
+        ]
 
         # Check if the base pairs are stacked.
         stacked = _check_base_stacking(aromatic_ring_centers, normal_vectors)
@@ -744,7 +756,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     return np.array(stacked_bases)
 
 
-def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
+def base_pairs(atom_array, min_atoms_per_base=3, unique=True):
     """
     Use DSSR criteria to find the base pairs in an :class:`AtomArray`.
 
@@ -854,11 +866,8 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
     nucleotides_boolean = filter_nucleotides(atom_array)
 
     # Disregard the phosphate-backbone
-    non_phosphate_boolean = (
-        ~ np.isin(
-            atom_array.atom_name,
-            ["O5'", "P", "OP1", "OP2", "OP3", "HOP2", "HOP3"]
-        )
+    non_phosphate_boolean = ~np.isin(
+        atom_array.atom_name, ["O5'", "P", "OP1", "OP2", "OP3", "HOP2", "HOP3"]
     )
 
     # Combine the two boolean masks
@@ -866,7 +875,6 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
 
     # Get only nucleosides
     nucleosides = atom_array[boolean_mask]
-
 
     # Get the base pair candidates according to a N/O cutoff distance,
     # where each base is identified as the first index of its respective
@@ -896,9 +904,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         base1 = nucleosides[base1_mask]
         base2 = nucleosides[base2_mask]
 
-        hbonds =  _check_dssr_criteria(
-            (base1, base2), min_atoms_per_base, unique
-        )
+        hbonds = _check_dssr_criteria((base1, base2), min_atoms_per_base, unique)
 
         # If no hydrogens are present use the number N/O pairs to
         # decide between multiple pairing possibilities.
@@ -906,7 +912,7 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         if hbonds is None:
             # Each N/O-pair is detected twice. Thus, the number of
             # matches must be divided by two.
-            hbonds = n_o_pairs/2
+            hbonds = n_o_pairs / 2
         if hbonds != -1:
             basepairs.append((base1_index, base2_index))
             if unique:
@@ -922,20 +928,16 @@ def base_pairs(atom_array, min_atoms_per_base = 3, unique = True):
         # Get all bases that have non-unique pairing interactions
         base_indices, occurrences = np.unique(basepairs, return_counts=True)
         for base_index, occurrence in zip(base_indices, occurrences):
-            if(occurrence > 1):
+            if occurrence > 1:
                 # Write the non-unique base pairs to a dictionary as
                 # 'index: number of hydrogen bonds'
                 remove_candidates = {}
-                for i, row in enumerate(
-                    np.asarray(basepair_array == base_index)
-                ):
-                    if(np.any(row)):
+                for i, row in enumerate(np.asarray(basepair_array == base_index)):
+                    if np.any(row):
                         remove_candidates[i] = basepairs_hbonds[i]
                 # Flag all non-unique base pairs for removal except the
                 # one that has the most hydrogen bonds
-                del remove_candidates[
-                    max(remove_candidates, key=remove_candidates.get)
-                ]
+                del remove_candidates[max(remove_candidates, key=remove_candidates.get)]
                 to_remove += list(remove_candidates.keys())
         # Remove all flagged base pairs from the output `ndarray`
         basepair_array = np.delete(basepair_array, to_remove, axis=0)
@@ -984,21 +986,22 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
 
     # Generate the data necessary for analysis of each base.
     for i in range(2):
-        transformed_std_vectors[i] = _match_base(
-            basepair[i], min_atoms_per_base
-        )
+        transformed_std_vectors[i] = _match_base(basepair[i], min_atoms_per_base)
 
-        if(transformed_std_vectors[i] is None):
+        if transformed_std_vectors[i] is None:
             return -1
 
-    origins = np.vstack((transformed_std_vectors[0][0],
-                         transformed_std_vectors[1][0]))
-    normal_vectors = np.vstack((transformed_std_vectors[0][1],
-                                transformed_std_vectors[1][1]))
-    schnaap_origins = np.vstack((transformed_std_vectors[0][2],
-                                 transformed_std_vectors[1][2]))
-    aromatic_ring_centers = [transformed_std_vectors[0][3:],
-                                       transformed_std_vectors[1][3:]]
+    origins = np.vstack((transformed_std_vectors[0][0], transformed_std_vectors[1][0]))
+    normal_vectors = np.vstack(
+        (transformed_std_vectors[0][1], transformed_std_vectors[1][1])
+    )
+    schnaap_origins = np.vstack(
+        (transformed_std_vectors[0][2], transformed_std_vectors[1][2])
+    )
+    aromatic_ring_centers = [
+        transformed_std_vectors[0][3:],
+        transformed_std_vectors[1][3:],
+    ]
 
     # Criterion 1: Distance between orgins <=15 Å
     if not (distance(origins[0], origins[1]) <= 15):
@@ -1009,9 +1012,8 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     # Average the base normal vectors. If the angle between the vectors
     # is >=90°, flip one vector before averaging
     mean_normal_vector = (
-        normal_vectors[0] + (normal_vectors[1] * np.sign(np.dot(
-            normal_vectors[0], normal_vectors[1]
-        )))
+        normal_vectors[0]
+        + (normal_vectors[1] * np.sign(np.dot(normal_vectors[0], normal_vectors[1])))
     ) / 2
     norm_vector(mean_normal_vector)
     # Calculate the distance vector between the two SCHNAaP origins
@@ -1024,8 +1026,9 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         return -1
 
     # Criterion 3: Angle between normal vectors <=65°
-    if not (np.arccos(np.dot(normal_vectors[0], normal_vectors[1]))
-            >= ((115*np.pi)/180)):
+    if not (
+        np.arccos(np.dot(normal_vectors[0], normal_vectors[1])) >= ((115 * np.pi) / 180)
+    ):
         return -1
 
     # Criterion 4: Absence of stacking
@@ -1035,8 +1038,7 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
     # Criterion 5: Presence of at least one hydrogen bond
     #
     # Check if both bases came with hydrogens.
-    if (("H" in basepair[0].element)
-        and ("H" in basepair[1].element)):
+    if ("H" in basepair[0].element) and ("H" in basepair[1].element):
         # For Structures that contain hydrogens, check for their
         # presence directly.
         #
@@ -1044,11 +1046,13 @@ def _check_dssr_criteria(basepair, min_atoms_per_base, unique):
         potential_basepair = basepair[0] + basepair[1]
 
         # Get the number of hydrogen bonds
-        bonds = len(hbond(
-            potential_basepair,
-            np.ones_like(potential_basepair, dtype=bool),
-            np.ones_like(potential_basepair, dtype=bool)
-        ))
+        bonds = len(
+            hbond(
+                potential_basepair,
+                np.ones_like(potential_basepair, dtype=bool),
+                np.ones_like(potential_basepair, dtype=bool),
+            )
+        )
 
         if bonds > 0:
             return bonds
@@ -1085,7 +1089,7 @@ def _check_base_stacking(aromatic_ring_centers, normal_vectors):
     wrong_distance = True
     for ring_center1 in aromatic_ring_centers[0]:
         for ring_center2 in aromatic_ring_centers[1]:
-            if (distance(ring_center1, ring_center2) <= 4.5):
+            if distance(ring_center1, ring_center2) <= 4.5:
                 wrong_distance = False
                 normalized_distance_vectors.append(ring_center2 - ring_center1)
                 norm_vector(normalized_distance_vectors[-1])
@@ -1106,8 +1110,7 @@ def _check_base_stacking(aromatic_ring_centers, normal_vectors):
             dist_normal_vector_angle = np.rad2deg(
                 np.arccos(np.dot(normal_vector, normalized_dist_vector))
             )
-            if ((dist_normal_vector_angle >= 40) and
-                (dist_normal_vector_angle <= 140)):
+            if (dist_normal_vector_angle >= 40) and (dist_normal_vector_angle <= 140):
                 return False
 
     return True
@@ -1142,19 +1145,19 @@ def _match_base(nucleotide, min_atoms_per_base):
     if one_letter_code is None:
         return None
 
-    if (one_letter_code == 'A'):
+    if one_letter_code == "A":
         std_base = _STD_ADENINE
         std_ring_centers = _STD_ADENINE_RING_CENTERS
-    elif (one_letter_code == 'T'):
+    elif one_letter_code == "T":
         std_base = _STD_THYMINE
         std_ring_centers = _STD_THYMINE_RING_CENTERS
-    elif (one_letter_code == 'C'):
+    elif one_letter_code == "C":
         std_base = _STD_CYTOSINE
         std_ring_centers = _STD_CYTOSINE_RING_CENTERS
-    elif (one_letter_code == 'G'):
+    elif one_letter_code == "G":
         std_base = _STD_GUANINE
         std_ring_centers = _STD_GUANINE_RING_CENTERS
-    elif (one_letter_code == 'U'):
+    elif one_letter_code == "U":
         std_base = _STD_URACIL
         std_ring_centers = _STD_URACIL_RING_CENTERS
 
@@ -1162,16 +1165,10 @@ def _match_base(nucleotide, min_atoms_per_base):
     vectors = np.vstack((vectors, std_ring_centers))
 
     # Select the matching atoms of the nucleotide and the standard base
-    nucleotide_matched = nucleotide[
-        np.isin(nucleotide.atom_name, std_base.atom_name)
-    ]
-    std_base_matched = std_base[
-        np.isin(std_base.atom_name, nucleotide.atom_name)
-    ]
+    nucleotide_matched = nucleotide[np.isin(nucleotide.atom_name, std_base.atom_name)]
+    std_base_matched = std_base[np.isin(std_base.atom_name, nucleotide.atom_name)]
     # Ensure the nucleotide does not contain duplicate atom names
-    _, unique_indices = np.unique(
-        nucleotide_matched.atom_name, return_index=True
-    )
+    _, unique_indices = np.unique(nucleotide_matched.atom_name, return_index=True)
     nucleotide_matched = nucleotide_matched[unique_indices]
     # Only continue if minimum number of matching atoms is reached
     if len(nucleotide_matched) < min_atoms_per_base:
@@ -1179,21 +1176,19 @@ def _match_base(nucleotide, min_atoms_per_base):
             f"Nucleotide with res_id {nucleotide.res_id[0]} and "
             f"chain_id {nucleotide.chain_id[0]} has less than 3 base "
             f"atoms, unable to check for base pair.",
-            IncompleteStructureWarning
+            IncompleteStructureWarning,
         )
         return None
     # Reorder the atoms of the nucleotide to obtain the standard RCSB
     # PDB atom order.
-    nucleotide_matched = nucleotide_matched[
-        standardize_order(nucleotide_matched)
-    ]
+    nucleotide_matched = nucleotide_matched[standardize_order(nucleotide_matched)]
 
     # Match the selected std_base to the base.
     _, transformation = superimpose(nucleotide_matched, std_base_matched)
     vectors = transformation.apply(vectors)
     # Normalize the base-normal-vector
-    vectors[1,:] = vectors[1,:]-vectors[0,:]
-    norm_vector(vectors[1,:])
+    vectors[1, :] = vectors[1, :] - vectors[0, :]
+    norm_vector(vectors[1, :])
 
     return vectors
 
@@ -1259,8 +1254,11 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
 
     # List of the standard bases for easy iteration
     std_base_list = [
-        _STD_ADENINE, _STD_THYMINE, _STD_CYTOSINE, _STD_GUANINE,
-        _STD_URACIL
+        _STD_ADENINE,
+        _STD_THYMINE,
+        _STD_CYTOSINE,
+        _STD_GUANINE,
+        _STD_URACIL,
     ]
 
     # The number of matched atoms for each 'standard' base
@@ -1275,7 +1273,7 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
             f"{residue.chain_id[0]} has an overlap with the reference "
             f"bases which is less than {min_atoms_per_base} atoms. "
             f"Unable to map nucleotide.",
-            IncompleteStructureWarning
+            IncompleteStructureWarning,
         )
         return None, False
 
@@ -1284,7 +1282,7 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
 
     # Iterate through the reference bases with the maximum number of
     # matching atoms
-    for ref_base in np.array(std_base_list, dtype='object')[
+    for ref_base in np.array(std_base_list, dtype="object")[
         np.array(matched_atom_no) == np.max(matched_atom_no)
     ]:
         # Copy the residue as the res_name property of the ``AtomArray``
@@ -1293,12 +1291,8 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
 
         # Select the matching atoms of the nucleotide and the reference
         # base
-        nuc = nuc[
-            np.isin(nuc.atom_name, ref_base.atom_name)
-        ]
-        ref_base_matched = ref_base[
-            np.isin(ref_base.atom_name, nuc.atom_name)
-        ]
+        nuc = nuc[np.isin(nuc.atom_name, ref_base.atom_name)]
+        ref_base_matched = ref_base[np.isin(ref_base.atom_name, nuc.atom_name)]
 
         # Set the res_name property to the same as the reference base.
         # This is a requirement for ``standardize_order``
@@ -1319,14 +1313,14 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
         # If the RMSD is lower than the specified cutoff or better than
         # a previous found reference, the current reference is selected
         # as best base
-        if(rmsd(fitted, ref_base_matched) < rmsd_cutoff):
+        if rmsd(fitted, ref_base_matched) < rmsd_cutoff:
             rmsd_cutoff = rmsd(fitted, ref_base_matched)
             best_base = ref_base_matched.res_name[0][-1]
 
     if best_base is None:
         warnings.warn(
             f"Base Type {residue.res_name[0]} not supported. ",
-            UnexpectedStructureWarning
+            UnexpectedStructureWarning,
         )
         return None
 
@@ -1360,9 +1354,9 @@ def _get_proximate_residues(atom_array, boolean_mask, cutoff):
 
     # Get the indices of the atoms that are within the maximum cutoff
     # of each other
-    indices = CellList(
-        atom_array, cutoff, selection=boolean_mask
-    ).get_atoms(atom_array.coord[boolean_mask], cutoff)
+    indices = CellList(atom_array, cutoff, selection=boolean_mask).get_atoms(
+        atom_array.coord[boolean_mask], cutoff
+    )
 
     # Loop through the indices of potential partners
     pairs = []
@@ -1375,16 +1369,12 @@ def _get_proximate_residues(atom_array, boolean_mask, cutoff):
     # indices.
     pairs = np.array(pairs)
     basepair_candidates_shape = pairs.shape
-    pairs = get_residue_starts_for(
-        atom_array, pairs.flatten()
-    ).reshape(basepair_candidates_shape)
+    pairs = get_residue_starts_for(atom_array, pairs.flatten()).reshape(
+        basepair_candidates_shape
+    )
 
     # Remove candidates where the pairs are from the same residue
-    pairs = np.delete(
-        pairs, np.where(
-            pairs[:,0] == pairs[:,1]
-        ), axis=0
-    )
+    pairs = np.delete(pairs, np.where(pairs[:, 0] == pairs[:, 1]), axis=0)
     # Sort the residue starts for each pair
     for i, candidate in enumerate(pairs):
         pairs[i] = sorted(candidate)
@@ -1411,5 +1401,4 @@ def _filter_atom_type(atom_array, atom_names):
         This array is ``True`` for all indices in the :class:`AtomArray`
         , where the atom has the desired atom names.
     """
-    return (np.isin(atom_array.atom_name, atom_names)
-            & (atom_array.res_id != -1))
+    return np.isin(atom_array.atom_name, atom_names) & (atom_array.res_id != -1)

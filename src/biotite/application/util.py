@@ -8,15 +8,15 @@ __all__ = ["map_sequence", "map_matrix"]
 
 
 import numpy as np
-from ..sequence.seqtypes import ProteinSequence
 from ..sequence.align.matrix import SubstitutionMatrix
+from ..sequence.seqtypes import ProteinSequence
 
 
 def map_sequence(sequence):
     """
     Map a sequence with an arbitrary alphabet into a
     :class:`ProteinSequence`, in order to support arbitrary sequence
-    types in software that can handle protein sequences. 
+    types in software that can handle protein sequences.
     """
     if len(sequence.alphabet) > len(ProteinSequence.alphabet):
         # Cannot map into a protein sequence if the alphabet
@@ -39,12 +39,11 @@ def map_matrix(matrix):
     Map a :class:`SubstitutionMatrix` with an arbitrary alphabet into a
     class:`SubstitutionMatrix` for protein sequences, in order to support
     arbitrary sequence types in software that can handle protein
-    sequences. 
+    sequences.
     """
     if matrix is None:
         raise TypeError(
-            "A substitution matrix must be provided for custom "
-            "sequence types"
+            "A substitution matrix must be provided for custom " "sequence types"
         )
     # Create a protein substitution matrix with the values taken
     # from the original matrix
@@ -54,6 +53,5 @@ def map_matrix(matrix):
     new_score_matrix = np.zeros((new_length, new_length))
     new_score_matrix[:old_length, :old_length] = matrix.score_matrix()
     return SubstitutionMatrix(
-        ProteinSequence.alphabet, ProteinSequence.alphabet,
-        new_score_matrix
+        ProteinSequence.alphabet, ProteinSequence.alphabet, new_score_matrix
     )

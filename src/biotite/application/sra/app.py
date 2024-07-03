@@ -7,17 +7,16 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["FastaDumpApp", "FastqDumpApp"]
 
 import abc
-from os.path import join
-from subprocess import Popen, SubprocessError, PIPE, TimeoutExpired
 import glob
+from os.path import join
+from subprocess import PIPE, Popen, SubprocessError, TimeoutExpired
 from tempfile import TemporaryDirectory
-from ..application import Application, AppState, AppStateError, \
-                          requires_state
-from ...sequence.seqtypes import NucleotideSequence
-from ...sequence.io.fastq.file import FastqFile
+from ...sequence.io.fasta.convert import get_sequences
 from ...sequence.io.fasta.file import FastaFile
 from ...sequence.io.fastq.convert import get_sequences as get_sequences_and_scores
-from ...sequence.io.fasta.convert import get_sequences
+from ...sequence.io.fastq.file import FastqFile
+from ...sequence.seqtypes import NucleotideSequence
+from ..application import Application, AppState, AppStateError, requires_state
 
 
 # Do not use LocalApp, as two programs are executed
@@ -48,8 +47,13 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
         the score format.
     """
 
-    def __init__(self, uid, output_path_prefix=None,
-                 prefetch_path="prefetch", fasterq_dump_path="fasterq-dump"):
+    def __init__(
+        self,
+        uid,
+        output_path_prefix=None,
+        prefetch_path="prefetch",
+        fasterq_dump_path="fasterq-dump",
+    ):
         super().__init__()
         self._prefetch_path = prefetch_path
         self._fasterq_dump_path = fasterq_dump_path
@@ -62,21 +66,16 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
         self._prefetch_process = None
         self._fasterq_dump_process = None
 
-
     @requires_state(AppState.RUNNING | AppState.FINISHED)
     def join(self, timeout=None):
         # Override method as repetitive calls of 'is_finished()'
         # are not necessary as 'communicate()' already waits for the
         # finished application
         try:
-            _, self._stderr = self._process.communicate(
-                timeout=timeout
-            )
+            _, self._stderr = self._process.communicate(timeout=timeout)
         except TimeoutExpired:
             self.cancel()
-            raise TimeoutError(
-                f"The application expired its timeout ({timeout:.1f} s)"
-            )
+            raise TimeoutError(f"The application expired its timeout ({timeout:.1f} s)")
         self._state = AppState.FINISHED
 
         try:
@@ -89,7 +88,6 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
         else:
             self._state = AppState.JOINED
         self.clean_up()
-
 
     def run(self):
         # Prefetch into a temp directory with file name equaling UID
@@ -105,15 +103,13 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
             command, stdout=PIPE, stderr=PIPE, shell=True, encoding="UTF-8"
         )
 
-
     def is_finished(self):
         code = self._process.poll()
         if code == None:
             return False
         else:
-            _,  self._stderr = self._process.communicate()
+            _, self._stderr = self._process.communicate()
             return True
-
 
     def evaluate(self):
         super().evaluate()
@@ -128,25 +124,23 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
 
         self._file_names = (
             # For entries with one read per spot
-            glob.glob(self._prefix +   ".fastq") +
+            glob.glob(self._prefix + ".fastq")
+            +
             # For entries with multiple reads per spot
             glob.glob(self._prefix + "_*.fastq")
         )
         # Only load FASTQ files into memory when needed
         self._fastq_files = None
 
-
     def wait_interval(self):
         # Not used in this implementation of 'join()'
         raise NotImplementedError()
-
 
     def clean_up(self):
         if self.get_app_state() == AppState.CANCELLED:
             self._process.kill()
         # Directory with temp files does not need to be deleted,
         # as temp dir is automatically deleted upon object destruction
-
 
     @requires_state(AppState.CREATED)
     def get_prefetch_options(self):
@@ -176,7 +170,6 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
         """
         return ""
 
-
     @requires_state(AppState.JOINED)
     def get_file_paths(self):
         """
@@ -188,7 +181,6 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
             The file paths to the downloaded files.
         """
         return self._file_names
-
 
     @requires_state(AppState.JOINED)
     @abc.abstractmethod
@@ -236,14 +228,17 @@ class FastqDumpApp(_DumpApp):
         the score format.
     """
 
-    def __init__(self, uid, output_path_prefix=None, prefetch_path="prefetch",
-                 fasterq_dump_path="fasterq-dump", offset="Sanger"):
-        super().__init__(
-            uid, output_path_prefix, prefetch_path, fasterq_dump_path
-        )
+    def __init__(
+        self,
+        uid,
+        output_path_prefix=None,
+        prefetch_path="prefetch",
+        fasterq_dump_path="fasterq-dump",
+        offset="Sanger",
+    ):
+        super().__init__(uid, output_path_prefix, prefetch_path, fasterq_dump_path)
         self._offset = offset
         self._fastq_files = None
-
 
     @requires_state(AppState.JOINED)
     def get_fastq(self):
@@ -265,19 +260,15 @@ class FastqDumpApp(_DumpApp):
             ]
         return self._fastq_files
 
-
     @requires_state(AppState.JOINED)
     def get_sequences(self):
         return [
             {
-                header: NucleotideSequence(
-                    seq_str.replace("U","T").replace("X","N")
-                )
+                header: NucleotideSequence(seq_str.replace("U", "T").replace("X", "N"))
                 for header, (seq_str, _) in fastq_file.items()
             }
             for fastq_file in self.get_fastq()
         ]
-
 
     @requires_state(AppState.JOINED)
     def get_sequences_and_scores(self):
@@ -294,15 +285,17 @@ class FastqDumpApp(_DumpApp):
             Each item in the list is a dictionary mapping identifiers to its
             corresponding sequence and score values.
         """
-        return [
-            get_sequences_and_scores(fastq_file)
-            for fastq_file in self.get_fastq()
-        ]
-
+        return [get_sequences_and_scores(fastq_file) for fastq_file in self.get_fastq()]
 
     @classmethod
-    def fetch(cls, uid, output_path_prefix=None, prefetch_path="prefetch",
-              fasterq_dump_path="fasterq-dump", offset="Sanger"):
+    def fetch(
+        cls,
+        uid,
+        output_path_prefix=None,
+        prefetch_path="prefetch",
+        fasterq_dump_path="fasterq-dump",
+        offset="Sanger",
+    ):
         """
         Get the sequences belonging to the UID from the
         *NCBI sequence read archive* (SRA).
@@ -338,9 +331,7 @@ class FastqDumpApp(_DumpApp):
             Each item in the list is a dictionary mapping identifiers to its
             corresponding sequence.
         """
-        app = cls(
-            uid, output_path_prefix, prefetch_path, fasterq_dump_path, offset
-        )
+        app = cls(uid, output_path_prefix, prefetch_path, fasterq_dump_path, offset)
         app.start()
         app.join()
         return app.get_sequences()
@@ -368,13 +359,15 @@ class FastaDumpApp(_DumpApp):
         respectively.
     """
 
-    def __init__(self, uid, output_path_prefix=None, prefetch_path="prefetch",
-                 fasterq_dump_path="fasterq-dump"):
-        super().__init__(
-            uid, output_path_prefix, prefetch_path, fasterq_dump_path
-        )
+    def __init__(
+        self,
+        uid,
+        output_path_prefix=None,
+        prefetch_path="prefetch",
+        fasterq_dump_path="fasterq-dump",
+    ):
+        super().__init__(uid, output_path_prefix, prefetch_path, fasterq_dump_path)
         self._fasta_files = None
-
 
     @requires_state(AppState.CREATED)
     def get_prefetch_options(self):
@@ -383,11 +376,9 @@ class FastaDumpApp(_DumpApp):
         # when https://github.com/ncbi/sra-tools/issues/883 is resolved
         # return "--eliminate-quals"
 
-
     @requires_state(AppState.CREATED)
     def get_fastq_dump_options(self):
         return "--fasta"
-
 
     @requires_state(AppState.JOINED)
     def get_fasta(self):
@@ -404,20 +395,22 @@ class FastaDumpApp(_DumpApp):
         """
         if self._fasta_files is None:
             self._fasta_files = [
-                FastaFile.read(file_name)
-                for file_name in self.get_file_paths()
+                FastaFile.read(file_name) for file_name in self.get_file_paths()
             ]
         return self._fasta_files
-
 
     @requires_state(AppState.JOINED)
     def get_sequences(self):
         return [get_sequences(fasta_file) for fasta_file in self.get_fasta()]
 
-
     @classmethod
-    def fetch(cls, uid, output_path_prefix=None, prefetch_path="prefetch",
-              fasterq_dump_path="fasterq-dump"):
+    def fetch(
+        cls,
+        uid,
+        output_path_prefix=None,
+        prefetch_path="prefetch",
+        fasterq_dump_path="fasterq-dump",
+    ):
         """
         Get the sequences belonging to the UID from the
         *NCBI sequence read archive* (SRA).
@@ -448,9 +441,7 @@ class FastaDumpApp(_DumpApp):
             Each item in the list is a dictionary mapping identifiers to its
             corresponding sequence.
         """
-        app = cls(
-            uid, output_path_prefix, prefetch_path, fasterq_dump_path
-        )
+        app = cls(uid, output_path_prefix, prefetch_path, fasterq_dump_path)
         app.start()
         app.join()
         return app.get_sequences()

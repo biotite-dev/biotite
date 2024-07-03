@@ -4,25 +4,33 @@
 
 """
 Functions related to working with the simulation box or unit cell
-of a structure 
+of a structure
 """
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["vectors_from_unitcell", "unitcell_from_vectors", "box_volume",
-           "repeat_box", "repeat_box_coord", "move_inside_box",
-           "remove_pbc", "remove_pbc_from_coord",
-           "coord_to_fraction", "fraction_to_coord", "is_orthogonal"]
+__all__ = [
+    "vectors_from_unitcell",
+    "unitcell_from_vectors",
+    "box_volume",
+    "repeat_box",
+    "repeat_box_coord",
+    "move_inside_box",
+    "remove_pbc",
+    "remove_pbc_from_coord",
+    "coord_to_fraction",
+    "fraction_to_coord",
+    "is_orthogonal",
+]
 
-from collections.abc import Iterable
 from numbers import Integral
 import numpy as np
 import numpy.linalg as linalg
-from .util import vector_dot
 from .atoms import repeat
-from .molecules import get_molecule_masks
 from .chains import get_chain_masks, get_chain_starts
 from .error import BadStructureError
+from .molecules import get_molecule_masks
+from .util import vector_dot
 
 
 def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
@@ -41,7 +49,7 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
         The angles between the box vectors in radians.
         *alpha* is the angle between *b* and *c*,
         *beta* between *a* and *c*, *gamma* between *a* and *b*
-    
+
     Returns
     -------
     box : ndarray, dtype=float, shape=(3,3)
@@ -49,7 +57,7 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
         The vector components are in the last dimension.
         The value can be directly used as :attr:`box` attribute in an
         atom array.
-    
+
     See also
     --------
     unitcell_from_vectors
@@ -58,19 +66,15 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
     b_x = len_b * np.cos(gamma)
     b_y = len_b * np.sin(gamma)
     c_x = len_c * np.cos(beta)
-    c_y = len_c * (np.cos(alpha) - np.cos(beta)*np.cos(gamma)) / np.sin(gamma)
-    c_z = np.sqrt(len_c*len_c - c_x*c_x - c_y*c_y)
-    box = np.array([
-        [a_x,   0,   0],
-        [b_x, b_y,   0],
-        [c_x, c_y, c_z]
-    ], dtype=np.float32)
-    
+    c_y = len_c * (np.cos(alpha) - np.cos(beta) * np.cos(gamma)) / np.sin(gamma)
+    c_z = np.sqrt(len_c * len_c - c_x * c_x - c_y * c_y)
+    box = np.array([[a_x, 0, 0], [b_x, b_y, 0], [c_x, c_y, c_z]], dtype=np.float32)
+
     # Fix numerical errors, as values, that are actually 0,
     # might not be calculated as such
     tol = 1e-4 * (len_a + len_b + len_c)
     box[np.abs(box) < tol] = 0
-    
+
     return box
 
 
@@ -84,7 +88,7 @@ def unitcell_from_vectors(box):
     ----------
     box : ndarray, shape=(3,3)
         The box vectors
-    
+
     Returns
     -------
     len_a, len_b, len_c : float
@@ -103,7 +107,7 @@ def unitcell_from_vectors(box):
     len_b = linalg.norm(b)
     len_c = linalg.norm(c)
     alpha = np.arccos(np.dot(b, c) / (len_b * len_c))
-    beta  = np.arccos(np.dot(a, c) / (len_a * len_c))
+    beta = np.arccos(np.dot(a, c) / (len_a * len_c))
     gamma = np.arccos(np.dot(a, b) / (len_a * len_b))
     return len_a, len_b, len_c, alpha, beta, gamma
 
@@ -116,7 +120,7 @@ def box_volume(box):
     ----------
     box : ndarray, shape=(3,3) or shape=(m,3,3)
         One or multiple boxes to get the volume for.
-    
+
     Returns
     -------
     volume : float or ndarray, shape=(m,)
@@ -159,7 +163,7 @@ def repeat_box(atoms, amount=1):
         Indices to the atoms in the original atom array (stack).
         Equal to
         ``numpy.tile(np.arange(atoms.array_length()), (1 + 2 * amount) ** 3)``.
-    
+
     See also
     --------
     repeat_box_coord
@@ -232,12 +236,12 @@ def repeat_box(atoms, amount=1):
     """
     if atoms.box is None:
         raise BadStructureError("Structure has no box")
-    
+
     repeat_coord, indices = repeat_box_coord(atoms.coord, atoms.box)
     # Unroll repeated coordinates for input to 'repeat()'
     if repeat_coord.ndim == 2:
         repeat_coord = repeat_coord.reshape(-1, atoms.array_length(), 3)
-    else: # ndim == 3
+    else:  # ndim == 3
         repeat_coord = repeat_coord.reshape(
             atoms.stack_depth(), -1, atoms.array_length(), 3
         )
@@ -283,16 +287,15 @@ def repeat_box_coord(coord, box, amount=1):
         raise TypeError("The amount must be an integer")
     # List of numpy arrays for each box repeat
     coords_for_boxes = [coord]
-    for i in range(-amount, amount+1):
-        for j in range(-amount, amount+1):
-            for k in range(-amount, amount+1):
+    for i in range(-amount, amount + 1):
+        for j in range(-amount, amount + 1):
+            for k in range(-amount, amount + 1):
                 # Omit the central box
                 if i != 0 or j != 0 or k != 0:
                     temp_coord = coord.copy()
                     # Shift coordinates to adjacent box/unit cell
                     translation_vec = np.sum(
-                        box * np.array([i,j,k])[:, np.newaxis],
-                        axis=-2
+                        box * np.array([i, j, k])[:, np.newaxis], axis=-2
                     )
                     # 'newaxis' to perform same translation on all
                     # atoms for each model
@@ -300,7 +303,7 @@ def repeat_box_coord(coord, box, amount=1):
                     coords_for_boxes.append(temp_coord)
     return (
         np.concatenate(coords_for_boxes, axis=-2),
-        np.tile(np.arange(coord.shape[-2]), (1 + 2 * amount) ** 3)
+        np.tile(np.arange(coord.shape[-2]), (1 + 2 * amount) ** 3),
     )
 
 
@@ -323,16 +326,16 @@ def move_inside_box(coord, box):
         The box(es) for one or multiple models.
         When `coord` is given for multiple models, :attr:`box` must be
         given for multiple models as well.
-    
+
     Returns
     -------
     moved_coord : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
         The moved coordinates.
         Has the same shape is the input `coord`.
-    
+
     Examples
     --------
-    
+
     >>> box = np.array([[10,0,0], [0,10,0], [0,0,10]], dtype=float)
     >>> inside_coord        = [ 1,  2,  3]
     >>> outside_coord       = [ 1, 22, 54]
@@ -363,7 +366,7 @@ def remove_pbc(atoms, selection=None):
     To determine the molecules the structure is required to have an
     associated `BondList`.
     Otherwise segmentation removal is performed on a per-chain basis.
-    
+
     Parameters
     ----------
     atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
@@ -373,13 +376,13 @@ def remove_pbc(atoms, selection=None):
     selection : ndarray, dtype=bool, shape=(n,)
         Specifies which parts of `atoms` are sanitized, i.e the
         segmentation is removed.
-    
+
     Returns
     -------
     sanitized_atoms : AtomArray or AtomArrayStack
         The input structure with removed segmentation over periodic
         boundaries.
-    
+
     See also
     --------
     remove_pbc_from_coord
@@ -393,11 +396,9 @@ def remove_pbc(atoms, selection=None):
     """
     # Avoid circular import
     from .geometry import centroid
-    
+
     if atoms.box is None:
-        raise BadStructureError(
-            "The 'box' attribute must be set in the structure"
-        )
+        raise BadStructureError("The 'box' attribute must be set in the structure")
     new_atoms = atoms.copy()
 
     if atoms.bonds is not None:
@@ -414,10 +415,8 @@ def remove_pbc(atoms, selection=None):
         )
         # Put center of molecule into box
         center = centroid(new_atoms.coord[..., mask, :])[..., np.newaxis, :]
-        center_in_box = move_inside_box(
-            center, new_atoms.box
-        )
-        new_atoms.coord[..., mask, :] += (center_in_box - center)
+        center_in_box = move_inside_box(center, new_atoms.box)
+        new_atoms.coord[..., mask, :] += center_in_box - center
 
     return new_atoms
 
@@ -433,11 +432,11 @@ def remove_pbc_from_coord(coord, box):
     the displacement coordinates in adjacent array positions.
     Basically, this function performs the reverse action of
     :func:`move_inside_box()`.
-    
+
     Parameters
     ----------
     coord : ndarray, dtype=float, shape=(m,n,3) or shape=(n,3)
-        The coordinates of the potentially segmented structure. 
+        The coordinates of the potentially segmented structure.
     box : ndarray, dtype=float, shape=(m,3,3) or shape=(3,3)
         The simulation box or unit cell that is used as periodic
         boundary.
@@ -447,7 +446,7 @@ def remove_pbc_from_coord(coord, box):
     -------
     sanitized_coord : ndarray, dtype=float, shape=(m,n,3) or shape=(n,3)
         The reassembled coordinates.
-    
+
     See also
     --------
     remove_pbc_from_coord
@@ -464,18 +463,13 @@ def remove_pbc_from_coord(coord, box):
 
     # Import in function to avoid circular import
     from .geometry import index_displacement
+
     # Get the PBC-sanitized displacements of all coordinates
     # to the respective next coordinate
     index_pairs = np.stack(
-        [
-            np.arange(0, coord.shape[-2] - 1), 
-            np.arange(1, coord.shape[-2]    )
-        ],
-        axis=1
+        [np.arange(0, coord.shape[-2] - 1), np.arange(1, coord.shape[-2])], axis=1
     )
-    neighbour_disp = index_displacement(
-        coord, index_pairs, box=box, periodic=True
-    )
+    neighbour_disp = index_displacement(coord, index_pairs, box=box, periodic=True)
     # Get the PBC-sanitized displacements of all but the first
     # coordinates to (0,0,0)
     absolute_disp = np.cumsum(neighbour_disp, axis=-2)
@@ -501,19 +495,19 @@ def coord_to_fraction(coord, box):
         The box(es) for one or multiple models.
         When `coord` is given for multiple models, :attr:`box` must be
         given for multiple models as well.
-    
+
     Returns
     -------
     fraction : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
         The fractions of the box vectors.
-    
+
     See also
     --------
     fraction_to_coord
 
     Examples
     --------
-    
+
     >>> box = np.array([[5,0,0], [0,5,0], [0,5,5]], dtype=float)
     >>> coord = np.array(
     ...     [[1,1,1], [10,0,0], [0,0,10], [-5,2,1]],
@@ -548,12 +542,12 @@ def fraction_to_coord(fraction, box):
         The box(es) for one or multiple models.
         When `coord` is given for multiple models, :attr:`box` must be
         given for multiple models as well.
-    
+
     Returns
     -------
     coord : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
         The coordinates.
-    
+
     See also
     --------
     coord_to_fraction
@@ -572,12 +566,12 @@ def is_orthogonal(box):
     ----------
     box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
         A single box or multiple boxes.
-    
+
     Returns
     -------
     is_orthgonal : bool or ndarray, shape=(m,), dtype=bool
         True, if the box vectors are orthogonal, false otherwise
-    
+
     Notes
     -----
     Due to possible numerical errors, this function also evaluates two
@@ -587,6 +581,8 @@ def is_orthogonal(box):
     # Fix numerical errors, as values, that are actually 0,
     # might not be calculated as such
     tol = 1e-6
-    return (np.abs(vector_dot(box[..., 0, :], box[..., 1, :])) < tol) & \
-           (np.abs(vector_dot(box[..., 0, :], box[..., 2, :])) < tol) & \
-           (np.abs(vector_dot(box[..., 1, :], box[..., 2, :])) < tol)
+    return (
+        (np.abs(vector_dot(box[..., 0, :], box[..., 1, :])) < tol)
+        & (np.abs(vector_dot(box[..., 0, :], box[..., 2, :])) < tol)
+        & (np.abs(vector_dot(box[..., 1, :], box[..., 2, :])) < tol)
+    )

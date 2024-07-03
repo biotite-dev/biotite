@@ -4,22 +4,35 @@
 
 __name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
-__all__ = ["plot_feature_map", "FeaturePlotter", "MiscFeaturePlotter",
-           "CodingPlotter", "PromoterPlotter", "TerminatorPlotter",
-           "RBSPlotter"]
+__all__ = [
+    "plot_feature_map",
+    "FeaturePlotter",
+    "MiscFeaturePlotter",
+    "CodingPlotter",
+    "PromoterPlotter",
+    "TerminatorPlotter",
+    "RBSPlotter",
+]
 
-import copy
 import abc
-import numpy as np
-from ...visualize import colors, AdaptiveFancyArrow
-from ..annotation import Annotation, Feature, Location
+from ...visualize import AdaptiveFancyArrow, colors
+from ..annotation import Location
 
 
-def plot_feature_map(axes, annotation, loc_range=None,
-                     multi_line=True, symbols_per_line=1000,
-                     show_numbers=False, number_size=None, line_width=0.05,
-                     show_line_position=False, spacing=0.25,
-                     feature_plotters=None, style_param=None):
+def plot_feature_map(
+    axes,
+    annotation,
+    loc_range=None,
+    multi_line=True,
+    symbols_per_line=1000,
+    show_numbers=False,
+    number_size=None,
+    line_width=0.05,
+    show_line_position=False,
+    spacing=0.25,
+    feature_plotters=None,
+    style_param=None,
+):
     """
     Plot a sequence annotation, by showing the range of each feature
     on one or multiple position depicting line(s).
@@ -87,8 +100,8 @@ def plot_feature_map(axes, annotation, loc_range=None,
     features.
     When two features overlap, their drawing area does also overlap.
     """
-    from matplotlib.transforms import Bbox
     from matplotlib.patches import Rectangle
+    from matplotlib.transforms import Bbox
 
     if loc_range is None:
         loc_range = annotation.get_location_range()
@@ -98,13 +111,13 @@ def plot_feature_map(axes, annotation, loc_range=None,
     else:
         # Line length covers the entire location range
         symbols_per_line = loc_range_length
-    
+
     plotters = [
         PromoterPlotter(),
         TerminatorPlotter(),
         RBSPlotter(),
         CodingPlotter(),
-        MiscFeaturePlotter()
+        MiscFeaturePlotter(),
     ]
     if feature_plotters is not None:
         plotters = list(feature_plotters) + plotters
@@ -116,7 +129,6 @@ def plot_feature_map(axes, annotation, loc_range=None,
     if loc_range_length % symbols_per_line != 0:
         line_count += 1
 
-
     ### Draw lines ###
     remaining_symbols = loc_range_length
     y = 0.5
@@ -127,14 +139,19 @@ def plot_feature_map(axes, annotation, loc_range=None,
         else:
             # Last line -> Line spans to end of annotation
             line_length = remaining_symbols
-        axes.add_patch(Rectangle(
-            (0, y-line_width/2), line_length, line_width,
-            color="gray", linewidth=0
-        ))
+        axes.add_patch(
+            Rectangle(
+                (0, y - line_width / 2),
+                line_length,
+                line_width,
+                color="gray",
+                linewidth=0,
+            )
+        )
         # Increment by spacing and width (=1) of feature
         y += spacing + 1
         remaining_symbols -= symbols_per_line
-    
+
     ### Draw features ###
     line_start_loc = loc_range[0]
     y = 0
@@ -160,15 +177,12 @@ def plot_feature_map(axes, annotation, loc_range=None,
                     width = loc_len
                     height = 1
                     bbox = Bbox.from_bounds(x, y, width, height)
-                    plotter.draw(
-                        axes, feature, bbox, loc,
-                        style_param=style_param
-                    )
+                    plotter.draw(axes, feature, bbox, loc, style_param=style_param)
         # Increment by spacing and width (=1) of feature
         y += spacing + 1
         remaining_symbols += symbols_per_line
         line_start_loc += symbols_per_line
-    
+
     ### Draw position numbers  ###
     ticks = []
     tick_labels = []
@@ -176,11 +190,11 @@ def plot_feature_map(axes, annotation, loc_range=None,
         # Numbers at center height of each feature line -> 0.5
         y = 0.5
         for i in range(line_count):
-            if i == line_count-1:
+            if i == line_count - 1:
                 # Last line -> get number of last column in trace
-                loc = loc_range[1] -1
+                loc = loc_range[1] - 1
             else:
-                loc = loc_range[0] + ((i+1) * symbols_per_line) -1
+                loc = loc_range[0] + ((i + 1) * symbols_per_line) - 1
             ticks.append(y)
             tick_labels.append(str(loc))
             # Increment by spacing and width of feature (1)
@@ -188,20 +202,17 @@ def plot_feature_map(axes, annotation, loc_range=None,
     axes.set_yticks(ticks)
     axes.set_yticklabels(tick_labels)
 
-
     axes.set_xlim(0, symbols_per_line)
     # Y-axis starts from top
-    axes.set_ylim(1*line_count + spacing*(line_count-1), 0)
+    axes.set_ylim(1 * line_count + spacing * (line_count - 1), 0)
     axes.set_frame_on(False)
     # Draw location numbers on right side
     axes.get_yaxis().set_tick_params(
         left=False, right=False, labelleft=False, labelright=True
     )
     # Remove ticks and set number font size
-    axes.yaxis.set_tick_params(
-        left=False, right=False, labelsize=number_size
-    )
-    
+    axes.yaxis.set_tick_params(left=False, right=False, labelsize=number_size)
+
     if show_line_position:
         axes.xaxis.set_tick_params(
             top=False, bottom=True, labeltop=False, labelbottom=True
@@ -236,7 +247,7 @@ class FeaturePlotter(metaclass=abc.ABCMeta):
         ----------
         feature : Feature
             The sequence feature to be checked.
-        
+
         Returns
         -------
         compatibility : bool
@@ -244,7 +255,7 @@ class FeaturePlotter(metaclass=abc.ABCMeta):
             false otherwise.
         """
         pass
-    
+
     @abc.abstractmethod
     def draw(self, axes, feature, bbox, location, style_param):
         """
@@ -284,7 +295,7 @@ class CodingPlotter(FeaturePlotter):
         The width of the arrow head
         as fraction of the feature drawing area height.
     """
-    
+
     def __init__(self, tail_width=0.5, head_width=0.8):
         self._tail_width = tail_width
         self._head_width = head_width
@@ -294,9 +305,9 @@ class CodingPlotter(FeaturePlotter):
             return True
         else:
             return False
-        
+
     def draw(self, axes, feature, bbox, loc, style_param):
-        y = bbox.y0 + bbox.height/2
+        y = bbox.y0 + bbox.height / 2
         dy = 0
         if loc.strand == Location.Strand.FORWARD:
             x = bbox.x0
@@ -304,25 +315,35 @@ class CodingPlotter(FeaturePlotter):
         else:
             x = bbox.x1
             dx = -bbox.width
-        
-        if  (
-                loc.strand == Location.Strand.FORWARD 
-                and loc.defect & Location.Defect.MISS_RIGHT
-            ) or (
-                loc.strand == Location.Strand.REVERSE 
-                and loc.defect & Location.Defect.MISS_LEFT
-            ):
-                # If the feature extends into the prevoius or next line
-                # do not draw an arrow head
-                draw_head = False
+
+        if (
+            loc.strand == Location.Strand.FORWARD
+            and loc.defect & Location.Defect.MISS_RIGHT
+        ) or (
+            loc.strand == Location.Strand.REVERSE
+            and loc.defect & Location.Defect.MISS_LEFT
+        ):
+            # If the feature extends into the prevoius or next line
+            # do not draw an arrow head
+            draw_head = False
         else:
-                draw_head = True
-        
+            draw_head = True
+
         # Create head with 90 degrees tip -> head width/length ratio = 1/2
-        axes.add_patch(AdaptiveFancyArrow(
-            x, y, dx, dy, self._tail_width, self._head_width, head_ratio=0.5,
-            draw_head=draw_head, color=colors["dimgreen"], linewidth=0
-        ))
+        axes.add_patch(
+            AdaptiveFancyArrow(
+                x,
+                y,
+                dx,
+                dy,
+                self._tail_width,
+                self._head_width,
+                head_ratio=0.5,
+                draw_head=draw_head,
+                color=colors["dimgreen"],
+                linewidth=0,
+            )
+        )
 
         if feature.key == "CDS":
             if "product" not in feature.qual:
@@ -332,17 +353,23 @@ class CodingPlotter(FeaturePlotter):
             else:
                 label = feature.qual["product"]
         elif feature.key == "gene":
-            if  "gene" not in feature.qual:
+            if "gene" not in feature.qual:
                 label = None
             else:
                 label = feature.qual["gene"]
-        
+
         if label is not None:
-            center_x = bbox.x0 + bbox.width/2
-            center_y = bbox.y0 + bbox.height/2
+            center_x = bbox.x0 + bbox.width / 2
+            center_y = bbox.y0 + bbox.height / 2
             axes.text(
-                center_x, center_y, label, color="black",
-                ha="center", va="center", size=11)
+                center_x,
+                center_y,
+                label,
+                color="black",
+                ha="center",
+                va="center",
+                size=11,
+            )
 
 
 class MiscFeaturePlotter(FeaturePlotter):
@@ -363,16 +390,19 @@ class MiscFeaturePlotter(FeaturePlotter):
 
     def matches(self, feature):
         return True
-        
+
     def draw(self, axes, feature, bbox, loc, style_param):
         from matplotlib.patches import Rectangle
 
         rect = Rectangle(
-            (bbox.x0, bbox.y0 + bbox.height/2 * (1-self._height)),
-            bbox.width, bbox.height*self._height,
-            color=colors["dimorange"], linewidth=0
+            (bbox.x0, bbox.y0 + bbox.height / 2 * (1 - self._height)),
+            bbox.width,
+            bbox.height * self._height,
+            color=colors["dimorange"],
+            linewidth=0,
         )
         axes.add_patch(rect)
+
 
 class PromoterPlotter(FeaturePlotter):
     """
@@ -394,8 +424,7 @@ class PromoterPlotter(FeaturePlotter):
         as fraction of the halffeature drawing area height.
     """
 
-    def __init__(self, line_width=2, head_width=2,
-                 head_length=6, head_height=0.8):
+    def __init__(self, line_width=2, head_width=2, head_length=6, head_height=0.8):
         self._line_width = line_width
         self._head_width = head_width
         self._head_length = head_length
@@ -404,43 +433,42 @@ class PromoterPlotter(FeaturePlotter):
     def matches(self, feature):
         if feature.key == "regulatory":
             if "regulatory_class" in feature.qual:
-                if feature.qual["regulatory_class"] in ["promoter","TATA_box"]:
+                if feature.qual["regulatory_class"] in ["promoter", "TATA_box"]:
                     return True
         return False
-        
+
     def draw(self, axes, feature, bbox, loc, style_param):
-        from matplotlib.patches import FancyArrowPatch, ArrowStyle
+        from matplotlib.patches import ArrowStyle, FancyArrowPatch
         from matplotlib.path import Path
 
-        x_center = bbox.x0 + bbox.width/2
-        y_center = bbox.y0 + bbox.height/2
+        x_center = bbox.x0 + bbox.width / 2
+        y_center = bbox.y0 + bbox.height / 2
 
         path = Path(
             vertices=[
                 (bbox.x0, y_center),
-                (bbox.x0, y_center - bbox.height/2 * self._head_height),
-                (bbox.x1, y_center - bbox.height/2 * self._head_height),
+                (bbox.x0, y_center - bbox.height / 2 * self._head_height),
+                (bbox.x1, y_center - bbox.height / 2 * self._head_height),
             ],
-            codes=[
-                Path.MOVETO,
-                Path.CURVE3,
-                Path.CURVE3
-            ]
+            codes=[Path.MOVETO, Path.CURVE3, Path.CURVE3],
         )
         style = ArrowStyle.CurveFilledB(
             head_width=self._head_width, head_length=self._head_length
         )
         arrow = FancyArrowPatch(
-            path=path, arrowstyle=style, linewidth=self._line_width,
-            color="black"
+            path=path, arrowstyle=style, linewidth=self._line_width, color="black"
         )
         axes.add_patch(arrow)
-        
+
         if "note" in feature.qual:
             axes.text(
-                x_center, y_center + bbox.height/4, feature.qual["note"],
-                color="black", ha="center", va="center",
-                size=9
+                x_center,
+                y_center + bbox.height / 4,
+                feature.qual["note"],
+                color="black",
+                ha="center",
+                va="center",
+                size=9,
             )
 
 
@@ -465,14 +493,17 @@ class TerminatorPlotter(FeaturePlotter):
                 if feature.qual["regulatory_class"] == "terminator":
                     return True
         return False
-        
-    def draw(self, axes, feature, bbox, loc, style_param):
 
-        x = bbox.x0 + bbox.width/2
+    def draw(self, axes, feature, bbox, loc, style_param):
+        x = bbox.x0 + bbox.width / 2
 
         axes.plot(
-            (x, x), (bbox.y0, bbox.y1), color="black",
-            linestyle="-", linewidth=self._bar_width, marker="None"
+            (x, x),
+            (bbox.y0, bbox.y1),
+            color="black",
+            linestyle="-",
+            linewidth=self._bar_width,
+            marker="None",
         )
 
 
@@ -499,12 +530,15 @@ class RBSPlotter(FeaturePlotter):
                 if feature.qual["regulatory_class"] == "ribosome_binding_site":
                     return True
         return False
-        
+
     def draw(self, axes, feature, bbox, loc, style_param):
         from matplotlib.patches import Ellipse
 
         ellipse = Ellipse(
-            (bbox.x0 + bbox.width/2, bbox.y0 + bbox.height/2),
-            bbox.width, self._height*bbox.height,
-            color=colors["dimorange"], linewidth=0)
+            (bbox.x0 + bbox.width / 2, bbox.y0 + bbox.height / 2),
+            bbox.width,
+            self._height * bbox.height,
+            color=colors["dimorange"],
+            linewidth=0,
+        )
         axes.add_patch(ellipse)

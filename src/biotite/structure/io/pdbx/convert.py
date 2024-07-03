@@ -23,24 +23,29 @@ from ....sequence.seqtypes import NucleotideSequence, ProteinSequence
 from ...atoms import AtomArray, AtomArrayStack, repeat
 from ...bonds import BondList, BondType, connect_via_residue_names
 from ...box import unitcell_from_vectors, vectors_from_unitcell
+from ...error import BadStructureError
 from ...filter import filter_first_altloc, filter_highest_occupancy_altloc
 from ...residues import get_residue_count, get_residue_starts_for
-from ...error import BadStructureError
 from ...util import matrix_rotate
+from .bcif import BinaryCIFBlock, BinaryCIFColumn, BinaryCIFFile
+from .cif import CIFBlock, CIFFile
 from .component import MaskValue
-from .cif import CIFFile, CIFBlock
-from .bcif import BinaryCIFFile, BinaryCIFBlock, BinaryCIFColumn
 from .encoding import StringArrayEncoding
-
 
 # Cond types in `struct_conn` category that refer to covalent bonds
 PDBX_COVALENT_TYPES = [
-    "covale", "covale_base", "covale_phosphate", "covale_sugar",
-    "disulf", "modres", "modres_link", "metalc"
+    "covale",
+    "covale_base",
+    "covale_phosphate",
+    "covale_sugar",
+    "disulf",
+    "modres",
+    "modres_link",
+    "metalc",
 ]
 # Map 'struct_conn' bond orders to 'BondType'...
 PDBX_BOND_ORDER_TO_TYPE = {
-    "":     BondType.ANY,
+    "": BondType.ANY,
     "sing": BondType.SINGLE,
     "doub": BondType.DOUBLE,
     "trip": BondType.TRIPLE,
@@ -60,13 +65,13 @@ PDBX_BOND_TYPE_TO_ORDER = {
 }
 # Map 'chem_comp_bond' bond orders and aromaticity to 'BondType'...
 COMP_BOND_ORDER_TO_TYPE = {
-    ("SING", "N") : BondType.SINGLE,
-    ("DOUB", "N") : BondType.DOUBLE,
-    ("TRIP", "N") : BondType.TRIPLE,
-    ("QUAD", "N") : BondType.QUADRUPLE,
-    ("SING", "Y") : BondType.AROMATIC_SINGLE,
-    ("DOUB", "Y") : BondType.AROMATIC_DOUBLE,
-    ("TRIP", "Y") : BondType.AROMATIC_TRIPLE,
+    ("SING", "N"): BondType.SINGLE,
+    ("DOUB", "N"): BondType.DOUBLE,
+    ("TRIP", "N"): BondType.TRIPLE,
+    ("QUAD", "N"): BondType.QUADRUPLE,
+    ("SING", "Y"): BondType.AROMATIC_SINGLE,
+    ("DOUB", "Y"): BondType.AROMATIC_DOUBLE,
+    ("TRIP", "Y"): BondType.AROMATIC_TRIPLE,
 }
 # ...and vice versa
 COMP_BOND_TYPE_TO_ORDER = {
@@ -97,16 +102,15 @@ def _filter(category, index):
     Column = Category.subcomponent_class()
     Data = Column.subcomponent_class()
 
-    return Category({
-        key: Column(
-            Data(column.data.array[index]),
-            (
-                Data(column.mask.array[index])
-                if column.mask is not None else None
+    return Category(
+        {
+            key: Column(
+                Data(column.data.array[index]),
+                (Data(column.mask.array[index]) if column.mask is not None else None),
             )
-        )
-        for key, column in category.items()
-    })
+            for key, column in category.items()
+        }
+    )
 
 
 def get_sequence(pdbx_file, data_block=None):
@@ -148,7 +152,7 @@ def get_sequence(pdbx_file, data_block=None):
     """
 
     block = _get_block(pdbx_file, data_block)
-    poly_category= block["entity_poly"]
+    poly_category = block["entity_poly"]
 
     seq_string = poly_category["pdbx_seq_one_letter_code_can"].as_array(str)
     seq_type = poly_category["type"].as_array(str)
@@ -158,7 +162,7 @@ def get_sequence(pdbx_file, data_block=None):
         for string, stype in zip(seq_string, seq_type)
     ]
 
-    strand_ids = poly_category['pdbx_strand_id'].as_array(str)
+    strand_ids = poly_category["pdbx_strand_id"].as_array(str)
     strand_ids = [strand_id.split(",") for strand_id in strand_ids]
 
     sequence_dict = {
@@ -192,14 +196,20 @@ def get_model_count(pdbx_file, data_block=None):
         The number of models.
     """
     block = _get_block(pdbx_file, data_block)
-    return len(_get_model_starts(
-        block["atom_site"]["pdbx_PDB_model_num"].as_array(np.int32)
-    ))
+    return len(
+        _get_model_starts(block["atom_site"]["pdbx_PDB_model_num"].as_array(np.int32))
+    )
 
 
-def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
-                  extra_fields=None, use_author_fields=True,
-                  include_bonds=False):
+def get_structure(
+    pdbx_file,
+    model=None,
+    data_block=None,
+    altloc="first",
+    extra_fields=None,
+    use_author_fields=True,
+    include_bonds=False,
+):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from the
     ``atom_site`` category in a file.
@@ -310,12 +320,21 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
                 "instead"
             )
 
-        atoms.coord[:, :, 0] = atom_site["Cartn_x"].as_array(np.float32) \
-                              .reshape((model_count, model_length))
-        atoms.coord[:, :, 1] = atom_site["Cartn_y"].as_array(np.float32) \
-                              .reshape((model_count, model_length))
-        atoms.coord[:, :, 2] = atom_site["Cartn_z"].as_array(np.float32) \
-                              .reshape((model_count, model_length))
+        atoms.coord[:, :, 0] = (
+            atom_site["Cartn_x"]
+            .as_array(np.float32)
+            .reshape((model_count, model_length))
+        )
+        atoms.coord[:, :, 1] = (
+            atom_site["Cartn_y"]
+            .as_array(np.float32)
+            .reshape((model_count, model_length))
+        )
+        atoms.coord[:, :, 2] = (
+            atom_site["Cartn_z"]
+            .as_array(np.float32)
+            .reshape((model_count, model_length))
+        )
 
         box = _get_box(block)
         if box is not None:
@@ -345,31 +364,25 @@ def get_structure(pdbx_file, model=None, data_block=None, altloc="first",
         atoms.box = _get_box(block)
 
     # The below part is the same for both, AtomArray and AtomArrayStack
-    _fill_annotations(
-        atoms, model_atom_site, extra_fields, use_author_fields
-    )
+    _fill_annotations(atoms, model_atom_site, extra_fields, use_author_fields)
     if include_bonds:
         if "chem_comp_bond" in block:
             try:
-                custom_bond_dict = _parse_intra_residue_bonds(
-                    block["chem_comp_bond"]
-                )
+                custom_bond_dict = _parse_intra_residue_bonds(block["chem_comp_bond"])
             except KeyError:
                 warnings.warn(
                     "The 'chem_comp_bond' category has missing columns, "
                     "falling back to using Chemical Component Dictionary",
-                    UserWarning
+                    UserWarning,
                 )
                 custom_bond_dict = None
-            bonds = connect_via_residue_names(
-                atoms, custom_bond_dict=custom_bond_dict
-            )
+            bonds = connect_via_residue_names(atoms, custom_bond_dict=custom_bond_dict)
         else:
             bonds = connect_via_residue_names(atoms)
         if "struct_conn" in block:
-            bonds = bonds.merge(_parse_inter_residue_bonds(
-                model_atom_site, block["struct_conn"]
-            ))
+            bonds = bonds.merge(
+                _parse_inter_residue_bonds(model_atom_site, block["struct_conn"])
+            )
         atoms.bonds = bonds
     atoms = _filter_altloc(atoms, model_atom_site, altloc)
 
@@ -388,24 +401,24 @@ def _get_block(pdbx_component, block_name):
 
 
 def _get_or_fallback(category, key, fallback_key):
-        """
-        Return column related to key in category if it exists,
-        otherwise try to get the column related to fallback key.
-        """
-        if key not in category:
-            warnings.warn(
-                f"Attribute '{key}' not found within 'atom_site' category. "
-                f"The fallback attribute '{fallback_key}' will be used instead",
-                UserWarning
-            )
-            try:
-                return category[fallback_key]
-            except KeyError as key_exc:
-                raise InvalidFileError(
-                    f"Fallback attribute '{fallback_key}' not found within "
-                    "'atom_site' category"
-                ) from key_exc
-        return category[key]
+    """
+    Return column related to key in category if it exists,
+    otherwise try to get the column related to fallback key.
+    """
+    if key not in category:
+        warnings.warn(
+            f"Attribute '{key}' not found within 'atom_site' category. "
+            f"The fallback attribute '{fallback_key}' will be used instead",
+            UserWarning,
+        )
+        try:
+            return category[fallback_key]
+        except KeyError as key_exc:
+            raise InvalidFileError(
+                f"Fallback attribute '{fallback_key}' not found within "
+                "'atom_site' category"
+            ) from key_exc
+    return category[key]
 
 
 def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
@@ -424,78 +437,52 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
         instead of ``label_``.
     """
 
-    prefix, alt_prefix = (
-        ("auth", "label") if use_author_fields else ("label", "auth")
-    )
+    prefix, alt_prefix = ("auth", "label") if use_author_fields else ("label", "auth")
 
     array.set_annotation(
         "chain_id",
         _get_or_fallback(
             atom_site, f"{prefix}_asym_id", f"{alt_prefix}_asym_id"
-        ).as_array("U4")
+        ).as_array("U4"),
     )
     array.set_annotation(
         "res_id",
         _get_or_fallback(
             atom_site, f"{prefix}_seq_id", f"{alt_prefix}_seq_id"
-        ).as_array(int, -1)
+        ).as_array(int, -1),
     )
-    array.set_annotation(
-        "ins_code",
-        atom_site["pdbx_PDB_ins_code"].as_array("U1", "")
-    )
+    array.set_annotation("ins_code", atom_site["pdbx_PDB_ins_code"].as_array("U1", ""))
     array.set_annotation(
         "res_name",
         _get_or_fallback(
             atom_site, f"{prefix}_comp_id", f"{alt_prefix}_comp_id"
-        ).as_array("U5")
+        ).as_array("U5"),
     )
-    array.set_annotation(
-        "hetero",
-        atom_site["group_PDB"].as_array(str) == "HETATM"
-    )
+    array.set_annotation("hetero", atom_site["group_PDB"].as_array(str) == "HETATM")
     array.set_annotation(
         "atom_name",
         _get_or_fallback(
             atom_site, f"{prefix}_atom_id", f"{alt_prefix}_atom_id"
-        ).as_array("U6")
+        ).as_array("U6"),
     )
-    array.set_annotation(
-        "element",
-        atom_site["type_symbol"].as_array("U2")
-    )
+    array.set_annotation("element", atom_site["type_symbol"].as_array("U2"))
 
     if "atom_id" in extra_fields:
-        array.set_annotation(
-            "atom_id",
-            atom_site["id"].as_array(int)
-        )
+        array.set_annotation("atom_id", atom_site["id"].as_array(int))
         extra_fields.remove("atom_id")
     if "b_factor" in extra_fields:
-        array.set_annotation(
-            "b_factor",
-            atom_site["B_iso_or_equiv"].as_array(float)
-        )
+        array.set_annotation("b_factor", atom_site["B_iso_or_equiv"].as_array(float))
         extra_fields.remove("b_factor")
     if "occupancy" in extra_fields:
-        array.set_annotation(
-            "occupancy",
-            atom_site["occupancy"].as_array(float)
-        )
+        array.set_annotation("occupancy", atom_site["occupancy"].as_array(float))
         extra_fields.remove("occupancy")
     if "charge" in extra_fields:
-        array.set_annotation(
-            "charge",
-            atom_site["pdbx_formal_charge"].as_array(int, 0)
-        )
+        array.set_annotation("charge", atom_site["pdbx_formal_charge"].as_array(int, 0))
         extra_fields.remove("charge")
 
     # Handle all remaining custom fields
     for field in extra_fields:
-        array.set_annotation(
-            field,
-            atom_site[field].as_array(str)
-        )
+        array.set_annotation(field, atom_site[field].as_array(str))
 
 
 def _parse_intra_residue_bonds(chem_comp_bond):
@@ -509,7 +496,7 @@ def _parse_intra_residue_bonds(chem_comp_bond):
         chem_comp_bond["atom_id_1"].as_array(str),
         chem_comp_bond["atom_id_2"].as_array(str),
         chem_comp_bond["value_order"].as_array(str),
-        chem_comp_bond["pdbx_aromatic_flag"].as_array(str)
+        chem_comp_bond["pdbx_aromatic_flag"].as_array(str),
     ):
         if res_name not in custom_bond_dict:
             custom_bond_dict[res_name] = {}
@@ -530,33 +517,32 @@ def _parse_inter_residue_bonds(atom_site, struct_conn):
     IDENTITY = "1_555"
     # Columns in 'atom_site' that should be matched by 'struct_conn'
     COLUMNS = [
-        "label_asym_id", "label_comp_id", "label_seq_id", "label_atom_id",
-        "label_alt_id", "auth_asym_id", "auth_comp_id", "auth_seq_id",
-        "pdbx_PDB_ins_code"
+        "label_asym_id",
+        "label_comp_id",
+        "label_seq_id",
+        "label_atom_id",
+        "label_alt_id",
+        "auth_asym_id",
+        "auth_comp_id",
+        "auth_seq_id",
+        "pdbx_PDB_ins_code",
     ]
 
     covale_mask = np.isin(
         struct_conn["conn_type_id"].as_array(str), PDBX_COVALENT_TYPES
     )
     if "ptnr1_symmetry" in struct_conn:
-        covale_mask &= (
-            struct_conn["ptnr1_symmetry"].as_array(str, IDENTITY) == IDENTITY
-        )
+        covale_mask &= struct_conn["ptnr1_symmetry"].as_array(str, IDENTITY) == IDENTITY
     if "ptnr2_symmetry" in struct_conn:
-        covale_mask &= (
-            struct_conn["ptnr2_symmetry"].as_array(str, IDENTITY) == IDENTITY
-        )
+        covale_mask &= struct_conn["ptnr2_symmetry"].as_array(str, IDENTITY) == IDENTITY
 
     atom_indices = [None] * 2
     for i in range(2):
         reference_arrays = []
         query_arrays = []
         for col_name in COLUMNS:
-            struct_conn_col_name = _get_struct_conn_col_name(col_name, i+1)
-            if (
-                col_name not in atom_site
-                or struct_conn_col_name not in struct_conn
-            ):
+            struct_conn_col_name = _get_struct_conn_col_name(col_name, i + 1)
+            if col_name not in atom_site or struct_conn_col_name not in struct_conn:
                 continue
             # Ensure both arrays have the same dtype to allow comparison
             reference = atom_site[col_name].as_array()
@@ -593,7 +579,7 @@ def _parse_inter_residue_bonds(atom_site, struct_conn):
 
     return BondList(
         atom_site.row_count,
-        np.stack([atoms_indices_1, atoms_indices_2, bond_types], axis=-1)
+        np.stack([atoms_indices_1, atoms_indices_2, bond_types], axis=-1),
     )
 
 
@@ -603,10 +589,13 @@ def _find_matches(query_arrays, reference_arrays):
     `reference_arrays` where all query values the reference counterpart.
     If no match is found for a query, the corresponding index is -1.
     """
-    match_masks_for_all_columns = np.stack([
-        query[:, np.newaxis] == reference[np.newaxis, :]
-        for query, reference in zip(query_arrays, reference_arrays)
-    ], axis=-1)
+    match_masks_for_all_columns = np.stack(
+        [
+            query[:, np.newaxis] == reference[np.newaxis, :]
+            for query, reference in zip(query_arrays, reference_arrays)
+        ],
+        axis=-1,
+    )
     match_masks = np.all(match_masks_for_all_columns, axis=-1)
     query_matches, reference_matches = np.where(match_masks)
 
@@ -685,9 +674,7 @@ def _filter_model(atom_site, model_starts, model):
     Data = Column.subcomponent_class()
 
     # Append exclusive stop
-    model_starts = np.append(
-        model_starts, [atom_site.row_count]
-    )
+    model_starts = np.append(model_starts, [atom_site.row_count])
     # Indexing starts at 0, but model number starts at 1
     model_index = model - 1
     index = slice(model_starts[model_index], model_starts[model_index + 1])
@@ -773,9 +760,7 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
     # Fill PDBx columns from information
     # in structures' attribute arrays as good as possible
     atom_site = Category()
-    atom_site["group_PDB"] = np.where(
-        array.hetero, "HETATM", "ATOM"
-    )
+    atom_site["group_PDB"] = np.where(array.hetero, "HETATM", "ATOM")
     atom_site["type_symbol"] = np.copy(array.element)
     atom_site["label_atom_id"] = np.copy(array.atom_name)
     atom_site["label_alt_id"] = Column(
@@ -789,7 +774,7 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
     atom_site["label_seq_id"] = np.copy(array.res_id)
     atom_site["pdbx_PDB_ins_code"] = Column(
         np.copy(array.ins_code),
-        np.where(array.ins_code == "", MaskValue.INAPPLICABLE, MaskValue.PRESENT)
+        np.where(array.ins_code == "", MaskValue.INAPPLICABLE, MaskValue.PRESENT),
     )
     atom_site["auth_seq_id"] = atom_site["label_seq_id"]
     atom_site["auth_comp_id"] = atom_site["label_comp_id"]
@@ -806,11 +791,11 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
     if "charge" in annot_categories:
         atom_site["pdbx_formal_charge"] = Column(
             np.array([f"{c:+d}" if c != 0 else "?" for c in array.charge]),
-            np.where(array.charge == 0, MaskValue.MISSING, MaskValue.PRESENT)
+            np.where(array.charge == 0, MaskValue.MISSING, MaskValue.PRESENT),
         )
 
     if array.bonds is not None:
-        struct_conn =  _set_inter_residue_bonds(array, atom_site)
+        struct_conn = _set_inter_residue_bonds(array, atom_site)
         if struct_conn is not None:
             block["struct_conn"] = struct_conn
         if include_bonds:
@@ -828,16 +813,12 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
         atom_site["Cartn_x"] = np.copy(np.ravel(array.coord[..., 0]))
         atom_site["Cartn_y"] = np.copy(np.ravel(array.coord[..., 1]))
         atom_site["Cartn_z"] = np.copy(np.ravel(array.coord[..., 2]))
-        atom_site["pdbx_PDB_model_num"] = np.ones(
-            array.array_length(), dtype=np.int32
-        )
+        atom_site["pdbx_PDB_model_num"] = np.ones(array.array_length(), dtype=np.int32)
     # In case of multiple models repeat annotations
     # and use model specific coordinates
     else:
         atom_site = _repeat(atom_site, array.stack_depth())
-        coord = np.reshape(
-            array.coord, (array.stack_depth() * array.array_length(), 3)
-        )
+        coord = np.reshape(array.coord, (array.stack_depth() * array.array_length(), 3))
         atom_site["Cartn_x"] = np.copy(coord[:, 0])
         atom_site["Cartn_y"] = np.copy(coord[:, 1])
         atom_site["Cartn_z"] = np.copy(coord[:, 2])
@@ -845,11 +826,9 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
             np.arange(1, array.stack_depth() + 1, dtype=np.int32),
             repeats=array.array_length(),
         )
-    if not "atom_id" in annot_categories:
+    if "atom_id" not in annot_categories:
         # Count from 1
-        atom_site["id"] = np.arange(
-            1, len(atom_site["group_PDB"]) + 1
-        )
+        atom_site["id"] = np.arange(1, len(atom_site["group_PDB"]) + 1)
     block["atom_site"] = atom_site
 
     # Write box into file
@@ -938,8 +917,11 @@ def _repeat(category, repetitions):
             data = Data(np.tile(column.data.array, repetitions), data_encoding)
         else:
             data = Data(np.tile(column.data.array, repetitions))
-        mask = Data(np.tile(column.mask.array, repetitions)) \
-               if column.mask is not None else None
+        mask = (
+            Data(np.tile(column.mask.array, repetitions))
+            if column.mask is not None
+            else None
+        )
         category_dict[key] = Column(data, mask)
     return Category(category_dict)
 
@@ -986,22 +968,18 @@ def _set_intra_residue_bonds(array, atom_site):
     chem_comp_bond["atom_id_1"] = array.atom_name[bond_array[:, 0]]
     chem_comp_bond["atom_id_2"] = array.atom_name[bond_array[:, 1]]
     chem_comp_bond["value_order"] = Column(
-        value_order,
-        np.where(any_mask, MaskValue.MISSING, MaskValue.PRESENT)
+        value_order, np.where(any_mask, MaskValue.MISSING, MaskValue.PRESENT)
     )
     chem_comp_bond["pdbx_aromatic_flag"] = Column(
-        aromatic_flag,
-        np.where(any_mask, MaskValue.MISSING, MaskValue.PRESENT)
+        aromatic_flag, np.where(any_mask, MaskValue.MISSING, MaskValue.PRESENT)
     )
     # BondList does not contain stereo information
     # -> all values are missing
     chem_comp_bond["pdbx_stereo_config"] = Column(
         np.zeros(len(bond_array), dtype="U1"),
-        np.full(len(bond_array), MaskValue.MISSING)
+        np.full(len(bond_array), MaskValue.MISSING),
     )
-    chem_comp_bond["pdbx_ordinal"] = np.arange(
-        1, len(bond_array) + 1, dtype=np.int32
-    )
+    chem_comp_bond["pdbx_ordinal"] = np.arange(1, len(bond_array) + 1, dtype=np.int32)
     return chem_comp_bond
 
 
@@ -1013,8 +991,11 @@ def _set_inter_residue_bonds(array, atom_site):
     ``atom_site`` category.
     """
     COLUMNS = [
-        "label_asym_id", "label_comp_id", "label_seq_id", "label_atom_id",
-        "pdbx_PDB_ins_code"
+        "label_asym_id",
+        "label_comp_id",
+        "label_seq_id",
+        "label_atom_id",
+        "pdbx_PDB_ins_code",
     ]
 
     Category = type(atom_site)
@@ -1027,13 +1008,12 @@ def _set_inter_residue_bonds(array, atom_site):
     struct_conn["id"] = np.arange(1, len(bond_array) + 1)
     struct_conn["conn_type_id"] = np.full(len(bond_array), "covale")
     struct_conn["pdbx_value_order"] = Column(
-        np.array(
-            [PDBX_BOND_TYPE_TO_ORDER[btype] for btype in bond_array[:, 2]]
-        ),
+        np.array([PDBX_BOND_TYPE_TO_ORDER[btype] for btype in bond_array[:, 2]]),
         np.where(
             bond_array[:, 2] == BondType.ANY,
-            MaskValue.MISSING, MaskValue.PRESENT,
-        )
+            MaskValue.MISSING,
+            MaskValue.PRESENT,
+        ),
     )
     # Write the identifying annotation...
     for col_name in COLUMNS:
@@ -1041,8 +1021,9 @@ def _set_inter_residue_bonds(array, atom_site):
         # ...for each bond partner
         for i in range(2):
             atom_indices = bond_array[:, i]
-            struct_conn[_get_struct_conn_col_name(col_name, i+1)] \
-                = annot[atom_indices]
+            struct_conn[_get_struct_conn_col_name(col_name, i + 1)] = annot[
+                atom_indices
+            ]
     return struct_conn
 
 
@@ -1054,9 +1035,9 @@ def _filter_bonds(array, connection):
     bond_array = array.bonds.as_array()
     # To save computation time call 'get_residue_starts_for()' only once
     # with indices of the first and second atom of each bond
-    residue_starts_1, residue_starts_2 = get_residue_starts_for(
-        array, bond_array[:, :2].flatten()
-    ).reshape(-1, 2).T
+    residue_starts_1, residue_starts_2 = (
+        get_residue_starts_for(array, bond_array[:, :2].flatten()).reshape(-1, 2).T
+    )
     if connection == "intra":
         return bond_array[residue_starts_1 == residue_starts_2]
     elif connection == "inter":
@@ -1065,8 +1046,7 @@ def _filter_bonds(array, connection):
         raise ValueError("Invalid 'connection' option")
 
 
-def get_component(pdbx_file, data_block=None, use_ideal_coord=True,
-                  res_name=None):
+def get_component(pdbx_file, data_block=None, use_ideal_coord=True, res_name=None):
     """
     Create an :class:`AtomArray` for a chemical component from the
     ``chem_comp_atom`` and, if available, the ``chem_comp_bond``
@@ -1166,16 +1146,16 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True,
         coord_fields, alt_coord_fields = alt_coord_fields, coord_fields
     try:
         for i, field in enumerate(coord_fields):
-            array.coord[:,i] = atom_category[field].as_array(np.float32)
+            array.coord[:, i] = atom_category[field].as_array(np.float32)
     except KeyError as err:
         key = err.args[0]
         warnings.warn(
             f"Attribute '{key}' not found within 'chem_comp_atom' category. "
             f"The fallback coordinates will be used instead",
-            UserWarning
+            UserWarning,
         )
         for i, field in enumerate(alt_coord_fields):
-            array.coord[:,i] = atom_category[field].as_array(np.float32)
+            array.coord[:, i] = atom_category[field].as_array(np.float32)
 
     try:
         bond_category = block["chem_comp_bond"]
@@ -1185,9 +1165,8 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True,
             )
     except KeyError:
         warnings.warn(
-            f"Category 'chem_comp_bond' not found. "
-            f"No bonds will be parsed",
-            UserWarning
+            "Category 'chem_comp_bond' not found. " "No bonds will be parsed",
+            UserWarning,
         )
     else:
         bonds = BondList(array.array_length())
@@ -1195,7 +1174,7 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True,
             bond_category["atom_id_1"].as_array(str),
             bond_category["atom_id_2"].as_array(str),
             bond_category["value_order"].as_array(str),
-            bond_category["pdbx_aromatic_flag"].as_array(str)
+            bond_category["pdbx_aromatic_flag"].as_array(str),
         ):
             atom_i = np.where(array.atom_name == atom1)[0][0]
             atom_j = np.where(array.atom_name == atom2)[0][0]
@@ -1237,9 +1216,7 @@ def set_component(pdbx_file, array, data_block=None):
     Category = block.subcomponent_class()
 
     if get_residue_count(array) > 1:
-        raise BadStructureError(
-            "The input atom array must comprise only one residue"
-        )
+        raise BadStructureError("The input atom array must comprise only one residue")
     res_name = array.res_name[0]
 
     annot_categories = array.get_annotation_categories()
@@ -1262,30 +1239,27 @@ def set_component(pdbx_file, array, data_block=None):
     atom_cat["pdbx_model_Cartn_z_ideal"] = atom_cat["model_Cartn_z"]
     atom_cat["pdbx_component_atom_id"] = atom_cat["atom_id"]
     atom_cat["pdbx_component_comp_id"] = atom_cat["comp_id"]
-    atom_cat["pdbx_ordinal"] = np.arange(
-        1, array.array_length() + 1
-    ).astype(str)
+    atom_cat["pdbx_ordinal"] = np.arange(1, array.array_length() + 1).astype(str)
     block["chem_comp_atom"] = atom_cat
 
     if array.bonds is not None and array.bonds.get_bond_count() > 0:
         bond_array = array.bonds.as_array()
         order_flags = []
         aromatic_flags = []
-        for bond_type in bond_array[:,2]:
+        for bond_type in bond_array[:, 2]:
             order_flag, aromatic_flag = COMP_BOND_TYPE_TO_ORDER[bond_type]
             order_flags.append(order_flag)
             aromatic_flags.append(aromatic_flag)
 
         bond_cat = Category()
         bond_cat["comp_id"] = np.full(len(bond_array), res_name)
-        bond_cat["atom_id_1"] = array.atom_name[bond_array[:,0]]
-        bond_cat["atom_id_2"] = array.atom_name[bond_array[:,1]]
+        bond_cat["atom_id_1"] = array.atom_name[bond_array[:, 0]]
+        bond_cat["atom_id_2"] = array.atom_name[bond_array[:, 1]]
         bond_cat["value_order"] = np.array(order_flags)
         bond_cat["pdbx_aromatic_flag"] = np.array(aromatic_flags)
-        bond_cat["pdbx_ordinal"] = np.arange(
-            1, len(bond_array) + 1
-        ).astype(str)
+        bond_cat["pdbx_ordinal"] = np.arange(1, len(bond_array) + 1).astype(str)
         block["chem_comp_bond"] = bond_cat
+
 
 def list_assemblies(pdbx_file, data_block=None):
     """
@@ -1337,14 +1311,21 @@ def list_assemblies(pdbx_file, data_block=None):
         id: details
         for id, details in zip(
             assembly_category["id"].as_array(str),
-            assembly_category["details"].as_array(str)
+            assembly_category["details"].as_array(str),
         )
     }
 
 
-def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
-                 altloc="first", extra_fields=None, use_author_fields=True,
-                 include_bonds=False):
+def get_assembly(
+    pdbx_file,
+    assembly_id=None,
+    model=None,
+    data_block=None,
+    altloc="first",
+    extra_fields=None,
+    use_author_fields=True,
+    include_bonds=False,
+):
     """
     Build the given biological assembly.
 
@@ -1434,9 +1415,7 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
     try:
         assembly_gen_category = block["pdbx_struct_assembly_gen"]
     except KeyError:
-        raise InvalidFileError(
-            "File has no 'pdbx_struct_assembly_gen' category"
-        )
+        raise InvalidFileError("File has no 'pdbx_struct_assembly_gen' category")
 
     try:
         struct_oper_category = block["pdbx_struct_oper_list"]
@@ -1469,7 +1448,7 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
         altloc,
         extra_fields_and_asym,
         use_author_fields,
-        include_bonds
+        include_bonds,
     )
 
     ### Get transformations and apply them to the affected asym IDs
@@ -1485,9 +1464,7 @@ def get_assembly(pdbx_file, assembly_id=None, model=None, data_block=None,
             operations = _parse_operation_expression(op_expr)
             asym_ids = asym_id_expr.split(",")
             # Filter affected asym IDs
-            sub_structure = structure[
-                ..., np.isin(structure.label_asym_id, asym_ids)
-            ]
+            sub_structure = structure[..., np.isin(structure.label_asym_id, asym_ids)]
             sub_assembly = _apply_transformations(
                 sub_structure, transformations, operations
             )
@@ -1546,10 +1523,9 @@ def _get_transformations(struct_oper):
                 for i in (1, 2, 3)
             ]
         )
-        translation_vector = np.array([
-            struct_oper[f"vector[{i}]"].as_array(float)[index]
-            for i in (1, 2, 3)
-        ])
+        translation_vector = np.array(
+            [struct_oper[f"vector[{i}]"].as_array(float)[index] for i in (1, 2, 3)]
+        )
         transformation_dict[id] = (rotation_matrix, translation_vector)
     return transformation_dict
 
@@ -1604,6 +1580,4 @@ def _convert_string_to_sequence(string, stype):
     elif stype in _other_type_list:
         return None
     else:
-        raise InvalidFileError(
-            "mmCIF _entity_poly.type unsupported" " type: " + stype
-        )
+        raise InvalidFileError("mmCIF _entity_poly.type unsupported" " type: " + stype)

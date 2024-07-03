@@ -22,25 +22,23 @@ looks quite similar to your sequence.
 # License: BSD 3 clause
 
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 import numpy as np
+from matplotlib.lines import Line2D
 from scipy.stats import linregress
 import biotite
+import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align
-from biotite.sequence.align.alignment import score
-import biotite.sequence.io.fasta as fasta
-import biotite.database.entrez as entrez
 import biotite.sequence.graphics as graphics
-
+import biotite.sequence.io.fasta as fasta
 
 GAP_PENALTY = (-12, -1)
 
 
 # Download and parse protein sequences of avidin and streptavidin
-fasta_file = fasta.FastaFile.read(entrez.fetch_single_file(
-    ["CAC34569", "ACL82594"], None, "protein", "fasta"
-))
+fasta_file = fasta.FastaFile.read(
+    entrez.fetch_single_file(["CAC34569", "ACL82594"], None, "protein", "fasta")
+)
 for name, sequence in fasta_file.items():
     if "CAC34569" in name:
         query_seq = seq.ProteinSequence(sequence)
@@ -54,8 +52,7 @@ matrix = align.SubstitutionMatrix.std_protein_matrix()
 # Perform pairwise sequence alignment with affine gap penalty
 # Terminal gaps are not penalized
 alignment = align.align_optimal(
-    query_seq, hit_seq, matrix,
-    local=True, gap_penalty=GAP_PENALTY, max_number=1
+    query_seq, hit_seq, matrix, local=True, gap_penalty=GAP_PENALTY, max_number=1
 )[0]
 
 
@@ -64,8 +61,12 @@ print(f"Score: {alignment.score}")
 fig = plt.figure(figsize=(8.0, 3.0))
 ax = fig.add_subplot(111)
 graphics.plot_alignment_similarity_based(
-    ax, alignment, matrix=matrix, labels=["Avidin (query)", "Database hit"],
-    show_numbers=True, show_line_position=True
+    ax,
+    alignment,
+    matrix=matrix,
+    labels=["Avidin (query)", "Database hit"],
+    show_numbers=True,
+    show_line_position=True,
 )
 fig.tight_layout()
 
@@ -103,10 +104,12 @@ fig.tight_layout()
 #
 #    f(x) = \lambda t(x) e^{-t(x)}
 
+
 # The probability density function of the extreme value distribution
 def pdf(x, l, u):
     t = np.exp(-l * (x - u))
     return l * t * np.exp(-t)
+
 
 x = np.linspace(-5, 10, 1000)
 y = pdf(x, 1, 0)
@@ -124,7 +127,7 @@ fig.tight_layout()
 # .. math::
 #
 #    u = \frac{\ln Kmn}{\lambda},
-# 
+#
 # where :math:`m` and :math:`n` are the lengths of the aligned
 # sequences.
 # :math:`K` and :math:`\lambda` can be calculated from the substitution
@@ -166,32 +169,39 @@ fig.tight_layout()
 SAMPLE_SIZE = 10000
 SEQ_LENGTH = 300
 
-BACKGROUND = np.array(list({
-    "A": 35155,
-    "C": 8669,
-    "D": 24161,
-    "E": 28354,
-    "F": 17367,
-    "G": 33229,
-    "H": 9906,
-    "I": 23161,
-    "K": 25872,
-    "L": 40625,
-    "M": 10101,
-    "N": 20212,
-    "P": 23435,
-    "Q": 19208,
-    "R": 23105,
-    "S": 32070,
-    "T": 26311,
-    "V": 29012,
-    "W": 5990,
-    "Y": 14488,
-    "B": 0,
-    "Z": 0,
-    "X": 0,
-    "*": 0,
-}.values())) / 450431
+BACKGROUND = (
+    np.array(
+        list(
+            {
+                "A": 35155,
+                "C": 8669,
+                "D": 24161,
+                "E": 28354,
+                "F": 17367,
+                "G": 33229,
+                "H": 9906,
+                "I": 23161,
+                "K": 25872,
+                "L": 40625,
+                "M": 10101,
+                "N": 20212,
+                "P": 23435,
+                "Q": 19208,
+                "R": 23105,
+                "S": 32070,
+                "T": 26311,
+                "V": 29012,
+                "W": 5990,
+                "Y": 14488,
+                "B": 0,
+                "Z": 0,
+                "X": 0,
+                "*": 0,
+            }.values()
+        )
+    )
+    / 450431
+)
 
 
 # Generate the sequence code for random sequences
@@ -199,7 +209,7 @@ np.random.seed(0)
 random_sequence_code = np.random.choice(
     np.arange(len(seq.ProteinSequence.alphabet)),
     size=(SAMPLE_SIZE, 2, SEQ_LENGTH),
-    p=BACKGROUND
+    p=BACKGROUND,
 )
 
 # Sample alignment scores
@@ -207,11 +217,10 @@ sample_scores = np.zeros(SAMPLE_SIZE, dtype=int)
 for i in range(SAMPLE_SIZE):
     seq1 = seq.ProteinSequence()
     seq2 = seq.ProteinSequence()
-    seq1.code = random_sequence_code[i,0]
-    seq2.code = random_sequence_code[i,1]
+    seq1.code = random_sequence_code[i, 0]
+    seq2.code = random_sequence_code[i, 1]
     sample_alignment = align.align_optimal(
-        seq1, seq2, matrix,
-        local=True, gap_penalty=GAP_PENALTY, max_number=1
+        seq1, seq2, matrix, local=True, gap_penalty=GAP_PENALTY, max_number=1
     )[0]
     sample_scores[i] = sample_alignment.score
 
@@ -238,18 +247,17 @@ u = np.mean(sample_scores) - np.euler_gamma / l
 freqs = np.bincount(sample_scores) / SAMPLE_SIZE
 
 # Coordinates for the fit
-x = np.linspace(0, len(freqs)-1, 1000)
+x = np.linspace(0, len(freqs) - 1, 1000)
 y = pdf(x, l, u)
 
 fig, ax = plt.subplots(figsize=(8.0, 4.0))
 ax.scatter(
-    np.arange(len(freqs)), freqs, color=biotite.colors["dimorange"],
-    label="Sample", s=8
+    np.arange(len(freqs)), freqs, color=biotite.colors["dimorange"], label="Sample", s=8
 )
 ax.plot(x, y, color="gray", linestyle="--", label="Fit")
 ax.set_xlabel("Similarity score")
 ax.set_ylabel("Probability")
-ax.set_xlim(0, len(freqs)-1)
+ax.set_xlim(0, len(freqs) - 1)
 ax.legend(loc="upper left")
 fig.tight_layout()
 
@@ -281,8 +289,7 @@ LENGTH_SAMPLE_SIZE = 20
 SAMPLE_SIZE_PER_LENGTH = 1000
 
 # The sequence lengths to be sampled
-length_samples = np.logspace(*np.log10(LENGTH_RANGE), LENGTH_SAMPLE_SIZE) \
-                 .astype(int)
+length_samples = np.logspace(*np.log10(LENGTH_RANGE), LENGTH_SAMPLE_SIZE).astype(int)
 u_series = np.zeros(LENGTH_SAMPLE_SIZE)
 l_series = np.zeros(LENGTH_SAMPLE_SIZE)
 for i, length in enumerate(length_samples):
@@ -290,18 +297,17 @@ for i, length in enumerate(length_samples):
     random_sequence_code = np.random.choice(
         np.arange(len(seq.ProteinSequence.alphabet)),
         size=(SAMPLE_SIZE_PER_LENGTH, 2, length),
-        p=BACKGROUND
+        p=BACKGROUND,
     )
 
     scores = np.zeros(SAMPLE_SIZE_PER_LENGTH, dtype=int)
     for j in range(SAMPLE_SIZE_PER_LENGTH):
         seq1 = seq.ProteinSequence()
         seq2 = seq.ProteinSequence()
-        seq1.code = random_sequence_code[j,0]
-        seq2.code = random_sequence_code[j,1]
+        seq1.code = random_sequence_code[j, 0]
+        seq2.code = random_sequence_code[j, 1]
         sample_alignment = align.align_optimal(
-            seq1, seq2, matrix,
-            local=True, gap_penalty=GAP_PENALTY, max_number=1
+            seq1, seq2, matrix, local=True, gap_penalty=GAP_PENALTY, max_number=1
         )[0]
         scores[j] = sample_alignment.score
 
@@ -309,7 +315,7 @@ for i, length in enumerate(length_samples):
     u_series[i] = np.mean(scores) - np.euler_gamma / l_series[i]
 
 ########################################################################
-# Now we use a linear fit of :math:`u` to check if there is a linear 
+# Now we use a linear fit of :math:`u` to check if there is a linear
 # relation.
 # Furthermore, if this is true, the slope and intercept of
 # the fit should give us a more precise estimation of :math:`\lambda`
@@ -319,7 +325,7 @@ ln_mn = np.log(length_samples**2)
 
 slope, intercept, r, _, _ = linregress(ln_mn, u_series)
 # More precise parameter estimation from fit
-l = 1/slope
+l = 1 / slope
 k = np.exp(intercept * l)
 
 # Coordinates for fit
@@ -327,19 +333,17 @@ x_fit = np.linspace(0, 16, 100)
 y_fit = slope * x_fit + intercept
 
 fig, ax = plt.subplots(figsize=(8.0, 4.0))
-arrowprops = dict(
-    facecolor='black', shrink=0.1, width=3, headwidth=10, headlength=10
-)
+arrowprops = dict(facecolor="black", shrink=0.1, width=3, headwidth=10, headlength=10)
 
 ax.scatter(ln_mn, u_series, color=biotite.colors["dimorange"], s=8)
 ax.plot(x_fit, y_fit, color=biotite.colors["darkorange"], linestyle="--")
 x_annot = 12
 ax.annotate(
     f"R² = {r**2:.3f}\nK = {k:.3f}",
-    xy = (x_annot, slope * x_annot + intercept),
-    xytext = (-100, 50),
-    textcoords = "offset pixels",
-    arrowprops = arrowprops,
+    xy=(x_annot, slope * x_annot + intercept),
+    xytext=(-100, 50),
+    textcoords="offset pixels",
+    arrowprops=arrowprops,
 )
 
 ax2 = ax.twinx()
@@ -348,10 +352,10 @@ ax2.axhline(l, color=biotite.colors["darkgreen"], linestyle=":")
 x_annot = 2
 ax2.annotate(
     f"λ = {l:.3f}",
-    xy = (x_annot, l),
-    xytext = (0, -50),
-    textcoords = "offset pixels",
-    arrowprops = arrowprops,
+    xy=(x_annot, l),
+    xytext=(0, -50),
+    textcoords="offset pixels",
+    arrowprops=arrowprops,
 )
 
 ax.set_xlabel("ln(mn)")
@@ -361,17 +365,25 @@ ax.set_xlim(0, 16)
 ax.set_ylim(0, 50)
 ax2.set_ylim(0, 0.6)
 ax.legend(
-    handles = [
+    handles=[
         Line2D(
-            [0], [0], color=biotite.colors["dimorange"], label='u',
-            marker='o', linestyle="None"
+            [0],
+            [0],
+            color=biotite.colors["dimorange"],
+            label="u",
+            marker="o",
+            linestyle="None",
         ),
         Line2D(
-            [0], [0], color=biotite.colors["lightgreen"], label='λ',
-            marker='o', linestyle="None"
-        )
+            [0],
+            [0],
+            color=biotite.colors["lightgreen"],
+            label="λ",
+            marker="o",
+            linestyle="None",
+        ),
     ],
-    loc = "upper left"
+    loc="upper left",
 )
 
 fig.tight_layout()
@@ -398,17 +410,17 @@ plt.show()
 # E-value calculation
 # -------------------
 #
-# Finally, we can use the estimated parameters to calculate the E-value 
+# Finally, we can use the estimated parameters to calculate the E-value
 # of the alignment of interest.
 # In this case we use :math:`K` and :math:`\lambda` from the linear fit,
 # but as already indicated we could alternatively use the parameters
 # from sampling alignments of sequences at a single length :math:`n`.
 # While :math:`\lambda` is a direct result of the method of moments as
-# shown above, :math:`K` is calculated as 
+# shown above, :math:`K` is calculated as
 #
 # .. math::
 #
-#    K = \frac{e^{\lambda u}}{n^2} 
+#    K = \frac{e^{\lambda u}}{n^2}
 #
 # where :math:`n` is the length of both sequences in each sample.
 #
@@ -425,12 +437,12 @@ plt.show()
 
 DATABASE_SIZE = 1_000_000
 
+
 def e_value(score, length1, length2, k, l):
     return k * length1 * length2 * np.exp(-l * score)
 
-e = e_value(
-    alignment.score, len(query_seq), len(hit_seq) * DATABASE_SIZE, k, l
-)
+
+e = e_value(alignment.score, len(query_seq), len(hit_seq) * DATABASE_SIZE, k, l)
 print(f"E-value = {e:.2e}")
 
 ########################################################################

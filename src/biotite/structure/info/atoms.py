@@ -8,7 +8,6 @@ __all__ = ["residue"]
 
 from .ccd import get_ccd
 
-
 # fmt: off
 NON_HETERO_RESIDUES = set([
     "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS",
@@ -77,8 +76,6 @@ def residue(res_name):
     try:
         component = get_component(get_ccd(), res_name=res_name)
     except KeyError:
-        raise KeyError(
-            f"No atom information found for residue '{res_name}' in CCD"
-        )
+        raise KeyError(f"No atom information found for residue '{res_name}' in CCD")
     component.hetero[:] = res_name not in NON_HETERO_RESIDUES
     return component

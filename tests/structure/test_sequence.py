@@ -5,16 +5,14 @@
 import glob
 from os.path import join
 import pytest
-import biotite.structure as struc
 import biotite.sequence as seq
 import biotite.sequence.align as align
+import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
 from ..util import data_dir
 
 
-@pytest.mark.parametrize(
-    "path", glob.glob(join(data_dir("structure"), "*.bcif"))
-)
+@pytest.mark.parametrize("path", glob.glob(join(data_dir("structure"), "*.bcif")))
 def test_pdbx_sequence_consistency(path):
     """
     Check if sequences created with :func:`to_sequence()` are equal to
@@ -61,8 +59,7 @@ def _find_best_match(sequence, ref_sequences):
         else:
             matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
         alignment = align.align_optimal(
-            sequence, ref_sequence, matrix,
-            terminal_penalty=False, max_number=1
+            sequence, ref_sequence, matrix, terminal_penalty=False, max_number=1
         )[0]
         # The 'shortest' identity is 1.0, if every residue in the
         # test sequence is aligned to an identical residue

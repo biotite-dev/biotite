@@ -6,9 +6,9 @@ import glob
 from os.path import join
 import numpy as np
 import pytest
+import biotite.sequence.io.fasta as fasta
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-import biotite.sequence.io.fasta as fasta
 from ..util import data_dir
 
 
@@ -23,18 +23,14 @@ def test_sse():
 
     matches = 0
     total = 0
-    ref_psea_file = fasta.FastaFile.read(
-        join(data_dir("structure"), "psea.fasta")
-    )
+    ref_psea_file = fasta.FastaFile.read(join(data_dir("structure"), "psea.fasta"))
 
     for pdb_id in ref_psea_file:
         ref_sse = np.array(list(ref_psea_file[pdb_id]))
 
         atoms = pdbx.get_structure(
-            pdbx.BinaryCIFFile.read(
-                join(data_dir("structure"), f"{pdb_id}.bcif")
-            ),
-            model=1
+            pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{pdb_id}.bcif")),
+            model=1,
         )
         atoms = atoms[struc.filter_canonical_amino_acids(atoms)]
         if atoms.array_length() == 0:
@@ -51,9 +47,9 @@ def test_sse():
 
 
 np.random.seed(0)
-@pytest.mark.parametrize(
-    "discont_pos", np.random.randint(2, 105, size=100)
-)
+
+
+@pytest.mark.parametrize("discont_pos", np.random.randint(2, 105, size=100))
 def test_sse_discontinuity(discont_pos):
     """
     Check if discontinuities are properly handled by inserting a
@@ -61,8 +57,7 @@ def test_sse_discontinuity(discont_pos):
     proximity becomes 'coil'.
     """
     atoms = pdbx.get_structure(
-        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1gya.bcif")),
-        model=1
+        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1gya.bcif")), model=1
     )
     atoms = atoms[struc.filter_canonical_amino_acids(atoms)]
 
@@ -72,7 +67,7 @@ def test_sse_discontinuity(discont_pos):
     assert len(struc.check_res_id_continuity(atoms)) == 0
     # Introduce discontinuity
     res_starts = struc.get_residue_starts(atoms)
-    atoms.res_id[res_starts[discont_pos]:] += 1
+    atoms.res_id[res_starts[discont_pos] :] += 1
     test_sse = struc.annotate_sse(atoms)
 
     assert len(test_sse) == len(ref_sse)
@@ -89,9 +84,7 @@ def test_sse_discontinuity(discont_pos):
     assert (test_sse[discont_proximity] == "c").all()
 
 
-@pytest.mark.parametrize(
-    "file_name", glob.glob(join(data_dir("structure"), "*.bcif"))
-)
+@pytest.mark.parametrize("file_name", glob.glob(join(data_dir("structure"), "*.bcif")))
 def test_sse_non_peptide(file_name):
     """
     Test whether only amino acids get SSE annotated.
@@ -101,9 +94,7 @@ def test_sse_non_peptide(file_name):
     # Special case for PDB 5EIL:
     # The residue BP5 is an amino acid, but has no CA
     # -> rename analogous atom
-    atoms.atom_name[
-        (atoms.res_name == "BP5") & (atoms.atom_name == "C13")
-    ] = "CA"
+    atoms.atom_name[(atoms.res_name == "BP5") & (atoms.atom_name == "C13")] = "CA"
 
     sse = struc.annotate_sse(atoms)
     peptide_mask = struc.filter_amino_acids(atoms)

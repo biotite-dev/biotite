@@ -27,6 +27,9 @@ def assert_valid_response(response_status_code):
         raise RequestError("Gone. The resource you requested was removed.")
     elif response_status_code == 500:
         raise RequestError(
-            "Internal server error. Most likely a temporary problem, but if the problem persists please contact UniProt team.")
+            "Internal server error. Most likely a temporary problem, but if the problem persists please contact UniProt team."
+        )
     elif response_status_code == 503:
-        raise RequestError("Service not available. The server is being updated, try again later.")
+        raise RequestError(
+            "Service not available. The server is being updated, try again later."
+        )

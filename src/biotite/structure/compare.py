@@ -12,7 +12,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["rmsd", "rmspd", "rmsf", "average"]
 
 import numpy as np
-from .atoms import Atom, AtomArray, AtomArrayStack, coord
+from .atoms import AtomArrayStack, coord
 from .geometry import index_distance
 from .util import vector_dot
 
@@ -20,13 +20,13 @@ from .util import vector_dot
 def rmsd(reference, subject):
     r"""
     Calculate the RMSD between two structures.
-    
+
     The *root-mean-square-deviation* (RMSD) indicates the overall
     deviation of each model of a structure to a reference structure.
     It is defined as:
-    
+
     .. math:: RMSD = \sqrt{ \frac{1}{n} \sum\limits_{i=1}^n (x_i - x_{ref,i})^2}
-    
+
     Parameters
     ----------
     reference : AtomArray or ndarray, dtype=float, shape=(n,3)
@@ -37,7 +37,7 @@ def rmsd(reference, subject):
         Structure(s) to be compared with `reference`.
         Alternatively, coordinates can be provided directly as
         :class:`ndarray`.
-    
+
     Returns
     -------
     rmsd : float or ndarray, dtype=float, shape=(m,)
@@ -45,7 +45,7 @@ def rmsd(reference, subject):
         If subject is an :class:`AtomArray` a float is returned.
         If subject is an :class:`AtomArrayStack` a :class:`ndarray`
         containing the RMSD for each model is returned.
-    
+
     See Also
     --------
     rmsf
@@ -71,16 +71,17 @@ def rmsd(reference, subject):
     """
     return np.sqrt(np.mean(_sq_euclidian(reference, subject), axis=-1))
 
+
 def rmspd(reference, subject, periodic=False, box=None):
     r"""
-    Calculate the RMSD of atom pair distances for given structures 
+    Calculate the RMSD of atom pair distances for given structures
     relative to those found in a reference structure.
 
-    Unlike the standard RMSD, the *root-mean-square-pairwise-deviation* 
-    (RMSPD) is a fit-free method to determine deviations between 
+    Unlike the standard RMSD, the *root-mean-square-pairwise-deviation*
+    (RMSPD) is a fit-free method to determine deviations between
     a structure and a preset reference.
 
-    .. math:: RMSPD = \sqrt{ \frac{1}{n^2} \sum\limits_{i=1}^n \sum\limits_{j \neq i}^n (d_{ij} - d_{ref,ij})^2}  
+    .. math:: RMSPD = \sqrt{ \frac{1}{n^2} \sum\limits_{i=1}^n \sum\limits_{j \neq i}^n (d_{ij} - d_{ref,ij})^2}
 
     Parameters
     ----------
@@ -102,7 +103,7 @@ def rmspd(reference, subject, periodic=False, box=None):
     box : ndarray, shape=(3,3) or shape=(m,3,3), optional
         If this parameter is set, the given box is used instead of the
         `box` attribute of `atoms`.
-    
+
     Returns
     -------
     rmspd : float or ndarray, dtype=float, shape=(m,)
@@ -110,7 +111,7 @@ def rmspd(reference, subject, periodic=False, box=None):
         If subject is an :class:`AtomArray` a float is returned.
         If subject is an :class:`AtomArrayStack` a :class:`ndarray`
         containing the RMSD for each model is returned.
-    
+
     Warnings
     --------
     Internally, this function uses :func:`index_distance()`.
@@ -119,7 +120,7 @@ def rmspd(reference, subject, periodic=False, box=None):
     prior to the computation of RMSPDs with `periodic` set to false
     to ensure correct results.
     (e.g. with :func:`remove_pbc()`).
-    
+
     See also
     --------
     index_distance
@@ -134,8 +135,9 @@ def rmspd(reference, subject, periodic=False, box=None):
     refdist = index_distance(reference, pairs, periodic=periodic, box=box)
     subjdist = index_distance(subject, pairs, periodic=periodic, box=box)
 
-    rmspd = np.sqrt(np.sum((subjdist - refdist)**2, axis = -1))/reflen
+    rmspd = np.sqrt(np.sum((subjdist - refdist) ** 2, axis=-1)) / reflen
     return rmspd
+
 
 def rmsf(reference, subject):
     r"""
@@ -146,9 +148,9 @@ def rmsf(reference, subject):
     models.
     Usually the reference structure, is the average over all models.
     The RMSF is defined as:
-    
+
     .. math:: RMSF(i) = \sqrt{ \frac{1}{T} \sum\limits_{t=1}^T (x_i(t) - x_{ref,i}(t))^2}
-    
+
     Parameters
     ----------
     reference : AtomArray or ndarray, dtype=float, shape=(n,3)
@@ -161,14 +163,14 @@ def rmsf(reference, subject):
         :class:`AtomArrayStack`.
         Alternatively, coordinates can be provided directly as
         :class:`ndarray`.
-    
+
     Returns
     -------
     rmsf : ndarray, dtype=float, shape=(n,)
         RMSF between subject and reference structure.
         Each element gives the RMSF for the atom at the respective
         index.
-    
+
     See Also
     --------
     rmsd
@@ -198,41 +200,39 @@ def rmsf(reference, subject):
 def average(atoms):
     """
     Calculate an average structure.
-    
+
     The average structure has the average coordinates
     of the input models.
-    
+
     Parameters
     ----------
     atoms : AtomArrayStack or ndarray, dtype=float, shape=(m,n,3)
         The structure models to be averaged.
         Alternatively, coordinates can be provided directly as
         :class:`ndarray`.
-    
+
     Returns
     -------
     average : AtomArray or ndarray, dtype=float, shape=(n,3)
         Structure with averaged atom coordinates.
         If `atoms` is a :class:`ndarray` and :class:`ndarray` is also
         returned.
-    
+
     See Also
     --------
     rmsd, rmsf
-    
+
     Notes
     -----
     The calculated average structure is not suitable for visualization
     or geometric calculations, since bond lengths and angles will
     deviate from meaningful values.
     This method is rather useful to provide a reference structure for
-    calculation of e.g. the RMSD or RMSF. 
+    calculation of e.g. the RMSD or RMSF.
     """
     coords = coord(atoms)
     if coords.ndim != 3:
-        raise TypeError(
-            "Expected an AtomArrayStack or an ndarray with shape (m,n,3)"
-        )
+        raise TypeError("Expected an AtomArrayStack or an ndarray with shape (m,n,3)")
     mean_coords = np.mean(coords, axis=0)
     if isinstance(atoms, AtomArrayStack):
         mean_array = atoms[0].copy()
@@ -246,7 +246,7 @@ def _sq_euclidian(reference, subject):
     """
     Calculate squared euclidian distance between atoms in two
     structures.
-    
+
     Parameters
     ----------
     reference : AtomArray or ndarray, dtype=float, shape=(n,3)
@@ -254,7 +254,7 @@ def _sq_euclidian(reference, subject):
     subject : AtomArray or AtomArrayStack or ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
         Structure(s) whose atoms squared euclidian distance to
         `reference` is measured.
-    
+
     Returns
     -------
     ndarray, dtype=float, shape=(n,) or shape=(m,n)

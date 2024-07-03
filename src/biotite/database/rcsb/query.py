@@ -4,28 +4,38 @@
 
 __name__ = "biotite.database.rcsb"
 __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
-__all__ = ["Query", "SingleQuery", "CompositeQuery",
-           "BasicQuery", "FieldQuery",
-           "SequenceQuery", "StructureQuery", "MotifQuery",
-           "Sorting",
-           "Grouping", "DepositGrouping", "IdentityGrouping", "UniprotGrouping",
-           "search", "count"]
+__all__ = [
+    "Query",
+    "SingleQuery",
+    "CompositeQuery",
+    "BasicQuery",
+    "FieldQuery",
+    "SequenceQuery",
+    "StructureQuery",
+    "MotifQuery",
+    "Sorting",
+    "Grouping",
+    "DepositGrouping",
+    "IdentityGrouping",
+    "UniprotGrouping",
+    "search",
+    "count",
+]
 
 import abc
-import json
 import copy
+import json
 from datetime import datetime
 import numpy as np
 import requests
 from ...sequence.seqtypes import NucleotideSequence
 from ..error import RequestError
 
-
 _search_url = "https://search.rcsb.org/rcsbsearch/v2/query"
 _scope_to_target = {
     "protein": "pdb_protein_sequence",
-    "rna":     "pdb_rna_sequence",
-    "dna":     "pdb_dna_sequence"
+    "rna": "pdb_rna_sequence",
+    "dna": "pdb_dna_sequence",
 }
 
 
@@ -35,6 +45,7 @@ class Query(metaclass=abc.ABCMeta):
 
     This is the abstract base class for all queries.
     """
+
     @abc.abstractmethod
     def get_content(self):
         """
@@ -58,7 +69,6 @@ class Query(metaclass=abc.ABCMeta):
         return CompositeQuery([self, query], "or")
 
 
-
 class SingleQuery(Query, metaclass=abc.ABCMeta):
     """
     A terminal query node for the RCSB search API.
@@ -69,6 +79,7 @@ class SingleQuery(Query, metaclass=abc.ABCMeta):
     This is the abstract base class for all queries that are
     terminal nodes.
     """
+
     @abc.abstractmethod
     def get_content(self):
         return {"parameters": {}}
@@ -91,12 +102,11 @@ class CompositeQuery(Query):
     operator : {'or', 'and'}
         The type of combination.
     """
+
     def __init__(self, queries, operator):
         self._queries = queries
         if operator not in ("or", "and"):
-            raise ValueError(
-                f"Operator must be 'or' or 'and', not '{operator}'"
-            )
+            raise ValueError(f"Operator must be 'or' or 'and', not '{operator}'")
         self._operator = operator
 
     def get_content(self):
@@ -113,10 +123,9 @@ class CompositeQuery(Query):
         content = {
             "type": "group",
             "logical_operator": self._operator,
-            "nodes": [query.get_content() for query in self._queries]
+            "nodes": [query.get_content() for query in self._queries],
         }
         return content
-
 
 
 class BasicQuery(SingleQuery):
@@ -141,6 +150,7 @@ class BasicQuery(SingleQuery):
     >>> print(sorted(search(query)))
     ['1L2Y', '8ANG', '8ANH', '8ANI', '8ANM']
     """
+
     def __init__(self, term):
         super().__init__()
         self._term = term
@@ -212,7 +222,10 @@ class FieldQuery(SingleQuery):
     >>> print(sorted(search(query)))
     ['1EJG', '1I0T', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG', '7R0H']
     """
-    def __init__(self, field, molecular_definition=False, case_sensitive=False, **kwargs):
+
+    def __init__(
+        self, field, molecular_definition=False, case_sensitive=False, **kwargs
+    ):
         super().__init__()
         self._negation = False
         self._field = field
@@ -231,20 +244,25 @@ class FieldQuery(SingleQuery):
 
         if self._operator not in [
             "exact_match",
-            "contains_words", "contains_phrase",
-            "greater", "less", "greater_or_equal", "less_or_equal", "equals",
-            "range", "range_closed",
+            "contains_words",
+            "contains_phrase",
+            "greater",
+            "less",
+            "greater_or_equal",
+            "less_or_equal",
+            "equals",
+            "range",
+            "range_closed",
             "is_in",
-            "exists"
+            "exists",
         ]:
             raise TypeError(
-                f"Constructor got an unexpected keyword argument "
-                f"'{self._operator}'"
+                f"Constructor got an unexpected keyword argument " f"'{self._operator}'"
             )
 
         # Convert dates into ISO 8601
         if isinstance(self._value, datetime):
-             self._value = _to_isoformat(self._value)
+            self._value = _to_isoformat(self._value)
         elif isinstance(self._value, (tuple, list, np.ndarray)):
             self._value = [
                 _to_isoformat(val) if isinstance(val, datetime) else val
@@ -257,14 +275,14 @@ class FieldQuery(SingleQuery):
                 "from": self._value[0],
                 "include_lower": False,
                 "to": self._value[1],
-                "include_upper": False
+                "include_upper": False,
             }
         elif self._operator == "range_closed":
             self._value = {
                 "from": self._value[0],
                 "include_lower": True,
                 "to": self._value[1],
-                "include_upper": True
+                "include_upper": True,
             }
 
         # Rename operators to names used in API
@@ -332,8 +350,8 @@ class SequenceQuery(SingleQuery):
     >>> print(sorted(search(query)))
     ['1L2Y', '1RIJ', '2JOF', '2LDJ', '2LL5', '2MJ9', '3UC7', '3UC8']
     """
-    def __init__(self, sequence, scope,
-                 min_identity=0.0, max_expect_value=10000000.0):
+
+    def __init__(self, sequence, scope, min_identity=0.0, max_expect_value=10000000.0):
         super().__init__()
         self._target = _scope_to_target.get(scope.lower())
         if self._target is None:
@@ -381,6 +399,7 @@ class MotifQuery(SingleQuery):
     ...     "protein"
     ... )
     """
+
     def __init__(self, pattern, pattern_type, scope):
         super().__init__()
         self._pattern = pattern
@@ -424,27 +443,20 @@ class StructureQuery(SingleQuery):
     >>> print(sorted(search(query)))
     ['1L2Y', '1RIJ', '2JOF', '2LDJ', '2M7D', '7MQS']
     """
+
     def __init__(self, pdb_id, chain=None, assembly=None, strict=True):
         super().__init__()
 
-        if (chain is None and assembly is None) \
-           or (chain is not None and assembly is not None):
-                raise TypeError(
-                    "Either the chain ID or assembly ID must be set"
-                )
+        if (chain is None and assembly is None) or (
+            chain is not None and assembly is not None
+        ):
+            raise TypeError("Either the chain ID or assembly ID must be set")
         elif chain is None:
-            self._value = {
-                "entry_id": pdb_id,
-                "asssembly_id": assembly
-            }
+            self._value = {"entry_id": pdb_id, "asssembly_id": assembly}
         else:
-            self._value = {
-                "entry_id": pdb_id,
-                "asym_id": chain
-            }
+            self._value = {"entry_id": pdb_id, "asym_id": chain}
 
-        self._operator = "strict_shape_match" if strict \
-                         else "relaxed_shape_match"
+        self._operator = "strict_shape_match" if strict else "relaxed_shape_match"
 
     def get_content(self):
         content = super().get_content()
@@ -455,10 +467,7 @@ class StructureQuery(SingleQuery):
         return content
 
 
-
-
 class Sorting:
-
     def __init__(self, field, descending=True):
         self._field = field
         self._descending = descending
@@ -487,12 +496,7 @@ class Sorting:
             ``'ranking_criteria_type'`` attributes.
         """
         direction = "desc" if self._descending else "asc"
-        return {
-            "sort_by" : self._field,
-            "direction" : direction
-        }
-
-
+        return {"sort_by": self._field, "direction": direction}
 
 
 class Grouping(metaclass=abc.ABCMeta):
@@ -539,7 +543,7 @@ class Grouping(metaclass=abc.ABCMeta):
             The content dictionary for the ``'group_by'`` attributes.
         """
         if self._sorting is not None:
-            return {"ranking_criteria_type" : self._sorting.get_content()}
+            return {"ranking_criteria_type": self._sorting.get_content()}
         else:
             return {}
 
@@ -627,6 +631,7 @@ class IdentityGrouping(Grouping):
         To choose the order a :class:`Sorting` object needs to be
         provided.
     """
+
     def __init__(self, similarity_cutoff, sort_by=None):
         super().__init__(sort_by)
         if similarity_cutoff not in (100, 95, 90, 70, 50, 30):
@@ -677,11 +682,7 @@ class UniprotGrouping(Grouping):
         return return_type == "polymer_entity"
 
 
-
-
-
-def count(query, return_type="entry", group_by=None,
-          content_types=("experimental",)):
+def count(query, return_type="entry", group_by=None, content_types=("experimental",)):
     """
     Count PDB entries that meet the given query requirements,
     via the RCSB search API.
@@ -737,9 +738,7 @@ def count(query, return_type="entry", group_by=None,
     >>> print(sorted(ids))
     ['1EJG', '1I0T', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG', '7R0H']
     """
-    query_dict = _initialize_query_dict(
-        query, return_type, group_by, content_types
-    )
+    query_dict = _initialize_query_dict(query, return_type, group_by, content_types)
 
     query_dict["request_options"]["return_counts"] = True
 
@@ -761,8 +760,15 @@ def count(query, return_type="entry", group_by=None,
             raise RequestError(f"Error {r.status_code}")
 
 
-def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
-           return_groups=False, content_types=("experimental",)):
+def search(
+    query,
+    return_type="entry",
+    range=None,
+    sort_by=None,
+    group_by=None,
+    return_groups=False,
+    content_types=("experimental",),
+):
     """
     Get all PDB IDs that meet the given query requirements,
     via the RCSB search API.
@@ -864,17 +870,13 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
     ... ))
     {'P24297': ['5NW3_1'], 'P27707': ['4JLJ_1'], 'P80176': ['5D8V_1'], 'O29777': ['7R0H_1'], 'P01542': ['3NIR_1', '1EJG_1']}
     """
-    query_dict = _initialize_query_dict(
-        query, return_type, group_by, content_types
-    )
+    query_dict = _initialize_query_dict(query, return_type, group_by, content_types)
 
     if group_by is not None:
         if return_groups:
-            query_dict["request_options"]["group_by_return_type"] \
-                = "groups"
+            query_dict["request_options"]["group_by_return_type"] = "groups"
         else:
-            query_dict["request_options"]["group_by_return_type"] \
-                = "representatives"
+            query_dict["request_options"]["group_by_return_type"] = "representatives"
 
     if sort_by is not None:
         if isinstance(sort_by, Sorting):
@@ -890,7 +892,7 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
     else:
         query_dict["request_options"]["paginate"] = {
             "start": int(range[0]),
-            "rows": int(range[1]) - int(range[0])
+            "rows": int(range[1]) - int(range[0]),
         }
 
     r = requests.get(_search_url, params={"json": json.dumps(query_dict)})
@@ -900,7 +902,7 @@ def search(query, return_type="entry", range=None, sort_by=None, group_by=None,
             return [result["identifier"] for result in r.json()["result_set"]]
         else:
             return {
-                group["identifier"] : [
+                group["identifier"]: [
                     result["identifier"] for result in group["result_set"]
                 ]
                 for group in r.json()["group_set"]
@@ -922,8 +924,11 @@ def _initialize_query_dict(query, return_type, group_by, content_types):
     `count()` and `search()` have in common.
     """
     if return_type not in [
-        "entry", "polymer_instance", "assembly",
-        "polymer_entity", "non_polymer_entity",
+        "entry",
+        "polymer_instance",
+        "assembly",
+        "polymer_entity",
+        "non_polymer_entity",
     ]:
         raise ValueError(f"'{return_type}' is an invalid return type")
 
@@ -947,7 +952,7 @@ def _initialize_query_dict(query, return_type, group_by, content_types):
     query_dict = {
         "query": query.get_content(),
         "return_type": return_type,
-        "request_options": request_options
+        "request_options": request_options,
     }
     return query_dict
 

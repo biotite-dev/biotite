@@ -9,7 +9,6 @@ __all__ = ["check_for_errors"]
 import json
 from ..error import RequestError
 
-
 # Taken from https://github.com/kblin/ncbi-entrez-error-messages
 _error_messages = [
     "Error reading from remote server",

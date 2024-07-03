@@ -29,7 +29,7 @@ class EValueEstimator:
     of random sequence alignments in :meth:`from_samples()`
     :footcite:`Altschul1986`, which may be time consuming.
     If these parameters are known, the constructor can be used instead.
-    
+
     Based on the sampled parameters, the decadic logarithm of the
     E-value can be quickly calculated via :meth:`log_evalue()`.
 
@@ -39,7 +39,7 @@ class EValueEstimator:
         The :math:`\lambda` parameter.
     k : float
         The :math:`K` parameter.
-    
+
     Notes
     -----
     The calculated E-value is a rough estimation that gets more
@@ -102,8 +102,9 @@ class EValueEstimator:
         self._k = k
 
     @staticmethod
-    def from_samples(alphabet, matrix, gap_penalty, frequencies,
-                     sample_length=1000, sample_size=1000):
+    def from_samples(
+        alphabet, matrix, gap_penalty, frequencies, sample_length=1000, sample_size=1000
+    ):
         r"""
         Create an :class:`EValueEstimator` with :math:`\lambda` and
         :math:`K` estimated via sampling alignments of random sequences
@@ -137,13 +138,13 @@ class EValueEstimator:
             The number of sampled sequences.
             The accuracy of the estimated parameters and E-values,
             but also the runtime increases with the sample size.
-        
+
         Returns
         -------
         estimator : EValueEstimator
             A :class:`EValueEstimator` with sampled :math:`\lambda` and
             :math:`K` parameters.
-        
+
         Notes
         -----
         The sampling process generates random sequences based on
@@ -167,15 +168,15 @@ class EValueEstimator:
             raise ValueError("A symmetric substitution matrix is required")
         if not matrix.get_alphabet1().extends(alphabet):
             raise ValueError(
-                "The substitution matrix is not compatible "
-                "with the given alphabet"
+                "The substitution matrix is not compatible " "with the given alphabet"
             )
-        score_matrix = matrix.score_matrix()[:len(alphabet), :len(alphabet)]
-        if np.sum(
-            score_matrix \
-            * frequencies[np.newaxis, :] \
-            * frequencies[:, np.newaxis]
-        ) >= 0:
+        score_matrix = matrix.score_matrix()[: len(alphabet), : len(alphabet)]
+        if (
+            np.sum(
+                score_matrix * frequencies[np.newaxis, :] * frequencies[:, np.newaxis]
+            )
+            >= 0
+        ):
             raise ValueError(
                 "Invalid substitution matrix, the expected similarity "
                 "score between two random symbols is not negative"
@@ -183,9 +184,7 @@ class EValueEstimator:
 
         # Generate the sequence code for the random sequences
         random_sequence_code = np.random.choice(
-            len(alphabet),
-            size=(sample_size, 2, sample_length),
-            p=frequencies
+            len(alphabet), size=(sample_size, 2, sample_length), p=frequencies
         )
 
         # Sample the alignments of random sequences
@@ -193,28 +192,27 @@ class EValueEstimator:
         for i in range(sample_size):
             seq1 = GeneralSequence(alphabet)
             seq2 = GeneralSequence(alphabet)
-            seq1.code = random_sequence_code[i,0]
-            seq2.code = random_sequence_code[i,1]
+            seq1.code = random_sequence_code[i, 0]
+            seq2.code = random_sequence_code[i, 1]
             sample_scores[i] = align_optimal(
-                seq1, seq2, matrix,
-                local=True, gap_penalty=gap_penalty, max_number=1
+                seq1, seq2, matrix, local=True, gap_penalty=gap_penalty, max_number=1
             )[0].score
-        
+
         # Use method of moments to estimate parameters
         lam = np.pi / np.sqrt(6 * np.var(sample_scores))
         u = np.mean(sample_scores) - np.euler_gamma / lam
         k = np.exp(lam * u) / sample_length**2
-        
+
         return EValueEstimator(lam, k)
 
     @property
     def lam(self):
         return self._lam
-    
+
     @property
     def k(self):
         return self._k
-    
+
     def log_evalue(self, score, seq1_length, seq2_length):
         r"""
         Calculate the decadic logarithm of the E-value for a given
@@ -223,11 +221,11 @@ class EValueEstimator:
         The E-value and the logarithm of the E-value is calculated as
 
         .. math::
-        
+
             E = Kmn e^{-\lambda s}
 
             \log_{10} E = (\log_{10} Kmn) - \frac{\lambda s}{\ln 10},
-        
+
         where :math:`s` is the similarity score and :math:`m` and
         :math:`n` are the lengths of the aligned sequences.
 
@@ -245,12 +243,12 @@ class EValueEstimator:
             this is usually either the combined length of all sequences
             in the database or the length of the hit sequence multiplied
             by the number of sequences in the database.
-        
+
         Returns
         -------
         log_e : float
             The decadic logarithm of the E-value.
-        
+
         Notes
         -----
         This method returns the logarithm of the E-value instead of
@@ -261,5 +259,6 @@ class EValueEstimator:
         seq1_length = np.asarray(seq1_length)
         seq2_length = np.asarray(seq2_length)
 
-        return np.log10(self._k * seq1_length * seq2_length) \
-            - self._lam * score / np.log(10)
+        return np.log10(
+            self._k * seq1_length * seq2_length
+        ) - self._lam * score / np.log(10)

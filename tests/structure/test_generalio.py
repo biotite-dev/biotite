@@ -2,23 +2,18 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from tempfile import NamedTemporaryFile
-import biotite.structure as struc
-import biotite.structure.io as strucio
 import glob
 import os
 from os.path import join, splitext
-from ..util import data_dir, cannot_import
+from tempfile import NamedTemporaryFile
 import pytest
+import biotite.structure as struc
+import biotite.structure.io as strucio
+from ..util import cannot_import, data_dir
 
 
-@pytest.mark.skipif(
-    cannot_import("mdtraj"),
-    reason="MDTraj is not installed"
-)
-@pytest.mark.parametrize(
-    "path", glob.glob(join(data_dir("structure"), "1l2y.*"))
-)
+@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
+@pytest.mark.parametrize("path", glob.glob(join(data_dir("structure"), "1l2y.*")))
 def test_loading(path):
     """
     Just check if :func:`load_structure()` does not raise an exception
@@ -26,9 +21,7 @@ def test_loading(path):
     """
     suffix = splitext(path)[1]
     if suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
-        template = strucio.load_structure(
-            join(data_dir("structure"), "1l2y.bcif")
-        )
+        template = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
         array = strucio.load_structure(path, template)
     else:
         array = strucio.load_structure(path)
@@ -40,10 +33,7 @@ def test_loading(path):
         assert isinstance(array, struc.AtomArrayStack)
 
 
-@pytest.mark.skipif(
-    cannot_import("mdtraj"),
-    reason="MDTraj is not installed"
-)
+@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 def test_loading_template_with_trj():
     """
     Check if :func:`load_structure()` using a trajectory file does not
@@ -57,10 +47,7 @@ def test_loading_template_with_trj():
     assert len(stack) > 1
 
 
-@pytest.mark.skipif(
-    cannot_import("mdtraj"),
-    reason="MDTraj is not installed"
-)
+@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 def test_loading_with_extra_args():
     """
     Check if :func:`load_structure()` witt optional arguments does not
@@ -74,9 +61,7 @@ def test_loading_with_extra_args():
     assert "b_factor" in structure.get_annotation_categories()
 
     # test if arguments are passed to read for trajectories
-    stack = strucio.load_structure(
-        trajectory, template=structure[0], start=5, stop=6
-    )
+    stack = strucio.load_structure(trajectory, template=structure[0], start=5, stop=6)
     assert len(stack) == 1
 
     # loading should fail with wrong arguments
@@ -88,16 +73,10 @@ def test_loading_with_extra_args():
     assert stack.shape[1] == 2
 
 
-@pytest.mark.skipif(
-    cannot_import("mdtraj"),
-    reason="MDTraj is not installed"
-)
+@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
     "suffix",
-    [
-        "pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "tng",
-        "dcd", "netcdf"
-    ]
+    ["pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "tng", "dcd", "netcdf"],
 )
 def test_saving(suffix):
     """
@@ -124,23 +103,19 @@ def test_saving(suffix):
         if category == "chain_id" and suffix == "gro":
             # The chain ID is not written to GRO files
             continue
-        assert test_array.get_annotation(category).tolist() \
-            ==  ref_array.get_annotation(category).tolist()
+        assert (
+            test_array.get_annotation(category).tolist()
+            == ref_array.get_annotation(category).tolist()
+        )
     assert test_array.coord.flatten().tolist() == pytest.approx(
-            ref_array.coord.flatten().tolist(), abs=1e-2
+        ref_array.coord.flatten().tolist(), abs=1e-2
     )
 
 
-@pytest.mark.skipif(
-    cannot_import("mdtraj"),
-    reason="MDTraj is not installed"
-)
+@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
     "suffix",
-    [
-        "pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "tng",
-        "dcd", "netcdf"
-    ]
+    ["pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "tng", "dcd", "netcdf"],
 )
 def test_saving_with_extra_args(suffix):
     """
@@ -150,9 +125,7 @@ def test_saving_with_extra_args(suffix):
     array = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
     temp = NamedTemporaryFile("w+", suffix=f".{suffix}")
     with pytest.raises(TypeError):
-        strucio.save_structure(
-            temp.name, array, answer=42
-        )
+        strucio.save_structure(temp.name, array, answer=42)
     temp.close()
 
 

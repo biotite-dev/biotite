@@ -4,16 +4,19 @@
 
 __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
-__all__ = ["File", "TextFile", "InvalidFileError",
-           "SerializationError", "DeserializationError"]
+__all__ = [
+    "File",
+    "TextFile",
+    "InvalidFileError",
+    "SerializationError",
+    "DeserializationError",
+]
 
 import abc
-import io
-import warnings
-from os import PathLike
-
-from .copyable import Copyable
 import copy
+import io
+from os import PathLike
+from .copyable import Copyable
 
 
 class File(Copyable, metaclass=abc.ABCMeta):
@@ -185,11 +188,13 @@ class InvalidFileError(Exception):
     either because the file does not contain the required data or
     because the file is malformed.
     """
+
     pass
 
 
 class SerializationError(Exception):
     pass
+
 
 class DeserializationError(Exception):
     pass
@@ -205,7 +210,7 @@ def wrap_string(text, width):
     """
     lines = []
     for i in range(0, len(text), width):
-        lines.append(text[i : i+width])
+        lines.append(text[i : i + width])
     return lines
 
 

@@ -6,25 +6,21 @@ __name__ = "biotite.application.muscle"
 __author__ = "Patrick Kunzmann"
 __all__ = ["MuscleApp"]
 
-import re
 import numbers
-import warnings
+import re
 import subprocess
+import warnings
 from tempfile import NamedTemporaryFile
+from ...sequence.phylo.tree import Tree
+from ..application import AppState, VersionError, requires_state
 from ..localapp import cleanup_tempfile
 from ..msaapp import MSAApp
-from ..application import AppState, VersionError, requires_state
-from ...sequence.sequence import Sequence
-from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
-from ...sequence.align.matrix import SubstitutionMatrix
-from ...sequence.align.alignment import Alignment
-from ...sequence.phylo.tree import Tree
 
 
 class MuscleApp(MSAApp):
     """
     Perform a multiple sequence alignment using MUSCLE version 3.
-    
+
     Parameters
     ----------
     sequences : list of Sequence
@@ -33,11 +29,11 @@ class MuscleApp(MSAApp):
         Path of the MUSCLE binary.
     matrix : SubstitutionMatrix, optional
         A custom substitution matrix.
-    
+
     See also
     --------
     Muscle5App
-    
+
     Examples
     --------
 
@@ -55,34 +51,32 @@ class MuscleApp(MSAApp):
     BISM-ITE
     -IQL-ITE
     """
-    
+
     def __init__(self, sequences, bin_path="muscle", matrix=None):
         major_version = get_version(bin_path)[0]
         if major_version != 3:
-            raise VersionError(
-                f"Muscle 3 is required, got version {major_version}"
-            )
-        
+            raise VersionError(f"Muscle 3 is required, got version {major_version}")
+
         super().__init__(sequences, bin_path, matrix)
         self._gap_open = None
         self._gap_ext = None
         self._terminal_penalty = None
         self._tree1 = None
         self._tree2 = None
-        self._out_tree1_file = NamedTemporaryFile(
-            "r", suffix=".tree", delete=False
-        )
-        self._out_tree2_file = NamedTemporaryFile(
-            "r", suffix=".tree", delete=False
-        )
-    
+        self._out_tree1_file = NamedTemporaryFile("r", suffix=".tree", delete=False)
+        self._out_tree2_file = NamedTemporaryFile("r", suffix=".tree", delete=False)
+
     def run(self):
         args = [
             "-quiet",
-            "-in", self.get_input_file_path(),
-            "-out", self.get_output_file_path(),
-            "-tree1", self._out_tree1_file.name,
-            "-tree2", self._out_tree2_file.name,
+            "-in",
+            self.get_input_file_path(),
+            "-out",
+            self.get_output_file_path(),
+            "-tree1",
+            self._out_tree1_file.name,
+            "-tree2",
+            self._out_tree2_file.name,
         ]
         if self.get_seqtype() == "protein":
             args += ["-seqtype", "protein"]
@@ -91,7 +85,7 @@ class MuscleApp(MSAApp):
         if self.get_matrix_file_path() is not None:
             args += ["-matrix", self.get_matrix_file_path()]
         if self._gap_open is not None and self._gap_ext is not None:
-            args += ["-gapopen",   f"{self._gap_open:.1f}"]
+            args += ["-gapopen", f"{self._gap_open:.1f}"]
             args += ["-gapextend", f"{self._gap_ext:.1f}"]
             # When the gap penalty is set,
             # use the penalty also for hydrophobic regions
@@ -100,7 +94,7 @@ class MuscleApp(MSAApp):
             args += ["-center", "0.0"]
         self.set_arguments(args)
         super().run()
-    
+
     def evaluate(self):
         super().evaluate()
 
@@ -108,23 +102,19 @@ class MuscleApp(MSAApp):
         if len(newick) > 0:
             self._tree1 = Tree.from_newick(newick)
         else:
-            warnings.warn(
-                "MUSCLE did not write a tree file from the first iteration"
-            )
-        
+            warnings.warn("MUSCLE did not write a tree file from the first iteration")
+
         newick = self._out_tree2_file.read().replace("\n", "")
         if len(newick) > 0:
             self._tree2 = Tree.from_newick(newick)
         else:
-            warnings.warn(
-                "MUSCLE did not write a tree file from the second iteration"
-            )
-    
+            warnings.warn("MUSCLE did not write a tree file from the second iteration")
+
     def clean_up(self):
         super().clean_up()
         cleanup_tempfile(self._out_tree1_file)
         cleanup_tempfile(self._out_tree2_file)
-    
+
     @requires_state(AppState.CREATED)
     def set_gap_penalty(self, gap_penalty):
         """
@@ -145,20 +135,20 @@ class MuscleApp(MSAApp):
             if gap_penalty > 0:
                 raise ValueError("Gap penalty must be negative")
             self._gap_open = gap_penalty
-            self._gap_ext= gap_penalty
+            self._gap_ext = gap_penalty
         elif type(gap_penalty) == tuple:
             if gap_penalty[0] > 0 or gap_penalty[1] > 0:
-                    raise ValueError("Gap penalty must be negative")
+                raise ValueError("Gap penalty must be negative")
             self._gap_open = gap_penalty[0]
             self._gap_ext = gap_penalty[1]
         else:
             raise TypeError("Gap penalty must be either float or tuple")
-    
+
     @requires_state(AppState.JOINED)
     def get_guide_tree(self, iteration="identity"):
         """
         Get the guide tree created for the progressive alignment.
-        
+
         Parameters
         ----------
         iteration : {'kmer', 'identity'}
@@ -168,7 +158,7 @@ class MuscleApp(MSAApp):
             If 'identity' the second iteration tree is returned.
             This tree uses distances based on the pairwise sequence
             identity after the first progressive alignment iteration.
-        
+
         Returns
         -------
         tree : Tree
@@ -180,32 +170,31 @@ class MuscleApp(MSAApp):
             return self._tree2
         else:
             raise ValueError("Iteration must be 'kmer' or 'identity'")
-    
+
     @staticmethod
     def supports_nucleotide():
         return True
-    
+
     @staticmethod
     def supports_protein():
         return True
-    
+
     @staticmethod
     def supports_custom_nucleotide_matrix():
         return False
-    
+
     @staticmethod
     def supports_custom_protein_matrix():
         return True
-    
+
     @classmethod
-    def align(cls, sequences, bin_path=None, matrix=None,
-              gap_penalty=None):
+    def align(cls, sequences, bin_path=None, matrix=None, gap_penalty=None):
         """
         Perform a multiple sequence alignment.
-        
+
         This is a convenience function, that wraps the :class:`MuscleApp`
         execution.
-        
+
         Parameters
         ----------
         sequences : iterable object of Sequence
@@ -222,7 +211,7 @@ class MuscleApp(MSAApp):
             The first value in the tuple is the gap opening penalty,
             the second value is the gap extension penalty.
             The values need to be negative.
-        
+
         Returns
         -------
         alignment : Alignment
@@ -240,15 +229,11 @@ class MuscleApp(MSAApp):
 
 
 def get_version(bin_path="muscle"):
-    output = subprocess.run(
-        [bin_path, "-version"], capture_output=True, text=True
-    )
+    output = subprocess.run([bin_path, "-version"], capture_output=True, text=True)
     # Find matches for version string containing major and minor version
-    match = re.search("\d+\.\d+", output.stdout)
+    match = re.search(r"\d+\.\d+", output.stdout)
     if match is None:
-        raise subprocess.SubprocessError(
-            "Could not determine Muscle version"
-        )
+        raise subprocess.SubprocessError("Could not determine Muscle version")
     version_string = match.group(0)
     splitted = version_string.split(".")
     return int(splitted[0]), int(splitted[1])

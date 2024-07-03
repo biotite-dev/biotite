@@ -2,27 +2,22 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import re
 import itertools
+import re
 import tempfile
-import pytest
 import numpy as np
+import pytest
 import biotite.database.pubchem as pubchem
 import biotite.structure.io.mol as mol
 from biotite.database import RequestError
 from ..util import cannot_connect_to
 
-
 PUBCHEM_URL = "https://pubchem.ncbi.nlm.nih.gov/"
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(PUBCHEM_URL),
-    reason="Pubchem is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="Pubchem is not available")
 @pytest.mark.parametrize(
-    "format, as_file_like",
-    itertools.product(["sdf", "png"], [False, True])
+    "format, as_file_like", itertools.product(["sdf", "png"], [False, True])
 )
 def test_fetch(format, as_file_like):
     """
@@ -39,10 +34,7 @@ def test_fetch(format, as_file_like):
         mol_file.get_structure()
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(PUBCHEM_URL),
-    reason="PubChem is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
 @pytest.mark.parametrize("as_structural_formula", [False, True])
 def test_fetch_structural_formula(as_structural_formula):
     """
@@ -52,9 +44,9 @@ def test_fetch_structural_formula(as_structural_formula):
     """
     CID = 2244
 
-    mol_file = mol.MOLFile.read(pubchem.fetch(
-        2244, as_structural_formula=as_structural_formula
-    ))
+    mol_file = mol.MOLFile.read(
+        pubchem.fetch(2244, as_structural_formula=as_structural_formula)
+    )
     atoms = mol_file.get_structure()
 
     if as_structural_formula:
@@ -63,10 +55,7 @@ def test_fetch_structural_formula(as_structural_formula):
         assert np.any(atoms.coord[:, 2] != 0)
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(PUBCHEM_URL),
-    reason="PubChem is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
 def test_fetch_invalid():
     """
     An exception is expected when the CID is not available.
@@ -77,10 +66,7 @@ def test_fetch_invalid():
         pubchem.fetch(1234567890)
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(PUBCHEM_URL),
-    reason="PubChem is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
 @pytest.mark.parametrize(
     "query, ref_ids",
     [
@@ -89,7 +75,7 @@ def test_fetch_invalid():
         (pubchem.InchiQuery("InChI=1S/C4H10/c1-3-4-2/h3-4H2,1-2H3"), [7843]),
         (pubchem.InchiKeyQuery("IJDNQMDRQITEOD-UHFFFAOYSA-N"), [7843]),
     ],
-    ids=["NameQuery", "SmilesQuery", "InchiQuery", "InchiKeyQuery"]
+    ids=["NameQuery", "SmilesQuery", "InchiQuery", "InchiKeyQuery"],
 )
 def test_search_simple(query, ref_ids):
     """
@@ -102,10 +88,7 @@ def test_search_simple(query, ref_ids):
     assert set(ref_ids).issubset(pubchem.search(query))
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(PUBCHEM_URL),
-    reason="PubChem is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
 def test_search_formula():
     """
     Download a structure and search for its molecular formula in
@@ -115,23 +98,17 @@ def test_search_formula():
     CID = 101608985
 
     atoms = mol.MOLFile.read(pubchem.fetch(CID)).get_structure()
-    test_cids = pubchem.search(
-        pubchem.FormulaQuery.from_atoms(atoms)
-    )
+    test_cids = pubchem.search(pubchem.FormulaQuery.from_atoms(atoms))
 
     assert CID in (test_cids)
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(PUBCHEM_URL),
-    reason="PubChem is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
 @pytest.mark.parametrize(
-    "cid, from_atoms, query_type", itertools.product(
-        [2244],
-        [False, True],
-        [pubchem.SuperstructureQuery, pubchem.SubstructureQuery]
-    )
+    "cid, from_atoms, query_type",
+    itertools.product(
+        [2244], [False, True], [pubchem.SuperstructureQuery, pubchem.SubstructureQuery]
+    ),
 )
 def test_search_super_and_substructure(cid, from_atoms, query_type):
     """
@@ -170,16 +147,9 @@ def test_search_super_and_substructure(cid, from_atoms, query_type):
             assert atoms.array_length() >= original_atoms.array_length()
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(PUBCHEM_URL),
-    reason="PubChem is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
 @pytest.mark.parametrize(
-    "conformation_based, from_atoms",
-    itertools.product(
-        [False, True],
-        [False, True]
-    )
+    "conformation_based, from_atoms", itertools.product([False, True], [False, True])
 )
 def test_search_similarity(conformation_based, from_atoms):
     """
@@ -192,8 +162,7 @@ def test_search_similarity(conformation_based, from_atoms):
     if from_atoms:
         original_atoms = mol.MOLFile.read(pubchem.fetch(CID)).get_structure()
         query = pubchem.SimilarityQuery.from_atoms(
-            original_atoms, threshold=1.0,
-            conformation_based=conformation_based
+            original_atoms, threshold=1.0, conformation_based=conformation_based
         )
     else:
         query = pubchem.SimilarityQuery(
@@ -204,10 +173,7 @@ def test_search_similarity(conformation_based, from_atoms):
     assert CID in cids
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(PUBCHEM_URL),
-    reason="PubChem is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
 @pytest.mark.parametrize("from_atoms", [False, True])
 def test_search_identity(from_atoms):
     """

@@ -9,15 +9,14 @@ __all__ = ["bond_type", "bonds_in_residue"]
 from ..bonds import BondType
 from .ccd import get_from_ccd
 
-
 BOND_TYPES = {
-    ("SING", "N") : BondType.SINGLE,
-    ("DOUB", "N") : BondType.DOUBLE,
-    ("TRIP", "N") : BondType.TRIPLE,
-    ("QUAD", "N") : BondType.QUADRUPLE,
-    ("SING", "Y") : BondType.AROMATIC_SINGLE,
-    ("DOUB", "Y") : BondType.AROMATIC_DOUBLE,
-    ("TRIP", "Y") : BondType.AROMATIC_TRIPLE,
+    ("SING", "N"): BondType.SINGLE,
+    ("DOUB", "N"): BondType.DOUBLE,
+    ("TRIP", "N"): BondType.TRIPLE,
+    ("QUAD", "N"): BondType.QUADRUPLE,
+    ("SING", "Y"): BondType.AROMATIC_SINGLE,
+    ("DOUB", "Y"): BondType.AROMATIC_DOUBLE,
+    ("TRIP", "Y"): BondType.AROMATIC_TRIPLE,
 }
 
 _intra_bonds = {}
@@ -62,8 +61,7 @@ def bond_type(res_name, atom_name1, atom_name2):
         return None
     # Try both atom orders
     bond_type_int = bonds_for_residue.get(
-        (atom_name1, atom_name2),
-        bonds_for_residue.get((atom_name2, atom_name1))
+        (atom_name1, atom_name2), bonds_for_residue.get((atom_name2, atom_name1))
     )
     if bond_type_int is not None:
         return BondType(bond_type_int)
@@ -137,7 +135,7 @@ def bonds_in_residue(res_name):
                 chem_comp_bond_dict["atom_id_1"],
                 chem_comp_bond_dict["atom_id_2"],
                 chem_comp_bond_dict["value_order"],
-                chem_comp_bond_dict["pdbx_aromatic_flag"]
+                chem_comp_bond_dict["pdbx_aromatic_flag"],
             ):
                 bond_type = BOND_TYPES[order, aromatic_flag]
                 bonds_for_residue[atom1.item(), atom2.item()] = bond_type

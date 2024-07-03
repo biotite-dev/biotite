@@ -10,9 +10,10 @@ __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
 __all__ = ["pseudoknots"]
 
-import numpy as np
-import networkx as nx
 from itertools import chain, product
+import networkx as nx
+import numpy as np
+
 
 def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     """
@@ -118,7 +119,7 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
         return np.array([[]], dtype=np.int32)
 
     # List containing the results
-    results = [np.full(len(base_pairs), -1, dtype='int32')]
+    results = [np.full(len(base_pairs), -1, dtype="int32")]
 
     # if no score array is given, each base pairs' score is one
     if scores is None:
@@ -126,9 +127,7 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
 
     # Make sure `base_pairs` has the same length as the score array
     if len(base_pairs) != len(scores):
-        raise ValueError(
-            "'base_pair' and 'scores' must have the same shape"
-        )
+        raise ValueError("'base_pair' and 'scores' must have the same shape")
 
     # Split the base pairs in regions
     regions = _find_regions(base_pairs, scores)
@@ -139,7 +138,7 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     return np.vstack(results)
 
 
-class _Region():
+class _Region:
     """
     This class represents a paired region.
 
@@ -159,7 +158,7 @@ class _Region():
         The score for each base pair.
     """
 
-    def __init__ (self, base_pairs, region_pairs, scores):
+    def __init__(self, base_pairs, region_pairs, scores):
         # The Start and Stop indices for each Region
         self.start = np.min(base_pairs[region_pairs])
         self.stop = np.max(base_pairs[region_pairs])
@@ -245,19 +244,18 @@ def _find_regions(base_pairs, scores):
 
         # Check if the current base pair belongs to the region that is
         # currently being defined
-        previous_upstream_rank = rank[i-1, 0]
+        previous_upstream_rank = rank[i - 1, 0]
         this_upstream_rank = rank[i, 0]
-        previous_downstream_rank = rank[i-1, 1]
+        previous_downstream_rank = rank[i - 1, 1]
         this_downstream_rank = rank[i, 1]
 
         # if the current base pair belongs to a new region, save the
         # current region and start a new region
-        if ((previous_downstream_rank - this_downstream_rank) != 1 or
-            (this_upstream_rank - previous_upstream_rank) != 1):
-                regions.add(
-                    _Region(base_pairs, np.array(region_pairs), scores)
-                )
-                region_pairs = []
+        if (previous_downstream_rank - this_downstream_rank) != 1 or (
+            this_upstream_rank - previous_upstream_rank
+        ) != 1:
+            regions.add(_Region(base_pairs, np.array(region_pairs), scores))
+            region_pairs = []
 
         # Append the current base pair to the region
         region_pairs.append(original_indices[i])
@@ -296,7 +294,7 @@ def _generate_graphical_representation(regions):
     # Get the region array and a boolean array, where the start of each
     # region is ``True``.
     region_array, (start_stops,) = _get_region_array_for(
-        regions, content=[lambda a : [True, False]], dtype=['bool']
+        regions, content=[lambda a: [True, False]], dtype=["bool"]
     )
 
     # Check each region for conflicts with other regions
@@ -307,15 +305,15 @@ def _generate_graphical_representation(regions):
 
         # Find the index of the stopping of the region in the region
         # array
-        stop = _get_first_occurrence_for(region_array[start+1:], region)
-        stop += (start + 1)
+        stop = _get_first_occurrence_for(region_array[start + 1 :], region)
+        stop += start + 1
 
         # Store regions the current region conflicts with
         conflicts = set()
 
         # Iterate over the regions between the starting and stopping
         # point of the current region
-        for other_region in region_array[start+1:stop]:
+        for other_region in region_array[start + 1 : stop]:
             # If the other region is not already a conflict, add it to
             # the conflict set
             if other_region not in conflicts:
@@ -389,17 +387,17 @@ def _get_region_array_for(regions, content=[], dtype=[]):
         The custom output.
     """
     # region_array and index array
-    region_array = np.empty(len(regions)*2, dtype=_Region)
-    index_array = np.empty(len(regions)*2, dtype='int32')
+    region_array = np.empty(len(regions) * 2, dtype=_Region)
+    index_array = np.empty(len(regions) * 2, dtype="int32")
 
     # Content array for custom return arrays
-    content_list = [None]*len(content)
+    content_list = [None] * len(content)
     for i in range(len(content)):
-        content_list[i] = np.empty(len(regions)*2, dtype=dtype[i])
+        content_list[i] = np.empty(len(regions) * 2, dtype=dtype[i])
 
     # Fill the arrays
     for i, reg in enumerate(regions):
-        indices = [2*i, 2*i+1]
+        indices = [2 * i, 2 * i + 1]
         region_array[indices] = reg
         for c in range(len(content_list)):
             content_list[c][indices] = content[c](reg)
@@ -443,8 +441,8 @@ def _remove_pseudoknots(regions):
         represented as ``set`` of unknotted regions.
     """
     # Create dynamic programming matrix
-    dp_matrix_shape = len(regions)*2, len(regions)*2
-    dp_matrix = np.empty(dp_matrix_shape, dtype='object')
+    dp_matrix_shape = len(regions) * 2, len(regions) * 2
+    dp_matrix = np.empty(dp_matrix_shape, dtype="object")
     dp_matrix_solutions_starts = np.zeros_like(dp_matrix)
     dp_matrix_solutions_stops = np.zeros_like(dp_matrix)
 
@@ -452,9 +450,7 @@ def _remove_pseudoknots(regions):
     # ``region_array`` contains the region objects and ``start_stops``
     # contains the lowest and highest positions of the regions
     region_array, (start_stops,) = _get_region_array_for(
-        regions,
-        [lambda a : (a.start, a.stop)],
-        ['int32']
+        regions, [lambda a: (a.start, a.stop)], ["int32"]
     )
     # Initialise the matrix diagonal with ndarrays of empty frozensets
     for i in range(len(dp_matrix)):
@@ -462,11 +458,11 @@ def _remove_pseudoknots(regions):
 
     # Iterate through the top right half of the dynamic programming
     # matrix
-    for j in range(len(regions)*2):
-        for i in range(j-1, -1, -1):
+    for j in range(len(regions) * 2):
+        for i in range(j - 1, -1, -1):
             solution_candidates = set()
-            left = dp_matrix[i, j-1]
-            bottom = dp_matrix[i+1, j]
+            left = dp_matrix[i, j - 1]
+            bottom = dp_matrix[i + 1, j]
 
             # Add all solutions of the cell to the left
             for solution in left:
@@ -474,24 +470,21 @@ def _remove_pseudoknots(regions):
 
             # Add all solutions of the cell to the bottom
             for solution in bottom:
-               solution_candidates.add(solution)
+                solution_candidates.add(solution)
 
             # Check if i and j are start/end-points of the same region
             if region_array[i] is region_array[j]:
-
                 # Add all solutions from the cell to the bottom left
                 # plus this region
-                bottom_left = dp_matrix[i+1, j-1]
+                bottom_left = dp_matrix[i + 1, j - 1]
                 for solution in bottom_left:
                     solution_candidates.add(solution | set([region_array[i]]))
 
             # Perform additional tests if solution in the left cell and
             # bottom cell both differ from an empty solution
-            if (np.any(left != [frozenset()]) and
-                np.any(bottom != [frozenset()])):
-
-                left_highest = dp_matrix_solutions_stops[i, j-1]
-                bottom_lowest = dp_matrix_solutions_starts[i+1, j]
+            if np.any(left != [frozenset()]) and np.any(bottom != [frozenset()]):
+                left_highest = dp_matrix_solutions_stops[i, j - 1]
+                bottom_lowest = dp_matrix_solutions_starts[i + 1, j]
 
                 # For each pair of solutions check if solutions are
                 # disjoint
@@ -504,11 +497,11 @@ def _remove_pseudoknots(regions):
                             # Both solutions are not disjoint
                             # Add subsolutions
                             for k in range(
-                                np.where(start_stops==lowest)[0][0]-1,
-                                np.where(start_stops==highest)[0][0]+1
+                                np.where(start_stops == lowest)[0][0] - 1,
+                                np.where(start_stops == highest)[0][0] + 1,
                             ):
                                 cell1 = dp_matrix[i, k]
-                                cell2 = dp_matrix[k+1, j]
+                                cell2 = dp_matrix[k + 1, j]
                                 for subsolution1 in cell1:
                                     for subsolution2 in cell2:
                                         solution_candidates.add(
@@ -536,16 +529,12 @@ def _remove_pseudoknots(regions):
             # Add the solutions to the dynamic programming matrix
             dp_matrix[i, j] = solution_candidates
 
-            solution_starts = np.zeros_like(solution_candidates, dtype='int32')
-            solution_stops = np.zeros_like(solution_candidates, dtype='int32')
+            solution_starts = np.zeros_like(solution_candidates, dtype="int32")
+            solution_stops = np.zeros_like(solution_candidates, dtype="int32")
 
             for s, solution in enumerate(solution_candidates):
-                solution_starts[s] = min(
-                    [reg.start for reg in solution], default=-1
-                )
-                solution_stops[s] = max(
-                    [reg.stop for reg in solution], default=-1
-                )
+                solution_starts[s] = min([reg.start for reg in solution], default=-1)
+                solution_stops[s] = max([reg.stop for reg in solution], default=-1)
 
             dp_matrix_solutions_starts[i, j] = solution_starts
             dp_matrix_solutions_stops[i, j] = solution_stops
@@ -586,13 +575,10 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
 
     # Non-conflicting regions are of the current order:
     index_list_non_conflicting = list(
-            chain(
-                *[region.get_index_array() for region in non_conflicting]
-            )
-        )
+        chain(*[region.get_index_array() for region in non_conflicting])
+    )
     for result in results:
         result[index_list_non_conflicting] = order
-
 
     # If no conflicts remain, the results are complete
     if len(regions) == 0:
@@ -601,9 +587,10 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
     # Get the optimal solutions for given regions. Evaluate each clique
     # of mutually conflicting regions seperately
     cliques = [component for component in nx.connected_components(regions)]
-    solutions = [set(chain(*e)) for e in product(
-        *[_remove_pseudoknots(clique) for clique in cliques]
-    )]
+    solutions = [
+        set(chain(*e))
+        for e in product(*[_remove_pseudoknots(clique) for clique in cliques])
+    ]
 
     # Get a copy of the current results for each optimal solution
     results_list = [
@@ -612,16 +599,13 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
 
     # Evaluate each optimal solution
     for i, solution in enumerate(solutions):
-
         # Get the pseudoknotted regions
         pseudoknotted_regions = regions.copy()
         pseudoknotted_regions.remove_nodes_from(solution)
 
         # Get an index list of the unknotted base pairs
         index_list_unknotted = list(
-            chain(
-                *[region.get_index_array() for region in solution]
-            )
+            chain(*[region.get_index_array() for region in solution])
         )
 
         # Write results for current solution
@@ -634,8 +618,10 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
 
         # Evaluate the pseudoknotted region
         results_list[i] = _get_results(
-            pseudoknotted_regions, results_list[i],
-            max_pseudoknot_order, order=order+1
+            pseudoknotted_regions,
+            results_list[i],
+            max_pseudoknot_order,
+            order=order + 1,
         )
 
     # Flatten the results

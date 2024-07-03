@@ -6,9 +6,9 @@ __name__ = "biotite.database.uniprot"
 __author__ = "Maximilian Greil"
 __all__ = ["fetch"]
 
-from os.path import isdir, isfile, join, getsize
-import os
 import io
+import os
+from os.path import getsize, isdir, isfile, join
 import requests
 from .check import assert_valid_response
 
@@ -36,8 +36,7 @@ def _get_database_name(id):
     return "uniprotkb"
 
 
-def fetch(ids, format, target_path=None,
-          overwrite=False, verbose=False):
+def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
     """
     Download files from the UniProt in various formats.
 
@@ -101,18 +100,14 @@ def fetch(ids, format, target_path=None,
         db_name = _get_database_name(id)
         # Verbose output
         if verbose:
-            print(f"Fetching file {i + 1:d} / {len(ids):d} ({id})...",
-                  end="\r")
+            print(f"Fetching file {i + 1:d} / {len(ids):d} ({id})...", end="\r")
         # Fetch file from database
         if target_path is not None:
             file = join(target_path, id + "." + format)
         else:
             # 'file = None' -> store content in a file-like object
             file = None
-        if file is None \
-                or not isfile(file) \
-                or getsize(file) == 0 \
-                or overwrite:
+        if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
             if format in ["fasta", "gff", "txt", "xml", "rdf", "tab"]:
                 r = requests.get(_fetch_url + db_name + "/" + id + "." + format)
                 content = r.text

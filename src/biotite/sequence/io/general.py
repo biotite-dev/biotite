@@ -9,31 +9,27 @@ general sequence files.
 
 __name__ = "biotite.sequence.io"
 __author__ = "Patrick Kunzmann"
-__all__ = ["load_sequence", "save_sequence",
-           "load_sequences", "save_sequences"]
+__all__ = ["load_sequence", "save_sequence", "load_sequences", "save_sequences"]
 
-import itertools
 import os.path
-import io
 from collections import OrderedDict
 import numpy as np
-from ..seqtypes import NucleotideSequence, ProteinSequence
-from ..alphabet import Alphabet
+from ..seqtypes import NucleotideSequence
 
 
 def load_sequence(file_path):
     """
     Load a sequence from a sequence file without the need
     to manually instantiate a :class:`File` object.
-    
+
     Internally this function uses a :class:`File` object, based on the
     file extension.
-    
+
     Parameters
     ----------
     file_path : str
         The path to the sequence file.
-    
+
     Returns
     -------
     sequence : Sequence
@@ -43,10 +39,12 @@ def load_sequence(file_path):
     filename, suffix = os.path.splitext(file_path)
     if suffix in [".fasta", ".fa", ".mpfa", ".fna", ".fsa"]:
         from .fasta import FastaFile, get_sequence
+
         file = FastaFile.read(file_path)
         return get_sequence(file)
     elif suffix in [".fastq", ".fq"]:
         from .fastq import FastqFile
+
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
         file = FastqFile.read(file_path, offset="Sanger")
@@ -57,6 +55,7 @@ def load_sequence(file_path):
         return sequence
     elif suffix in [".gb", ".gbk", ".gp"]:
         from .genbank import GenBankFile, get_sequence
+
         format = "gp" if suffix == ".gp" else "gb"
         file = GenBankFile.read(file_path)
         return get_sequence(file, format)
@@ -68,10 +67,10 @@ def save_sequence(file_path, sequence):
     """
     Save a sequence into a sequence file without the need
     to manually instantiate a :class:`File` object.
-    
+
     Internally this function uses a :class:`File` object, based on the
     given file extension.
-    
+
     Parameters
     ----------
     file_path : str
@@ -83,11 +82,13 @@ def save_sequence(file_path, sequence):
     filename, suffix = os.path.splitext(file_path)
     if suffix in [".fasta", ".fa", ".mpfa", ".fna", ".fsa"]:
         from .fasta import FastaFile, set_sequence
+
         file = FastaFile()
         set_sequence(file, sequence)
         file.write(file_path)
     elif suffix in [".fastq", ".fq"]:
         from .fastq import FastqFile
+
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
         file = FastqFile(offset="Sanger")
@@ -97,6 +98,7 @@ def save_sequence(file_path, sequence):
         file.write(file_path)
     elif suffix in [".gb", ".gbk", ".gp"]:
         from .genbank import GenBankFile, set_locus, set_sequence
+
         file = GenBankFile()
         set_locus(file, "sequence", len(sequence))
         set_sequence(file, sequence)
@@ -109,37 +111,42 @@ def load_sequences(file_path):
     """
     Load multiple sequences from a sequence file without the need
     to manually instantiate a :class:`File` object.
-    
+
     Internally this function uses a :class:`File` object, based on the
     file extension.
-    
+
     Parameters
     ----------
     file_path : str
         The path to the sequence file.
-    
+
     Returns
     -------
     sequences : dict of (str, Sequence)
         The sequences in the file.
         This dictionary maps each header name to
-        the respective sequence. 
+        the respective sequence.
     """
     # We only need the suffix here
     filename, suffix = os.path.splitext(file_path)
     if suffix in [".fasta", ".fa", ".mpfa", ".fna", ".fsa"]:
         from .fasta import FastaFile, get_sequences
+
         file = FastaFile.read(file_path)
         return get_sequences(file)
     elif suffix in [".fastq", ".fq"]:
         from .fastq import FastqFile
+
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
         file = FastqFile.read(file_path, offset="Sanger")
-        return {identifier : NucleotideSequence(seq_str)
-                for identifier, (seq_str, scores) in file.items()}
+        return {
+            identifier: NucleotideSequence(seq_str)
+            for identifier, (seq_str, scores) in file.items()
+        }
     elif suffix in [".gb", ".gbk", ".gp"]:
         from .genbank import MultiFile, get_definition, get_sequence
+
         file = MultiFile.read(file_path)
         format = "gp" if suffix == ".gp" else "gb"
         sequences = OrderedDict()
@@ -154,10 +161,10 @@ def save_sequences(file_path, sequences):
     """
     Save multiple sequences into a sequence file without the need
     to manually instantiate a :class:`File` object.
-    
+
     Internally this function uses a :class:`File` object, based on the
     given file extension.
-    
+
     Parameters
     ----------
     file_path : str
@@ -170,11 +177,13 @@ def save_sequences(file_path, sequences):
     filename, suffix = os.path.splitext(file_path)
     if suffix in [".fasta", ".fa", ".mpfa", ".fna", ".fsa"]:
         from .fasta import FastaFile, set_sequences
+
         file = FastaFile()
         set_sequences(file, sequences)
         file.write(file_path)
     elif suffix in [".fastq", ".fq"]:
         from .fastq import FastqFile
+
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
         file = FastqFile(offset="Sanger")

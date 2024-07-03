@@ -36,11 +36,10 @@ The file containing the eigenvectors can be downloaded via this
 from tempfile import NamedTemporaryFile
 import numpy as np
 from numpy import newaxis
+import biotite.database.rcsb as rcsb
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.pdbx as pdbx
-import biotite.database.rcsb as rcsb
-
 
 # A CSV file containing the eigenvectors for the CA atoms
 VECTOR_FILE = "../../../download/glycosylase_anm_vectors.csv"
@@ -64,8 +63,7 @@ structure = pdbx.get_structure(pdbx_file, model=1)
 
 # Filter first peptide chain
 protein_chain = structure[
-    struc.filter_amino_acids(structure)
-    & (structure.chain_id == structure.chain_id[0])
+    struc.filter_amino_acids(structure) & (structure.chain_id == structure.chain_id[0])
 ]
 # Filter CA atoms
 ca = protein_chain[protein_chain.atom_name == "CA"]
@@ -88,7 +86,7 @@ mode_vectors *= scale
 
 
 # Stepwise application of eigenvectors as smooth sine oscillation
-time = np.linspace(0, 2*np.pi, FRAMES, endpoint=False)
+time = np.linspace(0, 2 * np.pi, FRAMES, endpoint=False)
 deviation = np.sin(time)[:, newaxis, newaxis] * mode_vectors
 
 # Apply oscillation of CA atom to all atoms in the corresponding residue
@@ -97,13 +95,14 @@ residue_starts = struc.get_residue_starts(
     protein_chain,
     # The last array element will be the length of the atom array,
     # i.e. no valid index
-    add_exclusive_stop=True
+    add_exclusive_stop=True,
 )
-for i in range(len(residue_starts) -1):
+for i in range(len(residue_starts) - 1):
     res_start = residue_starts[i]
-    res_stop = residue_starts[i+1]
-    oscillation[:, res_start:res_stop, :] \
-        = protein_chain.coord[res_start:res_stop, :] + deviation[:, i:i+1, :]
+    res_stop = residue_starts[i + 1]
+    oscillation[:, res_start:res_stop, :] = (
+        protein_chain.coord[res_start:res_stop, :] + deviation[:, i : i + 1, :]
+    )
 
 # An atom array stack containing all frames
 oscillating_structure = struc.from_template(protein_chain, oscillation)

@@ -5,9 +5,9 @@
 import itertools
 import numpy as np
 import pytest
+import biotite.application.muscle as muscle
 import biotite.sequence as seq
 import biotite.sequence.align as align
-import biotite.application.muscle as muscle
 from biotite.application import VersionError
 from ...util import is_not_installed
 
@@ -47,11 +47,13 @@ align_cases = [
         ("TAAAGCGAAAT\nT---GCG---T")),
     (False,False,-7, "TAAAGCGAAAT","TGCGT",
         ("TAAAGCGAAAT\n---TGCGT---"))
-] # fmt: skip
-@pytest.mark.parametrize("local, term, gap_penalty, input1, input2, expect",
-                         align_cases)
-def test_align_optimal_simple(local, term, gap_penalty,
-                              input1, input2, expect):
+]  # fmt: skip
+
+
+@pytest.mark.parametrize(
+    "local, term, gap_penalty, input1, input2, expect", align_cases
+)
+def test_align_optimal_simple(local, term, gap_penalty, input1, input2, expect):
     """
     Test `align_optimal()` function using constructed test cases.
     """
@@ -59,29 +61,27 @@ def test_align_optimal_simple(local, term, gap_penalty,
     seq2 = seq.NucleotideSequence(input2)
     matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
     # Test alignment function
-    alignments = align.align_optimal(seq1, seq2,
-                       matrix,
-                       gap_penalty=gap_penalty, terminal_penalty=term,
-                       local=local)
+    alignments = align.align_optimal(
+        seq1, seq2, matrix, gap_penalty=gap_penalty, terminal_penalty=term, local=local
+    )
 
     for ali in alignments:
         assert str(ali) in expect
     # Test if separate score function calculates the same score
     for ali in alignments:
-        score = align.score(ali, matrix,
-                            gap_penalty=gap_penalty, terminal_penalty=term)
+        score = align.score(ali, matrix, gap_penalty=gap_penalty, terminal_penalty=term)
         assert score == ali.score
 
 
-@pytest.mark.skipif(
-    is_not_installed("muscle"),
-    reason="MUSCLE is not installed"
-)
+@pytest.mark.skipif(is_not_installed("muscle"), reason="MUSCLE is not installed")
 # Ignore warning about MUSCLE writing no second guide tree
 @pytest.mark.filterwarnings("ignore")
-@pytest.mark.parametrize("gap_penalty, seq_indices", itertools.product(
-    [-10, (-10,-1)], [(i,j) for i in range(10) for j in range(i+1)]
-))
+@pytest.mark.parametrize(
+    "gap_penalty, seq_indices",
+    itertools.product(
+        [-10, (-10, -1)], [(i, j) for i in range(10) for j in range(i + 1)]
+    ),
+)
 def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
     """
     Test `align_optimal()` function using real world sequences,
@@ -92,8 +92,7 @@ def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
     seq1 = sequences[index1]
     seq2 = sequences[index2]
     test_alignment = align.align_optimal(
-        seq1, seq2, matrix,
-        gap_penalty=gap_penalty, terminal_penalty=True, max_number=1
+        seq1, seq2, matrix, gap_penalty=gap_penalty, terminal_penalty=True, max_number=1
     )[0]
 
     try:
@@ -101,18 +100,14 @@ def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
             [seq1, seq2], matrix=matrix, gap_penalty=gap_penalty
         )
     except VersionError:
-        pytest.skip(f"Invalid Muscle software version")
+        pytest.skip("Invalid Muscle software version")
 
     # Check whether the score of the optimal alignments is the same
     # or higher as the MUSCLE alignment
     # Direct alignment comparison is not feasible,
     # since the treatment of terminal gaps is different in MUSCLE
-    test_score = align.score(
-        test_alignment, matrix, gap_penalty, terminal_penalty=True
-    )
-    ref_score = align.score(
-        ref_alignment, matrix, gap_penalty, terminal_penalty=True
-    )
+    test_score = align.score(test_alignment, matrix, gap_penalty, terminal_penalty=True)
+    ref_score = align.score(ref_alignment, matrix, gap_penalty, terminal_penalty=True)
     try:
         assert test_score >= ref_score
     except AssertionError:
@@ -127,9 +122,8 @@ def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
 
 
 @pytest.mark.parametrize(
-    "local, term, gap_penalty, seed", itertools.product(
-        [True, False], [True, False], [-5, -8, -10, -15], range(10)
-    )
+    "local, term, gap_penalty, seed",
+    itertools.product([True, False], [True, False], [-5, -8, -10, -15], range(10)),
 )
 def test_affine_gap_penalty(local, term, gap_penalty, seed):
     """
@@ -144,9 +138,7 @@ def test_affine_gap_penalty(local, term, gap_penalty, seed):
     for _ in range(2):
         sequence = seq.NucleotideSequence()
         length = np.random.randint(*LENGTH_RANGE)
-        sequence.code = np.random.randint(
-            len(sequence.alphabet), size=length
-        )
+        sequence.code = np.random.randint(len(sequence.alphabet), size=length)
         sequences.append(sequence)
 
     matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
@@ -177,13 +169,15 @@ def test_affine_gap_penalty(local, term, gap_penalty, seed):
 
 
 @pytest.mark.parametrize(
-    "local, term, gap_penalty, seq_indices", itertools.product(
-        [True, False], [True, False], [-10, (-10,-1)],
-        [(i,j) for i in range(10) for j in range(i+1)]
-    )
+    "local, term, gap_penalty, seq_indices",
+    itertools.product(
+        [True, False],
+        [True, False],
+        [-10, (-10, -1)],
+        [(i, j) for i in range(10) for j in range(i + 1)],
+    ),
 )
-def test_align_optimal_symmetry(sequences, local, term, gap_penalty,
-                                seq_indices):
+def test_align_optimal_symmetry(sequences, local, term, gap_penalty, seq_indices):
     """
     Alignments should be indifferent about which sequence comes first.
     """
@@ -192,15 +186,23 @@ def test_align_optimal_symmetry(sequences, local, term, gap_penalty,
     seq1 = sequences[index1]
     seq2 = sequences[index2]
     alignment1 = align.align_optimal(
-        seq1, seq2, matrix,
-        gap_penalty=gap_penalty, terminal_penalty=term, local=local,
-        max_number=1
+        seq1,
+        seq2,
+        matrix,
+        gap_penalty=gap_penalty,
+        terminal_penalty=term,
+        local=local,
+        max_number=1,
     )[0]
     # Swap the sequences
     alignment2 = align.align_optimal(
-        seq2, seq1, matrix,
-        gap_penalty=gap_penalty, terminal_penalty=term, local=local,
-        max_number=1
+        seq2,
+        seq1,
+        matrix,
+        gap_penalty=gap_penalty,
+        terminal_penalty=term,
+        local=local,
+        max_number=1,
     )[0]
     # Comparing all traces of both alignments to each other
     # would be unfeasible
@@ -209,10 +211,12 @@ def test_align_optimal_symmetry(sequences, local, term, gap_penalty,
 
 
 @pytest.mark.parametrize(
-    "gap_penalty, term, seq_indices", itertools.product(
-        [-10, (-10,-1)], [False, True],
-        [(i,j) for i in range(10) for j in range(i+1)]
-    )
+    "gap_penalty, term, seq_indices",
+    itertools.product(
+        [-10, (-10, -1)],
+        [False, True],
+        [(i, j) for i in range(10) for j in range(i + 1)],
+    ),
 )
 def test_scoring(sequences, gap_penalty, term, seq_indices):
     """
@@ -224,12 +228,10 @@ def test_scoring(sequences, gap_penalty, term, seq_indices):
     seq1 = sequences[index1]
     seq2 = sequences[index2]
     alignment = align.align_optimal(
-        seq1, seq2, matrix, gap_penalty=gap_penalty, terminal_penalty=term,
-        max_number=1
+        seq1, seq2, matrix, gap_penalty=gap_penalty, terminal_penalty=term, max_number=1
     )[0]
     try:
-        assert align.score(alignment, matrix, gap_penalty, term) \
-               == alignment.score
+        assert align.score(alignment, matrix, gap_penalty, term) == alignment.score
     except AssertionError:
         print(alignment)
         raise

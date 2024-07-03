@@ -6,25 +6,25 @@ __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
 __all__ = ["colors", "set_font_size_in_coord", "AdaptiveFancyArrow"]
 
-import abc
 from collections import OrderedDict
 import numpy as np
 from numpy.linalg import norm
 
-
 # Biotite themed colors
-colors = OrderedDict([
-    ("brightorange" , "#ffb569ff"),
-    ("lightorange"  , "#ff982dff"),
-    ("orange"       , "#ff8405ff"),
-    ("dimorange"    , "#dc7000ff"),
-    ("darkorange"   , "#b45c00ff"),
-    ("brightgreen"  , "#98e97fff"),
-    ("lightgreen"   , "#6fe04cff"),
-    ("green"        , "#52da2aff"),
-    ("dimgreen"     , "#45bc20ff"),
-    ("darkgreen"    , "#389a1aff"),
-])
+colors = OrderedDict(
+    [
+        ("brightorange", "#ffb569ff"),
+        ("lightorange", "#ff982dff"),
+        ("orange", "#ff8405ff"),
+        ("dimorange", "#dc7000ff"),
+        ("darkorange", "#b45c00ff"),
+        ("brightgreen", "#98e97fff"),
+        ("lightgreen", "#6fe04cff"),
+        ("green", "#52da2aff"),
+        ("dimgreen", "#45bc20ff"),
+        ("darkgreen", "#389a1aff"),
+    ]
+)
 
 
 def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
@@ -75,8 +75,8 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
     This behavior is not equal for all initial font sizes (in 'pt'),
     the boundaries for an initial size of 1 'pt' seem to be most exact.
     """
-    from matplotlib.transforms import Bbox, Affine2D
     from matplotlib.patheffects import AbstractPathEffect
+    from matplotlib.transforms import Affine2D, Bbox
 
     class TextScaler(AbstractPathEffect):
         def __init__(self, text, width, height, mode):
@@ -127,25 +127,21 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
 
     if mode in ["unlocked", "minimum", "maximum"]:
         if width is None or height is None:
-            raise TypeError(
-                f"Width and height must be set in '{mode}' mode"
-            )
+            raise TypeError(f"Width and height must be set in '{mode}' mode")
     elif mode == "proportional":
-        if  not (width  is None and height is not None) or \
-            not (height is None and width  is not None):
-                raise TypeError(
-                    f"Either width or height must be set in '{mode}' mode"
-                )
+        if not (width is None and height is not None) or not (
+            height is None and width is not None
+        ):
+            raise TypeError(f"Either width or height must be set in '{mode}' mode")
     else:
-        raise ValueError(
-                f"Unknown mode '{mode}'"
-            )
+        raise ValueError(f"Unknown mode '{mode}'")
     text.set_path_effects([TextScaler(text, width, height, mode)])
+
 
 try:
     # Only create this class when matplotlib is installed
-    from matplotlib.transforms import Bbox
     from matplotlib.patches import FancyArrow
+    from matplotlib.transforms import Bbox
 
     class AdaptiveFancyArrow(FancyArrow):
         """
@@ -177,9 +173,19 @@ try:
             `FancyArrow`.
         """
 
-        def __init__(self, x, y, dx, dy,
-                     tail_width, head_width, head_ratio, draw_head=True,
-                     shape="full", **kwargs):
+        def __init__(
+            self,
+            x,
+            y,
+            dx,
+            dy,
+            tail_width,
+            head_width,
+            head_ratio,
+            draw_head=True,
+            shape="full",
+            **kwargs,
+        ):
             self._x = x
             self._y = y
             self._dx = dx
@@ -193,23 +199,25 @@ try:
             if not draw_head:
                 head_width = tail_width
             super().__init__(
-                x, y, dx, dy,
-                width=tail_width, head_width=head_width,
-                overhang=0, shape=shape,
-                length_includes_head=True, **kwargs
+                x,
+                y,
+                dx,
+                dy,
+                width=tail_width,
+                head_width=head_width,
+                overhang=0,
+                shape=shape,
+                length_includes_head=True,
+                **kwargs,
             )
 
         def draw(self, renderer):
-            arrow_box = Bbox([(0,0), (0,self._head_width)])
+            arrow_box = Bbox([(0, 0), (0, self._head_width)])
             arrow_box_display = self.axes.transData.transform_bbox(arrow_box)
-            head_length_display = np.abs(
-                arrow_box_display.height * self._head_ratio
-            )
+            head_length_display = np.abs(arrow_box_display.height * self._head_ratio)
             arrow_box_display.x1 = arrow_box_display.x0 + head_length_display
             # Transfrom back to data coordinates for plotting
-            arrow_box = self.axes.transData.inverted().transform_bbox(
-                arrow_box_display
-            )
+            arrow_box = self.axes.transData.inverted().transform_bbox(arrow_box_display)
             head_length = arrow_box.width
             arrow_length = norm((self._dx, self._dy))
             if head_length > arrow_length:
@@ -221,11 +229,19 @@ try:
 
             # Renew the arrow's properties
             super().__init__(
-                self._x, self._y, self._dx, self._dy,
-                width=self._tail_width, head_width=self._head_width,
-                overhang=0, shape=self._shape,
-                head_length=head_length, length_includes_head=True,
-                axes=self.axes, transform=self.get_transform(), **self._kwargs
+                self._x,
+                self._y,
+                self._dx,
+                self._dy,
+                width=self._tail_width,
+                head_width=self._head_width,
+                overhang=0,
+                shape=self._shape,
+                head_length=head_length,
+                length_includes_head=True,
+                axes=self.axes,
+                transform=self.get_transform(),
+                **self._kwargs,
             )
             self.set_clip_path(self.axes.patch)
             super().draw(renderer)
@@ -234,18 +250,16 @@ try:
         # Removes warning:
         # unknown document: /tutorials/intermediate/constrainedlayout_guide
         def get_in_layout(self):
-            """
-            """
+            """ """
             return super().get_in_layout()
+
         def set_in_layout(self, in_layout):
-            """
-            """
+            """ """
             return super().set_in_layout(in_layout)
 
 except ImportError:
-
     # Dummy class that propagates a meaningful error,
     # i.e. that Matplotlib is not installed
-    class AdaptiveFancyArrow():
+    class AdaptiveFancyArrow:
         def __init__(*args, **kwargs):
-            raise ModuleNotFoundError(f"No module named 'matplotlib'")
+            raise ModuleNotFoundError("No module named 'matplotlib'")

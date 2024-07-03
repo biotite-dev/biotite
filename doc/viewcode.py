@@ -10,10 +10,10 @@ lines at GitHub.
 __author__ = "Patrick Kunzmann"
 __all__ = ["linkcode_resolve"]
 
-from importlib import import_module
-from os.path import dirname, join, isdir, splitext
-from os import listdir
 import inspect
+from importlib import import_module
+from os import listdir
+from os.path import dirname, isdir, join, splitext
 import biotite
 
 
@@ -66,10 +66,13 @@ def _index_attributes(package_name, src_path):
 
     # Import all modules in directory and index attributes
     source_files = [
-        file_name for file_name in directory_content
-        if file_name != "__init__.py" and (
+        file_name
+        for file_name in directory_content
+        if file_name != "__init__.py"
+        and (
             # Standard Python modules
-            file_name.endswith(".py") or
+            file_name.endswith(".py")
+            or
             # Extension modules
             file_name.endswith(".pyx")
         )
@@ -83,9 +86,7 @@ def _index_attributes(package_name, src_path):
         module = import_module(module_name)
 
         if not hasattr(module, "__all__"):
-            raise AttributeError(
-                f"Module {module_name} has not attribute '__all__'"
-            )
+            raise AttributeError(f"Module {module_name} has not attribute '__all__'")
         # Only index attributes from modules that are available
         # via respective Biotite (sub-)package
         # If a the attribute is available, the module was imported in
@@ -98,8 +99,7 @@ def _index_attributes(package_name, src_path):
 
         is_cython = source_file.endswith(".pyx")
         for attribute in module.__all__:
-            attribute_index[(package_name, attribute)] \
-                = (module_name, is_cython)
+            attribute_index[(package_name, attribute)] = (module_name, is_cython)
         if is_cython:
             with open(join(src_path, source_file), "r") as cython_file:
                 lines = cython_file.read().splitlines()
@@ -150,7 +150,7 @@ def _index_cython_code(code_lines):
             cropped_line = stripped_line[3:].strip()
             # ...and determine the end of the name by finding the
             # subsequent '('
-            cropped_line = cropped_line[:cropped_line.index("(")].strip()
+            cropped_line = cropped_line[: cropped_line.index("(")].strip()
             attr_name = cropped_line
         elif line.startswith(("class", "cdef class")):
             attr_type = "class"
@@ -163,8 +163,11 @@ def _index_cython_code(code_lines):
             cropped_line = cropped_line[5:].strip()
             # ...and determine the end of the name by finding the
             # subsequent '(' or ':'
-            index = cropped_line.index("(") if "(" in cropped_line \
-                    else cropped_line.index(":")
+            index = (
+                cropped_line.index("(")
+                if "(" in cropped_line
+                else cropped_line.index(":")
+            )
             cropped_line = cropped_line[:index].strip()
             attr_name = cropped_line
         else:
@@ -172,8 +175,8 @@ def _index_cython_code(code_lines):
             continue
 
         attr_line_start = i
-        attr_line_stop = i+1
-        for j in range(i+1, len(code_lines)):
+        attr_line_stop = i + 1
+        for j in range(i + 1, len(code_lines)):
             attr_line = code_lines[j]
             if len(attr_line.strip()) == 0 or attr_line.strip()[0] == "#":
                 continue
@@ -189,7 +192,7 @@ def _index_cython_code(code_lines):
             # 'One' based indexing
             attr_line_start + 1,
             # 'One' based indexing and inclusive stop
-            attr_line_stop
+            attr_line_stop,
         )
 
     return line_index
@@ -203,7 +206,7 @@ def _is_package(path):
 _attribute_index, _cython_line_index = _index_attributes(
     "biotite",
     # Directory to src/biotite
-    join(dirname(dirname(__file__)), "src", "biotite")
+    join(dirname(dirname(__file__)), "src", "biotite"),
 )
 
 
@@ -226,17 +229,11 @@ def linkcode_resolve(domain, info):
     if is_cython:
         if (package_name, attr_name) in _cython_line_index:
             first, last = _cython_line_index[(package_name, attr_name)]
-            return (
-                base_url +
-                f"{module_name.replace('.', '/')}.pyx#L{first}-L{last}"
-            )
+            return base_url + f"{module_name.replace('.', '/')}.pyx#L{first}-L{last}"
         else:
             # In case the attribute is not found
             # by the Cython code analyzer
-            return (
-                base_url +
-                f"{module_name.replace('.', '/')}.pyx"
-            )
+            return base_url + f"{module_name.replace('.', '/')}.pyx"
 
     else:
         module = import_module(module_name)
@@ -255,7 +252,4 @@ def linkcode_resolve(domain, info):
         source_lines, first = inspect.getsourcelines(obj)
         last = first + len(source_lines) - 1
 
-        return (
-            base_url +
-            f"{module_name.replace('.', '/')}.py#L{first}-L{last}"
-        )
+        return base_url + f"{module_name.replace('.', '/')}.py#L{first}-L{last}"
