@@ -7,7 +7,6 @@ import numpy as np
 import biotite.sequence as seq
 import biotite.sequence.align as align
 from biotite.sequence.align.statistics import EValueEstimator
-from .util import sequences
 
 
 BACKGROUND = np.array(list({
@@ -55,7 +54,7 @@ def test_distribution_param(matrix_name, gap_penalty, ref_lam, ref_k):
     """
     SAMPLE_LENGTH = 500
     SAMPLE_SIZE = 1000
-    
+
     alphabet = seq.ProteinSequence.alphabet
     matrix = align.SubstitutionMatrix(alphabet, alphabet, matrix_name)
 
@@ -185,6 +184,6 @@ def test_invalid_scoring_scheme():
     )
     # Uniform background frequencies
     freq = np.ones(len(alph))
-    
+
     with pytest.raises(ValueError):
         estimator = EValueEstimator.from_samples(alph, matrix, -10, freq)

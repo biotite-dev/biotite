@@ -7,7 +7,6 @@ import pytest
 import numpy as np
 import biotite.sequence as seq
 import biotite.sequence.align as align
-from .util import sequences
 
 
 @pytest.mark.parametrize(
@@ -34,7 +33,7 @@ def test_simple_alignment(gap_penalty, local, band_width):
     # Remove terminal gaps in reference to obtain a true semi-global
     # alignment, as returned by align_banded()
     ref_alignments = [align.remove_terminal_gaps(al) for al in ref_alignments]
-    
+
     test_alignments = align.align_banded(
         seq1, seq2, matrix, (-band_width, band_width),
         gap_penalty=gap_penalty, local=local
@@ -59,7 +58,7 @@ def test_complex_alignment(sequences, gap_penalty, local, seq_indices):
     can return the optimal alignment(s).
     """
     MAX_NUMBER = 100
-    
+
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     index1, index2 = seq_indices
     seq1 = sequences[index1]
@@ -73,7 +72,7 @@ def test_complex_alignment(sequences, gap_penalty, local, seq_indices):
     # Remove terminal gaps in reference to obtain a true semi-global
     # alignment, as returned by align_banded()
     ref_alignments = [align.remove_terminal_gaps(al) for al in ref_alignments]
-    
+
     identity = align.get_sequence_identity(ref_alignments[0])
     # Use a relatively small band width, if the sequences are similar,
     # otherwise use the entire search space
@@ -114,7 +113,7 @@ def test_large_sequence_mapping(length, excerpt_length, seed):
     sequence at the position, where the excerpt was taken from.
     """
     BAND_WIDTH = 100
-    
+
     np.random.seed(seed)
 
     sequence = seq.NucleotideSequence()
@@ -148,7 +147,7 @@ def test_large_sequence_mapping(length, excerpt_length, seed):
         np.arange(excerpt_pos, len(excerpt) + excerpt_pos)
     ], axis=1)
     assert np.array_equal(test_trace, ref_trace)
-    
+
 
 
 @pytest.mark.parametrize(
@@ -187,7 +186,7 @@ def test_swapping(gap_penalty, local, seed):
         return
     ref_alignment = ref_alignments[0]
     test_alignment = test_alignments[0]
-    
+
     assert test_alignment.sequences[0] == ref_alignment.sequences[1]
     assert test_alignment.sequences[1] == ref_alignment.sequences[0]
     assert np.array_equal(test_alignment.trace, ref_alignment.trace[:, ::-1])

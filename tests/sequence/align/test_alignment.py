@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
-from .util import sequences
 
 
 

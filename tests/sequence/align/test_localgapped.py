@@ -7,7 +7,6 @@ import pytest
 import numpy as np
 import biotite.sequence as seq
 import biotite.sequence.align as align
-from .util import sequences
 
 
 @pytest.mark.parametrize(
@@ -46,7 +45,7 @@ def test_simple_alignment(gap_penalty, seed, threshold,
         elif direction == "downstream":
             alignment.trace = alignment.trace[seed_index:]
         alignment.score = align.score(alignment, matrix, gap_penalty)
-    
+
     test_result = align.align_local_gapped(
         seq1, seq2, matrix, seed, threshold, gap_penalty,
         1000, direction, score_only
@@ -84,7 +83,7 @@ def test_complex_alignment(sequences, gap_penalty, score_only,
     # The linear gap penalty for longer gaps easily exceeds
     # a small threshold -> increase threshold for linear penalty
     THRESHOLD = 200 if isinstance(gap_penalty, int) else 50
-    
+
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     index1, index2 = seq_indices
     seq1 = sequences[index1]
@@ -98,7 +97,7 @@ def test_complex_alignment(sequences, gap_penalty, score_only,
     trace = ref_alignments[0].trace
     trace = trace[(trace != -1).all(axis=1)]
     seed = trace[len(trace) // 2]
-    
+
     test_result = align.align_local_gapped(
         seq1, seq2, matrix, seed, THRESHOLD, gap_penalty,
         MAX_NUMBER, "both", score_only
@@ -171,7 +170,7 @@ def test_max_table_size(gap_penalty, direction, score_only, should_raise):
         max_table_size = 1_000_000_000
 
     # Align a long random sequence to itself,
-    # effectively resulting in a global alignment 
+    # effectively resulting in a global alignment
     np.random.seed(0)
     seq1 = seq.NucleotideSequence()
     seq1.code = np.random.randint(len(seq1.alphabet), size=10000)
