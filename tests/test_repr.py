@@ -14,7 +14,7 @@ from biotite.sequence import AnnotatedSequence
 from biotite.sequence.align import Alignment
 from biotite.structure import Atom
 import numpy as np
-from numpy import float32, int32
+from numpy import float32, int32  # noqa: F401
 from biotite.sequence import CodonTable
 from biotite.sequence.align import SubstitutionMatrix
 from biotite.sequence import SequenceProfile
