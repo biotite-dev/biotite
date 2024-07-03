@@ -24,10 +24,12 @@ def test_single(pdb_id):
     sasa = struc.sasa(array, vdw_radii="Single", point_number=5000)
 
     import mdtraj
-    from biotite.structure.info.radii import _SINGLE_RADII as radii
+    from biotite.structure.info.radii import _SINGLE_RADII as SINGLE_RADII
 
     # Use the same atom radii
-    radii = {element.capitalize(): radius / 10 for element, radius in radii.items()}
+    radii = {
+        element.capitalize(): radius / 10 for element, radius in SINGLE_RADII.items()
+    }
     traj = mdtraj.load(file_name)
     # Conversion from nm^2 to A^2
     sasa_exp = (

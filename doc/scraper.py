@@ -63,8 +63,8 @@ def pymol_scraper(block, block_vars, gallery_conf):
         )
 
     try:
-        import ammolite
-        import pymol
+        import ammolite  # noqa: F401
+        import pymol  # noqa: F401
     except ImportError:
         # If Ammolite is not installed, fall back to the image file,
         # if already existing

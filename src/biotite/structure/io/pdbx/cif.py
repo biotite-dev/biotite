@@ -616,7 +616,7 @@ class CIFBlock(_Component, MutableMapping):
                 try:
                     category.name = category_name
                     text_blocks.append(category.serialize())
-                except:
+                except Exception:
                     raise SerializationError(
                         f"Failed to serialize category '{category_name}'"
                     )
@@ -639,7 +639,7 @@ class CIFBlock(_Component, MutableMapping):
                 else:
                     expect_whitespace = True
                 category = CIFCategory.deserialize(category, expect_whitespace)
-            except:
+            except Exception:
                 raise DeserializationError(f"Failed to deserialize category '{key}'")
             # Update with deserialized object
             self._categories[key] = category
@@ -788,7 +788,7 @@ class CIFFile(_Component, File, MutableMapping):
             else:
                 try:
                     text_blocks.append(block.serialize())
-                except:
+                except Exception:
                     raise SerializationError(
                         f"Failed to serialize block '{block_name}'"
                     )
@@ -848,7 +848,7 @@ class CIFFile(_Component, File, MutableMapping):
             # -> must be deserialized first
             try:
                 block = CIFBlock.deserialize(block)
-            except:
+            except Exception:
                 raise DeserializationError(f"Failed to deserialize block '{key}'")
             # Update with deserialized object
             self._blocks[key] = block

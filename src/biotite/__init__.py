@@ -14,5 +14,5 @@ __author__ = "Patrick Kunzmann"
 
 from .copyable import *
 from .file import *
-from .version import __version__, __version_tuple__
+from .version import __version__, __version_tuple__  # noqa: F401
 from .visualize import *

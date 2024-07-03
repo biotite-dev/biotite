@@ -495,7 +495,7 @@ def test_bcif_encoding():
                 test_msgpack = column.serialize()
 
                 assert test_msgpack == ref_msgpack
-            except:
+            except Exception:
                 raise Exception(f"Encoding failed for '{category_name}.{column_name}'")
 
     # Check if each encoding was used at least once
@@ -503,7 +503,7 @@ def test_bcif_encoding():
     for key, was_used in encodings_used.items():
         try:
             assert was_used
-        except:
+        except Exception:
             raise Exception(f"Encoding {key} was not used")
 
 
@@ -571,7 +571,7 @@ def test_bcif_cif_consistency():
                 assert cif_column.as_array(dtype).tolist() == pytest.approx(
                     bcif_column.as_array(dtype).tolist()
                 )
-            except:
+            except Exception:
                 raise Exception(
                     f"Comparison failed for '{category_name}.{column_name}'"
                 )
@@ -614,7 +614,7 @@ def test_serialization_consistency(format, create_new_encoding):
         try:
             for key in test_category.keys():
                 assert ref_category[key] == test_category[key]
-        except:
+        except Exception:
             raise Exception(f"Comparison failed for '{category_name}.{key}'")
 
 

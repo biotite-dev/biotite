@@ -84,7 +84,11 @@ def test_header_conversion():
     ),
 )
 def test_structure_conversion(
-    FileClass, path, version, omit_charge, use_charge_property
+    FileClass,  # noqa: N803
+    path,
+    version,
+    omit_charge,
+    use_charge_property,
 ):
     """
     After reading a file, writing the structure back to a new file

@@ -129,4 +129,4 @@ from .sequence import *
 from .sse import *
 from .superimpose import *
 from .transform import *
-# util and resutil are used internally
+# util and segments are used internally

@@ -100,8 +100,8 @@ def test_base_pairs_reverse(nuc_sample_array, basepairs, unique_bool):
 
     # Reverse sequence of residues in nuc_sample_array
     reversed_nuc_sample_array = struc.AtomArray(0)
-    for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
-        reversed_nuc_sample_array = reversed_nuc_sample_array + residue
+    for res in reversed_iterator(struc.residue_iter(nuc_sample_array)):
+        reversed_nuc_sample_array = reversed_nuc_sample_array + res
 
     computed_basepairs = struc.base_pairs(reversed_nuc_sample_array, unique=unique_bool)
     check_residue_starts(computed_basepairs, reversed_nuc_sample_array)
@@ -117,8 +117,8 @@ def test_base_pairs_reverse_no_hydrogen(nuc_sample_array, basepairs):
     nuc_sample_array = nuc_sample_array[nuc_sample_array.element != "H"]
     # Reverse sequence of residues in nuc_sample_array
     reversed_nuc_sample_array = struc.AtomArray(0)
-    for residue in reversed_iterator(struc.residue_iter(nuc_sample_array)):
-        reversed_nuc_sample_array = reversed_nuc_sample_array + residue
+    for res in reversed_iterator(struc.residue_iter(nuc_sample_array)):
+        reversed_nuc_sample_array = reversed_nuc_sample_array + res
 
     computed_basepairs = struc.base_pairs(reversed_nuc_sample_array)
     check_residue_starts(computed_basepairs, reversed_nuc_sample_array)
@@ -154,10 +154,10 @@ def test_base_pairs_reordered(nuc_sample_array, seed):
     nuc_sample_array_reordered = struc.AtomArray(0)
     np.random.seed(seed)
 
-    for residue in struc.residue_iter(nuc_sample_array):
-        bound = residue.array_length()
+    for res in struc.residue_iter(nuc_sample_array):
+        bound = res.array_length()
         indices = np.random.choice(np.arange(bound), bound, replace=False)
-        nuc_sample_array_reordered += residue[..., indices]
+        nuc_sample_array_reordered += res[..., indices]
 
     assert np.all(
         struc.base_pairs(nuc_sample_array)

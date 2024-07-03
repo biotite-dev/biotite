@@ -299,11 +299,11 @@ class GenBankFile(TextFile):
             subfield_dict = OrderedDict()
             subfield_start = None
             first_subfield_start = None
+            header = None
             for i in range(start + 1, stop):
                 line = self.lines[i]
-                # Check if line contains a new subfield
-                # (Header beginning from first column)
                 if len(line) != 0 and line[:12].strip() != "":
+                    # New header -> new subfield
                     if first_subfield_start is None:
                         first_subfield_start = i
                     # Store previous subfield

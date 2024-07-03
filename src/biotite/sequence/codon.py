@@ -397,11 +397,11 @@ class CodonTable(object):
         for line in lines:
             if not line:
                 table_found = False
-            if type(table_name) == int and line.startswith("id"):
+            if isinstance(table_name, Integral) and line.startswith("id"):
                 # remove identifier 'id'
                 if table_name == int(line[2:]):
                     table_found = True
-            elif type(table_name) == str and line.startswith("name"):
+            elif isinstance(table_name, str) and line.startswith("name"):
                 # Get list of table names from lines
                 # (separated with ';')
                 # remove identifier 'name'

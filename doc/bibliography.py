@@ -74,6 +74,6 @@ class IEEEStyle(BaseStyle):
 
             return Text(*authors, title, journal, volume, pages, date, doi)
 
-        except:
+        except Exception:
             warnings.warn(f"Invalid BibTeX entry '{entry.key}'")
             return Text(entry.key)

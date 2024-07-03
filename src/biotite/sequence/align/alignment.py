@@ -7,6 +7,7 @@ __author__ = "Patrick Kunzmann"
 
 import numbers
 import textwrap
+from collections.abc import Sequence
 import numpy as np
 from biotite.sequence.alphabet import LetterAlphabet
 
@@ -519,10 +520,10 @@ def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
                     score += matrix[code_i, code_j]
 
     # Sum gap penalties
-    if type(gap_penalty) == int:
+    if isinstance(gap_penalty, numbers.Real):
         gap_open = gap_penalty
         gap_ext = gap_penalty
-    elif type(gap_penalty) == tuple:
+    elif isinstance(gap_penalty, Sequence):
         gap_open = gap_penalty[0]
         gap_ext = gap_penalty[1]
     else:

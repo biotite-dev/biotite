@@ -2,12 +2,13 @@ import gzip
 import logging
 from dataclasses import dataclass
 from io import StringIO
+from pathlib import Path
 import numpy as np
 import requests
 from biotite.structure.io.pdbx import *
 
 
-class ComponentException(Exception):
+class ComponentError(Exception):
     pass
 
 
@@ -303,14 +304,14 @@ def check_presence(pdbx_file, category_name, column_names):
         is_present = column_names[0] in category
         for name in column_names:
             if (name in category) != is_present:
-                raise ComponentException("Only some column names are missing")
+                raise ComponentError("Only some column names are missing")
         if not is_present:
             return
 
         is_unmasked = category[column_names[0]].mask is None
         for name in column_names:
             if (category[name].mask is None) != is_unmasked:
-                raise ComponentException("Only some column names are masked")
+                raise ComponentError("Only some column names are masked")
 
 
 def concatenate_blocks_into_category(pdbx_file, category_name, column_infos):
@@ -337,7 +338,7 @@ def concatenate_blocks_into_category(pdbx_file, category_name, column_infos):
     for comp_id, block in pdbx_file.items():
         try:
             if category_name not in block:
-                raise ComponentException(f"Block has no category '{category_name}'")
+                raise ComponentError(f"Block has no category '{category_name}'")
             chunk = {}
             category = block[category_name]
             for col_name, info in column_infos.items():
@@ -348,17 +349,15 @@ def concatenate_blocks_into_category(pdbx_file, category_name, column_infos):
                     if info.alternative is not None:
                         col = category[info.alternative]
                         if col.mask is not None:
-                            raise ComponentException(
+                            raise ComponentError(
                                 f"Missing values in alternative "
                                 f"'{info.alternative}'"
                             )
                     else:
-                        raise ComponentException(
-                            f"Missing values in column '{col_name}'"
-                        )
+                        raise ComponentError(f"Missing values in column '{col_name}'")
                 data_array = col.as_array(info.dtype, info.fill_value)
                 chunk[col_name] = data_array
-        except ComponentException as e:
+        except ComponentError as e:
             logging.warning(f"Skipping '{comp_id}': {e}")
         # Append all columns in the chunk after the try-except block
         # to avoid appending incomplete chunks
@@ -471,7 +470,5 @@ def setup_ccd(target_diriectory):
     compressed_file["components"] = compressed_block
     compressed_file.write(target_diriectory / "components.bcif")
 
-
-from pathlib import Path
 
 setup_ccd(Path(__file__).parent / "src" / "biotite" / "structure" / "info" / "ccd")

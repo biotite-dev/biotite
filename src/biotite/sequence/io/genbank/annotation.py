@@ -88,7 +88,7 @@ def get_annotation(gb_file, include_only=None):
             loc_string = qualifier_parts.pop(0).strip()
             try:
                 locs = _parse_locs(loc_string)
-            except:
+            except Exception:
                 warnings.warn(
                     f"'{loc_string}' is an unsupported location identifier, "
                     f"skipping feature"
