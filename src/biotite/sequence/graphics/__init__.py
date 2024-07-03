@@ -29,5 +29,5 @@ from .alignment import *
 from .colorschemes import *
 from .dendrogram import *
 from .features import *
-from .plasmid import *
 from .logo import *
+from .plasmid import *

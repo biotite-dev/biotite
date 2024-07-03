@@ -7,11 +7,10 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["CodonTable"]
 
 import copy
-from os.path import join, dirname, realpath
-import numpy as np
 from numbers import Integral
+from os.path import dirname, join, realpath
+import numpy as np
 from .seqtypes import NucleotideSequence, ProteinSequence
-
 
 # Abbreviations
 _NUC_ALPH = NucleotideSequence.alphabet_unamb
@@ -20,7 +19,7 @@ _PROT_ALPH = ProteinSequence.alphabet
 # Multiplier array that converts a codon in code representation
 # into a unique integer
 _radix = len(_NUC_ALPH)
-_radix_multiplier = np.array([_radix**n for n in (2,1,0)], dtype=int)
+_radix_multiplier = np.array([_radix**n for n in (2, 1, 0)], dtype=int)
 
 
 class CodonTable(object):
@@ -29,14 +28,14 @@ class CodonTable(object):
     amino acid.
     It also defines start codons. A :class:`CodonTable`
     takes/outputs either the symbols or code of the codon/amino acid.
-    
+
     Furthermore, this class is able to give a list of codons that
     corresponds to a given amino acid.
-    
+
     The :func:`load()` method allows loading of NCBI codon tables.
-    
+
     Objects of this class are immutable.
-    
+
     Parameters
     ----------
     codon_dict : dict of (str -> str)
@@ -47,27 +46,27 @@ class CodonTable(object):
     starts : iterable object of str
         The start codons. Each entry must be a string of length 3
         (all upper case).
-    
+
     Examples
     --------
-    
+
     Get the amino acid coded by a given codon (symbol and code):
-        
+
     >>> table = CodonTable.default_table()
     >>> print(table["ATG"])
     M
     >>> print(table[(1,2,3)])
     14
-        
+
     Get the codons coding for a given amino acid (symbol and code):
-        
+
     >>> table = CodonTable.default_table()
     >>> print(table["M"])
     ('ATG',)
     >>> print(table[14])
     ((0, 2, 0), (0, 2, 2), (1, 2, 0), (1, 2, 1), (1, 2, 2), (1, 2, 3))
     """
-    
+
     # For efficient mapping of codon codes to amino acid codes,
     # especially in in the 'map_codon_codes()' function, the class
     # maps each possible codon into a unique number using a radix based
@@ -77,7 +76,7 @@ class CodonTable(object):
 
     # file for builtin codon tables from NCBI
     _table_file = join(dirname(realpath(__file__)), "codon_tables.txt")
-    
+
     def __init__(self, codon_dict, starts):
         # Check if 'starts' is iterable object of length 3 string
         for start in starts:
@@ -100,12 +99,10 @@ class CodonTable(object):
         if (self._codons == -1).any():
             # Find the missing codon
             missing_index = np.where(self._codons == -1)[0][0]
-            codon_code = CodonTable._to_codon(missing_index) 
+            codon_code = CodonTable._to_codon(missing_index)
             codon = _NUC_ALPH.decode_multiple(codon_code)
             codon_str = "".join(codon)
-            raise ValueError(
-                f"Codon dictionary does not contain codon '{codon_str}'"
-            )
+            raise ValueError(f"Codon dictionary does not contain codon '{codon_str}'")
 
     def __repr__(self):
         """Represent CodonTable as a string for debugging."""
@@ -131,8 +128,10 @@ class CodonTable(object):
                 codon_numbers = np.where(self._codons == aa_code)[0]
                 codon_codes = CodonTable._to_codon(codon_numbers)
                 codons = tuple(
-                    ["".join(_NUC_ALPH.decode_multiple(codon_code))
-                    for codon_code in codon_codes]
+                    [
+                        "".join(_NUC_ALPH.decode_multiple(codon_code))
+                        for codon_code in codon_codes
+                    ]
                 )
                 return codons
             elif len(item) == 3:
@@ -155,30 +154,28 @@ class CodonTable(object):
             # Code for codon as any iterable object
             # Code for codon -> return corresponding amino acid codes
             if len(item) != 3:
-                raise ValueError(
-                    f"{item} is an invalid sequence code for a codon"
-                )
+                raise ValueError(f"{item} is an invalid sequence code for a codon")
             codon_number = CodonTable._to_number(item)
             aa_code = self._codons[codon_number]
             return aa_code
-    
+
     def map_codon_codes(self, codon_codes):
         """
         Efficiently map multiple codons to the corresponding amino
         acids.
-        
+
         Parameters
         ----------
         codon_codes : ndarray, dtype=int, shape=(n,3)
             The codons to be translated into amino acids.
             The codons are given as symbol codes.
             *n* is the amount of codons.
-        
+
         Returns
         -------
         aa_codes : ndarray, dtype=int, shape=(n,)
             The amino acids as symbol codes.
-        
+
         Examples
         --------
         >>> dna = NucleotideSequence("ATGGTTTAA")
@@ -209,46 +206,50 @@ class CodonTable(object):
         codon_numbers = CodonTable._to_number(codon_codes)
         aa_codes = self._codons[codon_numbers]
         return aa_codes
-        
+
     def codon_dict(self, code=False):
         """
         Get the codon to amino acid mappings dictionary.
-        
+
         Parameters
         ----------
         code : bool
             If true, the dictionary contains keys and values as code.
             Otherwise, the dictionary contains strings for codons and
             amino acid. (Default: False)
-        
+
         Returns
         -------
         codon_dict : dict
             The dictionary mapping codons to amino acids.
         """
         if code:
-            return {tuple(CodonTable._to_codon(codon_number)): aa_code
-                    for codon_number, aa_code in enumerate(self._codons)}
+            return {
+                tuple(CodonTable._to_codon(codon_number)): aa_code
+                for codon_number, aa_code in enumerate(self._codons)
+            }
         else:
-            return {"".join(_NUC_ALPH.decode_multiple(codon_code)):
-                        _PROT_ALPH.decode(aa_code)
-                    for codon_code, aa_code
-                    in self.codon_dict(code=True).items()}
-    
+            return {
+                "".join(_NUC_ALPH.decode_multiple(codon_code)): _PROT_ALPH.decode(
+                    aa_code
+                )
+                for codon_code, aa_code in self.codon_dict(code=True).items()
+            }
+
     def is_start_codon(self, codon_codes):
         codon_numbers = CodonTable._to_number(codon_codes)
         return np.isin(codon_numbers, self._starts)
-    
+
     def start_codons(self, code=False):
         """
         Get the start codons of the codon table.
-        
+
         Parameters
         ----------
         code : bool
             If true, the code will be returned instead of strings.
             (Default: False)
-        
+
         Returns
         -------
         start_codons : tuple
@@ -257,25 +258,29 @@ class CodonTable(object):
         """
         if code:
             return tuple(
-                [tuple(CodonTable._to_codon(codon_number))
-                 for codon_number in self._starts]
+                [
+                    tuple(CodonTable._to_codon(codon_number))
+                    for codon_number in self._starts
+                ]
             )
         else:
             return tuple(
-                ["".join(_NUC_ALPH.decode_multiple(codon_code))
-                 for codon_code in self.start_codons(code=True)]
+                [
+                    "".join(_NUC_ALPH.decode_multiple(codon_code))
+                    for codon_code in self.start_codons(code=True)
+                ]
             )
-    
+
     def with_start_codons(self, starts):
         """
         Create an new :class:`CodonTable` with the same codon mappings,
         but changed start codons.
-        
+
         Parameters
         ----------
         starts : iterable object of str
             The new start codons.
-        
+
         Returns
         -------
         new_table : CodonTable
@@ -288,17 +293,17 @@ class CodonTable(object):
         )
         new_table._starts = CodonTable._to_number(start_codon_codes)
         return new_table
-    
+
     def with_codon_mappings(self, codon_dict):
         """
         Create an new :class:`CodonTable` with partially changed codon
         mappings.
-        
+
         Parameters
         ----------
         codon_dict : dict of (str -> str)
             The changed codon mappings.
-        
+
         Returns
         -------
         new_table : CodonTable
@@ -329,9 +334,9 @@ class CodonTable(object):
                     else:
                         string += "   "
                     # Add space for next codon
-                    string += " "*3
+                    string += " " * 3
                 # Remove terminal space
-                string = string [:-6]
+                string = string[:-6]
                 # Jump to next line
                 string += "\n"
             # Add empty line
@@ -354,10 +359,10 @@ class CodonTable(object):
         if not isinstance(numbers, np.ndarray):
             numbers = np.array(list(numbers), dtype=int)
         codons = np.zeros(numbers.shape + (3,), dtype=int)
-        for n in (2,1,0):
+        for n in (2, 1, 0):
             val = _radix**n
             digit = numbers // val
-            codons[..., -(n+1)] = digit
+            codons[..., -(n + 1)] = digit
             numbers = numbers - digit * val
         return codons
 
@@ -365,14 +370,14 @@ class CodonTable(object):
     def load(table_name):
         """
         Load a NCBI codon table.
-        
+
         Parameters
         ----------
         table_name : str or int
             If a string is given, it is interpreted as official NCBI
             codon table name (e.g. "Vertebrate Mitochondrial").
             An integer is interpreted as NCBI codon table ID.
-        
+
         Returns
         -------
         table : CodonTable
@@ -381,7 +386,7 @@ class CodonTable(object):
         # Loads codon tables from codon_tables.txt
         with open(CodonTable._table_file, "r") as f:
             lines = f.read().split("\n")
-        
+
         # Extract data for codon table from file
         table_found = False
         aa = None
@@ -405,7 +410,7 @@ class CodonTable(object):
                     table_found = True
             if table_found:
                 if line.startswith("AA"):
-                    #Remove identifier
+                    # Remove identifier
                     aa = line[5:].strip()
                 elif line.startswith("Init"):
                     init = line[5:].strip()
@@ -415,19 +420,24 @@ class CodonTable(object):
                     base2 = line[5:].strip()
                 elif line.startswith("Base3"):
                     base3 = line[5:].strip()
-        
+
         # Create codon table from data
-        if aa is not None and init is not None \
-            and base1 is not None and base2 is not None and base3 is not None:
-                symbol_dict = {}
-                starts = []
-                # aa, init and baseX all have the same length
-                for i in range(len(aa)):
-                    codon = base1[i] + base2[i] + base3[i]
-                    if init[i] == "i":
-                        starts.append(codon)
-                    symbol_dict[codon] = aa[i]
-                return CodonTable(symbol_dict, starts)
+        if (
+            aa is not None
+            and init is not None
+            and base1 is not None
+            and base2 is not None
+            and base3 is not None
+        ):
+            symbol_dict = {}
+            starts = []
+            # aa, init and baseX all have the same length
+            for i in range(len(aa)):
+                codon = base1[i] + base2[i] + base3[i]
+                if init[i] == "i":
+                    starts.append(codon)
+                symbol_dict[codon] = aa[i]
+            return CodonTable(symbol_dict, starts)
         else:
             raise ValueError(f"Codon table '{table_name}' was not found")
 
@@ -435,7 +445,7 @@ class CodonTable(object):
     def table_names():
         """
         The possible codon table names for :func:`load()`.
-        
+
         Returns
         -------
         names : list of str
@@ -448,14 +458,14 @@ class CodonTable(object):
             if line.startswith("name"):
                 names.extend([name.strip() for name in line[4:].split(";")])
         return names
-    
+
     @staticmethod
     def default_table():
         """
         The default codon table.
         The table is equal to the NCBI "Standard" codon table,
         with the difference that only "ATG" is a start codon.
-        
+
         Returns
         -------
         table : CodonTable

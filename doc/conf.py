@@ -5,23 +5,20 @@
 __author__ = "Patrick Kunzmann"
 
 # Setup Cython for import of uncompiled *.pyx files
-import pyximport
 import numpy as np
+import pyximport
+
 pyximport.install(
-    setup_args={'include_dirs': np.get_include()},
-    build_in_temp=False,
-    language_level=3
+    setup_args={"include_dirs": np.get_include()}, build_in_temp=False, language_level=3
 )
 
-from os.path import realpath, dirname, join
 import sys
 import warnings
-import pybtex
-from sphinx_gallery.sorting import FileNameSortKey, ExplicitOrder
+from os.path import dirname, join, realpath
 import matplotlib
-
+import pybtex
+from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 import biotite
-
 
 BIOTITE_DOMAIN = "www.biotite-python.org"
 DOC_PATH = dirname(realpath(__file__))
@@ -32,28 +29,21 @@ PACKAGE_PATH = join(dirname(DOC_PATH), "src")
 # in order to import modules for API doc generation etc.
 sys.path.insert(0, DOC_PATH)
 import apidoc
-import viewcode
-import scraper
 import bibliography
 import key
+import scraper
 import switcher
-
+import viewcode
 
 # Reset matplotlib params
 matplotlib.rcdefaults()
 
 # Pregeneration of files
 apidoc.create_api_doc(PACKAGE_PATH, join(DOC_PATH, "apidoc"))
-switcher.create_switcher_json(
-    join("static", "switcher.json"),
-    "v0.41.0",
-    n_versions=5
-)
+switcher.create_switcher_json(join("static", "switcher.json"), "v0.41.0", n_versions=5)
 
 # Use custom citation style
-pybtex.plugin.register_plugin(
-    "pybtex.style.formatting", "ieee", bibliography.IEEEStyle
-)
+pybtex.plugin.register_plugin("pybtex.style.formatting", "ieee", bibliography.IEEEStyle)
 
 #### Source code link ###
 
@@ -61,14 +51,13 @@ linkcode_resolve = viewcode.linkcode_resolve
 
 #### General ####
 
-import warnings
 
 # Removed standard matplotlib warning when generating gallery
 warnings.filterwarnings(
     "ignore",
     category=UserWarning,
     message="Matplotlib is currently using agg, which is a non-GUI backend, "
-            "so cannot show the figure."
+    "so cannot show the figure.",
 )
 
 extensions = [
@@ -127,10 +116,7 @@ notfound_urls_prefix = "/latest/"
 html_theme = "pydata_sphinx_theme"
 
 html_static_path = ["static"]
-html_css_files = [
-    "biotite.css",
-    "fonts.css"
-]
+html_css_files = ["biotite.css", "fonts.css"]
 html_title = "Biotite"
 html_logo = "static/assets/general/biotite_logo.svg"
 html_favicon = "static/assets/general/biotite_icon_32p.png"
@@ -162,11 +148,11 @@ html_theme_options = {
             "url": "https://biotite.bsky.social",
             "icon": "fa-brands fa-bluesky",
             "type": "fontawesome",
-        }
-   ],
-   "use_edit_page_button": True,
-   "show_prev_next": False,
-   "show_toc_level": 2,
+        },
+    ],
+    "use_edit_page_button": True,
+    "show_prev_next": False,
+    "show_toc_level": 2,
 }
 html_sidebars = {
     # No primary sidebar for these pages
@@ -183,53 +169,50 @@ html_context = {
 }
 
 sphinx_gallery_conf = {
-    "examples_dirs"             : [
-        "examples/scripts/sequence",
-        "examples/scripts/structure"
-    ],
-    "gallery_dirs"              : [
-        "examples/gallery/sequence",
-        "examples/gallery/structure"
-    ],
-    "subsection_order": ExplicitOrder([
-        "examples/scripts/sequence/homology",
-        "examples/scripts/sequence/sequencing",
-        "examples/scripts/sequence/profile",
-        "examples/scripts/sequence/annotation",
-        "examples/scripts/sequence/misc",
-        "examples/scripts/structure/protein",
-        "examples/scripts/structure/nucleotide",
-        "examples/scripts/structure/molecule",
-        "examples/scripts/structure/contacts",
-        "examples/scripts/structure/modeling",
-        "examples/scripts/structure/misc",
-    ]),
-    "within_subsection_order"   : FileNameSortKey,
+    "examples_dirs": ["examples/scripts/sequence", "examples/scripts/structure"],
+    "gallery_dirs": ["examples/gallery/sequence", "examples/gallery/structure"],
+    "subsection_order": ExplicitOrder(
+        [
+            "examples/scripts/sequence/homology",
+            "examples/scripts/sequence/sequencing",
+            "examples/scripts/sequence/profile",
+            "examples/scripts/sequence/annotation",
+            "examples/scripts/sequence/misc",
+            "examples/scripts/structure/protein",
+            "examples/scripts/structure/nucleotide",
+            "examples/scripts/structure/molecule",
+            "examples/scripts/structure/contacts",
+            "examples/scripts/structure/modeling",
+            "examples/scripts/structure/misc",
+        ]
+    ),
+    "within_subsection_order": FileNameSortKey,
     # Do not run example scripts with a trailing '_noexec'
-    "filename_pattern"          : "^((?!_noexec).)*$",
-    "ignore_pattern"            : "(.*ignore\.py)|(.*pymol\.py)",
-    "backreferences_dir"        : None,
-    "download_all_examples"     : False,
+    "filename_pattern": "^((?!_noexec).)*$",
+    "ignore_pattern": r"(.*ignore\.py)|(.*pymol\.py)",
+    "backreferences_dir": None,
+    "download_all_examples": False,
     # Never report run time
-    "min_reported_time"         : sys.maxsize,
-    "default_thumb_file"        : join(
+    "min_reported_time": sys.maxsize,
+    "default_thumb_file": join(
         DOC_PATH, "static/assets/general/biotite_icon_thumb.png"
     ),
-    "image_scrapers"            : (
+    "image_scrapers": (
         "matplotlib",
         scraper.static_image_scraper,
-        scraper.pymol_scraper
+        scraper.pymol_scraper,
     ),
-    "matplotlib_animations"     : True,
-    "backreferences_dir"        : "examples/backreferences",
-    "doc_module"                : ("biotite",),
+    "matplotlib_animations": True,
+    "backreferences_dir": "examples/backreferences",
+    "doc_module": ("biotite",),
     # Set the NCBI API key
-    "reset_modules"             : (key.set_ncbi_api_key_from_env,),
-    "remove_config_comments"    : True,
+    "reset_modules": (key.set_ncbi_api_key_from_env,),
+    "remove_config_comments": True,
 }
 
 
 #### App setup ####
+
 
 def setup(app):
     app.connect("autodoc-skip-member", apidoc.skip_nonrelevant)

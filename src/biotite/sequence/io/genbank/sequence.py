@@ -8,16 +8,19 @@ Functions for converting a sequence from/to a GenBank file.
 
 __name__ = "biotite.sequence.io.genbank"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_raw_sequence", "get_sequence", "get_annotated_sequence",
-           "set_sequence", "set_annotated_sequence"]
+__all__ = [
+    "get_raw_sequence",
+    "get_sequence",
+    "get_annotated_sequence",
+    "set_sequence",
+    "set_annotated_sequence",
+]
 
 import re
 from ....file import InvalidFileError
-from ...seqtypes import ProteinSequence, NucleotideSequence
 from ...annotation import AnnotatedSequence
-from .file import GenBankFile
+from ...seqtypes import NucleotideSequence, ProteinSequence
 from .annotation import get_annotation, set_annotation
-
 
 _SYMBOLS_PER_CHUNK = 10
 _SEQ_CHUNKS_PER_LINE = 6
@@ -112,7 +115,7 @@ def _convert_seq_str(seq_str, format):
     if len(seq_str) == 0:
         raise InvalidFileError("The file's 'ORIGIN' field is empty")
     if format == "gb":
-        return NucleotideSequence(seq_str.replace("U","T").replace("X","N"))
+        return NucleotideSequence(seq_str.replace("U", "T").replace("X", "N"))
     elif format == "gp":
         return ProteinSequence(seq_str.replace("U", "C").replace("O", "K"))
     else:
@@ -123,8 +126,6 @@ def _get_seq_start(origin_content):
     # Start of sequence is the sequence position indicator
     # at the beginning of the first line
     return int(origin_content[0].split()[0])
-
-
 
 
 def set_sequence(gb_file, sequence, sequence_start=1):
@@ -167,6 +168,4 @@ def set_annotated_sequence(gb_file, annot_sequence):
         The annotated sequence that is put into the GenBank file.
     """
     set_annotation(gb_file, annot_sequence.annotation)
-    set_sequence(
-        gb_file, annot_sequence.sequence, annot_sequence.sequence_start
-    )
+    set_sequence(gb_file, annot_sequence.sequence, annot_sequence.sequence_start)

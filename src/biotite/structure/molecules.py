@@ -244,8 +244,7 @@ def get_molecule_masks(array):
 
     molecule_indices = get_molecule_indices(bonds)
     molecule_masks = np.zeros(
-        (len(molecule_indices), bonds.get_atom_count()),
-        dtype=bool
+        (len(molecule_indices), bonds.get_atom_count()), dtype=bool
     )
     for i in range(len(molecule_indices)):
         molecule_masks[i, molecule_indices[i]] = True

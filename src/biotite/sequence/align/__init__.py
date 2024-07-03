@@ -191,8 +191,8 @@ from .banded import *
 from .buckets import *
 from .cigar import *
 from .kmeralphabet import *
-from .kmertable import *
 from .kmersimilarity import *
+from .kmertable import *
 from .localgapped import *
 from .localungapped import *
 from .matrix import *

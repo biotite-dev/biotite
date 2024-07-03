@@ -12,4 +12,5 @@ class RequestError(Exception):
     Indicates that the database returned a response with an error
     message or other malformed content.
     """
+
     pass

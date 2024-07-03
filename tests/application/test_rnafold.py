@@ -22,36 +22,25 @@ def sample_app():
     return app
 
 
-@pytest.mark.skipif(
-    is_not_installed("RNAfold"), reason="RNAfold is not installed"
-)
+@pytest.mark.skipif(is_not_installed("RNAfold"), reason="RNAfold is not installed")
 def test_get_dot_bracket(sample_app):
-    assert sample_app.get_dot_bracket() ==  "(((.((((.......)).)))))...."
+    assert sample_app.get_dot_bracket() == "(((.((((.......)).)))))...."
 
 
-@pytest.mark.skipif(
-    is_not_installed("RNAfold"), reason="RNAfold is not installed"
-)
+@pytest.mark.skipif(is_not_installed("RNAfold"), reason="RNAfold is not installed")
 def test_get_free_energy(sample_app):
     assert sample_app.get_free_energy() == -1.3
 
-@pytest.mark.skipif(
-    is_not_installed("RNAfold"), reason="RNAfold is not installed"
-)
+
+@pytest.mark.skipif(is_not_installed("RNAfold"), reason="RNAfold is not installed")
 def test_get_base_pairs(sample_app):
-    expected_basepairs = np.array([[ 0, 22],
-                                   [ 1, 21],
-                                   [ 2, 20],
-                                   [ 4, 19],
-                                   [ 5, 18],
-                                   [ 6, 16],
-                                   [ 7, 15]])
+    expected_basepairs = np.array(
+        [[0, 22], [1, 21], [2, 20], [4, 19], [5, 18], [6, 16], [7, 15]]
+    )
     assert np.all(sample_app.get_base_pairs() == expected_basepairs)
 
 
-@pytest.mark.skipif(
-    is_not_installed("RNAfold"), reason="RNAfold is not installed"
-)
+@pytest.mark.skipif(is_not_installed("RNAfold"), reason="RNAfold is not installed")
 def test_constraints():
     """
     Constrain every position of the input sequence and expect that the
@@ -59,7 +48,7 @@ def test_constraints():
     """
     # Sequence should not matter
     sequence = seq.NucleotideSequence("A" * 20)
-    
+
     # An arbitrary secondary structure
     # The loop in the center must probably comprise at least 5 bases
     # due to the dynamic programming algorithm
@@ -68,12 +57,15 @@ def test_constraints():
 
     app = RNAfoldApp(sequence)
     app.set_constraints(
-        pairs=np.stack([
-            np.where(ref_dotbracket_array == "(")[0],
-            np.where(ref_dotbracket_array == ")")[0][::-1]
-        ], axis=-1),
-        unpaired = (ref_dotbracket_array == "x"),
-        enforce=True
+        pairs=np.stack(
+            [
+                np.where(ref_dotbracket_array == "(")[0],
+                np.where(ref_dotbracket_array == ")")[0][::-1],
+            ],
+            axis=-1,
+        ),
+        unpaired=(ref_dotbracket_array == "x"),
+        enforce=True,
     )
     app.start()
     app.join()

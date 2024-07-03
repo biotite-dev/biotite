@@ -6,11 +6,12 @@ __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 __all__ = ["bucket_number"]
 
-from os.path import realpath, dirname, join
+from os.path import dirname, join, realpath
 import numpy as np
 
-
 _primes = None
+
+
 def bucket_number(n_kmers, load_factor=0.8):
     """
     Find an appropriate number of buckets for a :class:`BucketKmerTable`
@@ -54,13 +55,14 @@ def bucket_number(n_kmers, load_factor=0.8):
     """
     global _primes
     if _primes is None:
-        with open(
-            join(dirname(realpath(__file__)), "primes.txt")
-        ) as file:
-            _primes = np.array([
-                int(line) for line in file.read().splitlines()
-                if len(line) != 0 and line[0] != "#"
-            ])
+        with open(join(dirname(realpath(__file__)), "primes.txt")) as file:
+            _primes = np.array(
+                [
+                    int(line)
+                    for line in file.read().splitlines()
+                    if len(line) != 0 and line[0] != "#"
+                ]
+            )
 
     number = int(n_kmers / load_factor)
     index = np.searchsorted(_primes, number, side="left")

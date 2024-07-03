@@ -8,16 +8,21 @@ __all__ = ["SDFile", "SDRecord", "Metadata"]
 
 import re
 import warnings
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from collections.abc import MutableMapping, Mapping
 import numpy as np
-from ....file import File, InvalidFileError, is_open_compatible, is_text, \
-                     DeserializationError, SerializationError
-from .ctab import read_structure_from_ctab, write_structure_to_ctab
-from .header import Header
+from ....file import (
+    DeserializationError,
+    File,
+    InvalidFileError,
+    SerializationError,
+    is_open_compatible,
+    is_text,
+)
 from ...atoms import AtomArray
 from ...bonds import BondList, BondType
-
+from .ctab import read_structure_from_ctab, write_structure_to_ctab
+from .header import Header
 
 _N_HEADER = 3
 # Number of header lines
@@ -96,6 +101,7 @@ class Metadata(MutableMapping):
         number, name, registry_internal, registry_external
             The same as the parameters.
         """
+
         # The characters that can be given as input to `name`
         # First character must be alphanumeric,
         # following characters may include underscores and periods
@@ -103,7 +109,7 @@ class Metadata(MutableMapping):
         # they are still used in practice and therefore allowed here
         _NAME_INPUT_REGEX = re.compile(r"^[a-zA-Z0-9][\w.]*$")
         # These regexes are used to parse the key from a line
-        _COMPONENT_REGEX =  {
+        _COMPONENT_REGEX = {
             "number": re.compile(r"^DT(\d+)$"),
             "name": re.compile(r"^<([a-zA-Z0-9][\w.]*)>$"),
             "registry_internal": re.compile(r"^(\d+)$"),
@@ -162,9 +168,7 @@ class Metadata(MutableMapping):
                     break
                 else:
                     # There is no matching pattern
-                    raise DeserializationError(
-                        f"Invalid key component '{component}'"
-                    )
+                    raise DeserializationError(f"Invalid key component '{component}'")
             return Metadata.Key(**parsed_component_dict)
 
         def serialize(self):
@@ -189,7 +193,6 @@ class Metadata(MutableMapping):
 
         def __str__(self):
             return self.serialize()
-
 
     def __init__(self, metadata=None):
         if metadata is None:
@@ -222,9 +225,7 @@ class Metadata(MutableMapping):
                 current_value = None
             else:
                 if current_key is None:
-                    raise DeserializationError(
-                        "Value found before metadata key"
-                    )
+                    raise DeserializationError("Value found before metadata key")
                 if current_value is None:
                     current_value = line
                 else:
@@ -483,8 +484,7 @@ class SDRecord:
             raise InvalidFileError("File does not contain structure data")
         return read_structure_from_ctab(ctab_lines)
 
-    def set_structure(self, atoms, default_bond_type=BondType.ANY,
-                      version=None):
+    def set_structure(self, atoms, default_bond_type=BondType.ANY, version=None):
         """
         Set the structural data in the SD record.
 
@@ -505,9 +505,9 @@ class SDRecord:
             By default, ``"V2000"`` is used, unless the number of atoms
             or bonds exceeds 999, in which case ``"V3000"`` is used.
         """
-        self._ctab = _join_with_terminal_newline(write_structure_to_ctab(
-            atoms, default_bond_type, version
-        ))
+        self._ctab = _join_with_terminal_newline(
+            write_structure_to_ctab(atoms, default_bond_type, version)
+        )
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -736,28 +736,29 @@ class SDFile(File, MutableMapping):
             The content to be deserialized.
         """
         lines = text.splitlines()
-        record_ends = np.array([
-            i for i, line in enumerate(lines)
-            if line.startswith(_RECORD_DELIMITER)
-        ], dtype=int)
+        record_ends = np.array(
+            [i for i, line in enumerate(lines) if line.startswith(_RECORD_DELIMITER)],
+            dtype=int,
+        )
         if len(record_ends) == 0:
             warnings.warn(
                 "Final record delimiter missing, "
                 "maybe this is a MOL file instead of a SD file"
             )
-            record_ends = np.array([len(lines)-1], dtype=int)
+            record_ends = np.array([len(lines) - 1], dtype=int)
         # The first record starts at the first line and the last
         # delimiter is at the end of the file
         # Records in the middle start directly after the delimiter
         record_starts = np.concatenate(([0], record_ends[:-1] + 1), dtype=int)
         record_names = [lines[start].strip() for start in record_starts]
-        return SDFile({
-            # Do not include the delimiter
-            # -> stop at end (instead of end + 1)
-            name: _join_with_terminal_newline(lines[start : end])
-            for name, start, end
-            in zip(record_names, record_starts, record_ends)
-        })
+        return SDFile(
+            {
+                # Do not include the delimiter
+                # -> stop at end (instead of end + 1)
+                name: _join_with_terminal_newline(lines[start:end])
+                for name, start, end in zip(record_names, record_starts, record_ends)
+            }
+        )
 
     def serialize(self):
         """
@@ -836,18 +837,14 @@ class SDFile(File, MutableMapping):
             try:
                 record = SDRecord.deserialize(record)
             except:
-                raise DeserializationError(
-                    f"Failed to deserialize record '{key}'"
-                )
+                raise DeserializationError(f"Failed to deserialize record '{key}'")
             # Update with deserialized object
             self._records[key] = record
         return record
 
     def __setitem__(self, key, record):
         if not isinstance(record, SDRecord):
-            raise TypeError(
-                f"Expected 'SDRecord', but got '{type(record).__name__}'"
-            )
+            raise TypeError(f"Expected 'SDRecord', but got '{type(record).__name__}'")
         # The molecule name in the header is unique across the file
         record.header.mol_name = key
         self._records[key] = record
@@ -895,22 +892,19 @@ def _to_metadata_key(key):
         return Metadata.Key(name=key)
     else:
         raise TypeError(
-            "Expected 'Metadata.Key' or str, "
-            f"but got '{type(key).__name__}'"
+            "Expected 'Metadata.Key' or str, " f"but got '{type(key).__name__}'"
         )
 
 
 def _add_key_value_pair(metadata, key, value):
     if key is not None:
         if value is None:
-            raise DeserializationError(
-                f"No value found for metadata key {key}"
-            )
+            raise DeserializationError(f"No value found for metadata key {key}")
         metadata[key] = value
 
 
 def _get_ctab_stop(lines):
     for i in range(_N_HEADER, len(lines)):
         if lines[i].startswith("M  END"):
-            return i+1
+            return i + 1
     return len(lines)

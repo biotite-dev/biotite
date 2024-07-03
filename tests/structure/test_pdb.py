@@ -2,21 +2,20 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from tempfile import TemporaryFile
-import warnings
-import itertools
 import glob
-from os.path import join, splitext
+import itertools
 import sys
+import warnings
+from os.path import join, splitext
+from tempfile import TemporaryFile
+import numpy as np
 import pytest
 from pytest import approx
-import numpy as np
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdb.hybrid36 as hybrid36
 import biotite.structure.io.pdbx as pdbx
-import biotite.structure.io as io
 from ..util import data_dir
 
 
@@ -35,17 +34,15 @@ def test_get_model_count():
         glob.glob(join(data_dir("structure"), "*.pdb")),
         [None, 1, -1],
         [False, True],
-        [False, True]
-    )
+        [False, True],
+    ),
 )
 def test_array_conversion(path, model, hybrid36, include_bonds):
     pdb_file = pdb.PDBFile.read(path)
     # Test also the thin wrapper around the methods
     # 'get_structure()' and 'set_structure()'
     try:
-        array1 = pdb.get_structure(
-            pdb_file, model=model, include_bonds=include_bonds
-        )
+        array1 = pdb.get_structure(pdb_file, model=model, include_bonds=include_bonds)
     except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
@@ -58,8 +55,7 @@ def test_array_conversion(path, model, hybrid36, include_bonds):
     if hybrid36 and (array1.res_id < 0).any():
         with pytest.raises(
             ValueError,
-            match="Only positive integers can be converted "
-                  "into hybrid-36 notation"
+            match="Only positive integers can be converted " "into hybrid-36 notation",
         ):
             pdb_file = pdb.PDBFile()
             pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
@@ -68,33 +64,28 @@ def test_array_conversion(path, model, hybrid36, include_bonds):
         pdb_file = pdb.PDBFile()
         pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)
 
-    array2 = pdb.get_structure(
-        pdb_file, model=model, include_bonds=include_bonds
-    )
+    array2 = pdb.get_structure(pdb_file, model=model, include_bonds=include_bonds)
 
     if array1.box is not None:
         assert np.allclose(array1.box, array2.box)
     assert array1.bonds == array2.bonds
     for category in array1.get_annotation_categories():
-        assert array1.get_annotation(category).tolist() == \
-               array2.get_annotation(category).tolist()
+        assert (
+            array1.get_annotation(category).tolist()
+            == array2.get_annotation(category).tolist()
+        )
     assert array1.coord.tolist() == array2.coord.tolist()
 
 
 @pytest.mark.parametrize(
     "path, model",
-    itertools.product(
-        glob.glob(join(data_dir("structure"), "*.pdb")),
-        [None, 1, -1]
-    )
+    itertools.product(glob.glob(join(data_dir("structure"), "*.pdb")), [None, 1, -1]),
 )
 def test_pdbx_consistency(path, model):
     bcif_path = splitext(path)[0] + ".bcif"
     pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
     try:
-        ref_atoms = pdbx.get_structure(
-            pdbx_file, model=model, include_bonds=True
-        )
+        ref_atoms = pdbx.get_structure(pdbx_file, model=model, include_bonds=True)
     except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
@@ -134,17 +125,16 @@ def test_pdbx_consistency(path, model):
             print(file=sys.stderr)
         raise
     for category in ref_atoms.get_annotation_categories():
-        assert test_atoms.get_annotation(category).tolist() == \
-               ref_atoms.get_annotation(category).tolist()
+        assert (
+            test_atoms.get_annotation(category).tolist()
+            == ref_atoms.get_annotation(category).tolist()
+        )
     assert test_atoms.coord.tolist() == ref_atoms.coord.tolist()
 
 
 @pytest.mark.parametrize(
     "path, model",
-    itertools.product(
-        glob.glob(join(data_dir("structure"), "*.pdb")),
-        [None, 1]
-    )
+    itertools.product(glob.glob(join(data_dir("structure"), "*.pdb")), [None, 1]),
 )
 def test_pdbx_consistency_assembly(path, model):
     """
@@ -168,10 +158,13 @@ def test_pdbx_consistency_assembly(path, model):
     ref_assembly = pdbx.get_assembly(pdbx_file, model=model)
 
     for category in ref_assembly.get_annotation_categories():
-        assert test_assembly.get_annotation(category).tolist() == \
-                ref_assembly.get_annotation(category).tolist()
-    assert test_assembly.coord.flatten().tolist() == \
-           approx(ref_assembly.coord.flatten().tolist(), abs=1e-3)
+        assert (
+            test_assembly.get_annotation(category).tolist()
+            == ref_assembly.get_annotation(category).tolist()
+        )
+    assert test_assembly.coord.flatten().tolist() == approx(
+        ref_assembly.coord.flatten().tolist(), abs=1e-3
+    )
 
 
 @pytest.mark.parametrize("hybrid36", [False, True])
@@ -179,9 +172,7 @@ def test_extra_fields(hybrid36):
     path = join(data_dir("structure"), "1l2y.pdb")
     pdb_file = pdb.PDBFile.read(path)
     stack1 = pdb_file.get_structure(
-        extra_fields=[
-            "atom_id", "b_factor", "occupancy", "charge"
-        ]
+        extra_fields=["atom_id", "b_factor", "occupancy", "charge"]
     )
 
     with pytest.raises(ValueError):
@@ -196,9 +187,7 @@ def test_extra_fields(hybrid36):
     pdb_file.set_structure(stack1, hybrid36=hybrid36)
 
     stack2 = pdb_file.get_structure(
-        extra_fields=[
-            "atom_id", "b_factor", "occupancy", "charge"
-        ]
+        extra_fields=["atom_id", "b_factor", "occupancy", "charge"]
     )
 
     assert stack1.ins_code.tolist() == stack2.ins_code.tolist()
@@ -218,7 +207,7 @@ def test_inferred_elements():
 
     # Remove all elements
     removed_stack = stack.copy()
-    removed_stack.element[:] = ''
+    removed_stack.element[:] = ""
 
     # Save stack without elements to tmp file
     temp = TemporaryFile("w+")
@@ -237,10 +226,7 @@ def test_inferred_elements():
 
 @pytest.mark.parametrize(
     "path, model",
-    itertools.product(
-        glob.glob(join(data_dir("structure"), "*.pdb")),
-        [None, 1, -1]
-    )
+    itertools.product(glob.glob(join(data_dir("structure"), "*.pdb")), [None, 1, -1]),
 )
 def test_box_shape(path, model):
     pdb_file = pdb.PDBFile.read(path)
@@ -266,14 +252,11 @@ def test_box_parsing():
     path = join(data_dir("structure"), "1igy.pdb")
     pdb_file = pdb.PDBFile.read(path)
     a = pdb_file.get_structure()
-    expected_box = np.array([[
-        [66.65,   0.00, 0.00],
-        [0.00,  190.66, 0.00],
-        [-24.59,  0.00, 68.84]
-    ]])
+    expected_box = np.array(
+        [[[66.65, 0.00, 0.00], [0.00, 190.66, 0.00], [-24.59, 0.00, 68.84]]]
+    )
 
-    assert expected_box.flatten().tolist() \
-           == approx(a.box.flatten().tolist(), abs=1e-2)
+    assert expected_box.flatten().tolist() == approx(a.box.flatten().tolist(), abs=1e-2)
 
 
 def test_id_overflow():
@@ -283,7 +266,7 @@ def test_id_overflow():
     a.coord = np.zeros(a.coord.shape)
     a.chain_id = np.full(length, "A")
     # Create residue IDs over 10000
-    a.res_id = np.arange(1, length+1)
+    a.res_id = np.arange(1, length + 1)
     a.res_name = np.full(length, "GLY")
     a.hetero = np.full(length, False)
     a.atom_name = np.full(length, "CA")
@@ -299,13 +282,13 @@ def test_id_overflow():
     # Assert file can be read properly
     temp.seek(0)
     a2 = pdb.get_structure(pdb.PDBFile.read(temp))
-    assert(a2.array_length() == a.array_length())
+    assert a2.array_length() == a.array_length()
 
     # Manually check if the written atom id is correct
     temp.seek(0)
     last_line = temp.readlines()[-1]
     atom_id = int(last_line.split()[1])
-    assert(atom_id == 1)
+    assert atom_id == 1
 
     temp.close()
 
@@ -321,9 +304,9 @@ def test_id_overflow():
     temp.seek(0)
     last_line = temp.readlines()[-1]
     atom_id = last_line.split()[1]
-    assert(atom_id == "A0000")
+    assert atom_id == "A0000"
     res_id = last_line.split()[4][1:]
-    assert(res_id == "BXG0")
+    assert res_id == "BXG0"
 
     temp.close()
 
@@ -353,38 +336,41 @@ def test_get_b_factor(model):
     if model is None:
         # The B-factor is an annotation category
         # -> it can only be extracted in a per-model basis
-        ref_b_factor = np.stack([
-            pdb_file.get_structure(
-                model=m, extra_fields=["b_factor"]
-            ).b_factor
-            for m in range(1, pdb_file.get_model_count() + 1)
-        ])
+        ref_b_factor = np.stack(
+            [
+                pdb_file.get_structure(model=m, extra_fields=["b_factor"]).b_factor
+                for m in range(1, pdb_file.get_model_count() + 1)
+            ]
+        )
     else:
         ref_b_factor = pdb_file.get_structure(
             model=model, extra_fields=["b_factor"]
         ).b_factor
 
-    test_b_factor= pdb_file.get_b_factor(model=model)
+    test_b_factor = pdb_file.get_b_factor(model=model)
 
     assert test_b_factor.shape == ref_b_factor.shape
     assert (test_b_factor == ref_b_factor).all()
 
 
-
 np.random.seed(0)
 N = 200
 LENGTHS = [3, 4, 5]
+
+
 @pytest.mark.parametrize(
     "number, length",
     zip(
-        list(itertools.chain(*[
-            np.random.randint(0, hybrid36.max_hybrid36_number(length), N)
-            for length in LENGTHS
-        ])),
-        list(itertools.chain(*[
-            [length] * N for length in LENGTHS
-        ]))
-    )
+        list(
+            itertools.chain(
+                *[
+                    np.random.randint(0, hybrid36.max_hybrid36_number(length), N)
+                    for length in LENGTHS
+                ]
+            )
+        ),
+        list(itertools.chain(*[[length] * N for length in LENGTHS])),
+    ),
 )
 def test_hybrid36_codec(number, length):
     """
@@ -399,7 +385,6 @@ def test_hybrid36_codec(number, length):
 def test_max_hybrid36_number():
     assert hybrid36.max_hybrid36_number(4) == 2436111
     assert hybrid36.max_hybrid36_number(5) == 87440031
-
 
 
 @pytest.mark.parametrize("hybrid36", [False, True])
@@ -420,7 +405,7 @@ def test_bond_records(hybrid36):
 
     np.random.seed(0)
     # Create random bonds four times the number of atoms
-    bond_array = np.random.randint(n_atoms, size=(4*n_atoms, 2))
+    bond_array = np.random.randint(n_atoms, size=(4 * n_atoms, 2))
     # Remove bonds of atoms to themselves
     bond_array = bond_array[bond_array[:, 0] != bond_array[:, 1]]
     ref_bonds = struc.BondList(n_atoms, bond_array)
@@ -459,8 +444,8 @@ def test_get_symmetry_mates(model):
     Test generated symmetry mates on a known example with a simple
     space group and a single chain.
     """
-    INVERSION_AXES   = [(0,0,0), (0,0,1), (0,1,0), (1,0,0)]
-    TRANSLATION_AXES = [(0,0,0), (1,0,1), (0,1,1), (1,1,0)]
+    INVERSION_AXES = [(0, 0, 0), (0, 0, 1), (0, 1, 0), (1, 0, 0)]
+    TRANSLATION_AXES = [(0, 0, 0), (1, 0, 1), (0, 1, 1), (1, 1, 0)]
 
     path = join(data_dir("structure"), "1aki.pdb")
     pdb_file = pdb.PDBFile.read(path)
@@ -475,8 +460,7 @@ def test_get_symmetry_mates(model):
     symmetry_mates = pdb_file.get_symmetry_mates(model=model)
 
     # Space group has 4 copies in a unit cell
-    assert symmetry_mates.array_length() \
-        == original_structure.array_length() * 4
+    assert symmetry_mates.array_length() == original_structure.array_length() * 4
     if model is None:
         assert symmetry_mates.stack_depth() == original_structure.stack_depth()
     for chain, inv_axes, trans_axes in zip(
@@ -490,10 +474,13 @@ def test_get_symmetry_mates(model):
         chain = struc.rotate(chain, angles)
         # Now both mates should be equal
         for category in original_structure.get_annotation_categories():
-            assert chain.get_annotation(category).tolist() == \
-                   original_structure.get_annotation(category).tolist()
-        assert chain.coord.flatten().tolist() == \
-               approx(original_structure.coord.flatten().tolist(), abs=1e-3)
+            assert (
+                chain.get_annotation(category).tolist()
+                == original_structure.get_annotation(category).tolist()
+            )
+        assert chain.coord.flatten().tolist() == approx(
+            original_structure.coord.flatten().tolist(), abs=1e-3
+        )
 
 
 @pytest.mark.parametrize(
@@ -512,7 +499,7 @@ def test_get_symmetry_mates(model):
         ("occupancy", 1000, False),
         ("charge", -10, False),
         ("charge", 10, False),
-    ]
+    ],
 )
 def test_setting_incompatible_structure(annotation, value, warning_only):
     """
@@ -535,7 +522,7 @@ def test_setting_incompatible_structure(annotation, value, warning_only):
 
     # Set one annotation to a value that exceeds the number of columns
     if annotation == "coord":
-        atoms.coord[0,0] = value
+        atoms.coord[0, 0] = value
     else:
         atoms.get_annotation(annotation)[0] = value
 

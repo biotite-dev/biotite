@@ -6,7 +6,7 @@ __name__ = "biotite.sequence.io.gff"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_annotation", "set_annotation"]
 
-from ...annotation import Location, Feature, Annotation
+from ...annotation import Annotation, Feature, Location
 
 
 def get_annotation(gff_file):
@@ -22,12 +22,12 @@ def get_annotation(gff_file):
     Thus, for entries with the same ``ID``, the *type* and *attributes*
     are only parsed once and the locations are aggregated from each
     entry.
-    
+
     Parameters
     ----------
     gff_file : GFFFile
         The file tro extract the :class:`Annotation` object from.
-    
+
     Returns
     -------
     annotation : Annotation
@@ -45,9 +45,7 @@ def get_annotation(gff_file):
             # (beginning of the file)
             if current_key is not None:
                 # Beginning of new feature -> Save previous feature
-                annot.add_feature(
-                    Feature(current_key, current_locs, current_qual)
-                )
+                annot.add_feature(Feature(current_key, current_locs, current_qual))
             # Track new feature
             current_key = type
             current_locs = [Location(start, end, strand)]
@@ -61,15 +59,14 @@ def get_annotation(gff_file):
     return annot
 
 
-def set_annotation(gff_file, annotation,
-                   seqid=None, source=None, is_stranded=True):
+def set_annotation(gff_file, annotation, seqid=None, source=None, is_stranded=True):
     """
     Write an :class:`Annotation` object into a GFF3 file.
 
     Each feature will get one entry for each location it has.
     :class:`Feature` objects with multiple locations require the ``ID``
     qualifier in its :attr:`Feature.qual` attribute.
-    
+
     Parameters
     ----------
     gff_file : GFFFile
@@ -87,14 +84,13 @@ def set_annotation(gff_file, annotation,
     for feature in sorted(annotation):
         if len(feature.locs) > 1 and "ID" not in feature.qual:
             raise ValueError(
-                "The 'Id' qualifier is required "
-                "for features with multiple locations"
+                "The 'Id' qualifier is required " "for features with multiple locations"
             )
         ## seqid ##
         if seqid is not None and " " in seqid:
             raise ValueError("The 'seqid' must not contain whitespaces")
         ## source ##
-        #Nothing to be done
+        # Nothing to be done
         ## type ##
         type = feature.key
         ## strand ##
@@ -128,6 +124,5 @@ def set_annotation(gff_file, annotation,
             else:
                 phase = None
             gff_file.append(
-                seqid, source, type, start, end,
-                score, strand, phase, attributes
+                seqid, source, type, start, end, score, strand, phase, attributes
             )

@@ -4,19 +4,26 @@
 
 __name__ = "biotite.application"
 __author__ = "Patrick Kunzmann"
-__all__ = ["Application", "AppStateError", "TimeoutError", "VersionError",
-           "AppState", "requires_state"]
+__all__ = [
+    "Application",
+    "AppStateError",
+    "TimeoutError",
+    "VersionError",
+    "AppState",
+    "requires_state",
+]
 
 import abc
 import time
-from functools import wraps
 from enum import Flag, auto
+from functools import wraps
 
 
 class AppState(Flag):
     """
     This enum type represents the app states of an application.
     """
+
     CREATED = auto()
     RUNNING = auto()
     FINISHED = auto()
@@ -45,6 +52,7 @@ def requires_state(app_state):
     ... def function(self):
     ...     pass
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -52,16 +60,16 @@ def requires_state(app_state):
             try:
                 instance = args[0]
             except IndexError:
-                raise TypeError(
-                    "This method must be called from a class instance"
-                )
+                raise TypeError("This method must be called from a class instance")
             if not instance._state & app_state:
                 raise AppStateError(
                     f"The application is in {instance.get_app_state()} state, "
                     f"but {app_state} state is required"
                 )
             return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -146,11 +154,10 @@ class Application(metaclass=abc.ABCMeta):
         """
         time.sleep(self.wait_interval())
         while self.get_app_state() != AppState.FINISHED:
-            if timeout is not None and time.time()-self._start_time > timeout:
+            if timeout is not None and time.time() - self._start_time > timeout:
                 self.cancel()
                 raise TimeoutError(
-                    f"The application expired its timeout "
-                    f"({timeout:.1f} s)"
+                    f"The application expired its timeout " f"({timeout:.1f} s)"
                 )
             else:
                 time.sleep(self.wait_interval())
@@ -249,6 +256,7 @@ class AppStateError(Exception):
     """
     Indicate that the application lifecycle was violated.
     """
+
     pass
 
 
@@ -256,6 +264,7 @@ class TimeoutError(Exception):
     """
     Indicate that the application's timeout expired.
     """
+
     pass
 
 
@@ -263,4 +272,5 @@ class VersionError(Exception):
     """
     Indicate that the application's version is invalid.
     """
+
     pass

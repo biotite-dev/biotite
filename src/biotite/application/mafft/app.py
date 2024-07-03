@@ -6,25 +6,19 @@ __name__ = "biotite.application.mafft"
 __author__ = "Patrick Kunzmann"
 __all__ = ["MafftApp"]
 
-import re
 import os
-from ..msaapp import MSAApp
-from ..application import AppState, requires_state
-from ...sequence.sequence import Sequence
-from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
-from ...sequence.io.fasta.file import FastaFile
-from ...sequence.align.alignment import Alignment
+import re
 from ...sequence.phylo.tree import Tree
-
+from ..application import AppState, requires_state
+from ..msaapp import MSAApp
 
 _prefix_pattern = re.compile(r"\d*_")
-
 
 
 class MafftApp(MSAApp):
     """
     Perform a multiple sequence alignment using MAFFT.
-    
+
     Parameters
     ----------
     sequences : list of Sequence
@@ -33,7 +27,7 @@ class MafftApp(MSAApp):
         Path of the MUSCLE binary.
     matrix : SubstitutionMatrix, optional
         A custom substitution matrix.
-    
+
     Examples
     --------
 
@@ -51,19 +45,19 @@ class MafftApp(MSAApp):
     -BISMITE
     --IQLITE
     """
-    
+
     def __init__(self, sequences, bin_path="mafft", matrix=None):
         super().__init__(sequences, bin_path, matrix)
         self._tree = None
         self._out_tree_file_name = self.get_input_file_path() + ".tree"
-    
+
     def run(self):
         args = [
             "--quiet",
             "--auto",
             "--treeout",
             # Get the reordered alignment in order for
-            # get_alignment_order() to work properly 
+            # get_alignment_order() to work properly
             "--reorder",
         ]
         if self.get_seqtype() == "protein":
@@ -75,7 +69,7 @@ class MafftApp(MSAApp):
         args += [self.get_input_file_path()]
         self.set_arguments(args)
         super().run()
-    
+
     def evaluate(self):
         with open(self.get_output_file_path(), "w") as f:
             # MAFFT outputs alignment to stdout
@@ -89,7 +83,7 @@ class MafftApp(MSAApp):
             # -> remove the '<n>_' prefix
             newick = re.sub(_prefix_pattern, "", raw_newick)
             self._tree = Tree.from_newick(newick)
-    
+
     def clean_up(self):
         os.remove(self._out_tree_file_name)
 
@@ -97,26 +91,26 @@ class MafftApp(MSAApp):
     def get_guide_tree(self):
         """
         Get the guide tree created for the progressive alignment.
-        
+
         Returns
         -------
         tree : Tree
             The guide tree.
         """
         return self._tree
-    
+
     @staticmethod
     def supports_nucleotide():
         return True
-    
+
     @staticmethod
     def supports_protein():
         return True
-    
+
     @staticmethod
     def supports_custom_nucleotide_matrix():
         return True
-    
+
     @staticmethod
     def supports_custom_protein_matrix():
         return True

@@ -7,8 +7,8 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["ThrottleStatus"]
 
 
-from dataclasses import dataclass
 import time
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -67,8 +67,7 @@ class ThrottleStatus:
         """
         throttle_control = response.headers["X-Throttling-Control"]
         throttle_status = [
-            substring.split(")")[0] for substring
-            in throttle_control.split("(")[1:]
+            substring.split(")")[0] for substring in throttle_control.split("(")[1:]
         ]
         # Remove '%' sign and convert to int
         count_status, time_status, service_status = [

@@ -11,5 +11,5 @@ software series.
 __name__ = "biotite.structure.io.pdbqt"
 __author__ = "Patrick Kunzmann"
 
-from .file import *
 from .convert import *
+from .file import *

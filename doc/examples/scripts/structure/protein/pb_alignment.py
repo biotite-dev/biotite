@@ -27,15 +27,14 @@ PB with the least deviation to this set of angles is chosen.
 # License: BSD 3 clause
 
 from tempfile import gettempdir
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import biotite.database.rcsb as rcsb
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.sequence.graphics as graphics
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-import biotite.database.rcsb as rcsb
-
 
 # PB alphabet
 pb_alphabet = seq.LetterAlphabet("abcdefghijklmnop")
@@ -84,8 +83,7 @@ ref_angles = np.array([
 
 # Fetch animal lysoyzme structures
 lyso_files = rcsb.fetch(
-    ["1REX", "1AKI", "1DKJ", "1GD6"],
-    format="bcif", target_path=gettempdir()
+    ["1REX", "1AKI", "1DKJ", "1GD6"], format="bcif", target_path=gettempdir()
 )
 organisms = ["H. sapiens", "G. gallus", "C. viginianus", "B. mori"]
 
@@ -106,25 +104,21 @@ for file_name in lyso_files:
     # centered on the amino acid to calculate the PB for
     # Hence, the PBs are not defined for the two amino acids
     # at each terminus
-    pb_angles = np.full((len(phi)-4, 8), np.nan)
-    pb_angles[:, 0] = psi[  : -4]
-    pb_angles[:, 1] = phi[1 : -3]
-    pb_angles[:, 2] = psi[1 : -3]
-    pb_angles[:, 3] = phi[2 : -2]
-    pb_angles[:, 4] = psi[2 : -2]
-    pb_angles[:, 5] = phi[3 : -1]
-    pb_angles[:, 6] = psi[3 : -1]
-    pb_angles[:, 7] = phi[4 :   ]
+    pb_angles = np.full((len(phi) - 4, 8), np.nan)
+    pb_angles[:, 0] = psi[:-4]
+    pb_angles[:, 1] = phi[1:-3]
+    pb_angles[:, 2] = psi[1:-3]
+    pb_angles[:, 3] = phi[2:-2]
+    pb_angles[:, 4] = psi[2:-2]
+    pb_angles[:, 5] = phi[3:-1]
+    pb_angles[:, 6] = psi[3:-1]
+    pb_angles[:, 7] = phi[4:]
     pb_angles = np.rad2deg(pb_angles)
 
     # Angle RMSD of all reference angles with all actual angles
     rmsda = np.sum(
-        (
-            (
-                ref_angles[:, np.newaxis] - pb_angles[np.newaxis, :] + 180
-            ) % 360 - 180
-        )**2,
-        axis=-1
+        ((ref_angles[:, np.newaxis] - pb_angles[np.newaxis, :] + 180) % 360 - 180) ** 2,
+        axis=-1,
     )
     # Chose PB, where the RMSDA to the reference angle is lowest
     # Due to the definition of Biotite symbol codes
@@ -139,7 +133,7 @@ for file_name in lyso_files:
 matrix_dict = align.SubstitutionMatrix.dict_from_str(matrix_str)
 matrix = align.SubstitutionMatrix(pb_alphabet, pb_alphabet, matrix_dict)
 alignment, order, _, _ = align.align_multiple(
-    pb_seqs, matrix, gap_penalty=(-500,-100), terminal_penalty=False
+    pb_seqs, matrix, gap_penalty=(-500, -100), terminal_penalty=False
 )
 
 # Visualize the alignment
@@ -150,10 +144,15 @@ fig = plt.figure(figsize=(8.0, 4.0))
 ax = fig.add_subplot(111)
 # The color scheme was generated with the 'Gecos' software
 graphics.plot_alignment_type_based(
-    ax, alignment, labels=labels, symbols_per_line=45, spacing=2,
-    show_numbers=True, color_scheme="flower"
+    ax,
+    alignment,
+    labels=labels,
+    symbols_per_line=45,
+    spacing=2,
+    show_numbers=True,
+    color_scheme="flower",
 )
 # Organism names in italic
-ax.set_yticklabels(ax.get_yticklabels(), fontdict={"fontstyle":"italic"})
+ax.set_yticklabels(ax.get_yticklabels(), fontdict={"fontstyle": "italic"})
 fig.tight_layout()
 plt.show()

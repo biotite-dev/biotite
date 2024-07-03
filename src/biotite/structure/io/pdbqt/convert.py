@@ -18,7 +18,7 @@ def get_structure(pdbqt_file, model=None):
     PDBQT file.
 
     EXPERIMENTAL: Future API changes are probable.
-    
+
     Parameters
     ----------
     pdbqt_file : PDBQTFile
@@ -32,7 +32,7 @@ def get_structure(pdbqt_file, model=None):
         If this parameter is omitted, an :class:`AtomArrayStack`
         containing all models will be returned, even if the
         structure contains only one model.
-    
+
     Returns
     -------
     array : AtomArray or AtomArrayStack
@@ -41,13 +41,20 @@ def get_structure(pdbqt_file, model=None):
     return pdbqt_file.get_structure(model)
 
 
-def set_structure(pdbqt_file, atoms, charges=None, atom_types=None,
-                  rotatable_bonds=None, root=None, include_torsdof=True):
+def set_structure(
+    pdbqt_file,
+    atoms,
+    charges=None,
+    atom_types=None,
+    rotatable_bonds=None,
+    root=None,
+    include_torsdof=True,
+):
     """
     Write an :class:`AtomArray` into a PDBQT file.
 
     EXPERIMENTAL: Future API changes are probable.
-    
+
     Parameters
     ----------
     pdbqt_file : PDBQTFile
@@ -71,7 +78,7 @@ def set_structure(pdbqt_file, atoms, charges=None, atom_types=None,
               be written.
             - ``'rigid'`` - The molecule is handled as rigid ligand:
               Only a ``ROOT`` line will be written.
-            - ``'all'`` - The molecule is handled as flexible 
+            - ``'all'`` - The molecule is handled as flexible
               ligand:
               A ``ROOT`` line will be written and all rotatable
               bonds are included using ``BRANCH`` and ``ENDBRANCH``
@@ -81,7 +88,7 @@ def set_structure(pdbqt_file, atoms, charges=None, atom_types=None,
               A ``ROOT`` line will be written and all bonds in the
               given :class:`BondList` are considered flexible via
               ``BRANCH`` and ``ENDBRANCH`` lines.
-        
+
     root : int, optional
         Specifies the index of the atom following the ``ROOT`` line.
         Setting the root atom is useful for specifying the *anchor*
@@ -93,7 +100,7 @@ def set_structure(pdbqt_file, atoms, charges=None, atom_types=None,
         By default, a ``TORSDOF`` (torsional degrees of freedom)
         record is written at the end of the file.
         By setting this parameter to false, the record is omitted.
-    
+
     Returns
     -------
     mask : ndarray, shape=(n,), dtype=bool
@@ -102,6 +109,5 @@ def set_structure(pdbqt_file, atoms, charges=None, atom_types=None,
         hydrogen.
     """
     return pdbqt_file.set_structure(
-        atoms, charges, atom_types, rotatable_bonds, root,
-        include_torsdof
+        atoms, charges, atom_types, rotatable_bonds, root, include_torsdof
     )

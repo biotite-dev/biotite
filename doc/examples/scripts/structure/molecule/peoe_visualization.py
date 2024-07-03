@@ -13,15 +13,14 @@ The charges are calculated using the PEOE method
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import numpy as np
-from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-from matplotlib.colors import Normalize
+import numpy as np
 from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
+from sklearn.decomposition import PCA
 import biotite.structure as struc
-import biotite.structure.info as info
 import biotite.structure.graphics as graphics
-
+import biotite.structure.info as info
 
 # Acetylsalicylic acid
 MOLECULE_NAME = "AIN"
@@ -40,7 +39,6 @@ RAY_SCALE = 100
 RAY_ALPHA = 0.03
 # The color map to use to depict the charge
 CMAP_NAME = "bwr_r"
-
 
 
 # Get an atom array for the selected molecule
@@ -71,17 +69,19 @@ color_map = plt.get_cmap(CMAP_NAME)
 colors = color_map(normalized_charges)
 
 # Ball size should be proportional to VdW radius of the respective atom
-ball_sizes = np.array(
-    [info.vdw_radius_single(e) for e in molecule.element]
-) * BALL_SCALE
+ball_sizes = (
+    np.array([info.vdw_radius_single(e) for e in molecule.element]) * BALL_SCALE
+)
 
 # Gradient of ray strength
 # The ray size is proportional to the absolute charge value
 ray_full_sizes = ball_sizes + np.abs(charges) * RAY_SCALE
-ray_sizes = np.array([
-    np.linspace(ray_full_sizes[i], ball_sizes[i], N_RAY_STEPS, endpoint=False)
-    for i in range(molecule.array_length())
-]).T
+ray_sizes = np.array(
+    [
+        np.linspace(ray_full_sizes[i], ball_sizes[i], N_RAY_STEPS, endpoint=False)
+        for i in range(molecule.array_length())
+    ]
+).T
 
 
 # The plotting begins here
@@ -92,32 +92,38 @@ ax = fig.add_subplot(111, projection="3d")
 # As 'axes.scatter()' uses sizes in points**2,
 # the VdW-radii as also squared
 graphics.plot_ball_and_stick_model(
-    ax, molecule, colors, ball_size=ball_sizes**2, line_width=3,
-    line_color=color_map(0.5), background_color=(.05, .05, .05), zoom=1.5
+    ax,
+    molecule,
+    colors,
+    ball_size=ball_sizes**2,
+    line_width=3,
+    line_color=color_map(0.5),
+    background_color=(0.05, 0.05, 0.05),
+    zoom=1.5,
 )
 
 # Plot the element labels
 for atom in molecule:
     ax.text(
-        *atom.coord, atom.element,
-        fontsize=ELEMENT_FONT_SIZE, color="black",
-        ha="center", va="center", zorder=100
+        *atom.coord,
+        atom.element,
+        fontsize=ELEMENT_FONT_SIZE,
+        color="black",
+        ha="center",
+        va="center",
+        zorder=100,
     )
 
 # Plot the rays
 for i in range(N_RAY_STEPS):
     ax.scatter(
-        *molecule.coord.T, s=ray_sizes[i]**2, c=colors,
-        linewidth=0, alpha=RAY_ALPHA
+        *molecule.coord.T, s=ray_sizes[i] ** 2, c=colors, linewidth=0, alpha=RAY_ALPHA
     )
 
 # Plot the colorbar
 color_bar = fig.colorbar(
-    ScalarMappable(
-        norm=Normalize(vmin=-max_charge, vmax=max_charge),
-        cmap=color_map
-    ),
-    ax=ax
+    ScalarMappable(norm=Normalize(vmin=-max_charge, vmax=max_charge), cmap=color_map),
+    ax=ax,
 )
 color_bar.set_label("Partial charge (e)", color="white")
 color_bar.ax.yaxis.set_tick_params(color="white")

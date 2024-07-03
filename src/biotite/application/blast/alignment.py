@@ -14,10 +14,10 @@ class BlastAlignment(Alignment):
     A specialized :class:`Alignment` class for alignments using the
     BLAST application. It stores additional data, like the E-value,
     the HSP position and a description of the hit sequence.
-    
+
     Like its superclass, all attributes of a :class:`BlastAlignment` are
     public. The attributes are the same as the constructor parameters.
-    
+
     Parameters
     ----------
     sequences : list
@@ -44,16 +44,25 @@ class BlastAlignment(Alignment):
     hit_definition : str
         The name of the hit sequence.
     """
-    
-    def __init__(self, sequences, trace, score, e_value,
-                 query_interval, hit_interval, hit_id, hit_definition):
+
+    def __init__(
+        self,
+        sequences,
+        trace,
+        score,
+        e_value,
+        query_interval,
+        hit_interval,
+        hit_id,
+        hit_definition,
+    ):
         super().__init__(sequences, trace, score)
         self.e_value = e_value
         self.query_interval = query_interval
         self.hit_interval = hit_interval
         self.hit_id = hit_id
         self.hit_definition = hit_definition
-    
+
     def __eq__(self, item):
         if not isinstance(item, BlastAlignment):
             return False
@@ -68,7 +77,7 @@ class BlastAlignment(Alignment):
         if self.hit_definition != item.hit_definition:
             return False
         return super().__eq__(item)
-    
+
     def __getitem__(self, index):
         super_alignment = super().__getitem__(index)
         return BlastAlignment(
@@ -79,5 +88,5 @@ class BlastAlignment(Alignment):
             self.query_interval,
             self.hit_interval,
             self.hit_id,
-            self.hit_definition
+            self.hit_definition,
         )

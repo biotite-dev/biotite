@@ -2,19 +2,17 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from tempfile import TemporaryFile
 from os.path import join
-import biotite.sequence as seq
-import biotite.sequence.io.gff as gff
-import biotite.sequence.io.genbank as gb
-import numpy as np
+from tempfile import TemporaryFile
 import pytest
+import biotite.sequence as seq
+import biotite.sequence.io.genbank as gb
+import biotite.sequence.io.gff as gff
 from ..util import data_dir
 
 
 @pytest.mark.parametrize(
-    "path",
-    ["bt_lysozyme.gff3", "gg_avidin.gff3", "ec_bl21.gff3", "sc_chrom1.gff3"]
+    "path", ["bt_lysozyme.gff3", "gg_avidin.gff3", "ec_bl21.gff3", "sc_chrom1.gff3"]
 )
 def test_conversion_lowlevel(path):
     """
@@ -38,8 +36,7 @@ def test_conversion_lowlevel(path):
 
 
 @pytest.mark.parametrize(
-    "path",
-    ["bt_lysozyme.gff3", "gg_avidin.gff3", "ec_bl21.gff3", "sc_chrom1.gff3"]
+    "path", ["bt_lysozyme.gff3", "gg_avidin.gff3", "ec_bl21.gff3", "sc_chrom1.gff3"]
 )
 def test_conversion_highlevel(path):
     """
@@ -69,7 +66,7 @@ def test_conversion_highlevel(path):
     for _, _, type, _, _, _, _, phase, _ in gff_file:
         if type == "CDS":
             test_phases.append(phase)
-    
+
     assert ref_annot == test_annot
     assert test_phases == ref_phases
 
@@ -87,7 +84,7 @@ def test_genbank_consistency(path):
 
     gff_file = gff.GFFFile.read(join(data_dir("sequence"), path[:-3] + ".gff3"))
     test_annot = gff.get_annotation(gff_file)
-    
+
     # Remove qualifiers, since they will be different
     # in GFF3 and GenBank
     ref_annot = seq.Annotation(
@@ -115,7 +112,7 @@ def test_file_access():
     file.
     """
     file = gff.GFFFile()
-    entry_scaffold = ("ab", "cd", 1, 2, None, None, None, {"Id":"foo"})
+    entry_scaffold = ("ab", "cd", 1, 2, None, None, None, {"Id": "foo"})
     entry = ("a",) + entry_scaffold
     file.append(*entry)
     assert file[0] == entry
@@ -124,8 +121,11 @@ def test_file_access():
     file[1] = ("d",) + entry_scaffold
     file.insert(3, *(("e",) + entry_scaffold))
     del file[2]
-    assert [seqid for seqid, _, _, _, _, _, _, _, _ in file] \
-        == ["a", "d", "e", ]
+    assert [seqid for seqid, _, _, _, _, _, _, _, _ in file] == [
+        "a",
+        "d",
+        "e",
+    ]
 
 
 def test_entry_indexing():
@@ -134,17 +134,14 @@ def test_entry_indexing():
     test file with multiple directives, including '##FASTA'.
     """
     with pytest.warns(UserWarning):
-        file = gff.GFFFile.read(
-            join(data_dir("sequence"), "indexing_test.gff3")
-        )
+        file = gff.GFFFile.read(join(data_dir("sequence"), "indexing_test.gff3"))
     assert file._directives == [
         ("directive 1", 1),
         ("directive 2", 2),
         ("directive 3", 7),
         ("FASTA", 8),
     ]
-    assert file._entries == [3,4,6]
-
+    assert file._entries == [3, 4, 6]
 
 
 def test_percent_encoding():
@@ -153,21 +150,19 @@ def test_percent_encoding():
     artificial test file.
     """
     file = gff.GFFFile.read(join(data_dir("sequence"), "percent_test.gff3"))
-    seqid, source, type, start, end, score, strand, phase, attrib \
-        = file[0]
+    seqid, source, type, start, end, score, strand, phase, attrib = file[0]
     assert seqid == "123,456"
     assert source == "ääh"
     assert type == "regi&n"
     assert attrib == {
-        "ID"   : "AnID;AnotherID",
-        "Name" : "Ångström",
-        "c$l$r": "red\tgreen\tblue"
+        "ID": "AnID;AnotherID",
+        "Name": "Ångström",
+        "c$l$r": "red\tgreen\tblue",
     }
 
     file2 = gff.GFFFile()
     file.append(seqid, source, type, start, end, score, strand, phase, attrib)
-    assert (seqid, source, type, start, end, score, strand, phase, attrib) \
-        == file[0]
+    assert (seqid, source, type, start, end, score, strand, phase, attrib) == file[0]
 
 
 def test_error():
@@ -177,16 +172,17 @@ def test_error():
     file = gff.GFFFile()
     with pytest.raises(ValueError):
         # 'seqid' beginning with '>' is not legal
-        file.append(">xyz", "ab", "cd", 1, 2, None, None, None, {"Id":"foo"})
+        file.append(">xyz", "ab", "cd", 1, 2, None, None, None, {"Id": "foo"})
     with pytest.raises(ValueError):
         # String fields must not be empty
-        file.append("", "ab", "cd", 1, 2, None, None, None, {"Id":"foo"})
+        file.append("", "ab", "cd", 1, 2, None, None, None, {"Id": "foo"})
     with pytest.raises(ValueError):
         # String fields must not be empty
-        file.append("xyz", "", "cd", 1, 2, None, None, None, {"Id":"foo"})
+        file.append("xyz", "", "cd", 1, 2, None, None, None, {"Id": "foo"})
     with pytest.raises(ValueError):
         # String fields must not be empty
-        file.append("xyz", "ab", "", 1, 2, None, None, None, {"Id":"foo"})
+        file.append("xyz", "ab", "", 1, 2, None, None, None, {"Id": "foo"})
+
 
 def test_feature_without_id():
     """
@@ -194,11 +190,13 @@ def test_feature_without_id():
     locations and consequently multiple entries in the GFF3 file.
     """
     annot = seq.Annotation(
-        [seq.Feature(
-            key  = "CDS",
-            locs = [seq.Location(1,2), seq.Location(4,5)],
-            qual = {"some" : "qualifiers"}
-        )]
+        [
+            seq.Feature(
+                key="CDS",
+                locs=[seq.Location(1, 2), seq.Location(4, 5)],
+                qual={"some": "qualifiers"},
+            )
+        ]
     )
     file = gff.GFFFile()
     with pytest.raises(ValueError):

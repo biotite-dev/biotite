@@ -9,18 +9,26 @@ in a structure, mainly lenghts and angles.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["displacement", "index_displacement", "distance", "index_distance",
-           "angle", "index_angle", "dihedral", "index_dihedral",
-           "dihedral_backbone", "centroid"]
+__all__ = [
+    "displacement",
+    "index_displacement",
+    "distance",
+    "index_distance",
+    "angle",
+    "index_angle",
+    "dihedral",
+    "index_dihedral",
+    "dihedral_backbone",
+    "centroid",
+]
 
 import numpy as np
-from .atoms import Atom, AtomArray, AtomArrayStack, coord
-from .util import vector_dot, norm_vector
-from .filter import filter_peptide_backbone
+from .atoms import AtomArray, AtomArrayStack, coord
+from .box import coord_to_fraction, fraction_to_coord, is_orthogonal
 from .chains import chain_iter
-from .box import (coord_to_fraction, fraction_to_coord,
-                  move_inside_box, is_orthogonal)
 from .error import BadStructureError
+from .filter import filter_peptide_backbone
+from .util import norm_vector, vector_dot
 
 
 def displacement(atoms1, atoms2, box=None):
@@ -81,28 +89,24 @@ def displacement(atoms1, atoms2, box=None):
             fractions = fractions[np.newaxis, :]
             disp = disp[np.newaxis, :]
             if orthogonality:
-                _displacement_orthogonal_box(
-                    fractions, box, disp
-                )
+                _displacement_orthogonal_box(fractions, box, disp)
             else:
                 _displacement_triclinic_box(
                     fractions.astype(diff.dtype, copy=False),
                     box.astype(diff.dtype, copy=False),
-                    disp
+                    disp,
                 )
             # Transform back
             disp = disp[0]
         if fractions.ndim == 2:
             # Single model
             if orthogonality:
-                _displacement_orthogonal_box(
-                    fractions, box, disp
-                )
+                _displacement_orthogonal_box(fractions, box, disp)
             else:
                 _displacement_triclinic_box(
                     fractions.astype(diff.dtype, copy=False),
                     box.astype(diff.dtype, copy=False),
-                    disp
+                    disp,
                 )
         elif fractions.ndim == 3:
             # Multiple models
@@ -117,19 +121,15 @@ def displacement(atoms1, atoms2, box=None):
                 else:
                     raise ValueError(f"{box.ndim} are to many box dimensions")
                 if orthogonality_for_model:
-                    _displacement_orthogonal_box(
-                        fractions[i], box_for_model, disp[i]
-                    )
+                    _displacement_orthogonal_box(fractions[i], box_for_model, disp[i])
                 else:
                     _displacement_triclinic_box(
                         fractions[i].astype(diff.dtype, copy=False),
                         box_for_model.astype(diff.dtype, copy=False),
-                        disp[i]
+                        disp[i],
                     )
         else:
-            raise ValueError(
-                f"{diff.shape} is an invalid shape for atom coordinates"
-            )
+            raise ValueError(f"{diff.shape} is an invalid shape for atom coordinates")
         return disp
 
     else:
@@ -318,7 +318,7 @@ def angle(atoms1, atoms2, atoms3, box=None):
     v2 = displacement(atoms3, atoms2, box)
     norm_vector(v1)
     norm_vector(v2)
-    return np.arccos(vector_dot(v1,v2))
+    return np.arccos(vector_dot(v1, v2))
 
 
 def index_angle(*args, **kwargs):
@@ -416,9 +416,9 @@ def dihedral(atoms1, atoms2, atoms3, atoms4, box=None):
     n2 = np.cross(v2, v3)
 
     # Calculation using atan2, to ensure the correct sign of the angle
-    x = vector_dot(n1,n2)
-    y = vector_dot(np.cross(n1,n2), v2)
-    return np.arctan2(y,x)
+    x = vector_dot(n1, n2)
+    y = vector_dot(np.cross(n1, n2), v2)
+    return np.arctan2(y, x)
 
 
 def index_dihedral(*args, **kwargs):
@@ -542,14 +542,16 @@ def dihedral_backbone(atom_array):
     bb_filter = filter_peptide_backbone(atom_array)
     backbone = atom_array[..., bb_filter]
 
-    if backbone.array_length() % 3 != 0 \
-        or (backbone.atom_name[0::3] != "N" ).any() \
-        or (backbone.atom_name[1::3] != "CA").any() \
-        or (backbone.atom_name[2::3] != "C" ).any():
-            raise BadStructureError(
-                "The backbone is invalid, must be repeats of (N, CA, C), "
-                "maybe a backbone atom is missing"
-            )
+    if (
+        backbone.array_length() % 3 != 0
+        or (backbone.atom_name[0::3] != "N").any()
+        or (backbone.atom_name[1::3] != "CA").any()
+        or (backbone.atom_name[2::3] != "C").any()
+    ):
+        raise BadStructureError(
+            "The backbone is invalid, must be repeats of (N, CA, C), "
+            "maybe a backbone atom is missing"
+        )
     phis = []
     psis = []
     omegas = []
@@ -558,9 +560,11 @@ def dihedral_backbone(atom_array):
         phis.append(phi)
         psis.append(psi)
         omegas.append(omega)
-    return np.concatenate(phis, axis=-1), np.concatenate(psis, axis=-1), \
-        np.concatenate(omegas, axis=-1)
-
+    return (
+        np.concatenate(phis, axis=-1),
+        np.concatenate(psis, axis=-1),
+        np.concatenate(omegas, axis=-1),
+    )
 
 
 def _dihedral_backbone(chain_bb):
@@ -571,15 +575,15 @@ def _dihedral_backbone(chain_bb):
     # Dim 2: X, Y, Z coordinates
     # Dim 3: Atoms involved in dihedral angle
     if isinstance(chain_bb, AtomArray):
-        angle_coord_shape = (len(bb_coord)//3, 3, 4)
+        angle_coord_shape = (len(bb_coord) // 3, 3, 4)
     elif isinstance(chain_bb, AtomArrayStack):
-        angle_coord_shape = (bb_coord.shape[0], bb_coord.shape[1]//3, 3, 4)
-    phi_coord   = np.full(angle_coord_shape, np.nan)
-    psi_coord   = np.full(angle_coord_shape, np.nan)
+        angle_coord_shape = (bb_coord.shape[0], bb_coord.shape[1] // 3, 3, 4)
+    phi_coord = np.full(angle_coord_shape, np.nan)
+    psi_coord = np.full(angle_coord_shape, np.nan)
     omega_coord = np.full(angle_coord_shape, np.nan)
 
     # Indices for coordinates of CA atoms
-    ca_i = np.arange(bb_coord.shape[-2]//3) * 3 + 1
+    ca_i = np.arange(bb_coord.shape[-2] // 3) * 3 + 1
     # fmt: off
     phi_coord  [..., 1:,  :, 0] = bb_coord[..., ca_i[1: ]-2, :]
     phi_coord  [..., 1:,  :, 1] = bb_coord[..., ca_i[1: ]-1, :]
@@ -595,12 +599,18 @@ def _dihedral_backbone(chain_bb):
     omega_coord[..., :-1, :, 3] = bb_coord[..., ca_i[:-1]+3, :]
     # fmt: on
 
-    phi = dihedral(phi_coord[...,0], phi_coord[...,1],
-                   phi_coord[...,2], phi_coord[...,3])
-    psi = dihedral(psi_coord[...,0], psi_coord[...,1],
-                   psi_coord[...,2], psi_coord[...,3])
-    omega = dihedral(omega_coord[...,0], omega_coord[...,1],
-                     omega_coord[...,2], omega_coord[...,3])
+    phi = dihedral(
+        phi_coord[..., 0], phi_coord[..., 1], phi_coord[..., 2], phi_coord[..., 3]
+    )
+    psi = dihedral(
+        psi_coord[..., 0], psi_coord[..., 1], psi_coord[..., 2], psi_coord[..., 3]
+    )
+    omega = dihedral(
+        omega_coord[..., 0],
+        omega_coord[..., 1],
+        omega_coord[..., 2],
+        omega_coord[..., 3],
+    )
 
     return phi, psi, omega
 
@@ -625,8 +635,9 @@ def centroid(atoms):
     return np.mean(coord(atoms), axis=-2)
 
 
-def _call_non_index_function(function, expected_amount,
-                             atoms, indices, periodic=False, box=None):
+def _call_non_index_function(
+    function, expected_amount, atoms, indices, periodic=False, box=None
+):
     """
     Call an `xxx()` function based on the parameters given to a
     `index_xxx()` function.
@@ -638,15 +649,14 @@ def _call_non_index_function(function, expected_amount,
         )
     coord_list = []
     for i in range(expected_amount):
-        coord_list.append(coord(atoms)[..., indices[:,i], :])
+        coord_list.append(coord(atoms)[..., indices[:, i], :])
     if periodic:
         if box is None:
             if isinstance(atoms, (AtomArray, AtomArrayStack)):
                 box = atoms.box
             else:
                 raise ValueError(
-                    "If `atoms` are coordinates, "
-                    "the box must be set explicitly"
+                    "If `atoms` are coordinates, " "the box must be set explicitly"
                 )
     else:
         box = None
@@ -680,10 +690,10 @@ def _displacement_triclinic_box(fractions, box, disp):
     for i in range(-1, 1):
         for j in range(-1, 1):
             for k in range(-1, 1):
-                x = i*box[0,0] + j*box[1,0] + k*box[2,0]
-                y = i*box[0,1] + j*box[1,1] + k*box[2,1]
-                z = i*box[0,2] + j*box[1,2] + k*box[2,2]
-                periodic_shift.append([x,y,z])
+                x = i * box[0, 0] + j * box[1, 0] + k * box[2, 0]
+                y = i * box[0, 1] + j * box[1, 1] + k * box[2, 1]
+                z = i * box[0, 2] + j * box[1, 2] + k * box[2, 2]
+                periodic_shift.append([x, y, z])
     periodic_shift = np.array(periodic_shift, dtype=disp.dtype)
     # Create 8 periodically shifted variants for each atom
     shifted_diffs = diffs[:, np.newaxis, :] + periodic_shift[np.newaxis, :, :]
@@ -694,6 +704,5 @@ def _displacement_triclinic_box(fractions, box, disp):
     # for each given non-PBC-aware displacement find the PBC-aware
     # displacement with the lowest distance
     disp[:] = shifted_diffs[
-        np.arange(len(shifted_diffs)),
-        np.argmin(sq_distance, axis=1)
+        np.arange(len(shifted_diffs)), np.argmin(sq_distance, axis=1)
     ]

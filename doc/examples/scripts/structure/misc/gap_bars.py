@@ -16,11 +16,12 @@ residues in a recent cryo-EM structure (PDB: 5W1R).
 # License: BSD 3 clause
 
 from tempfile import gettempdir
-import biotite.structure.io as strucio
-import biotite.database.rcsb as rcsb
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 import numpy as np
+from matplotlib.patches import Rectangle
+import biotite.database.rcsb as rcsb
+import biotite.structure.io as strucio
+
 
 def plot_gaps(pdb_id, chain_id, ax):
     # Download and parse structure file
@@ -32,7 +33,7 @@ def plot_gaps(pdb_id, chain_id, ax):
     states = np.zeros(atom_array.res_id[-1], dtype=int)
     for i in range(len(states)):
         # Get array for only one residue ID
-        residue = atom_array[atom_array.res_id == i+1]
+        residue = atom_array[atom_array.res_id == i + 1]
         if len(residue) == 0:
             # not existing
             states[i] = 0
@@ -52,7 +53,7 @@ def plot_gaps(pdb_id, chain_id, ax):
             curr_start = i
             curr_state = states[i]
         else:
-            if states[i] != states[i-1]:
+            if states[i] != states[i - 1]:
                 state_intervals.append((curr_start, i, curr_state))
                 curr_start = i
                 curr_state = states[i]
@@ -69,8 +70,11 @@ def plot_gaps(pdb_id, chain_id, ax):
             color = "gold"
         elif state == 2:
             color = "forestgreen"
-        ax.add_patch(Rectangle((start+1-0.5, 0), stop-start, 1,
-                                edgecolor="None", facecolor=color))
+        ax.add_patch(
+            Rectangle(
+                (start + 1 - 0.5, 0), stop - start, 1, edgecolor="None", facecolor=color
+            )
+        )
     # Some other visual stuff
     ax.spines["left"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
@@ -88,6 +92,6 @@ plot_gaps("5luq", "A", ax)
 ax = fig.add_subplot(212)
 ax.set_title("5w1r", loc="left")
 plot_gaps("5w1r", "A", ax)
-ax.set_xlabel("$Residue \ number$")
+ax.set_xlabel(r"$Residue \ number$")
 fig.tight_layout()
 plt.show()

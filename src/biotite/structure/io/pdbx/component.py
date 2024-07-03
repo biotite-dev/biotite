@@ -11,10 +11,10 @@ __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 __all__ = ["MaskValue"]
 
-from enum import IntEnum
 from abc import ABCMeta, abstractmethod
 from collections.abc import MutableMapping
-from ....file import SerializationError, DeserializationError
+from enum import IntEnum
+from ....file import DeserializationError, SerializationError
 
 
 class MaskValue(IntEnum):
@@ -29,6 +29,7 @@ class MaskValue(IntEnum):
     - `MISSING` : For this row the value is missing or unknown
       (``?`` in *CIF*).
     """
+
     PRESENT = 0
     INAPPLICABLE = 1
     MISSING = 2
@@ -109,8 +110,7 @@ class _Component(metaclass=ABCMeta):
         return str(self.serialize())
 
 
-class _HierarchicalContainer(_Component, MutableMapping,
-                             metaclass=ABCMeta):
+class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
     """
     A container for hierarchical data in BinaryCIF files.
     For example, the file contains multiple blocks, each block contains
@@ -182,9 +182,7 @@ class _HierarchicalContainer(_Component, MutableMapping,
                 try:
                     serialized_element = element.serialize()
                 except:
-                    raise SerializationError(
-                        f"Failed to serialize element '{key}'"
-                    )
+                    raise SerializationError(f"Failed to serialize element '{key}'")
             else:
                 # Element is already stored in serialized form
                 serialized_element = element
@@ -201,9 +199,7 @@ class _HierarchicalContainer(_Component, MutableMapping,
             try:
                 element = self.subcomponent_class().deserialize(element)
             except:
-                raise DeserializationError(
-                    f"Failed to deserialize element '{key}'"
-                )
+                raise DeserializationError(f"Failed to deserialize element '{key}'")
             # Update container with deserialized object
             self._elements[key] = element
         return element
@@ -221,9 +217,7 @@ class _HierarchicalContainer(_Component, MutableMapping,
             try:
                 element = self.subcomponent_class().deserialize(element)
             except:
-                raise DeserializationError(
-                    f"Failed to deserialize given value"
-                )
+                raise DeserializationError("Failed to deserialize given value")
         self._elements[key] = element
 
     def __delitem__(self, key):

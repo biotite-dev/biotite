@@ -1,7 +1,7 @@
 import gzip
 import logging
-from io import StringIO
 from dataclasses import dataclass
+from io import StringIO
 import numpy as np
 import requests
 from biotite.structure.io.pdbx import *
@@ -28,6 +28,7 @@ class ColumnInfo:
         The name of an alternative column to use, if the original column
         contains masked values and no `fill_value` is given.
     """
+
     dtype: ...
     encoding: ...
     fill_value: ... = None
@@ -37,67 +38,75 @@ class ColumnInfo:
 MAIN_COLUMNS = {
     "id": ColumnInfo(
         "U5",
-        [StringArrayEncoding(
-            data_encoding=[
-                DeltaEncoding(src_type=TypeCode.INT32),
-                RunLengthEncoding(),
-                IntegerPackingEncoding(byte_count=2, is_unsigned=True),
-                ByteArrayEncoding()
-            ],
-            offset_encoding=[
-                DeltaEncoding(src_type=TypeCode.INT32),
-                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
-                ByteArrayEncoding()
-            ]
-        )]
+        [
+            StringArrayEncoding(
+                data_encoding=[
+                    DeltaEncoding(src_type=TypeCode.INT32),
+                    RunLengthEncoding(),
+                    IntegerPackingEncoding(byte_count=2, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+                offset_encoding=[
+                    DeltaEncoding(src_type=TypeCode.INT32),
+                    IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+            )
+        ],
     ),
     "name": ColumnInfo(
         str,
-        [StringArrayEncoding(
-            # The unique strings in the column are sorted
-            # -> Indices do not follow distinct pattern
-            data_encoding=[ByteArrayEncoding(type=TypeCode.INT32)],
-            offset_encoding=[
-                DeltaEncoding(src_type=TypeCode.INT32),
-                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
-                ByteArrayEncoding()
-            ]
-        )]
+        [
+            StringArrayEncoding(
+                # The unique strings in the column are sorted
+                # -> Indices do not follow distinct pattern
+                data_encoding=[ByteArrayEncoding(type=TypeCode.INT32)],
+                offset_encoding=[
+                    DeltaEncoding(src_type=TypeCode.INT32),
+                    IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+            )
+        ],
     ),
     "type": ColumnInfo(
         str,
-        [StringArrayEncoding(
-            # The unique strings in the column are sorted
-            # -> Indices do not follow distinct pattern
-            data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
-            offset_encoding=[
-                DeltaEncoding(src_type=TypeCode.INT32),
-                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
-                ByteArrayEncoding()
-            ]
-        )]
+        [
+            StringArrayEncoding(
+                # The unique strings in the column are sorted
+                # -> Indices do not follow distinct pattern
+                data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
+                offset_encoding=[
+                    DeltaEncoding(src_type=TypeCode.INT32),
+                    IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+            )
+        ],
     ),
     "formula_weight": ColumnInfo(
         "f8",
         [
             FixedPointEncoding(factor=1000, src_type=TypeCode.FLOAT64),
-            ByteArrayEncoding()
+            ByteArrayEncoding(),
         ],
-        fill_value=0
+        fill_value=0,
     ),
     "one_letter_code": ColumnInfo(
         "U1",
-        [StringArrayEncoding(
-            # The unique strings in the column are sorted
-            # -> Indices do not follow distinct pattern
-            data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
-            offset_encoding=[
-                DeltaEncoding(src_type=TypeCode.INT32),
-                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
-                ByteArrayEncoding()
-            ]
-        )],
-        fill_value=""
+        [
+            StringArrayEncoding(
+                # The unique strings in the column are sorted
+                # -> Indices do not follow distinct pattern
+                data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
+                offset_encoding=[
+                    DeltaEncoding(src_type=TypeCode.INT32),
+                    IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+            )
+        ],
+        fill_value="",
     ),
 }
 
@@ -105,148 +114,160 @@ MAIN_COLUMNS = {
 ATOM_COLUMNS = {
     "comp_id": ColumnInfo(
         "U5",
-        [StringArrayEncoding(
-            data_encoding=[
-                RunLengthEncoding(src_type=TypeCode.INT32),
-                IntegerPackingEncoding(byte_count=2, is_unsigned=True),
-                ByteArrayEncoding()
-            ],
-            offset_encoding=[
-                DeltaEncoding(src_type=TypeCode.INT32),
-                RunLengthEncoding(),
-                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
-                ByteArrayEncoding()
-            ]
-        )]
+        [
+            StringArrayEncoding(
+                data_encoding=[
+                    RunLengthEncoding(src_type=TypeCode.INT32),
+                    IntegerPackingEncoding(byte_count=2, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+                offset_encoding=[
+                    DeltaEncoding(src_type=TypeCode.INT32),
+                    RunLengthEncoding(),
+                    IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+            )
+        ],
     ),
     "atom_id": ColumnInfo(
         "U6",
-        [StringArrayEncoding(
-            # The unique strings in the column are sorted
-            # -> Indices do not follow distinct pattern
-            data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
-            offset_encoding=[
-                DeltaEncoding(src_type=TypeCode.INT32),
-                RunLengthEncoding(),
-                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
-                ByteArrayEncoding()
-            ]
-        )]
+        [
+            StringArrayEncoding(
+                # The unique strings in the column are sorted
+                # -> Indices do not follow distinct pattern
+                data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
+                offset_encoding=[
+                    DeltaEncoding(src_type=TypeCode.INT32),
+                    RunLengthEncoding(),
+                    IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+            )
+        ],
     ),
     "type_symbol": ColumnInfo(
         "U2",
-        [StringArrayEncoding(
-            # The unique strings in the column are sorted
-            # -> Indices do not follow distinct pattern
-            data_encoding=[ByteArrayEncoding(type=TypeCode.INT8)],
-            offset_encoding=[
-                DeltaEncoding(src_type=TypeCode.INT32),
-                RunLengthEncoding(),
-                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
-                ByteArrayEncoding()
-            ]
-        )]
+        [
+            StringArrayEncoding(
+                # The unique strings in the column are sorted
+                # -> Indices do not follow distinct pattern
+                data_encoding=[ByteArrayEncoding(type=TypeCode.INT8)],
+                offset_encoding=[
+                    DeltaEncoding(src_type=TypeCode.INT32),
+                    RunLengthEncoding(),
+                    IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+            )
+        ],
     ),
-    "charge": ColumnInfo(
-        "i1",
-        [ByteArrayEncoding(type=TypeCode.INT8)],
-        fill_value=0
-    ),
+    "charge": ColumnInfo("i1", [ByteArrayEncoding(type=TypeCode.INT8)], fill_value=0),
     "pdbx_model_Cartn_x_ideal": ColumnInfo(
         "f4",
         [
             FixedPointEncoding(factor=100),
             IntegerPackingEncoding(byte_count=2, is_unsigned=False),
-            ByteArrayEncoding()
+            ByteArrayEncoding(),
         ],
-        alternative="model_Cartn_x"
+        alternative="model_Cartn_x",
     ),
     "pdbx_model_Cartn_y_ideal": ColumnInfo(
         "f4",
         [
             FixedPointEncoding(factor=100),
             IntegerPackingEncoding(byte_count=2, is_unsigned=False),
-            ByteArrayEncoding()
+            ByteArrayEncoding(),
         ],
-        alternative="model_Cartn_y"
+        alternative="model_Cartn_y",
     ),
     "pdbx_model_Cartn_z_ideal": ColumnInfo(
         "f4",
         [
             FixedPointEncoding(factor=100),
             IntegerPackingEncoding(byte_count=2, is_unsigned=False),
-            ByteArrayEncoding()
+            ByteArrayEncoding(),
         ],
-        alternative="model_Cartn_z"
+        alternative="model_Cartn_z",
     ),
 }
 
 BOND_COLUMNS = {
     "comp_id": ColumnInfo(
         "U5",
-        [StringArrayEncoding(
-            data_encoding=[
-                RunLengthEncoding(src_type=TypeCode.INT32),
-                IntegerPackingEncoding(byte_count=2, is_unsigned=True),
-                ByteArrayEncoding()
-            ],
-            offset_encoding=[
-                DeltaEncoding(src_type=TypeCode.INT32),
-                RunLengthEncoding(),
-                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
-                ByteArrayEncoding()
-            ]
-        )]
+        [
+            StringArrayEncoding(
+                data_encoding=[
+                    RunLengthEncoding(src_type=TypeCode.INT32),
+                    IntegerPackingEncoding(byte_count=2, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+                offset_encoding=[
+                    DeltaEncoding(src_type=TypeCode.INT32),
+                    RunLengthEncoding(),
+                    IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+            )
+        ],
     ),
     "atom_id_1": ColumnInfo(
         "U6",
-        [StringArrayEncoding(
-            # The unique strings in the column are sorted
-            # -> Indices do not follow distinct pattern
-            data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
-            offset_encoding=[
-                DeltaEncoding(src_type=TypeCode.INT32),
-                RunLengthEncoding(),
-                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
-                ByteArrayEncoding()
-            ]
-        )]
+        [
+            StringArrayEncoding(
+                # The unique strings in the column are sorted
+                # -> Indices do not follow distinct pattern
+                data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
+                offset_encoding=[
+                    DeltaEncoding(src_type=TypeCode.INT32),
+                    RunLengthEncoding(),
+                    IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+            )
+        ],
     ),
     "atom_id_2": ColumnInfo(
         "U6",
-        [StringArrayEncoding(
-            # The unique strings in the column are sorted
-            # -> Indices do not follow distinct pattern
-            data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
-            offset_encoding=[
-                DeltaEncoding(src_type=TypeCode.INT32),
-                RunLengthEncoding(),
-                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
-                ByteArrayEncoding()
-            ]
-        )]
+        [
+            StringArrayEncoding(
+                # The unique strings in the column are sorted
+                # -> Indices do not follow distinct pattern
+                data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
+                offset_encoding=[
+                    DeltaEncoding(src_type=TypeCode.INT32),
+                    RunLengthEncoding(),
+                    IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+            )
+        ],
     ),
     "value_order": ColumnInfo(
         "U4",
-        [StringArrayEncoding(
-            data_encoding=[
-                RunLengthEncoding(src_type=TypeCode.INT32),
-                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
-                ByteArrayEncoding()
-            ],
-            offset_encoding=[ByteArrayEncoding(type=TypeCode.UINT8)]
-        )]
+        [
+            StringArrayEncoding(
+                data_encoding=[
+                    RunLengthEncoding(src_type=TypeCode.INT32),
+                    IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+                offset_encoding=[ByteArrayEncoding(type=TypeCode.UINT8)],
+            )
+        ],
     ),
     "pdbx_aromatic_flag": ColumnInfo(
         "U1",
-        [StringArrayEncoding(
-            data_encoding=[
-                RunLengthEncoding(src_type=TypeCode.INT32),
-                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
-                ByteArrayEncoding()
-            ],
-            offset_encoding=[ByteArrayEncoding(type=TypeCode.UINT8)]
-        )]
+        [
+            StringArrayEncoding(
+                data_encoding=[
+                    RunLengthEncoding(src_type=TypeCode.INT32),
+                    IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                    ByteArrayEncoding(),
+                ],
+                offset_encoding=[ByteArrayEncoding(type=TypeCode.UINT8)],
+            )
+        ],
     ),
 }
 
@@ -282,18 +303,14 @@ def check_presence(pdbx_file, category_name, column_names):
         is_present = column_names[0] in category
         for name in column_names:
             if (name in category) != is_present:
-                raise ComponentException(
-                    "Only some column names are missing"
-                )
+                raise ComponentException("Only some column names are missing")
         if not is_present:
             return
 
         is_unmasked = category[column_names[0]].mask is None
         for name in column_names:
             if (category[name].mask is None) != is_unmasked:
-                raise ComponentException(
-                    "Only some column names are masked"
-                )
+                raise ComponentException("Only some column names are masked")
 
 
 def concatenate_blocks_into_category(pdbx_file, category_name, column_infos):
@@ -320,17 +337,12 @@ def concatenate_blocks_into_category(pdbx_file, category_name, column_infos):
     for comp_id, block in pdbx_file.items():
         try:
             if category_name not in block:
-                raise ComponentException(
-                    f"Block has no category '{category_name}'"
-                )
+                raise ComponentException(f"Block has no category '{category_name}'")
             chunk = {}
             category = block[category_name]
             for col_name, info in column_infos.items():
                 col = category.get(col_name)
-                if (
-                    col is None
-                    or (col.mask is not None and info.fill_value is None)
-                ):
+                if col is None or (col.mask is not None and info.fill_value is None):
                     # Some/all values are missing and there is no default
                     # -> Try alternative
                     if info.alternative is not None:
@@ -353,13 +365,14 @@ def concatenate_blocks_into_category(pdbx_file, category_name, column_infos):
         else:
             for col_name, data_array in chunk.items():
                 column_chunks[col_name].append(data_array)
-    return BinaryCIFCategory({
-        col_name: BinaryCIFData(
-            array=np.concatenate(col_data),
-            encoding=column_infos[col_name].encoding
-        )
-        for col_name, col_data in column_chunks.items()
-    })
+    return BinaryCIFCategory(
+        {
+            col_name: BinaryCIFData(
+                array=np.concatenate(col_data), encoding=column_infos[col_name].encoding
+            )
+            for col_name, col_data in column_chunks.items()
+        }
+    )
 
 
 def extract_component_groups(type_dict, include, exclude, file_name):
@@ -393,8 +406,8 @@ def extract_component_groups(type_dict, include, exclude, file_name):
         del type_dict[comp_id]
     # Write extracted components into output file
     logging.info(
-        f"Using the following types for '{file_name.name}':\n" +
-        ", ".join(types_for_group)
+        f"Using the following types for '{file_name.name}':\n"
+        + ", ".join(types_for_group)
     )
     with open(file_name, "w") as file:
         for comp_id in comp_ids_for_group:
@@ -412,12 +425,12 @@ def setup_ccd(target_diriectory):
 
     logging.info("Checking for consistent coordinates...")
     check_presence(
-        ccd_file, "chem_comp_atom",
-        ["model_Cartn_x", "model_Cartn_y", "model_Cartn_z"]
+        ccd_file, "chem_comp_atom", ["model_Cartn_x", "model_Cartn_y", "model_Cartn_z"]
     )
     check_presence(
-        ccd_file, "chem_comp_atom",
-        ["model_Cartn_x_ideal", "model_Cartn_y_ideal", "model_Cartn_z_ideal"]
+        ccd_file,
+        "chem_comp_atom",
+        ["model_Cartn_x_ideal", "model_Cartn_y_ideal", "model_Cartn_z_ideal"],
     )
 
     logging.info("Extracting component groups...")
@@ -426,26 +439,25 @@ def setup_ccd(target_diriectory):
         for comp_id, block in ccd_file.items()
     }
     extract_component_groups(
-        type_dict, ["peptide", "amino"], ["peptide-like"],
-        target_diriectory / "amino_acids.txt"
+        type_dict,
+        ["peptide", "amino"],
+        ["peptide-like"],
+        target_diriectory / "amino_acids.txt",
     )
     extract_component_groups(
-        type_dict, ["rna", "dna"], [],
-        target_diriectory / "nucleotides.txt"
+        type_dict, ["rna", "dna"], [], target_diriectory / "nucleotides.txt"
     )
     extract_component_groups(
-        type_dict, ["saccharide"], [],
-        target_diriectory / "carbohydrates.txt"
+        type_dict, ["saccharide"], [], target_diriectory / "carbohydrates.txt"
     )
     remaining_types = set(type_dict.values())
     logging.info(
-        "The following types are not used in any group:\n" +
-        ", ".join(remaining_types)
+        "The following types are not used in any group:\n" + ", ".join(remaining_types)
     )
 
     compressed_block = BinaryCIFBlock()
     for category_name, column_infos in [
-        ("chem_comp",      MAIN_COLUMNS),
+        ("chem_comp", MAIN_COLUMNS),
         ("chem_comp_atom", ATOM_COLUMNS),
         ("chem_comp_bond", BOND_COLUMNS),
     ]:
@@ -459,5 +471,7 @@ def setup_ccd(target_diriectory):
     compressed_file["components"] = compressed_block
     compressed_file.write(target_diriectory / "components.bcif")
 
+
 from pathlib import Path
+
 setup_ccd(Path(__file__).parent / "src" / "biotite" / "structure" / "info" / "ccd")

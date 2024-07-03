@@ -6,16 +6,14 @@ import itertools
 from os.path import join
 from tempfile import gettempdir
 import pytest
-from biotite.application.sra import FastqDumpApp, FastaDumpApp
-from biotite.sequence.io.fastq import FastqFile
+from biotite.application.sra import FastaDumpApp, FastqDumpApp
 from biotite.sequence.io.fasta import FastaFile
+from biotite.sequence.io.fastq import FastqFile
 
 
 @pytest.mark.parametrize(
-    "app_class, custom_prefix", itertools.product(
-        [FastqDumpApp, FastaDumpApp],
-        [False, True]
-    )
+    "app_class, custom_prefix",
+    itertools.product([FastqDumpApp, FastaDumpApp], [False, True]),
 )
 def test_objects(app_class, custom_prefix):
     """
@@ -45,10 +43,8 @@ def test_objects(app_class, custom_prefix):
 
 
 @pytest.mark.parametrize(
-    "app_class, custom_prefix", itertools.product(
-        [FastqDumpApp, FastaDumpApp],
-        [False, True]
-    )
+    "app_class, custom_prefix",
+    itertools.product([FastqDumpApp, FastaDumpApp], [False, True]),
 )
 def test_classmethod(app_class, custom_prefix):
     """

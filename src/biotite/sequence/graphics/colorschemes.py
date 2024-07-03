@@ -6,11 +6,10 @@ __name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_color_scheme", "list_color_scheme_names", "load_color_scheme"]
 
-import numpy as np
-import json
-from os.path import join, dirname, realpath
 import glob
+import json
 import os
+from os.path import dirname, join, realpath
 from ..alphabet import Alphabet
 
 
@@ -26,13 +25,13 @@ def load_color_scheme(file_name):
     ----------
     file_name : str
         The file name of the JSON file containing the scheme.
-    
+
     Returns
     -------
     scheme : dict
         A dictionary representing the color scheme, It contains the
         following keys, if the input file is proper:
-        
+
            - **name** - Name of the scheme.
            - **alphabet** - :class:`Alphabet` instance describing the
              type of sequence the scheme can be used for.
@@ -71,7 +70,7 @@ def get_color_scheme(name, alphabet, default="#FFFFFF"):
     default : str or tuple, optional
         A *Matplotlib* compatible color that is used for symbols that
         have no defined color in the scheme.
-    
+
     Returns
     -------
     colors : list
@@ -99,11 +98,10 @@ def get_color_scheme(name, alphabet, default="#FFFFFF"):
         if scheme["name"] == name and scheme["alphabet"].extends(alphabet):
             colors = scheme["colors"]
             # Replace None values with default color
-            colors = [color if color is not None else default
-                      for color in colors]
+            colors = [color if color is not None else default for color in colors]
             # Only return colors that are in scope of this alphabet
             # and not the extended alphabet
-            return colors[:len(alphabet)]
+            return colors[: len(alphabet)]
     raise ValueError(f"Unkown scheme '{name}' for given alphabet")
 
 
@@ -117,7 +115,7 @@ def list_color_scheme_names(alphabet):
         The alphbet to get the color scheme names for.
         The alphabet of the scheme must equal or extend this parameter,
         to be included in the list.
-    
+
     Returns
     -------
     schemes : list of str

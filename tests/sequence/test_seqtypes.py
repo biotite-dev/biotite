@@ -2,9 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import biotite.sequence as seq
-import numpy as np
 import pytest
+import biotite.sequence as seq
 
 
 def test_nucleotide_construction():
@@ -23,26 +22,31 @@ def test_reverse_complement():
     dna = seq.NucleotideSequence(string)
     assert str(dna.reverse().complement()) == "RNTAACGCATT"
 
+
 def test_stop_removal():
     string = "LYG*GR*"
     protein = seq.ProteinSequence(string)
     assert str(protein.remove_stops()) == string.replace("*", "")
 
 
-@pytest.mark.parametrize("dna_str, protein_str",
-                         [("CACATAGCATGA", "HIA*"),
-                          ("ATGTAGCTA", "M*L")])
+@pytest.mark.parametrize(
+    "dna_str, protein_str", [("CACATAGCATGA", "HIA*"), ("ATGTAGCTA", "M*L")]
+)
 def test_full_translation(dna_str, protein_str):
     dna = seq.NucleotideSequence(dna_str)
     protein = dna.translate(complete=True)
     assert protein_str == str(protein)
 
 
-@pytest.mark.parametrize("dna_str, protein_str_list",
-                         [("CA", []),
-                          ("GAATGCACTGAGATGCAATAG", ["MH*","MQ*"]),
-                          ("ATGCACATGTAGGG", ["MHM*","M*"]),
-                          ("GATGCATGTGAAAA", ["MHVK","M*"])])
+@pytest.mark.parametrize(
+    "dna_str, protein_str_list",
+    [
+        ("CA", []),
+        ("GAATGCACTGAGATGCAATAG", ["MH*", "MQ*"]),
+        ("ATGCACATGTAGGG", ["MHM*", "M*"]),
+        ("GATGCATGTGAAAA", ["MHVK", "M*"]),
+    ],
+)
 def test_frame_translation(dna_str, protein_str_list):
     dna = seq.NucleotideSequence(dna_str)
     proteins, pos = dna.translate(complete=False)
@@ -50,8 +54,8 @@ def test_frame_translation(dna_str, protein_str_list):
     assert set([str(protein) for protein in proteins]) == set(protein_str_list)
     # Test if the positions are also right
     # -> Get sequence slice and translate completely
-    assert set([str(dna[start : stop].translate(complete=True))
-                for start, stop in pos]
+    assert set(
+        [str(dna[start:stop].translate(complete=True)) for start, stop in pos]
     ) == set(protein_str_list)
 
 
@@ -76,7 +80,7 @@ def test_letter_conversion():
 @pytest.mark.parametrize(
     "monoisotopic, expected_mol_weight_protein",
     # Reference values taken from https://web.expasy.org/compute_pi/
-    [(True, 2231.06), (False, 2232.56)]
+    [(True, 2231.06), (False, 2232.56)],
 )
 def test_get_molecular_weight(monoisotopic, expected_mol_weight_protein):
     """
@@ -84,8 +88,5 @@ def test_get_molecular_weight(monoisotopic, expected_mol_weight_protein):
     correctly.
     """
     protein = seq.ProteinSequence("ACDEFGHIKLMNPQRSTVW")
-    mol_weight_protein = protein.get_molecular_weight(
-        monoisotopic=monoisotopic)
-    assert mol_weight_protein == \
-           pytest.approx(expected_mol_weight_protein, abs=1e-2)
-
+    mol_weight_protein = protein.get_molecular_weight(monoisotopic=monoisotopic)
+    assert mol_weight_protein == pytest.approx(expected_mol_weight_protein, abs=1e-2)

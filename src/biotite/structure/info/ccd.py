@@ -9,7 +9,6 @@ __all__ = ["get_ccd", "get_from_ccd"]
 from pathlib import Path
 import numpy as np
 
-
 CCD_DIR = Path(__file__).parent / "ccd"
 INDEX_COLUMN_NAME = {
     "chem_comp": "id",
@@ -104,7 +103,7 @@ def _index_residues(id_column):
     # The final start is the exclusive stop of last residue
     residue_starts = np.concatenate(([0], residue_starts, [len(id_column)]))
     index = {}
-    for i in range(len(residue_starts)-1):
+    for i in range(len(residue_starts) - 1):
         comp_id = id_column[residue_starts[i]].item()
-        index[comp_id] = (residue_starts[i], residue_starts[i+1])
+        index[comp_id] = (residue_starts[i], residue_starts[i + 1])
     return index

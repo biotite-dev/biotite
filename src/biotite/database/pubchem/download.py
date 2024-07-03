@@ -6,24 +6,29 @@ __name__ = "biotite.database.pubchem"
 __author__ = "Patrick Kunzmann"
 __all__ = ["fetch", "fetch_property"]
 
-import numbers
-import requests
-from os.path import isdir, isfile, join, getsize
-import os
 import io
-import numpy as np
-from .throttle import ThrottleStatus
-from .error import parse_error_details
+import numbers
+import os
+from os.path import getsize, isdir, isfile, join
+import requests
 from ..error import RequestError
-
+from .error import parse_error_details
+from .throttle import ThrottleStatus
 
 _base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
 _binary_formats = ["png", "asnb"]
 
 
-def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
-          overwrite=False, verbose=False,
-          throttle_threshold=0.5, return_throttle_status=False):
+def fetch(
+    cids,
+    format="sdf",
+    target_path=None,
+    as_structural_formula=False,
+    overwrite=False,
+    verbose=False,
+    throttle_threshold=0.5,
+    return_throttle_status=False,
+):
     """
     Download structure files from *PubChem* in various formats.
 
@@ -109,8 +114,7 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
             raise TypeError("CIDs must be given as integers, not as string")
         # Verbose output
         if verbose:
-            print(f"Fetching file {i+1:d} / {len(cids):d} ({cid})...",
-                  end="\r")
+            print(f"Fetching file {i+1:d} / {len(cids):d} ({cid})...", end="\r")
 
         # Fetch file from database
         if target_path is not None:
@@ -119,36 +123,33 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
             # 'file = None' -> store content in a file-like object
             file = None
 
-        if file is None \
-           or not isfile(file) \
-           or getsize(file) == 0 \
-           or overwrite:
-                record_type = "2d" if as_structural_formula else "3d"
-                r = requests.get(
-                    _base_url + f"compound/cid/{cid}/{format.upper()}",
-                    params={"record_type": record_type}
-                )
-                if not r.ok:
-                    raise RequestError(parse_error_details(r.text))
+        if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
+            record_type = "2d" if as_structural_formula else "3d"
+            r = requests.get(
+                _base_url + f"compound/cid/{cid}/{format.upper()}",
+                params={"record_type": record_type},
+            )
+            if not r.ok:
+                raise RequestError(parse_error_details(r.text))
 
-                if format.lower() in _binary_formats:
-                    content = r.content
+            if format.lower() in _binary_formats:
+                content = r.content
+            else:
+                content = r.text
+
+            if file is None:
+                if format in _binary_formats:
+                    file = io.BytesIO(content)
                 else:
-                    content = r.text
+                    file = io.StringIO(content)
+            else:
+                mode = "wb+" if format in _binary_formats else "w+"
+                with open(file, mode) as f:
+                    f.write(content)
 
-                if file is None:
-                    if format in _binary_formats:
-                        file = io.BytesIO(content)
-                    else:
-                        file = io.StringIO(content)
-                else:
-                    mode = "wb+" if format in _binary_formats else "w+"
-                    with open(file, mode) as f:
-                        f.write(content)
-
-                throttle_status = ThrottleStatus.from_response(r)
-                if throttle_threshold is not None:
-                    throttle_status.wait_if_busy(throttle_threshold)
+            throttle_status = ThrottleStatus.from_response(r)
+            if throttle_threshold is not None:
+                throttle_status.wait_if_busy(throttle_threshold)
 
         files.append(file)
     if verbose:
@@ -164,8 +165,7 @@ def fetch(cids, format="sdf", target_path=None, as_structural_formula=False,
         return return_value
 
 
-def fetch_property(cids, name,
-                   throttle_threshold=0.5, return_throttle_status=False):
+def fetch_property(cids, name, throttle_threshold=0.5, return_throttle_status=False):
     """
     Download the given property for the given CID(s).
 
@@ -230,15 +230,13 @@ def fetch_property(cids, name,
 
     # Property names may only contain letters and numbers
     if not name.isalnum():
-        raise ValueError(
-            f"Property '{name}' contains invalid characters"
-        )
+        raise ValueError(f"Property '{name}' contains invalid characters")
 
     # Use TXT format instead of CSV to avoid issues with ',' characters
     # within table elements
     r = requests.post(
         _base_url + f"compound/cid/property/{name}/TXT",
-        data={"cid": ','.join([str(cid) for cid in cids])}
+        data={"cid": ",".join([str(cid) for cid in cids])},
     )
     if not r.ok:
         raise RequestError(parse_error_details(r.text))

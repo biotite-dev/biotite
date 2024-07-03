@@ -9,8 +9,14 @@ subpackages.
 
 __name__ = "biotite.structure.io.pdb"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_model_count", "get_structure", "set_structure",
-           "list_assemblies", "get_assembly", "get_symmetry_mates"]
+__all__ = [
+    "get_model_count",
+    "get_structure",
+    "set_structure",
+    "list_assemblies",
+    "get_assembly",
+    "get_symmetry_mates",
+]
 
 
 def get_model_count(pdb_file):
@@ -30,8 +36,9 @@ def get_model_count(pdb_file):
     return pdb_file.get_model_count()
 
 
-def get_structure(pdb_file, model=None, altloc="first", extra_fields=[],
-                  include_bonds=False):
+def get_structure(
+    pdb_file, model=None, altloc="first", extra_fields=[], include_bonds=False
+):
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from a
     :class:`PDBFile`.
@@ -39,7 +46,7 @@ def get_structure(pdb_file, model=None, altloc="first", extra_fields=[],
     This function is a thin wrapper around the :class:`PDBFile` method
     :func:`get_structure()` for the sake of consistency with other
     ``structure.io`` subpackages.
-    
+
     Parameters
     ----------
     pdb_file : PDBFile
@@ -77,12 +84,12 @@ def get_structure(pdb_file, model=None, altloc="first", extra_fields=[],
         (e.g. especially inter-residue bonds),
         have :attr:`BondType.ANY`, since the PDB format itself does
         not support bond orders.
-        
+
     Returns
     -------
     array : AtomArray or AtomArrayStack
         The return type depends on the `model` parameter.
-    
+
     """
     return pdb_file.get_structure(model, altloc, extra_fields, include_bonds)
 
@@ -95,11 +102,11 @@ def set_structure(pdb_file, array, hybrid36=False):
     This function is a thin wrapper around the :class:`PDBFile` method
     :func:`set_structure()` for the sake of consistency with other
     ``structure.io`` subpackages.
-    
+
     This will save the coordinates, the mandatory annotation categories
     and the optional annotation categories
     'atom_id', 'b_factor', 'occupancy' and 'charge'.
-    
+
     Parameters
     ----------
     pdb_file : PDBFile
@@ -137,7 +144,7 @@ def list_assemblies(pdb_file):
     -------
     assemblies : list of str
         A list that contains the available assembly IDs.
-    
+
     Examples
     --------
     >>> import os.path
@@ -148,8 +155,14 @@ def list_assemblies(pdb_file):
     return pdb_file.list_assemblies()
 
 
-def get_assembly(pdb_file, assembly_id=None, model=None, altloc="first",
-                 extra_fields=[], include_bonds=False):
+def get_assembly(
+    pdb_file,
+    assembly_id=None,
+    model=None,
+    altloc="first",
+    extra_fields=[],
+    include_bonds=False,
+):
     """
     Build the given biological assembly.
 
@@ -205,7 +218,7 @@ def get_assembly(pdb_file, assembly_id=None, model=None, altloc="first",
     assembly : AtomArray or AtomArrayStack
         The assembly.
         The return type depends on the `model` parameter.
-    
+
     Examples
     --------
 
@@ -218,8 +231,9 @@ def get_assembly(pdb_file, assembly_id=None, model=None, altloc="first",
     )
 
 
-def get_symmetry_mates(pdb_file, model=None, altloc="first",
-                        extra_fields=[], include_bonds=False):
+def get_symmetry_mates(
+    pdb_file, model=None, altloc="first", extra_fields=[], include_bonds=False
+):
     """
     Build a structure model containing all symmetric copies
     of the structure within a single unit cell, given by the space
@@ -274,13 +288,13 @@ def get_symmetry_mates(pdb_file, model=None, altloc="first",
     symmetry_mates : AtomArray or AtomArrayStack
         All atoms within a single unit cell.
         The return type depends on the `model` parameter.
-    
+
     Notes
     -----
     To expand the structure beyond a single unit cell, use
     :func:`repeat_box()` with the return value as its
     input.
-    
+
     Examples
     --------
 
@@ -288,6 +302,4 @@ def get_symmetry_mates(pdb_file, model=None, altloc="first",
     >>> file = PDBFile.read(os.path.join(path_to_structures, "1aki.pdb"))
     >>> atoms_in_unit_cell = get_symmetry_mates(file, model=1)
     """
-    return pdb_file.get_symmetry_mates(
-        model, altloc, extra_fields, include_bonds
-    )
+    return pdb_file.get_symmetry_mates(model, altloc, extra_fields, include_bonds)

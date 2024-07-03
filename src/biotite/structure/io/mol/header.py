@@ -6,16 +6,15 @@ __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Header"]
 
-import warnings
 import datetime
+import warnings
 from dataclasses import dataclass
-
 
 _DATE_FORMAT = "%m%d%y%H%M"
 
 
 @dataclass
-class Header():
+class Header:
     """
     The header for connection tables.
 
@@ -70,20 +69,25 @@ class Header():
             try:
                 time = datetime.datetime.strptime(time_string, _DATE_FORMAT)
             except ValueError:
-                warnings.warn(
-                    f"Invalid time format '{time_string}' in file header"
-                )
+                warnings.warn(f"Invalid time format '{time_string}' in file header")
                 time = None
         dimensions = lines[1][20:22].strip()
         scaling_factors = lines[1][22:34].strip()
-        energy  = lines[1][34:46].strip()
+        energy = lines[1][34:46].strip()
         registry_number = lines[1][46:52].strip()
 
         comments = lines[2].strip()
 
         return Header(
-            mol_name, initials, program, time, dimensions,
-            scaling_factors, energy, registry_number, comments
+            mol_name,
+            initials,
+            program,
+            time,
+            dimensions,
+            scaling_factors,
+            energy,
+            registry_number,
+            comments,
         )
 
     def serialize(self):

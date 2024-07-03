@@ -12,7 +12,7 @@ modules.
 __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
 
-from .file import *
 from .copyable import *
-from .visualize import *
+from .file import *
 from .version import __version__, __version_tuple__
+from .visualize import *

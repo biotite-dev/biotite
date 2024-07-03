@@ -2,11 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join, dirname, realpath
-import urllib.error
-import urllib.request
 import importlib
 import shutil
+import urllib.error
+import urllib.request
+from os.path import dirname, join, realpath
 
 
 def data_dir(subdir):
@@ -16,6 +16,8 @@ def data_dir(subdir):
 ### Functions for conditional test skips ###
 
 tested_urls = {}
+
+
 def cannot_connect_to(url):
     if url not in tested_urls:
         try:
@@ -25,8 +27,10 @@ def cannot_connect_to(url):
             tested_urls[url] = True
     return tested_urls[url]
 
+
 def cannot_import(module):
     return importlib.util.find_spec(module) is None
+
 
 def is_not_installed(program):
     return shutil.which(program) is None

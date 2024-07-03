@@ -19,10 +19,11 @@ from ..util import data_dir
 
 def list_v2000_sdf_files():
     return [
-        path for path
-        in glob.glob(join(data_dir("structure"), "molecules", "*.sdf"))
-        if not "v3000" in path
+        path
+        for path in glob.glob(join(data_dir("structure"), "molecules", "*.sdf"))
+        if "v3000" not in path
     ]
+
 
 def list_v3000_sdf_files():
     return glob.glob(join(data_dir("structure"), "molecules", "*v3000.sdf"))
@@ -79,11 +80,12 @@ def test_header_conversion():
         list_v2000_sdf_files(),
         ["V2000", "V3000"],
         [False, True],
-        [False, True]
-    )
+        [False, True],
+    ),
 )
-def test_structure_conversion(FileClass, path, version, omit_charge,
-                              use_charge_property):
+def test_structure_conversion(
+    FileClass, path, version, omit_charge, use_charge_property
+):
     """
     After reading a file, writing the structure back to a new file
     and reading it again should give the same structure.
@@ -123,9 +125,10 @@ def test_structure_conversion(FileClass, path, version, omit_charge,
 @pytest.mark.parametrize(
     "path",
     [
-        file for file in list_v2000_sdf_files() + list_v3000_sdf_files()
+        file
+        for file in list_v2000_sdf_files() + list_v3000_sdf_files()
         if file.split(".")[0] + ".cif" in list_cif_files()
-    ]
+    ],
 )
 def test_pdbx_consistency(path):
     """
@@ -145,20 +148,17 @@ def test_pdbx_consistency(path):
     test_atoms = mol.get_structure(sdf_file)
 
     assert test_atoms.coord.shape == ref_atoms.coord.shape
-    assert test_atoms.coord.flatten().tolist() \
-        == ref_atoms.coord.flatten().tolist()
+    assert test_atoms.coord.flatten().tolist() == ref_atoms.coord.flatten().tolist()
     assert test_atoms.element.tolist() == ref_atoms.element.tolist()
     assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
-    assert set(tuple(bond) for bond in test_atoms.bonds.as_array()) \
-        == set(tuple(bond) for bond in  ref_atoms.bonds.as_array())
+    assert set(tuple(bond) for bond in test_atoms.bonds.as_array()) == set(
+        tuple(bond) for bond in ref_atoms.bonds.as_array()
+    )
 
 
 @pytest.mark.parametrize(
     "v2000_path, v3000_path",
-    zip(
-        sorted(list_v2000_sdf_files()),
-        sorted(list_v3000_sdf_files())
-    )
+    zip(sorted(list_v2000_sdf_files()), sorted(list_v3000_sdf_files())),
 )
 def test_version_consistency(v2000_path, v3000_path):
     """
@@ -198,10 +198,7 @@ def test_multi_record_files():
 
     temp.seek(0)
     sdf_file = mol.SDFile.read(temp)
-    test_atom_arrays = [
-        sdf_file[res_name].get_structure()
-        for res_name in RES_NAMES
-    ]
+    test_atom_arrays = [sdf_file[res_name].get_structure() for res_name in RES_NAMES]
 
     assert test_atom_arrays == ref_atom_arrays
 
@@ -210,9 +207,7 @@ def test_metadata_parsing():
     """
     Check if metadata is parsed correctly based on a known example.
     """
-    sdf_file = mol.SDFile.read(
-        join(data_dir("structure"), "molecules", "13136.sdf")
-    )
+    sdf_file = mol.SDFile.read(join(data_dir("structure"), "molecules", "13136.sdf"))
     metadata = sdf_file.record.metadata
 
     assert metadata["PUBCHEM_COMPOUND_CID"] == "13136"
@@ -224,10 +219,7 @@ def test_metadata_conversion():
     """
     Writing metadata and reading it again should give the same data.
     """
-    ref_metadata = {
-        "test_1": "value 1",
-        "test_2": "value 2\nvalue 3"
-    }
+    ref_metadata = {"test_1": "value 1", "test_2": "value 2\nvalue 3"}
 
     record = mol.SDRecord(metadata=ref_metadata)
     sdf_file = mol.SDFile({"Molecule": record})
@@ -236,9 +228,7 @@ def test_metadata_conversion():
 
     temp.seek(0)
     sdf_file = mol.SDFile.read(temp)
-    test_metadata = {
-        key.name: val for key, val in sdf_file.record.metadata.items()
-    }
+    test_metadata = {key.name: val for key, val in sdf_file.record.metadata.items()}
     temp.close()
 
     assert test_metadata == ref_metadata
@@ -248,18 +238,10 @@ def test_metadata_conversion():
     "key_string, ref_key_attributes",
     [
         # Cases from Dalby1992
-        (
-            "> <MELTING.POINT>",
-            (None, "MELTING.POINT", None, None)
-        ),
-        (
-            "> 55 (MD-08974) <BOILING.POINT> DT12",
-            (12, "BOILING.POINT", 55, "MD-08974")
-        ),
-        (
-            "> DT12 55", (12, None, 55, None)
-        ),
-    ]
+        ("> <MELTING.POINT>", (None, "MELTING.POINT", None, None)),
+        ("> 55 (MD-08974) <BOILING.POINT> DT12", (12, "BOILING.POINT", 55, "MD-08974")),
+        ("> DT12 55", (12, None, 55, None)),
+    ],
 )
 def test_metadata_key_parsing(key_string, ref_key_attributes):
     """
@@ -270,7 +252,7 @@ def test_metadata_key_parsing(key_string, ref_key_attributes):
         number=number,
         name=name,
         registry_internal=registry_internal,
-        registry_external=registry_external
+        registry_external=registry_external,
     )
 
     test_key = mol.Metadata.Key.deserialize(key_string)
@@ -292,7 +274,7 @@ def test_structure_bond_type_fallback(path):
     # the default bond type
     ref_atoms.bonds.add_bond(0, 1, BondType.QUADRUPLE)
     updated_bond = ref_atoms.bonds.as_array()[
-        np.all(ref_atoms.bonds.as_array()[:,[0,1]] == [0,1], axis=1)
+        np.all(ref_atoms.bonds.as_array()[:, [0, 1]] == [0, 1], axis=1)
     ]
     assert updated_bond.tolist()[0][2] == BondType.QUADRUPLE
     test_mol_file = mol.MOLFile()
@@ -300,21 +282,16 @@ def test_structure_bond_type_fallback(path):
     # Test bond type fallback to BondType.ANY value (8) in
     # MolFile.set_structure during mol_file.lines formatting
     updated_line = [
-        mol_line
-        for mol_line in test_mol_file.lines if mol_line.startswith('  1  2  ')
+        mol_line for mol_line in test_mol_file.lines if mol_line.startswith("  1  2  ")
     ].pop()
-    assert int(updated_line[8]) == \
-        BOND_TYPE_MAPPING_REV[BondType.ANY]
+    assert int(updated_line[8]) == BOND_TYPE_MAPPING_REV[BondType.ANY]
     # Test bond type fallback to BondType.SINGLE value (1) in
     # MolFile.set_structure during mol_file.lines formatting
-    mol.set_structure(test_mol_file, ref_atoms,
-                      default_bond_type=BondType.SINGLE)
+    mol.set_structure(test_mol_file, ref_atoms, default_bond_type=BondType.SINGLE)
     updated_line = [
-        mol_line
-        for mol_line in test_mol_file.lines if mol_line.startswith('  1  2  ')
+        mol_line for mol_line in test_mol_file.lines if mol_line.startswith("  1  2  ")
     ].pop()
-    assert int(updated_line[8]) == \
-        BOND_TYPE_MAPPING_REV[BondType.SINGLE]
+    assert int(updated_line[8]) == BOND_TYPE_MAPPING_REV[BondType.SINGLE]
 
 
 @pytest.mark.parametrize("atom_type", ["", " ", "A ", " A"])

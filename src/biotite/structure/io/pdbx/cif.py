@@ -10,10 +10,14 @@ import itertools
 import shlex
 from collections.abc import MutableMapping, Sequence
 import numpy as np
-from .component import _Component, MaskValue
-from ....file import File, is_open_compatible, is_text, DeserializationError, \
-                     SerializationError
-
+from ....file import (
+    DeserializationError,
+    File,
+    SerializationError,
+    is_open_compatible,
+    is_text,
+)
+from .component import MaskValue, _Component
 
 UNICODE_CHAR_SIZE = 4
 
@@ -133,9 +137,7 @@ class CIFColumn:
         if not isinstance(data, CIFData):
             data = CIFData(data, str)
         if mask is None:
-            mask = np.full(
-                len(data), MaskValue.PRESENT, dtype=np.uint8
-            )
+            mask = np.full(len(data), MaskValue.PRESENT, dtype=np.uint8)
             mask[data.array == "."] = MaskValue.INAPPLICABLE
             mask[data.array == "?"] = MaskValue.MISSING
             if np.all(mask == MaskValue.PRESENT):
@@ -148,8 +150,7 @@ class CIFColumn:
                 mask = CIFData(mask, np.uint8)
             if len(mask) != len(data):
                 raise IndexError(
-                    f"Data has length {len(data)}, "
-                    f"but mask has length {len(mask)}"
+                    f"Data has length {len(data)}, " f"but mask has length {len(mask)}"
                 )
         self._data = data
         self._mask = mask
@@ -222,9 +223,7 @@ class CIFColumn:
         elif np.issubdtype(dtype, np.str_):
             # Limit float precision to 3 decimals
             if np.issubdtype(self._data.array.dtype, np.floating):
-                array = np.array(
-                    [f"{e:.3f}" for e in self._data.array], type=dtype
-                )
+                array = np.array([f"{e:.3f}" for e in self._data.array], type=dtype)
             else:
                 # Copy, as otherwise original data would be overwritten
                 # with mask values
@@ -247,9 +246,7 @@ class CIFColumn:
                 array = np.full(len(self._data), masked_value, dtype=dtype)
 
             present_mask = self._mask.array == MaskValue.PRESENT
-            array[present_mask] = (
-                self._data.array[present_mask].astype(dtype)
-            )
+            array[present_mask] = self._data.array[present_mask].astype(dtype)
             return array
 
     def __len__(self):
@@ -361,9 +358,7 @@ class CIFCategory(_Component, MutableMapping):
 
     @staticmethod
     def deserialize(text, expect_whitespace=True):
-        lines = [
-            line.strip() for line in text.splitlines() if not _is_empty(line)
-        ]
+        lines = [line.strip() for line in text.splitlines() if not _is_empty(line)]
 
         if _is_loop_start(lines[0]):
             is_looped = True
@@ -373,15 +368,11 @@ class CIFCategory(_Component, MutableMapping):
 
         category_name = _parse_category_name(lines[0])
         if category_name is None:
-            raise DeserializationError(
-                "Failed to parse category name"
-            )
+            raise DeserializationError("Failed to parse category name")
 
         lines = _to_single(lines, is_looped)
         if is_looped:
-            category_dict = CIFCategory._deserialize_looped(
-                lines, expect_whitespace
-            )
+            category_dict = CIFCategory._deserialize_looped(lines, expect_whitespace)
         else:
             category_dict = CIFCategory._deserialize_single(lines)
         return CIFCategory(category_dict, category_name)
@@ -511,27 +502,21 @@ class CIFCategory(_Component, MutableMapping):
         ]
 
     def _serialize_looped(self):
-        key_lines = [
-            "_" + self._name + "." + key + " "
-            for key in self.keys()
-        ]
+        key_lines = ["_" + self._name + "." + key + " " for key in self.keys()]
 
         column_arrays = []
         for column in self.values():
             array = column.as_array(str)
             # Quote before measuring the number of chars,
             # as the quote characters modify the length
-            array = np.array(
-                [_multiline(_quote(element)) for element in array]
-            )
+            array = np.array([_multiline(_quote(element)) for element in array])
             column_arrays.append(array)
 
         # Number of characters the longest string in the column needs
         # This can be deduced from the dtype
         # The "+1" is for the small whitespace column
         column_n_chars = [
-            array.dtype.itemsize // UNICODE_CHAR_SIZE + 1
-            for array in column_arrays
+            array.dtype.itemsize // UNICODE_CHAR_SIZE + 1 for array in column_arrays
         ]
         value_lines = [""] * self._row_count
         for i in range(self._row_count):
@@ -615,15 +600,11 @@ class CIFBlock(_Component, MutableMapping):
                     if is_loop_in_line:
                         # In case of lines with "loop_" the category is
                         # in the next line
-                        category_name_in_line = _parse_category_name(
-                            lines[i + 1]
-                        )
+                        category_name_in_line = _parse_category_name(lines[i + 1])
                     current_category_name = category_name_in_line
                     category_starts.append(i)
                     category_names.append(current_category_name)
-        return CIFBlock(_create_element_dict(
-            lines, category_names, category_starts
-        ))
+        return CIFBlock(_create_element_dict(lines, category_names, category_starts))
 
     def serialize(self):
         text_blocks = []
@@ -659,9 +640,7 @@ class CIFBlock(_Component, MutableMapping):
                     expect_whitespace = True
                 category = CIFCategory.deserialize(category, expect_whitespace)
             except:
-                raise DeserializationError(
-                    f"Failed to deserialize category '{key}'"
-                )
+                raise DeserializationError(f"Failed to deserialize category '{key}'")
             # Update with deserialized object
             self._categories[key] = category
         return category
@@ -870,18 +849,14 @@ class CIFFile(_Component, File, MutableMapping):
             try:
                 block = CIFBlock.deserialize(block)
             except:
-                raise DeserializationError(
-                    f"Failed to deserialize block '{key}'"
-                )
+                raise DeserializationError(f"Failed to deserialize block '{key}'")
             # Update with deserialized object
             self._blocks[key] = block
         return block
 
     def __setitem__(self, key, block):
         if not isinstance(block, CIFBlock):
-            raise TypeError(
-                f"Expected 'CIFBlock', but got '{type(block).__name__}'"
-            )
+            raise TypeError(f"Expected 'CIFBlock', but got '{type(block).__name__}'")
         self._blocks[key] = block
 
     def __delitem__(self, key):
@@ -919,7 +894,7 @@ def _create_element_dict(lines, element_names, element_starts):
     # Lazy deserialization
     # -> keep as text for now and deserialize later if needed
     return {
-        element_name: "\n".join(lines[element_starts[i] : element_starts[i+1]])
+        element_name: "\n".join(lines[element_starts[i] : element_starts[i + 1]])
         for i, element_name in enumerate(element_names)
     }
 

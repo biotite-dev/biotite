@@ -9,20 +9,25 @@ that can be applied on structures.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann", "Claude J. Rogers"
-__all__ = ["translate", "rotate", "rotate_centered", "rotate_about_axis",
-           "orient_principal_components", "align_vectors"]
+__all__ = [
+    "translate",
+    "rotate",
+    "rotate_centered",
+    "rotate_about_axis",
+    "orient_principal_components",
+    "align_vectors",
+]
 
 import numpy as np
-from .geometry import centroid
-from .error import BadStructureError
 from .atoms import Atom, AtomArray, AtomArrayStack, coord
-from .util import norm_vector, vector_dot, matrix_rotate
+from .geometry import centroid
+from .util import matrix_rotate, norm_vector, vector_dot
 
 
 def translate(atoms, vector):
     """
     Translate the given atoms or coordinates by a given vector.
-    
+
     Parameters
     ----------
     atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
@@ -30,7 +35,7 @@ def translate(atoms, vector):
         The coordinates can be directly provided as :class:`ndarray`.
     vector: array-like, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The translation vector :math:`(x, y, z)`.
-    
+
     Returns
     -------
     transformed : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
@@ -39,7 +44,7 @@ def translate(atoms, vector):
     """
     positions = coord(atoms).copy()
     vector = np.asarray(vector)
-    
+
     if vector.shape[-1] != 3:
         raise ValueError("Translation vector must contain 3 coordinates")
     positions += vector
@@ -50,10 +55,10 @@ def rotate(atoms, angles):
     """
     Rotate the given atoms or coordinates about the *x*, *y* and *z*
     axes by given angles.
-    
+
     The rotations are centered at the origin and are performed
     sequentially in the order *x*, *y*, *z*.
-    
+
     Parameters
     ----------
     atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
@@ -61,13 +66,13 @@ def rotate(atoms, angles):
         The coordinates can be directly provided as :class:`ndarray`.
     angles: array-like, length=3
         The rotation angles in radians around *x*, *y* and *z*.
-    
+
     Returns
     -------
     transformed : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         A copy of the input atoms or coordinates, rotated by the given
         angles.
-        
+
     See Also
     --------
     rotate_centered
@@ -82,27 +87,39 @@ def rotate(atoms, angles):
     >>> print(rotated)
     [1.225e-16 2.000e+00 0.000e+00]
     """
-    from numpy import sin, cos
+    from numpy import cos, sin
 
     # Check if "angles" contains 3 angles for all dimensions
     if len(angles) != 3:
         raise ValueError("Translation vector must be container of length 3")
     # Create rotation matrices for all 3 dimensions
-    rot_x = np.array([[ 1,               0,               0               ],
-                      [ 0,               cos(angles[0]),  -sin(angles[0]) ],
-                      [ 0,               sin(angles[0]),  cos(angles[0])  ]])
-    
-    rot_y = np.array([[ cos(angles[1]),  0,               sin(angles[1])  ],
-                      [ 0,               1,               0               ],
-                      [ -sin(angles[1]), 0,               cos(angles[1])  ]])
-    
-    rot_z = np.array([[ cos(angles[2]),  -sin(angles[2]), 0               ],
-                      [ sin(angles[2]),  cos(angles[2]),  0               ],
-                      [ 0,               0,               1               ]])
-    
+    rot_x = np.array(
+        [
+            [1, 0, 0],
+            [0, cos(angles[0]), -sin(angles[0])],
+            [0, sin(angles[0]), cos(angles[0])],
+        ]
+    )
+
+    rot_y = np.array(
+        [
+            [cos(angles[1]), 0, sin(angles[1])],
+            [0, 1, 0],
+            [-sin(angles[1]), 0, cos(angles[1])],
+        ]
+    )
+
+    rot_z = np.array(
+        [
+            [cos(angles[2]), -sin(angles[2]), 0],
+            [sin(angles[2]), cos(angles[2]), 0],
+            [0, 0, 1],
+        ]
+    )
+
     positions = coord(atoms).copy()
     positions = matrix_rotate(positions, rot_z @ rot_y @ rot_x)
-    
+
     return _put_back(atoms, positions)
 
 
@@ -110,10 +127,10 @@ def rotate_centered(atoms, angles):
     """
     Rotate the given atoms or coordinates about the *x*, *y* and *z*
     axes by given angles.
-    
+
     The rotations are centered at the centroid of the corresponding
     structure and are performed sequentially in the order *x*, *y*, *z*.
-    
+
     Parameters
     ----------
     atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
@@ -121,13 +138,13 @@ def rotate_centered(atoms, angles):
         The coordinates can be directly provided as :class:`ndarray`.
     angles: array-like, length=3
         The rotation angles in radians around axes *x*, *y* and *z*.
-    
+
     Returns
     -------
     transformed : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         A copy of the input atoms or coordinates, rotated by the given
         angles.
-        
+
     See Also
     --------
     rotate
@@ -136,7 +153,7 @@ def rotate_centered(atoms, angles):
     if len(coord(atoms).shape) == 1:
         # Single value -> centered rotation does not change coordinates
         return atoms.copy()
-    
+
     # Rotation around centroid requires moving centroid to origin
     center = coord(centroid(atoms))
     # 'centroid()' removes the second last dimesion
@@ -152,7 +169,7 @@ def rotate_about_axis(atoms, axis, angle, support=None):
     """
     Rotate the given atoms or coordinates about a given axis by a given
     angle.
-    
+
     Parameters
     ----------
     atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
@@ -167,13 +184,13 @@ def rotate_about_axis(atoms, axis, angle, support=None):
         An optional support vector for the rotation axis, i.e. the
         center of the rotation.
         By default, the center of the rotation is at *(0,0,0)*.
-    
+
     Returns
     -------
     transformed : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         A copy of the input atoms or coordinates, rotated about the
         given axis.
-        
+
     See Also
     --------
     rotate
@@ -194,7 +211,7 @@ def rotate_about_axis(atoms, axis, angle, support=None):
         # Transform coordinates
         # so that the axis support vector is at (0,0,0)
         positions -= np.asarray(support)
-    
+
     # Normalize axis
     axis = np.asarray(axis, dtype=np.float32).copy()
     if np.linalg.norm(axis) == 0:
@@ -205,16 +222,30 @@ def rotate_about_axis(atoms, axis, angle, support=None):
     sin_a = np.sin(angle)
     cos_a = np.cos(angle)
     icos_a = 1 - cos_a
-    x = axis[...,0]
-    y = axis[...,1]
-    z = axis[...,2]
+    x = axis[..., 0]
+    y = axis[..., 1]
+    z = axis[..., 2]
     # Rotation matrix is taken from
     # https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
-    rot_matrix = np.array([
-        [ cos_a + icos_a*x**2,  icos_a*x*y - z*sin_a,  icos_a*x*z + y*sin_a],
-        [icos_a*x*y + z*sin_a,   cos_a + icos_a*y**2,  icos_a*y*z - x*sin_a],
-        [icos_a*x*z - y*sin_a,  icos_a*y*z + x*sin_a,   cos_a + icos_a*z**2]
-    ])
+    rot_matrix = np.array(
+        [
+            [
+                cos_a + icos_a * x**2,
+                icos_a * x * y - z * sin_a,
+                icos_a * x * z + y * sin_a,
+            ],
+            [
+                icos_a * x * y + z * sin_a,
+                cos_a + icos_a * y**2,
+                icos_a * y * z - x * sin_a,
+            ],
+            [
+                icos_a * x * z - y * sin_a,
+                icos_a * y * z + x * sin_a,
+                cos_a + icos_a * z**2,
+            ],
+        ]
+    )
 
     # For proper rotation reshape into a maximum of 2 dimensions
     orig_ndim = positions.ndim
@@ -230,7 +261,7 @@ def rotate_about_axis(atoms, axis, angle, support=None):
     if support is not None:
         # Transform coordinates back to original support vector position
         positions += np.asarray(support)
-    
+
     return _put_back(atoms, positions)
 
 
@@ -298,9 +329,7 @@ def orient_principal_components(atoms, order=None):
     else:
         order = np.asarray(order, dtype=int)
         if order.shape != (3,):
-            raise ValueError(
-                f"Expected order to have shape (3,), not {order.shape}"
-            )
+            raise ValueError(f"Expected order to have shape (3,), not {order.shape}")
         if not (np.sort(order) == np.arange(3)).all():
             raise ValueError("Expected order to contain [0, 1, 2].")
 
@@ -333,8 +362,13 @@ def orient_principal_components(atoms, order=None):
     return _put_back(atoms, centered)
 
 
-def align_vectors(atoms, origin_direction, target_direction,
-                  origin_position=None, target_position=None):
+def align_vectors(
+    atoms,
+    origin_direction,
+    target_direction,
+    origin_position=None,
+    target_position=None,
+):
     """
     Apply a transformation to atoms or coordinates, that would transfer
     a origin vector to a target vector.
@@ -345,8 +379,8 @@ def align_vectors(atoms, origin_direction, target_direction,
     This means, that the application of the transformation on the
     origin vector would give the target vector.
     Then the same transformation is applied to the given
-    atoms/coordinates. 
-    
+    atoms/coordinates.
+
     Parameters
     ----------
     atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
@@ -359,13 +393,13 @@ def align_vectors(atoms, origin_direction, target_direction,
     origin_position, target_position : array-like, length=3, optional
         Optional support vectors for the origin or target, respectively.
         By default, origin and target start at *(0,0,0)*.
-    
+
     Returns
     -------
     transformed : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         A copy of the input atoms or coordinates with the applied
         transformation.
-        
+
     See Also
     --------
     rotate
@@ -428,12 +462,8 @@ def align_vectors(atoms, origin_direction, target_direction,
         A       2  LEU HD22   H        -6.255    7.544   -2.657
         A       2  LEU HD23   H        -5.592    8.445   -1.281
     """
-    origin_direction = np.asarray(
-        origin_direction, dtype=np.float32
-    ).squeeze()
-    target_direction = np.asarray(
-        target_direction, dtype=np.float32
-    ).squeeze()
+    origin_direction = np.asarray(origin_direction, dtype=np.float32).squeeze()
+    target_direction = np.asarray(target_direction, dtype=np.float32).squeeze()
     # check that original and target direction are vectors of shape (3,)
     if origin_direction.shape != (3,):
         raise ValueError(
@@ -449,9 +479,9 @@ def align_vectors(atoms, origin_direction, target_direction,
         raise ValueError("Length of the origin vector is 0")
     if np.linalg.norm(target_direction) == 0:
         raise ValueError("Length of the target vector is 0")
-    if origin_position is not None: 
+    if origin_position is not None:
         origin_position = np.asarray(origin_position, dtype=np.float32)
-    if target_position is not None: 
+    if target_position is not None:
         target_position = np.asarray(target_position, dtype=np.float32)
 
     positions = coord(atoms).copy()
@@ -459,7 +489,7 @@ def align_vectors(atoms, origin_direction, target_direction,
         # Transform coordinates
         # so that the position of the origin vector is at (0,0,0)
         positions -= origin_position
-    
+
     # Normalize direction vectors
     origin_direction = origin_direction.copy()
     norm_vector(origin_direction)
@@ -468,11 +498,7 @@ def align_vectors(atoms, origin_direction, target_direction,
     # Formula is taken from
     # https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d/476311#476311
     vx, vy, vz = np.cross(origin_direction, target_direction)
-    v_c = np.array([
-        [  0, -vz,  vy],
-        [ vz,   0, -vx],
-        [-vy,  vx,   0]
-    ], dtype=float)
+    v_c = np.array([[0, -vz, vy], [vz, 0, -vx], [-vy, vx, 0]], dtype=float)
     cos_a = vector_dot(origin_direction, target_direction)
     if np.all(cos_a == -1):
         raise ValueError(
@@ -480,9 +506,9 @@ def align_vectors(atoms, origin_direction, target_direction,
             "cannot calculate rotation matrix"
         )
     rot_matrix = np.identity(3) + v_c + (v_c @ v_c) / (1 + cos_a)
-    
+
     positions = matrix_rotate(positions, rot_matrix)
-    
+
     if target_position is not None:
         # Transform coordinates to position of the target vector
         positions += target_position

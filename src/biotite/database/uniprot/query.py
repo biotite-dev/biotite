@@ -6,10 +6,9 @@ __name__ = "biotite.database.uniprot"
 __author__ = "Maximilian Greil"
 __all__ = ["Query", "SimpleQuery", "CompositeQuery", "search"]
 
-import requests
 import abc
+import requests
 from .check import assert_valid_response
-
 
 _base_url = "https://rest.uniprot.org/uniprotkb/search/"
 
@@ -122,22 +121,114 @@ class SimpleQuery(Query):
     # Field identifiers are taken from
     # https://www.uniprot.org/help/query-fields
     _fields = [
-        "accession", "active", "ft_init_met", "ft_signal", "ft_transit", "ft_propep", "ft_chain", "ft_peptide",
-        "ft_topo_dom", "ft_transmem", "ft_intramem", "ft_domain", "ft_repeat", "ft_zn_fing", "ft_dna_bind",
-        "ft_region", "ft_coiled", "ft_motif", "ft_compbias", "ft_act_site", "ft_binding", "ft_site", "ft_non_std",
-        "ft_mod_res", "ft_lipid", "ft_carbohyd", "ft_disulfid", "ft_crosslnk", "ft_var_seq", "ft_variant",
-        "ft_mutagen", "ft_unsure", "ft_conflict", "ft_non_cons", "ft_non_ter", "ft_helix", "ft_turn", "ft_strand",
-        "lit_author", "protein_name", "chebi", "citation", "uniref_cluster_90", "xrefcount_pdb", "date_created",
-        "database", "xref", "ec", "cc_function", "cc_catalytic_activity", "cc_cofactor", "cc_activity_regulation",
-        "cc_biophysicochemical_properties", "cc_subunit", "cc_pathway", "cc_scl_term", "cc_tissue_specificity",
-        "cc_developmental_stage", "cc_induction", "cc_domain", "cc_ptm cc_rna_editing", "cc_mass_spectrometry",
-        "cc_polymorphism", "cc_disease", "cc_disruption_phenotype", "cc_allergen", "cc_toxic_dose", "cc_biotechnology",
-        "cc_pharmaceutical", "cc_miscellaneous", "cc_similarity", "cc_caution", "cc_sequence_caution",
-        "existence", "family", "fragment", "gene", "gene_exact", "go", "virus_host_name", "virus_host_id",
-        "accession_id", "inchikey", "protein_name", "interactor", "keyword", "length", "lineage", "mass",
-        "cc_mass_spectrometry", "date_modified", "protein_name", "organelle", "organism_name", "organism_id",
-        "plasmid", "proteome", "proteomecomponent", "sec_acc", "reviewed", "scope", "sequence",
-        "date_sequence_modified", "strain", "taxonomy_name", "taxonomy_id", "tissue", "cc_webresource"
+        "accession",
+        "active",
+        "ft_init_met",
+        "ft_signal",
+        "ft_transit",
+        "ft_propep",
+        "ft_chain",
+        "ft_peptide",
+        "ft_topo_dom",
+        "ft_transmem",
+        "ft_intramem",
+        "ft_domain",
+        "ft_repeat",
+        "ft_zn_fing",
+        "ft_dna_bind",
+        "ft_region",
+        "ft_coiled",
+        "ft_motif",
+        "ft_compbias",
+        "ft_act_site",
+        "ft_binding",
+        "ft_site",
+        "ft_non_std",
+        "ft_mod_res",
+        "ft_lipid",
+        "ft_carbohyd",
+        "ft_disulfid",
+        "ft_crosslnk",
+        "ft_var_seq",
+        "ft_variant",
+        "ft_mutagen",
+        "ft_unsure",
+        "ft_conflict",
+        "ft_non_cons",
+        "ft_non_ter",
+        "ft_helix",
+        "ft_turn",
+        "ft_strand",
+        "lit_author",
+        "protein_name",
+        "chebi",
+        "citation",
+        "uniref_cluster_90",
+        "xrefcount_pdb",
+        "date_created",
+        "database",
+        "xref",
+        "ec",
+        "cc_function",
+        "cc_catalytic_activity",
+        "cc_cofactor",
+        "cc_activity_regulation",
+        "cc_biophysicochemical_properties",
+        "cc_subunit",
+        "cc_pathway",
+        "cc_scl_term",
+        "cc_tissue_specificity",
+        "cc_developmental_stage",
+        "cc_induction",
+        "cc_domain",
+        "cc_ptm cc_rna_editing",
+        "cc_mass_spectrometry",
+        "cc_polymorphism",
+        "cc_disease",
+        "cc_disruption_phenotype",
+        "cc_allergen",
+        "cc_toxic_dose",
+        "cc_biotechnology",
+        "cc_pharmaceutical",
+        "cc_miscellaneous",
+        "cc_similarity",
+        "cc_caution",
+        "cc_sequence_caution",
+        "existence",
+        "family",
+        "fragment",
+        "gene",
+        "gene_exact",
+        "go",
+        "virus_host_name",
+        "virus_host_id",
+        "accession_id",
+        "inchikey",
+        "protein_name",
+        "interactor",
+        "keyword",
+        "length",
+        "lineage",
+        "mass",
+        "cc_mass_spectrometry",
+        "date_modified",
+        "protein_name",
+        "organelle",
+        "organism_name",
+        "organism_id",
+        "plasmid",
+        "proteome",
+        "proteomecomponent",
+        "sec_acc",
+        "reviewed",
+        "scope",
+        "sequence",
+        "date_sequence_modified",
+        "strain",
+        "taxonomy_name",
+        "taxonomy_id",
+        "tissue",
+        "cc_webresource",
     ]
 
     def __init__(self, field, term):
@@ -146,14 +237,11 @@ class SimpleQuery(Query):
             raise ValueError(f"Unknown field identifier '{field}'")
         if not _check_brackets(term):
             raise ValueError(
-                f"Query term contains illegal number of round brackets ( ) and/or square brackets [ ]"
+                "Query term contains illegal number of round brackets ( ) and/or square brackets [ ]"
             )
-        for invalid_string in \
-                ['"', "AND", "OR", "NOT", "\t", "\n"]:
+        for invalid_string in ['"', "AND", "OR", "NOT", "\t", "\n"]:
             if invalid_string in term:
-                raise ValueError(
-                    f"Query contains illegal term {invalid_string}"
-                )
+                raise ValueError(f"Query contains illegal term {invalid_string}")
         if " " in term:
             term = f'"{term}"'
         self._field = field
@@ -198,12 +286,8 @@ def search(query, number=500):
     ['P12345']
     """
 
-    params = {
-        'query': str(query),
-        'format': 'list',
-        'size': str(number)
-    }
+    params = {"query": str(query), "format": "list", "size": str(number)}
     r = requests.get(_base_url, params=params)
     content = r.text
     assert_valid_response(r.status_code)
-    return content.split('\n')[:-1]
+    return content.split("\n")[:-1]

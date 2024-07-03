@@ -12,13 +12,12 @@ The values in the adjacency matrix ``m`` are
 # License: BSD 3 clause
 
 from tempfile import gettempdir
-import biotite
-import biotite.structure as struc
-import biotite.structure.io as strucio
-import biotite.database.rcsb as rcsb
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-
+import biotite
+import biotite.database.rcsb as rcsb
+import biotite.structure as struc
+import biotite.structure.io as strucio
 
 file_name = rcsb.fetch("1aki", "bcif", gettempdir())
 array = strucio.load_structure(file_name)

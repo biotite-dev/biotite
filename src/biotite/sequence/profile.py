@@ -4,9 +4,9 @@
 
 import warnings
 import numpy as np
-from .seqtypes import NucleotideSequence, ProteinSequence, GeneralSequence
-from .alphabet import LetterAlphabet
 from .align.alignment import get_codes
+from .alphabet import LetterAlphabet
+from .seqtypes import GeneralSequence, NucleotideSequence, ProteinSequence
 
 __name__ = "biotite.sequence"
 __author__ = "Maximilian Greil"
@@ -73,7 +73,7 @@ class SequenceProfile(object):
     be created from an indefinite number of aligned sequences.
 
     With :meth:`sequence_probability_from_matrix()` the probability of a
-    sequence can be calculated based on the before calculated position 
+    sequence can be calculated based on the before calculated position
     probability matrix of this instance of object SequenceProfile.
 
     With :meth:`sequence_score_from_matrix()` the score of a sequence
@@ -154,8 +154,10 @@ class SequenceProfile(object):
 
     def __repr__(self):
         """Represent SequenceProfile as a string for debugging."""
-        return f"SequenceProfile(np.{np.array_repr(self.symbols)}, " \
-               f"np.{np.array_repr(self.gaps)}, Alphabet({self.alphabet}))"
+        return (
+            f"SequenceProfile(np.{np.array_repr(self.symbols)}, "
+            f"np.{np.array_repr(self.gaps)}, Alphabet({self.alphabet}))"
+        )
 
     def __eq__(self, item):
         if not isinstance(item, SequenceProfile):
@@ -204,16 +206,16 @@ class SequenceProfile(object):
             for alph in (seq.alphabet for seq in alignment.sequences):
                 if not alphabet.extends(alph):
                     raise ValueError(
-                        f"The given alphabet is incompatible with a least one "
+                        "The given alphabet is incompatible with a least one "
                         "alphabet of the given sequences"
                     )
         symbols = np.zeros((len(sequences[0]), len(alphabet)), dtype=int)
         gaps = np.zeros(len(sequences[0]), dtype=int)
         sequences = np.transpose(sequences)
         for i in range(len(sequences)):
-            row = np.where(sequences[i, ] == -1, len(alphabet), sequences[i, ])
+            row = np.where(sequences[i,] == -1, len(alphabet), sequences[i,])
             count = np.bincount(row, minlength=len(alphabet) + 1)
-            symbols[i, ] = count[0:len(alphabet)]
+            symbols[i,] = count[0 : len(alphabet)]
             gaps[i] = count[-1]
         return SequenceProfile(symbols, gaps, alphabet)
 
@@ -248,10 +250,21 @@ class SequenceProfile(object):
 
     def _dna_to_consensus(self):
         codes = {
-            (0,): 'A', (1,): 'C', (2,): 'G', (3,): 'T',
-            (0, 2): 'R', (1, 3): 'Y', (1, 2): 'S', (0, 3): 'W', (2, 3): 'K', (0, 1): 'M',
-            (1, 2, 3): 'B', (0, 2, 3): 'D', (0, 1, 3): 'H', (0, 1, 2): 'V',
-            (0, 1, 2, 3): 'N'
+            (0,): "A",
+            (1,): "C",
+            (2,): "G",
+            (3,): "T",
+            (0, 2): "R",
+            (1, 3): "Y",
+            (1, 2): "S",
+            (0, 3): "W",
+            (2, 3): "K",
+            (0, 1): "M",
+            (1, 2, 3): "B",
+            (0, 2, 3): "D",
+            (0, 1, 3): "H",
+            (0, 1, 2): "V",
+            (0, 1, 2, 3): "N",
         }
         consensus = ""
         maxes = np.max(self.symbols, axis=1)
@@ -261,10 +274,21 @@ class SequenceProfile(object):
 
     def _rna_to_consensus(self):
         codes = {
-            (0,): 'A', (1,): 'C', (2,): 'G', (3,): 'U',
-            (0, 2): 'R', (1, 3): 'Y', (1, 2): 'S', (0, 3): 'W', (2, 3): 'K', (0, 1): 'M',
-            (1, 2, 3): 'B', (0, 2, 3): 'D', (0, 1, 3): 'H', (0, 1, 2): 'V',
-            (0, 1, 2, 3): 'N'
+            (0,): "A",
+            (1,): "C",
+            (2,): "G",
+            (3,): "U",
+            (0, 2): "R",
+            (1, 3): "Y",
+            (1, 2): "S",
+            (0, 3): "W",
+            (2, 3): "K",
+            (0, 1): "M",
+            (1, 2, 3): "B",
+            (0, 2, 3): "D",
+            (0, 1, 3): "H",
+            (0, 1, 2): "V",
+            (0, 1, 2, 3): "N",
         }
         consensus = ""
         maxes = np.max(self.symbols, axis=1)
@@ -307,7 +331,7 @@ class SequenceProfile(object):
         .. math::
 
             P(S) = \frac {C_S + \frac{c_p}{k}} {\sum_{i} C_i + c_p}
-        
+
         :math:`S`: The symbol.
 
         :math:`C_S`: The count of symbol :math:`S` at the sequence
@@ -330,11 +354,10 @@ class SequenceProfile(object):
             The calculated the position probability matrix.
         """
         if pseudocount < 0:
-            raise ValueError(
-                f"Pseudocount can not be smaller than zero."
-            )
-        return (self.symbols + pseudocount / self.symbols.shape[1]) / \
-               (np.sum(self.symbols, axis=1)[:, np.newaxis] + pseudocount)
+            raise ValueError("Pseudocount can not be smaller than zero.")
+        return (self.symbols + pseudocount / self.symbols.shape[1]) / (
+            np.sum(self.symbols, axis=1)[:, np.newaxis] + pseudocount
+        )
 
     def log_odds_matrix(self, background_frequencies=None, pseudocount=0):
         r"""
@@ -346,7 +369,7 @@ class SequenceProfile(object):
         .. math::
 
             W(S) = \log_2 \left( \frac{P(S)}{B_S} \right)
-        
+
         :math:`S`: The symbol.
 
         :math:`P(S)`: The probability of symbol :math:`S` at the
@@ -363,7 +386,7 @@ class SequenceProfile(object):
         background_frequencies: ndarray, shape=(k,), dtype=float, optional
             The background frequencies for each symbol in the alphabet.
             By default, a uniform distribution is assumed.
-            
+
         Returns
         -------
         pwm: ndarray, dtype=float, shape=(n,k)
@@ -383,7 +406,7 @@ class SequenceProfile(object):
         Calculate probability of a sequence based on the
         position probability matrix (PPM).
 
-        The sequence probability is the product of the probability of 
+        The sequence probability is the product of the probability of
         the respective symbol over all sequence positions.
 
         Parameters
@@ -419,7 +442,7 @@ class SequenceProfile(object):
         Calculate score of a sequence based on the
         position weight matrix (PWM).
 
-        The score is the sum of weights (log-odds scores) of 
+        The score is the sum of weights (log-odds scores) of
         the respective symbol over all sequence positions.
 
         Parameters
@@ -442,7 +465,9 @@ class SequenceProfile(object):
         """
         if background_frequencies is None:
             background_frequencies = 1 / len(self.alphabet)
-        pwm = self.log_odds_matrix(background_frequencies=background_frequencies, pseudocount=pseudocount)
+        pwm = self.log_odds_matrix(
+            background_frequencies=background_frequencies, pseudocount=pseudocount
+        )
         if len(sequence) != len(pwm):
             raise ValueError(
                 f"The given sequence has a different length ({len(sequence)}) than "

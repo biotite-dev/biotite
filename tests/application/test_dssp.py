@@ -16,8 +16,7 @@ from ..util import data_dir, is_not_installed
 @pytest.mark.skipif(is_not_installed("mkdssp"), reason="DSSP is not installed")
 def test_multiple_chains():
     atoms = pdbx.get_structure(
-        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1igy.bcif")),
-        model=1
+        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1igy.bcif")), model=1
     )
     atoms = atoms[struc.filter_canonical_amino_acids(atoms)]
     sse = DsspApp.annotate_sse(atoms)
