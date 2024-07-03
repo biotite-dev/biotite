@@ -201,7 +201,6 @@ def test_index_distance_periodic_triclinic(shift, angles):
     traj.unitcell_vectors = array.box[np.newaxis, :, :] / 10
     # Nanometers to Angstrom
     mdtraj_dist = mdtraj.compute_distances(traj, dist_indices)[0] * 10
-    ind = np.where(~np.isclose(ref_dist, mdtraj_dist, atol=2e-5, rtol=1e-3))[0]
     assert np.allclose(ref_dist, mdtraj_dist, atol=2e-5, rtol=1e-3)
 
     # Compare with shifted variant

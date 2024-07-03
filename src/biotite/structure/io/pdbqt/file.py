@@ -149,7 +149,6 @@ class PDBQTFile(TextFile):
         if model is None:
             # Add exclusive end of file
             model_start_i = np.concatenate((model_start_i, [len(self.lines)]))
-            model_i = 0
             remarks = []
             for i in range(len(model_start_i) - 1):
                 start = model_start_i[i]
@@ -453,7 +452,7 @@ class PDBQTFile(TextFile):
         # for simple branch determination in '_write_atoms()'
         atoms.bonds.remove_bonds(rotatable_bonds)
 
-        hetero = ["ATOM" if e == False else "HETATM" for e in atoms.hetero]
+        hetero = ["HETATM" if e else "ATOM" for e in atoms.hetero]
         if "atom_id" in atoms.get_annotation_categories():
             atom_id = atoms.atom_id
         else:

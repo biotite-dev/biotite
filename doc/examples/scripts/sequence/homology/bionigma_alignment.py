@@ -271,7 +271,6 @@ def plot_alignment_shapes(
     label_size=None,
     show_line_position=False,
     spacing=1,
-    color_symbols=False,
     symbol_size=None,
     symbol_param=None,
 ):
@@ -279,7 +278,6 @@ def plot_alignment_shapes(
     A thin wrapper around the 'ShapePlotter' and 'plot_alignment()'
     function.
     """
-    alphabet = alignment.sequences[0].get_alphabet()
     symbol_plotter = ShapePlotter(axes, font_size=symbol_size, font_param=symbol_param)
     graphics.plot_alignment(
         axes=axes,

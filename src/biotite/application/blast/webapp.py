@@ -305,7 +305,7 @@ class BlastWebApp(WebApp):
         param_dict = {}
         param_dict["CMD"] = "Delete"
         param_dict["RID"] = self._rid
-        request = requests.get(self.app_url(), params=param_dict)
+        requests.get(self.app_url(), params=param_dict)
 
     def evaluate(self):
         param_dict = {}

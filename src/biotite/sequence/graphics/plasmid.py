@@ -332,7 +332,6 @@ try:
                 else:
                     for loc, indicator in zip(feature.locs, indicators_for_feature):
                         # Calculate arrow shape parameters
-                        row_center = row_bottom + self._feature_width / 2
                         row_top = row_bottom + self._feature_width
                         start_ang = _loc_to_rad(loc.first, self._plasmid_size)
                         stop_ang = _loc_to_rad(loc.last, self._plasmid_size)
@@ -425,7 +424,6 @@ try:
 
         def draw(self, renderer, *args, **kwargs):
             bbox = self._bbox
-            center_x = (bbox.x0 + bbox.x1) / 2
             center_y = (bbox.y0 + bbox.y1) / 2
 
             # Constant absolute width for all arrows
@@ -515,14 +513,6 @@ try:
             circle_px_circumference = (
                 ax_px_radius * 2 * np.pi * (self._radius / ax_unit_radius)
             )
-
-            rad_angle = 360 - np.rad2deg(self._angle)
-            # Avoid to draw the text upside down, when drawn on the
-            # bottom half of the map
-            if rad_angle > 90 and rad_angle < 270:
-                turn_around = True
-            else:
-                turn_around = False
 
             angles = []
             for text in self._texts:

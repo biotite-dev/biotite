@@ -219,41 +219,29 @@ def set_alignment(fasta_file, alignment, seq_names):
 
 
 def _convert_to_sequence(seq_str, seq_type=None):
-    # Define preprocessing of preimplemented sequence types
-
-    # Replace selenocysteine with cysteine
-    # and pyrrolysine with lysine
-    process_protein_sequence = lambda x: x.upper().replace("U", "C").replace("O", "K")
-    # For nucleotides uracil is represented by thymine and there is only
-    # one letter for completely unknown nucleotides
-    process_nucleotide_sequence = (
-        lambda x: x.upper().replace("U", "T").replace("X", "N")
-    )
-
     # Set manually selected sequence type
-
     if seq_type is not None:
         # Do preprocessing as done without manual selection
         if seq_type == NucleotideSequence:
-            seq_str = process_nucleotide_sequence(seq_str)
+            seq_str = _process_nucleotide_sequence(seq_str)
         elif seq_type == ProteinSequence:
             if "U" in seq_str:
                 warnings.warn(
                     "ProteinSequence objects do not support selenocysteine "
                     "(U), occurrences were substituted by cysteine (C)"
                 )
-            seq_str = process_protein_sequence(seq_str)
+            seq_str = _process_protein_sequence(seq_str)
         # Return the converted sequence
         return seq_type(seq_str)
 
     # Attempt to automatically determine sequence type
 
     try:
-        return NucleotideSequence(process_nucleotide_sequence(seq_str))
+        return NucleotideSequence(_process_nucleotide_sequence(seq_str))
     except AlphabetError:
         pass
     try:
-        prot_seq = ProteinSequence(process_protein_sequence(seq_str))
+        prot_seq = ProteinSequence(_process_protein_sequence(seq_str))
         # Raise Warning after conversion into 'ProteinSequence'
         # to wait for potential 'AlphabetError'
         if "U" in seq_str:
@@ -267,6 +255,21 @@ def _convert_to_sequence(seq_str, seq_type=None):
             "FASTA data cannot be converted either to "
             "'NucleotideSequence' nor to 'ProteinSequence'"
         )
+
+
+def _process_protein_sequence(x):
+    """
+    Replace selenocysteine with cysteine and pyrrolysine with lysine.
+    """
+    return x.upper().replace("U", "C").replace("O", "K")
+
+
+def _process_nucleotide_sequence(x):
+    """
+    For nucleotides uracil is represented by thymine and there is only
+    one letter for completely unknown nucleotides
+    """
+    return x.upper().replace("U", "T").replace("X", "N")
 
 
 def _convert_to_string(sequence, as_rna):

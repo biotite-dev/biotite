@@ -45,7 +45,7 @@ def test_fetch_structural_formula(as_structural_formula):
     CID = 2244
 
     mol_file = mol.MOLFile.read(
-        pubchem.fetch(2244, as_structural_formula=as_structural_formula)
+        pubchem.fetch(CID, as_structural_formula=as_structural_formula)
     )
     atoms = mol_file.get_structure()
 

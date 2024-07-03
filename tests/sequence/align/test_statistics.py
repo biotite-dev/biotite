@@ -190,4 +190,4 @@ def test_invalid_scoring_scheme():
     freq = np.ones(len(alph))
 
     with pytest.raises(ValueError):
-        estimator = EValueEstimator.from_samples(alph, matrix, -10, freq)
+        EValueEstimator.from_samples(alph, matrix, -10, freq)

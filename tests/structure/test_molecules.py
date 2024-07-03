@@ -95,7 +95,7 @@ def test_get_molecule_masks(array, as_stack, as_bonds):
     for i in range(len(test_masks)):
         # Assert that the mask is 'True' for all indices
         # and that these 'True' values are the only ones in the mask
-        assert (test_masks[i, ref_indices[i]] == True).all()
+        assert test_masks[i, ref_indices[i]].all()
         assert np.count_nonzero(test_masks[i]) == len(ref_indices[i])
 
 
