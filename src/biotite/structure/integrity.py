@@ -9,14 +9,13 @@ errors in the structure.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Daniel Bauer"
-__all__ = ["check_id_continuity", "check_atom_id_continuity",
+__all__ = ["check_atom_id_continuity",
            "check_res_id_continuity", "check_backbone_continuity",
-           "check_duplicate_atoms", "check_bond_continuity",
+           "check_duplicate_atoms",
            "check_linear_continuity"]
 
 import numpy as np
 import warnings
-from .atoms import AtomArray, AtomArrayStack
 from .filter import (
     filter_peptide_backbone, filter_phosphate_backbone, filter_linear_bond_continuity)
 from .box import coord_to_fraction
@@ -26,34 +25,6 @@ def _check_continuity(array):
     diff = np.diff(array)
     discontinuity = np.where( ((diff != 0) & (diff != 1)) )
     return discontinuity[0] + 1
-
-
-def check_id_continuity(array):
-    """
-    Check if the residue IDs are incremented by more than 1 or
-    decremented, from one atom to the next one.
-
-    An increment by more than 1 is as strong clue for missing residues,
-    a decrement means probably a start of a new chain.
-
-    DEPRECATED: Use :func:`check_res_id_continuity()` instead.
-
-    Parameters
-    ----------
-    array : AtomArray or AtomArrayStack
-        The array to be checked.
-
-    Returns
-    -------
-    discontinuity : ndarray, dtype=int
-        Contains the indices of atoms after a discontinuity
-    """
-    warnings.warn(
-        "'check_id_continuity()' is deprecated, "
-        "use 'check_res_id_continuity()' instead",
-        DeprecationWarning
-    )
-    return check_res_id_continuity(array)
 
 
 def check_atom_id_continuity(array):
@@ -97,36 +68,6 @@ def check_res_id_continuity(array):
     """
     ids = array.res_id
     return _check_continuity(ids)
-
-
-def check_bond_continuity(array, min_len=1.2, max_len=1.8):
-    """
-    Check if the peptide or phosphate backbone atoms have a
-    non-reasonable distance to the next residue.
-
-    A large or very small distance is a very strong clue, that there is
-    no bond between those atoms, therefore the chain is discontinued.
-
-    DEPRECATED: Please use :func:`check_backbone_continuity` for the same functionality.
-
-    Parameters
-    ----------
-    array : AtomArray
-        The array to be checked.
-    min_len, max_len : float, optional
-        The interval in which the atom-atom distance is evaluated as
-        bond.
-
-    Returns
-    -------
-    discontinuity : ndarray, dtype=int
-         Contains the indices of atoms after a discontinuity.
-    """
-    warnings.warn(
-        "Reimplemented into `check_backbone_continuity()`",
-        DeprecationWarning
-    )
-    return check_backbone_continuity(array, min_len, max_len)
 
 
 def check_linear_continuity(array, min_len=1.2, max_len=1.8):

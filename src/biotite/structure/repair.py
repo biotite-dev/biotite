@@ -8,8 +8,7 @@ This module contains functionalities for repairing malformed structures.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Daniel Bauer"
-__all__ = ["renumber_atom_ids", "renumber_res_ids",
-           "create_continuous_res_ids", "infer_elements", "create_atom_names"]
+__all__ = ["create_continuous_res_ids", "infer_elements", "create_atom_names"]
 
 from collections import Counter
 import warnings
@@ -17,71 +16,6 @@ import numpy as np
 from .atoms import AtomArray, AtomArrayStack
 from .residues import get_residue_starts
 from .chains import get_chain_starts
-
-
-def renumber_atom_ids(array, start=None):
-    """
-    Renumber the atom IDs of the given array.
-
-    DEPRECATED.
-
-    Parameters
-    ----------
-    array : AtomArray or AtomArrayStack
-        The array to be checked.
-    start : int, optional
-        The starting index for renumbering.
-        The first ID in the array is taken by default.
-
-    Returns
-    -------
-    array : AtomArray or AtomArrayStack
-        The renumbered array.
-    """
-    warnings.warn(
-      "'renumber_atom_ids()' is deprecated",
-        DeprecationWarning
-    )
-    if "atom_id" not in array.get_annotation_categories():
-        raise ValueError("The atom array must have the 'atom_id' annotation")
-    if start is None:
-        start = array.atom_id[0]
-    array = array.copy()
-    array.atom_id = np.arange(start, array.shape[-1]+1)
-    return array
-
-
-def renumber_res_ids(array, start=None):
-    """
-    Renumber the residue IDs of the given array, so that are continuous.
-
-    DEPRECATED: Use :func:`create_continuous_res_ids()`instead.
-
-    Parameters
-    ----------
-    array : AtomArray or AtomArrayStack
-        The array to be checked.
-    start : int, optional
-        The starting index for renumbering.
-        The first ID in the array is taken by default.
-
-    Returns
-    -------
-    array : AtomArray or AtomArrayStack
-        The renumbered array.
-    """
-    warnings.warn(
-      "'renumber_res_ids()' is deprecated, use 'create_continuous_res_ids()'",
-        DeprecationWarning
-    )
-    if start is None:
-        start = array.res_id[0]
-    diff = np.diff(array.res_id)
-    diff[diff != 0] = 1
-    new_res_ids =  np.concatenate(([start], diff)).cumsum()
-    array = array.copy()
-    array.res_id = new_res_ids
-    return array
 
 
 def create_continuous_res_ids(atoms, restart_each_chain=True):

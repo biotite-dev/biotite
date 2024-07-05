@@ -95,7 +95,7 @@ def test_loading_with_extra_args():
 @pytest.mark.parametrize(
     "suffix",
     [
-        "pdb", "pdbx", "cif", "bcif", "gro", "mmtf", "trr", "xtc", "tng",
+        "pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "tng",
         "dcd", "netcdf"
     ]
 )
@@ -138,7 +138,7 @@ def test_saving(suffix):
 @pytest.mark.parametrize(
     "suffix",
     [
-        "pdb", "pdbx", "cif", "bcif", "gro", "mmtf", "trr", "xtc", "tng",
+        "pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "tng",
         "dcd", "netcdf"
     ]
 )
