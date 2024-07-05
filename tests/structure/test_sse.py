@@ -12,23 +12,6 @@ import biotite.sequence.io.fasta as fasta
 from ..util import data_dir
 
 
-def test_sse_legacy():
-    """
-    Legacy test to assert that refactoring did not change behavior.
-    """
-    array = pdbx.get_structure(
-        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "3o5r.bcif")),
-        model = 1
-    )
-    test_sse = struc.annotate_sse(array, "A")
-    ref_sse = (
-        "caaaaaacccccccccccccbbbbbccccccbbbbccccccccccccccc"
-        "ccccccccccccbbbbbbcccccccaaaaaaaaaccccccbbbbbccccc"
-        "ccccccccccccbbbbbbbccccccccc"
-    )
-    assert "".join(test_sse.tolist()) == ref_sse
-
-
 def test_sse():
     """
     Compare output of :func:`annotate_sse()` to output of original

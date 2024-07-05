@@ -33,30 +33,24 @@ _d3_strand = ((9.9-0.9), (9.9+0.9))
 _d4_strand = ((12.4-1.1), (12.4+1.1))
 
 
-def annotate_sse(atom_array, chain_id=None):
+def annotate_sse(atom_array):
     r"""
     Calculate the secondary structure elements (SSEs) of a
     peptide chain based on the `P-SEA` algorithm.
     :footcite:`Labesse1997`
-    
+
     The annotation is based CA coordinates only, specifically
     distances and dihedral angles.
     Discontinuities between chains are detected by residue ID.
-    
+
     Parameters
     ----------
     atom_array : AtomArray
         The atom array to annotate for.
         Non-peptide residues are also allowed and obtain a ``''``
         SSE.
-    chain_id : str, optional
-        The peptide atoms belonging to this chain are filtered and
-        annotated.
-        DEPRECATED: By now multiple chains can be annotated at once.
-        To annotate only a certain chain, filter the `atom_array` before
-        giving it as input to this function.
 
-    
+
     Returns
     -------
     sse : ndarray
@@ -67,37 +61,30 @@ def annotate_sse(atom_array, chain_id=None):
         :math:`{\beta}`-strand/sheet, ``'c'`` means coil.
         ``''`` indicates that a residue is not an amino acid or it
         comprises no ``CA`` atom.
-    
+
     Notes
     -----
     Although this function is based on the original `P-SEA` algorithm,
     there are deviations compared to the official `P-SEA` software in
     some cases.
     Do not rely on getting the exact same results.
-    
+
     References
     ----------
 
     .. footbibliography::
-    
+
     Examples
     --------
-    
+
     SSE of PDB 1L2Y:
-    
-    >>> sse = annotate_sse(atom_array, "A")
+
+    >>> sse = annotate_sse(atom_array)
     >>> print(sse)
     ['c' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
      'c' 'c']
-    
-    """
-    if chain_id is not None:
-        # Filter all CA atoms in the relevant chain
-        atom_array = atom_array[
-            (atom_array.chain_id == chain_id) & filter_amino_acids(atom_array)
-        ]
-    
 
+    """
     residue_starts = get_residue_starts(atom_array)
     # Sort CA coord into the coord array at the respective residue index
     # If a residue has no CA, e.g. because it is not an amino acid,
@@ -163,7 +150,7 @@ def annotate_sse(atom_array, chain_id=None):
         ca_coord[2 : length-1],
         ca_coord[3 : length-0]
     )
-    
+
     # Find CA that meet criteria for potential helices and strands
     relaxed_helix = (
         (d3i >= _d3_helix[0]) & (d3i <= _d3_helix[1])
@@ -195,7 +182,7 @@ def annotate_sse(atom_array, chain_id=None):
 
     helix_mask = _mask_consecutive(strict_helix, 5)
     helix_mask = _extend_region(helix_mask, relaxed_helix)
-    
+
     strand_mask = _mask_consecutive(strict_strand, 4)
     short_strand_mask = _mask_regions_with_contacts(
         ca_coord,
@@ -215,7 +202,7 @@ def annotate_sse(atom_array, chain_id=None):
     sse[np.isnan(ca_coord).any(axis=-1)] = ""
     # Remove SSE for virtual atoms and return
     return sse[no_virtual_mask]
-            
+
 
 def _mask_consecutive(mask, number):
     """
@@ -232,13 +219,13 @@ def _mask_consecutive(mask, number):
     for i in range(number):
         counts[mask[i : i + len(counts)]] += 1
     consecutive_seed = (counts == number)
-    
+
     # Not only that element, but also the
     # following `number-1` elements are in a consecutive region
     consecutive_mask = np.zeros(len(mask), dtype=bool)
     for i in range(number):
         consecutive_mask[i : i + len(consecutive_seed)] |= consecutive_seed
-    
+
     return consecutive_mask
 
 
@@ -253,7 +240,7 @@ def _extend_region(base_condition_mask, extension_condition_mask):
     # Prepend absent region to the start to capture the event,
     # that the first element is already the start of a region
     region_change_mask = np.diff(np.append([False], base_condition_mask))
-    
+
     # These masks point to the first `False` element
     # left and right of a 'True' region
     # The left end is the element before the first element of a 'True' region
@@ -262,7 +249,7 @@ def _extend_region(base_condition_mask, extension_condition_mask):
     left_end_mask = np.append(left_end_mask[1:], [False])
     # The right end is first element of a 'False' region
     right_end_mask = region_change_mask & ~base_condition_mask
-    
+
     # The 'base_condition_mask' gets additional 'True' elements
     # at left or right ends, which meet the extension criterion
     return base_condition_mask | (
@@ -281,7 +268,7 @@ def _mask_regions_with_contacts(coord, candidate_mask,
         # No potential contacts -> no contacts
         # -> no residue can satisfy 'min_contacts'
         return np.zeros(len(candidate_mask), dtype=bool)
-    
+
     cell_list = CellList(
         potential_contact_coord, max_distance
     )
@@ -290,7 +277,7 @@ def _mask_regions_with_contacts(coord, candidate_mask,
     all_within_max_dist_indices = cell_list.get_atoms(
         coord[candidate_mask], max_distance
     )
-   
+
     contacts = np.zeros(len(coord), dtype=int)
     for i, atom_index in enumerate(np.where(candidate_mask)[0]):
         within_max_dist_indices = all_within_max_dist_indices[i]
@@ -298,7 +285,7 @@ def _mask_regions_with_contacts(coord, candidate_mask,
         within_max_dist_indices = within_max_dist_indices[
             within_max_dist_indices != -1
         ]
-        # Now count all contacts within maximum distance 
+        # Now count all contacts within maximum distance
         # that also satisfy the minimum distance
         contacts[atom_index] = np.count_nonzero(
             distance(
@@ -306,7 +293,7 @@ def _mask_regions_with_contacts(coord, candidate_mask,
                 potential_contact_coord[within_max_dist_indices]
             ) > min_distance
         )
-    
+
     # Count the number of contacts per region
     # These indices mark the start of either a 'True' or 'False' region
     # Prepend absent region to the start to capture the event,
@@ -323,5 +310,5 @@ def _mask_regions_with_contacts(coord, candidate_mask,
         total_contacts = np.sum(contacts[start : stop])
         if total_contacts >= min_contacts:
             output_mask[start : stop] = True
-    
+
     return output_mask

@@ -16,7 +16,7 @@ import biotite.structure.io.pdbx as pdbx
 from ..util import data_dir
 
 
-@pytest.mark.parametrize("format", ["cif", "bcif", "legacy"])
+@pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_get_model_count(format):
     """
     Check of :func:`get_model_count()`gives the same number of models
@@ -25,10 +25,8 @@ def test_get_model_count(format):
     base_path = join(data_dir("structure"), f"1l2y")
     if format == "cif":
         pdbx_file = pdbx.CIFFile.read(base_path + ".cif")
-    elif format == "bcif":
-        pdbx_file = pdbx.BinaryCIFFile.read(base_path + ".bcif")
     else:
-        pdbx_file = pdbx.PDBxFile.read(base_path + ".cif")
+        pdbx_file = pdbx.BinaryCIFFile.read(base_path + ".bcif")
     test_model_count = pdbx.get_model_count(pdbx_file)
     ref_model_count = pdbx.get_structure(pdbx_file).stack_depth()
     assert test_model_count == ref_model_count
@@ -78,7 +76,7 @@ def test_split_one_line(cif_line, expected_fields):
 @pytest.mark.parametrize(
     "format, path, model",
     itertools.product(
-        ["cif", "bcif", "legacy"],
+        ["cif", "bcif"],
         glob.glob(join(data_dir("structure"), "*.cif")),
         [None, 1, -1]
     ),
@@ -94,12 +92,9 @@ def test_conversion(tmpdir, format, path, model):
     if format == "cif":
         data_path = base_path + ".cif"
         File = pdbx.CIFFile
-    elif format == "bcif":
+    else:
         data_path = base_path + ".bcif"
         File = pdbx.BinaryCIFFile
-    else:
-        data_path = base_path + ".cif"
-        File = pdbx.PDBxFile
 
     pdbx_file = File.read(data_path)
     try:
@@ -122,10 +117,7 @@ def test_conversion(tmpdir, format, path, model):
 
     pdbx_file = File.read(file_path)
     # Remove one label section to test fallback to auth fields
-    if format == "legacy":
-        del pdbx_file.cif_file.block["atom_site"][DELETED_ANNOTATION]
-    else:
-        del pdbx_file.block["atom_site"][DELETED_ANNOTATION]
+    del pdbx_file.block["atom_site"][DELETED_ANNOTATION]
     with pytest.warns(UserWarning, match=f"'{DELETED_ANNOTATION}' not found"):
         test_atoms = pdbx.get_structure(
             pdbx_file, model=model, include_bonds=True
@@ -667,29 +659,6 @@ def test_serialization_consistency(format, create_new_encoding):
                 assert ref_category[key] == test_category[key]
         except:
             raise Exception(f"Comparison failed for '{category_name}.{key}'")
-
-
-def test_legacy_pdbx():
-    PDB_ID = "1aki"
-
-    path = join(data_dir("structure"), f"{PDB_ID}.cif")
-    ref_file = pdbx.CIFFile.read(path)
-
-    test_file = pdbx.PDBxFile.read(path)
-    assert test_file.get_block_names() == [PDB_ID.upper()]
-
-    for category_name, category in ref_file.block.items():
-        test_category_dict = test_file.get_category(
-            category_name, PDB_ID.upper(), expect_looped=True
-        )
-        for column_name, test_array in test_category_dict.items():
-            try:
-                assert test_array.tolist() \
-                    == category[column_name].as_array(str).tolist()
-            except:
-                raise Exception(
-                    f"Comparison failed for {category_name}.{column_name}"
-                )
 
 
 def _clear_encoding(category):

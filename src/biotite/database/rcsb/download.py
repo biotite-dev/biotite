@@ -15,11 +15,10 @@ from ..error import RequestError
 
 
 _standard_url = "https://files.rcsb.org/download/"
-_mmtf_url = "https://mmtf.rcsb.org/v1.0/full/"
 _bcif_url = "https://models.rcsb.org/"
 _fasta_url = "https://www.rcsb.org/fasta/entry/"
 
-_binary_formats = ["mmtf", "bcif"]
+_binary_formats = ["bcif"]
 
 
 def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
@@ -34,7 +33,7 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
     pdb_ids : str or iterable object of str
         A single PDB ID or a list of PDB IDs of the structure(s)
         to be downloaded.
-    format : {'pdb', 'pdbx', 'cif', 'mmcif', 'bcif', 'mmtf', 'fasta'}
+    format : {'pdb', 'pdbx', 'cif', 'mmcif', 'bcif', 'fasta'}
         The format of the files to be downloaded.
         ``'pdbx'``, ``'cif'`` and ``'mmcif'`` are synonyms for
         the same format.
@@ -118,10 +117,6 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
                     _assert_valid_file(content, id)
                 elif format in ["bcif"]:
                     r = requests.get(_bcif_url + id + ".bcif")
-                    content = r.content
-                    _assert_valid_file(r.text, id)
-                elif format == "mmtf":
-                    r = requests.get(_mmtf_url + id)
                     content = r.content
                     _assert_valid_file(r.text, id)
                 elif format == "fasta":
