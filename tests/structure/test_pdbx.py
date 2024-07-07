@@ -2,9 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import warnings
 import glob
 import itertools
+import warnings
 from os.path import join, splitext
 import numpy as np
 import pytest
@@ -13,7 +13,7 @@ import biotite
 import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-from ..util import data_dir
+from tests.util import data_dir
 
 
 @pytest.mark.parametrize("format", ["cif", "bcif"])
@@ -22,7 +22,7 @@ def test_get_model_count(format):
     Check of :func:`get_model_count()`gives the same number of models
     as :func:`get_structure()`.
     """
-    base_path = join(data_dir("structure"), f"1l2y")
+    base_path = join(data_dir("structure"), "1l2y")
     if format == "cif":
         pdbx_file = pdbx.CIFFile.read(base_path + ".cif")
     else:
@@ -35,8 +35,17 @@ def test_get_model_count(format):
 @pytest.mark.parametrize(
     "string, looped",
     itertools.product(
-        ["", " ", "  ", "te  xt", "'", '"' ,"te\nxt", "\t",],
-        [False, True]
+        [
+            "",
+            " ",
+            "  ",
+            "te  xt",
+            "'",
+            '"',
+            "te\nxt",
+            "\t",
+        ],
+        [False, True],
     ),
 )
 def test_escape(string, looped):
@@ -60,9 +69,7 @@ def test_escape(string, looped):
 @pytest.mark.parametrize(
     "format, path, model",
     itertools.product(
-        ["cif", "bcif"],
-        glob.glob(join(data_dir("structure"), "*.cif")),
-        [None, 1, -1]
+        ["cif", "bcif"], glob.glob(join(data_dir("structure"), "*.cif")), [None, 1, -1]
     ),
 )
 def test_conversion(tmpdir, format, path, model):
@@ -82,9 +89,7 @@ def test_conversion(tmpdir, format, path, model):
 
     pdbx_file = File.read(data_path)
     try:
-        ref_atoms = pdbx.get_structure(
-            pdbx_file, model=model, include_bonds=True
-        )
+        ref_atoms = pdbx.get_structure(pdbx_file, model=model, include_bonds=True)
     except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
@@ -103,9 +108,7 @@ def test_conversion(tmpdir, format, path, model):
     # Remove one label section to test fallback to auth fields
     del pdbx_file.block["atom_site"][DELETED_ANNOTATION]
     with pytest.warns(UserWarning, match=f"'{DELETED_ANNOTATION}' not found"):
-        test_atoms = pdbx.get_structure(
-            pdbx_file, model=model, include_bonds=True
-        )
+        test_atoms = pdbx.get_structure(pdbx_file, model=model, include_bonds=True)
 
     assert ref_atoms.array_length() > 0
     if ref_atoms.box is not None:
@@ -144,9 +147,7 @@ def test_bond_conversion(tmpdir, format, path):
         File = pdbx.BinaryCIFFile
 
     pdbx_file = File.read(data_path)
-    atoms = pdbx.get_structure(
-        pdbx_file, model=1, include_bonds=True
-    )
+    atoms = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
     ref_bonds = atoms.bonds
 
     pdbx_file = File()
@@ -160,16 +161,12 @@ def test_bond_conversion(tmpdir, format, path):
     # i.e. the bonds can be properly read from ``chem_comp_bond``
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        test_bonds = pdbx.get_structure(
-            pdbx_file, model=1, include_bonds=True
-        ).bonds
+        test_bonds = pdbx.get_structure(pdbx_file, model=1, include_bonds=True).bonds
 
     assert test_bonds == ref_bonds
 
 
-@pytest.mark.parametrize(
-    "format", ["cif", "bcif"]
-)
+@pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_extra_fields(tmpdir, format):
     path = join(data_dir("structure"), f"1l2y.{format}")
     if format == "cif":
@@ -208,9 +205,7 @@ def test_intra_bond_residue_parsing():
     """
     cif_path = join(data_dir("structure"), "1l2y.cif")
     cif_file = pdbx.CIFFile.read(cif_path)
-    ref_bonds = pdbx.get_structure(
-        cif_file, model=1, include_bonds=True
-    ).bonds
+    ref_bonds = pdbx.get_structure(cif_file, model=1, include_bonds=True).bonds
 
     nextgen_cif_path = join(
         data_dir("structure"), "nextgen", "pdb_00001l2y_xyz-enrich.cif"
@@ -227,9 +222,7 @@ def test_intra_bond_residue_parsing():
     assert test_bonds == ref_bonds
 
 
-@pytest.mark.parametrize(
-    "format", ["cif", "bcif"]
-)
+@pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_any_bonds(tmpdir, format):
     """
     Check if ``BondType.ANY`` bonds can be written and read from a PDBx
@@ -266,16 +259,12 @@ def test_any_bonds(tmpdir, format):
     # i.e. the bonds can be properly read from ``chem_comp_bond``
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        test_bonds = pdbx.get_structure(
-            pdbx_file, model=1, include_bonds=True
-        ).bonds
+        test_bonds = pdbx.get_structure(pdbx_file, model=1, include_bonds=True).bonds
 
     assert test_bonds == ref_bonds
 
 
-@pytest.mark.parametrize(
-    "format", ["cif", "bcif"]
-)
+@pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_unequal_lengths(format):
     """
     Check if setting columns with unequal lengths in the same category
@@ -299,9 +288,7 @@ def test_setting_empty_column():
     """
     Check if setting an empty column raises an exception.
     """
-    with pytest.raises(
-        ValueError, match="Array must contain at least one element"
-    ):
+    with pytest.raises(ValueError, match="Array must contain at least one element"):
         pdbx.CIFCategory({"foo": []})
 
 
@@ -324,9 +311,7 @@ def test_setting_empty_structure():
     pdbx.set_structure(pdbx.CIFFile(), atoms, include_bonds=True)
 
 
-@pytest.mark.parametrize(
-    "format", ["cif", "bcif"]
-)
+@pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_list_assemblies(format):
     """
     Test the :func:`list_assemblies()` function based on a known
@@ -351,11 +336,10 @@ def test_list_assemblies(format):
     }
 
 
-@pytest.mark.parametrize("format, pdb_id, model", itertools.product(
-    ["cif", "bcif"],
-    ["1f2n", "5zng"],
-    [None, 1, -1]
-))
+@pytest.mark.parametrize(
+    "format, pdb_id, model",
+    itertools.product(["cif", "bcif"], ["1f2n", "5zng"], [None, 1, -1]),
+)
 def test_get_assembly(format, pdb_id, model):
     """
     Test whether the :func:`get_assembly()` function produces the same
@@ -376,13 +360,11 @@ def test_get_assembly(format, pdb_id, model):
     # Test each available assembly
     for id, ref_oligomer_count in zip(
         assembly_category["id"].as_array(str),
-        assembly_category["oligomeric_count"].as_array(int)
+        assembly_category["oligomeric_count"].as_array(int),
     ):
         print("Assembly ID:", id)
         try:
-            assembly = pdbx.get_assembly(
-                pdbx_file, assembly_id=id, model=model
-            )
+            assembly = pdbx.get_assembly(pdbx_file, assembly_id=id, model=model)
         except biotite.InvalidFileError:
             if model is None:
                 # The file cannot be parsed into an AtomArrayStack,
@@ -409,8 +391,7 @@ def test_get_assembly(format, pdb_id, model):
 @pytest.mark.parametrize(
     "path, use_ideal_coord",
     itertools.product(
-        glob.glob(join(data_dir("structure"), "molecules", "*.cif")),
-        [False, True]
+        glob.glob(join(data_dir("structure"), "molecules", "*.cif")), [False, True]
     ),
 )
 def test_component_conversion(tmpdir, path, use_ideal_coord):
@@ -420,9 +401,7 @@ def test_component_conversion(tmpdir, path, use_ideal_coord):
     structure.
     """
     cif_file = pdbx.CIFFile.read(path)
-    ref_atoms = pdbx.get_component(
-        cif_file, use_ideal_coord=use_ideal_coord
-    )
+    ref_atoms = pdbx.get_component(cif_file, use_ideal_coord=use_ideal_coord)
 
     cif_file = pdbx.CIFFile()
     pdbx.set_component(cif_file, ref_atoms, data_block="test")
@@ -430,9 +409,7 @@ def test_component_conversion(tmpdir, path, use_ideal_coord):
     cif_file.write(file_path)
 
     cif_file = pdbx.CIFFile.read(path)
-    test_atoms = pdbx.get_component(
-        cif_file, use_ideal_coord=use_ideal_coord
-    )
+    test_atoms = pdbx.get_component(cif_file, use_ideal_coord=use_ideal_coord)
 
     assert test_atoms == ref_atoms
 
@@ -452,14 +429,14 @@ def test_get_sequence(format):
     sequences_1 = pdbx.get_sequence(pdbx_file)
     pdbx_file = File.read(join(data_dir("structure"), f"4gxy.{format}"))
     sequences_2 = pdbx.get_sequence(pdbx_file)
-    assert str(sequences_1['T']) == "CCGACGGCGCATCAGC"
-    assert type(sequences_1['T']) is seq.NucleotideSequence
-    assert str(sequences_1['P']) == "GCTGATGCGCC"
-    assert type(sequences_1['P']) is seq.NucleotideSequence
-    assert str(sequences_1['D']) == "GTCGG"
-    assert type(sequences_1['D']) is seq.NucleotideSequence
+    assert str(sequences_1["T"]) == "CCGACGGCGCATCAGC"
+    assert type(sequences_1["T"]) is seq.NucleotideSequence
+    assert str(sequences_1["P"]) == "GCTGATGCGCC"
+    assert type(sequences_1["P"]) is seq.NucleotideSequence
+    assert str(sequences_1["D"]) == "GTCGG"
+    assert type(sequences_1["D"]) is seq.NucleotideSequence
     assert (
-        str(sequences_1['A']) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
+        str(sequences_1["A"]) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
         "AYRKAASVIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQD"
         "DTSSSINFLTRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGD"
         "FEKRIPREEMLQMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPS"
@@ -467,14 +444,14 @@ def test_get_sequence(format):
         "RIDIRLIPKDQYYCGVLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVA"
         "GEPLPVDSEKDIFDYIQWKYREPKDRSE"
     )
-    assert type(sequences_1['A']) is seq.ProteinSequence
+    assert type(sequences_1["A"]) is seq.ProteinSequence
     assert (
-        str(sequences_2['A']) == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAA"
+        str(sequences_2["A"]) == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAA"
         "AAGGGAAGCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCC"
         "CCTCGGGATGTGCCACTGGCCCGAAGGCCGGGAAGGCGGAGGGGCGGCGAGGAT"
         "CCGGAGTCAGGAAACCTGCCTGCCGTC"
     )
-    assert type(sequences_2['A']) is seq.NucleotideSequence
+    assert type(sequences_2["A"]) is seq.NucleotideSequence
 
 
 def test_bcif_encoding():
@@ -485,21 +462,20 @@ def test_bcif_encoding():
     PDB_ID = "1aki"
 
     encodings_used = {
-        encoding: False for encoding in [
+        encoding: False
+        for encoding in [
             pdbx.ByteArrayEncoding,
             pdbx.FixedPointEncoding,
             # This encoding is not used in the test file
-            #pdbx.IntervalQuantizationEncoding,
+            # pdbx.IntervalQuantizationEncoding,
             pdbx.RunLengthEncoding,
             pdbx.DeltaEncoding,
             pdbx.IntegerPackingEncoding,
-            pdbx.StringArrayEncoding
+            pdbx.StringArrayEncoding,
         ]
     }
 
-    bcif_file = pdbx.BinaryCIFFile.read(
-        join(data_dir("structure"), f"{PDB_ID}.bcif")
-    )
+    bcif_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{PDB_ID}.bcif"))
     for category_name, category in bcif_file[PDB_ID.upper()].items():
         for column_name in category.keys():
             try:
@@ -519,17 +495,15 @@ def test_bcif_encoding():
                 test_msgpack = column.serialize()
 
                 assert test_msgpack == ref_msgpack
-            except:
-                raise Exception(
-                    f"Encoding failed for '{category_name}.{column_name}'"
-                )
+            except Exception:
+                raise Exception(f"Encoding failed for '{category_name}.{column_name}'")
 
     # Check if each encoding was used at least once
     # to ensure that the test was thorough
     for key, was_used in encodings_used.items():
         try:
             assert was_used
-        except:
+        except Exception:
             raise Exception(f"Encoding {key} was not used")
 
 
@@ -587,14 +561,17 @@ def test_bcif_cif_consistency():
                 if cif_column.mask is None:
                     assert bcif_column.mask is None
                 else:
-                    assert cif_column.mask.array.tolist() \
+                    assert (
+                        cif_column.mask.array.tolist()
                         == bcif_column.mask.array.tolist()
+                    )
                 # In CIF format, all vales are strings
                 # -> ensure consistency
                 dtype = bcif_column.data.array.dtype
-                assert cif_column.as_array(dtype).tolist() \
-                    == pytest.approx(bcif_column.as_array(dtype).tolist())
-            except:
+                assert cif_column.as_array(dtype).tolist() == pytest.approx(
+                    bcif_column.as_array(dtype).tolist()
+                )
+            except Exception:
                 raise Exception(
                     f"Comparison failed for '{category_name}.{column_name}'"
                 )
@@ -606,7 +583,7 @@ def test_bcif_cif_consistency():
         ("cif", None),
         ("bcif", False),
         ("bcif", True),
-    ]
+    ],
 )
 def test_serialization_consistency(format, create_new_encoding):
     """
@@ -626,22 +603,18 @@ def test_serialization_consistency(format, create_new_encoding):
 
     for category_name, ref_category in file.block.items():
         if format == "cif":
-            test_category = pdbx.CIFCategory.deserialize(
-                ref_category.serialize()
-            )
+            test_category = pdbx.CIFCategory.deserialize(ref_category.serialize())
         elif format == "bcif":
             # Access each column to force otherwise lazy deserialization
             for _ in ref_category.values():
                 pass
             if create_new_encoding:
                 ref_category = _clear_encoding(ref_category)
-            test_category = pdbx.BinaryCIFCategory.deserialize(
-                ref_category.serialize()
-            )
+            test_category = pdbx.BinaryCIFCategory.deserialize(ref_category.serialize())
         try:
             for key in test_category.keys():
                 assert ref_category[key] == test_category[key]
-        except:
+        except Exception:
             raise Exception(f"Comparison failed for '{category_name}.{key}'")
 
 

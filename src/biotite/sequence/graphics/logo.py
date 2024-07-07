@@ -7,12 +7,9 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["plot_sequence_logo"]
 
 import numpy as np
-from ...visualize import set_font_size_in_coord
-from ..alphabet import LetterAlphabet
-from .colorschemes import get_color_scheme
-import warnings
-from ..align import Alignment
-from .. import SequenceProfile
+from biotite.sequence.alphabet import LetterAlphabet
+from biotite.sequence.graphics.colorschemes import get_color_scheme
+from biotite.visualize import set_font_size_in_coord
 
 
 def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
@@ -61,10 +58,10 @@ def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
 
     # 'color' and 'size' property is not passed on to text
     kwargs.pop("color", None)
-    kwargs.pop("size",  None)
+    kwargs.pop("size", None)
 
     frequencies, entropies, max_entropy = _get_entropy(profile)
-    stack_heights = (max_entropy - entropies)
+    stack_heights = max_entropy - entropies
     symbols_heights = stack_heights[:, np.newaxis] * frequencies
     index_order = np.argsort(symbols_heights, axis=1)
     for i in range(symbols_heights.shape[0]):
@@ -73,21 +70,25 @@ def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
         start_height = 0
         for j in index_order[i]:
             # Stack the symbols at position on top of the preceeding one
-            height = symbols_heights[i,j]
+            height = symbols_heights[i, j]
             if height > 0:
                 symbol = alphabet.decode(j)
                 text = axes.text(
-                    i+0.5, start_height, symbol,
-                    ha="left", va="bottom", color=colors[j],
+                    i + 0.5,
+                    start_height,
+                    symbol,
+                    ha="left",
+                    va="bottom",
+                    color=colors[j],
                     # Best results are obtained with this font size
                     size=1,
-                    **kwargs
+                    **kwargs,
                 )
                 text.set_clip_on(True)
                 set_font_size_in_coord(text, width=1, height=height)
                 start_height += height
 
-    axes.set_xlim(0.5, len(profile.symbols)+0.5)
+    axes.set_xlim(0.5, len(profile.symbols) + 0.5)
     axes.set_ylim(0, max_entropy)
 
 
@@ -97,8 +98,7 @@ def _get_entropy(profile):
     # 0 * log2(0) = 0 -> Convert NaN to 0
     no_zeros = freq != 0
     pre_entropies = np.zeros(freq.shape)
-    pre_entropies[no_zeros] \
-        = freq[no_zeros] * np.log2(freq[no_zeros])
+    pre_entropies[no_zeros] = freq[no_zeros] * np.log2(freq[no_zeros])
     entropies = -np.sum(pre_entropies, axis=1)
     max_entropy = np.log2(len(profile.alphabet))
     return freq, entropies, max_entropy

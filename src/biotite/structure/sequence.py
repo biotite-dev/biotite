@@ -11,13 +11,12 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["to_sequence"]
 
 import numpy as np
-from .info.misc import one_letter_code
-from .info.groups import amino_acid_names, nucleotide_names
-from .residues import get_residues
-from .chains import get_chain_starts
-from .error import BadStructureError
-from ..sequence.seqtypes import ProteinSequence, NucleotideSequence
-
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
+from biotite.structure.chains import get_chain_starts
+from biotite.structure.error import BadStructureError
+from biotite.structure.info.groups import amino_acid_names, nucleotide_names
+from biotite.structure.info.misc import one_letter_code
+from biotite.structure.residues import get_residues
 
 HETERO_PLACEHOLDER = "."
 
@@ -63,9 +62,9 @@ def to_sequence(atoms, allow_hetero=False):
     """
     sequences = []
     chain_start_indices = get_chain_starts(atoms, add_exclusive_stop=True)
-    for i in range(len(chain_start_indices)-1):
+    for i in range(len(chain_start_indices) - 1):
         start = chain_start_indices[i]
-        stop = chain_start_indices[i+1]
+        stop = chain_start_indices[i + 1]
         chain = atoms[start:stop]
         _, residues = get_residues(chain)
         one_letter_symbols = np.array(
@@ -73,7 +72,7 @@ def to_sequence(atoms, allow_hetero=False):
         )
         hetero_mask = one_letter_symbols == HETERO_PLACEHOLDER
 
-        aa_count  = np.count_nonzero(np.isin(residues, amino_acid_names()))
+        aa_count = np.count_nonzero(np.isin(residues, amino_acid_names()))
         nuc_count = np.count_nonzero(np.isin(residues, nucleotide_names()))
         if aa_count == 0 and nuc_count == 0:
             raise BadStructureError(

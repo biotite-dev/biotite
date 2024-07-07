@@ -12,34 +12,29 @@ as the plot clearly indicates.
 # License: BSD 3 clause
 
 from tempfile import gettempdir
-import biotite.structure as struc
-import biotite.structure.io as strucio
-import biotite.database.rcsb as rcsb
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import colors
-import scipy.stats as sts
+import biotite.database.rcsb as rcsb
+import biotite.structure as struc
+import biotite.structure.io as strucio
 
 # Download and parse file
 file = rcsb.fetch("3vkh", "cif", gettempdir())
 atom_array = strucio.load_structure(file)
 # Calculate backbone dihedral angles
 # from one of the two identical chains in the asymmetric unit
-phi, psi, omega = struc.dihedral_backbone(
-    atom_array[atom_array.chain_id == "A"]
-)
+phi, psi, omega = struc.dihedral_backbone(atom_array[atom_array.chain_id == "A"])
 # Conversion from radians into degree
-phi *= 180/np.pi
-psi *= 180/np.pi
+phi *= 180 / np.pi
+psi *= 180 / np.pi
 # Remove invalid values (NaN) at first and last position
-phi= phi[1:-1]
-psi= psi[1:-1]
+phi = phi[1:-1]
+psi = psi[1:-1]
 
 # Plot density
 figure = plt.figure()
 ax = figure.add_subplot(111)
-h, xed, yed, image = ax.hist2d(phi, psi, bins=(200, 200),
-                cmap="RdYlGn_r", cmin=1)
+h, xed, yed, image = ax.hist2d(phi, psi, bins=(200, 200), cmap="RdYlGn_r", cmin=1)
 cbar = figure.colorbar(image, orientation="vertical")
 cbar.set_label("Count")
 ax.set_aspect("equal")

@@ -9,13 +9,12 @@ dot-bracket-notation.
 
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
-__all__ = ["dot_bracket_from_structure", "dot_bracket",
-           "base_pairs_from_dot_bracket"]
+__all__ = ["dot_bracket_from_structure", "dot_bracket", "base_pairs_from_dot_bracket"]
 
 import numpy as np
-from .basepairs import base_pairs
-from .pseudoknots import pseudoknots
-from .residues import get_residue_count, get_residue_positions
+from biotite.structure.basepairs import base_pairs
+from biotite.structure.pseudoknots import pseudoknots
+from biotite.structure.residues import get_residue_count, get_residue_positions
 
 _OPENING_BRACKETS = "([{<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 _OPENING_BRACKETS_BYTES = _OPENING_BRACKETS.encode()
@@ -24,7 +23,8 @@ _CLOSING_BRACKETS_BYTES = _CLOSING_BRACKETS.encode()
 
 
 def dot_bracket_from_structure(
-    nucleic_acid_strand, scores=None, max_pseudoknot_order=None):
+    nucleic_acid_strand, scores=None, max_pseudoknot_order=None
+):
     """
     Represent a nucleic-acid-strand in dot-bracket-letter-notation
     (DBL-notation). :footcite:`Antczak2018`
@@ -53,16 +53,18 @@ def dot_bracket_from_structure(
 
     References
     ----------
-    
+
     .. footbibliography::
     """
     basepairs = base_pairs(nucleic_acid_strand)
     if len(basepairs) == 0:
-        return ['']
+        return [""]
     basepairs = get_residue_positions(nucleic_acid_strand, basepairs)
     length = get_residue_count(nucleic_acid_strand)
-    return dot_bracket(basepairs, length, scores=scores,
-                       max_pseudoknot_order=max_pseudoknot_order)
+    return dot_bracket(
+        basepairs, length, scores=scores, max_pseudoknot_order=max_pseudoknot_order
+    )
+
 
 def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
     """
@@ -115,21 +117,20 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
 
     References
     ----------
-    
+
     .. footbibliography::
     """
     # Make sure the lower residue is on the left for each row
     basepairs = np.sort(basepairs, axis=1)
 
     # Get pseudoknot order
-    pseudoknot_order = pseudoknots(basepairs, scores=scores,
-                                   max_pseudoknot_order=max_pseudoknot_order)
+    pseudoknot_order = pseudoknots(
+        basepairs, scores=scores, max_pseudoknot_order=max_pseudoknot_order
+    )
 
     # Each optimal pseudoknot order solution is represented in
     # dot-bracket-notation
-    notations = [
-        bytearray((b"."*length)) for _ in range(len(pseudoknot_order))
-    ]
+    notations = [bytearray((b"." * length)) for _ in range(len(pseudoknot_order))]
     for s, solution in enumerate(pseudoknot_order):
         for basepair, order in zip(basepairs, solution):
             if order == -1:
@@ -137,6 +138,7 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
             notations[s][basepair[0]] = _OPENING_BRACKETS_BYTES[order]
             notations[s][basepair[1]] = _CLOSING_BRACKETS_BYTES[order]
     return [notation.decode() for notation in notations]
+
 
 def base_pairs_from_dot_bracket(dot_bracket_notation):
     """
@@ -172,7 +174,7 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
 
     References
     ----------
-    
+
     .. footbibliography::
     """
     basepairs = []
@@ -180,7 +182,6 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
 
     # Iterate through input string and extract base pairs
     for pos, symbol in enumerate(dot_bracket_notation):
-
         if symbol in _OPENING_BRACKETS:
             # Add opening residues to list (separate list for each
             # bracket type)
@@ -197,9 +198,7 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
 
         else:
             if symbol != ".":
-                raise ValueError(
-                    f"'{symbol}' is an invalid character for DBL-notation"
-                )
+                raise ValueError(f"'{symbol}' is an invalid character for DBL-notation")
 
     for not_closed in opened_brackets:
         if not_closed != []:
@@ -207,7 +206,6 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
                 "Invalid DBL-notation, not all opening brackets have a "
                 "closing bracket"
             )
-
 
     # Sort the base pair indices in ascending order
     basepairs = np.array(basepairs)

@@ -6,22 +6,28 @@ __name__ = "biotite.database.entrez"
 __author__ = "Patrick Kunzmann"
 __all__ = ["fetch", "fetch_single_file"]
 
-from os.path import isdir, isfile, join, getsize
-import os
-import glob
 import io
+import os
+from os.path import getsize, isdir, isfile, join
 import requests
-from .check import check_for_errors
-from .dbnames import sanitize_database_name
-from .key import get_api_key
-from ..error import RequestError
-
+from biotite.database.entrez.check import check_for_errors
+from biotite.database.entrez.dbnames import sanitize_database_name
+from biotite.database.entrez.key import get_api_key
+from biotite.database.error import RequestError
 
 _fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
 
-def fetch(uids, target_path, suffix, db_name, ret_type,
-          ret_mode="text", overwrite=False, verbose=False):
+def fetch(
+    uids,
+    target_path,
+    suffix,
+    db_name,
+    ret_type,
+    ret_mode="text",
+    overwrite=False,
+    verbose=False,
+):
     """
     Download files from the NCBI Entrez database in various formats.
 
@@ -111,31 +117,28 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
             file = join(target_path, id + "." + suffix)
         else:
             file = None
-        if file is None \
-           or not isfile(file) \
-           or getsize(file) == 0 \
-           or overwrite:
-                param_dict = {
-                    "db" : sanitize_database_name(db_name),
-                    "id" : id,
-                    "rettype" : ret_type,
-                    "retmode" : ret_mode,
-                    "tool" : "Biotite",
-                    "mail" : "padix.key@gmail.com"
-                }
-                api_key = get_api_key()
-                if api_key is not None:
-                    param_dict["api_key"] = api_key
-                r = requests.get(_fetch_url, params=param_dict)
-                content = r.text
-                check_for_errors(content)
-                if content.startswith(" Error"):
-                    raise RequestError(content[8:])
-                if file is None:
-                    file = io.StringIO(content)
-                else:
-                    with open(file, "w+") as f:
-                        f.write(content)
+        if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
+            param_dict = {
+                "db": sanitize_database_name(db_name),
+                "id": id,
+                "rettype": ret_type,
+                "retmode": ret_mode,
+                "tool": "Biotite",
+                "mail": "padix.key@gmail.com",
+            }
+            api_key = get_api_key()
+            if api_key is not None:
+                param_dict["api_key"] = api_key
+            r = requests.get(_fetch_url, params=param_dict)
+            content = r.text
+            check_for_errors(content)
+            if content.startswith(" Error"):
+                raise RequestError(content[8:])
+            if file is None:
+                file = io.StringIO(content)
+            else:
+                with open(file, "w+") as f:
+                    f.write(content)
         files.append(file)
     if verbose:
         print("\nDone")
@@ -146,8 +149,9 @@ def fetch(uids, target_path, suffix, db_name, ret_type,
         return files
 
 
-def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
-                      overwrite=False):
+def fetch_single_file(
+    uids, file_name, db_name, ret_type, ret_mode="text", overwrite=False
+):
     """
     Almost the same as :func:`fetch()`, but the data for the given UIDs
     will be stored in a single file.
@@ -188,24 +192,26 @@ def fetch_single_file(uids, file_name, db_name, ret_type, ret_mode="text",
     --------
     fetch
     """
-    if file_name is not None \
-       and os.path.isfile(file_name) \
-       and getsize(file_name) > 0 \
-       and not overwrite:
-            # Do no redownload the already existing file
-            return file_name
+    if (
+        file_name is not None
+        and os.path.isfile(file_name)
+        and getsize(file_name) > 0
+        and not overwrite
+    ):
+        # Do no redownload the already existing file
+        return file_name
     uid_list_str = ""
     for id in uids:
         uid_list_str += id + ","
     # Remove terminal comma
     uid_list_str = uid_list_str[:-1]
     param_dict = {
-        "db" : sanitize_database_name(db_name),
-        "id" : uid_list_str,
-        "rettype" : ret_type,
-        "retmode" : ret_mode,
-        "tool" : "Biotite",
-        "mail" : "padix.key@gmail.com"
+        "db": sanitize_database_name(db_name),
+        "id": uid_list_str,
+        "rettype": ret_type,
+        "retmode": ret_mode,
+        "tool": "Biotite",
+        "mail": "padix.key@gmail.com",
     }
     api_key = get_api_key()
     if api_key is not None:

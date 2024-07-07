@@ -7,8 +7,7 @@ __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
 __all__ = ["check_for_errors"]
 
 import json
-from ..error import RequestError
-
+from biotite.database.error import RequestError
 
 # Taken from https://github.com/kblin/ncbi-entrez-error-messages
 _error_messages = [

@@ -1330,6 +1330,7 @@ def _invert_index(IndexType[:] index_v, uint32 length):
 
 
 
+# fmt: off
 _DEFAULT_DISTANCE_RANGE = {
     # Taken from Allen et al.
     #               min   - 2*std     max   + 2*std
@@ -1376,6 +1377,7 @@ _DEFAULT_DISTANCE_RANGE = {
     ("SE", "SE") : (2.340 - 2*0.024,  2.340 + 2*0.024),
     ("SI", "SE") : (2.359 - 2*0.012,  2.359 + 2*0.012),
 }
+# fmt: on
 
 def connect_via_distances(atoms, dict distance_range=None, bint inter_residue=True,
                           default_bond_type=BondType.ANY, bint periodic=False):

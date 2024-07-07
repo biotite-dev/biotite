@@ -21,10 +21,10 @@ Each leaflet is a connected subgraph.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-from tempfile import NamedTemporaryFile
 import warnings
-import numpy as np
+from tempfile import NamedTemporaryFile
 import networkx as nx
+import numpy as np
 import biotite.structure as struc
 import biotite.structure.io as strucio
 
@@ -33,8 +33,7 @@ import biotite.structure.io as strucio
 PDB_FILE_PATH = "../../../download/dppc_n128.pdb"
 
 
-def find_leaflets(structure, head_atom_mask,
-                  cutoff_distance=15.0, periodic=False):
+def find_leaflets(structure, head_atom_mask, cutoff_distance=15.0, periodic=False):
     """
     Identify which lipids molecules belong to the same lipid bilayer
     leaflet.
@@ -64,28 +63,29 @@ def find_leaflets(structure, head_atom_mask,
     """
 
     cell_list = struc.CellList(
-        structure, cell_size=cutoff_distance, selection=head_atom_mask,
-        periodic=periodic
+        structure,
+        cell_size=cutoff_distance,
+        selection=head_atom_mask,
+        periodic=periodic,
     )
     adjacency_matrix = cell_list.create_adjacency_matrix(cutoff_distance)
     graph = nx.Graph(adjacency_matrix)
 
-    head_leaflets = [sorted(c) for c in nx.connected_components(graph)
-                     # A leaflet cannot consist of a single lipid
-                     # This also removes all entries
-                     # for atoms not in 'head_atom_mask'
-                     if len(c) > 1]
+    head_leaflets = [
+        sorted(c)
+        for c in nx.connected_components(graph)
+        # A leaflet cannot consist of a single lipid
+        # This also removes all entries
+        # for atoms not in 'head_atom_mask'
+        if len(c) > 1
+    ]
 
     # 'leaflets' contains indices to head atoms
     # Broadcast each head atom index to all atoms in its corresponding
     # residue
-    leaflet_masks = np.empty(
-        (len(head_leaflets), structure.array_length()),
-        dtype=bool
-    )
+    leaflet_masks = np.empty((len(head_leaflets), structure.array_length()), dtype=bool)
     for i, head_leaflet in enumerate(head_leaflets):
-        leaflet_masks[i] = struc.get_residue_masks(structure, head_leaflet) \
-                                .any(axis=0)
+        leaflet_masks[i] = struc.get_residue_masks(structure, head_leaflet).any(axis=0)
     return leaflet_masks
 
 
@@ -100,7 +100,7 @@ with warnings.catch_warnings():
 # periodicity should not matter
 leaflets = find_leaflets(
     structure,
-    head_atom_mask=(structure.res_name == "DPP") & (structure.atom_name == "P")
+    head_atom_mask=(structure.res_name == "DPP") & (structure.atom_name == "P"),
 )
 # Bilayer -> Expect two leaflets
 assert len(leaflets) == 2

@@ -7,11 +7,11 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["DsspApp"]
 
 from tempfile import NamedTemporaryFile
-from ..localapp import LocalApp, cleanup_tempfile
-from ..application import AppState, requires_state
-from ...structure.io.pdbx.cif import CIFFile
-from ...structure.io.pdbx.convert import set_structure
 import numpy as np
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.structure.io.pdbx.cif import CIFFile
+from biotite.structure.io.pdbx.convert import set_structure
 
 
 class DsspApp(LocalApp):
@@ -73,7 +73,7 @@ class DsspApp(LocalApp):
                 "occupancy", np.ones(self._array.array_length(), dtype=float)
             )
 
-        self._in_file  = NamedTemporaryFile("w", suffix=".cif",  delete=False)
+        self._in_file = NamedTemporaryFile("w", suffix=".cif", delete=False)
         self._out_file = NamedTemporaryFile("r", suffix=".dssp", delete=False)
 
     def run(self):
@@ -81,9 +81,7 @@ class DsspApp(LocalApp):
         set_structure(in_file, self._array)
         in_file.write(self._in_file)
         self._in_file.flush()
-        self.set_arguments(
-            ["-i", self._in_file.name, "-o", self._out_file.name]
-        )
+        self.set_arguments(["-i", self._in_file.name, "-o", self._out_file.name])
         super().run()
 
     def evaluate(self):
@@ -93,13 +91,12 @@ class DsspApp(LocalApp):
         sse_start = None
         for i, line in enumerate(lines):
             if line.startswith("  #  RESIDUE AA STRUCTURE"):
-                sse_start = i+1
+                sse_start = i + 1
         if sse_start is None:
             raise ValueError("DSSP file does not contain SSE records")
         # Remove "!" for missing residues
         lines = [
-            line for line in lines[sse_start:]
-            if len(line) != 0 and line[13] != "!"
+            line for line in lines[sse_start:] if len(line) != 0 and line[13] != "!"
         ]
         self._sse = np.zeros(len(lines), dtype="U1")
         # Parse file for SSE letters

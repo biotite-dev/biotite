@@ -18,21 +18,21 @@ software team.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 import networkx as nx
+import numpy as np
+from matplotlib.lines import Line2D
 from networkx.drawing.nx_pydot import graphviz_layout
+import biotite.database.rcsb as rcsb
 import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-import biotite.database.rcsb as rcsb
-
 
 # Adapted from "Mol*" Software
 # The dictionary maps residue names of saccharides to their common names
 SACCHARIDE_NAMES = {
-    res_name : common_name for common_name, res_names in [
+    res_name: common_name
+    for common_name, res_names in [
         ("Glc", ["GLC", "BGC", "Z8T", "TRE", "MLR"]),
         ("Man", ["MAN", "BMA"]),
         ("Gal", ["GLA", "GAL", "GZL", "GXL", "GIV"]),
@@ -112,62 +112,51 @@ SACCHARIDE_REPRESENTATION = {
     "All": ("o", "purple"),
     "Tal": ("o", "lightsteelblue"),
     "Ido": ("o", "chocolate"),
-
     "GlcNAc": ("s", "royalblue"),
     "ManNAc": ("s", "forestgreen"),
     "GalNAc": ("s", "gold"),
     "GulNAc": ("s", "darkorange"),
     "AllNAc": ("s", "purple"),
     "IdoNAc": ("s", "chocolate"),
-
     "GlcN": ("1", "royalblue"),
     "ManN": ("1", "forestgreen"),
     "GalN": ("1", "gold"),
-
     "GlcA": ("v", "royalblue"),
     "ManA": ("v", "forestgreen"),
     "GalA": ("v", "gold"),
     "GulA": ("v", "darkorange"),
     "TalA": ("v", "lightsteelblue"),
     "IdoA": ("v", "chocolate"),
-
     "Qui": ("^", "royalblue"),
     "Rha": ("^", "forestgreen"),
     "6dGul": ("^", "darkorange"),
     "Fuc": ("^", "crimson"),
-
     "QuiNAc": ("P", "royalblue"),
     "FucNAc": ("P", "crimson"),
-
     "Oli": ("X", "royalblue"),
     "Tyv": ("X", "forestgreen"),
     "Abe": ("X", "darkorange"),
     "Par": ("X", "pink"),
     "Dig": ("X", "purple"),
-
     "Ara": ("*", "forestgreen"),
     "Lyx": ("*", "gold"),
     "Xyl": ("*", "darkorange"),
     "Rib": ("*", "pink"),
-
     "Kdn": ("D", "forestgreen"),
     "Neu5Ac": ("D", "mediumvioletred"),
     "Neu5Gc": ("D", "turquoise"),
-
     "LDManHep": ("H", "forestgreen"),
     "Kdo": ("H", "gold"),
     "DDManHep": ("H", "pink"),
     "MurNAc": ("H", "purple"),
     "Mur": ("H", "chocolate"),
-
     "Api": ("p", "royalblue"),
     "Fru": ("p", "forestgreen"),
     "Tag": ("p", "gold"),
     "Sor": ("p", "darkorange"),
     "Psi": ("p", "pink"),
-
     # Default representation
-    None: ("h", "black")
+    None: ("h", "black"),
 }
 
 #########################################################################
@@ -222,19 +211,22 @@ graph.add_nodes_from(struc.get_residue_starts(structure))
 bonds = structure.bonds.as_array()[:, :2]
 # Convert indices pointing to connected atoms to indices pointing to the
 # starting atom of the respective residue
-connected = struc.get_residue_starts_for(
-    structure, bonds.flatten()
-).reshape(bonds.shape)
+connected = struc.get_residue_starts_for(structure, bonds.flatten()).reshape(
+    bonds.shape
+)
 # Omit bonds within the same residue
-connected = connected[connected[:,0] != connected[:,1]]
+connected = connected[connected[:, 0] != connected[:, 1]]
 # Add the residue connections to the graph
 graph.add_edges_from(connected)
 
 fig, ax = plt.subplots(figsize=(8.0, 8.0))
 nx.draw(
-    graph, ax=ax, node_size=10,
-    node_color=["crimson" if is_glycan[atom_i] else "royalblue"
-                for atom_i in graph.nodes()]
+    graph,
+    ax=ax,
+    node_size=10,
+    node_color=[
+        "crimson" if is_glycan[atom_i] else "royalblue" for atom_i in graph.nodes()
+    ],
 )
 
 ########################################################################
@@ -260,7 +252,8 @@ for atom_i, atom_j in list(graph.edges):
 # Get connected subgraphs containing glycans
 # -> any subgraph with more than one node
 glycan_graphs = [
-    graph.subgraph(nodes).copy() for nodes in nx.connected_components(graph)
+    graph.subgraph(nodes).copy()
+    for nodes in nx.connected_components(graph)
     if len(nodes) > 1
 ]
 
@@ -297,14 +290,14 @@ for glycan_graph in glycan_graphs:
     # almost always an atom index that is lower than the saccharides
     # attached to it
     glycan_graph = nx.DiGraph(
-        [(min(atom_i, atom_j), max(atom_i, atom_j))
-         for atom_i, atom_j in glycan_graph.edges()]
+        [
+            (min(atom_i, atom_j), max(atom_i, atom_j))
+            for atom_i, atom_j in glycan_graph.edges()
+        ]
     )
 
     # The 'root' is the amino acid
-    root = [
-        atom_i for atom_i in glycan_graph.nodes() if is_amino_acid[atom_i]
-    ]
+    root = [atom_i for atom_i in glycan_graph.nodes() if is_amino_acid[atom_i]]
     if len(root) == 0:
         # Saccharide is not attached to an amino acid -> Ignore glycan
         continue
@@ -331,22 +324,20 @@ for glycan_graph in glycan_graphs:
     # Position the root at coordinate origin
     pos_array -= pos_array[nodes.index(root)]
     # Set vertical distances between nodes to 1
-    pos_array[:,1] /= (
-        pos_array[nodes.index(root_neighbor), 1] -
-        pos_array[nodes.index(root), 1]
+    pos_array[:, 1] /= (
+        pos_array[nodes.index(root_neighbor), 1] - pos_array[nodes.index(root), 1]
     )
     # Set minimum horizontal distances between nodes to 1
-    non_zero_dist = np.abs(pos_array[(pos_array[:,0] != 0), 0])
+    non_zero_dist = np.abs(pos_array[(pos_array[:, 0] != 0), 0])
     if len(non_zero_dist) != 0:
-        pos_array[:,0] *= HORIZONTAL_NODE_DISTANCE / np.min(non_zero_dist)
+        pos_array[:, 0] *= HORIZONTAL_NODE_DISTANCE / np.min(non_zero_dist)
     # Move graph to residue ID position on x-axis
-    pos_array[:,0] += structure.res_id[root]
+    pos_array[:, 0] += structure.res_id[root]
     # Convert array back to dictionary
     pos = {node: tuple(coord) for node, coord in zip(nodes, pos_array)}
 
     nx.draw_networkx_edges(
-        glycan_graph, pos, ax=ax,
-        arrows=False, node_size=0, width=LINE_WIDTH
+        glycan_graph, pos, ax=ax, arrows=False, node_size=0, width=LINE_WIDTH
     )
 
     # Draw each node individually
@@ -359,14 +350,23 @@ for glycan_graph in glycan_graphs:
         common_name = SACCHARIDE_NAMES.get(structure.res_name[atom_i])
         shape, color = SACCHARIDE_REPRESENTATION[common_name]
         ax.scatter(
-            pos[atom_i][0], pos[atom_i][1],
-            s=NODE_SIZE, marker=shape, facecolor=color,
-            edgecolor="black", linewidths=LINE_WIDTH
+            pos[atom_i][0],
+            pos[atom_i][1],
+            s=NODE_SIZE,
+            marker=shape,
+            facecolor=color,
+            edgecolor="black",
+            linewidths=LINE_WIDTH,
         )
         legend_elements[common_name] = Line2D(
-            [0], [0], label=common_name, linestyle="None",
-            marker=shape, markerfacecolor=color,
-            markeredgecolor="black", markeredgewidth=LINE_WIDTH
+            [0],
+            [0],
+            label=common_name,
+            linestyle="None",
+            marker=shape,
+            markerfacecolor=color,
+            markeredgecolor="black",
+            markeredgewidth=LINE_WIDTH,
         )
 
 
@@ -381,9 +381,13 @@ ax.tick_params(axis="x", bottom=True, labelbottom=True)
 ax.tick_params(axis="y", left=False, labelleft=False)
 ax.set_xticks(glycosylated_residue_ids)
 ax.set_xticklabels(
-    [symbol + str(res_id) for symbol, res_id
-        in zip(glycosylated_residue_symbols, glycosylated_residue_ids)],
-        rotation=45
+    [
+        symbol + str(res_id)
+        for symbol, res_id in zip(
+            glycosylated_residue_symbols, glycosylated_residue_ids
+        )
+    ],
+    rotation=45,
 )
 
 # Set the end of the axis to the last amino acid

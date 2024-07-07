@@ -7,6 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["get_database_name"]
 
 
+# fmt: off
 _db_names = {
     "BioProject"        : "bioproject",
     "BioSample"         : "biosample",
@@ -45,26 +46,27 @@ _db_names = {
     "UniGene"           : "unigene",
     "UniSTS"            : "unists"
 }
+# fmt: on
 
 
 def get_database_name(database):
     """
     Map a common NCBI Entrez database name to an E-utility database
     name.
-    
+
     Parameters
     ----------
     database : str
         Entrez database name.
-    
+
     Returns
     -------
     name : str
         E-utility database name.
-    
+
     Examples
     --------
-    
+
     >>> print(get_database_name("Nucleotide"))
     nuccore
     """

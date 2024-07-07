@@ -3,20 +3,18 @@
 # information.
 
 import itertools
-from tempfile import NamedTemporaryFile
 from os.path import join
+from tempfile import NamedTemporaryFile
 import numpy as np
 import pytest
 import biotite.structure as struc
 from biotite.structure.io import load_structure, save_structure
-from ..util import data_dir, cannot_import
+from tests.util import cannot_import, data_dir
 
 
 @pytest.fixture()
 def stack(request):
-    stack = load_structure(
-        join(data_dir("structure"), "1l2y.bcif")
-    )
+    stack = load_structure(join(data_dir("structure"), "1l2y.bcif"))
     if request.param:
         # Use connect_via_distances, since 1l2y has invalidly bonded
         # N-terminal hydrogen atoms
@@ -26,21 +24,15 @@ def stack(request):
 
 # Ignore warning about dummy unit cell vector
 @pytest.mark.filterwarnings("ignore")
-@pytest.mark.skipif(
-    cannot_import("mdtraj"),
-    reason="MDTraj is not installed"
-)
+@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
-    "pdb_id, use_bond_list", itertools.product(
-        ["1l2y", "1gya", "1igy"],
-        [False, True]
-    )
+    "pdb_id, use_bond_list", itertools.product(["1l2y", "1gya", "1igy"], [False, True])
 )
 def test_hbond_structure(pdb_id, use_bond_list):
     """
     Compare hydrogen bond detection with MDTraj
     """
-    file_name = join(data_dir("structure"), pdb_id+".bcif")
+    file_name = join(data_dir("structure"), pdb_id + ".bcif")
 
     array = load_structure(file_name)
     if use_bond_list:
@@ -58,9 +50,9 @@ def test_hbond_structure(pdb_id, use_bond_list):
     if isinstance(array, struc.AtomArrayStack):
         # For consistency with MDTraj 'S' cannot be acceptor element
         # https://github.com/mdtraj/mdtraj/blob/master/mdtraj/geometry/hbond.py#L365
-        triplets, mask = struc.hbond(array, acceptor_elements=("O","N"))
+        triplets, mask = struc.hbond(array, acceptor_elements=("O", "N"))
     else:
-        triplets = struc.hbond(array, acceptor_elements=("O","N"))
+        triplets = struc.hbond(array, acceptor_elements=("O", "N"))
 
     # Save to new pdb file for consistent treatment of inscode/altloc
     # im MDTraj
@@ -69,11 +61,10 @@ def test_hbond_structure(pdb_id, use_bond_list):
 
     # Compare with MDTraj
     import mdtraj
+
     traj = mdtraj.load(temp.name)
     temp.close()
-    triplets_ref = mdtraj.baker_hubbard(
-        traj, freq=0, periodic=False
-    )
+    triplets_ref = mdtraj.baker_hubbard(traj, freq=0, periodic=False)
 
     # Both packages may use different order
     # -> use set for comparison
@@ -122,28 +113,27 @@ def test_hbond_with_selections(stack):
     of this boundary should be found. Also, hbond should respect the
     selection type.
     """
-    selection1 = (stack.res_id == 3) & (stack.atom_name == 'O')  # 3TYR BB Ox
+    selection1 = (stack.res_id == 3) & (stack.atom_name == "O")  # 3TYR BB Ox
     selection2 = stack.res_id == 7
 
     # backbone hbond should be found if selection1/2 type is both
-    triplets, mask = struc.hbond(stack, selection1, selection2,
-                                 selection1_type="both")
+    triplets, mask = struc.hbond(stack, selection1, selection2, selection1_type="both")
     assert len(triplets) == 1
     assert triplets[0][0] == 116
     assert triplets[0][2] == 38
 
     # backbone hbond should be found if selection1 is acceptor and
     # selection2 is donor
-    triplets, mask = struc.hbond(stack, selection1, selection2,
-                                 selection1_type="acceptor")
+    triplets, mask = struc.hbond(
+        stack, selection1, selection2, selection1_type="acceptor"
+    )
     assert len(triplets) == 1
     assert triplets[0][0] == 116
     assert triplets[0][2] == 38
 
     # no hbond should be found,
     # because the backbone oxygen cannot be a donor
-    triplets, mask = struc.hbond(stack, selection1, selection2,
-                                 selection1_type="donor")
+    triplets, mask = struc.hbond(stack, selection1, selection2, selection1_type="donor")
     assert len(triplets) == 0
 
 
@@ -164,18 +154,20 @@ def test_hbond_single_selection(stack):
 
 
 def test_hbond_frequency():
-    mask = np.array([
-        [True, True, True, True, True], # 1.0
-        [False, False, False, False, False], # 0.0
-        [False, False, False, True, True] # 0.4
-    ]).T
+    mask = np.array(
+        [
+            [True, True, True, True, True],  # 1.0
+            [False, False, False, False, False],  # 0.0
+            [False, False, False, True, True],  # 0.4
+        ]
+    ).T
     freq = struc.hbond_frequency(mask)
     assert not np.isin(False, np.isclose(freq, np.array([1.0, 0.0, 0.4])))
 
 
 # Ignore warning about missing BondList
 @pytest.mark.filterwarnings("ignore")
-@pytest.mark.parametrize("translation_vector", [(10,20,30), (-5, 3, 18)])
+@pytest.mark.parametrize("translation_vector", [(10, 20, 30), (-5, 3, 18)])
 def test_hbond_periodicity(translation_vector):
     """
     Test whether hydrogen bond identification uses periodic boundary

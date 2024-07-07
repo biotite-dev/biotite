@@ -8,16 +8,22 @@ import biotite.sequence as seq
 import biotite.sequence.align as align
 
 
-@pytest.mark.parametrize("db_entry", [entry for entry
-                                      in align.SubstitutionMatrix.list_db()
-                                      if entry not in ["NUC","GONNET"]])
+@pytest.mark.parametrize(
+    "db_entry",
+    [
+        entry
+        for entry in align.SubstitutionMatrix.list_db()
+        if entry not in ["NUC", "GONNET"]
+    ],
+)
 def test_matrices(db_entry):
     """
     Test for exceptions when reading matrix files.
     """
     alph1 = seq.ProteinSequence.alphabet
     alph2 = seq.ProteinSequence.alphabet
-    matrix = align.SubstitutionMatrix(alph1, alph2, db_entry)
+    align.SubstitutionMatrix(alph1, alph2, db_entry)
+
 
 def test_matrix_str():
     """
@@ -26,11 +32,11 @@ def test_matrix_str():
     """
     alph1 = seq.Alphabet("abc")
     alph2 = seq.Alphabet("def")
-    score_matrix = np.arange(9).reshape((3,3))
+    score_matrix = np.arange(9).reshape((3, 3))
     matrix = align.SubstitutionMatrix(alph1, alph2, score_matrix)
     assert str(matrix) == "\n".join(
         ["    d   e   f",
          "a   0   1   2",
          "b   3   4   5",
          "c   6   7   8"]
-    )
+    )  # fmt: skip

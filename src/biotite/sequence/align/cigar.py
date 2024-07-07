@@ -8,13 +8,14 @@ __all__ = ["CigarOp", "read_alignment_from_cigar", "write_alignment_to_cigar"]
 
 import enum
 import numpy as np
-from .alignment import Alignment, get_codes
+from biotite.sequence.align.alignment import Alignment, get_codes
 
 
 class CigarOp(enum.IntEnum):
     """
     An enum for the different CIGAR operations.
     """
+
     MATCH = 0
     INSERTION = 1
     DELETION = 2
@@ -46,23 +47,23 @@ class CigarOp(enum.IntEnum):
     def to_cigar_symbol(self):
         return _op_to_str[self]
 
+
 _str_to_op = {
-        "M" : CigarOp.MATCH,
-        "I" : CigarOp.INSERTION,
-        "D" : CigarOp.DELETION,
-        "N" : CigarOp.INTRON,
-        "S" : CigarOp.SOFT_CLIP,
-        "H" : CigarOp.HARD_CLIP,
-        "P" : CigarOp.PADDING,
-        "=" : CigarOp.EQUAL,
-        "X" : CigarOp.DIFFERENT,
-        "B" : CigarOp.BACK
-    }
+    "M": CigarOp.MATCH,
+    "I": CigarOp.INSERTION,
+    "D": CigarOp.DELETION,
+    "N": CigarOp.INTRON,
+    "S": CigarOp.SOFT_CLIP,
+    "H": CigarOp.HARD_CLIP,
+    "P": CigarOp.PADDING,
+    "=": CigarOp.EQUAL,
+    "X": CigarOp.DIFFERENT,
+    "B": CigarOp.BACK,
+}
 _op_to_str = {v: k for k, v in _str_to_op.items()}
 
 
-def read_alignment_from_cigar(cigar, position,
-                              reference_sequence, segment_sequence):
+def read_alignment_from_cigar(cigar, position, reference_sequence, segment_sequence):
     """
     Create an :class:`Alignment` from a CIGAR string.
 
@@ -147,20 +148,16 @@ def read_alignment_from_cigar(cigar, position,
     else:
         operations = np.asarray(cigar, dtype=int)
         if operations.ndim != 2:
-            raise ValueError(
-                "Expected array with shape (n,2)"
-            )
+            raise ValueError("Expected array with shape (n,2)")
         if operations.shape[1] != 2:
-            raise ValueError(
-                "Expected (operation, length) pairs"
-            )
+            raise ValueError("Expected (operation, length) pairs")
 
     if len(operations) == 0:
         return Alignment(
             [reference_sequence, segment_sequence], np.zeros((0, 2), dtype=int)
         )
 
-    trace = np.zeros((np.sum(operations[:,1]), 2), dtype=int)
+    trace = np.zeros((np.sum(operations[:, 1]), 2), dtype=int)
     clip_mask = np.ones(trace.shape[0], dtype=bool)
 
     i = 0
@@ -187,19 +184,23 @@ def read_alignment_from_cigar(cigar, position,
         elif op == CigarOp.HARD_CLIP:
             clip_mask[i : i + length] = False
         else:
-            raise ValueError(
-                f"CIGAR operation {op} is not implemented"
-            )
+            raise ValueError(f"CIGAR operation {op} is not implemented")
         i += length
     # Remove clipped positions
     trace = trace[clip_mask]
     return Alignment([reference_sequence, segment_sequence], trace)
 
 
-def write_alignment_to_cigar(alignment, reference_index=0, segment_index=1,
-                             introns=(), distinguish_matches=False,
-                             hard_clip=False, include_terminal_gaps=False,
-                             as_string=True):
+def write_alignment_to_cigar(
+    alignment,
+    reference_index=0,
+    segment_index=1,
+    introns=(),
+    distinguish_matches=False,
+    hard_clip=False,
+    include_terminal_gaps=False,
+    as_string=True,
+):
     """
     Convert an :class:`Alignment` into a CIGAR string.
 
@@ -305,8 +306,8 @@ def write_alignment_to_cigar(alignment, reference_index=0, segment_index=1,
     seg_trace = alignment.trace[:, segment_index]
     operations = np.full(alignment.trace.shape[0], CigarOp.MATCH, dtype=int)
 
-    insertion_mask = (ref_trace == -1)
-    deletion_mask = (seg_trace == -1)
+    insertion_mask = ref_trace == -1
+    deletion_mask = seg_trace == -1
     if np.any(insertion_mask & deletion_mask):
         raise ValueError(
             "Alignment contains insertion and deletion at the same position"
@@ -318,35 +319,27 @@ def write_alignment_to_cigar(alignment, reference_index=0, segment_index=1,
         intron_mask = np.zeros(operations.shape[0], dtype=bool)
         for start, stop in introns:
             if start >= stop:
-                raise ValueError(
-                    "Intron start must be smaller than intron stop"
-                )
+                raise ValueError("Intron start must be smaller than intron stop")
             if start < 0:
-                raise ValueError(
-                    "Intron start must not be negative"
-                )
+                raise ValueError("Intron start must not be negative")
             intron_mask[(ref_trace >= start) & (ref_trace < stop)] = True
         if np.any(intron_mask & ~deletion_mask):
-            raise ValueError(
-                "Introns must be within gaps in the reference sequence"
-            )
+            raise ValueError("Introns must be within gaps in the reference sequence")
         operations[intron_mask] = CigarOp.INTRON
 
     if distinguish_matches:
         symbol_codes = get_codes(alignment)
         ref_codes = symbol_codes[reference_index, :]
         seg_codes = symbol_codes[segment_index, :]
-        equal_mask = (ref_codes == seg_codes)
-        match_mask = (operations == CigarOp.MATCH)
+        equal_mask = ref_codes == seg_codes
+        match_mask = operations == CigarOp.MATCH
         operations[equal_mask & match_mask] = CigarOp.EQUAL
         operations[~equal_mask & match_mask] = CigarOp.DIFFERENT
 
     op_tuples = _aggregate_consecutive(operations)
 
     clip_op = CigarOp.HARD_CLIP if hard_clip else CigarOp.SOFT_CLIP
-    start_clip_length, end_clip_length = _find_clipped_bases(
-        alignment, segment_index
-    )
+    start_clip_length, end_clip_length = _find_clipped_bases(alignment, segment_index)
     if start_clip_length != 0:
         start_clip = [(clip_op, start_clip_length)]
     else:
@@ -386,9 +379,7 @@ def _find_clipped_bases(alignment, segment_index):
     # all previous bases are clipped...
     start_clip_length = seg_trace[0]
     # ...and the same applies for the last base
-    end_clip_length = (
-        len(alignment.sequences[segment_index]) - seg_trace[-1] - 1
-    )
+    end_clip_length = len(alignment.sequences[segment_index]) - seg_trace[-1] - 1
     return start_clip_length, end_clip_length
 
 

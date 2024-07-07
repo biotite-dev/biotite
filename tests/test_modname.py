@@ -2,11 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import pkgutil
-from os.path import dirname, join, isdir, splitext
 import importlib
+import pkgutil
+from os.path import dirname, join
 import pytest
-from .util import cannot_import
+from tests.util import cannot_import
 
 
 def find_all_modules(package_name, src_dir):
@@ -18,10 +18,9 @@ def find_all_modules(package_name, src_dir):
     for _, module_name, is_package in pkgutil.iter_modules([src_dir]):
         full_module_name = f"{package_name}.{module_name}"
         if is_package:
-            module_names.extend(find_all_modules(
-                full_module_name,
-                join(src_dir, module_name)
-            ))
+            module_names.extend(
+                find_all_modules(full_module_name, join(src_dir, module_name))
+            )
         else:
             module_names.append(full_module_name)
     return module_names
@@ -29,14 +28,11 @@ def find_all_modules(package_name, src_dir):
 
 @pytest.mark.skipif(
     cannot_import("matplotlib") | cannot_import("mdtraj"),
-    reason="Optional dependencies are not met"
+    reason="Optional dependencies are not met",
 )
 @pytest.mark.parametrize(
     "module_name",
-    find_all_modules(
-        "biotite",
-        join(dirname(dirname(__file__)), "src", "biotite")
-    )
+    find_all_modules("biotite", join(dirname(dirname(__file__)), "src", "biotite")),
 )
 def test_module_name(module_name):
     """

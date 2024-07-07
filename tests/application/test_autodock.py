@@ -9,12 +9,10 @@ import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io.pdbx as pdbx
 from biotite.application.autodock import VinaApp
-from ..util import data_dir, is_not_installed
+from tests.util import data_dir, is_not_installed
 
 
-@pytest.mark.skipif(
-    is_not_installed("vina"), reason="Autodock Vina is not installed"
-)
+@pytest.mark.skipif(is_not_installed("vina"), reason="Autodock Vina is not installed")
 @pytest.mark.parametrize("flexible", [False, True])
 def test_docking(flexible):
     """
@@ -24,9 +22,7 @@ def test_docking(flexible):
     PDB structure.
     """
     # A structure of a straptavidin-biotin complex
-    pdbx_file = pdbx.BinaryCIFFile.read(
-        join(data_dir("application"), "2rtg.bcif")
-    )
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("application"), "2rtg.bcif"))
     structure = pdbx.get_structure(
         pdbx_file, model=1, extra_fields=["charge"], include_bonds=True
     )
@@ -46,8 +42,11 @@ def test_docking(flexible):
         flexible_mask = None
 
     app = VinaApp(
-        ligand, receptor, struc.centroid(ref_ligand), [20, 20, 20],
-        flexible=flexible_mask
+        ligand,
+        receptor,
+        struc.centroid(ref_ligand),
+        [20, 20, 20],
+        flexible=flexible_mask,
     )
     app.set_seed(0)
     app.start()
@@ -65,7 +64,7 @@ def test_docking(flexible):
     # Select best binding pose
     test_ligand_coord = test_ligand_coord[0]
     not_nan_mask = ~np.isnan(test_ligand_coord).any(axis=-1)
-    ref_ligand_coord  =  ref_ligand_coord[not_nan_mask]
+    ref_ligand_coord = ref_ligand_coord[not_nan_mask]
     test_ligand_coord = test_ligand_coord[not_nan_mask]
     # Check if it least one atom is preserved
     assert test_ligand_coord.shape[1] > 0
@@ -78,7 +77,7 @@ def test_docking(flexible):
         # Select best binding pose
         test_receptor_coord = test_receptor_coord[0]
         not_nan_mask = ~np.isnan(test_receptor_coord).any(axis=-1)
-        ref_receptor_coord  =  receptor[not_nan_mask]
+        ref_receptor_coord = receptor[not_nan_mask]
         test_receptor_coord = test_receptor_coord[not_nan_mask]
         # Check if it least one atom is preserved
         assert test_receptor_coord.shape[1] > 0
@@ -86,9 +85,7 @@ def test_docking(flexible):
         # from the original conformation
         # NOTE: Currently 1.0 Å is sufficient in local testing,
         # but not in the CI (1.6 Å)
-        assert np.max(
-            struc.distance(test_receptor_coord, ref_receptor_coord)
-        ) < 1.7
+        assert np.max(struc.distance(test_receptor_coord, ref_receptor_coord)) < 1.7
     else:
         ref_receptor_coord = receptor.coord
         for model_coord in test_receptor_coord:

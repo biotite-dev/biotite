@@ -6,17 +6,15 @@ __name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Location", "Feature", "Annotation", "AnnotatedSequence"]
 
-import numbers
 import copy
+import numbers
 import sys
-from enum import Flag, Enum, auto
+from enum import Enum, Flag, auto
 import numpy as np
-from .sequence import Sequence
-from ..copyable import Copyable
-from .seqtypes import NucleotideSequence
+from biotite.copyable import Copyable
 
 
-class Location():
+class Location:
     """
     A :class:`Location` defines at which base(s)/residue(s) a feature is
     located.
@@ -63,24 +61,25 @@ class Location():
            - **BETWEEN** - The position is between to consecutive
              bases/residues.
         """
-        NONE         = 0
-        MISS_LEFT    = auto()
-        MISS_RIGHT   = auto()
-        BEYOND_LEFT  = auto()
+
+        NONE = 0
+        MISS_LEFT = auto()
+        MISS_RIGHT = auto()
+        BEYOND_LEFT = auto()
         BEYOND_RIGHT = auto()
-        UNK_LOC      = auto()
-        BETWEEN      = auto()
+        UNK_LOC = auto()
+        BETWEEN = auto()
 
     class Strand(Enum):
         """
         This enum type describes the strand of the feature location.
         This is not relevant for protein sequence features.
         """
+
         FORWARD = auto()
         REVERSE = auto()
 
-    def __init__(self, first, last, strand=Strand.FORWARD,
-                 defect=Defect.NONE):
+    def __init__(self, first, last, strand=Strand.FORWARD, defect=Defect.NONE):
         if first > last:
             raise ValueError(
                 "The first position cannot be higher than the last position"
@@ -92,8 +91,10 @@ class Location():
 
     def __repr__(self):
         """Represent Location as a string for debugging."""
-        return f'Location({self._first}, {self._last}, strand={"Location." + str(self._strand)}, ' \
-               f'defect={"Location." + str(self._defect)})'
+        return (
+            f'Location({self._first}, {self._last}, strand={"Location." + str(self._strand)}, '
+            f'defect={"Location." + str(self._defect)})'
+        )
 
     @property
     def first(self):
@@ -122,10 +123,12 @@ class Location():
     def __eq__(self, item):
         if not isinstance(item, Location):
             return False
-        return (    self.first  == item.first
-                and self.last   == item.last
-                and self.strand == item.strand
-                and self.defect == item.defect)
+        return (
+            self.first == item.first
+            and self.last == item.last
+            and self.strand == item.strand
+            and self.defect == item.defect
+        )
 
     def __hash__(self):
         return hash((self._first, self._last, self._strand, self._defect))
@@ -208,9 +211,11 @@ class Feature(Copyable):
     def __eq__(self, item):
         if not isinstance(item, Feature):
             return False
-        return (    self._key  == item._key
-                and self._locs == item._locs
-                and self._qual == item._qual)
+        return (
+            self._key == item._key
+            and self._locs == item._locs
+            and self._qual == item._qual
+        )
 
     def __lt__(self, item):
         if not isinstance(item, Feature):
@@ -223,7 +228,7 @@ class Feature(Copyable):
             return True
         elif first > it_first:
             return False
-        else: # First is equal
+        else:  # First is equal
             return last > it_last
 
     def __gt__(self, item):
@@ -237,7 +242,7 @@ class Feature(Copyable):
             return True
         elif first < it_first:
             return False
-        else: # First is equal
+        else:  # First is equal
             return last < it_last
 
     @property
@@ -253,7 +258,7 @@ class Feature(Copyable):
         return copy.copy(self._qual)
 
     def __hash__(self):
-        return hash(( self._key, self._locs, frozenset(self._qual.items()) ))
+        return hash((self._key, self._locs, frozenset(self._qual.items())))
 
 
 class Annotation(Copyable):
@@ -350,7 +355,9 @@ class Annotation(Copyable):
 
     def __repr__(self):
         """Represent Annotation as a string for debugging."""
-        return f'Annotation([{", ".join([feat.__repr__() for feat in self._features])}])'
+        return (
+            f'Annotation([{", ".join([feat.__repr__() for feat in self._features])}])'
+        )
 
     def __copy_create__(self):
         return Annotation(self._features)
@@ -403,7 +410,7 @@ class Annotation(Copyable):
                 if loc.last > last:
                     last = loc.last
         # Exclusive stop -> +1
-        return first, last+1
+        return first, last + 1
 
     def del_feature(self, feature):
         """
@@ -475,9 +482,7 @@ class Annotation(Copyable):
                         if loc.last > i_last:
                             defect |= Location.Defect.MISS_RIGHT
                             last = i_last
-                        locs_in_scope.append(Location(
-                            first, last, loc.strand, defect
-                        ))
+                        locs_in_scope.append(Location(first, last, loc.strand, defect))
                 if len(locs_in_scope) > 0:
                     # The feature is present in the new annotation
                     # if any of the original locations is in the new
@@ -488,15 +493,12 @@ class Annotation(Copyable):
                     sub_annot.add_feature(new_feature)
             return sub_annot
         else:
-            raise TypeError(
-                f"'{type(index).__name__}' instances are invalid indices"
-            )
+            raise TypeError(f"'{type(index).__name__}' instances are invalid indices")
 
     def __delitem__(self, item):
         if not isinstance(item, Feature):
             raise TypeError(
-                f"Only 'Feature' objects are supported, "
-                f"not {type(item).__name__}"
+                f"Only 'Feature' objects are supported, " f"not {type(item).__name__}"
             )
         self.del_feature(item)
 
@@ -626,8 +628,10 @@ class AnnotatedSequence(Copyable):
 
     def __repr__(self):
         """Represent AnnotatedSequence as a string for debugging."""
-        return f'AnnotatedSequence({self._annotation.__repr__()}, {self._sequence.__repr__()}, ' \
-               f'sequence_start={self._seqstart})'
+        return (
+            f"AnnotatedSequence({self._annotation.__repr__()}, {self._sequence.__repr__()}, "
+            f"sequence_start={self._seqstart})"
+        )
 
     @property
     def sequence_start(self):
@@ -643,7 +647,8 @@ class AnnotatedSequence(Copyable):
 
     def __copy_create__(self):
         return AnnotatedSequence(
-            self._annotation.copy(), self._sequence.copy, self._seqstart)
+            self._annotation.copy(), self._sequence.copy, self._seqstart
+        )
 
     def reverse_complement(self, sequence_start=1):
         """
@@ -676,10 +681,12 @@ class AnnotatedSequence(Copyable):
                 # (seq_len-1) -> last sequence index
                 # (loc.last-self._seqstart) -> location to index
                 # ... + rev_seqstart -> index to location
-                rev_loc_first \
-                    = (seq_len-1) - (loc.last-self._seqstart) + rev_seqstart
-                rev_loc_last \
-                    = (seq_len-1) - (loc.first-self._seqstart) + rev_seqstart
+                rev_loc_first = (
+                    (seq_len - 1) - (loc.last - self._seqstart) + rev_seqstart
+                )
+                rev_loc_last = (
+                    (seq_len - 1) - (loc.first - self._seqstart) + rev_seqstart
+                )
 
                 if loc.strand == Location.Strand.FORWARD:
                     rev_loc_strand = Location.Strand.REVERSE
@@ -700,17 +707,14 @@ class AnnotatedSequence(Copyable):
                 if loc.defect & Location.Defect.BETWEEN:
                     rev_loc_defect |= Location.Defect.BETWEEN
 
-                rev_locs.append(Location(
-                        rev_loc_first, rev_loc_last,
-                        rev_loc_strand, rev_loc_defect
-                ))
-            rev_features.append(Feature(
-                feature.key, rev_locs, feature.qual
-            ))
+                rev_locs.append(
+                    Location(
+                        rev_loc_first, rev_loc_last, rev_loc_strand, rev_loc_defect
+                    )
+                )
+            rev_features.append(Feature(feature.key, rev_locs, feature.qual))
 
-        return AnnotatedSequence(
-            Annotation(rev_features), rev_sequence, rev_seqstart
-        )
+        return AnnotatedSequence(Annotation(rev_features), rev_sequence, rev_seqstart)
 
     def __getitem__(self, index):
         if isinstance(index, Feature):
@@ -730,24 +734,20 @@ class AnnotatedSequence(Copyable):
                     pass
                 elif strand is None:
                     strand = loc.strand
-                else: # loc.strand != strand
+                else:  # loc.strand != strand
                     raise ValueError(
                         "All locations of the feature must have the same "
                         "strand direction"
                     )
             if strand == Location.Strand.FORWARD:
-                sorted_locs = sorted(
-                    locs, key=lambda loc: loc.first
-                )
+                sorted_locs = sorted(locs, key=lambda loc: loc.first)
             else:
-                sorted_locs = sorted(
-                    locs, key=lambda loc: loc.last, reverse=True
-                )
+                sorted_locs = sorted(locs, key=lambda loc: loc.last, reverse=True)
             # Merge the sequences corresponding to the ordered locations
             for loc in sorted_locs:
                 slice_start = loc.first - self._seqstart
                 # +1 due to exclusive stop
-                slice_stop = loc.last - self._seqstart +1
+                slice_stop = loc.last - self._seqstart + 1
                 add_seq = self._sequence[slice_start:slice_stop]
                 if loc.strand == Location.Strand.REVERSE:
                     add_seq = add_seq.reverse().complement()
@@ -775,17 +775,17 @@ class AnnotatedSequence(Copyable):
                 rel_seq_start = self._seqstart
             else:
                 rel_seq_start = index.start
-            return AnnotatedSequence(self._annotation[index],
-                                     self._sequence[seq_start:seq_stop],
-                                     rel_seq_start)
+            return AnnotatedSequence(
+                self._annotation[index],
+                self._sequence[seq_start:seq_stop],
+                rel_seq_start,
+            )
 
         elif isinstance(index, numbers.Integral):
             return self._sequence[index - self._seqstart]
 
         else:
-            raise TypeError(
-                f"'{type(index).__name__}' instances are invalid indices"
-            )
+            raise TypeError(f"'{type(index).__name__}' instances are invalid indices")
 
     def __setitem__(self, index, item):
         if isinstance(index, Feature):
@@ -796,10 +796,11 @@ class AnnotatedSequence(Copyable):
             for loc in index.locs:
                 slice_start = loc.first - self._seqstart
                 # +1 due to exclusive stop
-                slice_stop = loc.last - self._seqstart +1
+                slice_stop = loc.last - self._seqstart + 1
                 interval_size = slice_stop - slice_start
-                self._sequence[slice_start:slice_stop] \
-                    = sub_seq[sub_seq_i : sub_seq_i + interval_size]
+                self._sequence[slice_start:slice_stop] = sub_seq[
+                    sub_seq_i : sub_seq_i + interval_size
+                ]
                 sub_seq_i += interval_size
         elif isinstance(index, slice):
             # Sequence start correction
@@ -817,13 +818,13 @@ class AnnotatedSequence(Copyable):
             # Item is a symbol
             self._sequence[index - self._seqstart] = item
         else:
-            raise TypeError(
-                f"'{type(index).__name__}' instances are invalid indices"
-            )
+            raise TypeError(f"'{type(index).__name__}' instances are invalid indices")
 
     def __eq__(self, item):
         if not isinstance(item, AnnotatedSequence):
             return False
-        return (    self.annotation == item.annotation
-                and self.sequence   == item.sequence
-                and self._seqstart  == item._seqstart)
+        return (
+            self.annotation == item.annotation
+            and self.sequence == item.sequence
+            and self._seqstart == item._seqstart
+        )

@@ -16,10 +16,8 @@ the complementary strand of the genome as well.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import biotite.sequence as seq
-import biotite.sequence.io.fasta as fasta
 import biotite.database.entrez as entrez
-import matplotlib.pyplot as plt
+import biotite.sequence.io.fasta as fasta
 
 # Download Porcine circovirus genome
 file = entrez.fetch("KP282147", None, "fa", "nuccore", "fasta")
@@ -29,13 +27,19 @@ genome = fasta.get_sequence(fasta_file)
 proteins, positions = genome.translate()
 print("Forward strand:")
 for i in range(len(proteins)):
-    print("{:4d} - {:4d}:   {:}"
-          .format(positions[i][0], positions[i][1], str(proteins[i])))
+    print(
+        "{:4d} - {:4d}:   {:}".format(
+            positions[i][0], positions[i][1], str(proteins[i])
+        )
+    )
 print("\n")
 # Perform translation for complementary strand
 genome_rev = genome.reverse().complement()
 proteins, positions = genome_rev.translate()
 print("Reverse strand:")
 for i in range(len(proteins)):
-    print("{:5d} - {:5d}:   {:}"
-          .format(positions[i][0], positions[i][1], str(proteins[i])))
+    print(
+        "{:5d} - {:5d}:   {:}".format(
+            positions[i][0], positions[i][1], str(proteins[i])
+        )
+    )

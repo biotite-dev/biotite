@@ -6,11 +6,13 @@ __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["MOLFile"]
 
-from ....file import TextFile, InvalidFileError
-from .ctab import read_structure_from_ctab, write_structure_to_ctab
-from .header import Header
-from ...bonds import BondType
-
+from biotite.file import InvalidFileError, TextFile
+from biotite.structure.bonds import BondType
+from biotite.structure.io.mol.ctab import (
+    read_structure_from_ctab,
+    write_structure_to_ctab,
+)
+from biotite.structure.io.mol.header import Header
 
 # Number of header lines
 N_HEADER = 3
@@ -80,13 +82,11 @@ class MOLFile(TextFile):
         self.lines = [""] * N_HEADER
         self._header = None
 
-
     @classmethod
     def read(cls, file):
         mol_file = super().read(file)
         mol_file._header = None
         return mol_file
-
 
     @property
     def header(self):
@@ -94,12 +94,10 @@ class MOLFile(TextFile):
             self._header = Header.deserialize("\n".join(self.lines[0:3]) + "\n")
         return self._header
 
-
     @header.setter
     def header(self, header):
         self._header = header
         self.lines[0:3] = self._header.serialize().splitlines()
-
 
     def get_structure(self):
         """
@@ -118,9 +116,7 @@ class MOLFile(TextFile):
             raise InvalidFileError("File does not contain structure data")
         return read_structure_from_ctab(ctab_lines)
 
-
-    def set_structure(self, atoms, default_bond_type=BondType.ANY,
-                      version=None):
+    def set_structure(self, atoms, default_bond_type=BondType.ANY, version=None):
         """
         Set the :class:`AtomArray` for the file.
 
@@ -146,9 +142,8 @@ class MOLFile(TextFile):
         )
 
 
-
 def _get_ctab_lines(lines):
     for i, line in enumerate(lines):
         if line.startswith("M  END"):
-            return lines[N_HEADER:i+1]
+            return lines[N_HEADER : i + 1]
     return lines[N_HEADER:]

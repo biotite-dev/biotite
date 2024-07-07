@@ -10,5 +10,5 @@ using BLAST.
 __name__ = "biotite.application.blast"
 __author__ = "Patrick Kunzmann"
 
-from .webapp import *
 from .alignment import *
+from .webapp import *

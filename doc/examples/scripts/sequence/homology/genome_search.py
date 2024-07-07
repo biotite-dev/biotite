@@ -15,30 +15,26 @@ This approach has a high performance compared to :func:`align_optimal()`
 and is similar to the method used by software like *BLAST*.
 
 At first the sequences for the *M1* coding gene and the *S. enterica*
-genome are downloaded from *NCBI Entrez*. 
+genome are downloaded from *NCBI Entrez*.
 """
 
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.collections import LineCollection
 import biotite
-import biotite.sequence as seq
-import biotite.sequence.io.fasta as fasta
-import biotite.sequence.io.genbank as gb
-import biotite.sequence.graphics as seqgraphics
-import biotite.sequence.align as align
-import biotite.database.entrez as entrez
-import biotite.structure.graphics as strucgraphics
 import biotite.application.viennarna as viennarna
-
+import biotite.database.entrez as entrez
+import biotite.sequence.align as align
+import biotite.sequence.graphics as seqgraphics
+import biotite.sequence.io.genbank as gb
 
 # Download Escherichia coli BL21 and Salmonella enterica genome
-gb_file = gb.MultiFile.read(entrez.fetch_single_file(
-    ["CP001509", "CP019649"], None, "nuccore", "gb"
-))
+gb_file = gb.MultiFile.read(
+    entrez.fetch_single_file(["CP001509", "CP019649"], None, "nuccore", "gb")
+)
 ec_file, se_file = tuple(gb_file)
 
 annot_seq = gb.get_annotated_sequence(ec_file, include_only=["ncRNA"])
@@ -83,24 +79,27 @@ fig = plt.figure(figsize=(8.0, 8.0))
 trigger_matches = []
 # 0 represents the original genome sequence, 1 the reverse complement
 for strand in (0, 1):
-    matches_for_strand = matches[matches[:,1] == strand]
+    matches_for_strand = matches[matches[:, 1] == strand]
 
     # Plot match positions
-    ax = fig.add_subplot(1, 2, strand+1)
+    ax = fig.add_subplot(1, 2, strand + 1)
     ax.scatter(
-        matches_for_strand[:,0], matches_for_strand[:,2] / 1e6,
-        s=4, marker="o", color=biotite.colors["dimorange"]
+        matches_for_strand[:, 0],
+        matches_for_strand[:, 2] / 1e6,
+        s=4,
+        marker="o",
+        color=biotite.colors["dimorange"],
     )
     ax.set_xlim(0, len(m1_sequence))
     ax.set_ylim(0, len(se_genome) / 1e6)
     ax.set_xlabel("E. coli M1 position (b)")
     if strand == 0:
         ax.set_ylabel("S. enterica genome position (Mb)")
-    else: # strand == 1
+    else:  # strand == 1
         ax.set_ylabel("S. enterica genome position (Mb) (reverse complement)")
-    
+
     # Check if there are two adjacent matches on the same diagonal
-    diagonals = matches_for_strand[:,2] - matches_for_strand[:,0]
+    diagonals = matches_for_strand[:, 2] - matches_for_strand[:, 0]
     unique_diag = np.unique(diagonals)
     trigger_diagonals = np.array([], dtype=int)
     for diag in unique_diag:
@@ -116,7 +115,7 @@ for strand in (0, 1):
             # The other match on the same diagonal should not overlap
             # with this match and should be within a cutoff range
             if np.any((distances > K) & (distances < DISCARD_RANGE)):
-                trigger_matches.append((strand, pos, pos+diag))
+                trigger_matches.append((strand, pos, pos + diag))
                 trigger_diagonals = np.append(trigger_diagonals, diag)
                 # Only add one match per diagonal at maximum
                 break
@@ -142,11 +141,14 @@ for strand, m1_pos, genome_pos in trigger_matches:
     genome = genomic_seqs[strand]
     diagonal = genome_pos - m1_pos
     alignment = align.align_banded(
-        m1_sequence, genome, matrix,
-        band=(diagonal - BAND_WIDTH, diagonal + BAND_WIDTH), max_number=1
+        m1_sequence,
+        genome,
+        matrix,
+        band=(diagonal - BAND_WIDTH, diagonal + BAND_WIDTH),
+        max_number=1,
     )[0]
     alignments.append((strand, alignment))
-    
+
 strand, best_alignment = max(
     alignments, key=lambda strand_alignment: alignment[1].score
 )
@@ -159,15 +161,19 @@ strand, best_alignment = max(
 # genomic sequence.
 
 # Reverse sequence numbering for second sequence (genome) in alignment
-number_funcs = [None,   lambda x: len(best_alignment.sequences[1]) - x]
+number_funcs = [None, lambda x: len(best_alignment.sequences[1]) - x]
 # Visualize alignment, use custom color
 fig = plt.figure(figsize=(8.0, 4.0))
 ax = fig.add_subplot(111)
 seqgraphics.plot_alignment_similarity_based(
-    ax, best_alignment, matrix=matrix,
-    labels=["E. coli M1 coding gene", "S. enterica genome"], show_numbers=True,
-    number_functions=number_funcs, show_line_position=True,
-    color=biotite.colors["brightorange"]
+    ax,
+    best_alignment,
+    matrix=matrix,
+    labels=["E. coli M1 coding gene", "S. enterica genome"],
+    show_numbers=True,
+    number_functions=number_funcs,
+    show_line_position=True,
+    color=biotite.colors["brightorange"],
 )
 fig.tight_layout()
 # sphinx_gallery_thumbnail_number = 2
@@ -199,19 +205,22 @@ ax = fig.add_subplot(111)
 # Plot base connections
 ax.plot(*plot_coord.T, color="black", linewidth=1, zorder=1)
 # Plot base pairings
-ax.add_collection(LineCollection(
-    [(plot_coord[i], plot_coord[j]) for i, j in base_pairs],
-    color="silver", linewidth=1, zorder=1
-))
+ax.add_collection(
+    LineCollection(
+        [(plot_coord[i], plot_coord[j]) for i, j in base_pairs],
+        color="silver",
+        linewidth=1,
+        zorder=1,
+    )
+)
 # Plot base markers
 ax.scatter(
     *plot_coord.T,
-    s = 12,
+    s=12,
     # Render markers over lines
-    zorder = 2,
-    # Display base marker color based on the identity in the alignment 
-    color = ["forestgreen" if identity else "firebrick"
-             for identity in identities]
+    zorder=2,
+    # Display base marker color based on the identity in the alignment
+    color=["forestgreen" if identity else "firebrick" for identity in identities],
 )
 ax.set_aspect("equal")
 ax.axis("off")

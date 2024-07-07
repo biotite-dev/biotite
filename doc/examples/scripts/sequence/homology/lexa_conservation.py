@@ -21,24 +21,22 @@ the entires for their definition (title) and source (species).
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import numpy as np
 import matplotlib.pyplot as plt
-import biotite.sequence as seq
-import biotite.sequence.io.fasta as fasta
-import biotite.sequence.io.genbank as gb
-import biotite.sequence.graphics as graphics
 import biotite.application.clustalo as clustalo
 import biotite.database.entrez as entrez
+import biotite.sequence as seq
+import biotite.sequence.graphics as graphics
+import biotite.sequence.io.genbank as gb
+
 # Search for protein products of LexA gene in UniProtKB/Swiss-Prot database
-query =   entrez.SimpleQuery("lexA", "Gene Name") \
-        & entrez.SimpleQuery("srcdb_swiss-prot", "Properties")
+query = entrez.SimpleQuery("lexA", "Gene Name") & entrez.SimpleQuery(
+    "srcdb_swiss-prot", "Properties"
+)
 # Search for the first 200 hits
 # More than 200 UIDs are not recommended for the EFetch service
 # for a single fetch
 uids = entrez.search(query, db_name="protein", number=200)
-file = entrez.fetch_single_file(
-    uids, None, db_name="protein", ret_type="gp"
-)
+file = entrez.fetch_single_file(uids, None, db_name="protein", ret_type="gp")
 # The file contains multiple concatenated GenPept files
 # -> Usage of MultiFile
 multi_file = gb.MultiFile.read(file)
@@ -57,11 +55,13 @@ for file in files[:20]:
 # on. Therefore, we write a function that creates a proper abbreviation
 # for a species name.
 
+
 def abbreviate(species):
     # Remove possible brackets
-    species = species.replace("[","").replace("]","")
-    splitted_species= species.split()
+    species = species.replace("[", "").replace("]", "")
+    splitted_species = species.split()
     return "{:}. {:}".format(splitted_species[0][0], splitted_species[1])
+
 
 print("Sources:")
 all_sources = [abbreviate(gb.get_source(file)) for file in files]
@@ -97,16 +97,16 @@ for file, source in zip(files, all_sources):
         # Ignore already listed species
         continue
     bind_feature = None
-    annot_seq = gb.get_annotated_sequence(
-        file, include_only=["Site"], format="gp"
-    )
+    annot_seq = gb.get_annotated_sequence(file, include_only=["Site"], format="gp")
     # Find the feature for DNA-binding site
     for feature in annot_seq.annotation:
         # DNA binding site is a helix-turn-helix motif
-        if "site_type" in feature.qual \
-            and feature.qual["site_type"] == "DNA binding" \
-            and "H-T-H motif" in feature.qual["note"]:
-                bind_feature = feature
+        if (
+            "site_type" in feature.qual
+            and feature.qual["site_type"] == "DNA binding"
+            and "H-T-H motif" in feature.qual["note"]
+        ):
+            bind_feature = feature
     if bind_feature is not None:
         # If the feature is found,
         # get the sequence slice that is defined by the feature...
@@ -128,10 +128,10 @@ alignment = clustalo.ClustalOmegaApp.align(binding_sites)
 fig = plt.figure(figsize=(4.5, 4.0))
 ax = fig.add_subplot(111)
 graphics.plot_alignment_similarity_based(
-    ax, alignment[:,:20], labels=sources[:20], symbols_per_line=len(alignment)
+    ax, alignment[:, :20], labels=sources[:20], symbols_per_line=len(alignment)
 )
 # Source names in italic
-ax.set_yticklabels(ax.get_yticklabels(), fontdict={"fontstyle":"italic"})
+ax.set_yticklabels(ax.get_yticklabels(), fontdict={"fontstyle": "italic"})
 fig.tight_layout()
 
 ########################################################################
@@ -145,7 +145,7 @@ print(profile.to_consensus())
 fig = plt.figure(figsize=(8.0, 3.0))
 ax = fig.add_subplot(111)
 graphics.plot_sequence_logo(ax, profile, scheme="flower")
-ax.set_xticks([5,10,15,20])
+ax.set_xticks([5, 10, 15, 20])
 ax.set_xlabel("Residue position")
 ax.set_ylabel("Bits")
 # Only show left and bottom spine

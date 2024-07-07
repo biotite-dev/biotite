@@ -7,29 +7,43 @@ __author__ = "Tom David Müller"
 __all__ = ["plot_nucleotide_secondary_structure"]
 
 import shutil
-import numpy as np
 from itertools import repeat
-from .. import pseudoknots
-from ...application.viennarna import RNAplotApp
+import numpy as np
+from biotite.application.viennarna import RNAplotApp
+from biotite.structure import pseudoknots
 
 
 def plot_nucleotide_secondary_structure(
-    axes, base_labels, base_pairs, length, 
-    layout_type=RNAplotApp.Layout.NAVIEW, draw_pseudoknots=True, 
-    pseudoknot_order=None, angle=0, bond_linewidth=1, bond_linestyle=None, 
-    bond_color='black', backbone_linewidth=1, backbone_linestyle='solid', 
-    backbone_color='grey', base_text=None, base_box=None, 
-    annotation_positions=None, annotation_offset=8.5, annotation_text=None, 
-    border=0.03, bin_path="RNAplot"
-    ):
+    axes,
+    base_labels,
+    base_pairs,
+    length,
+    layout_type=RNAplotApp.Layout.NAVIEW,
+    draw_pseudoknots=True,
+    pseudoknot_order=None,
+    angle=0,
+    bond_linewidth=1,
+    bond_linestyle=None,
+    bond_color="black",
+    backbone_linewidth=1,
+    backbone_linestyle="solid",
+    backbone_color="grey",
+    base_text=None,
+    base_box=None,
+    annotation_positions=None,
+    annotation_offset=8.5,
+    annotation_text=None,
+    border=0.03,
+    bin_path="RNAplot",
+):
     """
     Generate 2D plots of nucleic acid secondary structures using the
     interface to *RNAplot*, which is part of the *ViennaRNA* software
     package.
 
-    Internally a :class:`biotite.application.viennarna.RNAplotApp` 
-    instance is created to generate coordinates for each individual base 
-    on a 2D plane. *ViennaRNA* must be installed in order to use this 
+    Internally a :class:`biotite.application.viennarna.RNAplotApp`
+    instance is created to generate coordinates for each individual base
+    on a 2D plane. *ViennaRNA* must be installed in order to use this
     function.
 
     Parameters
@@ -49,7 +63,7 @@ def plot_nucleotide_secondary_structure(
         Whether pseudoknotted bonds should be drawn.
     pseudoknot_order : iterable, optional (default: None)
         The pseudoknot order of each pair in the input `base_pairs`.
-        If no pseudoknot order is given, a solution determined by 
+        If no pseudoknot order is given, a solution determined by
         :func:`biotite.structure.pseudoknots` is picked at random.
     angle : int or float, optional (default: 0)
         The angle the plot should be rotated.
@@ -74,9 +88,9 @@ def plot_nucleotide_secondary_structure(
     backbone_color : str or ndarray, shape=(3,) or shape=(4,), dtype=float, optional (default: 'grey')
         The *Matplotlib* compatible color of the backbone.
     base_text : dict or iterable, optional (default: {'size': 'small'})
-        The keyword parameters for the *Matplotlib* ``Text`` objects 
-        denoting the type of each base. Provide a single value to set 
-        the parameters for all labels or an iterable to set the 
+        The keyword parameters for the *Matplotlib* ``Text`` objects
+        denoting the type of each base. Provide a single value to set
+        the parameters for all labels or an iterable to set the
         parameters for each individual label.
     base_box : dict or iterable, optional (default: {'pad'=0, 'color'='white'})
         The *Matplotlib* compatible properties of the ``FancyBboxPatch``
@@ -91,9 +105,9 @@ def plot_nucleotide_secondary_structure(
     annotation_offset : int or float, optional (default: 8.5)
         The offset of the annotations from the base labels.
     annotation_text : dict or iterable, optional (default: {'size': 'small'})
-        The keyword parameters for the *Matplotlib* ``Text`` objects 
-        annotating the sequence. Provide a single value to set the 
-        parameters for all annotations or an iterable to set the 
+        The keyword parameters for the *Matplotlib* ``Text`` objects
+        annotating the sequence. Provide a single value to set the
+        parameters for all annotations or an iterable to set the
         parameters for each individual annotation.
     border : float, optional (default: 0.03)
         The percentage of the coordinate range to be left as whitespace
@@ -105,8 +119,8 @@ def plot_nucleotide_secondary_structure(
     # Check if RNAplot is installed
     if shutil.which(bin_path) is None:
         raise FileNotFoundError(
-            'RNAplot is not installed at the specified location, unable to '
-            'plot secondary structure.'
+            "RNAplot is not installed at the specified location, unable to "
+            "plot secondary structure."
         )
 
     # Get the unknotted base pairs
@@ -127,7 +141,7 @@ def plot_nucleotide_secondary_structure(
     # Set the default properties of the Matplotlib `bbox` surrounding
     # the base labels
     if base_box is None:
-        base_box=np.full(length, {'pad': 0, 'color': 'white'})
+        base_box = np.full(length, {"pad": 0, "color": "white"})
     # if `base_box` is a dictionary, extrapolate
     elif isinstance(base_box, dict):
         base_box = np.full(length, base_box)
@@ -135,25 +149,23 @@ def plot_nucleotide_secondary_structure(
     # By default pseudoknotted bonds are denoted as dashed lines, while
     # unknotted bonds are denoted as solid lines
     if bond_linestyle is None:
-        bond_linestyle = np.full(base_pairs.shape[0], 'solid', dtype='object')
-        bond_linestyle[pseudoknot_order != 0] = 'dashed'
+        bond_linestyle = np.full(base_pairs.shape[0], "solid", dtype="object")
+        bond_linestyle[pseudoknot_order != 0] = "dashed"
     # If `bond_linestyle` is a string, extrapolate
     elif isinstance(bond_linestyle, str):
-        bond_linestyle = np.full(
-            base_pairs.shape[0], bond_linestyle, dtype='object'
-        )
+        bond_linestyle = np.full(base_pairs.shape[0], bond_linestyle, dtype="object")
 
     # If pseudoknots are not to be drawn, remove pseudoknotted bonds,
     # regardless of the given linestyles
     if not draw_pseudoknots:
         # Ensure that the array can hold the 'None' value
         # (not possible with 'U1' dtype for example)
-        bond_linestyle = np.asarray(bond_linestyle, dtype='object')
-        bond_linestyle[pseudoknot_order != 0] = 'None'
+        bond_linestyle = np.asarray(bond_linestyle, dtype="object")
+        bond_linestyle[pseudoknot_order != 0] = "None"
 
     # Set the default properties of the base labels
     if base_text is None:
-        base_text = np.full(length, {'size': 'small'})
+        base_text = np.full(length, {"size": "small"})
     elif isinstance(base_text, dict):
         base_text = np.full(length, base_text)
 
@@ -164,7 +176,7 @@ def plot_nucleotide_secondary_structure(
 
     # Set the default font properties of the base annotations
     if annotation_text is None:
-        annotation_text = repeat({'size': 'small'})
+        annotation_text = repeat({"size": "small"})
     elif isinstance(annotation_text, dict):
         annotation_text = repeat(annotation_text)
 
@@ -173,15 +185,14 @@ def plot_nucleotide_secondary_structure(
         base_pairs=unknotted_base_pairs,
         length=length,
         bin_path=bin_path,
-        layout_type=layout_type
+        layout_type=layout_type,
     )
 
     # Rotate Coordinates
     if angle != 0:
         angle = np.deg2rad(angle)
         rot_matrix = np.array(
-            [[np.cos(angle), -np.sin(angle)],
-            [np.sin(angle),  np.cos(angle)]]
+            [[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]
         )
         for i, coord in enumerate(coordinates):
             coordinates[i] = np.dot(rot_matrix, coord)
@@ -197,31 +208,32 @@ def plot_nucleotide_secondary_structure(
     )
     axes.set_frame_on(False)
 
-
     # Define buffer area (Border)
     coord_range = abs(np.max(coordinates)) + abs(np.min(coordinates))
-    buffer = border*coord_range
+    buffer = border * coord_range
 
     # Adjust display
     axes.set_xlim(
-        np.min(coordinates[:,0])-buffer, np.max(coordinates[:,0])+buffer
+        np.min(coordinates[:, 0]) - buffer, np.max(coordinates[:, 0]) + buffer
     )
     axes.set_ylim(
-        np.min(coordinates[:,1])-buffer, np.max(coordinates[:,1])+buffer
+        np.min(coordinates[:, 1]) - buffer, np.max(coordinates[:, 1]) + buffer
     )
-    axes.set_aspect(aspect='equal')
+    axes.set_aspect(aspect="equal")
 
     # Draw backbone
-    axes.plot(coordinates[:,0], coordinates[:,1], color=backbone_color,
-              linestyle=backbone_linestyle, linewidth=backbone_linewidth)
+    axes.plot(
+        coordinates[:, 0],
+        coordinates[:, 1],
+        color=backbone_color,
+        linestyle=backbone_linestyle,
+        linewidth=backbone_linewidth,
+    )
 
     # Draw base labels
-    for coords, label, box, text in zip(
-        coordinates, base_labels, base_box, base_text
-    ):
+    for coords, label, box, text in zip(coordinates, base_labels, base_box, base_text):
         t = axes.text(
-                    x=coords[0], y=coords[1], s=label,
-                    ha='center', va='center', **text
+            x=coords[0], y=coords[1], s=label, ha="center", va="center", **text
         )
         t.set_bbox(box)
 
@@ -237,37 +249,41 @@ def plot_nucleotide_secondary_structure(
 
     # Draw annotations
     for i, text in zip(annotation_positions, annotation_text):
-        if (i > 0) and ((i+1) < length):
+        if (i > 0) and ((i + 1) < length):
             # Get the average of the direction vectors to the next and
             # previous base
             vector_to_previous = np.array(
-                [coordinates[i-1][0] - coordinates[i][0],
-                 coordinates[i-1][1] - coordinates[i][1]]
+                [
+                    coordinates[i - 1][0] - coordinates[i][0],
+                    coordinates[i - 1][1] - coordinates[i][1],
+                ]
             )
-            vector_to_previous = vector_to_previous / np.linalg.norm(
-                vector_to_previous
-            )
+            vector_to_previous = vector_to_previous / np.linalg.norm(vector_to_previous)
             vector_to_next = np.array(
-                [coordinates[i][0] - coordinates[i+1][0],
-                 coordinates[i][1] - coordinates[i+1][1]]
+                [
+                    coordinates[i][0] - coordinates[i + 1][0],
+                    coordinates[i][1] - coordinates[i + 1][1],
+                ]
             )
-            vector_to_next = vector_to_next / np.linalg.norm(
-                vector_to_next
-            )
+            vector_to_next = vector_to_next / np.linalg.norm(vector_to_next)
             vector = (vector_to_next + vector_to_previous) / 2
         elif i > 0:
             # For the last base get the direction vector to the previous
             # base
             vector = np.array(
-                [coordinates[i-1][0] - coordinates[i][0],
-                 coordinates[i-1][1] - coordinates[i][1]]
+                [
+                    coordinates[i - 1][0] - coordinates[i][0],
+                    coordinates[i - 1][1] - coordinates[i][1],
+                ]
             )
         else:
             # For the first base get the direction vector to the next
             # base
             vector = np.array(
-                [coordinates[i][0] - coordinates[i+1][0],
-                 coordinates[i][1] - coordinates[i+1][1]]
+                [
+                    coordinates[i][0] - coordinates[i + 1][0],
+                    coordinates[i][1] - coordinates[i + 1][1],
+                ]
             )
         # Normalize the vector
         vector = vector / np.linalg.norm(vector)
@@ -275,8 +291,5 @@ def plot_nucleotide_secondary_structure(
         vector = np.array([vector[1], -vector[0]])
         # The annotations are offset in the direction of the
         # perpendicular vector
-        x, y = coordinates[i] + (annotation_offset*vector)
-        axes.text(
-            x=x, y=y, s=i+1,
-            ha='center', va='center', **text
-        )
+        x, y = coordinates[i] + (annotation_offset * vector)
+        axes.text(x=x, y=y, s=i + 1, ha="center", va="center", **text)

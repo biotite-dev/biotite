@@ -7,12 +7,17 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["build_constraint_string"]
 
 import numpy as np
-from ...structure.pseudoknots import pseudoknots
+from biotite.structure.pseudoknots import pseudoknots
 
 
-def build_constraint_string(sequence_length,
-                            pairs=None, paired=None, unpaired=None,
-                            downstream=None, upstream=None):
+def build_constraint_string(
+    sequence_length,
+    pairs=None,
+    paired=None,
+    unpaired=None,
+    downstream=None,
+    upstream=None,
+):
     """
     Build a ViennaRNA constraint string.
 
@@ -30,7 +35,7 @@ def build_constraint_string(sequence_length,
         Positions of bases that are paired with any downstream base.
     upstream : ndarray, shape=(n,), dtype=int or dtype=bool, optional
         Positions of bases that are paired with any upstream base.
-    
+
     Returns
     -------
     constraints : str
@@ -45,21 +50,21 @@ def build_constraint_string(sequence_length,
             raise ValueError("Given pairs include pseudoknots")
         # Ensure the lower base comes first for each pair
         pairs = np.sort(pairs, axis=-1)
-        _set_constraints(constraints, pairs[:,0], "(")
-        _set_constraints(constraints, pairs[:,1], ")")
+        _set_constraints(constraints, pairs[:, 0], "(")
+        _set_constraints(constraints, pairs[:, 1], ")")
 
     _set_constraints(constraints, paired, "|")
     _set_constraints(constraints, unpaired, "x")
     _set_constraints(constraints, downstream, "<")
     _set_constraints(constraints, upstream, ">")
-    
+
     return "".join(constraints)
-    
+
 
 def _set_constraints(constraints, index, character):
     if index is None:
         return
-    
+
     # Search for conflicts with other constraints
     potential_conflict_indices = np.where(constraints[index] != ".")[0]
     if len(potential_conflict_indices) > 0:
@@ -68,5 +73,5 @@ def _set_constraints(constraints, index, character):
             f"Constraint '{character}' at position {conflict_i} "
             f"conflicts with existing constraint '{constraints[conflict_i]}'"
         )
-    
+
     constraints[index] = character

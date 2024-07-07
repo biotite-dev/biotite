@@ -23,29 +23,28 @@ between the two consensus sequences.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
+import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align
-import biotite.sequence.io.genbank as gb
-import biotite.sequence.align as align
 import biotite.sequence.graphics as graphics
-import biotite.database.entrez as entrez
-import biotite.application.clustalo as clustalo
-
+import biotite.sequence.io.genbank as gb
 
 # Search for DNA sequences that belong to the cited article
-query =   entrez.SimpleQuery("Forensic Sci. Int.", "Journal") \
-        & entrez.SimpleQuery("159", "Volume") \
-        & entrez.SimpleQuery("132-140", "Page Number")
+query = (
+    entrez.SimpleQuery("Forensic Sci. Int.", "Journal")
+    & entrez.SimpleQuery("159", "Volume")
+    & entrez.SimpleQuery("132-140", "Page Number")
+)
 uids = entrez.search(query, db_name="nuccore")
 
 # Download and read file containing the Genbank records for the THCA
 # synthase genes
-multi_file = gb.MultiFile.read(entrez.fetch_single_file(
-    uids, file_name=None, db_name="nuccore", ret_type="gb"
-))
+multi_file = gb.MultiFile.read(
+    entrez.fetch_single_file(uids, file_name=None, db_name="nuccore", ret_type="gb")
+)
 
 
 # This dictionary maps the strain ID to the protein sequence
@@ -81,6 +80,7 @@ seq_len = len(list(sequences.values())[0])
 for sequence in sequences.values():
     assert len(sequence) == seq_len
 
+
 # Create consensus sequences for the drug-type and fiber-type cannabis
 # strains
 def create_consensus(sequences):
@@ -89,9 +89,7 @@ def create_consensus(sequences):
     for seq_pos in range(seq_len):
         # Count the number of occurrences of each amino acid
         # at the given sequence position
-        counts = np.bincount(
-            [sequence.code[seq_pos] for sequence in sequences]
-        )
+        counts = np.bincount([sequence.code[seq_pos] for sequence in sequences])
         # The consensus amino acid is the most frequent amino acid
         consensus_code[seq_pos] = np.argmax(counts)
     # Create empty ProteinSequence object...
@@ -100,6 +98,7 @@ def create_consensus(sequences):
     # sequence
     consensus_sequence.code = consensus_code
     return consensus_sequence
+
 
 drug_type_consensus = create_consensus(
     [sequences[strain] for strain in (1, 10, 13, 20, 53, 54)]
@@ -120,7 +119,8 @@ alignment = align.align_ungapped(
 # At low similarity the symbols are colored red,
 # at high similarity the symbols are colored white
 cmap = LinearSegmentedColormap.from_list(
-    "custom", colors=[(1.0, 0.3, 0.3), (1.0, 1.0, 1.0)]
+    "custom",
+    colors=[(1.0, 0.3, 0.3), (1.0, 1.0, 1.0)],
     #                    ^ reddish        ^ white
 )
 
@@ -128,9 +128,14 @@ fig = plt.figure(figsize=(8.0, 6.0))
 ax = fig.add_subplot(111)
 
 graphics.plot_alignment_similarity_based(
-    ax, alignment, matrix=matrix, symbols_per_line=50,
+    ax,
+    alignment,
+    matrix=matrix,
+    symbols_per_line=50,
     labels=["Drug-type", "Fiber-type"],
-    show_numbers=True, cmap=cmap, symbol_size=8
+    show_numbers=True,
+    cmap=cmap,
+    symbol_size=8,
 )
 
 fig.tight_layout()

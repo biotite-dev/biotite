@@ -7,18 +7,25 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["plot_atoms", "plot_ball_and_stick_model"]
 
 import numpy as np
-import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 
-def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None,
-               center=None, size=None, zoom=1.0):
+def plot_atoms(
+    axes,
+    atoms,
+    colors,
+    line_width=1.0,
+    background_color=None,
+    center=None,
+    size=None,
+    zoom=1.0,
+):
     """
     Plot an :class:`AtomArray` as lines between bonded atoms.
 
     The z-axis points into the screen plane.
-    
+
     Parameters
     ----------
     axes : Axes3D
@@ -49,7 +56,7 @@ def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None,
 
         - ``> 1.0``: Zoom in.
         - ``< 1.0``: Zoom out.
-    
+
     Notes
     -----
     This is a very simple visualization tools for quick visual analysis
@@ -61,38 +68,37 @@ def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None,
         raise ValueError("The given axes mut be an 'Axes3D'")
     if atoms.bonds is None:
         raise ValueError("The atom array must have an associated bond list")
-    
+
     # Calculating connections between atoms
     line_coord = []
     line_colors = []
-    for index1, index2 in atoms.bonds.as_array()[:,:2]:
+    for index1, index2 in atoms.bonds.as_array()[:, :2]:
         # Every connection consist of two lines:
         # One from the first atom to the center
         # and from from the second atom to the center
         line_start = atoms.coord[index1]
         line_end = atoms.coord[index2]
         line_center = (line_start + line_end) / 2
-        
+
         # Add line from first atom
-        line_coord.append((
-            line_start, line_center
-        ))
+        line_coord.append((line_start, line_center))
         line_colors.append(colors[index1])
-        
+
         # Add line from second atom
-        line_coord.append((
-            line_end, line_center
-        ))
+        line_coord.append((line_end, line_center))
         line_colors.append(colors[index2])
 
     # Plot computed line coordinates and colors
     # Use 'Line3DCollection' for higher efficiency
     lines = Line3DCollection(
-        line_coord, color=line_colors, linewidths=line_width,
-        capstyle="round", joinstyle="round"
+        line_coord,
+        color=line_colors,
+        linewidths=line_width,
+        capstyle="round",
+        joinstyle="round",
     )
     axes.add_collection(lines)
-    
+
     # Set viewing angle
     axes.azim = -90
     axes.elev = 90
@@ -105,17 +111,25 @@ def plot_atoms(axes, atoms, colors, line_width=1.0, background_color=None,
     _set_box(axes, atoms.coord, center, size, zoom)
 
 
-def plot_ball_and_stick_model(axes, atoms, colors, ball_size=200,
-                              line_color="black", line_width=1.0,
-                              background_color=None, center=None,
-                              size=None, zoom=1.0):
+def plot_ball_and_stick_model(
+    axes,
+    atoms,
+    colors,
+    ball_size=200,
+    line_color="black",
+    line_width=1.0,
+    background_color=None,
+    center=None,
+    size=None,
+    zoom=1.0,
+):
     """
     Plot an :class:`AtomArray` as *ball-and-stick* model.
 
     The z-axis points into the screen plane.
 
     UNSTABLE: This function is probably subject to future changes.
-    
+
     Parameters
     ----------
     axes : Axes3D
@@ -154,7 +168,7 @@ def plot_ball_and_stick_model(axes, atoms, colors, ball_size=200,
 
         - ``> 1.0``: Zoom in.
         - ``< 1.0``: Zoom out.
-    
+
     Notes
     -----
     This is a very simple visualization tools for quick visual analysis
@@ -166,26 +180,27 @@ def plot_ball_and_stick_model(axes, atoms, colors, ball_size=200,
         raise ValueError("The given axes mut be an 'Axes3D'")
     if atoms.bonds is None:
         raise ValueError("The atom array must have an associated bond list")
-    
+
     # Calculating connections between atoms
     line_coord = [
         (atoms.coord[index1], atoms.coord[index2])
-        for index1, index2 in atoms.bonds.as_array()[:,:2]
+        for index1, index2 in atoms.bonds.as_array()[:, :2]
     ]
 
     # Plot sticks
     # Use 'Line3DCollection' for higher efficiency
     sticks = Line3DCollection(
-        line_coord, color=line_color, linewidths=line_width,
-        capstyle="round", joinstyle="round"
+        line_coord,
+        color=line_color,
+        linewidths=line_width,
+        capstyle="round",
+        joinstyle="round",
     )
     axes.add_collection(sticks)
 
     # Plot balls
-    axes.scatter(
-        *atoms.coord.T, s=ball_size, c=colors, linewidth=0, alpha=1
-    )
-    
+    axes.scatter(*atoms.coord.T, s=ball_size, c=colors, linewidth=0, alpha=1)
+
     # Set viewing angle
     axes.azim = -90
     axes.elev = 90
@@ -211,16 +226,18 @@ def _set_box(axes, coord, center, size, zoom):
         )
 
     if size is None:
-        size = np.array([
-            coord[:, 0].max() - coord[:, 0].min(),
-            coord[:, 1].max() - coord[:, 1].min(),
-            coord[:, 2].max() - coord[:, 2].min()
-        ]).max()
-    
-    axes.set_xlim(center[0] - size/(2*zoom), center[0] + size/(2*zoom))
-    axes.set_ylim(center[1] - size/(2*zoom), center[1] + size/(2*zoom))
-    axes.set_zlim(center[2] - size/(2*zoom), center[2] + size/(2*zoom))
-    
+        size = np.array(
+            [
+                coord[:, 0].max() - coord[:, 0].min(),
+                coord[:, 1].max() - coord[:, 1].min(),
+                coord[:, 2].max() - coord[:, 2].min(),
+            ]
+        ).max()
+
+    axes.set_xlim(center[0] - size / (2 * zoom), center[0] + size / (2 * zoom))
+    axes.set_ylim(center[1] - size / (2 * zoom), center[1] + size / (2 * zoom))
+    axes.set_zlim(center[2] - size / (2 * zoom), center[2] + size / (2 * zoom))
+
     # Make the axis lengths of the 'plot box' equal
     # The 'plot box' is not visible due to 'axes.axis("off")'
-    axes.set_box_aspect([1,1,1])
+    axes.set_box_aspect([1, 1, 1])

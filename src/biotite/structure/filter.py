@@ -9,32 +9,64 @@ arrays and atom array stacks.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Tom David Müller"
-__all__ = ["filter_solvent", "filter_monoatomic_ions", "filter_nucleotides",
-           "filter_canonical_nucleotides", "filter_amino_acids",
-           "filter_canonical_amino_acids", "filter_carbohydrates",
-           "filter_intersection", "filter_first_altloc",
-           "filter_highest_occupancy_altloc", "filter_peptide_backbone",
-           "filter_phosphate_backbone", "filter_linear_bond_continuity",
-           "filter_polymer"]
+__all__ = [
+    "filter_solvent",
+    "filter_monoatomic_ions",
+    "filter_nucleotides",
+    "filter_canonical_nucleotides",
+    "filter_amino_acids",
+    "filter_canonical_amino_acids",
+    "filter_carbohydrates",
+    "filter_intersection",
+    "filter_first_altloc",
+    "filter_highest_occupancy_altloc",
+    "filter_peptide_backbone",
+    "filter_phosphate_backbone",
+    "filter_linear_bond_continuity",
+    "filter_polymer",
+]
 
-import warnings
 
-import numpy as np
 from functools import partial
-from .atoms import array as atom_array
-from .residues import get_residue_starts, get_residue_count
-from .info.groups import amino_acid_names, carbohydrate_names, nucleotide_names
+import numpy as np
+from biotite.structure.atoms import array as atom_array
+from biotite.structure.info.groups import (
+    amino_acid_names,
+    carbohydrate_names,
+    nucleotide_names,
+)
+from biotite.structure.residues import get_residue_count, get_residue_starts
 
-
-_canonical_aa_list = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS",
-                      "ILE","LEU","LYS","MET","PHE","PRO","PYL","SER","THR",
-                      "TRP","TYR","VAL", "SEC"]
+_canonical_aa_list = [
+    "ALA",
+    "ARG",
+    "ASN",
+    "ASP",
+    "CYS",
+    "GLN",
+    "GLU",
+    "GLY",
+    "HIS",
+    "ILE",
+    "LEU",
+    "LYS",
+    "MET",
+    "PHE",
+    "PRO",
+    "PYL",
+    "SER",
+    "THR",
+    "TRP",
+    "TYR",
+    "VAL",
+    "SEC",
+]
 _canonical_nucleotide_list = ["A", "DA", "G", "DG", "C", "DC", "U", "DT"]
 
-_solvent_list = ["HOH","SOL"]
+_solvent_list = ["HOH", "SOL"]
 
-_peptide_backbone_atoms = ['N', 'CA', 'C']
-_phosphate_backbone_atoms = ['P', 'O5\'', 'C5\'', 'C4\'', 'C3\'', 'O3\'']
+_peptide_backbone_atoms = ["N", "CA", "C"]
+_phosphate_backbone_atoms = ["P", "O5'", "C5'", "C4'", "C3'", "O3'"]
 
 
 def filter_monoatomic_ions(array):
@@ -55,7 +87,7 @@ def filter_monoatomic_ions(array):
     """
     # Exclusively in monoatomic ions,
     # the element name is equal to the residue name
-    return (array.res_name == array.element)
+    return array.res_name == array.element
 
 
 def filter_solvent(array):
@@ -228,8 +260,9 @@ def filter_peptide_backbone(array):
         is a part of the peptide backbone.
     """
 
-    return (_filter_atom_names(array, _peptide_backbone_atoms) &
-            filter_amino_acids(array))
+    return _filter_atom_names(array, _peptide_backbone_atoms) & filter_amino_acids(
+        array
+    )
 
 
 def filter_phosphate_backbone(array):
@@ -250,8 +283,9 @@ def filter_phosphate_backbone(array):
         is a part of the phosphate backbone.
     """
 
-    return (_filter_atom_names(array, _phosphate_backbone_atoms) &
-            filter_nucleotides(array))
+    return _filter_atom_names(array, _phosphate_backbone_atoms) & filter_nucleotides(
+        array
+    )
 
 
 def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
@@ -297,21 +331,20 @@ def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
 
 
 def _is_polymer(array, min_size, pol_type):
-
-    if pol_type.startswith('p'):
+    if pol_type.startswith("p"):
         filt_fn = filter_amino_acids
-    elif pol_type.startswith('n'):
+    elif pol_type.startswith("n"):
         filt_fn = filter_nucleotides
-    elif pol_type.startswith('c'):
+    elif pol_type.startswith("c"):
         filt_fn = filter_carbohydrates
     else:
-        raise ValueError(f'Unsupported polymer type {pol_type}')
+        raise ValueError(f"Unsupported polymer type {pol_type}")
 
     mask = filt_fn(array)
     return get_residue_count(array[mask]) >= min_size
 
 
-def filter_polymer(array, min_size=2, pol_type='peptide'):
+def filter_polymer(array, min_size=2, pol_type="peptide"):
     """
     Filter for atoms that are a part of a consecutive standard macromolecular
     polymer entity.
@@ -334,13 +367,14 @@ def filter_polymer(array, min_size=2, pol_type='peptide'):
 
     """
     # Import `check_res_id_continuity` here to avoid circular imports
-    from .integrity import check_res_id_continuity
+    from biotite.structure.integrity import check_res_id_continuity
+
     split_idx = check_res_id_continuity(array)
 
     check_pol = partial(_is_polymer, min_size=min_size, pol_type=pol_type)
     bool_idx = map(
         lambda a: np.full(len(a), check_pol(atom_array(a)), dtype=bool),
-        np.split(array, split_idx)
+        np.split(array, split_idx),
     )
     return np.concatenate(list(bool_idx))
 
@@ -384,13 +418,17 @@ def filter_intersection(array, intersect):
     intersect_categories = intersect.get_annotation_categories()
     # Check atom equality only for categories,
     # which exist in both arrays
-    categories = [category for category in array.get_annotation_categories()
-                  if category in intersect_categories]
+    categories = [
+        category
+        for category in array.get_annotation_categories()
+        if category in intersect_categories
+    ]
     for i in range(array.array_length()):
         subfilter = np.full(intersect.array_length(), True, dtype=bool)
         for category in categories:
-            subfilter &= (intersect.get_annotation(category)
-                          == array.get_annotation(category)[i])
+            subfilter &= (
+                intersect.get_annotation(category) == array.get_annotation(category)[i]
+            )
         filter[i] = subfilter.any()
     return filter
 
@@ -453,10 +491,10 @@ def filter_first_altloc(atoms, altloc_ids):
     # And filter all atoms for each residue with the first altloc ID
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
     for start, stop in zip(residue_starts[:-1], residue_starts[1:]):
-        letter_altloc_ids = [l for l in altloc_ids[start:stop] if l.isalpha()]
+        letter_altloc_ids = [loc for loc in altloc_ids[start:stop] if loc.isalpha()]
         if len(letter_altloc_ids) > 0:
             first_id = letter_altloc_ids[0]
-            altloc_filter[start:stop] |= (altloc_ids[start:stop] == first_id)
+            altloc_filter[start:stop] |= altloc_ids[start:stop] == first_id
         else:
             # No altloc ID in this residue -> Nothing to do
             pass
@@ -534,19 +572,17 @@ def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
         occupancies_in_res = occupancies[start:stop]
         altloc_ids_in_res = altloc_ids[start:stop]
 
-        letter_altloc_ids = [l for l in altloc_ids_in_res if l.isalpha()]
+        letter_altloc_ids = [loc for loc in altloc_ids_in_res if loc.isalpha()]
 
         if len(letter_altloc_ids) > 0:
             highest = -1.0
             highest_id = None
             for id in set(letter_altloc_ids):
-                occupancy_sum = np.sum(
-                    occupancies_in_res[altloc_ids_in_res == id]
-                )
+                occupancy_sum = np.sum(occupancies_in_res[altloc_ids_in_res == id])
                 if occupancy_sum > highest:
                     highest = occupancy_sum
                     highest_id = id
-            altloc_filter[start:stop] |= (altloc_ids[start:stop] == highest_id)
+            altloc_filter[start:stop] |= altloc_ids[start:stop] == highest_id
         else:
             # No altloc ID in this residue -> Nothing to do
             pass

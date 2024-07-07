@@ -1,8 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import biotite.structure as struc
 import ammolite
-
+import matplotlib.pyplot as plt
+import numpy as np
 
 PNG_SIZE = (1000, 1000)
 

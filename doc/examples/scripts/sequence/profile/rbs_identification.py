@@ -16,17 +16,15 @@ downstream direction to locate the start codon.
 # License: BSD 3 clause
 
 import tempfile
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
 import matplotlib.ticker as ticker
+import numpy as np
+from matplotlib.patches import Patch
 import biotite
-import biotite.sequence as seq
-import biotite.sequence.io.genbank as gb
-import biotite.sequence.graphics as graphics
 import biotite.database.entrez as entrez
-import biotite.application.muscle as muscle
-
+import biotite.sequence as seq
+import biotite.sequence.graphics as graphics
+import biotite.sequence.io.genbank as gb
 
 UTR_LENGTH = 20
 
@@ -58,18 +56,15 @@ for cds in bl21_genome.annotation:
     # CDS is on
     if loc.strand == seq.Location.Strand.FORWARD:
         utr_start = loc.first - UTR_LENGTH
-        utr_stop  = loc.first
+        utr_stop = loc.first
         # Include the start codon (3 bases) in the UTRs for later
         # visualization
-        utrs.append(
-            bl21_genome[utr_start : utr_stop + 3].sequence
-        )
+        utrs.append(bl21_genome[utr_start : utr_stop + 3].sequence)
     else:
         utr_start = loc.last + 1
-        utr_stop  = loc.last + 1 + UTR_LENGTH
+        utr_stop = loc.last + 1 + UTR_LENGTH
         utrs.append(
-            bl21_genome[utr_start - 3 : utr_stop].sequence \
-            .reverse().complement()
+            bl21_genome[utr_start - 3 : utr_stop].sequence.reverse().complement()
         )
 
 
@@ -82,13 +77,14 @@ for utr in utrs:
     frequencies[np.arange(len(utr)), utr.code] += 1
 
 profile = seq.SequenceProfile(
-    symbols = frequencies,
-    gaps = np.zeros(len(frequencies)),
-    alphabet = bl21_genome.sequence.alphabet
+    symbols=frequencies,
+    gaps=np.zeros(len(frequencies)),
+    alphabet=bl21_genome.sequence.alphabet,
 )
 
 
 ### Visualize the profile
+
 
 # Spend extra effort for correct sequence postion labels
 def normalize_seq_pos(x):
@@ -103,15 +99,17 @@ def normalize_seq_pos(x):
         x -= 1
     return x
 
+
 @ticker.FuncFormatter
 def sequence_loc_formatter(x, pos):
     x = normalize_seq_pos(x)
     return f"{x:+}"
 
+
 COLOR_SCHEME = [
-    biotite.colors["lightgreen"],    # A
-    biotite.colors["orange"],        # C
-    biotite.colors["dimgreen"],      # G
+    biotite.colors["lightgreen"],  # A
+    biotite.colors["orange"],  # C
+    biotite.colors["dimgreen"],  # G
     biotite.colors["brightorange"],  # T
 ]
 
@@ -127,10 +125,13 @@ ax.set_xlabel("Residue position")
 ax.set_ylabel("Conservation (Bits)")
 ax.spines["right"].set_visible(False)
 ax.spines["top"].set_visible(False)
-ax.legend(loc="upper left", handles=[
-    Patch(color=biotite.colors["green"],      label="Purine"),
-    Patch(color=biotite.colors["lightorange"], label="Pyrimidine"),
-])
+ax.legend(
+    loc="upper left",
+    handles=[
+        Patch(color=biotite.colors["green"], label="Purine"),
+        Patch(color=biotite.colors["lightorange"], label="Pyrimidine"),
+    ],
+)
 
 fig.tight_layout()
 

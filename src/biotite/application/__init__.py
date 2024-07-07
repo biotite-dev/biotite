@@ -65,5 +65,5 @@ __author__ = "Patrick Kunzmann"
 
 from .application import *
 from .localapp import *
-from .webapp import *
 from .msaapp import *
+from .webapp import *

@@ -4,20 +4,28 @@
 
 __name__ = "biotite.database.pubchem"
 __author__ = "Patrick Kunzmann"
-__all__ = ["Query", "NameQuery", "SmilesQuery", "InchiQuery", "InchiKeyQuery",
-           "FormulaQuery", "SuperstructureQuery", "SubstructureQuery",
-           "SimilarityQuery", "IdentityQuery",
-           "search"]
+__all__ = [
+    "Query",
+    "NameQuery",
+    "SmilesQuery",
+    "InchiQuery",
+    "InchiKeyQuery",
+    "FormulaQuery",
+    "SuperstructureQuery",
+    "SubstructureQuery",
+    "SimilarityQuery",
+    "IdentityQuery",
+    "search",
+]
 
-import copy
 import abc
 import collections
+import copy
 import requests
-from .error import parse_error_details
-from .throttle import ThrottleStatus
-from ..error import RequestError
-from ...structure.io.mol.mol import MOLFile
-
+from biotite.database.error import RequestError
+from biotite.database.pubchem.error import parse_error_details
+from biotite.database.pubchem.throttle import ThrottleStatus
+from biotite.structure.io.mol.mol import MOLFile
 
 _base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
 
@@ -258,8 +266,9 @@ class FormulaQuery(Query):
         # Only set maximum number, if provided by the user
         # The PubChem default value for this might change over time
         if self._number is not None:
-           params["MaxRecords"] = self._number
+            params["MaxRecords"] = self._number
         return params
+
 
 def _format_element(element, count):
     if count == 1:
@@ -318,8 +327,8 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
                     )
         if not query_key_found:
             raise TypeError(
-                "Expected exactly one of 'smiles', 'smarts', 'inchi', 'sdf' "
-                "or 'cid'")
+                "Expected exactly one of 'smiles', 'smarts', 'inchi', 'sdf' " "or 'cid'"
+            )
         if "number" in kwargs:
             self._number = kwargs["number"]
             del kwargs["number"]
@@ -346,14 +355,10 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
         mol_file.set_structure(atoms)
         # Every MOL string with "$$$$" is a valid SDF string
         # Important: USE MS-style new lines
-        return cls(
-            *args,
-            sdf = "\r\n".join(mol_file.lines) + "\r\n$$$$\r\n",
-            **kwargs
-        )
+        return cls(*args, sdf="\r\n".join(mol_file.lines) + "\r\n$$$$\r\n", **kwargs)
 
     def get_input_url_path(self):
-        input_string =  f"compound/{self.search_type()}/{self._query_key}"
+        input_string = f"compound/{self.search_type()}/{self._query_key}"
         if self._query_key == "cid":
             # Put CID in URL and not in POST payload,
             # as PubChem is confused otherwise
@@ -370,7 +375,7 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
         # Only set maximum number, if provided by the user
         # The PubChem default value for this might change over time
         if self._number is not None:
-           params["MaxRecords"] = self._number
+            params["MaxRecords"] = self._number
         for key, val in self.search_options().items():
             # Convert 'snake case' Python parameters
             # to 'camel case' request parameters
@@ -472,13 +477,13 @@ class SuperOrSubstructureQuery(StructureQuery, metaclass=abc.ABCMeta):
     """
 
     _option_defaults = {
-        "match_charges" : False,
-        "match_tautomers" : False,
-        "rings_not_embedded" : False,
-        "single_double_bonds_match" : True,
-        "chains_match_rings" : True,
-        "strip_hydrogen" : False,
-        "stereo" : "ignore",
+        "match_charges": False,
+        "match_tautomers": False,
+        "rings_not_embedded": False,
+        "single_double_bonds_match": True,
+        "chains_match_rings": True,
+        "strip_hydrogen": False,
+        "stereo": "ignore",
     }
 
     def __init__(self, **kwargs):
@@ -706,7 +711,7 @@ class SimilarityQuery(StructureQuery):
         return f"fastsimilarity_{dim}"
 
     def search_options(self):
-        return {"threshold" : int(round(self._threshold * 100))}
+        return {"threshold": int(round(self._threshold * 100))}
 
 
 class IdentityQuery(StructureQuery):
@@ -766,8 +771,6 @@ class IdentityQuery(StructureQuery):
         return params
 
 
-
-
 def search(query, throttle_threshold=0.5, return_throttle_status=False):
     """
     Get all CIDs that meet the given query requirements,
@@ -812,7 +815,7 @@ def search(query, throttle_threshold=0.5, return_throttle_status=False):
     r = requests.post(
         _base_url + query.get_input_url_path() + "/cids/TXT",
         data=query.get_params(),
-        files=files
+        files=files,
     )
     if not r.ok:
         raise RequestError(parse_error_details(r.text))

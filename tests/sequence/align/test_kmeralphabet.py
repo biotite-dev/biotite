@@ -7,7 +7,6 @@ import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
 
-
 K = 3
 
 
@@ -15,21 +14,24 @@ K = 3
 def kmer_alphabet():
     return align.KmerAlphabet(seq.ProteinSequence.alphabet, K)
 
+
 @pytest.fixture
 def spaced_kmer_alphabet():
-    return align.KmerAlphabet(seq.ProteinSequence.alphabet, K, spacing=[0,1,2])
-
+    return align.KmerAlphabet(seq.ProteinSequence.alphabet, K, spacing=[0, 1, 2])
 
 
 np.random.seed(0)
 N = 10
 L = 30
+
+
 @pytest.mark.parametrize(
     "ref_split_kmer_code",
     # Test for single instances as input
-    list(np.random.randint(len(seq.ProteinSequence.alphabet), size=(N, K))) +
+    list(np.random.randint(len(seq.ProteinSequence.alphabet), size=(N, K)))
+    +
     # Test for multiple instances as input
-    list(np.random.randint(len(seq.ProteinSequence.alphabet), size=(N, L, K)))
+    list(np.random.randint(len(seq.ProteinSequence.alphabet), size=(N, L, K))),
 )
 def test_fuse_and_split(kmer_alphabet, ref_split_kmer_code):
     """
@@ -38,15 +40,16 @@ def test_fuse_and_split(kmer_alphabet, ref_split_kmer_code):
     """
     fused = kmer_alphabet.fuse(ref_split_kmer_code)
     test_split_kmer_code = kmer_alphabet.split(fused)
-    
+
     assert test_split_kmer_code.tolist() == ref_split_kmer_code.tolist()
 
 
 np.random.seed(0)
 N = 10
+
+
 @pytest.mark.parametrize(
-    "split_kmer_code",
-    np.random.randint(len(seq.ProteinSequence.alphabet), size=(N, K))
+    "split_kmer_code", np.random.randint(len(seq.ProteinSequence.alphabet), size=(N, K))
 )
 def test_encode_and_decode(kmer_alphabet, split_kmer_code):
     """
@@ -58,7 +61,7 @@ def test_encode_and_decode(kmer_alphabet, split_kmer_code):
     ref_kmer_symbol = alph.decode_multiple(split_kmer_code)
     kmer_code = kmer_alphabet.encode(ref_kmer_symbol)
     test_kmer_symbol = kmer_alphabet.decode(kmer_code)
-    
+
     assert test_kmer_symbol.tolist() == ref_kmer_symbol.tolist()
 
 
@@ -86,6 +89,8 @@ def test_create_continuous_kmers(kmer_alphabet):
 
 
 N = 50
+
+
 @pytest.mark.parametrize("seed", range(N))
 def test_create_spaced_kmers(kmer_alphabet, spaced_kmer_alphabet, seed):
     """
@@ -99,8 +104,7 @@ def test_create_spaced_kmers(kmer_alphabet, spaced_kmer_alphabet, seed):
     np.random.seed(seed)
     sequence = seq.ProteinSequence()
     sequence.code = np.random.randint(
-        len(sequence.alphabet),
-        size=np.random.randint(MIN_LENGTH, MAX_LENGTH)
+        len(sequence.alphabet), size=np.random.randint(MIN_LENGTH, MAX_LENGTH)
     )
 
     ref_kmers = kmer_alphabet.create_kmers(sequence.code)

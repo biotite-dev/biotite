@@ -3,9 +3,9 @@
 # information.
 
 import numpy as np
+import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
-import pytest
 
 
 def _create_frequency_permutation(k):
@@ -34,10 +34,7 @@ def test_random_permutation_modulo():
         np.iinfo(np.int64).max + 1, size=SEQ_LENGTH, dtype=np.int64
     )
 
-    ref_order = [
-        (LCG_A * kmer.item() + LCG_C) % LCG_M
-        for kmer in kmers
-    ]
+    ref_order = [(LCG_A * kmer.item() + LCG_C) % LCG_M for kmer in kmers]
 
     permutation = align.RandomPermutation()
     test_order = permutation.permute(kmers)
@@ -60,11 +57,9 @@ def test_random_permutation_randomness():
     kmers = np.arange(0, SEQ_LENGTH, dtype=np.int64)
     permutation = align.RandomPermutation()
     order = permutation.permute(kmers)
-    positive = (np.sign(order) == 1)
-    n_positive = np.convolve(positive, np.ones(FRAME_SIZE), mode='valid')
-    distribution, _ = np.histogram(
-        n_positive, bins=np.arange(0, 10 * FRAME_SIZE)
-    )
+    positive = np.sign(order) == 1
+    n_positive = np.convolve(positive, np.ones(FRAME_SIZE), mode="valid")
+    distribution, _ = np.histogram(n_positive, bins=np.arange(0, 10 * FRAME_SIZE))
 
     # Since each value in the k-mer array is unique,
     # all mapped values should be unique as well
@@ -76,9 +71,7 @@ def test_random_permutation_randomness():
 
 def test_frequency_permutation():
     K = 5
-    kmer_alphabet = align.KmerAlphabet(
-        seq.NucleotideSequence.alphabet_unamb, K
-    )
+    kmer_alphabet = align.KmerAlphabet(seq.NucleotideSequence.alphabet_unamb, K)
     np.random.seed(0)
     # Generate a random count order for each k-mer
     # Use 'np.arange()' to generate a unique order,
@@ -89,21 +82,24 @@ def test_frequency_permutation():
         kmer_alphabet,
         # The actual k-mer positions are dummy values,
         # only the number of each k-mer is important for this test
-        {i: np.zeros((count, 2)) for i, count in enumerate(counts)}
+        {i: np.zeros((count, 2)) for i, count in enumerate(counts)},
     )
     permutation = align.FrequencyPermutation.from_table(kmer_table)
 
     kmers_sorted_by_frequency = np.argsort(counts)
-    assert permutation.permute(kmers_sorted_by_frequency).tolist() \
+    assert (
+        permutation.permute(kmers_sorted_by_frequency).tolist()
         == np.arange(len(kmer_alphabet), dtype=np.int64).tolist()
+    )
 
 
 @pytest.mark.parametrize(
-    "kmer_range, permutation", [
+    "kmer_range, permutation",
+    [
         (np.iinfo(np.int64).max, align.RandomPermutation()),
         (int(4**5), _create_frequency_permutation(5)),
         (int(4**8), _create_frequency_permutation(8)),
-    ]
+    ],
 )
 def test_min_max(kmer_range, permutation):
     """

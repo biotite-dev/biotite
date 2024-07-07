@@ -31,28 +31,25 @@ At first, the genomic sequences are fetched and loaded.
 # License: BSD 3 clause
 
 import tempfile
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import MultipleLocator
 import biotite
+import biotite.application.tantan as tantan
+import biotite.database.entrez as entrez
 import biotite.sequence as seq
+import biotite.sequence.align as align
 import biotite.sequence.io as seqio
 import biotite.sequence.io.genbank as gb
-import biotite.sequence.align as align
-import biotite.database.entrez as entrez
-import biotite.application.tantan as tantan
-
 
 fasta_file = entrez.fetch(
-    "NC_000932", tempfile.gettempdir(), "fasta",
-    db_name="Nucleotide", ret_type="fasta"
+    "NC_000932", tempfile.gettempdir(), "fasta", db_name="Nucleotide", ret_type="fasta"
 )
 chloroplast_seq = seqio.load_sequence(fasta_file)
 
 fasta_file = entrez.fetch(
-    "NC_000911", tempfile.gettempdir(), "fasta",
-    db_name="Nucleotide", ret_type="fasta"
+    "NC_000911", tempfile.gettempdir(), "fasta", db_name="Nucleotide", ret_type="fasta"
 )
 bacterium_seq = seqio.load_sequence(fasta_file)
 
@@ -73,15 +70,13 @@ bacterium_seq = seqio.load_sequence(fasta_file)
 # one ``111∗1∗11∗1∗∗11∗111`` :footcite:`Choi2004` is used here.
 
 repeat_mask = tantan.TantanApp.mask_repeats(bacterium_seq)
-bacterium_seqs = [
-    bacterium_seq, bacterium_seq.reverse(copy=False).complement()
-]
+bacterium_seqs = [bacterium_seq, bacterium_seq.reverse(copy=False).complement()]
 
 table = align.KmerTable.from_sequences(
-    k = 12,
-    sequences = bacterium_seqs,
-    spacing = "111∗1∗11∗1∗∗11∗111",
-    ignore_masks = [repeat_mask, repeat_mask[::-1].copy()]
+    k=12,
+    sequences=bacterium_seqs,
+    spacing="111∗1∗11∗1∗∗11∗111",
+    ignore_masks=[repeat_mask, repeat_mask[::-1].copy()],
 )
 
 ########################################################################
@@ -117,7 +112,7 @@ diagonals = matches[:, 2] - matches[:, 0]
 # Store the indices to the match array
 # for each combination of diagonal and strand on the bacterial genome
 matches_for_diagonals = {}
-for i, (diag, strand) in enumerate(zip(diagonals, matches[:,1])):
+for i, (diag, strand) in enumerate(zip(diagonals, matches[:, 1])):
     if (diag, strand) not in matches_for_diagonals:
         matches_for_diagonals[(diag, strand)] = [i]
     else:
@@ -125,8 +120,9 @@ for i, (diag, strand) in enumerate(zip(diagonals, matches[:,1])):
 
 # If a diagonal has more than one match,
 # the first match on this diagonal is a double hit
-double_hit_indices = [indices[0] for indices
-                      in matches_for_diagonals.values() if len(indices) > 1]
+double_hit_indices = [
+    indices[0] for indices in matches_for_diagonals.values() if len(indices) > 1
+]
 double_hits = matches[double_hit_indices]
 print("Number of double hits:", len(double_hits))
 
@@ -148,13 +144,19 @@ X_DROP = 20
 ACCEPT_THRESHOLD = 100
 
 matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
-ungapped_scores = np.array([
-    align.align_local_ungapped(
-        chloroplast_seq, bacterium_seqs[strand], matrix,
-        seed=(i,j), threshold=X_DROP, score_only=True
-    )
-    for i, strand, j in double_hits
-])
+ungapped_scores = np.array(
+    [
+        align.align_local_ungapped(
+            chloroplast_seq,
+            bacterium_seqs[strand],
+            matrix,
+            seed=(i, j),
+            threshold=X_DROP,
+            score_only=True,
+        )
+        for i, strand, j in double_hits
+    ]
+)
 
 accepted_hits = double_hits[ungapped_scores > ACCEPT_THRESHOLD]
 print("Number of accepted ungapped alignments:", len(accepted_hits))
@@ -190,19 +192,27 @@ np.random.seed(0)
 estimator = align.EValueEstimator.from_samples(
     chloroplast_seq.alphabet,
     # The scoring scheme must be the same as used for the alignment
-    matrix, GAP_PENALTY,
-    background
+    matrix,
+    GAP_PENALTY,
+    background,
 )
 
 # Compute similarity scores for each hit
-gapped_scores = np.array([
-    align.align_local_gapped(
-        chloroplast_seq, bacterium_seqs[strand], matrix,
-        seed=(i,j), gap_penalty=GAP_PENALTY, threshold=X_DROP, score_only=True,
-        max_table_size=100_000_000
-    )
-    for i, strand, j in accepted_hits
-])
+gapped_scores = np.array(
+    [
+        align.align_local_gapped(
+            chloroplast_seq,
+            bacterium_seqs[strand],
+            matrix,
+            seed=(i, j),
+            gap_penalty=GAP_PENALTY,
+            threshold=X_DROP,
+            score_only=True,
+            max_table_size=100_000_000,
+        )
+        for i, strand, j in accepted_hits
+    ]
+)
 
 # Calculate the E-values
 # For numeric stability reasons the method returns the common logarithm
@@ -215,10 +225,14 @@ log_evalues = estimator.log_evalue(
 accepted_alignments = [
     (
         align.align_local_gapped(
-            chloroplast_seq, bacterium_seqs[strand], matrix,
-            seed=(i,j), gap_penalty=GAP_PENALTY, threshold=X_DROP,
+            chloroplast_seq,
+            bacterium_seqs[strand],
+            matrix,
+            seed=(i, j),
+            gap_penalty=GAP_PENALTY,
+            threshold=X_DROP,
         )[0],
-        log_evalue
+        log_evalue,
     )
     for (i, strand, j), log_evalue in zip(accepted_hits, log_evalues)
     if log_evalue <= np.log10(EVALUE_THRESHOLD)
@@ -248,11 +262,11 @@ for alignment, log_evalue in accepted_alignments:
     stop = alignment.trace[-1, 0]
     # If this region was not covered by any other alignment before,
     # accept it and mark the region as covered
-    if not covered_range[start : stop].any():
+    if not covered_range[start:stop].any():
         unique_alignments.append((alignment, log_evalue))
-        covered_range[start : stop] = True
+        covered_range[start:stop] = True
 
-print("Number of unique alignments:",  len(unique_alignments))
+print("Number of unique alignments:", len(unique_alignments))
 
 ########################################################################
 # To take a closer look on the found homologous regions, they are viewed
@@ -269,9 +283,9 @@ EXCERPT_SIZE = 3000
 MARGIN_SIZE = 250
 
 COLORS = {
-    "CDS" : biotite.colors["dimgreen"],
+    "CDS": biotite.colors["dimgreen"],
     "tRNA": biotite.colors["orange"],
-    "rRNA": biotite.colors["orange"]
+    "rRNA": biotite.colors["orange"],
 }
 
 
@@ -280,7 +294,6 @@ gb_file = gb.GenBankFile.read(
     entrez.fetch("NC_000932", None, "gb", db_name="Nucleotide", ret_type="gb")
 )
 annotation = gb.get_annotation(gb_file, include_only=["CDS", "rRNA", "tRNA"])
-
 
 
 def draw_arrow(ax, feature, loc):
@@ -294,18 +307,25 @@ def draw_arrow(ax, feature, loc):
         dx = loc.first - loc.last + 1
 
     # Create head with 90 degrees tip -> head width/length ratio = 1/2
-    ax.add_patch(biotite.AdaptiveFancyArrow(
-        x, 0.5, dx, 0, tail_width=0.4, head_width=0.7, head_ratio=0.5,
-        draw_head=True, color=COLORS[feature.key], linewidth=0
-    ))
+    ax.add_patch(
+        biotite.AdaptiveFancyArrow(
+            x,
+            0.5,
+            dx,
+            0,
+            tail_width=0.4,
+            head_width=0.7,
+            head_ratio=0.5,
+            draw_head=True,
+            color=COLORS[feature.key],
+            linewidth=0,
+        )
+    )
 
     label = feature.qual.get("gene")
 
     if label is not None:
-        ax.text(
-            x + dx/2, 0.5, label, color="black",
-            ha="center", va="center", size=8
-        )
+        ax.text(x + dx / 2, 0.5, label, color="black", ha="center", va="center", size=8)
 
 
 # Fetch features of the chloroplast genome
@@ -315,21 +335,15 @@ gb_file = gb.GenBankFile.read(
 annotation = gb.get_annotation(gb_file, include_only=["CDS", "rRNA", "tRNA"])
 
 n_rows = int(np.ceil(len(unique_alignments) / N_COL))
-fig, axes = plt.subplots(
-    n_rows, N_COL,
-    figsize=(8.0, 24.0),
-    constrained_layout=True
-)
+fig, axes = plt.subplots(n_rows, N_COL, figsize=(8.0, 24.0), constrained_layout=True)
 
-for (alignment, log_evalue), ax in zip(
-    unique_alignments, axes.flatten()
-):
+for (alignment, log_evalue), ax in zip(unique_alignments, axes.flatten()):
     # Transform 0-based sequence index to 1-based sequence position
     first = alignment.trace[0, 0] + 1
     last = alignment.trace[-1, 0] + 1
     center = (first + last) // 2
     if last - first < EXCERPT_SIZE - MARGIN_SIZE * 2:
-        excerpt_loc = (center - EXCERPT_SIZE//2, center + EXCERPT_SIZE//2)
+        excerpt_loc = (center - EXCERPT_SIZE // 2, center + EXCERPT_SIZE // 2)
     else:
         # Exceed excerpt size to show entire alignment range
         excerpt_loc = (first - MARGIN_SIZE, last + MARGIN_SIZE)
@@ -345,11 +359,18 @@ for (alignment, log_evalue), ax in zip(
         for loc in feature.locs:
             draw_arrow(ax, feature, loc)
     # Draw rectangle representing homologuous region
-    ax.add_patch(Rectangle(
-        (first, 0.1), last - first + 1, 1 - 2*0.1,
-        facecolor="None", edgecolor="black", alpha=0.2, linewidth=1,
-        clip_on=False
-    ))
+    ax.add_patch(
+        Rectangle(
+            (first, 0.1),
+            last - first + 1,
+            1 - 2 * 0.1,
+            facecolor="None",
+            edgecolor="black",
+            alpha=0.2,
+            linewidth=1,
+            clip_on=False,
+        )
+    )
 
     ax.xaxis.set_major_locator(MultipleLocator(1000))
     ax.tick_params(labelsize=6)
@@ -359,13 +380,13 @@ for (alignment, log_evalue), ax in zip(
     ax.get_yaxis().set_tick_params(left=False, right=False, labelleft=False)
 
     exponent = int(np.floor(log_evalue))
-    mantissa = 10**(log_evalue-exponent)
+    mantissa = 10 ** (log_evalue - exponent)
     homolog_excerpt = annotation[first : last + 1]
     if len(homolog_excerpt) > 0:
         # Select the longest feature in range for name display in title
         representative_feature = max(
             homolog_excerpt,
-            key=lambda feature: -np.subtract(*feature.get_location_range())
+            key=lambda feature: -np.subtract(*feature.get_location_range()),
         )
         feature_name = representative_feature.qual["product"]
     else:
@@ -377,14 +398,15 @@ for (alignment, log_evalue), ax in zip(
 
     ax.set_title(
         f"{feature_name}\n"
-        fr"E-Value: ${mantissa:.2f} \times 10^{{{exponent}}}$"
+        rf"E-Value: ${mantissa:.2f} \times 10^{{{exponent}}}$"
         f"\nIdentity: {align.get_sequence_identity(alignment) * 100:3.1f} %",
-        loc="left", size=8
+        loc="left",
+        size=8,
     )
 
 # Hide empty axes
-for ax in axes.flatten()[len(unique_alignments):]:
-    ax.axis('off')
+for ax in axes.flatten()[len(unique_alignments) :]:
+    ax.axis("off")
 
 fig.tight_layout(h_pad=3.0, w_pad=0.5)
 

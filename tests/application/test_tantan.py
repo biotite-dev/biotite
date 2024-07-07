@@ -7,24 +7,20 @@ import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
 from biotite.application.tantan import TantanApp
-from ..util import is_not_installed
+from tests.util import is_not_installed
+
 
 @pytest.fixture
 def simple_matrix():
     alph = seq.NucleotideSequence.alphabet_unamb
     return align.SubstitutionMatrix(
-        alph, alph, np.array(
-            [[ 1, -1, -1, -1],
-             [-1,  1, -1, -1],
-             [-1, -1,  1, -1],
-             [-1, -1, -1,  1]]
-        )
+        alph,
+        alph,
+        np.array([[1, -1, -1, -1], [-1, 1, -1, -1], [-1, -1, 1, -1], [-1, -1, -1, 1]]),
     )
 
 
-@pytest.mark.skipif(
-    is_not_installed("tantan"), reason="tantan is not installed"
-)
+@pytest.mark.skipif(is_not_installed("tantan"), reason="tantan is not installed")
 @pytest.mark.parametrize("use_custom_matrix", [False, True])
 def test_nucleotide(simple_matrix, use_custom_matrix):
     """
@@ -45,9 +41,7 @@ def test_nucleotide(simple_matrix, use_custom_matrix):
     assert test_mask.tolist() == ref_mask
 
 
-@pytest.mark.skipif(
-    is_not_installed("tantan"), reason="tantan is not installed"
-)
+@pytest.mark.skipif(is_not_installed("tantan"), reason="tantan is not installed")
 @pytest.mark.parametrize("use_custom_matrix", [False, True])
 def test_protein(use_custom_matrix):
     """
@@ -68,16 +62,14 @@ def test_protein(use_custom_matrix):
     assert test_mask.tolist() == ref_mask
 
 
-@pytest.mark.skipif(
-    is_not_installed("tantan"), reason="tantan is not installed"
-)
+@pytest.mark.skipif(is_not_installed("tantan"), reason="tantan is not installed")
 def test_multiple_sequences():
     """
     Test masking multiple sequences in a single run.
     """
     seq_strings = [
         "CANYQVcanacanasacannercancanACAN",
-        "NEARAnearanearerearanearlyeerieear"
+        "NEARAnearanearerearanearlyeerieear",
     ]
 
     sequences = [seq.ProteinSequence(seq_string) for seq_string in seq_strings]

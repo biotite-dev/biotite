@@ -14,8 +14,6 @@ of the
 __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann, Tom David Müller"
 
-from .groups import *
-
 from .atoms import *
 from .bonds import *
 from .groups import *

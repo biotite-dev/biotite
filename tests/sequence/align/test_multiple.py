@@ -3,19 +3,14 @@
 # information.
 
 import pytest
-import biotite.sequence.align as align
 import biotite.application.muscle as muscle
+import biotite.sequence.align as align
 from biotite.application import VersionError
-from ...util import is_not_installed
-from .util import sequences
+from tests.util import is_not_installed
 
 
-
-@pytest.mark.skipif(
-    is_not_installed("muscle"),
-    reason="MUSCLE is not installed"
-)
-@pytest.mark.parametrize("gap_penalty", [-10, (-10,-1)])
+@pytest.mark.skipif(is_not_installed("muscle"), reason="MUSCLE is not installed")
+@pytest.mark.parametrize("gap_penalty", [-10, (-10, -1)])
 def test_align_multiple(sequences, gap_penalty):
     r"""
     Test `align_multiple()` function using actual long sequences,
@@ -26,22 +21,18 @@ def test_align_multiple(sequences, gap_penalty):
     score of the MUSCLE alignment.
     """
     matrix = align.SubstitutionMatrix.std_protein_matrix()
-    
+
     test_alignment, order, tree, distances = align.align_multiple(
         sequences, matrix, gap_penalty=gap_penalty, terminal_penalty=True
     )
-    test_score = align.score(
-        test_alignment, matrix, gap_penalty, terminal_penalty=True
-    )
-    
+    test_score = align.score(test_alignment, matrix, gap_penalty, terminal_penalty=True)
+
     try:
         ref_alignment = muscle.MuscleApp.align(
             sequences, matrix=matrix, gap_penalty=gap_penalty
         )
     except VersionError:
-        pytest.skip(f"Invalid Muscle software version")
-    ref_score = align.score(
-        ref_alignment, matrix, gap_penalty, terminal_penalty=True
-    )
-    
+        pytest.skip("Invalid Muscle software version")
+    ref_score = align.score(ref_alignment, matrix, gap_penalty, terminal_penalty=True)
+
     assert test_score >= ref_score * 0.5

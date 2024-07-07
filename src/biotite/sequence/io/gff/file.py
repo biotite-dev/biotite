@@ -6,19 +6,17 @@ __name__ = "biotite.sequence.io.gff"
 __author__ = "Patrick Kunzmann"
 __all__ = ["GFFFile"]
 
-import copy
 import string
-from urllib.parse import quote, unquote
 import warnings
-from ....file import TextFile, InvalidFileError
-from ...annotation import Location
-
+from urllib.parse import quote, unquote
+from biotite.file import InvalidFileError, TextFile
+from biotite.sequence.annotation import Location
 
 # All punctuation characters except
 # percent, semicolon, equals, ampersand, comma
-_NOT_QUOTED = "".join(
-    [char for char in string.punctuation if char not in "%;=&,"]
-) + " "
+_NOT_QUOTED = (
+    "".join([char for char in string.punctuation if char not in "%;=&,"]) + " "
+)
 
 
 class GFFFile(TextFile):
@@ -61,7 +59,7 @@ class GFFFile(TextFile):
     The content after the ``##FASTA`` directive is simply ignored.
     Please provide the sequence via a separate file or read the FASTA
     data directly via the :attr:`lines` attribute:
-    
+
     >>> import os.path
     >>> from io import StringIO
     >>> gff_file = GFFFile.read(os.path.join(path_to_sequences, "indexing_test.gff3"))
@@ -121,7 +119,7 @@ class GFFFile(TextFile):
     ##Example directive param1 param2
     SomeSeqID   Biotite CDS     1       99      .       +       0       ID=FeatureID;product=A protein
     """
-    
+
     def __init__(self):
         super().__init__()
         # Maps entry indices to line indices
@@ -132,18 +130,18 @@ class GFFFile(TextFile):
         self._has_fasta = None
         self._index_entries()
         self.append_directive("gff-version", "3")
-    
+
     @classmethod
     def read(cls, file):
         """
         Read a GFF3 file.
-        
+
         Parameters
         ----------
         file : file-like object or str
             The file to be read.
             Alternatively a file path can be supplied.
-        
+
         Returns
         -------
         file_object : GFFFile
@@ -152,18 +150,29 @@ class GFFFile(TextFile):
         file = super().read(file)
         file._index_entries()
         return file
-    
-    def insert(self, index, seqid, source, type, start, end,
-               score, strand, phase, attributes=None):
+
+    def insert(
+        self,
+        index,
+        seqid,
+        source,
+        type,
+        start,
+        end,
+        score,
+        strand,
+        phase,
+        attributes=None,
+    ):
         """
         Insert an entry at the given index.
-        
+
         Parameters
         ----------
         index : int
             Index where the entry is inserted.
             If the index is equal to the length of the file, the entry
-            is appended at the end of the file. 
+            is appended at the end of the file.
         seqid : str
             The ID of the reference sequence.
         source : str
@@ -184,22 +193,23 @@ class GFFFile(TextFile):
             Additional properties of the feature.
         """
         if index == len(self):
-            self.append(seqid, source, type, start, end,
-                        score, strand, phase, attributes)
+            self.append(
+                seqid, source, type, start, end, score, strand, phase, attributes
+            )
         else:
             line_index = self._entries[index]
             line = GFFFile._create_line(
-                seqid, source, type, start, end,
-                score, strand, phase, attributes
+                seqid, source, type, start, end, score, strand, phase, attributes
             )
             self.lines.insert(line_index, line)
             self._index_entries()
-    
-    def append(self, seqid, source, type, start, end,
-               score, strand, phase, attributes=None):
+
+    def append(
+        self, seqid, source, type, start, end, score, strand, phase, attributes=None
+    ):
         """
         Append an entry to the end of the file.
-        
+
         Parameters
         ----------
         seqid : str
@@ -232,11 +242,11 @@ class GFFFile(TextFile):
         self.lines.append(line)
         # Fast update of entry index by adding last line
         self._entries.append(len(self.lines) - 1)
-    
+
     def append_directive(self, directive, *args):
         """
         Append a directive line to the end of the file.
-        
+
         Parameters
         ----------
         directive : str
@@ -245,13 +255,13 @@ class GFFFile(TextFile):
             Optional parameters for the directive.
             Each argument is simply appended to the directive, separated
             by a single space character.
-        
+
         Raises
         ------
         NotImplementedError
             If the ``##FASTA`` directive is used, which is not
             supported.
-        
+
         Examples
         --------
 
@@ -262,17 +272,15 @@ class GFFFile(TextFile):
         ##Example directive param1 param2
         """
         if directive.startswith("FASTA"):
-            raise NotImplementedError(
-                "Adding FASTA information is not supported"
-            )
+            raise NotImplementedError("Adding FASTA information is not supported")
         directive_line = "##" + directive + " " + " ".join(args)
         self._directives.append((directive_line[2:], len(self.lines)))
         self.lines.append(directive_line)
-    
+
     def directives(self):
         """
         Get the directives in the file.
-        
+
         Returns
         -------
         directives : list of tuple(str, int)
@@ -283,7 +291,7 @@ class GFFFile(TextFile):
         """
         # Sort in line order
         return sorted(self._directives, key=lambda directive: directive[1])
-        
+
     def __setitem__(self, index, item):
         seqid, source, type, start, end, score, strand, phase, attrib = item
         line = GFFFile._create_line(
@@ -292,15 +300,13 @@ class GFFFile(TextFile):
         line_index = self._entries[index]
         self.lines[line_index] = line
 
-    
     def __getitem__(self, index):
-        if (index >= 0 and  index >= len(self)) or \
-           (index <  0 and -index >  len(self)):
-                raise IndexError(
-                    f"Index {index} is out of range for GFFFile with "
-                    f"{len(self)} entries"
-                )
-        
+        if (index >= 0 and index >= len(self)) or (index < 0 and -index > len(self)):
+            raise IndexError(
+                f"Index {index} is out of range for GFFFile with "
+                f"{len(self)} entries"
+            )
+
         line_index = self._entries[index]
         # Columns are tab separated
         s = self.lines[line_index].strip().split("\t")
@@ -324,15 +330,15 @@ class GFFFile(TextFile):
         attrib = GFFFile._parse_attributes(attrib)
 
         return seqid, source, type, start, end, score, strand, phase, attrib
-    
+
     def __delitem__(self, index):
         line_index = self._entries[index]
         del self.lines[line_index]
         self._index_entries()
-    
+
     def __len__(self):
         return len(self._entries)
-    
+
     def _index_entries(self):
         """
         Parse the file for comment and directive lines.
@@ -374,15 +380,12 @@ class GFFFile(TextFile):
         self._entries = self._entries[:entry_counter]
 
     @staticmethod
-    def _create_line(seqid, source, type, start, end,
-                     score, strand, phase, attributes):
+    def _create_line(seqid, source, type, start, end, score, strand, phase, attributes):
         """
         Create a line for a newly created entry.
         """
-        seqid = quote(seqid.strip(), safe=_NOT_QUOTED) \
-                if seqid is not None else "."
-        source = quote(source.strip(), safe=_NOT_QUOTED) \
-                 if source is not None else "."
+        seqid = quote(seqid.strip(), safe=_NOT_QUOTED) if seqid is not None else "."
+        source = quote(source.strip(), safe=_NOT_QUOTED) if source is not None else "."
         type = type.strip()
 
         # Perform checks
@@ -394,7 +397,7 @@ class GFFFile(TextFile):
             raise ValueError("'type' must not be empty")
         if seqid[0] == ">":
             raise ValueError("'seqid' must not start with '>'")
-        
+
         score = str(score) if score is not None else "."
         if strand == Location.Strand.FORWARD:
             strand = "+"
@@ -403,16 +406,31 @@ class GFFFile(TextFile):
         else:
             strand = "."
         phase = str(phase) if phase is not None else "."
-        attributes = ";".join(
-            [quote(key, safe=_NOT_QUOTED) + "=" + quote(val, safe=_NOT_QUOTED)
-             for key, val in attributes.items()]
-        ) if attributes is not None and len(attributes) > 0 else "."
+        attributes = (
+            ";".join(
+                [
+                    quote(key, safe=_NOT_QUOTED) + "=" + quote(val, safe=_NOT_QUOTED)
+                    for key, val in attributes.items()
+                ]
+            )
+            if attributes is not None and len(attributes) > 0
+            else "."
+        )
 
         return "\t".join(
-            [seqid, source, type, str(start), str(end),
-             str(score), strand, phase, attributes]
+            [
+                seqid,
+                source,
+                type,
+                str(start),
+                str(end),
+                str(score),
+                strand,
+                phase,
+                attributes,
+            ]
         )
-    
+
     @staticmethod
     def _parse_attributes(attributes):
         """
@@ -426,9 +444,7 @@ class GFFFile(TextFile):
         for entry in attrib_entries:
             compounds = entry.split("=")
             if len(compounds) != 2:
-                raise InvalidFileError(
-                    f"Attribute entry '{entry}' is invalid"
-                )
+                raise InvalidFileError(f"Attribute entry '{entry}' is invalid")
             key, val = compounds
             attrib_dict[unquote(key)] = unquote(val)
         return attrib_dict

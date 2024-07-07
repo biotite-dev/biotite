@@ -3,16 +3,15 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["create_api_doc", "skip_non_methods"]
+__all__ = ["create_switcher_json"]
 
-from dataclasses import dataclass
-from pathlib import Path
 import json
 import re
+from dataclasses import dataclass
 import requests
 import biotite
 
-RELEASE_REQUEST = f"https://api.github.com/repos/biotite-dev/biotite/releases"
+RELEASE_REQUEST = "https://api.github.com/repos/biotite-dev/biotite/releases"
 BIOTITE_URL = "https://www.biotite-python.org"
 SEMVER_TAG_REGEX = r"^v(\d+)\.(\d+)\.(\d+)"
 
@@ -35,18 +34,17 @@ class Version:
         return f"{self.major}.{self.minor}.{self.patch}"
 
     def __ge__(self, other):
-        return (
-            (self.major, self.minor, self.patch)
-            >= (other.major, other.minor, other.patch)
+        return (self.major, self.minor, self.patch) >= (
+            other.major,
+            other.minor,
+            other.patch,
         )
 
 
 def _get_previous_versions(min_tag, n_versions):
     response = requests.get(RELEASE_REQUEST, params={"per_page": n_versions})
     release_data = json.loads(response.text)
-    versions = [
-        Version.from_tag(release["tag_name"]) for release in release_data
-    ]
+    versions = [Version.from_tag(release["tag_name"]) for release in release_data]
     return [version for version in versions if version >= Version.from_tag(min_tag)]
 
 
@@ -69,17 +67,21 @@ def create_switcher_json(file_path, min_tag, n_versions):
     """
     version_config = []
     for version in _get_previous_versions(min_tag, n_versions)[::-1]:
-        version_config.append({
-            "name": f"{version.major}.{version.minor}",
-            "version": str(version),
-            "url": f"{BIOTITE_URL}/{version}/",
-        })
+        version_config.append(
+            {
+                "name": f"{version.major}.{version.minor}",
+                "version": str(version),
+                "url": f"{BIOTITE_URL}/{version}/",
+            }
+        )
     current_version = _get_current_version()
-    version_config.append({
-        "name": f"{current_version.major}.{current_version.minor}",
-        "version": str(current_version),
-        "url": f"{BIOTITE_URL}/{current_version}/",
-        "preferred": True
-    })
+    version_config.append(
+        {
+            "name": f"{current_version.major}.{current_version.minor}",
+            "version": str(current_version),
+            "url": f"{BIOTITE_URL}/{current_version}/",
+            "preferred": True,
+        }
+    )
     with open(file_path, "w") as file:
         json.dump(version_config, file, indent=4)

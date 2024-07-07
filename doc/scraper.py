@@ -1,12 +1,11 @@
-import shutil
 import copy
-import sys
 import os
-from os.path import splitext, join, dirname, isfile
-from sphinx_gallery.scrapers import figure_rst
-from sphinx_gallery.py_source_parser import extract_file_config
+import shutil
+import sys
+from os.path import dirname, isfile, join, splitext
 from sphinx.errors import ExtensionError
-
+from sphinx_gallery.py_source_parser import extract_file_config
+from sphinx_gallery.scrapers import figure_rst
 
 STATIC_IMAGE_COMMAND = "static_image"
 PYMOL_IMAGE_COMMAND = "ammolite_script"
@@ -19,7 +18,7 @@ def static_image_scraper(block, block_vars, gallery_conf):
     # Search for `sphinx_gallery_static_image` commands
     block_conf = extract_file_config(code)
     if STATIC_IMAGE_COMMAND not in block_conf:
-        return figure_rst([], gallery_conf['src_dir'])
+        return figure_rst([], gallery_conf["src_dir"])
 
     image_sources = [
         join(script_dir, image_name.strip())
@@ -29,7 +28,7 @@ def static_image_scraper(block, block_vars, gallery_conf):
     # Copy the images into the 'gallery' directory under a canonical
     # sphinx-gallery name
     image_destinations = []
-    image_path_iterator = block_vars['image_path_iterator']
+    image_path_iterator = block_vars["image_path_iterator"]
     for image in image_sources:
         suffix = splitext(image)[1]
         image_destination = image_path_iterator.next()
@@ -40,7 +39,7 @@ def static_image_scraper(block, block_vars, gallery_conf):
         shutil.copy(image, image_destination)
 
     # Generate rST for detected image files
-    return figure_rst(image_destinations, gallery_conf['src_dir'])
+    return figure_rst(image_destinations, gallery_conf["src_dir"])
 
 
 def pymol_scraper(block, block_vars, gallery_conf):
@@ -48,7 +47,7 @@ def pymol_scraper(block, block_vars, gallery_conf):
     block_conf = extract_file_config(code)
     # Search for a `sphinx_gallery_ammolite_script` command
     if PYMOL_IMAGE_COMMAND not in block_conf:
-        return figure_rst([], gallery_conf['src_dir'])
+        return figure_rst([], gallery_conf["src_dir"])
 
     script_dir = dirname(block_vars["src_file"])
     pymol_script_path = join(script_dir, block_conf[PYMOL_IMAGE_COMMAND])
@@ -56,7 +55,7 @@ def pymol_scraper(block, block_vars, gallery_conf):
     # the example script
     # -> the image will be included in version control
     # -> Rendering with PyMOL is not necessary for building the docs
-    pymol_image_path  = splitext(block_vars["src_file"])[0] + ".png"
+    pymol_image_path = splitext(block_vars["src_file"])[0] + ".png"
     if not isfile(pymol_script_path):
         raise ExtensionError(
             f"'{block_vars['src_file']}' has no corresponding "
@@ -64,8 +63,8 @@ def pymol_scraper(block, block_vars, gallery_conf):
         )
 
     try:
-        import pymol
-        import ammolite
+        import ammolite  # noqa: F401
+        import pymol  # noqa: F401
     except ImportError:
         # If Ammolite is not installed, fall back to the image file,
         # if already existing
@@ -82,7 +81,7 @@ def pymol_scraper(block, block_vars, gallery_conf):
             # to STDOUT or STDERR
             # -> Save original STDOUT/STDERR and point them
             # temporarily to DEVNULL
-            dev_null = open(os.devnull, 'w')
+            dev_null = open(os.devnull, "w")
             orig_stdout = sys.stdout
             orig_stderr = sys.stderr
             sys.stdout = dev_null
@@ -100,13 +99,12 @@ def pymol_scraper(block, block_vars, gallery_conf):
                 dev_null.close()
         if not isfile(pymol_image_path):
             raise ExtensionError(
-                "PyMOL script did not create an image "
-                "(at expected location)"
+                "PyMOL script did not create an image " "(at expected location)"
             )
 
     # Copy the images into the 'gallery' directory under a canonical
     # sphinx-gallery name
-    image_path_iterator = block_vars['image_path_iterator']
+    image_path_iterator = block_vars["image_path_iterator"]
     image_destination = image_path_iterator.next()
     shutil.copy(pymol_image_path, image_destination)
-    return figure_rst([image_destination], gallery_conf['src_dir'])
+    return figure_rst([image_destination], gallery_conf["src_dir"])

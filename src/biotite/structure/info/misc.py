@@ -6,7 +6,7 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["all_residues", "full_name", "link_type", "one_letter_code"]
 
-from .ccd import get_ccd, get_from_ccd
+from biotite.structure.info.ccd import get_ccd, get_from_ccd
 
 
 def all_residues():

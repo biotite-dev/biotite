@@ -37,6 +37,42 @@ homepage = "https://www.biotite-python.org"
 repository = "https://github.com/biotite-dev/biotite"
 documentation = "https://www.biotite-python.org"
 
+[tool.ruff.lint]
+# pyflakes, pycodestyle isort and varibale naming
+select = ["F", "E", "W", "I", "TID", "N"]
+ignore = [
+    # In docstrings long lines are often intentional
+    # Most other ocassions are caught by the ruff formatter
+    "E501",
+    # Due to constants and class placeholders defined in functions
+    "N806",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Due to `* import` of BCIF encoding
+"setup_ccd.py" = ["F405", "F403"]
+# Due to imports after the PATH has been adjusted
+"doc/conf.py" = ["E402"]
+# Due to `from .module import *` imports in `__init__.py` modules
+"__init__.py" = ["F403", "TID252"]
+# Due to pymol scripts that are evaluated in other example scripts
+"doc/examples/**/*_pymol.py" = ["F821"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.isort]
+# No separator lines between import sections
+no-lines-before = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+order-by-type = true
+known-first-party = ["biotite"]
+
 [tool.hatch.build.targets.sdist]
 exclude = [
   "tests",
