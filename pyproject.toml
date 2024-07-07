@@ -95,6 +95,9 @@ dependencies = ["hatch-cython"]
 [tool.hatch.build.targets.wheel.hooks.cython.options]
 include_numpy = true
 compile_py = false
+define_macros = [
+    ["NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"],
+]
 
 [build-system]
 requires = [
