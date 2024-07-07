@@ -8,17 +8,33 @@ __all__ = ["PDBQTFile"]
 
 import warnings
 import numpy as np
-from ....file import TextFile, InvalidFileError
-from ...error import BadStructureError
-from ...atoms import AtomArray, AtomArrayStack
-from ...charges import partial_charges
-from ...bonds import BondList, BondType, find_connected, find_rotatable_bonds
-
+from biotite.file import InvalidFileError, TextFile
+from biotite.structure.atoms import AtomArray, AtomArrayStack
+from biotite.structure.bonds import (
+    BondList,
+    BondType,
+    find_connected,
+    find_rotatable_bonds,
+)
+from biotite.structure.charges import partial_charges
+from biotite.structure.error import BadStructureError
 
 PARAMETRIZED_ELEMENTS = [
-    "H", "C", "N", "O", "P", "S",
-    "F", "Cl", "Br", "I",
-    "Mg", "Ca", "Mn", "Fe", "Zn"
+    "H",
+    "C",
+    "N",
+    "O",
+    "P",
+    "S",
+    "F",
+    "Cl",
+    "Br",
+    "I",
+    "Mg",
+    "Ca",
+    "Mn",
+    "Fe",
+    "Zn",
 ]
 
 
@@ -116,13 +132,15 @@ class PDBQTFile(TextFile):
             ``'REMARKS'``.
         """
         # Line indices where a new model starts
-        model_start_i = np.array([i for i in range(len(self.lines))
-                                  if self.lines[i].startswith(("MODEL"))],
-                                 dtype=int)
+        model_start_i = np.array(
+            [i for i in range(len(self.lines)) if self.lines[i].startswith(("MODEL"))],
+            dtype=int,
+        )
         # Line indices with ATOM or HETATM records
-        remark_line_i = np.array([i for i in range(len(self.lines)) if
-                                  self.lines[i].startswith("REMARK")],
-                                 dtype=int)
+        remark_line_i = np.array(
+            [i for i in range(len(self.lines)) if self.lines[i].startswith("REMARK")],
+            dtype=int,
+        )
         # Structures containing only one model may omit MODEL record
         # In these cases model starting index is set to 0
         if len(model_start_i) == 0:
@@ -131,11 +149,10 @@ class PDBQTFile(TextFile):
         if model is None:
             # Add exclusive end of file
             model_start_i = np.concatenate((model_start_i, [len(self.lines)]))
-            model_i = 0
             remarks = []
             for i in range(len(model_start_i) - 1):
                 start = model_start_i[i]
-                stop  = model_start_i[i+1]
+                stop = model_start_i[i + 1]
                 model_remark_line_i = remark_line_i[
                     (remark_line_i >= start) & (remark_line_i < stop)
                 ]
@@ -152,10 +169,11 @@ class PDBQTFile(TextFile):
             model = last_model + model + 1 if model < 0 else model
 
             if model < last_model:
-                line_filter = ( ( remark_line_i >= model_start_i[model-1] ) &
-                                ( remark_line_i <  model_start_i[model  ] ) )
+                line_filter = (remark_line_i >= model_start_i[model - 1]) & (
+                    remark_line_i < model_start_i[model]
+                )
             elif model == last_model:
-                line_filter = (remark_line_i >= model_start_i[model-1])
+                line_filter = remark_line_i >= model_start_i[model - 1]
             else:
                 raise ValueError(
                     f"The file has {last_model} models, "
@@ -165,7 +183,6 @@ class PDBQTFile(TextFile):
 
             # Do not include 'REMARK ' itself -> begin from pos 8
             return "\n".join([self.lines[i][7:] for i in remark_line_i])
-
 
     def get_structure(self, model=None):
         """
@@ -190,13 +207,19 @@ class PDBQTFile(TextFile):
             The return type depends on the `model` parameter.
         """
         # Line indices where a new model starts
-        model_start_i = np.array([i for i in range(len(self.lines))
-                                  if self.lines[i].startswith(("MODEL"))],
-                                 dtype=int)
+        model_start_i = np.array(
+            [i for i in range(len(self.lines)) if self.lines[i].startswith(("MODEL"))],
+            dtype=int,
+        )
         # Line indices with ATOM or HETATM records
-        atom_line_i = np.array([i for i in range(len(self.lines)) if
-                                self.lines[i].startswith(("ATOM", "HETATM"))],
-                               dtype=int)
+        atom_line_i = np.array(
+            [
+                i
+                for i in range(len(self.lines))
+                if self.lines[i].startswith(("ATOM", "HETATM"))
+            ],
+            dtype=int,
+        )
         # Structures containing only one model may omit MODEL record
         # In these cases model starting index is set to 0
         if len(model_start_i) == 0:
@@ -224,10 +247,11 @@ class PDBQTFile(TextFile):
             model = last_model + model + 1 if model < 0 else model
 
             if model < last_model:
-                line_filter = ( ( atom_line_i >= model_start_i[model-1] ) &
-                                ( atom_line_i <  model_start_i[model  ] ) )
+                line_filter = (atom_line_i >= model_start_i[model - 1]) & (
+                    atom_line_i < model_start_i[model]
+                )
             elif model == last_model:
-                line_filter = (atom_line_i >= model_start_i[model-1])
+                line_filter = atom_line_i >= model_start_i[model - 1]
             else:
                 raise ValueError(
                     f"The file has {last_model} models, "
@@ -237,16 +261,16 @@ class PDBQTFile(TextFile):
             array = AtomArray(len(coord_i))
 
         # Save atom IDs for later sorting into the original atom order
-        atom_id  = np.zeros(array.array_length(), int)
+        atom_id = np.zeros(array.array_length(), int)
 
         # Create annotation arrays
-        chain_id  = np.zeros(array.array_length(), array.chain_id.dtype)
-        res_id    = np.zeros(array.array_length(), array.res_id.dtype)
-        ins_code  = np.zeros(array.array_length(), array.ins_code.dtype)
-        res_name  = np.zeros(array.array_length(), array.res_name.dtype)
-        hetero    = np.zeros(array.array_length(), array.hetero.dtype)
+        chain_id = np.zeros(array.array_length(), array.chain_id.dtype)
+        res_id = np.zeros(array.array_length(), array.res_id.dtype)
+        ins_code = np.zeros(array.array_length(), array.ins_code.dtype)
+        res_name = np.zeros(array.array_length(), array.res_name.dtype)
+        hetero = np.zeros(array.array_length(), array.hetero.dtype)
         atom_name = np.zeros(array.array_length(), array.atom_name.dtype)
-        element   = np.zeros(array.array_length(), array.element.dtype)
+        element = np.zeros(array.array_length(), array.element.dtype)
 
         # Fill annotation array
         # i is index in array, line_i is line index
@@ -258,7 +282,7 @@ class PDBQTFile(TextFile):
             res_id[i] = int(line[22:26])
             ins_code[i] = line[26].strip()
             res_name[i] = line[17:20].strip()
-            hetero[i] = (False if line[0:4] == "ATOM" else True)
+            hetero[i] = False if line[0:4] == "ATOM" else True
             atom_name[i] = line[12:16].strip()
             element[i] = line[76:78].strip()
 
@@ -275,21 +299,21 @@ class PDBQTFile(TextFile):
         if isinstance(array, AtomArray):
             for i, line_i in enumerate(coord_i):
                 line = self.lines[line_i]
-                array.coord[i,0] = float(line[30:38])
-                array.coord[i,1] = float(line[38:46])
-                array.coord[i,2] = float(line[46:54])
+                array.coord[i, 0] = float(line[30:38])
+                array.coord[i, 1] = float(line[38:46])
+                array.coord[i, 2] = float(line[46:54])
 
         elif isinstance(array, AtomArrayStack):
             m = 0
             i = 0
             for line_i in atom_line_i:
-                if m < len(model_start_i)-1 and line_i > model_start_i[m+1]:
+                if m < len(model_start_i) - 1 and line_i > model_start_i[m + 1]:
                     m += 1
                     i = 0
                 line = self.lines[line_i]
-                array.coord[m,i,0] = float(line[30:38])
-                array.coord[m,i,1] = float(line[38:46])
-                array.coord[m,i,2] = float(line[46:54])
+                array.coord[m, i, 0] = float(line[30:38])
+                array.coord[m, i, 1] = float(line[38:46])
+                array.coord[m, i, 2] = float(line[46:54])
                 i += 1
 
         # Sort into the original atom order
@@ -297,9 +321,15 @@ class PDBQTFile(TextFile):
 
         return array
 
-
-    def set_structure(self, atoms, charges=None, atom_types=None,
-                      rotatable_bonds=None, root=None, include_torsdof=True):
+    def set_structure(
+        self,
+        atoms,
+        charges=None,
+        atom_types=None,
+        rotatable_bonds=None,
+        root=None,
+        include_torsdof=True,
+    ):
         """
         Write an :class:`AtomArray` into the PDBQT file.
 
@@ -394,12 +424,8 @@ class PDBQTFile(TextFile):
             use_root = True
         else:
             if rotatable_bonds.ndim != 2 or rotatable_bonds.shape[1] != 2:
-                raise ValueError(
-                    "An (nx2) array is expected for rotatable bonds"
-                )
-            rotatable_bonds = BondList(
-                len(mask), np.asarray(rotatable_bonds)
-            )[mask]
+                raise ValueError("An (nx2) array is expected for rotatable bonds")
+            rotatable_bonds = BondList(len(mask), np.asarray(rotatable_bonds))[mask]
             use_root = True
 
         if root is None:
@@ -426,35 +452,51 @@ class PDBQTFile(TextFile):
         # for simple branch determination in '_write_atoms()'
         atoms.bonds.remove_bonds(rotatable_bonds)
 
-        hetero = ["ATOM" if e == False else "HETATM" for e in atoms.hetero]
+        hetero = ["HETATM" if e else "ATOM" for e in atoms.hetero]
         if "atom_id" in atoms.get_annotation_categories():
             atom_id = atoms.atom_id
         else:
-            atom_id = np.arange(1, atoms.array_length()+1)
+            atom_id = np.arange(1, atoms.array_length() + 1)
         occupancy = np.ones(atoms.array_length())
         b_factor = np.zeros(atoms.array_length())
 
         # Convert rotatable bonds into array for easier handling
         # The bond type is irrelevant from this point on
-        rotatable_bonds = rotatable_bonds.as_array()[:,:2]
+        rotatable_bonds = rotatable_bonds.as_array()[:, :2]
 
         self.lines = []
         self._write_atoms(
-            atoms, charges, types,
-            atom_id, hetero, occupancy, b_factor,
-            root_index, rotatable_bonds,
-            np.zeros(len(rotatable_bonds), dtype=bool), use_root
+            atoms,
+            charges,
+            types,
+            atom_id,
+            hetero,
+            occupancy,
+            b_factor,
+            root_index,
+            rotatable_bonds,
+            np.zeros(len(rotatable_bonds), dtype=bool),
+            use_root,
         )
         if include_torsdof:
             self.lines.append(f"TORSDOF {len(rotatable_bonds)}")
 
         return mask
 
-
-    def _write_atoms(self, atoms, charges, types,
-                     atom_id, hetero, occupancy, b_factor,
-                     root_atom, rotatable_bonds, visited_rotatable_bonds,
-                     is_root):
+    def _write_atoms(
+        self,
+        atoms,
+        charges,
+        types,
+        atom_id,
+        hetero,
+        occupancy,
+        b_factor,
+        root_atom,
+        rotatable_bonds,
+        visited_rotatable_bonds,
+        is_root,
+    ):
         if len(rotatable_bonds) != 0:
             # Get the indices to atoms of this branch, i.e. a group of
             # atoms that are connected by non-rotatable bonds
@@ -465,9 +507,7 @@ class PDBQTFile(TextFile):
             # the rotatable bond should always be listed first
             # -> Remove root atom and insert it at the beginning
             this_branch_indices = np.insert(
-                this_branch_indices[this_branch_indices != root_atom],
-                0,
-                root_atom
+                this_branch_indices[this_branch_indices != root_atom], 0, root_atom
             )
         else:
             # No rotatable bonds
@@ -525,17 +565,23 @@ class PDBQTFile(TextFile):
                 f"BRANCH {atom_id[this_br_i]:>3d} {atom_id[new_br_i]:>3d}"
             )
             self._write_atoms(
-                atoms, charges, types,
-                atom_id, hetero, occupancy, b_factor,
+                atoms,
+                charges,
+                types,
+                atom_id,
+                hetero,
+                occupancy,
+                b_factor,
                 # The root atom of the branch
-                #is the other atom of the rotatable bond
-                new_br_i, rotatable_bonds, visited_rotatable_bonds,
-                False
+                # is the other atom of the rotatable bond
+                new_br_i,
+                rotatable_bonds,
+                visited_rotatable_bonds,
+                False,
             )
             self.lines.append(
                 f"ENDBRANCH {atom_id[this_br_i]:>3d} {atom_id[new_br_i]:>3d}"
             )
-
 
     def _get_model_length(self, model_start_i, atom_line_i):
         """
@@ -546,8 +592,11 @@ class PDBQTFile(TextFile):
         length = None
         for model_i in range(len(model_start_i)):
             model_start = model_start_i[model_i]
-            model_stop = model_start_i[model_i+1] if model_i+1 < n_models \
-                            else len(self.lines)
+            model_stop = (
+                model_start_i[model_i + 1]
+                if model_i + 1 < n_models
+                else len(self.lines)
+            )
             model_length = np.count_nonzero(
                 (atom_line_i >= model_start) & (atom_line_i < model_stop)
             )
@@ -613,8 +662,7 @@ def convert_atoms(atoms, charges):
                 )
         elif element == "C":
             if np.isin(
-                all_bond_types[i],
-                [BondType.AROMATIC_SINGLE, BondType.AROMATIC_DOUBLE]
+                all_bond_types[i], [BondType.AROMATIC_SINGLE, BondType.AROMATIC_DOUBLE]
             ).any():
                 # Aromatic carbon
                 atom_types[i] = "A"

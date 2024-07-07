@@ -6,22 +6,23 @@ __name__ = "biotite.database.entrez"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Query", "SimpleQuery", "CompositeQuery", "search"]
 
-import requests
 import abc
 from xml.etree import ElementTree
-from .check import check_for_errors
-from .dbnames import sanitize_database_name
-from ..error import RequestError
-from .key import get_api_key
-
+import requests
+from biotite.database.entrez.check import check_for_errors
+from biotite.database.entrez.dbnames import sanitize_database_name
+from biotite.database.entrez.key import get_api_key
+from biotite.database.error import RequestError
 
 _search_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+
 
 class Query(metaclass=abc.ABCMeta):
     """
     Base class for a wrapper around a search term
     for the NCBI Entrez search service.
     """
+
     def __init__(self):
         pass
 
@@ -85,7 +86,6 @@ class CompositeQuery(Query):
         return "({:}) {:} ({:})".format(str(self._q1), self._op, self._q2)
 
 
-
 class SimpleQuery(Query):
     """
     A simple query for the NCBI Entrez search service without
@@ -121,17 +121,59 @@ class SimpleQuery(Query):
     # Field identifiers are taken from
     # https://www.ncbi.nlm.nih.gov/books/NBK49540/
     _fields = [
-        "Accession", "All Fields", "Author", "EC/RN Number", "Feature Key",
-        "Filter", "Gene Name", "Genome Project", "Issue", "Journal", "Keyword",
-        "Modification Date", "Molecular Weight", "Organism", "Page Number",
-        "Primary Accession", "Properties", "Protein Name", "Publication Date",
-        "SeqID String", "Sequence Length", "Substance Name", "Text Word",
-        "Title", "Volume",
+        "Accession",
+        "All Fields",
+        "Author",
+        "EC/RN Number",
+        "Feature Key",
+        "Filter",
+        "Gene Name",
+        "Genome Project",
+        "Issue",
+        "Journal",
+        "Keyword",
+        "Modification Date",
+        "Molecular Weight",
+        "Organism",
+        "Page Number",
+        "Primary Accession",
+        "Properties",
+        "Protein Name",
+        "Publication Date",
+        "SeqID String",
+        "Sequence Length",
+        "Substance Name",
+        "Text Word",
+        "Title",
+        "Volume",
         # Abbreviations
-        "ACCN", "ALL", "AU", "AUTH", "ECNO", "FKEY", "FILT", "SB", "GENE",
-        "ISS", "JOUR", "KYWD", "MDAT", "MOLWT", "ORGN", "PAGE", "PACC",
-        "PORGN", "PROP", "PROT", "PDAT", "SQID", "SLEN", "SUBS", "WORD",  "TI",
-        "TITL" "VOL"
+        "ACCN",
+        "ALL",
+        "AU",
+        "AUTH",
+        "ECNO",
+        "FKEY",
+        "FILT",
+        "SB",
+        "GENE",
+        "ISS",
+        "JOUR",
+        "KYWD",
+        "MDAT",
+        "MOLWT",
+        "ORGN",
+        "PAGE",
+        "PACC",
+        "PORGN",
+        "PROP",
+        "PROT",
+        "PDAT",
+        "SQID",
+        "SLEN",
+        "SUBS",
+        "WORD",
+        "TI",
+        "TITL" "VOL",
     ]
 
     def __init__(self, term, field=None):
@@ -139,12 +181,9 @@ class SimpleQuery(Query):
         if field is not None:
             if field not in SimpleQuery._fields:
                 raise ValueError(f"Unknown field identifier '{field}'")
-        for invalid_string in \
-            ['"', "AND", "OR", "NOT", "[", "]", "(", ")", "\t", "\n"]:
-                if invalid_string in term:
-                    raise ValueError(
-                        f"Query contains illegal term {invalid_string}"
-                    )
+        for invalid_string in ['"', "AND", "OR", "NOT", "[", "]", "(", ")", "\t", "\n"]:
+            if invalid_string in term:
+                raise ValueError(f"Query contains illegal term {invalid_string}")
         if " " in term:
             # Encapsulate in quotes if spaces are in search term
             term = f'"{term}"'

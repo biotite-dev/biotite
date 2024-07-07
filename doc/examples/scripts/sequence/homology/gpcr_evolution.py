@@ -20,22 +20,23 @@ capabilities of the *NetworkX* package.
 import re
 import matplotlib.pyplot as plt
 import networkx as nx
+import biotite.application.clustalo as clustalo
+import biotite.database.uniprot as uniprot
 import biotite.sequence as seq
 import biotite.sequence.align as align
-import biotite.sequence.phylo as phylo
 import biotite.sequence.io.fasta as fasta
-import biotite.database.uniprot as uniprot
-import biotite.application.clustalo as clustalo
-
+import biotite.sequence.phylo as phylo
 
 # The bovine GPCRs are investigated
 SPECIES = "Bovine"
 
 
 query = (
-    uniprot.SimpleQuery("reviewed", "true") &
+    uniprot.SimpleQuery("reviewed", "true")
+    &
     # Bovine proteins
-    uniprot.SimpleQuery("organism_name", "Bos taurus") &
+    uniprot.SimpleQuery("organism_name", "Bos taurus")
+    &
     # Keyword ID for GPCRs
     uniprot.SimpleQuery("keyword", "KW-0297")
 )
@@ -62,13 +63,11 @@ alignment = clustalo.ClustalOmegaApp.align(sequences)
 # The distance measure required for the tree calculation is the
 # percentage of non-identical amino acids in the respective two
 # sequences
-distances = 1 - align.get_pairwise_sequence_identity(
-    alignment, mode="shortest"
-)
+distances = 1 - align.get_pairwise_sequence_identity(alignment, mode="shortest")
 # Create tree via neighbor joining
 tree = phylo.neighbor_joining(distances)
 # Convert to NetworkX graph
-#For the graph visualization, the edge directions are unnecessary
+# For the graph visualization, the edge directions are unnecessary
 graph = tree.as_graph().to_undirected()
 
 fig = plt.figure(figsize=(8.0, 8.0))
@@ -78,14 +77,16 @@ ax.axis("off")
 pos = nx.kamada_kawai_layout(graph)
 # Assign the gene names to the nodes that represent a reference index
 node_labels = {i: name for i, name in enumerate(genes)}
-nx.draw_networkx_edges(
-    graph, pos, ax=ax
-)
+nx.draw_networkx_edges(graph, pos, ax=ax)
 nx.draw_networkx_labels(
-    graph, pos, ax=ax, labels=node_labels, font_size=7,
+    graph,
+    pos,
+    ax=ax,
+    labels=node_labels,
+    font_size=7,
     # Draw a white background behind the labeled nodes
     # for better readability
-    bbox=dict(pad=0, color="white")
+    bbox=dict(pad=0, color="white"),
 )
 fig.tight_layout()
 

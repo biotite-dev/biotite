@@ -12,17 +12,14 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["mass_center", "gyration_radius"]
 
 import numpy as np
-from .atoms import Atom, AtomArray, AtomArrayStack, coord
-from .util import vector_dot, norm_vector
-from .error import BadStructureError
-from .geometry import distance
-from .info.masses import mass
+from biotite.structure.geometry import distance
+from biotite.structure.info.masses import mass
 
 
 def gyration_radius(array, masses=None):
     """
     Compute the radius/radii of gyration of an atom array or stack.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
@@ -33,7 +30,7 @@ def gyration_radius(array, masses=None):
         Must have the same length as `array`. By default, the standard
         atomic mass for each element is taken.
 
-    
+
     Returns
     -------
     masses : float or ndarray, dtype=float
@@ -46,13 +43,14 @@ def gyration_radius(array, masses=None):
         masses = np.array([mass(element) for element in array.element])
     center = mass_center(array, masses)
     radii = distance(array, center[..., np.newaxis, :])
-    inertia_moment = np.sum(masses * radii*radii, axis=-1)
+    inertia_moment = np.sum(masses * radii * radii, axis=-1)
     return np.sqrt(inertia_moment / np.sum(masses))
+
 
 def mass_center(array, masses=None):
     """
     Calculate the center(s) of mass of an atom array or stack.
-    
+
     Parameters
     ----------
     array : AtomArray or AtomArrayStack
@@ -61,7 +59,7 @@ def mass_center(array, masses=None):
         The masses to use for each atom in the input `array`.
         Must have the same length as `array`. By default, the standard
         atomic mass for each element is taken.
-    
+
     Returns
     -------
     radius : ndarray, ndarray, dtype=float
@@ -72,4 +70,4 @@ def mass_center(array, masses=None):
     """
     if masses is None:
         masses = np.array([mass(element) for element in array.element])
-    return np.sum(masses[:,np.newaxis] * array.coord, axis=-2) / np.sum(masses)
+    return np.sum(masses[:, np.newaxis] * array.coord, axis=-2) / np.sum(masses)

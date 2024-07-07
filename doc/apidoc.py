@@ -3,17 +3,16 @@
 # information.
 
 __author__ = "Patrick Kunzmann"
-__all__ = ["create_api_doc", "skip_non_methods"]
+__all__ = ["create_api_doc", "skip_nonrelevant"]
 
-from os.path import join, isdir
-from os import listdir, makedirs
-from importlib import import_module
-import types
-import json
 import enum
-from textwrap import dedent
+import json
+import types
 from collections import OrderedDict
-
+from importlib import import_module
+from os import listdir, makedirs
+from os.path import isdir, join
+from textwrap import dedent
 
 _INDENT = " " * 4
 
@@ -22,7 +21,6 @@ _INDENT = " " * 4
 # from biotite/doc/apidoc.json
 with open("apidoc.json", "r") as file:
     _pck_categories = json.load(file, object_pairs_hook=OrderedDict)
-
 
 
 def create_api_doc(src_path, doc_path):
@@ -40,11 +38,7 @@ def create_api_doc(src_path, doc_path):
     # Create directory to store apidoc
     if not isdir(doc_path):
         makedirs(doc_path)
-    package_list = _create_package_doc(
-        "biotite",
-        join(src_path, "biotite"),
-        doc_path
-    )
+    package_list = _create_package_doc("biotite", join(src_path, "biotite"), doc_path)
     _create_package_index(doc_path, package_list)
 
 
@@ -67,19 +61,24 @@ def _create_package_doc(pck, src_path, doc_path):
     module = import_module(pck)
     attr_list = dir(module)
     # Classify attribute names into classes and functions
-    class_list = [attr for attr in attr_list
-                  # Do not document private classes
-                  if attr[0] != "_"
-                  # Check if object is a class
-                  and isinstance(getattr(module, attr), type)]
-    func_list = [attr for attr in attr_list
-                 # Do not document private classes
-                 if attr[0] != "_"
-                 # All functions are callable...
-                 and callable(getattr(module, attr))
-                 # ...but classes are also callable
-                 and attr not in class_list
-                ]
+    class_list = [
+        attr
+        for attr in attr_list
+        # Do not document private classes
+        if attr[0] != "_"
+        # Check if object is a class
+        and isinstance(getattr(module, attr), type)
+    ]
+    func_list = [
+        attr
+        for attr in attr_list
+        # Do not document private classes
+        if attr[0] != "_"
+        # All functions are callable...
+        and callable(getattr(module, attr))
+        # ...but classes are also callable
+        and attr not in class_list
+    ]
     # Create *.rst files
     _create_package_page(doc_path, pck, class_list, func_list, sub_pck)
     for class_name in class_list:
@@ -87,11 +86,10 @@ def _create_package_doc(pck, src_path, doc_path):
     for function_name in func_list:
         _create_function_page(doc_path, pck, function_name)
 
-    return([pck] + sub_pck)
+    return [pck] + sub_pck
 
 
-def _create_package_page(doc_path, package_name,
-                         classes, functions, subpackages):
+def _create_package_page(doc_path, package_name, classes, functions, subpackages):
     attributes = classes + functions
 
     # Get categories for this package
@@ -114,7 +112,6 @@ def _create_package_page(doc_path, package_name,
         misc_category_name = "Miscellaneous" if categories else "Content"
         categories[misc_category_name] = misc_attributes
 
-
     # String for categorized class and function enumeration
     category_strings = []
     for category, attrs in categories.items():
@@ -135,12 +132,11 @@ def _create_package_page(doc_path, package_name,
     attributes_string = "\n".join(category_strings)
 
     # String for subpackage enumeration
-    subpackages_string = "\n".join(
-        [_INDENT + pck for pck in subpackages]
-    )
+    subpackages_string = "\n".join([_INDENT + pck for pck in subpackages])
 
     # Assemble page
-    file_content = dedent(f"""
+    file_content = (
+        dedent(f"""
 
         ``{package_name}``
         {"=" * (len(package_name) + 4)}
@@ -150,16 +146,21 @@ def _create_package_page(doc_path, package_name,
 
         .. currentmodule:: {package_name}
 
-    """) + attributes_string
+    """)
+        + attributes_string
+    )
     if len(subpackages) > 0:
-        file_content += dedent(f"""
+        file_content += (
+            dedent("""
 
         Subpackages
         -----------
 
         .. autosummary::
 
-    """) + subpackages_string
+    """)
+            + subpackages_string
+        )
     with open(join(doc_path, f"{package_name}.rst"), "w") as f:
         f.write(file_content)
 
@@ -201,18 +202,19 @@ def _create_function_page(doc_path, package_name, function_name):
 
 def _create_package_index(doc_path, package_list):
     # String for package enumeration
-    packages_string = "\n".join(
-        [_INDENT + pck for pck in sorted(package_list)]
-    )
+    packages_string = "\n".join([_INDENT + pck for pck in sorted(package_list)])
 
-    file_content = dedent(f"""
+    file_content = (
+        dedent("""
         API Reference
         =============
 
         .. autosummary::
             :toctree:
 
-    """) + packages_string
+    """)
+        + packages_string
+    )
     with open(join(doc_path, "index.rst"), "w") as f:
         f.write(file_content)
 
@@ -249,20 +251,21 @@ def _is_relevant_type(obj):
         # These are some special built-in Python methods
         return False
     return (
-        # Functions
-        type(obj) in [
-            types.FunctionType, types.BuiltinFunctionType, types.MethodType
-        ]
-    ) | (
-        # Functions from C-extensions
-        type(obj).__name__ in [
-            "cython_function_or_method",
-            "fused_cython_function"
-        ]
-    ) | (
-        # Enum instance
-        isinstance(obj, enum.Enum)
-    ) | (
-        # Inner class
-        isinstance(obj, type)
+        (
+            # Functions
+            type(obj)
+            in [types.FunctionType, types.BuiltinFunctionType, types.MethodType]
+        )
+        | (
+            # Functions from C-extensions
+            type(obj).__name__ in ["cython_function_or_method", "fused_cython_function"]
+        )
+        | (
+            # Enum instance
+            isinstance(obj, enum.Enum)
+        )
+        | (
+            # Inner class
+            isinstance(obj, type)
+        )
     )

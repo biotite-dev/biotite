@@ -1,4 +1,4 @@
-"""
+r"""
 Comparative genome assembly
 ===========================
 
@@ -48,21 +48,20 @@ terms of base-call error probability :math:`P` :footcite:`Cock2010`:
 import itertools
 import tempfile
 from concurrent.futures import ProcessPoolExecutor
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
+import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.lines import Line2D
 import biotite
+import biotite.application.sra as sra
+import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align
+import biotite.sequence.graphics as graphics
 import biotite.sequence.io as seqio
 import biotite.sequence.io.fasta as fasta
 import biotite.sequence.io.fastq as fastq
 import biotite.sequence.io.genbank as gb
-import biotite.sequence.graphics as graphics
-import biotite.database.entrez as entrez
-import biotite.application.sra as sra
-
 
 # Download the sequencing data
 app = sra.FastqDumpApp("SRR13453793")
@@ -73,8 +72,9 @@ app.join()
 # There is only one read per spot
 file_path = app.get_file_paths()[0]
 fastq_file = fastq.FastqFile.read(file_path, offset="Sanger")
-reads = [seq.NucleotideSequence(seq_str)
-         for seq_str, score_array in fastq_file.values()]
+reads = [
+    seq.NucleotideSequence(seq_str) for seq_str, score_array in fastq_file.values()
+]
 score_arrays = [score_array for seq_str, score_array in fastq_file.values()]
 
 print(f"Number of reads: {len(reads)}")
@@ -93,7 +93,8 @@ fig, (length_ax, score_ax) = plt.subplots(nrows=2, figsize=(8.0, 6.0))
 
 length_ax.hist(
     [len(score_array) for score_array in score_arrays],
-    bins=np.logspace(1, 5, N_BINS), color="gray"
+    bins=np.logspace(1, 5, N_BINS),
+    color="gray",
 )
 length_ax.set_xlabel("Read length")
 length_ax.set_ylabel("Number of reads")
@@ -102,7 +103,8 @@ length_ax.set_yscale("log")
 
 score_ax.hist(
     [np.mean(score_array) for score_array in score_arrays],
-    bins=N_BINS, color="gray",
+    bins=N_BINS,
+    color="gray",
 )
 score_ax.set_xlim(0, 30)
 score_ax.set_xlabel("Phred score")
@@ -134,8 +136,10 @@ score_histogram = np.bincount(np.concatenate(score_arrays))
 fig, ax = plt.subplots(figsize=(8.0, 4.0))
 ax.fill_between(
     # Value in megabases -> 1e-6
-    np.arange(len(score_histogram)), score_histogram * 1e-6,
-    linewidth=0, color="gray"
+    np.arange(len(score_histogram)),
+    score_histogram * 1e-6,
+    linewidth=0,
+    color="gray",
 )
 ax.set_xlim(
     np.min(np.where(score_histogram > 0)[0]),
@@ -166,15 +170,14 @@ fig.tight_layout()
 
 # Download and read the reference SARS-CoV-2 genome
 orig_genome_file = entrez.fetch(
-    "NC_045512", tempfile.gettempdir(), "gb",
-    db_name="Nucleotide", ret_type="gb"
+    "NC_045512", tempfile.gettempdir(), "gb", db_name="Nucleotide", ret_type="gb"
 )
 orig_genome = seqio.load_sequence(orig_genome_file)
 
 # Create complementary reads
-compl_reads = list(itertools.chain(
-    *[(read, read.reverse(False).complement()) for read in reads]
-))
+compl_reads = list(
+    itertools.chain(*[(read, read.reverse(False).complement()) for read in reads])
+)
 
 ########################################################################
 # To map the reads to their corresponding positions in the reference
@@ -239,19 +242,27 @@ matches = all_matches[INDEX]
 read_length = len(compl_reads[INDEX])
 
 # Find the correct diagonal for the example read
-diagonals = matches[:,2] - matches[:,0]
+diagonals = matches[:, 2] - matches[:, 0]
 diag, counts = np.unique(diagonals, return_counts=True)
 correct_diagonal = diag[np.argmax(counts)]
 
 # Visualize the matches and the correct diagonal
 fig, ax = plt.subplots(figsize=(8.0, 8.0))
 ax.scatter(
-    matches[:,0], matches[:,2],
-    s=4, marker="o", color=biotite.colors["dimorange"], label="Match"
+    matches[:, 0],
+    matches[:, 2],
+    s=4,
+    marker="o",
+    color=biotite.colors["dimorange"],
+    label="Match",
 )
 ax.plot(
-    [0, read_length], [correct_diagonal, read_length+correct_diagonal],
-    linestyle=":", linewidth=1.0, color="black", label="Correct diagonal"
+    [0, read_length],
+    [correct_diagonal, read_length + correct_diagonal],
+    linestyle=":",
+    linewidth=1.0,
+    color="black",
+    label="Correct diagonal",
 )
 ax.set_xlim(0, read_length)
 ax.set_xlabel("Read position")
@@ -263,7 +274,7 @@ fig.tight_layout()
 # Find the correct diagonal for all reads
 correct_diagonals = [None] * len(all_matches)
 for i, matches in enumerate(all_matches):
-    diagonals = matches[:,2] - matches[:,0]
+    diagonals = matches[:, 2] - matches[:, 0]
     unqiue_diag, counts = np.unique(diagonals, return_counts=True)
     if len(unqiue_diag) == 0:
         # If no match is found for this sequence, ignore this sequence
@@ -325,23 +336,28 @@ P_INDEL = 4 * (0.03 + 0.05 - 0.03**2 - 0.05**2)
 
 matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
 
+
 def map_sequence(read, diag):
     deviation = int(3 * np.sqrt(len(read) * P_INDEL))
     if diag is None:
         return None
     else:
         return align.align_banded(
-            read, orig_genome, matrix, gap_penalty=-10,
-            band = (diag - deviation, diag + deviation),
-            max_number = 1
+            read,
+            orig_genome,
+            matrix,
+            gap_penalty=-10,
+            band=(diag - deviation, diag + deviation),
+            max_number=1,
         )[0]
+
 
 # Each process can be quite memory consuming
 # -> Cap to two processes to make it work on low-RAM commodity hardware
 with ProcessPoolExecutor(max_workers=2) as executor:
-    alignments = list(executor.map(
-        map_sequence, compl_reads, correct_diagonals, chunksize=1000
-    ))
+    alignments = list(
+        executor.map(map_sequence, compl_reads, correct_diagonals, chunksize=1000)
+    )
 
 ########################################################################
 # Now we have to select for each read, whether the original or
@@ -351,18 +367,25 @@ with ProcessPoolExecutor(max_workers=2) as executor:
 for_alignments = [alignments[i] for i in range(0, len(alignments), 2)]
 rev_alignments = [alignments[i] for i in range(1, len(alignments), 2)]
 
-scores = np.stack((
-    [ali.score if ali is not None else 0 for ali in for_alignments],
-    [ali.score if ali is not None else 0 for ali in rev_alignments]
-),axis=-1)
+scores = np.stack(
+    (
+        [ali.score if ali is not None else 0 for ali in for_alignments],
+        [ali.score if ali is not None else 0 for ali in rev_alignments],
+    ),
+    axis=-1,
+)
 
 correct_sense = np.argmax(scores, axis=-1)
-correct_alignments = [for_a if sense == 0 else rev_a for for_a, rev_a, sense
-                      in zip(for_alignments, rev_alignments, correct_sense)]
+correct_alignments = [
+    for_a if sense == 0 else rev_a
+    for for_a, rev_a, sense in zip(for_alignments, rev_alignments, correct_sense)
+]
 # If we use a reverse complementary read,
 # we also need to reverse the Phred score arrays
-correct_score_arrays = [score if sense == 0 else score[::-1] for score, sense
-                        in zip(score_arrays, correct_sense)]
+correct_score_arrays = [
+    score if sense == 0 else score[::-1]
+    for score, sense in zip(score_arrays, correct_sense)
+]
 
 ########################################################################
 # Now we know for each read where its corresponding position on the
@@ -371,12 +394,8 @@ correct_score_arrays = [score if sense == 0 else score[::-1] for score, sense
 # Eventually, we visualize the mapping.
 
 # Find genome positions for the starts and ends of all reads
-starts = np.array(
-    [ali.trace[ 0, 1] for ali in correct_alignments if ali is not None]
-)
-stops = np.array(
-    [ali.trace[-1, 1] for ali in correct_alignments if ali is not None]
-)
+starts = np.array([ali.trace[0, 1] for ali in correct_alignments if ali is not None])
+stops = np.array([ali.trace[-1, 1] for ali in correct_alignments if ali is not None])
 # For a nicer plot sort these by their start position
 order = np.argsort(starts)
 starts = starts[order]
@@ -384,13 +403,17 @@ stops = stops[order]
 
 fig, ax = plt.subplots(figsize=(8.0, 12.0))
 ax.barh(
-    np.arange(len(starts)), left=starts, width=stops-starts, height=1,
-    color=biotite.colors["dimgreen"], linewidth=0
+    np.arange(len(starts)),
+    left=starts,
+    width=stops - starts,
+    height=1,
+    color=biotite.colors["dimgreen"],
+    linewidth=0,
 )
-ax.set_ylim(0, len(starts)+1)
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-ax.spines['left'].set_visible(False)
+ax.set_ylim(0, len(starts) + 1)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_visible(False)
 ax.tick_params(left=False, labelleft=False)
 ax.set_xlabel("Sequence position")
 ax.set_title("Read mappings to reference genome")
@@ -479,24 +502,21 @@ for alignment, score_array in zip(correct_alignments, correct_score_arrays):
     if alignment is not None:
         trace = alignment.trace
 
-        no_gap_trace = trace[(trace[:,0] != -1) & (trace[:,1] != -1)]
+        no_gap_trace = trace[(trace[:, 0] != -1) & (trace[:, 1] != -1)]
         # Get the sequence code for the aligned read symbols
-        seq_code = alignment.sequences[0].code[no_gap_trace[:,0]]
+        seq_code = alignment.sequences[0].code[no_gap_trace[:, 0]]
         # The sequence code contains the integers 0 - 3;
         # one for each possible base
         # Hence, we can use these integers directly to index the second
         # dimension of the Pred score sum
         # The index for the first dimension contains simply the genome
         # positions taken from the alignment trace
-        phred_sum[no_gap_trace[:,1], seq_code] \
-            += score_array[no_gap_trace[:,0]]
+        phred_sum[no_gap_trace[:, 1], seq_code] += score_array[no_gap_trace[:, 0]]
 
-        sequencing_depth[
-            trace[0,1] : trace[-1,1]
-        ] += 1
+        sequencing_depth[trace[0, 1] : trace[-1, 1]] += 1
 
-        read_gap_trace = trace[trace[:,0] == -1]
-        deletion_number[read_gap_trace[:,1]] += 1
+        read_gap_trace = trace[trace[:, 0] == -1]
+        deletion_number[read_gap_trace[:, 1]] += 1
 
 # Call the most probable base for each genome position according to the
 # formula above
@@ -504,23 +524,21 @@ most_probable_symbol_codes = np.argmax(phred_sum, axis=1)
 
 
 # Visualize the sequencing depth and score sum over the genome
-max_phred_sum = phred_sum[
-    np.arange(len(phred_sum)), most_probable_symbol_codes
-]
+max_phred_sum = phred_sum[np.arange(len(phred_sum)), most_probable_symbol_codes]
+
 
 def moving_average(data_set, window_size):
-    weights = np.full(window_size, 1/window_size)
-    return np.convolve(data_set, weights, mode='valid')
+    weights = np.full(window_size, 1 / window_size)
+    return np.convolve(data_set, weights, mode="valid")
+
 
 fig, ax = plt.subplots(figsize=(8.0, 4.0))
-ax.plot(
-    moving_average(max_phred_sum, 100),
-    color="lightgray", linewidth=1.0
-)
+ax.plot(moving_average(max_phred_sum, 100), color="lightgray", linewidth=1.0)
 ax2 = ax.twinx()
 ax2.plot(
     moving_average(sequencing_depth, 100),
-    color=biotite.colors["dimorange"], linewidth=1.0
+    color=biotite.colors["dimorange"],
+    linewidth=1.0,
 )
 ax.axhline(0, color="silver", linewidth=0.5)
 ax.set_xlim(0, len(orig_genome))
@@ -528,10 +546,9 @@ ax.set_xlabel("Genome postion")
 ax.set_ylabel("Phred score sum")
 ax2.set_ylabel("Sequencing depth")
 ax.legend(
-    [Line2D([0], [0], color=c)
-     for c in ("lightgray", biotite.colors["dimorange"])],
+    [Line2D([0], [0], color=c) for c in ("lightgray", biotite.colors["dimorange"])],
     ["Phred score sum", "Sequencing depth"],
-    loc="upper left"
+    loc="upper left",
 )
 fig.tight_layout()
 
@@ -551,14 +568,13 @@ var_genome = seq.NucleotideSequence()
 var_genome.code = most_probable_symbol_codes
 # A deletion is called, if either enough reads include this deletion
 # or the sequence position is not covered by any read at all
-deletion_mask = (deletion_number > sequencing_depth * DELETION_THRESHOLD) \
-                | (sequencing_depth == 0)
+deletion_mask = (deletion_number > sequencing_depth * DELETION_THRESHOLD) | (
+    sequencing_depth == 0
+)
 var_genome = var_genome[~deletion_mask]
 # Write the assembled genome into a FASTA file
 out_file = fasta.FastaFile()
-fasta.set_sequence(
-    out_file, var_genome, header="SARS-CoV-2 B.1.1.7", as_rna=True
-)
+fasta.set_sequence(out_file, var_genome, header="SARS-CoV-2 B.1.1.7", as_rna=True)
 out_file.write(tempfile.NamedTemporaryFile("w"))
 
 ########################################################################
@@ -578,10 +594,13 @@ out_file.write(tempfile.NamedTemporaryFile("w"))
 BAND_WIDTH = 1000
 
 genome_alignment = align.align_banded(
-    var_genome, orig_genome, matrix,
-    band=(-BAND_WIDTH//2, BAND_WIDTH//2), max_number=1
+    var_genome,
+    orig_genome,
+    matrix,
+    band=(-BAND_WIDTH // 2, BAND_WIDTH // 2),
+    max_number=1,
 )[0]
-identity = align.get_sequence_identity(genome_alignment, 'all')
+identity = align.get_sequence_identity(genome_alignment, "all")
 print(f"Sequence identity: {identity * 100:.2f} %")
 
 ########################################################################
@@ -599,9 +618,9 @@ annot_seq = gb.get_annotated_sequence(gb_file, include_only=["gene"])
 
 # Calculate the sequence identity within each bin
 bin_identities = np.zeros(N_BINS)
-edges = np.linspace(0, len(orig_genome), N_BINS+1)
+edges = np.linspace(0, len(orig_genome), N_BINS + 1)
 for i, (bin_start, bin_stop) in enumerate(zip(edges[:-1], edges[1:])):
-    orig_genome_trace = genome_alignment.trace[:,1]
+    orig_genome_trace = genome_alignment.trace[:, 1]
     excerpt = genome_alignment[
         (orig_genome_trace >= bin_start) & (orig_genome_trace < bin_stop)
     ]
@@ -612,9 +631,11 @@ fig, (deviation_ax, feature_ax) = plt.subplots(nrows=2, figsize=(8.0, 5.0))
 
 # Plot the deviation = 1 - sequence identity
 deviation_ax.bar(
-    edges[:-1], width=(edges[1:]-edges[:-1]),
+    edges[:-1],
+    width=(edges[1:] - edges[:-1]),
     height=(1 - bin_identities),
-    color=biotite.colors["dimorange"], align="edge"
+    color=biotite.colors["dimorange"],
+    align="edge",
 )
 deviation_ax.set_xlim(0, len(orig_genome))
 deviation_ax.set_ylabel("1 - Sequence identity")
@@ -623,20 +644,24 @@ deviation_ax.set_yscale("log")
 deviation_ax.set_ylim(1e-3, 1e-1)
 
 # Plot genmic coordinates of the genes
-for i, feature in enumerate(sorted(
-    annot_seq.annotation,
-    key=lambda feature: min([loc.first for loc in feature.locs])
-)):
+for i, feature in enumerate(
+    sorted(
+        annot_seq.annotation,
+        key=lambda feature: min([loc.first for loc in feature.locs]),
+    )
+):
     for loc in feature.locs:
         feature_ax.barh(
-            left=loc.first, width=loc.last-loc.first, y=i, height=1,
-            color=biotite.colors["dimgreen"]
+            left=loc.first,
+            width=loc.last - loc.first,
+            y=i,
+            height=1,
+            color=biotite.colors["dimgreen"],
         )
         feature_ax.text(
-            loc.last + 100, i, feature.qual["gene"],
-            fontsize=8, ha="left", va="center"
+            loc.last + 100, i, feature.qual["gene"], fontsize=8, ha="left", va="center"
         )
-feature_ax.set_ylim(i+0.5, -0.5)
+feature_ax.set_ylim(i + 0.5, -0.5)
 feature_ax.set_xlim(0, len(orig_genome))
 feature_ax.xaxis.set_visible(False)
 feature_ax.yaxis.set_visible(False)
@@ -671,17 +696,17 @@ SPACING = 3
 # The locations of some notable spike protein regions
 FEATURES = {
     # Signal peptide
-    "SP":  (   1,   12),
+    "SP": (1, 12),
     # N-terminal domain
-    "NTD": (  14,  303),
+    "NTD": (14, 303),
     # Receptor binding domain
-    "RBD": ( 319,  541),
+    "RBD": (319, 541),
     # Fusion peptide
-    "FP":  ( 788,  806),
+    "FP": (788, 806),
     # Transmembrane domain
-    "TM":  (1214, 1234),
+    "TM": (1214, 1234),
     # Cytoplasmatic tail
-    "CT":  (1269, 1273),
+    "CT": (1269, 1273),
 }
 
 # Get RNA sequence coding for spike protein from the reference genome
@@ -694,11 +719,11 @@ for feature in annot_seq.annotation:
 alignment = align.align_optimal(
     var_genome, orig_spike_seq, matrix, local=True, max_number=1
 )[0]
-var_spike_seq = var_genome[alignment.trace[alignment.trace[:,0] != -1, 0]]
+var_spike_seq = var_genome[alignment.trace[alignment.trace[:, 0] != -1, 0]]
 
 # Obtain protein sequences from RNA sequences
 orig_spike_prot_seq = orig_spike_seq.translate(complete=True).remove_stops()
-var_spike_prot_seq  =  var_spike_seq.translate(complete=True).remove_stops()
+var_spike_prot_seq = var_spike_seq.translate(complete=True).remove_stops()
 
 # Align both protein sequences with each other for later comparison
 blosum_matrix = align.SubstitutionMatrix.std_protein_matrix()
@@ -712,47 +737,50 @@ ax = fig.add_subplot(111)
 
 # Plot alignment
 cmap = LinearSegmentedColormap.from_list(
-    "custom", colors=[(1.0, 0.3, 0.3), (1.0, 1.0, 1.0)]
+    "custom",
+    colors=[(1.0, 0.3, 0.3), (1.0, 1.0, 1.0)],
     #                    ^ reddish        ^ white
 )
 graphics.plot_alignment_similarity_based(
-    ax, alignment, matrix=blosum_matrix, symbols_per_line=SYMBOLS_PER_LINE,
-    labels=["B.1.1.7", "Reference"], show_numbers=True, label_size=9,
-    number_size=9, symbol_size=7, spacing=SPACING, cmap=cmap
+    ax,
+    alignment,
+    matrix=blosum_matrix,
+    symbols_per_line=SYMBOLS_PER_LINE,
+    labels=["B.1.1.7", "Reference"],
+    show_numbers=True,
+    label_size=9,
+    number_size=9,
+    symbol_size=7,
+    spacing=SPACING,
+    cmap=cmap,
 )
 
 ## Add indicator for features to the alignment
 for row in range(1 + len(alignment) // SYMBOLS_PER_LINE):
     col_start = SYMBOLS_PER_LINE * row
-    col_stop  = SYMBOLS_PER_LINE * (row + 1)
+    col_stop = SYMBOLS_PER_LINE * (row + 1)
     if col_stop > len(alignment):
         # This happens in the last line
         col_stop = len(alignment)
     seq_start = alignment.trace[col_start, 1]
-    seq_stop  = alignment.trace[col_stop-1,  1] + 1
+    seq_stop = alignment.trace[col_stop - 1, 1] + 1
     n_sequences = len(alignment.sequences)
     y_base = (n_sequences + SPACING) * row + n_sequences
 
     for feature_name, (first, last) in FEATURES.items():
         # Zero based sequence indexing
-        start = first-1
+        start = first - 1
         # Exclusive stop
         stop = last
         if start < seq_stop and stop > seq_start:
             # The feature is found in this line
             x_begin = np.clip(start - seq_start, 0, SYMBOLS_PER_LINE)
-            x_end   = np.clip(stop - seq_start,  0, SYMBOLS_PER_LINE)
+            x_end = np.clip(stop - seq_start, 0, SYMBOLS_PER_LINE)
             x_mean = (x_begin + x_end) / 2
             y_line = y_base + 0.3
             y_text = y_base + 0.6
-            ax.plot(
-                [x_begin, x_end], [y_line, y_line],
-                color="black", linewidth=2
-            )
-            ax.text(
-                x_mean, y_text, feature_name,
-                fontsize=8, va="top", ha="center"
-            )
+            ax.plot([x_begin, x_end], [y_line, y_line], color="black", linewidth=2)
+            ax.text(x_mean, y_text, feature_name, fontsize=8, va="top", ha="center")
 # Increase y-limit to include the feature indicators in the last line
 ax.set_ylim(y_text, 0)
 fig.tight_layout()

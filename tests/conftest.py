@@ -2,8 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import pytest
-import numpy as np
 
 def pytest_sessionstart(session):
     """
@@ -13,10 +11,11 @@ def pytest_sessionstart(session):
     try:
         import numpy as np
         import pyximport
+
         pyximport.install(
             build_in_temp=False,
-            setup_args={"include_dirs":np.get_include()},
-            language_level=3
+            setup_args={"include_dirs": np.get_include()},
+            language_level=3,
         )
     except ImportError:
         pass

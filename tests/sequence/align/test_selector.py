@@ -11,12 +11,7 @@ import biotite.sequence.align as align
 
 @pytest.mark.parametrize(
     "seed, window, from_sequence, use_permutation",
-    itertools.product(
-        range(20),
-        [2, 5, 10, 25],
-        [False, True],
-        [False, True]
-    )
+    itertools.product(range(20), [2, 5, 10, 25], [False, True], [False, True]),
 )
 def test_minimizer(seed, window, from_sequence, use_permutation):
     """
@@ -40,23 +35,20 @@ def test_minimizer(seed, window, from_sequence, use_permutation):
         order = kmers
 
     # Use an inefficient but simple algorithm for comparison
-    ref_minimizer_pos = np.array([
-        np.argmin(order[i : i + window]) + i
-        for i in range(len(order) - (window - 1))
-    ])
+    ref_minimizer_pos = np.array(
+        [np.argmin(order[i : i + window]) + i for i in range(len(order) - (window - 1))]
+    )
     # Remove duplicates
     ref_minimizer_pos = np.unique(ref_minimizer_pos)
     ref_minimizers = kmers[ref_minimizer_pos]
 
-    minimizer_selector = align.MinimizerSelector(
-        kmer_alph, window, permutation
-    )
+    minimizer_selector = align.MinimizerSelector(kmer_alph, window, permutation)
     if from_sequence:
-        test_minimizer_pos, test_minimizers \
-            = minimizer_selector.select(sequence)
+        test_minimizer_pos, test_minimizers = minimizer_selector.select(sequence)
     else:
-        test_minimizer_pos, test_minimizers \
-            = minimizer_selector.select_from_kmers(kmers)
+        test_minimizer_pos, test_minimizers = minimizer_selector.select_from_kmers(
+            kmers
+        )
 
     assert test_minimizer_pos.tolist() == ref_minimizer_pos.tolist()
     assert test_minimizers.tolist() == ref_minimizers.tolist()
@@ -69,10 +61,10 @@ def test_minimizer(seed, window, from_sequence, use_permutation):
         [2, 3, 5, 7],
         [(0,), (0, 1, 2), (0, -1), (-2, -1)],
         [False, True],
-        [False, True]
+        [False, True],
     ),
     # Print tuples in name of test
-    ids=lambda x: str(x).replace(" ", "") if isinstance(x, tuple) else None
+    ids=lambda x: str(x).replace(" ", "") if isinstance(x, tuple) else None,
 )
 def test_syncmer(seed, s, offset, from_sequence, use_permutation):
     """
@@ -113,11 +105,9 @@ def test_syncmer(seed, s, offset, from_sequence, use_permutation):
         sequence.alphabet, K, s, permutation, offset
     )
     if from_sequence:
-        test_syncmer_pos, test_syncmers \
-            = syncmer_selector.select(sequence)
+        test_syncmer_pos, test_syncmers = syncmer_selector.select(sequence)
     else:
-        test_syncmer_pos, test_syncmers \
-            = syncmer_selector.select_from_kmers(kmers)
+        test_syncmer_pos, test_syncmers = syncmer_selector.select_from_kmers(kmers)
 
     assert test_syncmer_pos.tolist() == ref_syncmer_pos.tolist()
     assert test_syncmers.tolist() == ref_syncmers.tolist()
@@ -141,14 +131,10 @@ def test_cached_syncmer():
     np.random.seed(0)
     sequence.code = np.random.randint(len(sequence.alphabet), size=LENGTH)
 
-    syncmer_selector = align.SyncmerSelector(
-        sequence.alphabet, K, S
-    )
+    syncmer_selector = align.SyncmerSelector(sequence.alphabet, K, S)
     ref_syncmer_pos, ref_syncmers = syncmer_selector.select(sequence)
 
-    cached_syncmer_selector = align.CachedSyncmerSelector(
-        sequence.alphabet, K, S
-    )
+    cached_syncmer_selector = align.CachedSyncmerSelector(sequence.alphabet, K, S)
     test_syncmer_pos, test_syncmers = cached_syncmer_selector.select(sequence)
 
     assert test_syncmer_pos.tolist() == ref_syncmer_pos.tolist()
@@ -159,13 +145,13 @@ def test_cached_syncmer():
     "offset, exception_type",
     [
         # Duplicate values
-        ((1, 1),    ValueError),
+        ((1, 1), ValueError),
         ((0, 2, 0), ValueError),
-        ((0, -10),  ValueError),
+        ((0, -10), ValueError),
         # Offset out of window range
-        ((-11,),    IndexError),
-        ((10,),     IndexError),
-    ]
+        ((-11,), IndexError),
+        ((10,), IndexError),
+    ],
 )
 def test_syncmer_invalid_offset(offset, exception_type):
     """
@@ -176,7 +162,10 @@ def test_syncmer_invalid_offset(offset, exception_type):
     with pytest.raises(exception_type):
         align.SyncmerSelector(
             # Any alphabet would work here
-            seq.NucleotideSequence.alphabet_unamb, K, S, offset=offset
+            seq.NucleotideSequence.alphabet_unamb,
+            K,
+            S,
+            offset=offset,
         )
 
 
@@ -205,12 +194,9 @@ def test_mincode(use_permutation):
         permutation_range = len(kmer_alph)
         order = kmers
 
-    mincode_selector = align.MincodeSelector(
-        kmer_alph, COMPRESSION, permutation
-    )
+    mincode_selector = align.MincodeSelector(kmer_alph, COMPRESSION, permutation)
 
     _, mincode_pos = mincode_selector.select_from_kmers(kmers)
     threshold = permutation_offset + permutation_range / COMPRESSION
     assert mincode_pos.tolist() == np.where(order < threshold)[0].tolist()
-    assert len(mincode_pos) * COMPRESSION \
-        == pytest.approx(len(kmers), rel=0.02)
+    assert len(mincode_pos) * COMPRESSION == pytest.approx(len(kmers), rel=0.02)

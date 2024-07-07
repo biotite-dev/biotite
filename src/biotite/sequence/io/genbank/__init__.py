@@ -11,7 +11,7 @@ and *GenPept* format.
 __name__ = "biotite.sequence.io.genbank"
 __author__ = "Patrick Kunzmann"
 
-from .file import *
 from .annotation import *
-from .sequence import *
+from .file import *
 from .metadata import *
+from .sequence import *

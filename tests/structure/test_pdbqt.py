@@ -2,31 +2,30 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import warnings
-from tempfile import TemporaryFile
 import glob
+import warnings
 from os.path import join
-import pytest
+from tempfile import TemporaryFile
 import numpy as np
+import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbqt as pdbqt
 import biotite.structure.io.pdbx as pdbx
-from ..util import data_dir
+from tests.util import data_dir
 
 
 @pytest.mark.parametrize(
     "path",
     [
-        path for path in glob.glob(join(data_dir("structure"), "*.bcif"))
+        path
+        for path in glob.glob(join(data_dir("structure"), "*.bcif"))
         # Skip this PDB ID as it contains 5-character residue names
         if "7gsa" not in path
-    ]
+    ],
 )
 def test_array_conversion(path):
     pdbx_file = pdbx.BinaryCIFFile.read(path)
-    ref_structure = pdbx.get_structure(
-        pdbx_file, model=1, extra_fields=["charge"]
-    )
+    ref_structure = pdbx.get_structure(pdbx_file, model=1, extra_fields=["charge"])
     ref_structure.bonds = struc.connect_via_residue_names(ref_structure)
 
     pdbqt_file = pdbqt.PDBQTFile()
@@ -53,7 +52,7 @@ def test_array_conversion(path):
         try:
             assert np.array_equal(
                 test_structure.get_annotation(category),
-                 ref_structure.get_annotation(category)
+                ref_structure.get_annotation(category),
             )
         except AssertionError:
             print(f"Inequality in '{category}' category")

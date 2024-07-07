@@ -6,7 +6,7 @@ from os.path import join
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
-from ...util import data_dir
+from tests.util import data_dir
 
 
 @pytest.fixture

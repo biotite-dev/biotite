@@ -19,28 +19,26 @@ of :math:`2.05 \pm 0.05` Å and the dihedral angle of
 
 import io
 from tempfile import gettempdir
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
+import biotite.database.rcsb as rcsb
 import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-import biotite.database.rcsb as rcsb
 
 
-def detect_disulfide_bonds(structure, distance=2.05, distance_tol=0.05,
-                           dihedral=90, dihedral_tol=10):
+def detect_disulfide_bonds(
+    structure, distance=2.05, distance_tol=0.05, dihedral=90, dihedral_tol=10
+):
     # Array where detected disulfide bonds are stored
     disulfide_bonds = []
     # A mask that selects only S-gamma atoms of cysteins
-    sulfide_mask = (structure.res_name == "CYS") & \
-                   (structure.atom_name == "SG")
+    sulfide_mask = (structure.res_name == "CYS") & (structure.atom_name == "SG")
     # sulfides in adjacency to other sulfides are detected in an
     # efficient manner via a cell list
     cell_list = struc.CellList(
-        structure,
-        cell_size=distance+distance_tol,
-        selection=sulfide_mask
+        structure, cell_size=distance + distance_tol, selection=sulfide_mask
     )
     # Iterate over every index corresponding to an S-gamma atom
     for sulfide_i in np.where(sulfide_mask)[0]:
@@ -65,30 +63,33 @@ def detect_disulfide_bonds(structure, distance=2.05, distance_tol=0.05,
             # For dihedral angle measurement the corresponding
             # C-beta atoms are required, too
             cb1 = structure[
-                (structure.chain_id == sg1.chain_id) &
-                (structure.res_id == sg1.res_id) &
-                (structure.atom_name == "CB")
+                (structure.chain_id == sg1.chain_id)
+                & (structure.res_id == sg1.res_id)
+                & (structure.atom_name == "CB")
             ]
             cb2 = structure[
-                (structure.chain_id == sg2.chain_id) &
-                (structure.res_id == sg2.res_id) &
-                (structure.atom_name == "CB")
+                (structure.chain_id == sg2.chain_id)
+                & (structure.res_id == sg2.res_id)
+                & (structure.atom_name == "CB")
             ]
             # Measure distance and dihedral angle and check criteria
             bond_dist = struc.distance(sg1, sg2)
             bond_dihed = np.abs(np.rad2deg(struc.dihedral(cb1, sg1, sg2, cb2)))
-            if bond_dist  > distance - distance_tol and \
-               bond_dist  < distance + distance_tol and \
-               bond_dihed > dihedral - dihedral_tol and \
-               bond_dihed < dihedral + dihedral_tol:
-                    # Atom meet criteria -> we found a disulfide bond
-                    # -> the indices of the bond S-gamma atoms
-                    # are put into a tuple with the lower index first
-                    bond_tuple = sorted((sulfide_i, sulfide_j))
-                    # Add bond to list of bonds, but each bond only once
-                    if bond_tuple not in disulfide_bonds:
-                        disulfide_bonds.append(bond_tuple)
+            if (
+                bond_dist > distance - distance_tol
+                and bond_dist < distance + distance_tol
+                and bond_dihed > dihedral - dihedral_tol
+                and bond_dihed < dihedral + dihedral_tol
+            ):
+                # Atom meet criteria -> we found a disulfide bond
+                # -> the indices of the bond S-gamma atoms
+                # are put into a tuple with the lower index first
+                bond_tuple = sorted((sulfide_i, sulfide_j))
+                # Add bond to list of bonds, but each bond only once
+                if bond_tuple not in disulfide_bonds:
+                    disulfide_bonds.append(bond_tuple)
     return np.array(disulfide_bonds, dtype=int)
+
 
 ########################################################################
 # As test case a structure of a *cysteine knot* protein is used,
@@ -104,19 +105,15 @@ def detect_disulfide_bonds(structure, distance=2.05, distance_tol=0.05,
 # For later verification that the implemented function works correctly,
 # the disulfide bonds, that are removed, are printed out.
 
-pdbx_file = pdbx.BinaryCIFFile.read(
-    rcsb.fetch("2IT7", "bcif", gettempdir())
-)
+pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("2IT7", "bcif", gettempdir()))
 knottin = pdbx.get_structure(pdbx_file, include_bonds=True, model=1)
-sulfide_indices = np.where(
-    (knottin.res_name == "CYS") & (knottin.atom_name == "SG")
-)[0]
+sulfide_indices = np.where((knottin.res_name == "CYS") & (knottin.atom_name == "SG"))[0]
 for i, j, _ in knottin.bonds.as_array():
     if i in sulfide_indices and j in sulfide_indices:
         print(knottin[i])
         print(knottin[j])
         print()
-        knottin.bonds.remove_bond(i,j)
+        knottin.bonds.remove_bond(i, j)
 
 ########################################################################
 # Now the sanitized structure is put into the disulfide detection
@@ -143,13 +140,11 @@ sequence = seq.ProteinSequence(knottin.res_name[knottin.atom_name == "CA"])
 figure = plt.figure(figsize=(4.0, 1.0))
 ax = figure.gca()
 MARGIN = 0.2
-ax.set_xlim(1-MARGIN, len(sequence)+MARGIN)
-ax.set_ylim(0, 1+MARGIN)
-ax.set_xticks(np.arange(1, len(sequence)+1))
+ax.set_xlim(1 - MARGIN, len(sequence) + MARGIN)
+ax.set_ylim(0, 1 + MARGIN)
+ax.set_xticks(np.arange(1, len(sequence) + 1))
 ax.set_xticklabels(str(sequence))
-ax.yaxis.set_tick_params(
-    left=False, right=False, labelleft=False, labelright=False
-)
+ax.yaxis.set_tick_params(left=False, right=False, labelleft=False, labelright=False)
 ax.xaxis.set_tick_params(
     bottom=True, top=False, labelbottom=True, labeltop=False, width=0
 )
@@ -161,10 +156,16 @@ for sg1_index, sg2_index in disulfide_bonds:
     ellipse_width = sg2_res_id - sg1_res_id
     # Height is 2 instead of 1,
     # because only the upper half of the ellipse is visible
-    ax.add_patch(patches.Ellipse(
-        xy=(ellipse_center, 0), width=ellipse_width, height=2,
-        facecolor="None", edgecolor="gold", linewidth=2
-    ))
+    ax.add_patch(
+        patches.Ellipse(
+            xy=(ellipse_center, 0),
+            width=ellipse_width,
+            height=2,
+            facecolor="None",
+            edgecolor="gold",
+            linewidth=2,
+        )
+    )
 figure.tight_layout()
 
 ########################################################################

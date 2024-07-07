@@ -9,9 +9,8 @@ import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
-import biotite.structure as struc
 from biotite.structure.superimpose import _multi_matmul as multi_matmul
-from ..util import data_dir
+from tests.util import data_dir
 
 
 def test_transform_as_matrix():
@@ -30,7 +29,7 @@ def test_transform_as_matrix():
         # This is not really a rotation matrix,
         # but the same maths apply
         rotation=np.random.rand(N_MODELS, 3, 3),
-        target_translation=np.random.rand(N_MODELS, 3)
+        target_translation=np.random.rand(N_MODELS, 3),
     )
 
     ref_coord = transform.apply(orig_coord)
@@ -41,15 +40,13 @@ def test_transform_as_matrix():
     test_coord_4 = multi_matmul(transform.as_matrix(), orig_coord_4)
     test_coord = test_coord_4[..., :3]
 
-    assert test_coord.flatten().tolist() \
-        == pytest.approx(ref_coord.flatten().tolist(), abs=1e-6)
+    assert test_coord.flatten().tolist() == pytest.approx(
+        ref_coord.flatten().tolist(), abs=1e-6
+    )
 
 
 @pytest.mark.parametrize(
-    "seed, multi_model", itertools.product(
-        range(10),
-        [False, True]
-    )
+    "seed, multi_model", itertools.product(range(10), [False, True])
 )
 def test_restoration(seed, multi_model):
     """
@@ -70,8 +67,9 @@ def test_restoration(seed, multi_model):
     test_coord = _transform_random_affine(ref_coord)
     test_coord, _ = struc.superimpose(ref_coord, test_coord)
 
-    assert test_coord.flatten().tolist() \
-        == pytest.approx(ref_coord.flatten().tolist(), abs=1e-6)
+    assert test_coord.flatten().tolist() == pytest.approx(
+        ref_coord.flatten().tolist(), abs=1e-6
+    )
 
 
 def test_rotation_matrix():
@@ -83,28 +81,23 @@ def test_rotation_matrix():
     N_COORD = 100
 
     # A rotation matrix that rotates 90 degrees around the z-axis
-    ref_rotation = np.array([
-        [0, -1,  0],
-        [1,  0,  0],
-        [0,  0,  1]
-    ])
+    ref_rotation = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
 
     np.random.seed(0)
     original_coord = np.random.rand(N_COORD, 3)
     # Rotate about 90 degrees around z-axis
-    rotated_coord = struc.rotate(original_coord, angles=(0, 0, np.pi/2))
+    rotated_coord = struc.rotate(original_coord, angles=(0, 0, np.pi / 2))
     _, transform = struc.superimpose(rotated_coord, original_coord)
     test_rotation = transform.rotation
 
-    assert test_rotation.flatten().tolist() \
-        == pytest.approx(ref_rotation.flatten().tolist(), abs=1e-6)
+    assert test_rotation.flatten().tolist() == pytest.approx(
+        ref_rotation.flatten().tolist(), abs=1e-6
+    )
 
 
 @pytest.mark.parametrize(
-    "path, coord_only", itertools.product(
-        glob.glob(join(data_dir("structure"), "*.bcif")),
-        [False, True]
-    )
+    "path, coord_only",
+    itertools.product(glob.glob(join(data_dir("structure"), "*.bcif")), [False, True]),
 )
 def test_superimposition_array(path, coord_only):
     """
@@ -116,16 +109,14 @@ def test_superimposition_array(path, coord_only):
     fixed = strucio.load_structure(path, model=1)
 
     mobile = fixed.copy()
-    mobile = struc.rotate(mobile, (1,2,3))
-    mobile = struc.translate(mobile, (1,2,3))
+    mobile = struc.rotate(mobile, (1, 2, 3))
+    mobile = struc.translate(mobile, (1, 2, 3))
 
     if coord_only:
         fixed = fixed.coord
         mobile = mobile.coord
 
-    fitted, transformation = struc.superimpose(
-        fixed, mobile
-    )
+    fitted, transformation = struc.superimpose(fixed, mobile)
 
     if coord_only:
         assert isinstance(fitted, np.ndarray)
@@ -150,7 +141,7 @@ def test_superimposition_stack(ca_only):
     fixed = stack[0]
     mobile = stack[1:]
     if ca_only:
-        mask = (mobile.atom_name == "CA")
+        mask = mobile.atom_name == "CA"
     else:
         mask = None
 
@@ -160,13 +151,11 @@ def test_superimposition_stack(ca_only):
         # The superimpositions are better for most cases than the
         # superimpositions in the structure file
         # -> Use average
-        assert np.mean(struc.rmsd(fixed, fitted)) \
-             < np.mean(struc.rmsd(fixed, mobile))
+        assert np.mean(struc.rmsd(fixed, fitted)) < np.mean(struc.rmsd(fixed, mobile))
     else:
         # The superimpositions are better than the superimpositions
         # in the structure file
         assert (struc.rmsd(fixed, fitted) < struc.rmsd(fixed, mobile)).all()
-
 
 
 @pytest.mark.parametrize("seed", range(5))
@@ -188,25 +177,19 @@ def test_masked_superimposition(seed):
 
     # The distance between the atom in both models should not be
     # already 0 prior to superimposition
-    assert struc.distance(fixed[mask], mobile[mask])[0] \
-        != pytest.approx(0, abs=5e-4)
+    assert struc.distance(fixed[mask], mobile[mask])[0] != pytest.approx(0, abs=5e-4)
 
-    fitted, transformation = struc.superimpose(
-        fixed, mobile, mask
-    )
+    fitted, transformation = struc.superimpose(fixed, mobile, mask)
 
-    assert struc.distance(fixed[mask], fitted[mask])[0] \
-        == pytest.approx(0, abs=5e-4)
+    assert struc.distance(fixed[mask], fitted[mask])[0] == pytest.approx(0, abs=5e-4)
 
     fitted = transformation.apply(mobile)
 
-    struc.distance(fixed[mask], fitted[mask])[0] \
-        == pytest.approx(0, abs=5e-4)
+    struc.distance(fixed[mask], fitted[mask])[0] == pytest.approx(0, abs=5e-4)
 
 
 @pytest.mark.parametrize(
-    "single_model, single_atom",
-    itertools.product([False, True], [False, True])
+    "single_model, single_atom", itertools.product([False, True], [False, True])
 )
 def test_input_shapes(single_model, single_atom):
     """
@@ -258,24 +241,25 @@ def test_outlier_detection(seed):
     superimposed_coord, _, anchors = struc.superimpose_without_outliers(
         # Increase the threshold a bit,
         # to ensure that no inlier is classified as outlier
-        fixed_coord, mobile_coord, outlier_threshold=3.0
+        fixed_coord,
+        mobile_coord,
+        outlier_threshold=3.0,
     )
     test_outlier_mask = np.full(N_COORD, True)
     test_outlier_mask[anchors] = False
 
     assert test_outlier_mask.tolist() == ref_outlier_mask.tolist()
     # Without the outliers, the RMSD should be in the noise range
-    assert struc.rmsd(
-        fixed_coord[~ref_outlier_mask], superimposed_coord[~ref_outlier_mask]
-    ) < NOISE
+    assert (
+        struc.rmsd(
+            fixed_coord[~ref_outlier_mask], superimposed_coord[~ref_outlier_mask]
+        )
+        < NOISE
+    )
 
 
 @pytest.mark.parametrize(
-    "multi_model, coord_only",
-    itertools.product(
-        [False, True],
-        [False, True]
-    )
+    "multi_model, coord_only", itertools.product([False, True], [False, True])
 )
 def test_superimpose_without_outliers_inputs(multi_model, coord_only):
     """
@@ -289,9 +273,7 @@ def test_superimpose_without_outliers_inputs(multi_model, coord_only):
     if coord_only:
         atoms = atoms.coord
 
-    superimposed, transform, _ = struc.superimpose_without_outliers(
-        atoms, atoms
-    )
+    superimposed, transform, _ = struc.superimpose_without_outliers(atoms, atoms)
 
     assert type(superimposed) == type(atoms)
     assert superimposed.shape == atoms.shape
@@ -313,7 +295,7 @@ def test_superimpose_without_outliers_inputs(multi_model, coord_only):
         ("1aki", "A", True),
         ("4gxy", "A", False),  # is a nucleic acid
         ("4gxy", "A", True),
-    ]
+    ],
 )
 def test_superimpose_homologs(pdb_id, chain_id, as_stack):
     """
@@ -342,8 +324,10 @@ def test_superimpose_homologs(pdb_id, chain_id, as_stack):
     )
 
     # Check if corresponding residues were superimposed
-    assert fixed_atoms.res_id[fix_anchors].tolist() \
+    assert (
+        fixed_atoms.res_id[fix_anchors].tolist()
         == mobile_atoms.res_id[mob_anchors].tolist()
+    )
     # If a stack, it only contains one model
     if as_stack:
         fixed_atoms = fixed_atoms[0]
@@ -355,15 +339,14 @@ def test_superimpose_homologs(pdb_id, chain_id, as_stack):
 
 def _transform_random_affine(coord):
     coord = struc.translate(coord, np.random.rand(3))
-    coord = struc.rotate(coord, np.random.uniform(low=0, high=2*np.pi, size=3))
+    coord = struc.rotate(coord, np.random.uniform(low=0, high=2 * np.pi, size=3))
     return coord
 
 
 def _delete_random_residues(atoms, p_conservation):
     residue_starts = struc.get_residue_starts(atoms)
     conserved_residue_starts = np.random.choice(
-        residue_starts, size=int(p_conservation * len(residue_starts)),
-        replace=False
+        residue_starts, size=int(p_conservation * len(residue_starts)), replace=False
     )
     conservation_mask = np.any(
         struc.get_residue_masks(atoms, conserved_residue_starts), axis=0

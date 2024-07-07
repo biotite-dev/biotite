@@ -6,14 +6,13 @@ __name__ = "biotite.application.viennarna"
 __author__ = "Tom David Müller, Patrick Kunzmann"
 __all__ = ["RNAfoldApp"]
 
-import warnings
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ..application import AppState, requires_state
-from ..localapp import LocalApp, cleanup_tempfile
-from ...sequence.io.fasta import FastaFile, set_sequence
-from ...structure.dotbracket import base_pairs_from_dot_bracket
-from .util import build_constraint_string
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.application.viennarna.util import build_constraint_string
+from biotite.sequence.io.fasta import FastaFile, set_sequence
+from biotite.structure.dotbracket import base_pairs_from_dot_bracket
 
 
 class RNAfoldApp(LocalApp):
@@ -51,9 +50,7 @@ class RNAfoldApp(LocalApp):
         self._temperature = str(temperature)
         self._constraints = None
         self._enforce = None
-        self._in_file = NamedTemporaryFile(
-            "w", suffix=".fa", delete=False
-        )
+        self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
         super().__init__(bin_path)
 
     def run(self):
@@ -68,7 +65,8 @@ class RNAfoldApp(LocalApp):
 
         options = [
             "--noPS",
-            "-T", self._temperature,
+            "-T",
+            self._temperature,
         ]
         if self._enforce is True:
             options.append("--enforceConstraint")
@@ -106,8 +104,15 @@ class RNAfoldApp(LocalApp):
         self._temperature = str(temperature)
 
     @requires_state(AppState.CREATED)
-    def set_constraints(self, pairs=None, paired=None, unpaired=None,
-                        downstream=None, upstream=None, enforce=False):
+    def set_constraints(
+        self,
+        pairs=None,
+        paired=None,
+        unpaired=None,
+        downstream=None,
+        upstream=None,
+        enforce=False,
+    ):
         """
         Add constraints of known paired or unpaired bases to the folding
         algorithm.
@@ -134,8 +139,7 @@ class RNAfoldApp(LocalApp):
             of a pair that would conflict with this constraint.
         """
         self._constraints = build_constraint_string(
-            len(self._sequence),
-            pairs, paired, unpaired, downstream, upstream
+            len(self._sequence), pairs, paired, unpaired, downstream, upstream
         )
         self._enforce = enforce
 

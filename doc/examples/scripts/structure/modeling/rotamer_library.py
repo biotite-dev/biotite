@@ -13,14 +13,11 @@ an arbitrary small molecule.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import numpy as np
-import networkx as nx
 import matplotlib.pyplot as plt
+import numpy as np
 import biotite.structure as struc
-import biotite.structure.io as strucio
-import biotite.structure.info as info
 import biotite.structure.graphics as graphics
-
+import biotite.structure.info as info
 
 # 'CA' is not in backbone,
 # as we want to include the rotation between 'CA' and 'CB'
@@ -73,14 +70,12 @@ for i in range(LIBRARY_SIZE):
         bond_list_without_axis.remove_bond(atom_i, atom_j)
         # ...and these atoms are found by identifying the atoms that
         # are still connected to one of the two atoms involved
-        rotated_atom_indices = struc.find_connected(
-            bond_list_without_axis, root=atom_i
-        )
+        rotated_atom_indices = struc.find_connected(bond_list_without_axis, root=atom_i)
 
         accepted = False
         while not accepted:
             # A random angle between 0 and 360 degrees
-            angle = np.random.rand() * 2*np.pi
+            angle = np.random.rand() * 2 * np.pi
             # Rotate
             coord[rotated_atom_indices] = struc.rotate_about_axis(
                 coord[rotated_atom_indices], axis, angle, support
@@ -91,9 +86,7 @@ for i in range(LIBRARY_SIZE):
             # than the sum of their VdW radii, if they are not bonded to
             # each other
             accepted = True
-            distances = struc.distance(
-                coord[:, np.newaxis], coord[np.newaxis, :]
-            )
+            distances = struc.distance(coord[:, np.newaxis], coord[np.newaxis, :])
             clashed = distances < vdw_radii_mean
             for clash_atom1, clash_atom2 in zip(*np.where(clashed)):
                 if clash_atom1 == clash_atom2:
@@ -115,23 +108,28 @@ rotamers, _ = struc.superimpose(
 
 ### Visualize rotamers ###
 colors = np.zeros((residue.array_length(), 3))
-colors[residue.element == "H"] = (0.8, 0.8, 0.8) # gray
-colors[residue.element == "C"] = (0.0, 0.8, 0.0) # green
-colors[residue.element == "N"] = (0.0, 0.0, 0.8) # blue
-colors[residue.element == "O"] = (0.8, 0.0, 0.0) # red
+colors[residue.element == "H"] = (0.8, 0.8, 0.8)  # gray
+colors[residue.element == "C"] = (0.0, 0.8, 0.0)  # green
+colors[residue.element == "N"] = (0.0, 0.0, 0.8)  # blue
+colors[residue.element == "O"] = (0.8, 0.0, 0.0)  # red
 
 # For consistency, each subplot has the same box size
 coord = rotamers.coord
-size = np.array(
-    [coord[:, :, 0].max() - coord[:, :, 0].min(),
-     coord[:, :, 1].max() - coord[:, :, 1].min(),
-     coord[:, :, 2].max() - coord[:, :, 2].min()]
-).max() * 0.5
+size = (
+    np.array(
+        [
+            coord[:, :, 0].max() - coord[:, :, 0].min(),
+            coord[:, :, 1].max() - coord[:, :, 1].min(),
+            coord[:, :, 2].max() - coord[:, :, 2].min(),
+        ]
+    ).max()
+    * 0.5
+)
 
 fig = plt.figure(figsize=(8.0, 8.0))
 fig.suptitle("Rotamers of tyrosine", fontsize=20, weight="bold")
 for i, rotamer in enumerate(rotamers):
-    ax = fig.add_subplot(3, 3, i+1, projection="3d")
+    ax = fig.add_subplot(3, 3, i + 1, projection="3d")
     graphics.plot_atoms(ax, rotamer, colors, line_width=3, size=size, zoom=0.9)
 
 fig.tight_layout()
@@ -139,4 +137,4 @@ plt.show()
 
 
 ### Write rotamers to structure file ###
-#strucio.save_structure("rotamers.pdb", rotamers)
+# strucio.save_structure("rotamers.pdb", rotamers)

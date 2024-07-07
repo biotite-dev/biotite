@@ -12,8 +12,8 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["get_molecule_indices", "get_molecule_masks", "molecule_iter"]
 
 import numpy as np
-from .atoms import AtomArray, AtomArrayStack
-from .bonds import BondList, find_connected
+from biotite.structure.atoms import AtomArray, AtomArrayStack
+from biotite.structure.bonds import BondList, find_connected
 
 
 def get_molecule_indices(array):
@@ -244,8 +244,7 @@ def get_molecule_masks(array):
 
     molecule_indices = get_molecule_indices(bonds)
     molecule_masks = np.zeros(
-        (len(molecule_indices), bonds.get_atom_count()),
-        dtype=bool
+        (len(molecule_indices), bonds.get_atom_count()), dtype=bool
     )
     for i in range(len(molecule_indices)):
         molecule_masks[i, molecule_indices[i]] = True

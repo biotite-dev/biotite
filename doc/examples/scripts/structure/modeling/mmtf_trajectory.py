@@ -25,13 +25,13 @@ This comes at cost of a higher file size compared to XTC.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-from tempfile import NamedTemporaryFile
-import biotite
-import biotite.structure.io.xtc as xtc
-import biotite.structure.io.pdbx as pdbx
-import numpy as np
-import matplotlib.pyplot as plt
 import os.path
+from tempfile import NamedTemporaryFile
+import matplotlib.pyplot as plt
+import numpy as np
+import biotite
+import biotite.structure.io.pdbx as pdbx
+import biotite.structure.io.xtc as xtc
 
 # Put here the path of the downloaded trajectory file
 xtc_file_path = "../../../download/lysozyme_md.xtc"
@@ -53,14 +53,14 @@ columns["frame"] = pdbx.BinaryCIFData(
 )
 for i, dim in enumerate(("x", "y", "z")):
     columns[f"coord_{dim}"] = pdbx.BinaryCIFData(
-        coord[:,:,i].flatten(),
+        coord[:, :, i].flatten(),
         encoding=[
             pdbx.FixedPointEncoding(factor=100, src_type=np.float32),
             pdbx.DeltaEncoding(),
             # Encode the difference into two bytes
             pdbx.IntegerPackingEncoding(byte_count=2, is_unsigned=False),
             pdbx.ByteArrayEncoding(),
-        ]
+        ],
     )
 category = pdbx.BinaryCIFCategory(columns)
 bcif_file = pdbx.BinaryCIFFile(
@@ -77,11 +77,13 @@ file.close()
 figure = plt.figure()
 ax = figure.add_subplot(111)
 ax.bar(
-    [1,2], [xtc_size/1e+6, bcif_size/1e+6], width=0.3,
+    [1, 2],
+    [xtc_size / 1e6, bcif_size / 1e6],
+    width=0.3,
     color=[biotite.colors["dimgreen"], biotite.colors["dimorange"]],
-    linewidth=0
+    linewidth=0,
 )
-ax.set_xticks([1,2])
+ax.set_xticks([1, 2])
 ax.set_xticklabels(["XTC", "BinaryCIF"])
 ax.set_xlim(0.5, 2.5)
 ax.set_ylim(0, 40)

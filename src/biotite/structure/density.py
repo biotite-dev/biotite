@@ -11,11 +11,10 @@ __author__ = "Daniel Bauer"
 __all__ = ["density"]
 
 import numpy as np
-from .atoms import coord
+from biotite.structure.atoms import coord
 
 
-def density(atoms, selection=None, delta=1.0, bins=None,
-            density=False, weights=None):
+def density(atoms, selection=None, delta=1.0, bins=None, density=False, weights=None):
     r"""
     Compute the density of the selected atoms.
 
@@ -51,13 +50,13 @@ def density(atoms, selection=None, delta=1.0, bins=None,
         Otherwise, returns the probability density function of each bin.
         See :func:`numpy.histogramdd()` for further details.
     weights: ndarray, shape=(n,) or shape=(m,n), optional
-        An array of values to weight the contribution of *n* atoms in 
+        An array of values to weight the contribution of *n* atoms in
         *m* models.
         If the shape is *(n,)*, the weights will be interpreted as
         *per atom*.
         A shape of *(m,n)* allows to additionally weight atoms on a
         *per model* basis.
-    
+
     Returns
     -------
     H : ndarray, dtype=float
@@ -69,12 +68,12 @@ def density(atoms, selection=None, delta=1.0, bins=None,
         A list containing the 3 arrays describing the bin edges.
     """
     coords = coord(atoms)
-    
+
     is_stack = coords.ndim == 3
 
     # Define the grid for coordinate binning based on coordinates of
     # supplied atoms
-    # This makes the binning independent of a supplied box vector and 
+    # This makes the binning independent of a supplied box vector and
     # fluctuating box dimensions are not a problem
     # However, this means that the user has to make sure the region of
     # interest is in the center of the box, i.e. by centering the
@@ -84,19 +83,17 @@ def density(atoms, selection=None, delta=1.0, bins=None,
             axis = (0, 1)
         else:
             axis = 0
-        grid_min, grid_max = np.min(
-            coords, axis=axis), np.max(coords, axis=axis
-        )
+        grid_min, grid_max = np.min(coords, axis=axis), np.max(coords, axis=axis)
         bins = [
-            np.arange(grid_min[0], grid_max[0]+delta, delta),
-            np.arange(grid_min[1], grid_max[1]+delta, delta),
-            np.arange(grid_min[2], grid_max[2]+delta, delta),
+            np.arange(grid_min[0], grid_max[0] + delta, delta),
+            np.arange(grid_min[1], grid_max[1] + delta, delta),
+            np.arange(grid_min[2], grid_max[2] + delta, delta),
         ]
 
     if selection is None:
         selected_coords = coords
     else:
-        selected_coords = coords[...,selection, :]
+        selected_coords = coords[..., selection, :]
 
     # Reshape the coords into Nx3
     coords = selected_coords.reshape((np.prod(selected_coords.shape[:-1]), 3))
@@ -106,9 +103,7 @@ def density(atoms, selection=None, delta=1.0, bins=None,
         if is_stack and len(weights.shape) < 2:
             weights = np.tile(weights, len(selected_coords))
         weights = weights.reshape(coords.shape[0])
-    
+
     # Calculate the histogram
-    hist = np.histogramdd(
-        coords, bins=bins, density=density, weights=weights
-    )
+    hist = np.histogramdd(coords, bins=bins, density=density, weights=weights)
     return hist

@@ -10,16 +10,15 @@ __name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Sequence"]
 
-import numbers
 import abc
+import numbers
 import numpy as np
-from .alphabet import Alphabet, LetterAlphabet
-from ..copyable import Copyable
+from biotite.copyable import Copyable
+from biotite.sequence.alphabet import LetterAlphabet
 
-
-_size_uint8  = np.iinfo(np.uint8 ).max +1
-_size_uint16 = np.iinfo(np.uint16).max +1
-_size_uint32 = np.iinfo(np.uint32).max +1
+_size_uint8 = np.iinfo(np.uint8).max + 1
+_size_uint16 = np.iinfo(np.uint16).max + 1
+_size_uint32 = np.iinfo(np.uint32).max + 1
 
 
 class Sequence(Copyable, metaclass=abc.ABCMeta):
@@ -277,12 +276,10 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
             corresponding number of occurences in the sequence as
             values.
         """
-        counts = np.bincount(
-            self._seq_code, minlength=len(self.get_alphabet())
-        )
+        counts = np.bincount(self._seq_code, minlength=len(self.get_alphabet()))
         return {
-            symbol: count for symbol, count
-            in zip(self.get_alphabet().get_symbols(), counts)
+            symbol: count
+            for symbol, count in zip(self.get_alphabet().get_symbols(), counts)
         }
 
     def __getitem__(self, index):
@@ -329,12 +326,13 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     def __str__(self):
         alph = self.get_alphabet()
         if isinstance(alph, LetterAlphabet):
-            return alph.decode_multiple(self._seq_code, as_bytes=True)\
-                   .tobytes().decode("ASCII")
-        else:
-            return ", ".join(
-                [str(e) for e in alph.decode_multiple(self._seq_code)]
+            return (
+                alph.decode_multiple(self._seq_code, as_bytes=True)
+                .tobytes()
+                .decode("ASCII")
             )
+        else:
+            return ", ".join([str(e) for e in alph.decode_multiple(self._seq_code)])
 
     def __add__(self, sequence):
         if self.get_alphabet().extends(sequence.get_alphabet()):

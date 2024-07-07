@@ -22,16 +22,16 @@ and using it to load the trajectory as :class:`AtomArrayStack`.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
+import matplotlib.pyplot as plt
+import numpy as np
 import biotite
 import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.xtc as xtc
-import numpy as np
-import matplotlib.pyplot as plt
 
 # Put here the path of the downloaded files
 templ_file_path = "../../../download/lysozyme_md.pdb"
-traj_file_path  = "../../../download/lysozyme_md.xtc"
+traj_file_path = "../../../download/lysozyme_md.xtc"
 
 # Gromacs does not set the element symbol in its PDB files,
 # but Biotite guesses the element names from the atom names,
@@ -76,7 +76,7 @@ trajectory = struc.remove_pbc(trajectory)
 trajectory, _ = struc.superimpose(trajectory[0], trajectory)
 rmsd = struc.rmsd(trajectory[0], trajectory)
 
-figure = plt.figure(figsize=(6,3))
+figure = plt.figure(figsize=(6, 3))
 ax = figure.add_subplot(111)
 ax.plot(time, rmsd, color=biotite.colors["dimorange"])
 ax.set_xlim(time[0], time[-1])
@@ -97,7 +97,7 @@ figure.tight_layout()
 
 radius = struc.gyration_radius(trajectory)
 
-figure = plt.figure(figsize=(6,3))
+figure = plt.figure(figsize=(6, 3))
 ax = figure.add_subplot(111)
 ax.plot(time, radius, color=biotite.colors["dimorange"])
 ax.set_xlim(time[0], time[-1])
@@ -129,10 +129,10 @@ figure.tight_layout()
 ca_trajectory = trajectory[:, trajectory.atom_name == "CA"]
 rmsf = struc.rmsf(struc.average(ca_trajectory), ca_trajectory)
 
-figure = plt.figure(figsize=(6,3))
+figure = plt.figure(figsize=(6, 3))
 ax = figure.add_subplot(111)
 res_count = struc.get_residue_count(trajectory)
-ax.plot(np.arange(1, res_count+1), rmsf, color=biotite.colors["dimorange"])
+ax.plot(np.arange(1, res_count + 1), rmsf, color=biotite.colors["dimorange"])
 ax.set_xlim(1, res_count)
 ax.set_ylim(0, 1.5)
 ax.set_xlabel("Residue")

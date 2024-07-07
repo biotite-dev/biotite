@@ -3,16 +3,19 @@
 # information.
 
 import itertools
-import pytest
 import numpy as np
+import pytest
 import biotite.sequence as seq
 
-
 test_cases = {
-    "A" : [0],
-    "D" : [3],
-    "ABC" : [0,1,2,],
-    "ABAFF" : [0,1,0,5,5]
+    "A": [0],
+    "D": [3],
+    "ABC": [
+        0,
+        1,
+        2,
+    ],
+    "ABAFF": [0, 1, 0, 5, 5],
 }
 
 
@@ -24,17 +27,17 @@ def alphabet_symbols():
 @pytest.mark.parametrize(
     "symbols, exp_code, use_letter_alphabet",
     zip(
-        list(test_cases.keys()  ) * 2,
+        list(test_cases.keys()) * 2,
         list(test_cases.values()) * 2,
-        [False] * len(test_cases) + [True] * len(test_cases)
-    )
+        [False] * len(test_cases) + [True] * len(test_cases),
+    ),
 )
 def test_encoding(alphabet_symbols, symbols, exp_code, use_letter_alphabet):
     if use_letter_alphabet:
         alph = seq.LetterAlphabet(alphabet_symbols)
     else:
         alph = seq.Alphabet(alphabet_symbols)
-    
+
     if len(symbols) == 1:
         assert alph.encode(symbols[0]) == exp_code[0]
     else:
@@ -44,17 +47,17 @@ def test_encoding(alphabet_symbols, symbols, exp_code, use_letter_alphabet):
 @pytest.mark.parametrize(
     "exp_symbols, code, use_letter_alphabet",
     zip(
-        list(test_cases.keys()  ) * 2,
+        list(test_cases.keys()) * 2,
         list(test_cases.values()) * 2,
-        [False] * len(test_cases) + [True] * len(test_cases)
-    )
+        [False] * len(test_cases) + [True] * len(test_cases),
+    ),
 )
 def test_decoding(alphabet_symbols, exp_symbols, code, use_letter_alphabet):
     if use_letter_alphabet:
         alph = seq.LetterAlphabet(alphabet_symbols)
     else:
         alph = seq.Alphabet(alphabet_symbols)
-    
+
     code = np.array(code, dtype=np.uint8)
     if len(code) == 1:
         assert alph.decode(code[0]) == exp_symbols[0]
@@ -64,9 +67,7 @@ def test_decoding(alphabet_symbols, exp_symbols, code, use_letter_alphabet):
 
 @pytest.mark.parametrize(
     "use_letter_alphabet, is_single_val",
-    itertools.product(
-        [False, True], [False, True]
-    )
+    itertools.product([False, True], [False, True]),
 )
 def test_error(alphabet_symbols, use_letter_alphabet, is_single_val):
     if use_letter_alphabet:
@@ -96,8 +97,13 @@ def test_error(alphabet_symbols, use_letter_alphabet, is_single_val):
 
 @pytest.mark.parametrize(
     "symbols",
-    ["ABC", b"ABC", ["A","B","C"],
-     np.array(["A","B","C"]), np.array([b"A",b"B",b"C"])]
+    [
+        "ABC",
+        b"ABC",
+        ["A", "B", "C"],
+        np.array(["A", "B", "C"]),
+        np.array([b"A", b"B", b"C"]),
+    ],
 )
 def test_input_types(alphabet_symbols, symbols):
     """
@@ -108,13 +114,14 @@ def test_input_types(alphabet_symbols, symbols):
     alph = seq.LetterAlphabet(alphabet_symbols)
     code = alph.encode_multiple(symbols)
     conv_symbols = alph.decode_multiple(code)
-    
-    
+
     if isinstance(symbols, bytes):
         symbols = symbols.decode("ASCII")
     assert list(conv_symbols) == list(
-        [symbol.decode("ASCII") if isinstance(symbol, bytes) else symbol
-         for symbol in symbols]
+        [
+            symbol.decode("ASCII") if isinstance(symbol, bytes) else symbol
+            for symbol in symbols
+        ]
     )
 
 
@@ -137,26 +144,24 @@ def test_contains(alphabet_symbols, use_letter_alphabet):
 
 
 @pytest.mark.parametrize(
-    "source_alph_symbols, target_alph_symbols", 
+    "source_alph_symbols, target_alph_symbols",
     [
         ("A", "AB"),
         (["foo", "bar"], ["bar", "foo", 42]),
         ("ACGT", "AGTC"),
         ("ACGT", "ACGNT"),
         (np.arange(0, 1000), np.arange(999, -1, -1)),
-    ]
+    ],
 )
 def test_alphabet_mapper(source_alph_symbols, target_alph_symbols):
     CODE_LENGTH = 10000
     source_alph = seq.Alphabet(source_alph_symbols)
     target_alph = seq.Alphabet(target_alph_symbols)
     mapper = seq.AlphabetMapper(source_alph, target_alph)
-    
+
     ref_sequence = seq.GeneralSequence(source_alph)
     np.random.seed(0)
-    ref_sequence.code = np.random.randint(
-        len(source_alph), size=CODE_LENGTH, dtype=int
-    )
+    ref_sequence.code = np.random.randint(len(source_alph), size=CODE_LENGTH, dtype=int)
 
     test_sequence = seq.GeneralSequence(target_alph)
     test_sequence.code = mapper[ref_sequence.code]
@@ -164,22 +169,25 @@ def test_alphabet_mapper(source_alph_symbols, target_alph_symbols):
     assert test_sequence.symbols == ref_sequence.symbols
 
 
-@pytest.mark.parametrize("alphabets, common_alph", [
-    (
-        [
+@pytest.mark.parametrize(
+    "alphabets, common_alph",
+    [
+        (
+            [
+                seq.NucleotideSequence.alphabet_amb,
+                seq.NucleotideSequence.alphabet_unamb,
+            ],
             seq.NucleotideSequence.alphabet_amb,
-            seq.NucleotideSequence.alphabet_unamb,
-        ],
-        seq.NucleotideSequence.alphabet_amb
-    ),
-    (
-        [
-            seq.NucleotideSequence.alphabet_unamb,
+        ),
+        (
+            [
+                seq.NucleotideSequence.alphabet_unamb,
+                seq.NucleotideSequence.alphabet_amb,
+            ],
             seq.NucleotideSequence.alphabet_amb,
-        ],
-        seq.NucleotideSequence.alphabet_amb
-    ),
-])
+        ),
+    ],
+)
 def test_common_alphabet(alphabets, common_alph):
     """
     Check if :func:`common_alphabet()` correctly identifies the common
@@ -188,13 +196,14 @@ def test_common_alphabet(alphabets, common_alph):
     seq.common_alphabet(alphabets) == common_alph
 
 
-
 def test_common_alphabet_no_common():
     """
     Check if :func:`common_alphabet()` correctly identifies that no
     common alphabet exists in a simple known test case.
     """
-    assert seq.common_alphabet([
-        seq.NucleotideSequence.alphabet_unamb,
-        seq.ProteinSequence.alphabet
-    ]) is None
+    assert (
+        seq.common_alphabet(
+            [seq.NucleotideSequence.alphabet_unamb, seq.ProteinSequence.alphabet]
+        )
+        is None
+    )

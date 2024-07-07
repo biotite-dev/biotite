@@ -4,16 +4,29 @@
 
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
-__all__ = ["BinaryCIFFile", "BinaryCIFBlock", "BinaryCIFCategory",
-           "BinaryCIFColumn", "BinaryCIFData"]
+__all__ = [
+    "BinaryCIFFile",
+    "BinaryCIFBlock",
+    "BinaryCIFCategory",
+    "BinaryCIFColumn",
+    "BinaryCIFData",
+]
 
 from collections.abc import Sequence
-import numpy as np
 import msgpack
-from .component import _Component, _HierarchicalContainer, MaskValue
-from .encoding import decode_stepwise, encode_stepwise, deserialize_encoding, \
-                      create_uncompressed_encoding
-from ....file import File, is_binary, is_open_compatible, SerializationError
+import numpy as np
+from biotite.file import File, SerializationError, is_binary, is_open_compatible
+from biotite.structure.io.pdbx.component import (
+    MaskValue,
+    _Component,
+    _HierarchicalContainer,
+)
+from biotite.structure.io.pdbx.encoding import (
+    create_uncompressed_encoding,
+    decode_stepwise,
+    deserialize_encoding,
+    encode_stepwise,
+)
 
 
 class BinaryCIFData(_Component):
@@ -74,10 +87,7 @@ class BinaryCIFData(_Component):
     """
 
     def __init__(self, array, encoding=None):
-        if (
-            not isinstance(array, (Sequence, np.ndarray))
-            or isinstance(array, str)
-        ):
+        if not isinstance(array, (Sequence, np.ndarray)) or isinstance(array, str):
             array = [array]
         array = np.asarray(array)
         if np.issubdtype(array.dtype, np.object_):
@@ -107,19 +117,13 @@ class BinaryCIFData(_Component):
 
     @staticmethod
     def deserialize(content):
-        encoding = [
-            deserialize_encoding(enc) for enc in content["encoding"]
-        ]
-        return BinaryCIFData(
-            decode_stepwise(content["data"], encoding), encoding
-        )
+        encoding = [deserialize_encoding(enc) for enc in content["encoding"]]
+        return BinaryCIFData(decode_stepwise(content["data"], encoding), encoding)
 
     def serialize(self):
         serialized_data = encode_stepwise(self._array, self._encoding)
         if not isinstance(serialized_data, bytes):
-            raise SerializationError(
-                "Final encoding must return 'bytes'"
-            )
+            raise SerializationError("Final encoding must return 'bytes'")
         serialized_encoding = [enc.serialize() for enc in self._encoding]
         return {"data": serialized_data, "encoding": serialized_encoding}
 
@@ -190,8 +194,7 @@ class BinaryCIFColumn(_Component):
                 mask = BinaryCIFData(mask)
             if len(data) != len(mask):
                 raise IndexError(
-                    f"Data has length {len(data)}, "
-                    f"but mask has length {len(mask)}"
+                    f"Data has length {len(data)}, " f"but mask has length {len(mask)}"
                 )
         self._data = data
         self._mask = mask
@@ -290,9 +293,7 @@ class BinaryCIFColumn(_Component):
                 array = np.full(len(self._data), masked_value, dtype=dtype)
 
             present_mask = self._mask.array == MaskValue.PRESENT
-            array[present_mask] = (
-                self._data.array[present_mask].astype(dtype)
-            )
+            array[present_mask] = self._data.array[present_mask].astype(dtype)
             return array
 
     @staticmethod
@@ -300,13 +301,14 @@ class BinaryCIFColumn(_Component):
         return BinaryCIFColumn(
             BinaryCIFData.deserialize(content["data"]),
             BinaryCIFData.deserialize(content["mask"])
-            if content["mask"] is not None else None
+            if content["mask"] is not None
+            else None,
         )
 
     def serialize(self):
         return {
             "data": self._data.serialize(),
-            "mask": self._mask.serialize() if self._mask is not None else None
+            "mask": self._mask.serialize() if self._mask is not None else None,
         }
 
     def __len__(self):
@@ -392,10 +394,8 @@ class BinaryCIFCategory(_HierarchicalContainer):
     @staticmethod
     def deserialize(content):
         return BinaryCIFCategory(
-            BinaryCIFCategory._deserialize_elements(
-                content["columns"], "name"
-            ),
-            content["rowCount"]
+            BinaryCIFCategory._deserialize_elements(content["columns"], "name"),
+            content["rowCount"],
         )
 
     def serialize(self):
@@ -470,9 +470,7 @@ class BinaryCIFBlock(_HierarchicalContainer):
     @staticmethod
     def deserialize(content):
         return BinaryCIFBlock(
-            BinaryCIFBlock._deserialize_elements(
-                content["categories"], "name"
-            )
+            BinaryCIFBlock._deserialize_elements(content["categories"], "name")
         )
 
     def serialize(self):
@@ -559,16 +557,14 @@ class BinaryCIFFile(File, _HierarchicalContainer):
     @staticmethod
     def deserialize(content):
         return BinaryCIFFile(
-            BinaryCIFFile._deserialize_elements(
-                content["dataBlocks"], "header"
-            )
+            BinaryCIFFile._deserialize_elements(content["dataBlocks"], "header")
         )
 
     def serialize(self):
         return {"dataBlocks": self._serialize_elements("header")}
 
     @classmethod
-    def read(self, file):
+    def read(cls, file):
         """
         Read a *BinaryCIF* file.
 
@@ -587,18 +583,14 @@ class BinaryCIFFile(File, _HierarchicalContainer):
         if is_open_compatible(file):
             with open(file, "rb") as f:
                 return BinaryCIFFile.deserialize(
-                    msgpack.unpackb(
-                        f.read(), use_list=True, raw=False
-                    )
+                    msgpack.unpackb(f.read(), use_list=True, raw=False)
                 )
         # File object
         else:
             if not is_binary(file):
                 raise TypeError("A file opened in 'binary' mode is required")
             return BinaryCIFFile.deserialize(
-                msgpack.unpackb(
-                    file.read(), use_list=True, raw=False
-                )
+                msgpack.unpackb(file.read(), use_list=True, raw=False)
             )
 
     def write(self, file):

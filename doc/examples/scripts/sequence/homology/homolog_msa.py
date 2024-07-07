@@ -10,13 +10,12 @@ sequence alignment of the hit sequences afterwards, using MUSCLE.
 # Code source: Patrick Kunzmann
 # License: BSD 3 cl
 from tempfile import gettempdir
-import biotite.sequence as seq
-import biotite.sequence.io.fasta as fasta
-import biotite.sequence.graphics as graphics
-import biotite.application.muscle as muscle
-import biotite.application.blast as blast
-import biotite.database.entrez as entrez
 import matplotlib.pyplot as plt
+import biotite.application.blast as blast
+import biotite.application.muscle as muscle
+import biotite.database.entrez as entrez
+import biotite.sequence.graphics as graphics
+import biotite.sequence.io.fasta as fasta
 
 # Download sequence of Streptococcus pyogenes Cas9
 file_name = entrez.fetch("Q99ZW2", gettempdir(), "fa", "protein", "fasta")
@@ -49,7 +48,7 @@ alignment = app.get_alignment()
 print("MSA results:")
 gapped_seqs = alignment.get_gapped_sequences()
 for i in range(len(gapped_seqs)):
-    print(hits[i], " "*3, gapped_seqs[i])
+    print(hits[i], " " * 3, gapped_seqs[i])
 
 # Visualize the first 200 columns of the alignment
 # Reorder alignments to reflect sequence distance
@@ -58,8 +57,10 @@ fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.add_subplot(111)
 order = app.get_alignment_order()
 graphics.plot_alignment_type_based(
-    ax, alignment[:200, order.tolist()], labels=[hits[i] for i in order],
-    show_numbers=True
+    ax,
+    alignment[:200, order.tolist()],
+    labels=[hits[i] for i in order],
+    show_numbers=True,
 )
 fig.tight_layout()
 

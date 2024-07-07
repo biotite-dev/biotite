@@ -1,6 +1,5 @@
+from os.path import isdir, join
 from pymol import cmd
-from os.path import join, isdir
-
 
 INPUT_STRUCTURE = "normal_modes.pdb"
 OUTPUT_DIR = "normal_modes"
@@ -13,20 +12,34 @@ cmd.load(INPUT_STRUCTURE)
 cmd.dss()
 
 # Define colors
-cmd.set_color("biotite_lightgreen",    [111/255, 222/255,  76/255])
+cmd.set_color("biotite_lightgreen", [111 / 255, 222 / 255, 76 / 255])
 
 # Set overall colors
 cmd.color("biotite_lightgreen", "chain A")
 
 # Set view
-cmd.set_view((
-     0.605540633,    0.363677770,   -0.707855821,
-    -0.416691631,    0.902691007,    0.107316799,
-     0.678002179,    0.229972601,    0.698157668,
-     0.000000000,    0.000000000, -115.912551880,
-    32.098876953,   31.005725861,   78.377349854,
-    89.280677795,  142.544403076,  -20.000000000
-))
+cmd.set_view(
+    (
+        0.605540633,
+        0.363677770,
+        -0.707855821,
+        -0.416691631,
+        0.902691007,
+        0.107316799,
+        0.678002179,
+        0.229972601,
+        0.698157668,
+        0.000000000,
+        0.000000000,
+        -115.912551880,
+        32.098876953,
+        31.005725861,
+        78.377349854,
+        89.280677795,
+        142.544403076,
+        -20.000000000,
+    )
+)
 
 # Prepare output video frames
 cmd.mset()

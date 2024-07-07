@@ -38,11 +38,10 @@ At first we will check, which assemblies are available to us.
 # License: BSD 3 clause
 
 from tempfile import NamedTemporaryFile
-import biotite.structure as struc
-import biotite.structure.io.pdbx as pdbx
-import biotite.structure.io as strucio
 import biotite.database.rcsb as rcsb
-
+import biotite.structure as struc
+import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 
 pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("3J31", "bcif"))
 

@@ -9,7 +9,7 @@ import pytest
 import biotite.structure as struc
 import biotite.structure.info as strucinfo
 from biotite.structure.io import load_structure
-from ..util import data_dir
+from tests.util import data_dir
 
 
 @pytest.mark.parametrize(
@@ -18,7 +18,7 @@ from ..util import data_dir
         (strucinfo.amino_acid_names, ["ALA", "ARG", "ASN", "ASP"], ["HOH"]),
         (strucinfo.nucleotide_names, ["A", "C", "G", "U"], ["HOH", "ALA"]),
         (strucinfo.carbohydrate_names, ["GLC", "RIB"], ["HOH", "ALA"]),
-    ]
+    ],
 )
 def test_group_names(function, included, excluded):
     """
@@ -49,16 +49,16 @@ def test_mass():
     ref_masses = [strucinfo.mass(res) for res in struc.residue_iter(array)]
     # Up to three additional/missing hydrogens are allowed
     # (protonation state)
-    mass_diff = np.abs(np.array(
-        [mass - ref_mass for mass, ref_mass in zip(masses, ref_masses)]
-    ))
+    mass_diff = np.abs(
+        np.array([mass - ref_mass for mass, ref_mass in zip(masses, ref_masses)])
+    )
     assert (mass_diff // strucinfo.mass("H") <= 3).all()
     # Check if the mass difference is a multiple of the hydrogen mass
     multiple_of_h_masses = mass_diff / strucinfo.mass("H")
     assert np.all(np.round(multiple_of_h_masses, decimals=2) % 1 == 0)
 
 
-def test_protOr_radii():
+def test_protor_radii():
     """
     Assert that ProtOr VdW radii (except hydrogen) can be calculated for
     all atoms in the given structure, since the structure (1GYA)
@@ -72,7 +72,7 @@ def test_protOr_radii():
     for res_name, atom_name in zip(array.res_name, array.atom_name):
         radius = strucinfo.vdw_radius_protor(res_name, atom_name)
         assert isinstance(radius, float)
-        assert radius != None
+        assert radius is not None
 
 
 def test_protor_radii_invalid():
@@ -83,7 +83,7 @@ def test_protor_radii_invalid():
         # Expect raised exception when a residue does not contain an atom
         strucinfo.vdw_radius_protor("ALA", "K")
     # For all other unknown radii expect None
-    assert strucinfo.vdw_radius_protor("HOH", "O") == None
+    assert strucinfo.vdw_radius_protor("HOH", "O") is None
 
 
 def test_single_radii():
@@ -105,12 +105,16 @@ def test_link_type():
     [
         (strucinfo.amino_acid_names(), True, 0.4),
         (strucinfo.nucleotide_names(), True, 0.4),
-        (sorted(
-            set(strucinfo.all_residues())
-            - set(strucinfo.amino_acid_names())
-            - set(strucinfo.nucleotide_names())
-        ), False, 0.01),
-    ]
+        (
+            sorted(
+                set(strucinfo.all_residues())
+                - set(strucinfo.amino_acid_names())
+                - set(strucinfo.nucleotide_names())
+            ),
+            False,
+            0.01,
+        ),
+    ],
 )
 def test_one_letter_code(residues, should_have_one_letter, exception_ratio):
     """
@@ -145,14 +149,13 @@ def test_standardize_order(multi_model, seed):
         reordered = struc.AtomArray(0)
     for residue in struc.residue_iter(original):
         bound = residue.array_length()
-        indices = np.random.choice(
-            np.arange(bound), bound,replace=False
-        )
+        indices = np.random.choice(np.arange(bound), bound, replace=False)
         reordered += residue[..., indices]
 
     # Restore the original PDB standard order
     restored = reordered[..., strucinfo.standardize_order(reordered)]
 
     assert restored.shape == original.shape
-    assert restored[..., restored.element != "H"] \
-        == original[..., original.element != "H"]
+    assert (
+        restored[..., restored.element != "H"] == original[..., original.element != "H"]
+    )

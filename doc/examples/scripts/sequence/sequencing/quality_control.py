@@ -20,14 +20,13 @@ the exact same length.
 # License: BSD 3 clause
 # sphinx_gallery_thumbnail_number = 2
 
-import numpy as np
-from scipy.stats import binom
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import numpy as np
+from scipy.stats import binom
 import biotite
-import biotite.sequence as seq
 import biotite.application.sra as sra
-
+import biotite.sequence as seq
 
 FIG_SIZE = (8.0, 6.0)
 
@@ -38,12 +37,10 @@ app.join()
 # Each run can have multiple reads per spot
 # by selecting index 0 we take only the first read for every spot
 sequences_and_scores = app.get_sequences_and_scores()[0]
-sequence_codes = np.stack([
-    sequence.code for sequence, _ in sequences_and_scores.values()
-])
-scores = np.stack([
-    scores for _, scores in sequences_and_scores.values()
-])
+sequence_codes = np.stack(
+    [sequence.code for sequence, _ in sequences_and_scores.values()]
+)
+scores = np.stack([scores for _, scores in sequences_and_scores.values()])
 seq_count = scores.shape[0]
 seq_length = scores.shape[1]
 positions = np.arange(1, seq_length + 1)
@@ -56,20 +53,18 @@ positions = np.arange(1, seq_length + 1)
 # For the plot we need the first, second (the median) and third
 # quartile for each position.
 
-first_quartile, median, third_quartile = np.quantile(
-    scores, (0.25, 0.5, 0.75), axis=0
-)
+first_quartile, median, third_quartile = np.quantile(scores, (0.25, 0.5, 0.75), axis=0)
 
 fig, ax = plt.subplots(figsize=FIG_SIZE)
 ax.bar(
     positions,
-    bottom=first_quartile, height=third_quartile-first_quartile, width=1.0,
-    facecolor=biotite.colors["brightorange"], label="Lower/upper quartile"
+    bottom=first_quartile,
+    height=third_quartile - first_quartile,
+    width=1.0,
+    facecolor=biotite.colors["brightorange"],
+    label="Lower/upper quartile",
 )
-ax.plot(
-    positions, median,
-    color=biotite.colors["dimorange"], label="Median"
-)
+ax.plot(positions, median, color=biotite.colors["dimorange"], label="Median")
 ax.set_xlim(positions[0], positions[-1])
 ax.set_xlabel("Position in read")
 ax.set_ylabel("Phred score")
@@ -92,15 +87,13 @@ mean_scores = np.mean(scores, axis=1)
 fig, ax = plt.subplots(figsize=FIG_SIZE)
 ax.hist(
     # Definition range of Sanger Phred scores is 0 to 40
-    mean_scores, bins=np.linspace(0, 40, BIN_NUMBER),
-    color=biotite.colors["lightorange"]
+    mean_scores,
+    bins=np.linspace(0, 40, BIN_NUMBER),
+    color=biotite.colors["lightorange"],
 )
 ax.set_xlabel("Mean Phred score of sequence")
 ax.set_ylabel("Sequence count")
-ax.set_xlim(
-    np.floor(np.min(mean_scores)),
-    np.ceil( np.max(mean_scores))
-)
+ax.set_xlim(np.floor(np.min(mean_scores)), np.ceil(np.max(mean_scores)))
 fig.tight_layout()
 
 ########################################################################
@@ -115,10 +108,9 @@ fig.tight_layout()
 # as ambiguous bases might occur in some sequencing datasets
 alphabet = seq.NucleotideSequence.alphabet_amb
 
-counts = np.stack([
-    np.bincount(codes, minlength=len(alphabet))
-    for codes in sequence_codes.T
-], axis=-1)
+counts = np.stack(
+    [np.bincount(codes, minlength=len(alphabet)) for codes in sequence_codes.T], axis=-1
+)
 frequencies = counts / seq_count * 100
 
 fig, ax = plt.subplots(figsize=FIG_SIZE)
@@ -141,38 +133,30 @@ fig.tight_layout()
 # distribution.
 
 gc_count = np.count_nonzero(
-    (sequence_codes == alphabet.encode("G")) |
-    (sequence_codes == alphabet.encode("C")),
-    axis=1
+    (sequence_codes == alphabet.encode("G")) | (sequence_codes == alphabet.encode("C")),
+    axis=1,
 )
 at_count = np.count_nonzero(
-    (sequence_codes == alphabet.encode("A")) |
-    (sequence_codes == alphabet.encode("T")),
-    axis=1
+    (sequence_codes == alphabet.encode("A")) | (sequence_codes == alphabet.encode("T")),
+    axis=1,
 )
 gc_content = gc_count / (gc_count + at_count)
 
 # Exclusive range -> 0 to seq_length inclusive
-number_of_gc = np.arange(seq_length+1)
-exp_gc_content = binom.pmf(
-    k=number_of_gc,
-    n=seq_length,
-    p=np.mean(gc_content)
-)
+number_of_gc = np.arange(seq_length + 1)
+exp_gc_content = binom.pmf(k=number_of_gc, n=seq_length, p=np.mean(gc_content))
 
 fig, ax = plt.subplots(figsize=FIG_SIZE)
 # Due to finite sequence length, the distribution is discrete
 # -> use bar() instead of hist()
 values, counts = np.unique(gc_content, return_counts=True)
 bin_width = 100 / seq_length
-ax.bar(
-    values * 100, counts, width=bin_width,
-    color=biotite.colors["brightorange"]
-)
+ax.bar(values * 100, counts, width=bin_width, color=biotite.colors["brightorange"])
 ax.plot(
     number_of_gc / seq_length * 100,
     exp_gc_content * seq_count,
-    color=biotite.colors["dimorange"], linestyle=":"
+    color=biotite.colors["dimorange"],
+    linestyle=":",
 )
 ax.set_xlim(0, 100)
 ax.set_xlabel("Sequence GC content (%)")
@@ -201,11 +185,9 @@ for code in sequence_codes:
         duplications[code] = 1
 duplication_level_count = np.bincount(list(duplications.values()))
 duplication_level_freq = (
-    duplication_level_count
-    * np.arange(len(duplication_level_count))
-    / seq_count * 100
+    duplication_level_count * np.arange(len(duplication_level_count)) / seq_count * 100
 )
-max_duplication = len(duplication_level_count)-1
+max_duplication = len(duplication_level_count) - 1
 print("Maximum duplication number:", max_duplication)
 
 fig, ax = plt.subplots(figsize=FIG_SIZE)
@@ -213,7 +195,7 @@ ax.bar(
     np.arange(0, len(duplication_level_freq)),
     duplication_level_freq,
     width=0.6,
-    color=biotite.colors["dimorange"]
+    color=biotite.colors["dimorange"],
 )
 ax.set_xlim(0.5, len(duplication_level_freq) + 0.5)
 ax.xaxis.set_major_locator(ticker.MaxNLocator(10))

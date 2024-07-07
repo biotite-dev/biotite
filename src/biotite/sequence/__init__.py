@@ -76,9 +76,9 @@ __name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
 
 from .alphabet import *
+from .annotation import *
+from .codon import *
+from .profile import *
 from .search import *
 from .seqtypes import *
 from .sequence import *
-from .codon import *
-from .annotation import *
-from .profile import *

@@ -7,13 +7,18 @@ __author__ = "Patrick Kunzmann"
 
 import warnings
 from collections import OrderedDict
-from ...sequence import Sequence
-from ...alphabet import AlphabetError, LetterAlphabet
-from ...seqtypes import NucleotideSequence, ProteinSequence
-from ...align.alignment import Alignment
+from biotite.sequence.align.alignment import Alignment
+from biotite.sequence.alphabet import AlphabetError, LetterAlphabet
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
-__all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences",
-           "get_alignment", "set_alignment"]
+__all__ = [
+    "get_sequence",
+    "get_sequences",
+    "set_sequence",
+    "set_sequences",
+    "get_alignment",
+    "set_alignment",
+]
 
 
 def get_sequence(fasta_file, header=None, seq_type=None):
@@ -180,8 +185,10 @@ def get_alignment(fasta_file, additional_gap_chars=("_",), seq_type=None):
         for i, seq_str in enumerate(seq_strings):
             seq_strings[i] = seq_str.replace(char, "-")
     # Remove gaps for creation of sequences
-    sequences = [_convert_to_sequence(seq_str.replace("-",""), seq_type)
-                 for seq_str in seq_strings]
+    sequences = [
+        _convert_to_sequence(seq_str.replace("-", ""), seq_type)
+        for seq_str in seq_strings
+    ]
     trace = Alignment.trace_from_strings(seq_strings)
     return Alignment(sequences, trace, score=None)
 
@@ -212,44 +219,29 @@ def set_alignment(fasta_file, alignment, seq_names):
 
 
 def _convert_to_sequence(seq_str, seq_type=None):
-
-    # Define preprocessing of preimplemented sequence types
-
-    # Replace selenocysteine with cysteine
-    # and pyrrolysine with lysine
-    process_protein_sequence = (
-        lambda x : x.upper().replace("U", "C").replace("O", "K")
-    )
-    # For nucleotides uracil is represented by thymine and there is only
-    # one letter for completely unknown nucleotides
-    process_nucleotide_sequence = (
-        lambda x : x.upper().replace("U","T").replace("X","N")
-    )
-
     # Set manually selected sequence type
-
     if seq_type is not None:
         # Do preprocessing as done without manual selection
         if seq_type == NucleotideSequence:
-            seq_str = process_nucleotide_sequence(seq_str)
+            seq_str = _process_nucleotide_sequence(seq_str)
         elif seq_type == ProteinSequence:
             if "U" in seq_str:
                 warnings.warn(
                     "ProteinSequence objects do not support selenocysteine "
                     "(U), occurrences were substituted by cysteine (C)"
                 )
-            seq_str = process_protein_sequence(seq_str)
+            seq_str = _process_protein_sequence(seq_str)
         # Return the converted sequence
         return seq_type(seq_str)
 
     # Attempt to automatically determine sequence type
 
     try:
-        return NucleotideSequence(process_nucleotide_sequence(seq_str))
+        return NucleotideSequence(_process_nucleotide_sequence(seq_str))
     except AlphabetError:
         pass
     try:
-        prot_seq = ProteinSequence(process_protein_sequence(seq_str))
+        prot_seq = ProteinSequence(_process_protein_sequence(seq_str))
         # Raise Warning after conversion into 'ProteinSequence'
         # to wait for potential 'AlphabetError'
         if "U" in seq_str:
@@ -259,15 +251,34 @@ def _convert_to_sequence(seq_str, seq_type=None):
             )
         return prot_seq
     except AlphabetError:
-        raise ValueError("FASTA data cannot be converted either to "
-                         "'NucleotideSequence' nor to 'ProteinSequence'")
+        raise ValueError(
+            "FASTA data cannot be converted either to "
+            "'NucleotideSequence' nor to 'ProteinSequence'"
+        )
+
+
+def _process_protein_sequence(x):
+    """
+    Replace selenocysteine with cysteine and pyrrolysine with lysine.
+    """
+    return x.upper().replace("U", "C").replace("O", "K")
+
+
+def _process_nucleotide_sequence(x):
+    """
+    For nucleotides uracil is represented by thymine and there is only
+    one letter for completely unknown nucleotides
+    """
+    return x.upper().replace("U", "T").replace("X", "N")
 
 
 def _convert_to_string(sequence, as_rna):
     if not isinstance(sequence.get_alphabet(), LetterAlphabet):
-        raise ValueError("Only sequences using single letter alphabets "
-                         "can be stored in a FASTA file")
+        raise ValueError(
+            "Only sequences using single letter alphabets "
+            "can be stored in a FASTA file"
+        )
     if isinstance(sequence, NucleotideSequence) and as_rna:
-        return(str(sequence).replace("T", "U"))
+        return str(sequence).replace("T", "U")
     else:
-        return(str(sequence))
+        return str(sequence)
