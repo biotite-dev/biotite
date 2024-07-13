@@ -17,12 +17,12 @@ dependencies:
   - setuptools >=30.0
   - wheel >=0.30
   # Biotite dependencies
+  - biotraj >=1.0,<2.0
   - msgpack-python >=0.5.6
   - networkx >=2.0
   - numpy >=1.25
   - requests >=2.12
   # Testing
-  # - mdtraj >=1.9.3, <1.10  # tempoarily disabled due to incompatibility with numpy 2.0
   - pytest >=7.0
   # Code style
   - ruff =0.5.2
