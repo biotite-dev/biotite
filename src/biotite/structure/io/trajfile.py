@@ -22,9 +22,6 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     frames. The file formats are usually binary and involve sometimes
     heavy compression, so that a large number of frames can be stored
     in relatively small space.
-    Since all :class:`TrajectoryFile` subclasses interface *MDtraj*
-    trajectory file classes, `MDtraj` must be installed to use any of
-    them.
 
     Notes
     -----
