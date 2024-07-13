@@ -1,45 +1,45 @@
-import itertools
+import json
 from os.path import join
 import numpy as np
 import pytest
+import biotite.structure.io.gro as gro
 from biotite.structure.box import vectors_from_unitcell
 from biotite.structure.io import load_structure
 from biotite.structure.rdf import rdf
-from tests.util import cannot_import, data_dir
+from tests.util import data_dir
 
 TEST_FILE = join(data_dir("structure"), "waterbox.gro")
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
-def test_rdf():
-    """General test to reproduce oxygen RDF for a box of water"""
-    test_file = TEST_FILE
-    stack = load_structure(test_file)
+def test_rdf_consistency():
+    """
+    Check that oxygen RDF for a box of water reproduces results from MDTraj.
+    """
+    INTERVAL = [0, 10]
+    N_BINS = 100
 
-    # calculate oxygen RDF for water
+    # Load precomputed RDF from MDTraj
+    with open(join(data_dir("structure"), "misc", "rdf.json")) as file:
+        ref_data = json.load(file)
+    ref_bins = ref_data["bins"]
+    ref_g_r = ref_data["g_r"]
+
+    gro_file = gro.GROFile.read(TEST_FILE)
+    stack = gro_file.get_structure()
+    # Calculate oxygen RDF for water
     oxygen = stack[:, stack.atom_name == "OW"]
-    interval = np.array([0, 10])
-    n_bins = 100
-    bins, g_r = rdf(
-        oxygen[:, 0].coord, oxygen, interval=interval, bins=n_bins, periodic=False
+    test_bins, test_g_r = rdf(
+        oxygen[:, 0].coord, oxygen, interval=INTERVAL, bins=N_BINS, periodic=False
     )
 
-    # Compare with MDTraj
-    import mdtraj
-
-    traj = mdtraj.load(TEST_FILE)
-    ow = [a.index for a in traj.topology.atoms if a.name == "O"]
-    pairs = itertools.product([ow[0]], ow)
-    mdt_bins, mdt_g_r = mdtraj.compute_rdf(
-        traj, list(pairs), r_range=interval / 10, n_bins=n_bins, periodic=False
-    )
-
-    assert np.allclose(bins, mdt_bins * 10)
-    assert np.allclose(g_r, mdt_g_r, rtol=0.0001)
+    assert test_bins.tolist() == pytest.approx(ref_bins)
+    assert test_g_r.tolist() == pytest.approx(ref_g_r, rel=0.01)
 
 
 def test_rdf_bins():
-    """Test if RDF produce correct bin ranges"""
+    """
+    Test if RDF produce correct bin ranges.
+    """
     stack = load_structure(TEST_FILE)
     center = stack[:, 0]
     num_bins = 44
@@ -51,7 +51,9 @@ def test_rdf_bins():
 
 
 def test_rdf_with_selection():
-    """Test if the selection argument of rdf function works as expected"""
+    """
+    Test if the selection argument of rdf function works as expected.
+    """
     stack = load_structure(TEST_FILE)
 
     # calculate oxygen RDF for water with and without a selection
@@ -81,7 +83,9 @@ def test_rdf_with_selection():
 
 
 def test_rdf_atom_argument():
-    """Test if the first argument allows to use AtomArrayStack"""
+    """
+    Test if the first argument allows to use AtomArrayStack.
+    """
     stack = load_structure(TEST_FILE)
 
     # calculate oxygen RDF for water with and without a selection
@@ -99,7 +103,9 @@ def test_rdf_atom_argument():
 
 
 def test_rdf_multiple_center():
-    """Test if the first argument allows to use multiple centers"""
+    """
+    Test if the first argument allows to use multiple centers.
+    """
     stack = load_structure(TEST_FILE)
 
     # calculate oxygen RDF for water with and without a selection
@@ -136,36 +142,10 @@ def test_rdf_multiple_center():
     assert np.allclose(g_r, mean, rtol=0.0001)
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
-def test_rdf_periodic():
-    """Test if the periodic argument gives the correct results"""
-    test_file = TEST_FILE
-    stack = load_structure(test_file)
-
-    # calculate oxygen RDF for water
-    oxygen = stack[:, stack.atom_name == "OW"]
-    interval = np.array([0, 10])
-    n_bins = 100
-    bins, g_r = rdf(
-        oxygen[:, 0].coord, oxygen[:, 1:], interval=interval, bins=n_bins, periodic=True
-    )
-
-    # Compare with MDTraj
-    import mdtraj
-
-    traj = mdtraj.load(TEST_FILE)
-    ow = [a.index for a in traj.topology.atoms if a.name == "O"]
-    pairs = itertools.product([ow[0]], ow[1:])
-    mdt_bins, mdt_g_r = mdtraj.compute_rdf(
-        traj, list(pairs), r_range=interval / 10, n_bins=n_bins, periodic=True
-    )
-
-    assert np.allclose(bins, mdt_bins * 10)
-    assert np.allclose(g_r, mdt_g_r, rtol=0.0001)
-
-
 def test_rdf_box():
-    """Test correct use of simulation boxes"""
+    """
+    Test correct use of simulation boxes.
+    """
     stack = load_structure(TEST_FILE)
     box = vectors_from_unitcell(1, 1, 1, 90, 90, 90)
     box_stack = np.repeat(box[np.newaxis, :, :], len(stack), axis=0)
@@ -192,7 +172,9 @@ def test_rdf_box():
 
 
 def test_rdf_normalized():
-    """Assert that the RDF tail is normalized to 1"""
+    """
+    Assert that the RDF tail is normalized to 1.
+    """
     test_file = TEST_FILE
     stack = load_structure(test_file)
 

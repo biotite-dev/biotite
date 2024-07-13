@@ -2,50 +2,36 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import json
 from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
-from tests.util import cannot_import, data_dir
+from tests.util import data_dir
 
 
-# Ignore warning about dummy unit cell vector
-@pytest.mark.filterwarnings("ignore")
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize("pdb_id", ["1l2y", "1gya"])
-def test_single(pdb_id):
-    file_name = join(data_dir("structure"), pdb_id + ".pdb")
+def test_sasa_consistency(pdb_id):
+    """
+    Check that SASA computation for a single model reproduces results from MDTraj.
+    """
+    # Load precomputed hydrogen bond triplets from MDTraj
+    with open(join(data_dir("structure"), "misc", "sasa.json")) as file:
+        ref_data = json.load(file)
+    ref_sasa = np.array(ref_data[pdb_id])
 
-    # Single atom SASA, compare with MDTraj
-    file = pdb.PDBFile.read(file_name)
+    file = pdb.PDBFile.read(join(data_dir("structure"), pdb_id + ".pdb"))
     array = file.get_structure(model=1)
-    sasa = struc.sasa(array, vdw_radii="Single", point_number=5000)
+    test_sasa = struc.sasa(array, vdw_radii="Single", point_number=5000)
 
-    import mdtraj
-    from biotite.structure.info.radii import _SINGLE_RADII as SINGLE_RADII
-
-    # Use the same atom radii
-    radii = {
-        element.capitalize(): radius / 10 for element, radius in SINGLE_RADII.items()
-    }
-    traj = mdtraj.load(file_name)
-    # Conversion from nm^2 to A^2
-    sasa_exp = (
-        mdtraj.shrake_rupley(traj, change_radii=radii, n_sphere_points=5000)[0] * 100
-    )
-
-    # Assert that more than 90% of atoms
-    # have less than 10% SASA difference
+    # Assert that all atoms have less than 10% SASA difference
+    assert np.all(np.isclose(test_sasa, ref_sasa, rtol=1e-1, atol=1e-1))
+    # Assert that more than 98% of atoms have less than 1% SASA difference
     assert (
-        np.count_nonzero(np.isclose(sasa, sasa_exp, rtol=1e-1, atol=1e-1)) / len(sasa)
-        > 0.9
-    )
-    # Assert that more than 98% of atoms
-    # have less than 1% SASA difference
-    assert (
-        np.count_nonzero(np.isclose(sasa, sasa_exp, rtol=1e-2, atol=1e-1)) / len(sasa)
+        np.count_nonzero(np.isclose(test_sasa, ref_sasa, rtol=1e-2, atol=1e-1))
+        / len(test_sasa)
         > 0.98
     )
 
