@@ -3,13 +3,14 @@
 # information.
 
 import itertools
+import json
 from os.path import join
-from tempfile import NamedTemporaryFile
 import numpy as np
 import pytest
 import biotite.structure as struc
-from biotite.structure.io import load_structure, save_structure
-from tests.util import cannot_import, data_dir
+import biotite.structure.io.pdbx as pdbx
+from biotite.structure.io import load_structure
+from tests.util import data_dir
 
 
 @pytest.fixture()
@@ -22,55 +23,47 @@ def stack(request):
     return stack
 
 
-# Ignore warning about dummy unit cell vector
-@pytest.mark.filterwarnings("ignore")
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
-    "pdb_id, use_bond_list", itertools.product(["1l2y", "1gya", "1igy"], [False, True])
+    "pdb_id, use_all_models, use_bond_list",
+    itertools.product(["1l2y", "1gya", "1igy"], [False, True], [False, True]),
 )
-def test_hbond_structure(pdb_id, use_bond_list):
+def test_hbond_consistency(pdb_id, use_all_models, use_bond_list):
     """
-    Compare hydrogen bond detection with MDTraj
+    Compare hydrogen bond detection with MDTraj.
     """
-    file_name = join(data_dir("structure"), pdb_id + ".bcif")
+    # Load precomputed hydrogen bond triplets from MDTraj
+    with open(join(data_dir("structure"), "misc", "hbond.json")) as file:
+        ref_data = json.load(file)
+    key = "single_model" if not use_all_models else "all_models"
+    ref_triplets = ref_data[pdb_id][key]
 
-    array = load_structure(file_name)
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), pdb_id + ".bcif"))
+    model = None if use_all_models else 1
+    atoms = pdbx.get_structure(pdbx_file, model=model)
+
     if use_bond_list:
-        if isinstance(array, struc.AtomArrayStack):
-            ref_model = array[0]
+        if isinstance(atoms, struc.AtomArrayStack):
+            ref_model = atoms[0]
         else:
-            ref_model = array
+            ref_model = atoms
         bonds = struc.connect_via_distances(ref_model)
         bonds = bonds.merge(struc.connect_via_residue_names(ref_model))
-        array.bonds = bonds
+        atoms.bonds = bonds
 
     # Only consider amino acids for consistency
     # with bonded hydrogen detection in MDTraj
-    array = array[..., struc.filter_amino_acids(array)]
-    if isinstance(array, struc.AtomArrayStack):
+    atoms = atoms[..., struc.filter_amino_acids(atoms)]
+    if isinstance(atoms, struc.AtomArrayStack):
         # For consistency with MDTraj 'S' cannot be acceptor element
         # https://github.com/mdtraj/mdtraj/blob/master/mdtraj/geometry/hbond.py#L365
-        triplets, mask = struc.hbond(array, acceptor_elements=("O", "N"))
+        test_triplets, mask = struc.hbond(atoms, acceptor_elements=("O", "N"))
     else:
-        triplets = struc.hbond(array, acceptor_elements=("O", "N"))
+        test_triplets = struc.hbond(atoms, acceptor_elements=("O", "N"))
 
-    # Save to new pdb file for consistent treatment of inscode/altloc
-    # im MDTraj
-    temp = NamedTemporaryFile("w+", suffix=".pdb")
-    save_structure(temp.name, array)
-
-    # Compare with MDTraj
-    import mdtraj
-
-    traj = mdtraj.load(temp.name)
-    temp.close()
-    triplets_ref = mdtraj.baker_hubbard(traj, freq=0, periodic=False)
-
-    # Both packages may use different order
-    # -> use set for comparison
-    triplets_set = set([tuple(tri) for tri in triplets])
-    triplets_ref_set = set([tuple(tri) for tri in triplets_ref])
-    assert triplets_set == triplets_ref_set
+    # MDTraj and Biotite may use different order -> use set for comparison
+    assert set([tuple(tri) for tri in test_triplets]) == set(
+        [tuple(tri) for tri in ref_triplets]
+    )
 
 
 # Ignore warning about missing BondList, as this is intended
