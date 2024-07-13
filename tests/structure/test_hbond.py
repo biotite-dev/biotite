@@ -96,7 +96,7 @@ def test_hbond_total_count(stack):
     """
     With the standart Baker & Hubbard criterion,
     1l2y should have 28 hydrogen bonds with a frequency > 0.1
-    (comparision with MDTraj results)
+    (comparison with results obtained from MDTraj)
     """
     triplets, mask = struc.hbond(stack)
     freq = struc.hbond_frequency(mask)

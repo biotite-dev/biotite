@@ -14,10 +14,9 @@ import biotite.structure.io.netcdf as netcdf
 import biotite.structure.io.tng as tng
 import biotite.structure.io.trr as trr
 import biotite.structure.io.xtc as xtc
-from tests.util import cannot_import, data_dir
+from tests.util import data_dir
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize("format", ["trr", "xtc", "tng", "dcd", "netcdf"])
 def test_array_conversion(format):
     template = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))[0]
@@ -50,7 +49,6 @@ def test_array_conversion(format):
     assert ref_array.coord == pytest.approx(array.coord, abs=1e-2)
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
     "format, start, stop, step, chunk_size",
     itertools.product(
@@ -63,7 +61,7 @@ def test_array_conversion(format):
 )
 def test_bcif_consistency(format, start, stop, step, chunk_size):
     if format == "netcdf" and stop is not None and step is not None:
-        # Currently, there is an inconsistency in in MDTraj's
+        # Currently, there is an inconsistency in in biotraj's
         # NetCDFTrajectoryFile class:
         # In this class the number of frames in the output arrays
         # is dependent on the 'stride' parameter
@@ -112,7 +110,6 @@ def test_bcif_consistency(format, start, stop, step, chunk_size):
     assert test_traj.coord == pytest.approx(ref_traj.coord, abs=1e-2)
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
     "format, start, stop, step, stack_size",
     itertools.product(
@@ -129,7 +126,7 @@ def test_read_iter(format, start, stop, step, stack_size):
     from a corresponding :class:`TrajectoryFile` object.
     """
     if format == "netcdf" and step is not None:
-        # Currently, there is an inconsistency in in MDTraj's
+        # Currently, there is an inconsistency in in biotraj's
         # NetCDFTrajectoryFile class:
         # In this class the number of frames in the output arrays
         # is dependent on the 'stride' parameter
@@ -185,7 +182,6 @@ def test_read_iter(format, start, stop, step, stack_size):
         assert test_time.tolist() == ref_time.tolist()
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
     "format, start, stop, step, stack_size",
     itertools.product(
@@ -203,7 +199,7 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
     :class:`TrajectoryFile` object.
     """
     if format == "netcdf" and step is not None:
-        # Currently, there is an inconsistency in in MDTraj's
+        # Currently, there is an inconsistency in in biotraj's
         # NetCDFTrajectoryFile class:
         # In this class the number of frames in the output arrays
         # is dependent on the 'stride' parameter
@@ -243,7 +239,6 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
     assert test_traj == ref_traj
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
     "format, n_models, n_atoms, include_box, include_time",
     itertools.product(

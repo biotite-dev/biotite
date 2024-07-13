@@ -27,7 +27,7 @@ def find_all_modules(package_name, src_dir):
 
 
 @pytest.mark.skipif(
-    cannot_import("matplotlib") | cannot_import("mdtraj"),
+    cannot_import("matplotlib"),
     reason="Optional dependencies are not met",
 )
 @pytest.mark.parametrize(
