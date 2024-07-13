@@ -20,7 +20,6 @@ dependencies if not already present.
 
 Some functionalities require extra packages:
 
-   - ``mdtraj`` - Required for trajectory file I/O operations.
    - ``matplotlib`` - Required for plotting purposes.
 
 

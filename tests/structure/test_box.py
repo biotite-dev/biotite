@@ -10,9 +10,9 @@ import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
 from biotite.structure.io import load_structure
-from tests.util import cannot_import, data_dir
+from tests.util import data_dir
 
-SAMPLE_BOXES = [
+SAMPLE_CELLS = [
     (1, 1, 1,  90,  90,  90),
     (9, 5, 2,  90,  90,  90),
     (5, 5, 8,  90,  90, 120),
@@ -30,36 +30,23 @@ SAMPLE_COORD = [
 ]  # fmt: skip
 
 
-# Ignore warning about dummy unit cell vector
-@pytest.mark.filterwarnings("ignore")
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
-@pytest.mark.parametrize("len_a, len_b, len_c, alpha, beta, gamma", SAMPLE_BOXES)
-def test_box_vector_calculation(len_a, len_b, len_c, alpha, beta, gamma):
-    box = struc.vectors_from_unitcell(
-        len_a, len_b, len_c, np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
-    )
-
-    from mdtraj.utils import lengths_and_angles_to_box_vectors
-
-    ref_box = np.stack(
-        lengths_and_angles_to_box_vectors(len_a, len_b, len_c, alpha, beta, gamma)
-    )
-    assert np.allclose(box, ref_box)
-
-    assert struc.unitcell_from_vectors(box) == pytest.approx(
-        (
-            len_a,
-            len_b,
-            len_c,
-            alpha * 2 * np.pi / 360,
-            beta * 2 * np.pi / 360,
-            gamma * 2 * np.pi / 360,
-        )
-    )
+@pytest.mark.parametrize("ref_cell", SAMPLE_CELLS)
+def test_box_vector_conversion(ref_cell):
+    """
+    Converting a unit cell into box vectors and back should restore the same
+    unit cell.
+    """
+    len_a, len_b, len_c, alpha, beta, gamma = ref_cell
+    alpha, beta, gamma = [np.deg2rad(angle) for angle in (alpha, beta, gamma)]
+    box = struc.vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
+    test_cell = struc.unitcell_from_vectors(box)
+    assert test_cell == pytest.approx((len_a, len_b, len_c, alpha, beta, gamma))
 
 
 def test_volume():
-    # Very rudimentary test
+    """
+    Test the volume calculation of a simple orthorhombic box.
+    """
     box = np.array(
         [
             [5, 0, 0],
@@ -74,7 +61,7 @@ def test_volume():
 
 @pytest.mark.parametrize(
     "len_a, len_b, len_c, alpha, beta, gamma, x, y,z",
-    [box + coord for box, coord in itertools.product(SAMPLE_BOXES, SAMPLE_COORD)],
+    [box + coord for box, coord in itertools.product(SAMPLE_CELLS, SAMPLE_COORD)],
 )
 def test_move_into_box(len_a, len_b, len_c, alpha, beta, gamma, x, y, z):
     box = struc.vectors_from_unitcell(
@@ -89,7 +76,7 @@ def test_move_into_box(len_a, len_b, len_c, alpha, beta, gamma, x, y, z):
 
 @pytest.mark.parametrize(
     "len_a, len_b, len_c, alpha, beta, gamma, x, y,z",
-    [box + coord for box, coord in itertools.product(SAMPLE_BOXES, SAMPLE_COORD)],
+    [box + coord for box, coord in itertools.product(SAMPLE_CELLS, SAMPLE_COORD)],
 )
 def test_conversion_to_fraction(len_a, len_b, len_c, alpha, beta, gamma, x, y, z):
     box = struc.vectors_from_unitcell(

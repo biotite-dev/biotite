@@ -79,9 +79,8 @@ The import statement for the dependency should be located directly inside the
 function or class, rather than module level, to ensure that the package is not
 required for any other functionality or for building the API documentation.
 
-An example for this approach is the support for trajectory files in
-:mod:`biotite.structure.io`, that require `MDTraj <http://mdtraj.org/>`_.
-The usage of these packages is not only allowed but even encouraged.
+An example for this approach are the plotting functions in
+:mod:`biotite.sequence.graphics`, that require *Matplotlib*.
 
 Code efficiency
 ---------------
