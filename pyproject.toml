@@ -77,6 +77,11 @@ no-lines-before = [
 order-by-type = true
 known-first-party = ["biotite"]
 
+[tool.pytest.ini_options]
+filterwarnings = [
+  "ignore:The 'netCDF4' Python package is not installed.",
+]
+
 [tool.hatch.build.targets.sdist]
 exclude = [
   "tests",
