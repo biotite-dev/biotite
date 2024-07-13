@@ -10,11 +10,6 @@ If you like, you can even use the
 seamless interaction between *Biotite* and the
 `OpenMM <https://openmm.org/>`_ MD simulation toolkit.
 
-.. note::
-
-    Reading/writing trajectory files currently requires the
-    `MDtraj <https://www.mdtraj.org>`_ package.
-
 Reading trajectory files
 ------------------------
 

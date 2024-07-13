@@ -21,7 +21,7 @@ This package bundles popular tasks in computational molecular biology
 into a uniform *Python* library.
 It can handle a major part of the typical workflow
 for sequence and biomolecular structure data:
-   
+
    - Searching and fetching data from biological databases
    - Reading and writing popular sequence/structure file formats
    - Analyzing and editing sequence/structure data
@@ -57,7 +57,6 @@ Installation
 
 Some functions require some extra packages:
 
-   - **mdtraj** - Required for trajetory file I/O operations.
    - **matplotlib** - Required for plotting purposes.
 
 *Biotite* can be installed via *Conda*...
