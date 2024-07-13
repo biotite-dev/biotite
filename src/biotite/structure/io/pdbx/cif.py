@@ -972,11 +972,11 @@ def _to_single(lines, is_looped):
                 j += 1
             if is_looped:
                 # Create a line for the multiline string only
-                processed_lines[out_i] = _quote(multi_line_str)
+                processed_lines[out_i] = f"'{multi_line_str}'"
                 out_i += 1
             else:
                 # Append multiline string to previous line
-                processed_lines[out_i - 1] += " " + _quote(multi_line_str)
+                processed_lines[out_i - 1] += " " + f"'{multi_line_str}'"
             in_i = j + 1
 
         elif not is_looped and lines[in_i][0] != "_":
@@ -999,10 +999,6 @@ def _quote(value):
     """
     if len(value) == 0:
         return "''"
-    elif len(value) >= 2 and value[0] == value[-1] == "'":
-        return value
-    elif len(value) >= 2 and value[0] == value[-1] == '"':
-        return value
     elif value[0] == "_":
         return "'" + value + "'"
     elif "'" in value:
@@ -1012,8 +1008,6 @@ def _quote(value):
     elif " " in value:
         return "'" + value + "'"
     elif "\t" in value:
-        return "'" + value + "'"
-    elif "\n" in value:
         return "'" + value + "'"
     else:
         return value
