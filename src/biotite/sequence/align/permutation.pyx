@@ -245,7 +245,7 @@ class FrequencyPermutation(Permutation):
         # 'order' maps a permutation to a k-mer
         # Stability is important to get the same k-mer subset selection
         # on different architectures
-        order = np.argsort(counts, stable=True)
+        order = np.argsort(counts, kind="stable")
         # '_permutation_table' should perform the reverse mapping
         self._permutation_table = _invert_mapping(order)
         self._kmer_alph = kmer_alphabet
