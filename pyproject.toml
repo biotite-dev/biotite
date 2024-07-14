@@ -20,10 +20,12 @@ classifiers = [
 ]
 
 dependencies = [
-  "requests >= 2.12",
-  "numpy >= 2.0",
+  # Wheels compiled with NumPy 2.0 are backward compatible with NumPy 1.x
+  # https://numpy.org/devdocs/dev/depending_on_numpy.html#numpy-2-0-specific-advice
+  "numpy >= 1.25",
   "msgpack >= 0.5.6",
   "networkx >= 2.0",
+  "requests >= 2.12",
 ]
 dynamic = ["version"]
 
