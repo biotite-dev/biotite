@@ -103,10 +103,10 @@ class KmerAlphabet(Alphabet):
 
     >>> base_alphabet = NucleotideSequence.unambiguous_alphabet()
     >>> print(base_alphabet.get_symbols())
-    ['A', 'C', 'G', 'T']
+    ('A', 'C', 'G', 'T')
     >>> kmer_alphabet = KmerAlphabet(base_alphabet, 2)
     >>> print(kmer_alphabet.get_symbols())
-    ['AA', 'AC', 'AG', 'AT', 'CA', 'CC', 'CG', 'CT', 'GA', 'GC', 'GG', 'GT', 'TA', 'TC', 'TG', 'TT']
+    ('AA', 'AC', 'AG', 'AT', 'CA', 'CC', 'CG', 'CT', 'GA', 'GC', 'GG', 'GT', 'TA', 'TC', 'TG', 'TT')
 
     Encode and decode *k-mers*:
 
@@ -210,8 +210,8 @@ class KmerAlphabet(Alphabet):
 
         Returns
         -------
-        symbols : list
-            A list of all *k-mer* symbols, i.e. all possible
+        symbols : tuple
+            A tuple of all *k-mer* symbols, i.e. all possible
             combinations of *k* symbols from its *base alphabet*.
 
         Notes
@@ -224,9 +224,9 @@ class KmerAlphabet(Alphabet):
         to be created first.
         """
         if isinstance(self._base_alph, LetterAlphabet):
-            return ["".join(self.decode(code)) for code in range(len(self))]
+            return tuple(["".join(self.decode(code)) for code in range(len(self))])
         else:
-            return [list(self.decode(code)) for code in range(len(self))]
+            return tuple([list(self.decode(code)) for code in range(len(self))])
 
 
     def extends(self, alphabet):
