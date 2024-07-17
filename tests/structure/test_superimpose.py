@@ -210,7 +210,7 @@ def test_input_shapes(single_model, single_atom):
 
     fitted, _ = struc.superimpose(fixed, mobile)
 
-    assert type(fitted) == type(mobile)
+    assert isinstance(fitted, type(mobile))
     assert fitted.coord.shape == mobile.coord.shape
 
 
@@ -275,7 +275,7 @@ def test_superimpose_without_outliers_inputs(multi_model, coord_only):
 
     superimposed, transform, _ = struc.superimpose_without_outliers(atoms, atoms)
 
-    assert type(superimposed) == type(atoms)
+    assert isinstance(superimposed, type(atoms))
     assert superimposed.shape == atoms.shape
     transform_matrix = transform.as_matrix()
     if multi_model:
