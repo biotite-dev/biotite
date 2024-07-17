@@ -98,7 +98,7 @@ def test_stack_indexing(stack):
     with pytest.raises(IndexError):
         stack[5]
     filtered_stack = stack[0]
-    assert type(filtered_stack) == struc.AtomArray
+    assert isinstance(filtered_stack, struc.AtomArray)
     filtered_stack = stack[0:2, stack.res_name == "PRO"]
     assert filtered_stack.atom_name.tolist() == ["O", "CA"]
     filtered_stack = stack[np.array([True, False, True])]

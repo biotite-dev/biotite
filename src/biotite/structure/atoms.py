@@ -383,7 +383,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         return self._array_length
 
     def __add__(self, array):
-        if type(self) != type(array):
+        if not isinstance(self, type(array)):
             raise TypeError("Can only concatenate two arrays or two stacks")
         # Create either new array or stack, depending of the own type
         if isinstance(self, AtomArray):

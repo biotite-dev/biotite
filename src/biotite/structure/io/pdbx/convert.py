@@ -808,8 +808,8 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
 
     # In case of a single model handle each coordinate
     # simply like a flattened array
-    if type(array) == AtomArray or (
-        type(array) == AtomArrayStack and array.stack_depth() == 1
+    if isinstance(array, AtomArray) or (
+        isinstance(array, AtomArrayStack) and array.stack_depth() == 1
     ):
         # 'ravel' flattens coord without copy
         # in case of stack with stack_depth = 1
