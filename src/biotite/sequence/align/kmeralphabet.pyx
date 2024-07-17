@@ -560,6 +560,10 @@ class KmerAlphabet(Alphabet):
         return True
 
 
+    def __hash__(self):
+        return hash((self._base_alph, self._k, tuple(self._spacing.tolist())))
+
+
     def __len__(self):
         return int(len(self._base_alph) ** self._k)
 
