@@ -40,7 +40,7 @@ jobs:
       with:
         python-version: "3.12"
     - name: Install ruff
-      run: pip install ruff
+      run: pip install ruff==0.5.2
     - name: Check code formatting
       run: ruff format --diff
     - name: Lint code base
