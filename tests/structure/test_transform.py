@@ -60,7 +60,7 @@ def test_translate(input_atoms, ndim, as_list, random_seed):
     translated = struc.translate(input_atoms, vectors)
     restored = struc.translate(translated, neg_vectors)
 
-    assert type(restored) == type(input_atoms)
+    assert isinstance(restored, type(input_atoms))
     assert struc.coord(restored).shape == struc.coord(input_atoms).shape
     assert np.allclose(struc.coord(restored), struc.coord(input_atoms), atol=1e-5)
 
@@ -86,7 +86,7 @@ def test_rotate(input_atoms, as_list, axis, random_seed, centered):
     rotated = func(input_atoms, angles)
     restored = func(rotated, neg_angles)
 
-    assert type(restored) == type(input_atoms)
+    assert isinstance(restored, type(input_atoms))
     assert struc.coord(restored).shape == struc.coord(input_atoms).shape
     print(np.max(np.abs(struc.coord(restored) - struc.coord(input_atoms))))
     assert np.allclose(struc.coord(restored), struc.coord(input_atoms), atol=1e-5)
@@ -108,7 +108,7 @@ def test_rotate_360(input_atoms, x, y, z, centered):
     func = struc.rotate_centered if centered else struc.rotate
     rotated = func(input_atoms, [x, y, z])
 
-    assert type(rotated) == type(input_atoms)
+    assert isinstance(rotated, type(input_atoms))
     assert struc.coord(rotated).shape == struc.coord(input_atoms).shape
     assert np.allclose(struc.coord(rotated), struc.coord(input_atoms), atol=1e-5)
     if centered and struc.coord(input_atoms).ndim > 1:
@@ -184,7 +184,7 @@ def test_rotate_about_axis(input_atoms, as_list, use_support, random_seed):
     rotated = struc.rotate_about_axis(input_atoms, axis, angle, support)
     restored = struc.rotate_about_axis(rotated, axis, neg_angle, support)
 
-    assert type(restored) == type(input_atoms)
+    assert isinstance(restored, type(input_atoms))
     assert struc.coord(restored).shape == struc.coord(input_atoms).shape
     assert np.allclose(struc.coord(restored), struc.coord(input_atoms), atol=1e-5)
 
@@ -212,7 +212,7 @@ def test_rotate_about_axis_consistency(input_atoms, axis, random_seed):
         angle,
     )
 
-    assert type(test_rotated) == type(ref_rotated)
+    assert isinstance(test_rotated, type(ref_rotated))
     assert struc.coord(test_rotated).shape == struc.coord(ref_rotated).shape
     assert np.allclose(struc.coord(test_rotated), struc.coord(ref_rotated), atol=1e-5)
 
@@ -230,7 +230,7 @@ def test_rotate_about_axis_360(input_atoms, random_seed, use_support):
 
     rotated = struc.rotate_about_axis(input_atoms, axis, 2 * np.pi, support)
 
-    assert type(rotated) == type(input_atoms)
+    assert isinstance(rotated, type(input_atoms))
     assert struc.coord(rotated).shape == struc.coord(input_atoms).shape
     assert np.allclose(struc.coord(rotated), struc.coord(input_atoms), atol=1e-5)
 
@@ -264,7 +264,7 @@ def test_orient_principal_components(input_atoms, as_list, order):
 
     result = struc.orient_principal_components(input_atoms, order=order)
     neg_variance = -struc.coord(result).var(axis=0)
-    assert type(result) == type(input_atoms)
+    assert isinstance(result, type(input_atoms))
     assert (neg_variance.argsort() == np.argsort(order)).all()
 
 
@@ -317,7 +317,7 @@ def test_align_vectors(input_atoms, as_list, use_support, random_seed):
         source_position,
     )
 
-    assert type(restored) == type(input_atoms)
+    assert isinstance(restored, type(input_atoms))
     assert struc.coord(restored).shape == struc.coord(input_atoms).shape
     assert np.allclose(struc.coord(restored), struc.coord(input_atoms), atol=1e-5)
 

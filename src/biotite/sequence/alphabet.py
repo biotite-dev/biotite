@@ -324,7 +324,7 @@ class LetterAlphabet(Alphabet):
     def extends(self, alphabet):
         if alphabet is self:
             return True
-        elif type(alphabet) == LetterAlphabet:
+        elif isinstance(alphabet, LetterAlphabet):
             if len(alphabet._symbols) > len(self._symbols):
                 return False
             return np.all(alphabet._symbols == self._symbols[: len(alphabet._symbols)])
