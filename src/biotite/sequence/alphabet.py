@@ -12,7 +12,6 @@ __all__ = [
     "common_alphabet",
 ]
 
-import copy
 import string
 from numbers import Integral
 import numpy as np
@@ -105,7 +104,7 @@ class Alphabet(object):
     def __init__(self, symbols):
         if len(symbols) == 0:
             raise ValueError("Symbol list is empty")
-        self._symbols = copy.deepcopy(list(symbols))
+        self._symbols = tuple(symbols)
         self._symbol_dict = {}
         for i, symbol in enumerate(symbols):
             self._symbol_dict[symbol] = i
@@ -120,10 +119,10 @@ class Alphabet(object):
 
         Returns
         -------
-        symbols : list
-            Copy of the internal list of symbols.
+        symbols : tuple
+            The symbols.
         """
-        return copy.deepcopy(self._symbols)
+        return self._symbols
 
     def extends(self, alphabet):
         """
@@ -244,7 +243,7 @@ class Alphabet(object):
                 return False
             if isinstance(symbol, str):
                 symbol = symbol.encode("ASCII")
-            if symbol not in LetterAlphabet.PRINATBLES:
+            if symbol not in LetterAlphabet.PRINTABLES:
                 return False
         return True
 
@@ -261,7 +260,11 @@ class Alphabet(object):
         return symbol in self.get_symbols()
 
     def __hash__(self):
-        return hash(tuple(self._symbols))
+        symbols = self.get_symbols()
+        if isinstance(symbols, tuple):
+            return hash(symbols)
+        else:
+            return hash(tuple(symbols))
 
     def __eq__(self, item):
         if item is self:
@@ -293,7 +296,7 @@ class LetterAlphabet(Alphabet):
         in this list.
     """
 
-    PRINATBLES = (string.digits + string.ascii_letters + string.punctuation).encode(
+    PRINTABLES = (string.digits + string.ascii_letters + string.punctuation).encode(
         "ASCII"
     )
 
@@ -306,7 +309,7 @@ class LetterAlphabet(Alphabet):
                 raise ValueError(f"Symbol '{symbol}' is not a single letter")
             if isinstance(symbol, str):
                 symbol = symbol.encode("ASCII")
-            if symbol not in LetterAlphabet.PRINATBLES:
+            if symbol not in LetterAlphabet.PRINTABLES:
                 raise ValueError(
                     f"Symbol {repr(symbol)} is not printable or whitespace"
                 )
@@ -332,15 +335,7 @@ class LetterAlphabet(Alphabet):
             return super().extends(alphabet)
 
     def get_symbols(self):
-        """
-        Get the symbols in the alphabet.
-
-        Returns
-        -------
-        symbols : list
-            Copy of the internal list of symbols.
-        """
-        return [symbol.decode("ASCII") for symbol in self._symbols_as_bytes()]
+        return tuple([symbol.decode("ASCII") for symbol in self._symbols_as_bytes()])
 
     def encode(self, symbol):
         if not isinstance(symbol, (str, bytes)) or len(symbol) > 1:

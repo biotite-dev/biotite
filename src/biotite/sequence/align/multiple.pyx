@@ -236,7 +236,7 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     # Create new matrix with neutral gap symbol
     gap_symbol = GapSymbol.instance()
     new_alphabet = Alphabet(
-        matrix.get_alphabet1().get_symbols() + [gap_symbol]
+        matrix.get_alphabet1().get_symbols() + (gap_symbol,)
     )
     new_score_matrix = np.zeros(
         (len(new_alphabet), len(new_alphabet)), dtype=np.int32

@@ -85,7 +85,7 @@ class RandomPermutation(Permutation):
     This class uses a simple full-period *linear congruential generator*
     (LCG) to provide pseudo-randomized values:
 
-    .. math:: \text{order} = (a c_\text{k-mer} + 1) \mod 2^64.
+    .. math:: \text{order} = (a \, c_\text{k-mer} + 1) \mod 2^{64}.
 
     The factor :math:`a` is taken from :footcite:`Steele2021` to ensure
     full periodicity and good random behavior.
