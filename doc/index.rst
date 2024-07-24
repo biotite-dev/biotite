@@ -32,6 +32,10 @@
                 display: block;
             }
         }
+        /* Limit the size of the sponsor logos */
+        .sponsors {
+            width: 25%;
+        }
 
     </style>
 
@@ -229,6 +233,20 @@ Biotite documentation
 
             Kunzmann2018
             Kunzmann2023
+
+
+.. raw:: html
+
+    <h1>Sponsors</h1>
+
+.. grid::
+    :gutter: 5
+    :padding: 5
+    :class-container: sponsors
+
+    .. grid-item-card::
+        :img-background: /static/assets/sponsors/vantai_logo.jpg
+        :link: https://www.vant.ai/
 
 
 .. toctree::
