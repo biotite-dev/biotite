@@ -207,7 +207,7 @@ Biotite documentation
         .. raw:: html
 
             <a href="https://github.com/biotite-dev/biotite/graphs/contributors" style="margin-top: 20px; margin-bottom: 20px;">
-                <img src="https://contrib.rocks/image?repo=biotite-dev/biotite&columns=8" />
+                <img src="https://contrib.rocks/image?repo=biotite-dev/biotite&columns=10&max=40" />
             </a>
 
         Interested in contributing to the project?
