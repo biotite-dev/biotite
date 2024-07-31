@@ -32,6 +32,10 @@
                 display: block;
             }
         }
+        /* Limit the size of the sponsor logos */
+        .sponsors {
+            width: 25%;
+        }
 
     </style>
 
@@ -203,7 +207,7 @@ Biotite documentation
         .. raw:: html
 
             <a href="https://github.com/biotite-dev/biotite/graphs/contributors" style="margin-top: 20px; margin-bottom: 20px;">
-                <img src="https://contrib.rocks/image?repo=biotite-dev/biotite&columns=8" />
+                <img src="https://contrib.rocks/image?repo=biotite-dev/biotite&columns=10&max=40" />
             </a>
 
         Interested in contributing to the project?
@@ -229,6 +233,20 @@ Biotite documentation
 
             Kunzmann2018
             Kunzmann2023
+
+
+.. raw:: html
+
+    <h1>Sponsors</h1>
+
+.. grid::
+    :gutter: 5
+    :padding: 5
+    :class-container: sponsors
+
+    .. grid-item-card::
+        :img-background: /static/assets/sponsors/vantai_logo.jpg
+        :link: https://www.vant.ai/
 
 
 .. toctree::
