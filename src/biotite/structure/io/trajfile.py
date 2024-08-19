@@ -390,7 +390,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
 
         Notes
         -----
-        The `time` parameter has no effect for *TNG* and *DCD* files.
+        The `time` parameter has no effect for *DCD* files.
         """
         if box is None:
             box = itertools.repeat(None)
