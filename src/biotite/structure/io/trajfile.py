@@ -16,7 +16,7 @@ from biotite.structure.atoms import AtomArray, AtomArrayStack, from_template
 class TrajectoryFile(File, metaclass=abc.ABCMeta):
     """
     This file class represents a trajectory file interfacing a
-    trajectory file class from `MDtraj`.
+    trajectory file class from `biotraj`.
 
     A trajectory file stores atom coordinates over multiple (time)
     frames. The file formats are usually binary and involve sometimes
@@ -552,14 +552,14 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def traj_type(cls):
         """
-        The `MDtraj` files class to be used.
+        The ``biotraj`` files class to be used.
 
         PROTECTED: Override when inheriting.
 
         Returns
         -------
         class
-            An `MDtraj` subclass of :class:`TrajectoryFile`.
+            An ``biotraj`` subclass of :class:`TrajectoryFile`.
         """
         pass
 
@@ -568,7 +568,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     def process_read_values(cls, read_values):
         """
         Convert the return value of the `read()` method of the
-        respective :class:`mdtraj.TrajectoryFile` into coordinates,
+        respective :class:`biotraj.TrajectoryFile` into coordinates,
         simulation box and simulation time.
 
         PROTECTED: Override when inheriting.
@@ -577,7 +577,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         ----------
         read_values : tuple
             The return value of the respective
-            :func:`mdtraj.TrajectoryFile.read()` method.
+            :func:`biotraj.TrajectoryFile.read()` method.
 
         Returns
         -------
@@ -596,7 +596,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         Convert the `coord`, `box` and `time` attribute into a
         dictionary that is given as *kwargs* to the respective
-        :func:`mdtraj.TrajectoryFile.write()` method.
+        :func:`biotraj.TrajectoryFile.write()` method.
 
         PROTECTED: Override when inheriting.
 
@@ -613,7 +613,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         -------
         parameters : dict
             This dictionary is given as *kwargs* parameter to the
-            respective :func:`mdtraj.TrajectoryFile.write()` method.
+            respective :func:`biotraj.TrajectoryFile.write()` method.
         """
         pass
 
@@ -657,7 +657,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             try:
                 chunk = file.read(n_frames=n, stride=step, atom_indices=atom_i)
             except ValueError as e:
-                # MDTraj raises exception because no coordinates can be
+                # biotraj raises exception because no coordinates can be
                 # concatenated
                 # -> all frames have been read
                 # -> stop reading chunks

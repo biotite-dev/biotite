@@ -6,6 +6,7 @@ __name__ = "biotite.structure.io.trr"
 __author__ = "Patrick Kunzmann"
 __all__ = ["TRRFile"]
 
+import biotraj
 import numpy as np
 from biotite.structure.io.trajfile import TrajectoryFile
 
@@ -17,9 +18,7 @@ class TRRFile(TrajectoryFile):
 
     @classmethod
     def traj_type(cls):
-        import mdtraj.formats as traj
-
-        return traj.TRRTrajectoryFile
+        return biotraj.TRRTrajectoryFile
 
     @classmethod
     def process_read_values(cls, read_values):
