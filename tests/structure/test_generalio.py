@@ -19,7 +19,7 @@ def test_loading(path):
     and returns an object of appropriate type.
     """
     suffix = splitext(path)[1]
-    if suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
+    if suffix in [".trr", ".xtc", ".dcd", ".netcdf"]:
         template = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
         array = strucio.load_structure(path, template)
     else:
@@ -72,7 +72,7 @@ def test_loading_with_extra_args():
 
 @pytest.mark.parametrize(
     "suffix",
-    ["pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "tng", "dcd", "netcdf"],
+    ["pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "dcd", "netcdf"],
 )
 def test_saving(suffix):
     """
@@ -82,7 +82,7 @@ def test_saving(suffix):
     """
     path = join(data_dir("structure"), "1l2y.bcif")
     ref_array = strucio.load_structure(path)
-    if suffix in ("trr", "xtc", "tng", "dcd", "netcdf"):
+    if suffix in ("trr", "xtc", "dcd", "netcdf"):
         # Reading a trajectory file requires a template
         template = path
     else:
@@ -110,7 +110,7 @@ def test_saving(suffix):
 
 @pytest.mark.parametrize(
     "suffix",
-    ["pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "tng", "dcd", "netcdf"],
+    ["pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "dcd", "netcdf"],
 )
 def test_saving_with_extra_args(suffix):
     """

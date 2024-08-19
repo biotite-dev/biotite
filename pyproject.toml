@@ -79,6 +79,7 @@ known-first-party = ["biotite"]
 
 [tool.pytest.ini_options]
 filterwarnings = [
+  # Appears in loading NetCDF trajectory files
   "ignore:The 'netCDF4' Python package is not installed.",
 ]
 
