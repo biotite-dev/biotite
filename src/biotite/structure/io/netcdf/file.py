@@ -6,6 +6,7 @@ __name__ = "biotite.structure.io.netcdf"
 __author__ = "Patrick Kunzmann"
 __all__ = ["NetCDFFile"]
 
+import biotraj
 import numpy as np
 from biotite.structure.box import unitcell_from_vectors, vectors_from_unitcell
 from biotite.structure.io.trajfile import TrajectoryFile
@@ -18,9 +19,7 @@ class NetCDFFile(TrajectoryFile):
 
     @classmethod
     def traj_type(cls):
-        import mdtraj.formats as traj
-
-        return traj.NetCDFTrajectoryFile
+        return biotraj.NetCDFTrajectoryFile
 
     @classmethod
     def process_read_values(cls, read_values):

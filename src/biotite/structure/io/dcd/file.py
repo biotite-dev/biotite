@@ -6,6 +6,7 @@ __name__ = "biotite.structure.io.dcd"
 __author__ = "Patrick Kunzmann"
 __all__ = ["DCDFile"]
 
+import biotraj
 import numpy as np
 from biotite.structure.box import unitcell_from_vectors, vectors_from_unitcell
 from biotite.structure.io.trajfile import TrajectoryFile
@@ -18,9 +19,7 @@ class DCDFile(TrajectoryFile):
 
     @classmethod
     def traj_type(cls):
-        import mdtraj.formats as traj
-
-        return traj.DCDTrajectoryFile
+        return biotraj.DCDTrajectoryFile
 
     @classmethod
     def process_read_values(cls, read_values):

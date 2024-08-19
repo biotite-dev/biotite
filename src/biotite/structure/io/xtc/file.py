@@ -6,6 +6,7 @@ __name__ = "biotite.structure.io.xtc"
 __author__ = "Patrick Kunzmann"
 __all__ = ["XTCFile"]
 
+import biotraj
 import numpy as np
 from biotite.structure.io.trajfile import TrajectoryFile
 
@@ -17,9 +18,7 @@ class XTCFile(TrajectoryFile):
 
     @classmethod
     def traj_type(cls):
-        import mdtraj.formats as traj
-
-        return traj.XTCTrajectoryFile
+        return biotraj.XTCTrajectoryFile
 
     @classmethod
     def process_read_values(cls, read_values):
