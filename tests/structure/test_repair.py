@@ -46,6 +46,7 @@ def test_create_continuous_res_ids(multi_chain, restart_each_chain):
         assert test_res_ids.tolist() == (np.arange(len(test_res_ids)) + 1).tolist()
 
 
+@pytest.mark.filterwarnings("ignore:Could not infer element")
 @pytest.mark.parametrize(
     "name,expected",
     [
