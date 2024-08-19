@@ -81,6 +81,7 @@ known-first-party = ["biotite"]
 filterwarnings = [
   # Appears in loading NetCDF trajectory files
   "ignore:The 'netCDF4' Python package is not installed.",
+  "ignore:Input structure has no associated 'BondList'",
 ]
 
 [tool.hatch.build.targets.sdist]
