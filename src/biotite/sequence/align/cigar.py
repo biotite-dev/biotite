@@ -294,10 +294,10 @@ def write_alignment_to_cigar(
 
     >>> op_tuples = write_alignment_to_cigar(semiglobal_alignment, as_string=False)
     >>> for op, length in op_tuples:
-    ...     print(CigarOp(op), length)
-    CigarOp.MATCH 9
-    CigarOp.DELETION 2
-    CigarOp.MATCH 12
+    ...     print(CigarOp(op).name, length)
+    MATCH 9
+    DELETION 2
+    MATCH 12
     """
     if not include_terminal_gaps:
         alignment = _remove_terminal_segment_gaps(alignment, segment_index)

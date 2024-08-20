@@ -80,7 +80,7 @@ class GenBankFile(TextFile):
     >>> print(content)
     ['One line', 'A second line']
     >>> print(subfields)
-    OrderedDict([('SUBFIELD1', ['Single Line']), ('SUBFIELD2', ['Two', 'lines'])])
+    OrderedDict({'SUBFIELD1': ['Single Line'], 'SUBFIELD2': ['Two', 'lines']})
 
     Adding an additional field:
 
