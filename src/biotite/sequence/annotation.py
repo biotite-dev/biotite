@@ -342,7 +342,7 @@ class Annotation(Copyable):
     ...     gene = f.qual["gene"]
     ...     loc_str = "".join([f"{loc}    {loc.defect}" for loc in f.locs])
     ...     print(gene, loc_str)
-    test5 40-149 >    Defect.MISS_RIGHT|MISS_LEFT
+    test5 40-149 >    Defect.MISS_LEFT|MISS_RIGHT
     test2 40-50 >    Defect.MISS_LEFT
     test3 100-130 >    Defect.NONE
     """

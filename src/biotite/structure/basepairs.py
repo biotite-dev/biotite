@@ -379,19 +379,19 @@ def base_pairs_edge(atom_array, base_pairs):
     The resulting integers can be interpreted as :class:`Edge` ``Enum``:
 
     >>> for interaction in interacting_edges:
-    ...     print(Edge(interaction[0]), Edge(interaction[1]))
-    Edge.WATSON_CRICK Edge.WATSON_CRICK
-    Edge.WATSON_CRICK Edge.WATSON_CRICK
-    Edge.WATSON_CRICK Edge.WATSON_CRICK
-    Edge.WATSON_CRICK Edge.WATSON_CRICK
-    Edge.WATSON_CRICK Edge.WATSON_CRICK
-    Edge.WATSON_CRICK Edge.WATSON_CRICK
-    Edge.WATSON_CRICK Edge.WATSON_CRICK
-    Edge.WATSON_CRICK Edge.WATSON_CRICK
-    Edge.WATSON_CRICK Edge.WATSON_CRICK
-    Edge.WATSON_CRICK Edge.WATSON_CRICK
-    Edge.WATSON_CRICK Edge.WATSON_CRICK
-    Edge.WATSON_CRICK Edge.WATSON_CRICK
+    ...     print(f"{Edge(interaction[0]).name} to {Edge(interaction[1]).name}")
+    WATSON_CRICK to WATSON_CRICK
+    WATSON_CRICK to WATSON_CRICK
+    WATSON_CRICK to WATSON_CRICK
+    WATSON_CRICK to WATSON_CRICK
+    WATSON_CRICK to WATSON_CRICK
+    WATSON_CRICK to WATSON_CRICK
+    WATSON_CRICK to WATSON_CRICK
+    WATSON_CRICK to WATSON_CRICK
+    WATSON_CRICK to WATSON_CRICK
+    WATSON_CRICK to WATSON_CRICK
+    WATSON_CRICK to WATSON_CRICK
+    WATSON_CRICK to WATSON_CRICK
 
     References
     ----------
@@ -531,19 +531,19 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
     ``Enum``:
 
     >>> for orientation in orientations:
-    ...     print(GlycosidicBond(orientation))
-    GlycosidicBond.CIS
-    GlycosidicBond.CIS
-    GlycosidicBond.CIS
-    GlycosidicBond.CIS
-    GlycosidicBond.CIS
-    GlycosidicBond.CIS
-    GlycosidicBond.CIS
-    GlycosidicBond.CIS
-    GlycosidicBond.CIS
-    GlycosidicBond.CIS
-    GlycosidicBond.CIS
-    GlycosidicBond.CIS
+    ...     print(GlycosidicBond(orientation).name)
+    CIS
+    CIS
+    CIS
+    CIS
+    CIS
+    CIS
+    CIS
+    CIS
+    CIS
+    CIS
+    CIS
+    CIS
 
     References
     ----------
