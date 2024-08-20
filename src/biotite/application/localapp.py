@@ -301,5 +301,8 @@ def cleanup_tempfile(temp_file):
         The temporary file to be closed and deleted.
     """
     temp_file.close()
-    if not temp_file.delete:
+    try:
         remove(temp_file.name)
+    except FileNotFoundError:
+        # File was already deleted, e.g. due to `TemporaryFile(delete=True)`
+        pass
