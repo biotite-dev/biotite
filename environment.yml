@@ -10,7 +10,7 @@ channels:
   - bioconda
 
 dependencies:
-  - python =3.10
+  - python =3.12
   # Package building
   - cython >=3.0
   - pip >=10.0
@@ -20,7 +20,7 @@ dependencies:
   # - biotraj >=1.0,<2.0
   - msgpack-python >=0.5.6
   - networkx >=2.0
-  - numpy >=1.25
+  - numpy >=2.0
   - requests >=2.12
   # Testing
   - pytest >=7.0
