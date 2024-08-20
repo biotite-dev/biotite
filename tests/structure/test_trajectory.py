@@ -11,14 +11,12 @@ import biotite.structure as struc
 import biotite.structure.io as strucio
 import biotite.structure.io.dcd as dcd
 import biotite.structure.io.netcdf as netcdf
-import biotite.structure.io.tng as tng
 import biotite.structure.io.trr as trr
 import biotite.structure.io.xtc as xtc
-from tests.util import cannot_import, data_dir
+from tests.util import data_dir
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
-@pytest.mark.parametrize("format", ["trr", "xtc", "tng", "dcd", "netcdf"])
+@pytest.mark.parametrize("format", ["trr", "xtc", "dcd", "netcdf"])
 def test_array_conversion(format):
     template = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))[0]
     # Add fake box
@@ -27,8 +25,6 @@ def test_array_conversion(format):
         traj_file_cls = trr.TRRFile
     if format == "xtc":
         traj_file_cls = xtc.XTCFile
-    if format == "tng":
-        traj_file_cls = tng.TNGFile
     if format == "dcd":
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
@@ -50,11 +46,10 @@ def test_array_conversion(format):
     assert ref_array.coord == pytest.approx(array.coord, abs=1e-2)
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
     "format, start, stop, step, chunk_size",
     itertools.product(
-        ["trr", "xtc", "tng", "dcd", "netcdf"],
+        ["trr", "xtc", "dcd", "netcdf"],
         [None, 2],
         [None, 17],
         [None, 2],
@@ -63,7 +58,7 @@ def test_array_conversion(format):
 )
 def test_bcif_consistency(format, start, stop, step, chunk_size):
     if format == "netcdf" and stop is not None and step is not None:
-        # Currently, there is an inconsistency in in MDTraj's
+        # Currently, there is an inconsistency in in biotraj's
         # NetCDFTrajectoryFile class:
         # In this class the number of frames in the output arrays
         # is dependent on the 'stride' parameter
@@ -78,8 +73,6 @@ def test_bcif_consistency(format, start, stop, step, chunk_size):
         traj_file_cls = trr.TRRFile
     if format == "xtc":
         traj_file_cls = xtc.XTCFile
-    if format == "tng":
-        traj_file_cls = tng.TNGFile
     if format == "dcd":
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
@@ -112,11 +105,10 @@ def test_bcif_consistency(format, start, stop, step, chunk_size):
     assert test_traj.coord == pytest.approx(ref_traj.coord, abs=1e-2)
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
     "format, start, stop, step, stack_size",
     itertools.product(
-        ["trr", "xtc", "tng", "dcd", "netcdf"],
+        ["trr", "xtc", "dcd", "netcdf"],
         [None, 2],
         [None, 17],
         [None, 2],
@@ -129,7 +121,7 @@ def test_read_iter(format, start, stop, step, stack_size):
     from a corresponding :class:`TrajectoryFile` object.
     """
     if format == "netcdf" and step is not None:
-        # Currently, there is an inconsistency in in MDTraj's
+        # Currently, there is an inconsistency in in biotraj's
         # NetCDFTrajectoryFile class:
         # In this class the number of frames in the output arrays
         # is dependent on the 'stride' parameter
@@ -139,8 +131,6 @@ def test_read_iter(format, start, stop, step, stack_size):
         traj_file_cls = trr.TRRFile
     if format == "xtc":
         traj_file_cls = xtc.XTCFile
-    if format == "tng":
-        traj_file_cls = tng.TNGFile
     if format == "dcd":
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
@@ -185,11 +175,10 @@ def test_read_iter(format, start, stop, step, stack_size):
         assert test_time.tolist() == ref_time.tolist()
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
     "format, start, stop, step, stack_size",
     itertools.product(
-        ["trr", "xtc", "tng", "dcd", "netcdf"],
+        ["trr", "xtc", "dcd", "netcdf"],
         [None, 2],
         [None, 17],
         [None, 2],
@@ -203,7 +192,7 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
     :class:`TrajectoryFile` object.
     """
     if format == "netcdf" and step is not None:
-        # Currently, there is an inconsistency in in MDTraj's
+        # Currently, there is an inconsistency in in biotraj's
         # NetCDFTrajectoryFile class:
         # In this class the number of frames in the output arrays
         # is dependent on the 'stride' parameter
@@ -215,8 +204,6 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
         traj_file_cls = trr.TRRFile
     if format == "xtc":
         traj_file_cls = xtc.XTCFile
-    if format == "tng":
-        traj_file_cls = tng.TNGFile
     if format == "dcd":
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
@@ -243,11 +230,10 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
     assert test_traj == ref_traj
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
     "format, n_models, n_atoms, include_box, include_time",
     itertools.product(
-        ["trr", "xtc", "tng", "dcd", "netcdf"],
+        ["trr", "xtc", "dcd", "netcdf"],
         [1, 100],
         [1, 1000],
         [False, True],
@@ -262,12 +248,6 @@ def test_write_iter(format, n_models, n_atoms, include_box, include_time):
         traj_file_cls = trr.TRRFile
     if format == "xtc":
         traj_file_cls = xtc.XTCFile
-    if format == "tng":
-        # TNG files do only write time when more than one frame is
-        # written to file; 'write_iter()' writes only one frame per
-        # 'write()' call, hence time is not written
-        traj_file_cls = tng.TNGFile
-        include_time = False
     if format == "dcd":
         traj_file_cls = dcd.DCDFile
         # DCD format does not support simulation time
@@ -279,8 +259,7 @@ def test_write_iter(format, n_models, n_atoms, include_box, include_time):
     np.random.seed(0)
     coord = np.random.rand(n_models, n_atoms, 3) * 100
     box = np.random.rand(n_models, 3, 3) * 100 if include_box else None
-    # time is evenly spaced for TNG compatibility
-    time = np.linspace(0, 10, n_models) if include_time else None
+    time = np.random.rand(n_models) * 10 if include_time else None
 
     ref_file = NamedTemporaryFile("w+b")
     traj_file = traj_file_cls()

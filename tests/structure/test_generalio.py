@@ -9,10 +9,9 @@ from tempfile import NamedTemporaryFile
 import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from tests.util import cannot_import, data_dir
+from tests.util import data_dir
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize("path", glob.glob(join(data_dir("structure"), "1l2y.*")))
 def test_loading(path):
     """
@@ -20,7 +19,7 @@ def test_loading(path):
     and returns an object of appropriate type.
     """
     suffix = splitext(path)[1]
-    if suffix in [".trr", ".xtc", ".tng", ".dcd", ".netcdf"]:
+    if suffix in [".trr", ".xtc", ".dcd", ".netcdf"]:
         template = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
         array = strucio.load_structure(path, template)
     else:
@@ -33,7 +32,6 @@ def test_loading(path):
         assert isinstance(array, struc.AtomArrayStack)
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 def test_loading_template_with_trj():
     """
     Check if :func:`load_structure()` using a trajectory file does not
@@ -47,7 +45,6 @@ def test_loading_template_with_trj():
     assert len(stack) > 1
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 def test_loading_with_extra_args():
     """
     Check if :func:`load_structure()` witt optional arguments does not
@@ -73,10 +70,9 @@ def test_loading_with_extra_args():
     assert stack.shape[1] == 2
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
     "suffix",
-    ["pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "tng", "dcd", "netcdf"],
+    ["pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "dcd", "netcdf"],
 )
 def test_saving(suffix):
     """
@@ -86,15 +82,15 @@ def test_saving(suffix):
     """
     path = join(data_dir("structure"), "1l2y.bcif")
     ref_array = strucio.load_structure(path)
-    if suffix in ("trr", "xtc", "tng", "dcd", "netcdf"):
+    if suffix in ("trr", "xtc", "dcd", "netcdf"):
         # Reading a trajectory file requires a template
         template = path
     else:
         template = None
 
     temp = NamedTemporaryFile("w", suffix=f".{suffix}", delete=False)
-    strucio.save_structure(temp.name, ref_array)
     temp.close()
+    strucio.save_structure(temp.name, ref_array)
 
     test_array = strucio.load_structure(temp.name, template)
     os.remove(temp.name)
@@ -112,10 +108,9 @@ def test_saving(suffix):
     )
 
 
-@pytest.mark.skipif(cannot_import("mdtraj"), reason="MDTraj is not installed")
 @pytest.mark.parametrize(
     "suffix",
-    ["pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "tng", "dcd", "netcdf"],
+    ["pdb", "pdbx", "cif", "bcif", "gro", "trr", "xtc", "dcd", "netcdf"],
 )
 def test_saving_with_extra_args(suffix):
     """

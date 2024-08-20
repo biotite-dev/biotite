@@ -106,7 +106,7 @@ def load_structure(file_path, template=None, **kwargs):
             file = SDFile.read(file_path)
             array = get_structure(file, **kwargs)
             return array
-        case ".trr" | ".xtc" | ".tng" | ".dcd" | ".netcdf":
+        case ".trr" | ".xtc" | ".dcd" | ".netcdf":
             if template is None:
                 raise TypeError("Template must be specified for trajectory files")
             # Filter template for atom ids, if an unfiltered template
@@ -114,7 +114,6 @@ def load_structure(file_path, template=None, **kwargs):
                 template = template[..., kwargs["atom_i"]]
             from biotite.structure.io.dcd import DCDFile
             from biotite.structure.io.netcdf import NetCDFFile
-            from biotite.structure.io.tng import TNGFile
             from biotite.structure.io.trr import TRRFile
             from biotite.structure.io.xtc import XTCFile
 
@@ -122,8 +121,6 @@ def load_structure(file_path, template=None, **kwargs):
                 traj_file_cls = TRRFile
             if suffix == ".xtc":
                 traj_file_cls = XTCFile
-            if suffix == ".tng":
-                traj_file_cls = TNGFile
             if suffix == ".dcd":
                 traj_file_cls = DCDFile
             if suffix == ".netcdf":
@@ -206,10 +203,9 @@ def save_structure(file_path, array, **kwargs):
             record.header = _mol_header()
             file = SDFile({"Molecule": record})
             file.write(file_path)
-        case ".trr" | ".xtc" | ".tng" | ".dcd" | ".netcdf":
+        case ".trr" | ".xtc" | ".dcd" | ".netcdf":
             from biotite.structure.io.dcd import DCDFile
             from biotite.structure.io.netcdf import NetCDFFile
-            from biotite.structure.io.tng import TNGFile
             from biotite.structure.io.trr import TRRFile
             from biotite.structure.io.xtc import XTCFile
 
@@ -217,8 +213,6 @@ def save_structure(file_path, array, **kwargs):
                 traj_file_cls = TRRFile
             if suffix == ".xtc":
                 traj_file_cls = XTCFile
-            if suffix == ".tng":
-                traj_file_cls = TNGFile
             if suffix == ".dcd":
                 traj_file_cls = DCDFile
             if suffix == ".netcdf":
