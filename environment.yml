@@ -17,7 +17,7 @@ dependencies:
   - setuptools >=30.0
   - wheel >=0.30
   # Biotite dependencies
-  - biotraj >=1.0,<2.0
+  # - biotraj >=1.0,<2.0
   - msgpack-python >=0.5.6
   - networkx >=2.0
   - numpy >=1.25
