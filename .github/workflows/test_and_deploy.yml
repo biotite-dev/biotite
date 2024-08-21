@@ -124,9 +124,6 @@ jobs:
         with:
           mamba-version: "*"
           environment-file: environment.yml
-      # TODO: Re-enable DSSP tests as soon as issues with libboost in CI are resolved
-      - name: "TEMP: Remove DSSP from environment"
-        run: mamba remove dssp -y
       - name: Build distribution
         run: pip wheel --no-deps -w dist .
       - name: Install distribution
