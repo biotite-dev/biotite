@@ -69,11 +69,11 @@ def test_escape(string, looped):
 @pytest.mark.parametrize(
     "cif_line, expected_fields",
     [
-        ["'' 'embed'quote' ", ['', "embed'quote"]],
-        ['2 "embed"quote" "\t\n"', ['2', 'embed"quote', '\t\n']],
-        [" 3 '' \"\" 'spac e' 'embed\"quote'", ['3', '', '', 'spac e', 'embed"quote']],
-        ["''' \"\"\" ''quoted''", ["'", '"', "'quoted'"]]
-    ]
+        ["'' 'embed'quote' ", ["", "embed'quote"]],
+        ['2 "embed"quote" "\t\n"', ["2", 'embed"quote', "\t\n"]],
+        [" 3 '' \"\" 'spac e' 'embed\"quote'", ["3", "", "", "spac e", 'embed"quote']],
+        ["''' \"\"\" ''quoted''", ["'", '"', "'quoted'"]],
+    ],
 )
 def test_split_one_line(cif_line, expected_fields):
     """

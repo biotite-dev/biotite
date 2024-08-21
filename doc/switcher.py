@@ -70,11 +70,13 @@ def create_switcher_json(file_path, min_tag, n_versions):
         if version.patch != 0:
             # Documentation is not uploaded for patch versions
             continue
-        version_config.append({
-            "name": f"{version.major}.{version.minor}",
-            "version": str(version),
-            "url": f"{BIOTITE_URL}/{version}/",
-        })
+        version_config.append(
+            {
+                "name": f"{version.major}.{version.minor}",
+                "version": str(version),
+                "url": f"{BIOTITE_URL}/{version}/",
+            }
+        )
     current_version = _get_current_version()
     version_config.append(
         {
