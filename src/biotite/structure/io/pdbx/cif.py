@@ -6,8 +6,8 @@ __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 __all__ = ["CIFFile", "CIFBlock", "CIFCategory", "CIFColumn", "CIFData"]
 
-import re
 import itertools
+import re
 from collections.abc import MutableMapping, Sequence
 import numpy as np
 from biotite.file import (
