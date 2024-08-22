@@ -38,7 +38,7 @@ jobs:
       - name: Install wheel
         run: pip install .//dist//*.whl
       - name: Test wheel
-        run: pytest --assert=plain
+        run: pytest --assert=plain tests
       - uses: actions/upload-artifact@v3
         with:
           path: .//dist//*.whl
@@ -62,17 +62,30 @@ jobs:
       - name: Install source distribution
         run: pip install .//dist//*.tar.gz
       - name: Test source distribution
-        run: pytest --assert=plain
+        run: pytest --assert=plain tests
       - uses: actions/upload-artifact@v3
         with:
           path: dist//*.tar.gz
 
+  benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install .[test]
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@v3
+        with:
+          run: pytest --codspeed benchmarks
 
   upload:
     name: Upload to GitHub Releases & PyPI
     permissions:
       contents: write
-    needs: [wheels, sdist]
+    needs: [wheels, sdist, benchmarks]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v3
