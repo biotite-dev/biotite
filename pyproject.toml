@@ -34,6 +34,9 @@ test = [
     "pytest",
     "pytest-codspeed",
 ]
+plot = [
+    "matplotlib",
+]
 
 [project.urls]
 homepage = "https://github.com/biotite-dev/fastpdb"
