@@ -25,7 +25,14 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 dependencies = [
-  "biotite >= 0.39"
+  "biotite >= 0.39",
+]
+
+[project.optional-dependencies]
+# development dependency groups
+test = [
+    "pytest",
+    "pytest-codspeed",
 ]
 
 [project.urls]
