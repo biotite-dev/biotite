@@ -5,10 +5,16 @@ use std::str::FromStr;
 use std::convert::TryInto;
 use std::collections::HashMap;
 use std::cmp::Ordering;
-use ndarray::{Array, Ix1, Ix2, Ix3};
 use pyo3::prelude::*;
 use pyo3::exceptions;
-use numpy::PyArray;
+use numpy::{
+    PyArray1, PyArray2, PyArray3,
+    PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray3,
+    IntoPyArray
+};
+use numpy::ndarray::{
+    Array, Array1, Array2, Array3, ArrayView2
+};
 
 
 pyo3::import_exception!(biotite, InvalidFileError);
@@ -23,8 +29,8 @@ mod biotite {
 /// since they differ only in the shape of the objects.
 #[derive(Debug)]
 enum CoordArray {
-    Single(Array<f32, Ix2>),
-    Multi(Array<f32, Ix3>)
+    Single(Array2<f32>),
+    Multi(Array3<f32>)
 }
 
 
@@ -81,22 +87,18 @@ impl PDBFile {
 
 
     #[getter]
-    fn model_start_i(&self) -> PyResult<Py<PyArray<i64, Ix1>>> {
-        Python::with_gil(|py| {
-            Ok(PyArray::from_iter(
-                py, self.model_start_i.iter().map(|x| *x as i64)
-            ).to_owned())
-        })
+    fn model_start_i<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyArray1<i64>>> {
+        Ok(PyArray1::from_iter_bound(
+            py, self.model_start_i.iter().map(|x| *x as i64)
+        ))
     }
 
 
     #[getter]
-    fn atom_line_i(&self) -> PyResult<Py<PyArray<i64, Ix1>>> {
-        Python::with_gil(|py| {
-            Ok(PyArray::from_iter(
-                py, self.atom_line_i.iter().map(|x| *x as i64)
-            ).to_owned())
-        })
+    fn atom_line_i<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyArray1<i64>>> {
+        Ok(PyArray1::from_iter_bound(
+            py, self.atom_line_i.iter().map(|x| *x as i64)
+        ).to_owned())
     }
 
 
@@ -150,27 +152,30 @@ impl PDBFile {
 
     /// Get a 2D coordinate *NumPy* array for a single model in the file.
     /// `model` is the 1-based number of the requested model.
-    fn parse_coord_single_model(&self, model: isize) -> PyResult<Py<PyArray<f32, Ix2>>> {
+    fn parse_coord_single_model<'py>(
+        &self,
+        py: Python<'py>,
+        model: isize
+    ) -> PyResult<Bound<'py, PyArray2<f32>>> {
         let array = self.parse_coord(Some(model))?;
-        Python::with_gil(|py| {
-            match array {
-                CoordArray::Single(array) => Ok(PyArray::from_array(py, &array).to_owned()),
-                CoordArray::Multi(_) => panic!("No multi-model coordinates should be returned"),
-            }
-        })
+        match array {
+            CoordArray::Single(array) => Ok(array.into_pyarray_bound(py)),
+            CoordArray::Multi(_) => panic!("No multi-model coordinates should be returned"),
+        }
     }
 
 
     /// Get a 3D coordinate *NumPy* array for all models in the file.
     /// A `PyErr` is returned if the number of atoms per model differ from each other.
-    fn parse_coord_multi_model(&self) -> PyResult<Py<PyArray<f32, Ix3>>> {
+    fn parse_coord_multi_model<'py>(
+        &self,
+        py: Python<'py>
+    ) -> PyResult<Bound<'py, PyArray3<f32>>> {
         let array = self.parse_coord(None)?;
-        Python::with_gil(|py| {
-            match array {
-                CoordArray::Single(_) => panic!("No single-model coordinates should be returned"),
-                CoordArray::Multi(array) => Ok(PyArray::from_array(py, &array).to_owned()),
-            }
-        })
+        match array {
+            CoordArray::Single(_) => panic!("No single-model coordinates should be returned"),
+            CoordArray::Multi(array) => Ok(array.into_pyarray_bound(py))
+        }
     }
 
 
@@ -193,35 +198,40 @@ impl PDBFile {
     /// - `b_factor`
     /// - `occupancy`
     /// - `charge`
-    fn parse_annotations(&self,
-                        model: isize,
-                        include_atom_id: bool,
-                        include_b_factor: bool,
-                        include_occupancy: bool,
-                        include_charge: bool) -> PyResult<(Py<PyArray<u32,  Ix2>>,
-                                                           Py<PyArray<i64,  Ix1>>,
-                                                           Py<PyArray<u32,  Ix2>>,
-                                                           Py<PyArray<u32,  Ix2>>,
-                                                           Py<PyArray<bool, Ix1>>,
-                                                           Py<PyArray<u32,  Ix2>>,
-                                                           Py<PyArray<u32,  Ix2>>,
-                                                           Py<PyArray<u32,  Ix2>>,
-                                                           Option<Py<PyArray<i64,  Ix1>>>,
-                                                           Option<Py<PyArray<f64,  Ix1>>>,
-                                                           Option<Py<PyArray<f64,  Ix1>>>,
-                                                           Option<Py<PyArray<i64,  Ix1>>>)> {
+    fn parse_annotations<'py>(
+        &self,
+        py: Python<'py>,
+        model: isize,
+        include_atom_id: bool,
+        include_b_factor: bool,
+        include_occupancy: bool,
+        include_charge: bool
+    ) -> PyResult<(
+        Bound<'py, PyArray2<u32>>,
+        Bound<'py, PyArray1<i64>>,
+        Bound<'py, PyArray2<u32>>,
+        Bound<'py, PyArray2<u32>>,
+        Bound<'py, PyArray1<bool>>,
+        Bound<'py, PyArray2<u32>>,
+        Bound<'py, PyArray2<u32>>,
+        Bound<'py, PyArray2<u32>>,
+        Option<Bound<'py, PyArray1<i64>>>,
+        Option<Bound<'py, PyArray1<f64>>>,
+        Option<Bound<'py, PyArray1<f64>>>,
+        Option<Bound<'py, PyArray1<i64>>>
+    )> {
         let atom_line_i: Vec<usize> = self.get_atom_indices(model)?;
 
-        let mut chain_id:  Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 4));
-        let mut res_id:    Array<i64,  Ix1> = Array::zeros(atom_line_i.len());
-        let mut ins_code:  Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 1));
-        let mut res_name:  Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 5));
-        let mut hetero:    Array<bool, Ix1> = Array::default(atom_line_i.len());
-        let mut atom_name: Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 6));
-        let mut element:   Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 2));
-        let mut altloc_id: Array<u32,  Ix2> = Array::zeros((atom_line_i.len(), 1));
+        let mut chain_id:  Array2<u32>  = Array::zeros((atom_line_i.len(), 4));
+        let mut res_id:    Array1<i64>  = Array::zeros(atom_line_i.len());
+        let mut ins_code:  Array2<u32>  = Array::zeros((atom_line_i.len(), 1));
+        let mut res_name:  Array2<u32>  = Array::zeros((atom_line_i.len(), 5));
+        let mut hetero:    Array1<bool> = Array::default(atom_line_i.len());
+        let mut atom_name: Array2<u32>  = Array::zeros((atom_line_i.len(), 6));
+        let mut element:   Array2<u32>  = Array::zeros((atom_line_i.len(), 2));
+        let mut altloc_id: Array2<u32>  = Array::zeros((atom_line_i.len(), 1));
 
-        let mut atom_id: Array<i64, Ix1>;
+        let mut atom_id: Array1<i64>;
         if include_atom_id {
             atom_id = Array::zeros(atom_line_i.len());
         }
@@ -229,21 +239,21 @@ impl PDBFile {
             // Array will not be used
             atom_id = Array::zeros(0);
         }
-        let mut b_factor: Array<f64, Ix1>;
+        let mut b_factor: Array1<f64>;
         if include_b_factor {
             b_factor = Array::zeros(atom_line_i.len());
         }
         else {
             b_factor = Array::zeros(0);
         }
-        let mut occupancy: Array<f64, Ix1>;
+        let mut occupancy: Array1<f64>;
         if include_occupancy {
             occupancy = Array::zeros(atom_line_i.len());
         }
         else {
             occupancy = Array::zeros(0);
         }
-        let mut charge: Array<i64, Ix1>;
+        let mut charge: Array1<i64>;
         if include_charge {
             charge = Array::zeros(atom_line_i.len());
         }
@@ -294,22 +304,20 @@ impl PDBFile {
             }
         }
 
-        Python::with_gil(|py| {
-            Ok((
-                PyArray::from_array(py, &chain_id ).to_owned(),
-                PyArray::from_array(py, &res_id   ).to_owned(),
-                PyArray::from_array(py, &ins_code ).to_owned(),
-                PyArray::from_array(py, &res_name ).to_owned(),
-                PyArray::from_array(py, &hetero   ).to_owned(),
-                PyArray::from_array(py, &atom_name).to_owned(),
-                PyArray::from_array(py, &element  ).to_owned(),
-                PyArray::from_array(py, &altloc_id).to_owned(),
-                if include_atom_id   { Some(PyArray::from_array(py, &atom_id).to_owned())   } else {None},
-                if include_b_factor  { Some(PyArray::from_array(py, &b_factor).to_owned())  } else {None},
-                if include_occupancy { Some(PyArray::from_array(py, &occupancy).to_owned()) } else {None},
-                if include_charge    { Some(PyArray::from_array(py, &charge).to_owned())    } else {None},
-            ))
-        })
+        Ok((
+            chain_id.into_pyarray_bound(py),
+            res_id.into_pyarray_bound(py),
+            ins_code.into_pyarray_bound(py),
+            res_name.into_pyarray_bound(py),
+            hetero.into_pyarray_bound(py),
+            atom_name.into_pyarray_bound(py),
+            element.into_pyarray_bound(py),
+            altloc_id.into_pyarray_bound(py),
+            if include_atom_id   { Some(atom_id.into_pyarray_bound(py))   } else {None},
+            if include_b_factor  { Some(b_factor.into_pyarray_bound(py))  } else {None},
+            if include_occupancy { Some(occupancy.into_pyarray_bound(py)) } else {None},
+            if include_charge    { Some(charge.into_pyarray_bound(py))    } else {None},
+        ))
     }
 
 
@@ -318,14 +326,16 @@ impl PDBFile {
     /// Each index points to the respective atom in the `AtomArray`.
     /// The `atom_id` annotation array is required to map the atom IDs in `CONECT` records
     /// to atom indices.
-    fn parse_bonds(&self, atom_id: Py<PyArray<i64, Ix1>>) -> PyResult<Py<PyArray<u32, Ix2>>> {
+    fn parse_bonds<'py>(
+        &self,
+        py: Python<'py>,
+        atom_id: PyReadonlyArray1<'py, i64>
+    ) -> PyResult<Bound<'py, PyArray2<u32>>> {
         // Mapping from atom ids to indices in an AtomArray
         let mut atom_id_to_index: HashMap<i64, u32> = HashMap::new();
-        Python::with_gil(|py| {
-            for (i, id) in atom_id.as_ref(py).to_owned_array().iter().enumerate() {
-                atom_id_to_index.insert(*id, i as u32);
-            }
-        });
+        for (i, id) in atom_id.as_array().iter().enumerate() {
+            atom_id_to_index.insert(*id, i as u32);
+        }
 
         // Cannot preemptively determine number of bonds
         // -> Memory allocation for all bonds is not possible
@@ -348,23 +358,23 @@ impl PDBFile {
             }
         }
 
-        let mut bond_array: Array<u32, Ix2> = Array::zeros((bonds.len(), 2));
+        let mut bond_array: Array2<u32> = Array::zeros((bonds.len(), 2));
         for (i, (center_id, bonded_id)) in bonds.iter().enumerate() {
             bond_array[[i, 0]] = *center_id;
             bond_array[[i, 1]] = *bonded_id;
         }
-        Python::with_gil(|py| {
-            Ok(PyArray::from_array(py, &bond_array).to_owned())
-        })
+        Ok(bond_array.into_pyarray_bound(py))
     }
 
 
 
 
     /// Write the `CRYST1` record to this [`PDBFile`] based on the given unit cell parameters.
-    fn write_box(&mut self,
-                 len_a: f32, len_b: f32, len_c: f32,
-                 alpha: f32, beta: f32, gamma: f32) {
+    fn write_box(
+        &mut self,
+        len_a: f32, len_b: f32, len_c: f32,
+        alpha: f32, beta: f32, gamma: f32
+    ) {
         self.lines.push(
             format!(
                 "CRYST1{:>9.3}{:>9.3}{:>9.3}{:>7.2}{:>7.2}{:>7.2} P 1           1          ",
@@ -375,95 +385,95 @@ impl PDBFile {
 
 
     /// Write models to this [`PDBFile`] based on the given coordinates and annotation arrays.
-    fn write_models(&mut self,
-        coord:     Py<PyArray<f32,  Ix3>>,
-        chain_id:  Py<PyArray<u32,  Ix2>>,
-        res_id:    Py<PyArray<i64,  Ix1>>,
-        ins_code:  Py<PyArray<u32,  Ix2>>,
-        res_name:  Py<PyArray<u32,  Ix2>>,
-        hetero:    Py<PyArray<bool, Ix1>>,
-        atom_name: Py<PyArray<u32,  Ix2>>,
-        element:   Py<PyArray<u32,  Ix2>>,
-        atom_id:   Option<Py<PyArray<i64,  Ix1>>>,
-        b_factor:  Option<Py<PyArray<f64,  Ix1>>>,
-        occupancy: Option<Py<PyArray<f64,  Ix1>>>,
-        charge:    Option<Py<PyArray<i64,  Ix1>>>) -> PyResult<()> {
-        Python::with_gil(|py| {
-            let coord     = coord.as_ref(py).to_owned_array();
-            let chain_id  = chain_id.as_ref(py).to_owned_array();
-            let res_id    = res_id.as_ref(py).to_owned_array();
-            let ins_code  = ins_code.as_ref(py).to_owned_array();
-            let res_name  = res_name.as_ref(py).to_owned_array();
-            let hetero    = hetero.as_ref(py).to_owned_array();
-            let atom_name = atom_name.as_ref(py).to_owned_array();
-            let element   = element.as_ref(py).to_owned_array();
-            let atom_id   =   atom_id.map(|arr| arr.as_ref(py).to_owned_array());
-            let b_factor  =  b_factor.map(|arr| arr.as_ref(py).to_owned_array());
-            let occupancy = occupancy.map(|arr| arr.as_ref(py).to_owned_array());
-            let charge    =    charge.map(|arr| arr.as_ref(py).to_owned_array());
+    fn write_models<'py>(
+        &mut self,
+        coord:     PyReadonlyArray3<'py, f32>,
+        chain_id:  PyReadonlyArray2<'py, u32>,
+        res_id:    PyReadonlyArray1<'py, i64>,
+        ins_code:  PyReadonlyArray2<'py, u32>,
+        res_name:  PyReadonlyArray2<'py, u32>,
+        hetero:    PyReadonlyArray1<'py, bool>,
+        atom_name: PyReadonlyArray2<'py, u32>,
+        element:   PyReadonlyArray2<'py, u32>,
+        atom_id:   Option<PyReadonlyArray1<'py, i64>>,
+        b_factor:  Option<PyReadonlyArray1<'py, f64>>,
+        occupancy: Option<PyReadonlyArray1<'py, f64>>,
+        charge:    Option<PyReadonlyArray1<'py, i64>>
+    ) -> PyResult<()> {
+        let coord     = coord.as_array();
+        let chain_id  = chain_id.as_array();
+        let res_id    = res_id.as_array();
+        let ins_code  = ins_code.as_array();
+        let res_name  = res_name.as_array();
+        let hetero    = hetero.as_array();
+        let atom_name = atom_name.as_array();
+        let element   = element.as_array();
+        let atom_id   =   atom_id.as_ref().map(|arr| arr.as_array());
+        let b_factor  =  b_factor.as_ref().map(|arr| arr.as_array());
+        let occupancy = occupancy.as_ref().map(|arr| arr.as_array());
+        let charge    =    charge.as_ref().map(|arr| arr.as_array());
 
-            let is_multi_model = coord.shape()[0] > 1;
+        let is_multi_model = coord.shape()[0] > 1;
 
-            // These will contain the ATOM records for each atom
-            // These are reused in every model by adding the coordinates to the string
-            // This procedure aims to increase the performance is repetitive formatting is omitted
-            let mut prefix: Vec<String> = Vec::new();
-            let mut suffix: Vec<String> = Vec::new();
+        // These will contain the ATOM records for each atom
+        // These are reused in every model by adding the coordinates to the string
+        // This procedure aims to increase the performance is repetitive formatting is omitted
+        let mut prefix: Vec<String> = Vec::new();
+        let mut suffix: Vec<String> = Vec::new();
 
-            for i in 0..coord.shape()[1] {
-                let element_i = parse_string_from_array(&element, i)?;
-                let atom_name_i = parse_string_from_array(&atom_name, i)?;
+        for i in 0..coord.shape()[1] {
+            let element_i = parse_string_from_array(&element, i)?;
+            let atom_name_i = parse_string_from_array(&atom_name, i)?;
 
-                prefix.push(format!(
-                    "{:6}{:>5} {:4} {:>3} {:1}{:>4}{:1}   ",
-                    if hetero[i] { "HETATM" } else { "ATOM" },
-                    atom_id.as_ref().map_or((i+1) as i64, |arr| truncate_id(arr[i], 99999)),
-                    if element_i.len() == 1 && atom_name_i.len() < 4 {
-                        format!(" {}", atom_name_i)
-                    } else {
-                        atom_name_i
-                    },
-                    parse_string_from_array(&res_name, i)?,
-                    parse_string_from_array(&chain_id, i)?,
-                    truncate_id(res_id[i], 9999),
-                    parse_string_from_array(&ins_code, i)?,
-                ));
+            prefix.push(format!(
+                "{:6}{:>5} {:4} {:>3} {:1}{:>4}{:1}   ",
+                if hetero[i] { "HETATM" } else { "ATOM" },
+                atom_id.as_ref().map_or((i+1) as i64, |arr| truncate_id(arr[i], 99999)),
+                if element_i.len() == 1 && atom_name_i.len() < 4 {
+                    format!(" {}", atom_name_i)
+                } else {
+                    atom_name_i
+                },
+                parse_string_from_array(&res_name, i)?,
+                parse_string_from_array(&chain_id, i)?,
+                truncate_id(res_id[i], 9999),
+                parse_string_from_array(&ins_code, i)?,
+            ));
 
-                suffix.push(format!(
-                    "{:>6.2}{:>6.2}          {:>2}{}",
-                    occupancy.as_ref().map_or(1f64, |arr| arr[i]),
-                    b_factor.as_ref().map_or(0f64, |arr| arr[i]),
-                    element_i,
-                    charge.as_ref().map_or(String::from("  "), |arr| {
-                        let c = arr[i];
-                        match c.cmp(&0) {
-                            Ordering::Greater => format!("{:1}+", c),
-                            Ordering::Less => format!("{:1}-", -c),
-                            Ordering::Equal => String::from("  ")
-                        }
-                    }),
-                ));
+            suffix.push(format!(
+                "{:>6.2}{:>6.2}          {:>2}{}",
+                occupancy.as_ref().map_or(1f64, |arr| arr[i]),
+                b_factor.as_ref().map_or(0f64, |arr| arr[i]),
+                element_i,
+                charge.as_ref().map_or(String::from("  "), |arr| {
+                    let c = arr[i];
+                    match c.cmp(&0) {
+                        Ordering::Greater => format!("{:1}+", c),
+                        Ordering::Less => format!("{:1}-", -c),
+                        Ordering::Equal => String::from("  ")
+                    }
+                }),
+            ));
+        }
+
+        for model_i in 0..coord.shape()[0] {
+            if is_multi_model {
+                self.lines.push(format!("MODEL {:>8}", model_i+1));
             }
-
-            for model_i in 0..coord.shape()[0] {
-                if is_multi_model {
-                    self.lines.push(format!("MODEL {:>8}", model_i+1));
-                }
-                for atom_i in 0..coord.shape()[1] {
-                    let coord_string = format!(
-                        "{:>8.3}{:>8.3}{:>8.3}",
-                        coord[[model_i, atom_i, 0]],
-                        coord[[model_i, atom_i, 1]],
-                        coord[[model_i, atom_i, 2]],
-                    );
-                    self.lines.push(prefix[atom_i].clone() + &coord_string + &suffix[atom_i]);
-                }
-                if is_multi_model {
-                    self.lines.push(String::from("ENDMDL"));
-                }
+            for atom_i in 0..coord.shape()[1] {
+                let coord_string = format!(
+                    "{:>8.3}{:>8.3}{:>8.3}",
+                    coord[[model_i, atom_i, 0]],
+                    coord[[model_i, atom_i, 1]],
+                    coord[[model_i, atom_i, 2]],
+                );
+                self.lines.push(prefix[atom_i].clone() + &coord_string + &suffix[atom_i]);
             }
-            Ok(())
-        })
+            if is_multi_model {
+                self.lines.push(String::from("ENDMDL"));
+            }
+        }
+        Ok(())
     }
 
 
@@ -471,42 +481,42 @@ impl PDBFile {
     /// array containing indices pointing to bonded atoms in the `AtomArray`.
     /// The `atom_id` annotation array is required to map the atom IDs in `CONECT` records
     /// to atom indices.
-    fn write_bonds(&mut self,
-                   bonds: Py<PyArray<i32, Ix2>>,
-                   atom_id: Py<PyArray<i64, Ix1>>) -> PyResult<()> {
-        Python::with_gil(|py| {
-            let bonds = bonds.as_ref(py).to_owned_array();
-            let atom_id = atom_id.as_ref(py).to_owned_array();
+    fn write_bonds<'py>(
+        &mut self,
+        bonds: PyReadonlyArray2<'py, i32>,
+        atom_id: PyReadonlyArray1<'py, i64>
+    ) -> PyResult<()> {
+        let bonds = bonds.as_array();
+        let atom_id = atom_id.as_array();
 
-            for (center_i, bonded_indices) in bonds.outer_iter().enumerate() {
-                let mut n_added: usize = 0;
-                let mut line: String = String::new();
-                for bonded_i in bonded_indices.iter() {
-                    if *bonded_i == -1 {
-                        // Reached padding values
-                        break;
-                    }
-                    if n_added == 0 {
-                        // Add new record
-                        line.push_str(&format!("CONECT{:>5}", atom_id[center_i]));
-                    }
-                    line.push_str(&format!("{:>5}", atom_id[*bonded_i as usize]));
-                    n_added += 1;
-                    if n_added == 4 {
-                        // Only a maximum of 4 bond partners can be put
-                        // into a single line
-                        // If there are more, use an extra record
-                        n_added = 0;
-                        self.lines.push(line);
-                        line = String::new();
-                    }
+        for (center_i, bonded_indices) in bonds.outer_iter().enumerate() {
+            let mut n_added: usize = 0;
+            let mut line: String = String::new();
+            for bonded_i in bonded_indices.iter() {
+                if *bonded_i == -1 {
+                    // Reached padding values
+                    break;
                 }
-                if n_added > 0 {
+                if n_added == 0 {
+                    // Add new record
+                    line.push_str(&format!("CONECT{:>5}", atom_id[center_i]));
+                }
+                line.push_str(&format!("{:>5}", atom_id[*bonded_i as usize]));
+                n_added += 1;
+                if n_added == 4 {
+                    // Only a maximum of 4 bond partners can be put
+                    // into a single line
+                    // If there are more, use an extra record
+                    n_added = 0;
                     self.lines.push(line);
+                    line = String::new();
                 }
             }
-            Ok(())
-        })
+            if n_added > 0 {
+                self.lines.push(line);
+            }
+        }
+        Ok(())
     }
 
     /// Index lines in the file that correspond to starts of new models and to
@@ -532,7 +542,7 @@ impl PDBFile {
 
 impl PDBFile {
 
-    /// Get a *NumPy* array containing coordinates for a single model (2D) or
+    /// Get an `ndarray` containing coordinates for a single model (2D) or
     /// multiple models (3D) in the file.
     /// The number of returned dimensions is based on whether a `model` is
     /// given.
@@ -647,7 +657,7 @@ impl PDBFile {
 /// Write the characters of a `String` into the 2nd dimension of a 2D *Numpy* array.
 /// This function is the reverse of [`parse_string_from_array()`].
 #[inline(always)]
-fn write_string_to_array(array: &mut Array<u32, Ix2>, index: usize, string: &str) {
+fn write_string_to_array(array: &mut Array2<u32>, index: usize, string: &str) {
     for (i, char) in string.chars().enumerate() {
         array[[index, i]] = char as u32
     }
@@ -658,7 +668,7 @@ fn write_string_to_array(array: &mut Array<u32, Ix2>, index: usize, string: &str
 /// Each `uint32` value in the array is interpreted a an UTF-32 character.
 /// This function is the reverse of [`write_string_to_array()`].
 #[inline(always)]
-fn parse_string_from_array(array: &Array<u32, Ix2>, index: usize) -> PyResult<String> {
+fn parse_string_from_array(array: &ArrayView2<u32>, index: usize) -> PyResult<String> {
     let mut out_string: String = String::new();
     for i in 0..array.shape()[1] {
         let utf_32_val = array[[index, i]];
@@ -722,7 +732,7 @@ fn truncate_id(id: i64, max_id: i64) -> i64 {
 
 
 #[pymodule]
-fn fastpdb(_py: Python, m: &PyModule) -> PyResult<()> {
+fn fastpdb(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PDBFile>()?;
     Ok(())
 }
