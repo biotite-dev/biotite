@@ -34,6 +34,9 @@ test = [
     "pytest",
     "pytest-codspeed",
 ]
+plot = [
+    "matplotlib",
+]
 
 [project.urls]
 homepage = "https://github.com/biotite-dev/fastpdb"
@@ -45,7 +48,7 @@ python-source = "python-src"
 
 [build-system]
 requires = [
-    "maturin==1.4",
-    "oldest-supported-numpy"
+    "maturin >=1.0,<2.0",
+    "numpy == 1.26"
 ]
 build-backend = "maturin"

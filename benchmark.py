@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 import biotite.database.rcsb as rcsb
-import biotite.structure.info as info
 import biotite.structure.io.pdb as pdb
+from biotite.structure.info.ccd import get_ccd
 import fastpdb
 
 
@@ -17,7 +17,7 @@ WIDTH = 0.25
 
 # Call this function before the benchmark
 # to avoid a bias due to the initial loading time
-info.bond_dataset()
+get_ccd()
 
 
 pdb_file_path = rcsb.fetch(PDB_ID, "pdb", tempfile.gettempdir())
