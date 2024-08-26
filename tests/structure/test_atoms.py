@@ -75,6 +75,19 @@ def test_access(array):
         array.set_annotation("test2", np.array([0, 1, 2, 3]))
 
 
+def test_finding_compatible_dtype(array):
+    """
+    Check if a compatible dtype is selected, if the existing one is incompatible with
+    the new annotation array.
+    """
+    # Has more than the default 4 characters
+    CHAIN_ID = "LONG_ID"
+
+    array.set_annotation("chain_id", np.array([CHAIN_ID] * array.array_length()))
+    # Without a compatible dtype, the string would be truncated
+    assert (array.chain_id[:] == CHAIN_ID).all()
+
+
 def test_modification(atom, array, stack):
     new_atom = atom
     new_atom.chain_id = "C"

@@ -450,7 +450,7 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
         "chain_id",
         _get_or_fallback(
             atom_site, f"{prefix}_asym_id", f"{alt_prefix}_asym_id"
-        ).as_array("U4"),
+        ).as_array(str),
     )
     array.set_annotation(
         "res_id",
@@ -458,21 +458,21 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
             atom_site, f"{prefix}_seq_id", f"{alt_prefix}_seq_id"
         ).as_array(int, -1),
     )
-    array.set_annotation("ins_code", atom_site["pdbx_PDB_ins_code"].as_array("U1", ""))
+    array.set_annotation("ins_code", atom_site["pdbx_PDB_ins_code"].as_array(str, ""))
     array.set_annotation(
         "res_name",
         _get_or_fallback(
             atom_site, f"{prefix}_comp_id", f"{alt_prefix}_comp_id"
-        ).as_array("U5"),
+        ).as_array(str),
     )
     array.set_annotation("hetero", atom_site["group_PDB"].as_array(str) == "HETATM")
     array.set_annotation(
         "atom_name",
         _get_or_fallback(
             atom_site, f"{prefix}_atom_id", f"{alt_prefix}_atom_id"
-        ).as_array("U6"),
+        ).as_array(str),
     )
-    array.set_annotation("element", atom_site["type_symbol"].as_array("U2"))
+    array.set_annotation("element", atom_site["type_symbol"].as_array(str))
 
     if "atom_id" in extra_fields:
         array.set_annotation("atom_id", atom_site["id"].as_array(int))
@@ -577,7 +577,7 @@ def _parse_inter_residue_bonds(atom_site, struct_conn):
     atoms_indices_2 = atoms_indices_2[mapping_exists_mask]
 
     # Interpret missing values as ANY bonds
-    bond_order = struct_conn["pdbx_value_order"].as_array("U4", "")
+    bond_order = struct_conn["pdbx_value_order"].as_array(str, "")
     # Consecutively apply the same masks as applied to the atom indices
     # Logical combination does not work here,
     # as the second mask was created based on already filtered data
@@ -1135,12 +1135,11 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True, res_name=Non
 
     array = AtomArray(atom_category.row_count)
 
-    array.hetero[:] = True
-    array.res_name = atom_category["comp_id"].as_array("U5")
-    array.atom_name = atom_category["atom_id"].as_array("U6")
-    array.element = atom_category["type_symbol"].as_array("U2")
-    array.add_annotation("charge", int)
-    array.charge = atom_category["charge"].as_array(int, 0)
+    array.set_annotation("hetero", np.full(len(atom_category["comp_id"]), True))
+    array.set_annotation("res_name", atom_category["comp_id"].as_array(str))
+    array.set_annotation("atom_name", atom_category["atom_id"].as_array(str))
+    array.set_annotation("element", atom_category["type_symbol"].as_array(str))
+    array.set_annotation("charge", atom_category["charge"].as_array(int, 0))
 
     coord_fields = [f"pdbx_model_Cartn_{dim}_ideal" for dim in ("x", "y", "z")]
     alt_coord_fields = [f"model_Cartn_{dim}" for dim in ("x", "y", "z")]

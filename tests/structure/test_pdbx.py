@@ -213,6 +213,24 @@ def test_extra_fields(tmpdir, format):
     assert test_atoms == ref_atoms
 
 
+def test_dynamic_dtype():
+    """
+    Check if the dtype of an annotation array is automatically adjusted if the
+    column in the `atom_site` category contains longer strings than supported by the
+    default dtype.
+    """
+    CHAIN_ID = "LONG_ID"
+
+    path = join(data_dir("structure"), "1l2y.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(path)
+    category = pdbx_file.block["atom_site"]
+    category["label_asym_id"] = np.full(len(category["label_asym_id"]), CHAIN_ID)
+    atoms = pdbx.get_structure(pdbx_file, model=1, use_author_fields=False)
+
+    # Without a dynamically chosen compatible dtype, the string would be truncated
+    assert (atoms.chain_id == CHAIN_ID).all()
+
+
 def test_intra_bond_residue_parsing():
     """
     Check if intra-residue bonds can be parsed from a NextGen CIF file
