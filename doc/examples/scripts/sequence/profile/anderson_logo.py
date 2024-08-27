@@ -55,7 +55,7 @@ alignment = align.Alignment(
 fig = plt.figure(figsize=(8.0, 1.5))
 ax = fig.add_subplot(111)
 profile = seq.SequenceProfile.from_alignment(alignment)
-graphics.plot_sequence_logo(ax, profile)
+graphics.plot_sequence_logo(ax, profile, scheme='rainbow')
 # Remove the entire frame
 ax.axis("off")
 fig.tight_layout()
