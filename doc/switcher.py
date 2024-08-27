@@ -13,7 +13,7 @@ import biotite
 
 RELEASE_REQUEST = "https://api.github.com/repos/biotite-dev/biotite/releases"
 BIOTITE_URL = "https://www.biotite-python.org"
-SEMVER_TAG_REGEX = r"^v(\d+)\.(\d+)\.(\d+)"
+SEMVER_TAG_REGEX = r"^v?(\d+)\.(\d+)\.(\d+)"
 
 
 @dataclass(frozen=True)

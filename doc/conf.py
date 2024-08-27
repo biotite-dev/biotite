@@ -40,7 +40,9 @@ matplotlib.rcdefaults()
 
 # Pregeneration of files
 apidoc.create_api_doc(PACKAGE_PATH, join(DOC_PATH, "apidoc"))
-switcher.create_switcher_json(join("static", "switcher.json"), "v0.41.0", n_versions=5)
+switcher.create_switcher_json(
+    join("static", "switcher.json"), biotite.__version__, n_versions=5
+)
 
 # Use custom citation style
 pybtex.plugin.register_plugin("pybtex.style.formatting", "ieee", bibliography.IEEEStyle)
