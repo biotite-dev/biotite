@@ -29,9 +29,9 @@ structure = pdbx.get_structure(pdbx_file, model=1)
 
 
 # Separate structure into the DNA and the two identical protein chains
-dna = structure[np.isin(structure.chain_id, ["A", "B"]) & (structure.hetero == False)]
-protein_l = structure[(structure.chain_id == "L") & (structure.hetero == False)]
-protein_r = structure[(structure.chain_id == "R") & (structure.hetero == False)]
+dna = structure[np.isin(structure.chain_id, ["A", "B"]) & ~structure.hetero]
+protein_l = structure[(structure.chain_id == "L") & ~structure.hetero]
+protein_r = structure[(structure.chain_id == "R") & ~structure.hetero]
 # Quick check if the two protein chains are really identical
 assert len(struc.get_residues(protein_l)) == len(struc.get_residues(protein_r))
 
