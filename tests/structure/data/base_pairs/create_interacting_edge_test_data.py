@@ -1,36 +1,37 @@
-import pandas as pd
 import argparse
 import json
 import numpy as np
+import pandas as pd
+
 
 def process(input, output, chain):
     data = pd.read_csv(input)
     # Only retain rows with basepair annotation
-    data = data[data['Leontis-Westhof'].notna()]
+    data = data[data["Leontis-Westhof"].notna()]
 
     output_list = []
 
     for _, row in data.iterrows():
-        nucleotides = [row['Nucleotide 1'], row['Nucleotide 2']]
+        nucleotides = [row["Nucleotide 1"], row["Nucleotide 2"]]
 
         # Extract the Leontis-Westhof annotation
-        lw_string = row['Leontis-Westhof']
+        lw_string = row["Leontis-Westhof"]
 
         # Some interactions are labelled with `n` for near. These are
         # ignored
-        if lw_string[0] == 'n':
+        if lw_string[0] == "n":
             continue
 
         # Get edge annotations from string
         edges = [lw_string[-2], lw_string[-1]]
-        
+
         # Dont allow unspecified edges in test data
-        if '.' in edges:
+        if "." in edges:
             continue
 
-        res_ids = [None]*2
+        res_ids = [None] * 2
         for i, nucleotide in enumerate(nucleotides):
-            nucleotide_list = nucleotide.split('.')
+            nucleotide_list = nucleotide.split(".")
 
             # if the nucleotide is not part of the specified chain, skip
             # base pair
@@ -43,11 +44,11 @@ def process(input, output, chain):
             continue
 
         for i, edge in enumerate(edges):
-            if edge == 'W':
+            if edge == "W":
                 edges[i] = 1
-            if edge == 'H':
+            if edge == "H":
                 edges[i] = 2
-            if edge == 'S':
+            if edge == "S":
                 edges[i] = 3
 
         # Lower residue id on the left, higher residue id on the right
@@ -62,8 +63,9 @@ def process(input, output, chain):
         )
 
     output_list = np.unique(output_list, axis=0).tolist()
-    with open(output, 'w') as f:
+    with open(output, "w") as f:
         json.dump(output_list, f, indent=1)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -71,19 +73,9 @@ if __name__ == "__main__":
         "a specific chain. The annotations can be downloaded in the section "
         "'Base Pairs'."
     )
-    parser.add_argument(
-        "infile",
-        help="The path to the input file."
-    )
-    parser.add_argument(
-        "outfile",
-        help="The path to the output JSON file."
-    )
-    parser.add_argument(
-        "chain",
-        help="The chain ID to be extracted."
-    )
+    parser.add_argument("infile", help="The path to the input file.")
+    parser.add_argument("outfile", help="The path to the output JSON file.")
+    parser.add_argument("chain", help="The chain ID to be extracted.")
     args = parser.parse_args()
 
     process(args.infile, args.outfile, args.chain)
-

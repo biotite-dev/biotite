@@ -2,33 +2,28 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import itertools
 import tempfile
-import pytest
+from os.path import join
 import numpy as np
+import pytest
 import biotite.database.rcsb as rcsb
+import biotite.sequence.align as align
+import biotite.sequence.io.fasta as fasta
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
-import biotite.structure.io.mmtf as mmtf
-import biotite.sequence.io.fasta as fasta
-import biotite.sequence.align as align
 from biotite.database import RequestError
-from ..util import cannot_connect_to, data_dir
-
+from tests.util import cannot_connect_to, data_dir
 
 RCSB_URL = "https://www.rcsb.org/"
 # Search term that should only find the entry 1L2Y
 TC5B_TERM = "Miniprotein Construct TC5b"
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 @pytest.mark.parametrize(
     "format, as_file_like",
-    itertools.product(["pdb", "cif", "bcif", "mmtf", "fasta"], [False, True])
+    itertools.product(["pdb", "cif", "bcif", "fasta"], [False, True]),
 )
 def test_fetch(format, as_file_like):
     path = None if as_file_like else tempfile.gettempdir()
@@ -37,30 +32,22 @@ def test_fetch(format, as_file_like):
         file = pdb.PDBFile.read(file_path_or_obj)
         pdb.get_structure(file)
     elif format == "pdbx":
-        file = pdbx.PDBxFile.read(file_path_or_obj)
+        file = pdbx.CIFFile.read(file_path_or_obj)
         pdbx.get_structure(file)
     elif format == "bcif":
         file = pdbx.BinaryCIFFile.read(file_path_or_obj)
         pdbx.get_structure(file)
-    elif format == "mmtf":
-        file = mmtf.MMTFFile.read(file_path_or_obj)
-        mmtf.get_structure(file)
     elif format == "fasta":
         file = fasta.FastaFile.read(file_path_or_obj)
         # Test if the file contains any sequences
         assert len(fasta.get_sequences(file)) > 0
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
-@pytest.mark.parametrize("format", ["pdb", "cif", "bcif", "mmtf", "fasta"])
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
+@pytest.mark.parametrize("format", ["pdb", "cif", "bcif", "fasta"])
 def test_fetch_invalid(format):
     with pytest.raises(RequestError):
-        rcsb.fetch(
-            "xxxx", format, tempfile.gettempdir(), overwrite=True
-        )
+        rcsb.fetch("xxxx", format, tempfile.gettempdir(), overwrite=True)
 
 
 def test_search_basic():
@@ -76,58 +63,78 @@ def test_search_basic():
             "pdbx_serial_crystallography_sample_delivery_injection.preparation",
             False,
             {},
-            ["6IG7", "6IG6", "7JRI", "7JR5", "7QX4", "7QX5", "7QX6", "7QX7",
-             "8A2O", "8A2P"]
+            [
+                "6IG7",
+                "6IG6",
+                "7JRI",
+                "7JR5",
+                "7QX4",
+                "7QX5",
+                "7QX6",
+                "7QX7",
+                "8A2O",
+                "8A2P",
+            ],
         ),
         (
             "audit_author.name",
             False,
             {"is_in": ["Neidigh, J.W."]},
-            ["1JRJ", "1L2Y", "2O3P", "2O63", "2O64", "2O65"]
+            ["1JRJ", "1L2Y", "2O3P", "2O63", "2O64", "2O65"],
         ),
         (
             "rcsb_entity_source_organism.rcsb_gene_name.value",
             False,
             {"exact_match": "lacA"},
-            ["5JUV", "1KQA", "1KRV", "1KRU", "1KRR", "3U7V", "4IUG", "4LFK",
-             "4LFL", "4LFM", "4LFN", "5IFP", "5IFT", "5IHR", "4DUW", "5MGD",
-             "5MGC"]
+            [
+                "5JUV",
+                "1KQA",
+                "1KRV",
+                "1KRU",
+                "1KRR",
+                "3U7V",
+                "4IUG",
+                "4LFK",
+                "4LFL",
+                "4LFM",
+                "4LFN",
+                "5IFP",
+                "5IFT",
+                "5IHR",
+                "4DUW",
+                "5MGD",
+                "5MGC",
+            ],
         ),
         (
             "struct.title",
             False,
             {"contains_words": "tc5b"},
-            ["1L2Y", "8ANH", "8ANM", "8ANG", "8ANI"]
+            ["1L2Y", "8ANH", "8ANM", "8ANG", "8ANI", "8QWW"],
         ),
         (
             "reflns.d_resolution_high",
             False,
             {"less_or_equal": 0.6},
-            ["1EJG", "1I0T", "3NIR", "3P4J", "5D8V", "5NW3", "4JLJ", "7ATG",
-             "7R0H"]
+            ["1EJG", "1I0T", "3NIR", "3P4J", "5D8V", "5NW3", "4JLJ", "7ATG", "7R0H"],
         ),
         (
             "rcsb_entry_info.deposited_model_count",
             False,
             {"range_closed": (60, 61)},
-            ["1BBO", "1GB1", "1O5P", "1XU6", "2LUM", "2NO8"]
+            ["1BBO", "1GB1", "1O5P", "1XU6", "2LUM", "2NO8"],
         ),
         (
             "rcsb_id",
             True,
             {"exact_match": "AIN"},
-            ["1OXR", "1TGM", "3IAZ", "3GCL", "6MQF", "2QQT", "4NSB", "8J3W"]
+            ["1OXR", "1TGM", "3IAZ", "3GCL", "6MQF", "2QQT", "4NSB", "8J3W"],
         ),
-    ]
+    ],
 )
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 def test_search_field(field, molecular_definition, params, ref_ids):
-    query = rcsb.FieldQuery(
-        field, molecular_definition, **params
-    )
+    query = rcsb.FieldQuery(field, molecular_definition, **params)
     test_ids = rcsb.search(query)
     test_count = rcsb.count(query)
 
@@ -135,17 +142,12 @@ def test_search_field(field, molecular_definition, params, ref_ids):
     assert test_count == len(ref_ids)
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 def test_search_sequence():
     IDENTIY_CUTOFF = 0.9
-    pdbx_file = pdbx.PDBxFile.read(join(data_dir("structure"), "1l2y.cif"))
-    ref_sequence = pdbx.get_sequence(pdbx_file)['A']
-    query = rcsb.SequenceQuery(
-        ref_sequence, "protein", min_identity=IDENTIY_CUTOFF
-    )
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    ref_sequence = pdbx.get_sequence(pdbx_file)["A"]
+    query = rcsb.SequenceQuery(ref_sequence, "protein", min_identity=IDENTIY_CUTOFF)
     test_ids = rcsb.search(query)
     assert len(test_ids) >= 2
 
@@ -160,20 +162,14 @@ def test_search_sequence():
         assert identity >= IDENTIY_CUTOFF
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 def test_search_structure():
     query = rcsb.StructureQuery("1L2Y", chain="A")
     test_ids = rcsb.search(query)
     assert "1L2Y" in test_ids
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 def test_search_motif():
     # motif is taken from official RCSB search API tutorial
     MOTIF = "C-x(2,4)-C-x(3)-[LIVMFYWC]-x(8)-H-x(3,5)-H."
@@ -182,25 +178,18 @@ def test_search_motif():
     assert test_count == pytest.approx(639, rel=0.1)
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 def test_search_composite():
     query1 = rcsb.FieldQuery(
-        "rcsb_entity_host_organism.scientific_name",
-        exact_match="Homo sapiens"
+        "rcsb_entity_host_organism.scientific_name", exact_match="Homo sapiens"
     )
-    query2 = rcsb.FieldQuery(
-        "exptl.method",
-        exact_match="SOLUTION NMR"
-    )
+    query2 = rcsb.FieldQuery("exptl.method", exact_match="SOLUTION NMR")
     ids_1 = set(rcsb.search(query1))
     ids_2 = set(rcsb.search(query2))
     ids_or = set(rcsb.search(query1 | query2))
     ids_and = set(rcsb.search(query1 & query2))
 
-    assert ids_or  == ids_1 | ids_2
+    assert ids_or == ids_1 | ids_2
     assert ids_and == ids_1 & ids_2
 
 
@@ -213,26 +202,19 @@ def test_search_composite():
         ("non_polymer_entity", []        ),
         ("polymer_instance",   ["1L2Y.A"]),
     ]
-)
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+)  # fmt: skip
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 def test_search_return_type(return_type, expected):
     query = rcsb.BasicQuery(TC5B_TERM)
     assert rcsb.search(query, return_type) == expected
     assert rcsb.count(query, return_type) == len(expected)
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 @pytest.mark.parametrize("seed", np.arange(5))
 def test_search_range(seed):
     query = rcsb.FieldQuery(
-        "rcsb_entity_host_organism.scientific_name",
-        exact_match="Homo sapiens"
+        "rcsb_entity_host_organism.scientific_name", exact_match="Homo sapiens"
     )
     count = rcsb.count(query)
     ref_entries = rcsb.search(query)
@@ -245,15 +227,11 @@ def test_search_range(seed):
     assert test_entries == ref_entries[range[0] : range[1]]
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 @pytest.mark.parametrize("as_sorting_object", [False, True])
 def test_search_sort(as_sorting_object):
     query = rcsb.FieldQuery(
-        "rcsb_entity_host_organism.scientific_name",
-        exact_match="Homo sapiens"
+        "rcsb_entity_host_organism.scientific_name", exact_match="Homo sapiens"
     )
     if as_sorting_object:
         sort_by = rcsb.Sorting("reflns.d_resolution_high", descending=False)
@@ -263,8 +241,8 @@ def test_search_sort(as_sorting_object):
 
     resolutions = []
     for pdb_id in entries[:5]:
-        pdbx_file = pdbx.PDBxFile.read(rcsb.fetch(pdb_id, "pdbx"))
-        resolutions.append(float(pdbx_file["reflns"]["d_resolution_high"]))
+        pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch(pdb_id, "bcif"))
+        resolutions.append(pdbx_file.block["reflns"]["d_resolution_high"].as_item())
 
     if as_sorting_object:
         # In the tested case the Sorting object uses ascending order
@@ -274,20 +252,18 @@ def test_search_sort(as_sorting_object):
         assert resolutions == list(reversed(sorted(resolutions)))
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 def test_search_content_types():
     # Query to limit the number of returned results
     # for improved performance
     query = rcsb.FieldQuery(
-        "rcsb_entity_host_organism.scientific_name",
-        exact_match="Homo sapiens"
+        "rcsb_entity_host_organism.scientific_name", exact_match="Homo sapiens"
     )
-    experimental_set =  set(rcsb.search(query, content_types=["experimental"]))
+    experimental_set = set(rcsb.search(query, content_types=["experimental"]))
     computational_set = set(rcsb.search(query, content_types=["computational"]))
-    combined_set =      set(rcsb.search(query, content_types=["experimental", "computational"]))
+    combined_set = set(
+        rcsb.search(query, content_types=["experimental", "computational"])
+    )
 
     # If there are no results, the following tests make no sense
     assert len(combined_set) > 0
@@ -298,7 +274,9 @@ def test_search_content_types():
 
     assert rcsb.count(query, content_types=["experimental"]) == len(experimental_set)
     assert rcsb.count(query, content_types=["computational"]) == len(computational_set)
-    assert rcsb.count(query, content_types=["experimental", "computational"]) == len(combined_set)
+    assert rcsb.count(query, content_types=["experimental", "computational"]) == len(
+        combined_set
+    )
 
     # Expect an exception if no content_type
     with pytest.raises(ValueError):
@@ -307,10 +285,7 @@ def test_search_content_types():
         rcsb.count(query, content_types=[])
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 @pytest.mark.parametrize(
     "grouping, resolution_threshold, return_type, ref_groups",
     [
@@ -320,79 +295,65 @@ def test_search_content_types():
             ),
             0.7,
             "polymer_entity",
-            set([
-                ("3X2M_1",),
-                ("6E6O_1",),
-                ("1YK4_1",),
-                ("5NW3_1",),
-                ("1US0_1",),
-                ("4HP2_1",),
-                ("2DSX_1",),
-                ("2VB1_1",),
-                ("7VOS_1", "5D8V_1", "3A38_1"),
-                ("1UCS_1",),
-                ("3NIR_1", "1EJG_1"),
-            ])
-        ),
-
-        (
-            rcsb.UniprotGrouping(
-                sort_by="rcsb_accession_info.initial_release_date"
+            set(
+                [
+                    ("3X2M_1",),
+                    ("6E6O_1",),
+                    ("1YK4_1",),
+                    ("5NW3_1",),
+                    ("1US0_1",),
+                    ("4HP2_1",),
+                    ("2DSX_1",),
+                    ("2VB1_1",),
+                    ("3A38_1", "5D8V_1", "7VOS_1"),
+                    ("1UCS_1",),
+                    ("1EJG_1", "3NIR_1"),
+                ]
             ),
+        ),
+        (
+            rcsb.UniprotGrouping(sort_by="rcsb_accession_info.initial_release_date"),
             0.7,
             "polymer_entity",
-            set([
-                ("3X2M_1",),
-                ("6E6O_1",),
-                ("1YK4_1",),
-                ("5NW3_1",),
-                ("1US0_1",),
-                ("4HP2_1",),
-                ("2DSX_1",),
-                ("2VB1_1",),
-                ("7VOS_1", "5D8V_1", "3A38_1"),
-                ("1UCS_1",),
-                ("3NIR_1", "1EJG_1"),
-            ])
-        ),
-
-        (
-            rcsb.DepositGrouping(
-                sort_by="rcsb_accession_info.initial_release_date"
+            set(
+                [
+                    ("3X2M_1",),
+                    ("6E6O_1",),
+                    ("1YK4_1",),
+                    ("5NW3_1",),
+                    ("1US0_1",),
+                    ("4HP2_1",),
+                    ("2DSX_1",),
+                    ("2VB1_1",),
+                    ("3A38_1", "5D8V_1", "7VOS_1"),
+                    ("1UCS_1",),
+                    ("1EJG_1", "3NIR_1"),
+                ]
             ),
+        ),
+        (
+            rcsb.DepositGrouping(sort_by="rcsb_accession_info.initial_release_date"),
             0.9,
             "entry",
-            set([
-                ("5R32",),
-                ("5RDH", "5RBR"),
-                ("7G0Z", "7FXV")
-            ])
-        )
-    ]
+            set([("5R32",), ("5RBR", "5RDH"), ("7FXV", "7G0Z")]),
+        ),
+    ],
 )
-def test_search_grouping(grouping, resolution_threshold, return_type,
-                         ref_groups):
+def test_search_grouping(grouping, resolution_threshold, return_type, ref_groups):
     """
     Check whether the same result as in a known example is achieved.
     """
-    query = (
-        rcsb.FieldQuery(
-            "exptl.method",
-            exact_match="X-RAY DIFFRACTION"
-        )
-        & rcsb.FieldQuery(
-            "rcsb_entry_info.resolution_combined",
-            range_closed=(0.0, resolution_threshold)
-        )
+    query = rcsb.FieldQuery(
+        "exptl.method", exact_match="X-RAY DIFFRACTION"
+    ) & rcsb.FieldQuery(
+        "rcsb_entry_info.resolution_combined", range_closed=(0.0, resolution_threshold)
     )
 
-    test_groups = list(rcsb.search(
-        query, return_type,
-        group_by=grouping, return_groups=True
-    ).values())
+    test_groups = list(
+        rcsb.search(query, return_type, group_by=grouping, return_groups=True).values()
+    )
     test_representatives = rcsb.search(
-        query, return_type,
-        group_by=grouping, return_groups=False
+        query, return_type, group_by=grouping, return_groups=False
     )
     test_count = rcsb.count(query, return_type, group_by=grouping)
 
@@ -402,10 +363,7 @@ def test_search_grouping(grouping, resolution_threshold, return_type,
     assert test_count == len(ref_groups)
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 def test_search_empty():
     query = rcsb.BasicQuery("This will not match any ID")
     assert rcsb.search(query) == []
@@ -414,21 +372,9 @@ def test_search_empty():
 
 @pytest.mark.parametrize(
     "field, params",
-    [
-        (
-            "invalid.field",
-            {"exact_match": "Some Value"}
-        ),
-        (
-            "exptl.method",
-            {"less": 5}
-        )
-    ]
+    [("invalid.field", {"exact_match": "Some Value"}), ("exptl.method", {"less": 5})],
 )
-@pytest.mark.skipif(
-    cannot_connect_to(RCSB_URL),
-    reason="RCSB PDB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 def test_search_invalid(field, params):
     invalid_query = rcsb.FieldQuery(field, **params)
     with pytest.raises(RequestError, match="400"):

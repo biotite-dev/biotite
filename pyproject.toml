@@ -6,7 +6,7 @@ readme = "README.rst"
 authors = [{name = "The Biotite contributors"}]
 license = {"file" = "LICENSE.rst"}
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
@@ -18,15 +18,16 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-# Based on https://github.com/scipy/oldest-supported-numpy/blob/main/setup.cfg
-# When updating our minimum supported python version follow minimums set in this setup.cfg
-# as of 2022-01 for 3.7 "numpy >= 1.14.5", for 3.8 "numpy >= 1.17.3", for 3.9 "numpy >= 1.19.3"
-# this should be manually updated as the minimum python version increases
+
 dependencies = [
+  # Wheels compiled with NumPy 2.0 are backward compatible with NumPy 1.x
+  # https://numpy.org/devdocs/dev/depending_on_numpy.html#numpy-2-0-specific-advice
+  "numpy >= 1.25",
+  "biotraj >= 1.0, < 2.0",
   "requests >= 2.12",
-  "numpy >= 1.14.5, < 2.0",
   "msgpack >= 0.5.6",
   "networkx >= 2.0",
+  "requests >= 2.12",
 ]
 dynamic = ["version"]
 
@@ -39,6 +40,49 @@ test = [
 homepage = "https://www.biotite-python.org"
 repository = "https://github.com/biotite-dev/biotite"
 documentation = "https://www.biotite-python.org"
+
+[tool.ruff.lint]
+# pyflakes, pycodestyle isort and varibale naming
+select = ["F", "E", "W", "I", "TID", "N"]
+ignore = [
+    # In docstrings long lines are often intentional
+    # Most other ocassions are caught by the ruff formatter
+    "E501",
+    # Due to constants and class placeholders defined in functions
+    "N806",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Due to `* import` of BCIF encoding
+"setup_ccd.py" = ["F405", "F403"]
+# Due to imports after the PATH has been adjusted
+"doc/conf.py" = ["E402"]
+# Due to `from .module import *` imports in `__init__.py` modules
+"__init__.py" = ["F403", "TID252"]
+# Due to pymol scripts that are evaluated in other example scripts
+"doc/examples/**/*_pymol.py" = ["F821"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.isort]
+# No separator lines between import sections
+no-lines-before = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+order-by-type = true
+known-first-party = ["biotite"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+  # Appears in loading NetCDF trajectory files
+  "ignore:The 'netCDF4' Python package is not installed.",
+  "ignore:Input structure has no associated 'BondList'",
+]
 
 [tool.hatch.build.targets.sdist]
 exclude = [
@@ -62,13 +106,16 @@ dependencies = ["hatch-cython"]
 [tool.hatch.build.targets.wheel.hooks.cython.options]
 include_numpy = true
 compile_py = false
+define_macros = [
+    ["NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"],
+]
 
 [build-system]
 requires = [
     "hatchling",
     "hatch-vcs == 0.4",
     "hatch-cython == 0.5",
-    "oldest-supported-numpy",
+    "numpy >= 2.0",
     "cython >= 3.0",
 ]
 build-backend = "hatchling.build"

@@ -5,14 +5,14 @@
 __author__ = "Patrick Kunzmann"
 
 import warnings
-from pybtex.richtext import Text, Tag, HRef
+from pybtex.richtext import HRef, Tag, Text
 from pybtex.style.formatting import BaseStyle
 
 
 class IEEEStyle(BaseStyle):
     def format_article(self, param):
         entry = param["entry"]
-        
+
         try:
             authors = []
             for author in entry.persons["author"]:
@@ -28,7 +28,7 @@ class IEEEStyle(BaseStyle):
                     text += " "
                 text += " ".join([s for s in author.last_names])
                 authors.append(Text(text + ", "))
-            
+
             title = ""
             in_protected = False
             for char in entry.fields["title"]:
@@ -46,34 +46,34 @@ class IEEEStyle(BaseStyle):
                         else:
                             title += char.lower()
             title = Text('"', title, '," ')
-            
+
             journal = Text(Tag("em", entry.fields["journal"]), ", ")
-            
+
             if "volume" in entry.fields:
                 volume = Text("vol. ", entry.fields["volume"], ", ")
             else:
                 volume = Text()
-            
+
             if "pages" in entry.fields:
                 pages = Text("pp. ", entry.fields["pages"], ", ")
             else:
                 pages = Text()
-            
+
             date = entry.fields["year"]
             if "month" in entry.fields:
                 date = entry.fields["month"] + " " + date
             date = Text(date, ". ")
-            
-            if "doi" in entry.fields: 
-                doi = Text("doi: ", HRef(
-                    "https://doi.org/" + entry.fields["doi"],
-                    entry.fields["doi"]
-                ))
+
+            if "doi" in entry.fields:
+                doi = Text(
+                    "doi: ",
+                    HRef("https://doi.org/" + entry.fields["doi"], entry.fields["doi"]),
+                )
             else:
                 doi = Text()
-            
+
             return Text(*authors, title, journal, volume, pages, date, doi)
-        
-        except:
+
+        except Exception:
             warnings.warn(f"Invalid BibTeX entry '{entry.key}'")
             return Text(entry.key)

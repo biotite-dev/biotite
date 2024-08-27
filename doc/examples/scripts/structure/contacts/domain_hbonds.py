@@ -15,10 +15,9 @@ Hence, we can also calculate the frequency of each bond.
 from tempfile import gettempdir
 import matplotlib.pyplot as plt
 import biotite
+import biotite.database.rcsb as rcsb
 import biotite.structure as struc
 import biotite.structure.io as strucio
-import biotite.database.rcsb as rcsb
-
 
 file_name = rcsb.fetch("2KB1", "bcif", gettempdir())
 stack = strucio.load_structure(file_name)
@@ -35,16 +34,19 @@ freq = struc.hbond_frequency(mask)
 
 # Create names of bonds
 label = "{d_resid}{d_resnm}-{d_a} -- {a_resid}{a_resnm}-{a_a}"
-names = [label.format(
-    d_resid=chain_a.res_id[donor],
-    d_resnm=chain_a.res_name[donor],
-    d_a=chain_a.atom_name[donor],
-    a_resid=chain_a.res_id[acceptor],
-    a_resnm=chain_a.res_name[acceptor],
-    a_a=chain_a.atom_name[acceptor]
-    ) for donor, _, acceptor in triplets]
+names = [
+    label.format(
+        d_resid=chain_a.res_id[donor],
+        d_resnm=chain_a.res_name[donor],
+        d_a=chain_a.atom_name[donor],
+        a_resid=chain_a.res_id[acceptor],
+        a_resnm=chain_a.res_name[acceptor],
+        a_a=chain_a.atom_name[acceptor],
+    )
+    for donor, _, acceptor in triplets
+]
 
-plt.subplots(figsize=(11,4.5))
+plt.subplots(figsize=(11, 4.5))
 plt.bar(names, freq, color=biotite.colors["orange"])
 plt.xlabel("Hydrogen bond")
 plt.ylabel("Hydrogen bond frequency")

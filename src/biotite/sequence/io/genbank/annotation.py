@@ -12,10 +12,8 @@ __all__ = ["get_annotation", "set_annotation"]
 
 import re
 import warnings
-from ....file import InvalidFileError
-from ...annotation import Annotation, Feature, Location
-from .file import GenBankFile
-
+from biotite.file import InvalidFileError
+from biotite.sequence.annotation import Annotation, Feature, Location
 
 _KEY_START = 5
 _QUAL_START = 21
@@ -46,7 +44,6 @@ def get_annotation(gb_file, include_only=None):
         raise InvalidFileError("File has multiple 'FEATURES' fields")
     lines, _ = fields[0]
 
-
     ### Parse all lines to create an index of features,
     # i.e. pairs of the feature key
     # and the text belonging to the respective feature
@@ -60,12 +57,11 @@ def get_annotation(gb_file, include_only=None):
                 # Store old feature key and value
                 feature_list.append((feature_key, feature_value))
             # Track new key
-            feature_key = line[_KEY_START : _QUAL_START-1].strip()
+            feature_key = line[_KEY_START : _QUAL_START - 1].strip()
             feature_value = ""
         feature_value += line[_QUAL_START:] + " "
     # Store last feature key and value (loop already exited)
     feature_list.append((feature_key, feature_value))
-
 
     ### Process only relevant features and put them into an Annotation
     annotation = Annotation()
@@ -92,7 +88,7 @@ def get_annotation(gb_file, include_only=None):
             loc_string = qualifier_parts.pop(0).strip()
             try:
                 locs = _parse_locs(loc_string)
-            except:
+            except Exception:
                 warnings.warn(
                     f"'{loc_string}' is an unsupported location identifier, "
                     f"skipping feature"
@@ -114,7 +110,7 @@ def get_annotation(gb_file, include_only=None):
                     # -> split at whitespaces,
                     # as keys do not contain whitespaces
                     for subpart in part.split():
-                        if not "=" in subpart:
+                        if "=" not in subpart:
                             # Qualifier without value, e.g. '/pseudo'
                             # -> store immediately
                             # Remove "/" -> subpart[1:]
@@ -147,11 +143,11 @@ def get_annotation(gb_file, include_only=None):
 def _parse_locs(loc_str):
     locs = []
     if loc_str.startswith(("join", "order")):
-        str_list = loc_str[loc_str.index("(")+1:loc_str.rindex(")")].split(",")
+        str_list = loc_str[loc_str.index("(") + 1 : loc_str.rindex(")")].split(",")
         for s in str_list:
             locs.extend(_parse_locs(s.strip()))
     elif loc_str.startswith("complement"):
-        compl_str = loc_str[loc_str.index("(")+1:loc_str.rindex(")")]
+        compl_str = loc_str[loc_str.index("(") + 1 : loc_str.rindex(")")]
         compl_locs = [
             Location(loc.first, loc.last, Location.Strand.REVERSE, loc.defect)
             for loc in _parse_locs(compl_str)
@@ -214,8 +210,6 @@ def _set_qual(qual_dict, key, val):
         qual_dict[key] = val
 
 
-
-
 def set_annotation(gb_file, annotation):
     """
     Set the *FEATURES* field of a GenBank file with an annotation.
@@ -236,12 +230,12 @@ def set_annotation(gb_file, annotation):
         for key, values in feature.qual.items():
             if values is None:
                 line = " " * _QUAL_START
-                line +=  f'/{key}'
+                line += f"/{key}"
                 lines.append(line)
             else:
                 for val in values.split("\n"):
                     line = " " * _QUAL_START
-                    line +=  f'/{key}="{val}"'
+                    line += f'/{key}="{val}"'
                     lines.append(line)
     gb_file.set_field("FEATURES", lines)
 
@@ -254,11 +248,11 @@ def _convert_to_loc_string(locs):
     if len(locs) == 1:
         loc = list(locs)[0]
         loc_first_str = str(loc.first)
-        loc_last_str  = str(loc.last)
+        loc_last_str = str(loc.last)
         if loc.defect & Location.Defect.BEYOND_LEFT:
             loc_first_str = "<" + loc_first_str
         if loc.defect & Location.Defect.BEYOND_RIGHT:
-            loc_last_str  = ">" + loc_last_str
+            loc_last_str = ">" + loc_last_str
         if loc.first == loc.last:
             loc_string = loc_first_str
         elif loc.defect & Location.Defect.UNK_LOC:
@@ -270,8 +264,6 @@ def _convert_to_loc_string(locs):
         if loc.strand == Location.Strand.REVERSE:
             loc_string = f"complement({loc_string})"
     else:
-        loc_string = ",".join(
-            [_convert_to_loc_string([loc]) for loc in locs]
-        )
+        loc_string = ",".join([_convert_to_loc_string([loc]) for loc in locs])
         loc_string = f"join({loc_string})"
     return loc_string

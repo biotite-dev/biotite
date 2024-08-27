@@ -10,20 +10,23 @@ channels:
   - bioconda
 
 dependencies:
-  - python =3.10
+  - python =3.11
   # Package building
   - cython >=3.0
   - pip >=10.0
-  - setuptools >=30.0
+  - hatchling
+  - hatch-vcs == 0.4
   - wheel >=0.30
   # Biotite dependencies
+  - biotraj >=1.0,<2.0
   - msgpack-python >=0.5.6
   - networkx >=2.0
-  - numpy >=1.15, <2.0
+  - numpy >=2.0
   - requests >=2.12
   # Testing
-  - mdtraj >=1.9.3, <1.10
   - pytest >=7.0
+  # Code style
+  - ruff =0.5.2
   # Interfaced software in biotite.application (can also be installed separately)
   - autodock-vina
   - clustalo

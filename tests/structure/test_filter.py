@@ -2,110 +2,125 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from os.path import join
+import numpy as np
+import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
-import numpy as np
-from os.path import join
-from ..util import data_dir
-import pytest
+from tests.util import data_dir
+
 
 @pytest.fixture
 def canonical_sample_protein():
-    return strucio.load_structure(
-        join(data_dir("structure"), "3o5r.bcif")
-    )
+    return strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
+
 
 @pytest.fixture
 def sample_protein():
-    return strucio.load_structure(
-        join(data_dir("structure"), "5eil.bcif")
-    )
+    return strucio.load_structure(join(data_dir("structure"), "5eil.bcif"))
+
 
 @pytest.fixture
 def canonical_sample_nucleotide():
-    return strucio.load_structure(
-        join(data_dir("structure"), "5ugo.bcif")
-    )
+    return strucio.load_structure(join(data_dir("structure"), "5ugo.bcif"))
+
 
 @pytest.fixture
 def sample_nucleotide():
-    return strucio.load_structure(
-        join(data_dir("structure"), "4p5j.bcif")
-    )
+    return strucio.load_structure(join(data_dir("structure"), "4p5j.bcif"))
+
 
 @pytest.fixture
 def sample_carbohydrate():
-    return strucio.load_structure(
-        join(data_dir("structure"), "2d0f.bcif")
-    )
+    return strucio.load_structure(join(data_dir("structure"), "2d0f.bcif"))
+
 
 @pytest.fixture
 def all_atloc_structure():
     return strucio.load_structure(
         join(data_dir("structure"), "1o1z.bcif"),
-        extra_fields = ["occupancy"],
-        altloc="all"
+        extra_fields=["occupancy"],
+        altloc="all",
     )
 
+
 def test_solvent_filter(canonical_sample_protein):
-    assert len(canonical_sample_protein[struc.filter_solvent(canonical_sample_protein)]) == 287
+    assert (
+        len(canonical_sample_protein[struc.filter_solvent(canonical_sample_protein)])
+        == 287
+    )
+
 
 def test_canonical_amino_acid_filter(canonical_sample_protein):
     assert (
-        len(canonical_sample_protein[
-            struc.filter_canonical_amino_acids(canonical_sample_protein)
-        ]) == 982
+        len(
+            canonical_sample_protein[
+                struc.filter_canonical_amino_acids(canonical_sample_protein)
+            ]
+        )
+        == 982
     )
+
 
 def test_amino_acid_filter(sample_protein):
     assert (
-        struc.get_residue_count((sample_protein[
-            struc.filter_amino_acids(sample_protein)
-        ])) ==
-        struc.get_residue_count((sample_protein[
-            struc.filter_canonical_amino_acids(sample_protein)
-        ])) + 3
+        struc.get_residue_count(
+            (sample_protein[struc.filter_amino_acids(sample_protein)])
+        )
+        == struc.get_residue_count(
+            (sample_protein[struc.filter_canonical_amino_acids(sample_protein)])
+        )
+        + 3
     )
+
 
 def test_canonical_nucleotide_filter(canonical_sample_nucleotide):
     assert (
-        len(canonical_sample_nucleotide[
-            struc.filter_canonical_nucleotides(canonical_sample_nucleotide)
-        ]) == 651
+        len(
+            canonical_sample_nucleotide[
+                struc.filter_canonical_nucleotides(canonical_sample_nucleotide)
+            ]
+        )
+        == 651
     )
+
 
 def test_nucleotide_filter(sample_nucleotide):
     assert (
-        struc.get_residue_count((sample_nucleotide[
-            struc.filter_nucleotides(sample_nucleotide)
-        ])) ==
-        struc.get_residue_count((sample_nucleotide[
-            struc.filter_canonical_nucleotides(sample_nucleotide)
-        ])) + 1
+        struc.get_residue_count(
+            (sample_nucleotide[struc.filter_nucleotides(sample_nucleotide)])
+        )
+        == struc.get_residue_count(
+            (sample_nucleotide[struc.filter_canonical_nucleotides(sample_nucleotide)])
+        )
+        + 1
     )
+
 
 def test_carbohydrate_filter(sample_carbohydrate):
     assert (
-        struc.get_residue_count((sample_carbohydrate[
-            struc.filter_carbohydrates(sample_carbohydrate)
-        ])) == 8
+        struc.get_residue_count(
+            (sample_carbohydrate[struc.filter_carbohydrates(sample_carbohydrate)])
+        )
+        == 8
     )
 
 
 def test_peptide_backbone_filter(canonical_sample_protein):
     assert (
-        len(canonical_sample_protein[
-            struc.filter_peptide_backbone(canonical_sample_protein)
-        ]) == 384
+        len(
+            canonical_sample_protein[
+                struc.filter_peptide_backbone(canonical_sample_protein)
+            ]
+        )
+        == 384
     )
 
 
 def test_phosphate_backbone_filter(canonical_sample_nucleotide):
     # take a chain D with five canonical nucleotides
     # => there should be 5 x 6 = 30 backbone atoms
-    chain_d = canonical_sample_nucleotide[
-        canonical_sample_nucleotide.chain_id == 'D'
-    ]
+    chain_d = canonical_sample_nucleotide[canonical_sample_nucleotide.chain_id == "D"]
     assert len(chain_d[struc.filter_phosphate_backbone(chain_d)]) == 30
 
 
@@ -139,38 +154,44 @@ def test_polymer_filter(canonical_sample_nucleotide, sample_carbohydrate):
     a = canonical_sample_nucleotide
 
     # Check for nucleotide filtering
-    a_nuc = a[struc.filter_polymer(a, pol_type='n')]
+    a_nuc = a[struc.filter_polymer(a, pol_type="n")]
     # Take three nucleic acids chains and remove solvent => the result should
     # encompass all nucleotide polymer atoms, which is exactly the output of the
     # `filter_polymer()`. In the structure file, the filtered atoms are 1-651.
-    a_nuc_manual = a[np.isin(a.chain_id, ['D', 'P', 'T']) & ~struc.filter_solvent(a)]
+    a_nuc_manual = a[np.isin(a.chain_id, ["D", "P", "T"]) & ~struc.filter_solvent(a)]
     assert len(a_nuc) == len(a_nuc_manual) == 651
-    assert set(a_nuc.chain_id) == {'D', 'P', 'T'}
+    assert set(a_nuc.chain_id) == {"D", "P", "T"}
     # chain D should be absent
-    a_nuc = a_nuc[struc.filter_polymer(a_nuc, min_size=6, pol_type='n')]
-    assert set(a_nuc.chain_id) == {'P', 'T'}
+    a_nuc = a_nuc[struc.filter_polymer(a_nuc, min_size=6, pol_type="n")]
+    assert set(a_nuc.chain_id) == {"P", "T"}
 
     # Single protein chain A: residues 10-335
-    a_pep = a[struc.filter_polymer(a, pol_type='p')]
-    assert len(a_pep) == len(a[(a.res_id >= 10) & (a.res_id <= 335) & (a.chain_id == 'A')])
+    a_pep = a[struc.filter_polymer(a, pol_type="p")]
+    assert len(a_pep) == len(
+        a[(a.res_id >= 10) & (a.res_id <= 335) & (a.chain_id == "A")]
+    )
 
     # Chain B has five carbohydrate residues
     # Chain C has four
     # => Only chain B is selected
     a = sample_carbohydrate
-    a_carb = a[struc.filter_polymer(a, min_size=4, pol_type='carb')]
-    assert set(a_carb.chain_id) == {'B'}
+    a_carb = a[struc.filter_polymer(a, min_size=4, pol_type="carb")]
+    assert set(a_carb.chain_id) == {"B"}
     assert struc.get_residue_count(a_carb) == 5
 
 
 def test_intersection_filter(canonical_sample_protein):
     assert (
-        len(canonical_sample_protein[:200][
-            struc.filter_intersection(
-                canonical_sample_protein[:200],canonical_sample_protein[100:]
-            )
-        ]) == 100
+        len(
+            canonical_sample_protein[:200][
+                struc.filter_intersection(
+                    canonical_sample_protein[:200], canonical_sample_protein[100:]
+                )
+            ]
+        )
+        == 100
     )
+
 
 @pytest.mark.parametrize("filter_func", ["first", "occupancy"])
 def test_filter_altloc(all_atloc_structure, filter_func):
@@ -183,21 +204,22 @@ def test_filter_altloc(all_atloc_structure, filter_func):
         all_atloc_structure.chain_id,
         all_atloc_structure.res_id,
         all_atloc_structure.ins_code,
-        all_atloc_structure.atom_name
+        all_atloc_structure.atom_name,
     ):
         ref_atom_set.add(atom_tuple)
 
     if filter_func == "first":
-        filtered_structure = all_atloc_structure[struc.filter_first_altloc(
-            all_atloc_structure,
-            all_atloc_structure.altloc_id
-        )]
+        filtered_structure = all_atloc_structure[
+            struc.filter_first_altloc(
+                all_atloc_structure, all_atloc_structure.altloc_id
+            )
+        ]
     elif filter_func == "occupancy":
         filtered_structure = all_atloc_structure[
             struc.filter_highest_occupancy_altloc(
                 all_atloc_structure,
                 all_atloc_structure.altloc_id,
-                all_atloc_structure.occupancy
+                all_atloc_structure.occupancy,
             )
         ]
 
@@ -206,7 +228,7 @@ def test_filter_altloc(all_atloc_structure, filter_func):
         filtered_structure.chain_id,
         filtered_structure.res_id,
         filtered_structure.ins_code,
-        filtered_structure.atom_name
+        filtered_structure.atom_name,
     ):
         try:
             # No atom should be present twice
@@ -230,10 +252,9 @@ def test_filter_highest_occupancy_altloc(all_atloc_structure):
     all_atloc_structure.occupancy[all_atloc_structure.altloc_id == "B"] = 1.0
 
     # filter_first_altloc
-    filtered_structure = all_atloc_structure[struc.filter_first_altloc(
-        all_atloc_structure,
-        all_atloc_structure.altloc_id
-    )]
+    filtered_structure = all_atloc_structure[
+        struc.filter_first_altloc(all_atloc_structure, all_atloc_structure.altloc_id)
+    ]
     ref_occupancy_sum = np.average(filtered_structure.occupancy)
 
     # filter_highest_occupancy_altloc
@@ -241,7 +262,7 @@ def test_filter_highest_occupancy_altloc(all_atloc_structure):
         struc.filter_highest_occupancy_altloc(
             all_atloc_structure,
             all_atloc_structure.altloc_id,
-            all_atloc_structure.occupancy
+            all_atloc_structure.occupancy,
         )
     ]
     test_occupancy_sum = np.average(filtered_structure.occupancy)

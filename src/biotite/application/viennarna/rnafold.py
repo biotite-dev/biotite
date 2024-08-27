@@ -6,14 +6,13 @@ __name__ = "biotite.application.viennarna"
 __author__ = "Tom David Müller, Patrick Kunzmann"
 __all__ = ["RNAfoldApp"]
 
-import warnings
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ..application import AppState, requires_state
-from ..localapp import LocalApp, cleanup_tempfile
-from ...sequence.io.fasta import FastaFile, set_sequence
-from ...structure.dotbracket import base_pairs_from_dot_bracket
-from .util import build_constraint_string
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.application.viennarna.util import build_constraint_string
+from biotite.sequence.io.fasta import FastaFile, set_sequence
+from biotite.structure.dotbracket import base_pairs_from_dot_bracket
 
 
 class RNAfoldApp(LocalApp):
@@ -51,9 +50,7 @@ class RNAfoldApp(LocalApp):
         self._temperature = str(temperature)
         self._constraints = None
         self._enforce = None
-        self._in_file = NamedTemporaryFile(
-            "w", suffix=".fa", delete=False
-        )
+        self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
         super().__init__(bin_path)
 
     def run(self):
@@ -65,10 +62,11 @@ class RNAfoldApp(LocalApp):
             fasta_file.lines.append(self._constraints)
         fasta_file.write(self._in_file)
         self._in_file.flush()
-        
+
         options = [
             "--noPS",
-            "-T", self._temperature,
+            "-T",
+            self._temperature,
         ]
         if self._enforce is True:
             options.append("--enforceConstraint")
@@ -87,11 +85,11 @@ class RNAfoldApp(LocalApp):
 
         self._free_energy = free_energy
         self._dotbracket = dotbracket
-    
+
     def clean_up(self):
         super().clean_up()
         cleanup_tempfile(self._in_file)
-    
+
     @requires_state(AppState.CREATED)
     def set_temperature(self, temperature):
         """
@@ -104,10 +102,17 @@ class RNAfoldApp(LocalApp):
             The temperature.
         """
         self._temperature = str(temperature)
-    
+
     @requires_state(AppState.CREATED)
-    def set_constraints(self, pairs=None, paired=None, unpaired=None,
-                        downstream=None, upstream=None, enforce=False):
+    def set_constraints(
+        self,
+        pairs=None,
+        paired=None,
+        unpaired=None,
+        downstream=None,
+        upstream=None,
+        enforce=False,
+    ):
         """
         Add constraints of known paired or unpaired bases to the folding
         algorithm.
@@ -134,11 +139,10 @@ class RNAfoldApp(LocalApp):
             of a pair that would conflict with this constraint.
         """
         self._constraints = build_constraint_string(
-            len(self._sequence),
-            pairs, paired, unpaired, downstream, upstream
+            len(self._sequence), pairs, paired, unpaired, downstream, upstream
         )
         self._enforce = enforce
-    
+
     @requires_state(AppState.JOINED)
     def get_free_energy(self):
         """
@@ -161,25 +165,6 @@ class RNAfoldApp(LocalApp):
         -1.3
         """
         return self._free_energy
-
-    @requires_state(AppState.JOINED)
-    def get_mfe(self):
-        """
-        Get the free energy (kcal/mol) of the suggested
-        secondary structure.
-
-        DEPRECATED: Use :meth:`get_free_energy()` instead.
-
-        Returns
-        -------
-        mfe : float
-            The minimum free energy.
-        """
-        warnings.warn(
-            "'get_mfe()' is deprecated, use 'get_free_energy()' instead",
-            DeprecationWarning
-        )
-        return self.get_free_energy()
 
     @requires_state(AppState.JOINED)
     def get_dot_bracket(self):
@@ -243,7 +228,7 @@ class RNAfoldApp(LocalApp):
     @staticmethod
     def compute_secondary_structure(sequence, bin_path="RNAfold"):
         """
-        Compute the minimum free energy secondary structure of a 
+        Compute the minimum free energy secondary structure of a
         ribonucleic acid sequence using *ViennaRNA's* *RNAfold* software.
 
         This is a convenience function, that wraps the

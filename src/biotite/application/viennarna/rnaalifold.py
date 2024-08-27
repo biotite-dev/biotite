@@ -9,12 +9,12 @@ __all__ = ["RNAalifoldApp"]
 import copy
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ..application import AppState, requires_state
-from ..localapp import LocalApp, cleanup_tempfile
-from ...sequence.io.fasta import FastaFile, set_alignment
-from ...structure.dotbracket import base_pairs_from_dot_bracket
-from ...structure.bonds import BondList
-from .util import build_constraint_string
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.application.viennarna.util import build_constraint_string
+from biotite.sequence.io.fasta import FastaFile, set_alignment
+from biotite.structure.bonds import BondList
+from biotite.structure.dotbracket import base_pairs_from_dot_bracket
 
 
 class RNAalifoldApp(LocalApp):
@@ -45,9 +45,7 @@ class RNAalifoldApp(LocalApp):
         self._temperature = str(temperature)
         self._constraints = None
         self._enforce = None
-        self._in_file = NamedTemporaryFile(
-            "w", suffix=".fa", delete=False
-        )
+        self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
         self._constraints_file = NamedTemporaryFile(
             "w+", suffix=".constraints", delete=False
         )
@@ -57,15 +55,17 @@ class RNAalifoldApp(LocalApp):
         # -> Extremely high value for characters per line
         fasta_file = FastaFile(chars_per_line=np.iinfo(np.int32).max)
         set_alignment(
-            fasta_file, self._alignment,
-            seq_names=[str(i) for i in range(len(self._alignment.sequences))]
+            fasta_file,
+            self._alignment,
+            seq_names=[str(i) for i in range(len(self._alignment.sequences))],
         )
         fasta_file.write(self._in_file)
         self._in_file.flush()
 
         options = [
             "--noPS",
-            "-T", self._temperature,
+            "-T",
+            self._temperature,
         ]
         if self._enforce is True:
             options.append("--enforceConstraint")
@@ -78,7 +78,7 @@ class RNAalifoldApp(LocalApp):
 
         self.set_arguments(options + [self._in_file.name])
         super().run()
-    
+
     def clean_up(self):
         super().clean_up()
         cleanup_tempfile(self._in_file)
@@ -97,7 +97,7 @@ class RNAalifoldApp(LocalApp):
         self._free_energy = float(energy_contributions[0])
         self._covariance_energy = float(energy_contributions[1])
         self._dotbracket = dotbracket
-    
+
     @requires_state(AppState.CREATED)
     def set_temperature(self, temperature):
         """
@@ -110,10 +110,17 @@ class RNAalifoldApp(LocalApp):
             The temperature.
         """
         self._temperature = str(temperature)
-    
+
     @requires_state(AppState.CREATED)
-    def set_constraints(self, pairs=None, paired=None, unpaired=None,
-                        downstream=None, upstream=None, enforce=False):
+    def set_constraints(
+        self,
+        pairs=None,
+        paired=None,
+        unpaired=None,
+        downstream=None,
+        upstream=None,
+        enforce=False,
+    ):
         """
         Add constraints of known paired or unpaired bases to the folding
         algorithm.
@@ -138,15 +145,14 @@ class RNAalifoldApp(LocalApp):
             the respective base pairs must form.
             By default (false), a constraint does only forbid formation
             of a pair that would conflict with this constraint.
-        
+
         Warnings
         --------
         If a constraint is given for a gap position in the consensus sequence,
         the software may find no base pairs at all.
         """
         self._constraints = build_constraint_string(
-            len(self._alignment),
-            pairs, paired, unpaired, downstream, upstream
+            len(self._alignment), pairs, paired, unpaired, downstream, upstream
         )
         self._enforce = enforce
 
@@ -160,19 +166,19 @@ class RNAalifoldApp(LocalApp):
         -------
         free_energy : float
             The free energy.
-        
+
         Notes
         -----
         The total energy of the secondary structure regarding the
         minimization objective is the sum of the free energy and the
         covariance term.
-        
+
         See also
         --------
         get_covariance_energy
         """
         return self._free_energy
-    
+
     @requires_state(AppState.JOINED)
     def get_covariance_energy(self):
         """
@@ -183,19 +189,19 @@ class RNAalifoldApp(LocalApp):
         -------
         covariance_energy : float
             The energy of the covariance term.
-        
+
         Notes
         -----
         The total energy of the secondary structure regarding the
         minimization objective is the sum of the free energy and the
         covariance term.
-        
+
         See also
         --------
         get_free_energy
         """
         return self._covariance_energy
-    
+
     @requires_state(AppState.JOINED)
     def get_consensus_sequence_string(self):
         """
@@ -265,7 +271,7 @@ class RNAalifoldApp(LocalApp):
             pair_list = pair_list[trace != -1]
             # Convert back to array of base pairs,
             # remove unused BondType column
-            base_pairs = pair_list.as_array()[:,:2]
+            base_pairs = pair_list.as_array()[:, :2]
         return base_pairs
 
     @staticmethod
@@ -300,5 +306,5 @@ class RNAalifoldApp(LocalApp):
         return (
             app.get_dot_bracket(),
             app.get_free_energy(),
-            app.get_covariance_energy()
+            app.get_covariance_energy(),
         )

@@ -6,21 +6,21 @@ __name__ = "biotite.structure.io.dcd"
 __author__ = "Patrick Kunzmann"
 __all__ = ["DCDFile"]
 
+import biotraj
 import numpy as np
-from ..trajfile import TrajectoryFile
-from ...box import vectors_from_unitcell, unitcell_from_vectors
+from biotite.structure.box import unitcell_from_vectors, vectors_from_unitcell
+from biotite.structure.io.trajfile import TrajectoryFile
 
 
 class DCDFile(TrajectoryFile):
     """
     This file class represents a DCD trajectory file.
     """
-    
+
     @classmethod
     def traj_type(cls):
-        import mdtraj.formats as traj
-        return traj.DCDTrajectoryFile
-    
+        return biotraj.DCDTrajectoryFile
+
     @classmethod
     def process_read_values(cls, read_values):
         # .netcdf files use Angstrom
@@ -28,34 +28,36 @@ class DCDFile(TrajectoryFile):
         cell_lengths = read_values[1]
         cell_angles = read_values[2]
         if cell_lengths is None or cell_angles is None:
-             box = None
+            box = None
         else:
             box = np.stack(
-                [vectors_from_unitcell(a, b, c, alpha, beta, gamma)
-                for (a, b, c), (alpha, beta, gamma)
-                in zip(cell_lengths, np.deg2rad(cell_angles))],
-                axis=0
+                [
+                    vectors_from_unitcell(a, b, c, alpha, beta, gamma)
+                    for (a, b, c), (alpha, beta, gamma) in zip(
+                        cell_lengths, np.deg2rad(cell_angles)
+                    )
+                ],
+                axis=0,
             )
         return coord, box, None
-    
+
     @classmethod
     def prepare_write_values(cls, coord, box, time):
-        xyz = coord.astype(np.float32, copy=False) \
-              if coord is not None else None
+        xyz = coord.astype(np.float32, copy=False) if coord is not None else None
         if box is None:
             cell_lengths = None
-            cell_angles  = None
+            cell_angles = None
         else:
             cell_lengths = np.zeros((len(box), 3), dtype=np.float32)
-            cell_angles  = np.zeros((len(box), 3), dtype=np.float32)
+            cell_angles = np.zeros((len(box), 3), dtype=np.float32)
             for i, model_box in enumerate(box):
                 a, b, c, alpha, beta, gamma = unitcell_from_vectors(model_box)
                 cell_lengths[i] = np.array((a, b, c))
                 cell_angles[i] = np.rad2deg((alpha, beta, gamma))
         return {
-            "xyz" : xyz,
-            "cell_lengths" : cell_lengths,
-            "cell_angles" : cell_angles,
+            "xyz": xyz,
+            "cell_lengths": cell_lengths,
+            "cell_angles": cell_angles,
         }
 
     def set_time(self, time):

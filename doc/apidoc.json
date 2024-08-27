@@ -4,10 +4,6 @@
             "File",
             "TextFile"
         ],
-        "Temporary files" : [
-            "temp_dir",
-            "temp_file"
-        ],
         "Visualization utilities":[
             "set_font_size_in_coord",
             "AdaptiveFancyArrow"
@@ -260,8 +256,7 @@
             "superimpose",
             "superimpose_homologs",
             "superimpose_without_outliers",
-            "AffineTransformation",
-            "superimpose_apply"
+            "AffineTransformation"
         ],
         "Filters" : [
             "filter_canonical_nucleotides",
@@ -269,7 +264,6 @@
             "filter_canonical_amino_acids",
             "filter_amino_acids",
             "filter_carbohydrates",
-            "filter_backbone",
             "filter_peptide_backbone",
             "filter_phosphate_backbone",
             "filter_linear_bond_continuity",
@@ -281,17 +275,13 @@
             "filter_highest_occupancy_altloc"
         ],
         "Checks" : [
-            "check_id_continuity",
             "check_atom_id_continuity",
             "check_res_id_continuity",
             "check_backbone_continuity",
             "check_duplicate_atoms",
-            "check_bond_continuity",
             "check_linear_continuity"
         ],
         "Repair" : [
-            "renumber_atom_ids",
-            "renumber_res_ids",
             "create_continuous_res_ids",
             "infer_elements",
             "create_atom_names"

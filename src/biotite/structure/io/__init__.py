@@ -18,13 +18,12 @@ structure file.
 The recommended format for reading structure files is *BinaryCIF*.
 It has by far the shortest parsing time and file size.
 
-Besides the mentioned structure formats, Gromacs trajectory files can be
-loaded, if `mdtraj` is installed.
+Besides the mentioned structure formats, common trajectory formats can be
+loaded as well.
 """
 
 __name__ = "biotite.structure.io"
 __author__ = "Patrick Kunzmann"
 
-from .ctab import *
 from .general import *
 from .trajfile import *

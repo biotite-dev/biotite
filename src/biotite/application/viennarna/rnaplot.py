@@ -6,13 +6,14 @@ __name__ = "biotite.application.viennarna"
 __author__ = "Tom David Müller"
 __all__ = ["RNAplotApp"]
 
-import numpy as np
-from tempfile import NamedTemporaryFile
-from os import remove
 from enum import IntEnum
-from ..localapp import LocalApp, cleanup_tempfile
-from ..application import AppState, requires_state
-from ...structure.dotbracket import dot_bracket as dot_bracket_
+from os import remove
+from tempfile import NamedTemporaryFile
+import numpy as np
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.structure.dotbracket import dot_bracket as dot_bracket_
+
 
 class RNAplotApp(LocalApp):
     """
@@ -60,21 +61,28 @@ class RNAplotApp(LocalApp):
         This enum type represents the layout type of the plot according
         to the official *RNAplot* orientation.
         """
-        RADIAL = 0,
-        NAVIEW = 1,
-        CIRCULAR = 2,
-        RNATURTLE = 3,
+
+        RADIAL = (0,)
+        NAVIEW = (1,)
+        CIRCULAR = (2,)
+        RNATURTLE = (3,)
         RNAPUZZLER = 4
 
-    def __init__(self, dot_bracket=None, base_pairs=None, length=None,
-                 layout_type=Layout.NAVIEW, bin_path="RNAplot"):
+    def __init__(
+        self,
+        dot_bracket=None,
+        base_pairs=None,
+        length=None,
+        layout_type=Layout.NAVIEW,
+        bin_path="RNAplot",
+    ):
         super().__init__(bin_path)
 
         if dot_bracket is not None:
             self._dot_bracket = dot_bracket
         elif (base_pairs is not None) and (length is not None):
             self._dot_bracket = dot_bracket_(
-                base_pairs, length, max_pseudoknot_order = 0
+                base_pairs, length, max_pseudoknot_order=0
             )[0]
         else:
             raise ValueError(
@@ -84,10 +92,10 @@ class RNAplotApp(LocalApp):
 
         # Get the value of the enum type
         self._layout_type = str(int(layout_type))
-        self._in_file  = NamedTemporaryFile("w", suffix=".fold",  delete=False)
+        self._in_file = NamedTemporaryFile("w", suffix=".fold", delete=False)
 
     def run(self):
-        self._in_file.write("N"*len(self._dot_bracket) + "\n")
+        self._in_file.write("N" * len(self._dot_bracket) + "\n")
         self._in_file.write(self._dot_bracket)
         self._in_file.flush()
         self.set_arguments(
@@ -146,8 +154,11 @@ class RNAplotApp(LocalApp):
 
     @staticmethod
     def compute_coordinates(
-        dot_bracket=None, base_pairs=None, length=None,
-        layout_type=Layout.NAVIEW, bin_path="RNAplot"
+        dot_bracket=None,
+        base_pairs=None,
+        length=None,
+        layout_type=Layout.NAVIEW,
+        bin_path="RNAplot",
     ):
         """
         Get coordinates for a 2D representation of any unknotted RNA
@@ -179,9 +190,13 @@ class RNAplotApp(LocalApp):
             The 2D coordinates. Each row represents the *x* and *y*
             coordinates for a total sequence length of *n*.
         """
-        app = RNAplotApp(dot_bracket=dot_bracket, base_pairs=base_pairs,
-                         length=length, layout_type=layout_type,
-                         bin_path=bin_path)
+        app = RNAplotApp(
+            dot_bracket=dot_bracket,
+            base_pairs=base_pairs,
+            length=length,
+            layout_type=layout_type,
+            bin_path=bin_path,
+        )
         app.start()
         app.join()
         return app.get_coordinates()

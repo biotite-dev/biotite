@@ -8,9 +8,8 @@ __all__ = ["mass"]
 
 import json
 from pathlib import Path
-from ..atoms import Atom, AtomArray, AtomArrayStack
-from .ccd import get_from_ccd
-
+from biotite.structure.atoms import Atom, AtomArray, AtomArrayStack
+from biotite.structure.info.ccd import get_from_ccd
 
 # Masses are taken from http://www.sbcs.qmul.ac.uk/iupac/AtWt/ (2018/03/01)
 ATOM_MASSES_FILE = Path(__file__).parent / "atom_masses.json"
@@ -109,14 +108,10 @@ def mass(item, is_residue=None):
     elif isinstance(item, Atom):
         result_mass = mass(item.element, is_residue=False)
     elif isinstance(item, AtomArray) or isinstance(item, AtomArrayStack):
-        result_mass = sum(
-            (mass(element, is_residue=False) for element in item.element)
-        )
+        result_mass = sum((mass(element, is_residue=False) for element in item.element))
 
     else:
-        raise TypeError(
-            f"Cannot calculate mass for {type(item).__name__} objects"
-        )
+        raise TypeError(f"Cannot calculate mass for {type(item).__name__} objects")
 
     if result_mass is None:
         raise KeyError(f"{item} is not known")

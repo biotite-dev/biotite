@@ -12,8 +12,7 @@ modules.
 __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
 
-from .file import *
-from .temp import *
 from .copyable import *
+from .file import *
+from .version import __version__, __version_tuple__  # noqa: F401
 from .visualize import *
-from .version import __version__, __version_tuple__

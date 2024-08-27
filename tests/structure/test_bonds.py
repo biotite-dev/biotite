@@ -9,7 +9,7 @@ import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io as strucio
 import biotite.structure.io.pdbx as pdbx
-from ..util import data_dir
+from tests.util import data_dir
 
 
 def generate_random_bond_list(atom_count, bond_count, seed=0):
@@ -23,20 +23,22 @@ def generate_random_bond_list(atom_count, bond_count, seed=0):
     # Clip bond types to allowed BondType values
     bonds[:, 2] %= len(struc.BondType)
     # Remove bonds of atoms to itself
-    bonds = bonds[bonds[:,0] != bonds[:,1]]
+    bonds = bonds[bonds[:, 0] != bonds[:, 1]]
     assert len(bonds) > 0
     return struc.BondList(atom_count, bonds)
 
 
 @pytest.fixture(
-    params=[False, True] # as_negative
+    params=[False, True]  # as_negative
 )
 def bond_list(request):
     """
     A toy :class:`BondList`.
     """
     as_negative = request.param
-    bond_array = np.array([(0,1),(2,1),(3,1),(3,4),(3,1),(1,2),(4,0),(6,4)])
+    bond_array = np.array(
+        [(0, 1), (2, 1), (3, 1), (3, 4), (3, 1), (1, 2), (4, 0), (6, 4)]
+    )
     if as_negative:
         return struc.BondList(7, -7 + bond_array)
     else:
@@ -48,12 +50,14 @@ def test_creation(bond_list):
     Test creating a :class:`BondList` on a known example.
     """
     # Test includes redundancy removal and max bonds calculation
-    assert bond_list.as_array().tolist() == [[0, 1, 0],
-                                             [1, 2, 0],
-                                             [1, 3, 0],
-                                             [3, 4, 0],
-                                             [0, 4, 0],
-                                             [4, 6, 0]]
+    assert bond_list.as_array().tolist() == [
+        [0, 1, 0],
+        [1, 2, 0],
+        [1, 3, 0],
+        [3, 4, 0],
+        [0, 4, 0],
+        [4, 6, 0],
+    ]
     assert bond_list._max_bonds_per_atom == 3
     assert bond_list._atom_count == 7
 
@@ -65,46 +69,44 @@ def test_invalid_creation():
     """
     # Test invalid input shapes
     with pytest.raises(ValueError):
-        struc.BondList(
-            5,
-            np.array([
-                [1,2,3,4]
-            ])
-        )
+        struc.BondList(5, np.array([[1, 2, 3, 4]]))
     with pytest.raises(ValueError):
-        struc.BondList(
-            5,
-            np.array([1,2])
-        )
+        struc.BondList(5, np.array([1, 2]))
 
     # Test invalid atom indices
     with pytest.raises(IndexError):
         struc.BondList(
             5,
-            np.array([
-                [1,2],
-                # 5 is an invalid index for an atom count of 5
-                [5,2]
-            ])
+            np.array(
+                [
+                    [1, 2],
+                    # 5 is an invalid index for an atom count of 5
+                    [5, 2],
+                ]
+            ),
         )
     with pytest.raises(IndexError):
         struc.BondList(
             5,
-            np.array([
-                # Index -6 is invalid for an atom count of 5
-                [-6,3],
-                [3,4]
-            ])
+            np.array(
+                [
+                    # Index -6 is invalid for an atom count of 5
+                    [-6, 3],
+                    [3, 4],
+                ]
+            ),
         )
 
     # Test invalid BondType
     with pytest.raises(ValueError):
         struc.BondList(
             5,
-            np.array([
-                # BondType '8' does not exist
-                [1,2,8]
-            ])
+            np.array(
+                [
+                    # BondType '8' does not exist
+                    [1, 2, 8]
+                ]
+            ),
         )
 
 
@@ -126,25 +128,21 @@ def test_modification(bond_list):
     # Not in list -> Do nothing
     bond_list.remove_bond(0, 3)
     # Remove mutliple bonds, one of them is not in list
-    bond_list.remove_bonds(struc.BondList(10, np.array([(1,0),(1,2),(8,9)])))
-    assert bond_list.as_array().tolist() == [[1, 3, 1],
-                                             [3, 4, 0],
-                                             [4, 6, 0],
-                                             [1, 4, 0]]
+    bond_list.remove_bonds(struc.BondList(10, np.array([(1, 0), (1, 2), (8, 9)])))
+    assert bond_list.as_array().tolist() == [[1, 3, 1], [3, 4, 0], [4, 6, 0], [1, 4, 0]]
 
 
 def test_add_two_bond_list():
     """
     Test adding two `BondList` objects.
     """
-    bond_list1 = struc.BondList(2, np.array([(0,1)])) # max_bond_per_atom=1
-    bond_list2 = struc.BondList(3, np.array([(0,1),(0,2)])) # max_bond_per_atom=2
+    bond_list1 = struc.BondList(2, np.array([(0, 1)]))  # max_bond_per_atom=1
+    bond_list2 = struc.BondList(3, np.array([(0, 1), (0, 2)]))  # max_bond_per_atom=2
     added_list = bond_list1 + bond_list2
     assert added_list._max_bonds_per_atom == 2
     assert added_list.get_bonds(2)[0].tolist() == [3, 4]
-    assert added_list.as_array().tolist() == [[0, 1, 0],
-                                              [2, 3, 0],
-                                              [2, 4, 0]]
+    assert added_list.as_array().tolist() == [[0, 1, 0], [2, 3, 0], [2, 4, 0]]
+
 
 def test_contains(bond_list):
     """
@@ -185,29 +183,33 @@ def test_merge(bond_list):
     """
     Test merging two `BondList` objects on a known example.
     """
-    merged_list = struc.BondList(8, np.array([(4,6),(6,7)])).merge(bond_list)
-    assert merged_list.as_array().tolist() == [[0, 1, 0],
-                                               [1, 2, 0],
-                                               [1, 3, 0],
-                                               [3, 4, 0],
-                                               [0, 4, 0],
-                                               [4, 6, 0],
-                                               [6, 7, 0]]
+    merged_list = struc.BondList(8, np.array([(4, 6), (6, 7)])).merge(bond_list)
+    assert merged_list.as_array().tolist() == [
+        [0, 1, 0],
+        [1, 2, 0],
+        [1, 3, 0],
+        [3, 4, 0],
+        [0, 4, 0],
+        [4, 6, 0],
+        [6, 7, 0],
+    ]
 
 
 def test_concatenation(bond_list):
     """
     Test concatenation of two `BondList` objects on a known example.
     """
-    bond_list += struc.BondList(3, np.array([(0,1,2),(1,2,2)]))
-    assert bond_list.as_array().tolist() == [[0, 1, 0],
-                                             [1, 2, 0],
-                                             [1, 3, 0],
-                                             [3, 4, 0],
-                                             [0, 4, 0],
-                                             [4, 6, 0],
-                                             [7, 8, 2],
-                                             [8, 9, 2]]
+    bond_list += struc.BondList(3, np.array([(0, 1, 2), (1, 2, 2)]))
+    assert bond_list.as_array().tolist() == [
+        [0, 1, 0],
+        [1, 2, 0],
+        [1, 3, 0],
+        [3, 4, 0],
+        [0, 4, 0],
+        [4, 6, 0],
+        [7, 8, 2],
+        [8, 9, 2],
+    ]
     assert bond_list._max_bonds_per_atom == 3
     assert bond_list._atom_count == 10
 
@@ -219,30 +221,27 @@ def test_indexing(bond_list):
     sub_list = bond_list[:]
     assert sub_list.as_array().tolist() == bond_list.as_array().tolist()
     sub_list = bond_list[::-1]
-    assert sub_list.as_array().tolist() == [[5, 6, 0],
-                                            [4, 5, 0],
-                                            [3, 5, 0],
-                                            [2, 3, 0],
-                                            [2, 6, 0],
-                                            [0, 2, 0]]
+    assert sub_list.as_array().tolist() == [
+        [5, 6, 0],
+        [4, 5, 0],
+        [3, 5, 0],
+        [2, 3, 0],
+        [2, 6, 0],
+        [0, 2, 0],
+    ]
     sub_list = bond_list[1:6:2]
     assert sub_list.as_array().tolist() == [[0, 1, 0]]
     sub_list = bond_list[:4]
-    assert sub_list.as_array().tolist() == [[0, 1, 0],
-                                            [1, 2, 0],
-                                            [1, 3, 0]]
+    assert sub_list.as_array().tolist() == [[0, 1, 0], [1, 2, 0], [1, 3, 0]]
     sub_list = bond_list[2:]
-    assert sub_list.as_array().tolist() == [[1, 2, 0],
-                                            [2, 4, 0]]
+    assert sub_list.as_array().tolist() == [[1, 2, 0], [2, 4, 0]]
 
-    sub_list = bond_list[[0,3,4]]
-    assert sub_list.as_array().tolist() == [[1, 2, 0],
-                                            [0, 2, 0]]
+    sub_list = bond_list[[0, 3, 4]]
+    assert sub_list.as_array().tolist() == [[1, 2, 0], [0, 2, 0]]
 
-    sub_list = bond_list[np.array([True,False,False,True,True,False,True])]
-    assert sub_list.as_array().tolist() == [[1, 2, 0],
-                                            [0, 2, 0],
-                                            [2, 3, 0]]
+    sub_list = bond_list[np.array([True, False, False, True, True, False, True])]
+    assert sub_list.as_array().tolist() == [[1, 2, 0], [0, 2, 0], [2, 3, 0]]
+
 
 def test_get_all_bonds():
     """
@@ -261,17 +260,13 @@ def test_get_all_bonds():
     assert (bond_types != -1).all(axis=1).any(axis=0)
 
     test_bonds = [
-        (
-            bonded_i[bonded_i != -1].tolist(),
-            bond_type[bond_type != -1].tolist()
-        )
+        (bonded_i[bonded_i != -1].tolist(), bond_type[bond_type != -1].tolist())
         for bonded_i, bond_type in zip(bonds, bond_types)
     ]
 
     ref_bonds = [bond_list.get_bonds(i) for i in range(ATOM_COUNT)]
     ref_bonds = [
-        (bonded_i.tolist(), bond_type.tolist())
-        for bonded_i, bond_type in ref_bonds
+        (bonded_i.tolist(), bond_type.tolist()) for bonded_i, bond_type in ref_bonds
     ]
 
     assert test_bonds == ref_bonds
@@ -330,9 +325,9 @@ def test_sorted_array_indexing():
 
     # Create a sorted array of random indices for the BondList
     # Indices may not occur multiple times -> 'replace=False'
-    index_array = np.sort(np.random.choice(
-        np.arange(ATOM_COUNT), INDEX_SIZE, replace=False
-    ))
+    index_array = np.sort(
+        np.random.choice(np.arange(ATOM_COUNT), INDEX_SIZE, replace=False)
+    )
     test_bonds = bonds[index_array]
 
     # Create a boolean mask that indexes the same elements as the array
@@ -363,15 +358,13 @@ def test_unsorted_array_indexing():
     # Create random bonds between the reference integers
     bonds = np.random.randint(ATOM_COUNT, size=(BOND_COUNT, 2))
     # Remove bonds of elements to itself
-    bonds = bonds[bonds[:,0] != bonds[:,1]]
+    bonds = bonds[bonds[:, 0] != bonds[:, 1]]
     assert len(bonds) > 0
     bonds = struc.BondList(ATOM_COUNT, bonds)
 
     # Create an unsorted array of random indices for the BondList
     # Indices should be unsorted -> 'replace=False'
-    unsorted_index = np.random.choice(
-        np.arange(ATOM_COUNT), INDEX_SIZE, replace=False
-    )
+    unsorted_index = np.random.choice(np.arange(ATOM_COUNT), INDEX_SIZE, replace=False)
     test_bonds = bonds[unsorted_index]
 
     # Create a sorted variant of the index array
@@ -385,14 +378,18 @@ def test_unsorted_array_indexing():
     # Get the 'atoms', in this case integers, that are connected with a bond
     # Use a set for simpler comparison between the sorted and unsorted variant
     # Omit the bond type -> 'bonds.as_array()[:, :2]'
-    test_integer_pairs = set([
-        frozenset((unsorted_indexed_integers[i], unsorted_indexed_integers[j]))
-        for i, j in test_bonds.as_array()[:, :2]
-    ])
-    ref_integer_pairs = set([
-        frozenset((sorted_indexed_integers[i], sorted_indexed_integers[j]))
-        for i, j in ref_bonds.as_array()[:, :2]
-    ])
+    test_integer_pairs = set(
+        [
+            frozenset((unsorted_indexed_integers[i], unsorted_indexed_integers[j]))
+            for i, j in test_bonds.as_array()[:, :2]
+        ]
+    )
+    ref_integer_pairs = set(
+        [
+            frozenset((sorted_indexed_integers[i], sorted_indexed_integers[j]))
+            for i, j in ref_bonds.as_array()[:, :2]
+        ]
+    )
 
     # The BondList entries should be different,
     # since they point to different positions in the reference array
@@ -415,18 +412,21 @@ def test_atom_array_consistency():
     array = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))[0]
     ca = array[array.atom_name == "CA"]
     # Just for testing, does not reflect real bonds
-    bond_list = struc.BondList(ca.array_length(),
-        np.array([(0,1),(2,8),(5,15),(1,5),(0,9),(3,18),(2,9)])
+    bond_list = struc.BondList(
+        ca.array_length(),
+        np.array([(0, 1), (2, 8), (5, 15), (1, 5), (0, 9), (3, 18), (2, 9)]),
     )
     ca.bonds = bond_list
 
-    ref_ids = ca.res_id[bond_list.as_array()[:,:2].flatten()]
+    ref_ids = ca.res_id[bond_list.as_array()[:, :2].flatten()]
 
     # Some random boolean mask as index,
     # but all bonded atoms are included
-    mask = np.array([1,1,1,1,0,1,0,0,1,1,0,1,1,0,0,1,1,0,1,1], dtype=bool)
+    mask = np.array(
+        [1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1], dtype=bool
+    )
     masked_ca = ca[mask]
-    test_ids = masked_ca.res_id[masked_ca.bonds.as_array()[:,:2].flatten()]
+    test_ids = masked_ca.res_id[masked_ca.bonds.as_array()[:, :2].flatten()]
 
     # The bonds, should always point to the same atoms (same res_id),
     # irrespective of indexing
@@ -442,9 +442,7 @@ def test_method_consistency(periodic):
     THRESHOLD_PERCENTAGE = 0.99
 
     # Structure with peptide, nucleotide, small molecules and water
-    pdbx_file = pdbx.BinaryCIFFile.read(
-        join(data_dir("structure"), "5ugo.bcif")
-    )
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "5ugo.bcif"))
     atoms = pdbx.get_structure(pdbx_file, model=1)
     if periodic:
         # Add large dummy box to test parameter
@@ -454,22 +452,22 @@ def test_method_consistency(periodic):
     bonds_from_names = struc.connect_via_residue_names(atoms)
     bonds_from_names.remove_bond_order()
 
-    bonds_from_distances = struc.connect_via_distances(
-        atoms, periodic=periodic
-    )
+    bonds_from_distances = struc.connect_via_distances(atoms, periodic=periodic)
 
     # The distance based method may not detect all bonds
     assert bonds_from_distances.as_set().issubset(bonds_from_names.as_set())
-    assert len(bonds_from_distances.as_array()) \
+    assert (
+        len(bonds_from_distances.as_array())
         >= len(bonds_from_names.as_array()) * THRESHOLD_PERCENTAGE
+    )
 
 
 def test_find_connected(bond_list):
     """
     Find all connected atoms to an atom in a known example.
     """
-    for index in (0,1,2,3,4,6):
-        assert struc.find_connected(bond_list, index).tolist() == [0,1,2,3,4,6]
+    for index in (0, 1, 2, 3, 4, 6):
+        assert struc.find_connected(bond_list, index).tolist() == [0, 1, 2, 3, 4, 6]
     assert struc.find_connected(bond_list, 5).tolist() == [5]
 
 
@@ -498,7 +496,7 @@ def test_find_connected(bond_list):
             ("C17",  "C22"),
         ]),
     ]
-)
+)  # fmt: skip
 def test_find_rotatable_bonds(res_name, expected_bonds):
     """
     Check the :func:`find_rotatable_bonds()` function based on
@@ -513,9 +511,7 @@ def test_find_rotatable_bonds(res_name, expected_bonds):
     rotatable_bonds = struc.find_rotatable_bonds(molecule.bonds)
     test_bond_set = set()
     for i, j, _ in rotatable_bonds.as_array():
-        test_bond_set.add(
-            tuple(sorted((molecule.atom_name[i], molecule.atom_name[j])))
-        )
+        test_bond_set.add(tuple(sorted((molecule.atom_name[i], molecule.atom_name[j]))))
 
     # Compare with reference bonded atom names
     assert test_bond_set == ref_bond_set

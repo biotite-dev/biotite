@@ -8,19 +8,22 @@ This module provides functions for structure superimposition.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Claude J. Rogers"
-__all__ = ["superimpose", "superimpose_homologs",
-           "superimpose_without_outliers",
-           "AffineTransformation", "superimpose_apply"]
+__all__ = [
+    "superimpose",
+    "superimpose_homologs",
+    "superimpose_without_outliers",
+    "AffineTransformation",
+]
 
 
 import numpy as np
-from .atoms import coord
-from .geometry import centroid, distance
-from .filter import filter_amino_acids, filter_nucleotides
-from .sequence import to_sequence
-from ..sequence.alphabet import common_alphabet
-from ..sequence.seqtypes import ProteinSequence
-from ..sequence.align import SubstitutionMatrix, align_optimal, get_codes
+from biotite.sequence.align import SubstitutionMatrix, align_optimal, get_codes
+from biotite.sequence.alphabet import common_alphabet
+from biotite.sequence.seqtypes import ProteinSequence
+from biotite.structure.atoms import coord
+from biotite.structure.filter import filter_amino_acids, filter_nucleotides
+from biotite.structure.geometry import centroid, distance
+from biotite.structure.sequence import to_sequence
 
 
 class AffineTransformation:
@@ -45,11 +48,11 @@ class AffineTransformation:
         The dimensions are always expanded to *(m,3)* or *(m,3,3)*,
         respectively.
     """
+
     def __init__(self, center_translation, rotation, target_translation):
         self.center_translation = _expand_dims(center_translation, 2)
         self.rotation = _expand_dims(rotation, 3)
         self.target_translation = _expand_dims(target_translation, 2)
-
 
     def apply(self, atoms):
         """
@@ -117,7 +120,6 @@ class AffineTransformation:
             superimposed = atoms.copy()
             superimposed.coord = superimposed_coord
             return superimposed
-
 
     def as_matrix(self):
         """
@@ -316,16 +318,19 @@ def superimpose(fixed, mobile, atom_mask=None):
     mob_centered_filtered = mob_filtered - mob_centroid[:, np.newaxis, :]
     fix_centered_filtered = fix_filtered - fix_centroid[:, np.newaxis, :]
 
-    rotation = _get_rotation_matrices(
-        fix_centered_filtered, mob_centered_filtered
-    )
+    rotation = _get_rotation_matrices(fix_centered_filtered, mob_centered_filtered)
     transform = AffineTransformation(-mob_centroid, rotation, fix_centroid)
     return transform.apply(mobile), transform
 
 
-def superimpose_without_outliers(fixed, mobile, min_anchors=3,
-                                 max_iterations=10, quantiles=(0.25, 0.75),
-                                 outlier_threshold=1.5):
+def superimpose_without_outliers(
+    fixed,
+    mobile,
+    min_anchors=3,
+    max_iterations=10,
+    quantiles=(0.25, 0.75),
+    outlier_threshold=1.5,
+):
     r"""
     Superimpose structures onto a fixed structure, ignoring
     conformational outliers.
@@ -458,8 +463,9 @@ def superimpose_without_outliers(fixed, mobile, min_anchors=3,
     return transform.apply(mobile), transform, anchor_indices
 
 
-def superimpose_homologs(fixed, mobile, substitution_matrix=None,
-                         gap_penalty=-10, min_anchors=3, **kwargs):
+def superimpose_homologs(
+    fixed, mobile, substitution_matrix=None, gap_penalty=-10, min_anchors=3, **kwargs
+):
     r"""
     Superimpose one protein or nucleotide chain onto another one,
     considering sequence differences and conformational outliers.
@@ -530,8 +536,8 @@ def superimpose_homologs(fixed, mobile, substitution_matrix=None,
     fixed_anchor_indices = _get_backbone_anchor_indices(fixed)
     mobile_anchor_indices = _get_backbone_anchor_indices(mobile)
     if (
-        len(fixed_anchor_indices) < min_anchors or
-        len(mobile_anchor_indices) < min_anchors
+        len(fixed_anchor_indices) < min_anchors
+        or len(mobile_anchor_indices) < min_anchors
     ):
         raise ValueError(
             "Structures have too few CA atoms for required number of anchors"
@@ -562,7 +568,7 @@ def superimpose_homologs(fixed, mobile, substitution_matrix=None,
         fixed[..., fixed_anchor_indices],
         mobile[..., mobile_anchor_indices],
         min_anchors,
-        **kwargs
+        **kwargs,
     )
     fixed_anchor_indices = fixed_anchor_indices[selected_anchor_indices]
     mobile_anchor_indices = mobile_anchor_indices[selected_anchor_indices]
@@ -575,54 +581,18 @@ def superimpose_homologs(fixed, mobile, substitution_matrix=None,
     )
 
 
-def superimpose_apply(atoms, transformation):
-    """
-    Superimpose structures using a given :class:`AffineTransformation`.
-
-    The :class:`AffineTransformation` can be obtained by prior
-    superimposition.
-
-    DEPRECATED: Use :func:`AffineTransformation.apply()` instead.
-
-    Parameters
-    ----------
-    atoms : AtomArray or ndarray, shape(n,), dtype=float
-        The structure to apply the transformation on.
-        Alternatively coordinates can be given.
-    transformation: AffineTransformation
-        The transformation, obtained by :func:`superimpose()`.
-
-    Returns
-    -------
-    fitted : AtomArray or AtomArrayStack
-        A copy of the `atoms` structure,
-        with transformations applied.
-        Only coordinates are returned, if coordinates were given in
-        `atoms`.
-
-    See Also
-    --------
-    superimpose
-    """
-    return transformation.apply(atoms)
-
-
 def _reshape_to_3d(coord):
     """
     Reshape the coordinate array to 3D, if it is 2D.
     """
     if coord.ndim < 2:
-        raise ValueError(
-            "Coordinates must be at least two-dimensional"
-        )
+        raise ValueError("Coordinates must be at least two-dimensional")
     if coord.ndim == 2:
         return coord[np.newaxis, ...]
     elif coord.ndim == 3:
         return coord
     else:
-        raise ValueError(
-            "Coordinates must be at most three-dimensional"
-        )
+        raise ValueError("Coordinates must be at most three-dimensional")
 
 
 def _get_rotation_matrices(fixed, mobile):
@@ -634,10 +604,10 @@ def _get_rotation_matrices(fixed, mobile):
     Both sets of coordinates must already be centered at origin.
     """
     # Calculate cross-covariance matrices
-    cov = np.sum(fixed[:,:,:,np.newaxis] * mobile[:,:,np.newaxis,:], axis=1)
+    cov = np.sum(fixed[:, :, :, np.newaxis] * mobile[:, :, np.newaxis, :], axis=1)
     v, s, w = np.linalg.svd(cov)
     # Remove possibility of reflected atom coordinates
-    reflected_mask = (np.linalg.det(v) * np.linalg.det(w) < 0)
+    reflected_mask = np.linalg.det(v) * np.linalg.det(w) < 0
     v[reflected_mask, :, -1] *= -1
     matrices = np.matmul(v, w)
     return matrices
@@ -649,11 +619,7 @@ def _multi_matmul(matrices, vectors):
     with m x n vectors.
     """
     return np.transpose(
-        np.matmul(
-            matrices,
-            np.transpose(vectors, axes=(0, 2, 1))
-        ),
-        axes=(0, 2, 1)
+        np.matmul(matrices, np.transpose(vectors, axes=(0, 2, 1))), axes=(0, 2, 1)
     )
 
 
@@ -663,8 +629,8 @@ def _get_backbone_anchor_indices(atoms):
     nucleotide and return their indices.
     """
     return np.where(
-        ((filter_amino_acids(atoms)) & (atoms.atom_name == "CA")) |
-        ((filter_nucleotides(atoms)) & (atoms.atom_name == "P"))
+        ((filter_amino_acids(atoms)) & (atoms.atom_name == "CA"))
+        | ((filter_nucleotides(atoms)) & (atoms.atom_name == "P"))
     )[0]
 
 
@@ -717,11 +683,7 @@ def _find_matching_anchors(
 def _to_sequence(atoms):
     sequences, _ = to_sequence(atoms, allow_hetero=True)
     if len(sequences) == 0:
-        raise ValueError(
-            "Structure does not contain any amino acids or nucleotides"
-        )
+        raise ValueError("Structure does not contain any amino acids or nucleotides")
     if len(sequences) > 1:
-        raise ValueError(
-            "Structure contains multiple chains, but only one is allowed"
-        )
+        raise ValueError("Structure contains multiple chains, but only one is allowed")
     return sequences[0]

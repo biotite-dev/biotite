@@ -43,22 +43,21 @@ Afterwards these sequences are aligned with *Clustal Omega*.
 # License: BSD 3 clause
 
 import warnings
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+import matplotlib.pyplot as plt
+import numpy as np
 import biotite
-import biotite.structure as struc
-import biotite.structure.io.pdbx as pdbx
-import biotite.sequence.align as align
-import biotite.sequence.graphics as graphics
 import biotite.application.blast as blast
 import biotite.application.clustalo as clustalo
 import biotite.database.rcsb as rcsb
-
+import biotite.sequence.align as align
+import biotite.sequence.graphics as graphics
+import biotite.structure as struc
+import biotite.structure.io.pdbx as pdbx
 
 # Get structure and sequence
 pdbx_file = pdbx.CIFFile.read(rcsb.fetch("1GUU", "mmcif"))
-sequence = pdbx.get_sequence(pdbx_file)['A']
+sequence = pdbx.get_sequence(pdbx_file)["A"]
 # 'use_author_fields' is set to false,
 # to ensure that values in the 'res_id' annotation point to the sequence
 structure = pdbx.get_structure(pdbx_file, model=1, use_author_fields=False)
@@ -88,16 +87,24 @@ alignment = clustalo.ClustalOmegaApp.align(hit_seqs)
 # Plot MSA
 number_functions = []
 for start in hit_starts:
+
     def some_func(x, start=start):
         return x + start
+
     number_functions.append(some_func)
 fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.gca()
 graphics.plot_alignment_type_based(
-    ax, alignment, symbols_per_line=len(alignment), labels=hit_ids,
-    symbol_size=8, number_size=8, label_size=8,
-    show_numbers=True, number_functions=number_functions,
-    color_scheme="flower"
+    ax,
+    alignment,
+    symbols_per_line=len(alignment),
+    labels=hit_ids,
+    symbol_size=8,
+    number_size=8,
+    label_size=8,
+    show_numbers=True,
+    number_functions=number_functions,
+    color_scheme="flower",
 )
 ax.set_title("C-Myb R1-like sequences")
 fig.tight_layout()
@@ -110,6 +117,7 @@ fig.tight_layout()
 # Finally, the MI-Z-score matrix is plotted.
 # High values indicate that the residues at the respective two
 # positions have coevolved.
+
 
 def mutual_information_zscore(alignment, n_shuffle=100):
     codes = align.get_codes(alignment).T
@@ -127,12 +135,14 @@ def mutual_information_zscore(alignment, n_shuffle=100):
     z_score = (mi - mean) / std
     return z_score
 
+
 def _shuffle(codes):
     shuffled_codes = codes.copy()
     # Shuffle each alignment column
     for i in range(len(shuffled_codes)):
         np.random.shuffle(shuffled_codes[i])
     return shuffled_codes
+
 
 def _mutual_information(codes, alph):
     mi = np.zeros((len(alignment), len(alignment)))
@@ -147,10 +157,10 @@ def _mutual_information(codes, alph):
             # Iterate over all symbols in both columns
             for k in range(codes.shape[1]):
                 # Skip rows where either column has a gap
-                if codes[i,k] != -1 and codes[j,k] != -1:
-                    marginal_counts_i[codes[i,k]] += 1
-                    marginal_counts_j[codes[j,k]] += 1
-                    combined_counts[codes[i,k], codes[j,k]] += 1
+                if codes[i, k] != -1 and codes[j, k] != -1:
+                    marginal_counts_i[codes[i, k]] += 1
+                    marginal_counts_j[codes[j, k]] += 1
+                    combined_counts[codes[i, k], codes[j, k]] += 1
                     nrows += 1
             marginal_probs_i = marginal_counts_i / nrows
             marginal_probs_j = marginal_counts_j / nrows
@@ -159,27 +169,31 @@ def _mutual_information(codes, alph):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 mi_before_sum = (
-                    combined_probs * np.log2(
-                        combined_probs / (
-                            marginal_probs_i[:, np.newaxis] *
-                            marginal_probs_j[np.newaxis, :]
+                    combined_probs
+                    * np.log2(
+                        combined_probs
+                        / (
+                            marginal_probs_i[:, np.newaxis]
+                            * marginal_probs_j[np.newaxis, :]
                         )
                     )
                 ).flatten()
-            mi[i,j] = np.sum(mi_before_sum[~np.isnan(mi_before_sum)])
+            mi[i, j] = np.sum(mi_before_sum[~np.isnan(mi_before_sum)])
     return mi
 
 
 # Remove alignment columns that have a gap in the C-Myb sequence
-alignment = alignment[alignment.trace[:,0] != -1]
+alignment = alignment[alignment.trace[:, 0] != -1]
 
 mi = mutual_information_zscore(alignment)
 
 # Create the color map for the plot
 color = colors.to_rgb(biotite.colors["dimorange"])
 cmap_val = np.stack(
-    [np.interp(np.linspace(0, 1, 100), [0, 1], [1, color[i]])
-        for i in range(len(color))]
+    [
+        np.interp(np.linspace(0, 1, 100), [0, 1], [1, color[i]])
+        for i in range(len(color))
+    ]
 ).transpose()
 cmap = colors.ListedColormap(cmap_val)
 

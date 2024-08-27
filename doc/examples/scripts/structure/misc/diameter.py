@@ -11,9 +11,10 @@ defined as the maximum pairwise atom distance.
 
 from tempfile import gettempdir
 import numpy as np
+import biotite.database.rcsb as rcsb
 import biotite.structure as struc
 import biotite.structure.io as strucio
-import biotite.database.rcsb as rcsb
+
 
 def get_diameter(pdb_id):
     file_name = rcsb.fetch(pdb_id, "bcif", gettempdir())
@@ -24,10 +25,11 @@ def get_diameter(pdb_id):
     # Calculate all pairwise difference vectors
     diff = coord[:, np.newaxis, :] - coord[np.newaxis, :, :]
     # Calculate absolute of difference vectors -> square distances
-    sq_dist = np.sum(diff*diff, axis=-1)
+    sq_dist = np.sum(diff * diff, axis=-1)
     # Maximum distance is diameter
     diameter = np.sqrt(np.max(sq_dist))
     return diameter
+
 
 # Example application
 print("Diameter of 1QAW:", get_diameter("1QAW"), "Angstrom")

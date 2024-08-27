@@ -18,5 +18,5 @@ getting/setting directly :class:`Sequence` objects, rather than strings.
 __name__ = "biotite.sequence.io.fasta"
 __author__ = "Patrick Kunzmann"
 
-from .file import *
 from .convert import *
+from .file import *

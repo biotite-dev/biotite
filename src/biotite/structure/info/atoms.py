@@ -6,15 +6,16 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["residue"]
 
-from .ccd import get_ccd
+from biotite.structure.info.ccd import get_ccd
 
-
-non_hetero_residues = set([
-    "ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS",
-    "ILE","LEU","LYS","MET","PHE","PRO","PYL","SER","THR",
-    "TRP","TYR","VAL", "SEC",
+# fmt: off
+NON_HETERO_RESIDUES = set([
+    "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS",
+    "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "PYL", "SER", "THR",
+    "TRP", "TYR", "VAL", "SEC",
     "A", "DA", "G", "DG", "C", "DC", "U", "DT",
 ])
+# fmt: on
 
 
 def residue(res_name):
@@ -70,13 +71,11 @@ def residue(res_name):
      ['OXT' 'HXT']]
     """
     # Avoid circular import
-    from ..io.pdbx import get_component
+    from biotite.structure.io.pdbx import get_component
 
     try:
         component = get_component(get_ccd(), res_name=res_name)
     except KeyError:
-        raise KeyError(
-            f"No atom information found for residue '{res_name}' in CCD"
-        )
-    component.hetero[:] = res_name not in non_hetero_residues
+        raise KeyError(f"No atom information found for residue '{res_name}' in CCD")
+    component.hetero[:] = res_name not in NON_HETERO_RESIDUES
     return component

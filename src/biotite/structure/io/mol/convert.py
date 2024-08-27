@@ -6,9 +6,9 @@ __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_structure", "set_structure"]
 
-from .mol import MOLFile
-from .sdf import SDFile, SDRecord
-from ...bonds import BondType
+from biotite.structure.bonds import BondType
+from biotite.structure.io.mol.mol import MOLFile
+from biotite.structure.io.mol.sdf import SDFile, SDRecord
 
 
 def get_structure(mol_file, record_name=None):
@@ -39,8 +39,9 @@ def get_structure(mol_file, record_name=None):
     return record.get_structure()
 
 
-def set_structure(mol_file, atoms, default_bond_type=BondType.ANY,
-                  version=None, record_name=None):
+def set_structure(
+    mol_file, atoms, default_bond_type=BondType.ANY, version=None, record_name=None
+):
     """
     Set the :class:`AtomArray` for the MOL file.
 
@@ -88,9 +89,7 @@ def _get_record(file, record_name):
         else:
             return file[record_name]
     else:
-        raise TypeError(
-            f"Unsupported file type '{type(file).__name__}'"
-        )
+        raise TypeError(f"Unsupported file type '{type(file).__name__}'")
 
 
 def _get_or_create_record(file, record_name):
@@ -110,6 +109,4 @@ def _get_or_create_record(file, record_name):
             file[record_name] = record
         return file[record_name]
     else:
-        raise TypeError(
-            f"Unsupported file type '{type(file).__name__}'"
-        )
+        raise TypeError(f"Unsupported file type '{type(file).__name__}'")

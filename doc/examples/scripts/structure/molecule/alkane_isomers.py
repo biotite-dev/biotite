@@ -24,12 +24,11 @@ This way subsequent queries can be achieved with a single request as
 opposed to one request per carbon number.
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import biotite.database.pubchem as pubchem
-import biotite.structure.io.mol as mol
 import biotite.structure as struc
-
+import biotite.structure.io.mol as mol
 
 MAX_CARBON_COUNT = 12
 PLOT_MAX_CARBON_COUNT = 6
@@ -37,13 +36,13 @@ PLOT_MAX_CARBON_COUNT = 6
 
 carbon_numbers = []
 alkane_cids = []
-for n_carbon in range(1, MAX_CARBON_COUNT+1):
+for n_carbon in range(1, MAX_CARBON_COUNT + 1):
     formula = f"C{n_carbon}H{2 * n_carbon + 2}"
     print(formula)
     cids = np.array(pubchem.search(pubchem.FormulaQuery(formula)))
     carbon_numbers.extend([n_carbon] * len(cids))
     alkane_cids.extend(cids)
-carbon_numbers = np.array(carbon_numbers) 
+carbon_numbers = np.array(carbon_numbers)
 alkane_cids = np.array(alkane_cids)
 
 ########################################################################
@@ -58,15 +57,13 @@ alkane_cids = np.array(alkane_cids)
 # appropriate data type and used for filtering.
 # Finally, also the IUPAC name for each remaining compound is retrieved
 # to review the results.
-    
+
 # Filter natural isotopes...
 n_isotopes = np.array(
     pubchem.fetch_property(alkane_cids, "IsotopeAtomCount"), dtype=int
 )
 # ...and neutral compounds
-charge = np.array(
-    pubchem.fetch_property(alkane_cids, "Charge"), dtype=int
-)
+charge = np.array(pubchem.fetch_property(alkane_cids, "Charge"), dtype=int)
 # Apply filter
 mask = (n_isotopes == 0) & (charge == 0)
 carbon_numbers = carbon_numbers[mask]
@@ -85,7 +82,7 @@ for name in iupac_names[:10]:
 
 # Remove compounds containing multiple molecules
 # (indicated by the ';' as separator between molecule names)
-single_molecule_mask = np.array([not ";" in name for name in iupac_names])
+single_molecule_mask = np.array([";" not in name for name in iupac_names])
 # Some compounds containing multiple molecules have no name at all
 single_molecule_mask &= np.array([len(name) != 0 for name in iupac_names])
 carbon_numbers = carbon_numbers[single_molecule_mask]
@@ -109,10 +106,7 @@ for n_carbon, cid, name in zip(carbon_numbers, alkane_cids, iupac_names):
 # for alkanes with zero carbon atoms, which does not make sense
 isomer_numbers = np.bincount(carbon_numbers)[1:]
 fig, ax = plt.subplots(figsize=(8.0, 4.0))
-ax.plot(
-    np.arange(1, MAX_CARBON_COUNT+1), isomer_numbers,
-    marker="o", color="gray"
-)
+ax.plot(np.arange(1, MAX_CARBON_COUNT + 1), isomer_numbers, marker="o", color="gray")
 ax.set_xlim(left=0)
 ax.set_ylim(bottom=0)
 ax.set_xlabel("Number of carbon atoms")
@@ -127,18 +121,18 @@ fig.tight_layout()
 # xy-coordinates are plotted as skeletal formula.
 
 files = pubchem.fetch(
-    alkane_cids[carbon_numbers <= PLOT_MAX_CARBON_COUNT],
-    as_structural_formula=True
+    alkane_cids[carbon_numbers <= PLOT_MAX_CARBON_COUNT], as_structural_formula=True
 )
 
 fig, axes = plt.subplots(
     nrows=np.max(isomer_numbers[:PLOT_MAX_CARBON_COUNT]),
     ncols=PLOT_MAX_CARBON_COUNT,
     figsize=(8.0, 6.0),
-    sharex=True, sharey=True
+    sharex=True,
+    sharey=True,
 )
 fig.suptitle("Number of carbon atoms", fontsize=16)
-for i, n_carbon in enumerate(range(1, PLOT_MAX_CARBON_COUNT+1)):
+for i, n_carbon in enumerate(range(1, PLOT_MAX_CARBON_COUNT + 1)):
     axes[0, i].set_title(n_carbon, fontsize=12)
     indices_for_n_carbon = np.where(carbon_numbers == n_carbon)[0]
     for j, file_index in enumerate(indices_for_n_carbon):
@@ -149,17 +143,13 @@ for i, n_carbon in enumerate(range(1, PLOT_MAX_CARBON_COUNT+1)):
         # Center atoms in origin
         atoms.coord -= struc.centroid(atoms)
         # Structural formula is 0 in z-dimension
-        coord = atoms.coord[:,:2]
+        coord = atoms.coord[:, :2]
 
         ax = axes[j, i]
-        ax.plot(
-            coord[:, 0], coord[:, 1],
-            color="black", linestyle="None", marker="o"
-        )
+        ax.plot(coord[:, 0], coord[:, 1], color="black", linestyle="None", marker="o")
         for bond_i, bond_j, _ in atoms.bonds.as_array():
             ax.plot(
-                coord[[bond_i, bond_j], 0], coord[[bond_i, bond_j], 1],
-                color="black"
+                coord[[bond_i, bond_j], 0], coord[[bond_i, bond_j], 1], color="black"
             )
 
 for ax in axes.flatten():

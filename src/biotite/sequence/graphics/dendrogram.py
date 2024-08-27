@@ -8,9 +8,18 @@ __all__ = ["plot_dendrogram"]
 
 import numpy as np
 
-def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
-                    labels=None, label_size=None, color="black",
-                    show_distance=True, **kwargs):
+
+def plot_dendrogram(
+    axes,
+    tree,
+    orientation="left",
+    use_distances=True,
+    labels=None,
+    label_size=None,
+    color="black",
+    show_distance=True,
+    **kwargs,
+):
     """
     Plot a dendrogram from a (phylogenetic) tree.
 
@@ -24,7 +33,7 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
         If true, the `distance` attribute of the :class:`TreeNode`
         objects are used as distance measure.
         Otherwise the topological distance is used.
-    labels : list of str, optional 
+    labels : list of str, optional
         The leaf node labels.
         The label of a leaf node is the entry at the position of its
         `index` attribute.
@@ -40,9 +49,9 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
         Additional parameters that are used to draw the dendrogram
         lines.
     """
-    
+
     indices = tree.root.get_indices()
-    leaf_dict = {indices[i] : i for i in indices}
+    leaf_dict = {indices[i]: i for i in indices}
 
     # Required for setting the plot limits
     max_distance = 0
@@ -50,12 +59,12 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
     def _plot_node(node, distance):
         """
         Draw the lines from the given node to its children.
-        
+
         Parameters
         ----------
         dist : float
             the distance of the node from root
-        
+
         Returns
         -------
         pos : float
@@ -88,31 +97,43 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
             if orientation in ["left", "right"]:
                 # Line connecting the childs
                 axes.plot(
-                    [distance, distance], [child_pos[0], child_pos[-1]],
-                    color=color, marker="None", **kwargs
+                    [distance, distance],
+                    [child_pos[0], child_pos[-1]],
+                    color=color,
+                    marker="None",
+                    **kwargs,
                 )
                 # Lines depicting the distances of the childs
                 for child_dist, pos in zip(child_distances, child_pos):
                     axes.plot(
-                        [distance, child_dist], [pos, pos],
-                        color=color, marker="None", **kwargs
+                        [distance, child_dist],
+                        [pos, pos],
+                        color=color,
+                        marker="None",
+                        **kwargs,
                     )
             elif orientation in ["bottom", "top"]:
                 # Line connecting the childs
                 axes.plot(
-                    [child_pos[0], child_pos[-1]], [distance, distance],
-                    color=color, marker="None", **kwargs
+                    [child_pos[0], child_pos[-1]],
+                    [distance, distance],
+                    color=color,
+                    marker="None",
+                    **kwargs,
                 )
                 # Lines depicting the distances of the childs
                 for child_dist, pos in zip(child_distances, child_pos):
                     axes.plot(
-                        [pos, pos], [distance, child_dist],
-                        color=color, marker="None", **kwargs
+                        [pos, pos],
+                        [distance, child_dist],
+                        color=color,
+                        marker="None",
+                        **kwargs,
                     )
             else:
                 raise ValueError(f"'{orientation}' is not a valid orientation")
             return center_pos
-    
+
     _plot_node(tree.root, 0)
 
     if labels is not None:
@@ -133,12 +154,18 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
         axes.set_yticks(np.arange(0, len(indices)))
         axes.set_yticklabels(labels)
         axes.yaxis.set_tick_params(
-            left=False, right=False, labelleft=False, labelright=True,
-            labelsize=label_size
+            left=False,
+            right=False,
+            labelleft=False,
+            labelright=True,
+            labelsize=label_size,
         )
         axes.xaxis.set_tick_params(
-            bottom=True, top=False, labelbottom=show_distance, labeltop=False,
-            labelsize=label_size
+            bottom=True,
+            top=False,
+            labelbottom=show_distance,
+            labeltop=False,
+            labelsize=label_size,
         )
     elif orientation == "right":
         axes.set_xlim(max_distance, zero_limit)
@@ -146,12 +173,18 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
         axes.set_yticks(np.arange(0, len(indices)))
         axes.set_yticklabels(labels)
         axes.yaxis.set_tick_params(
-            left=False, right=False, labelleft=True, labelright=False,
-            labelsize=label_size
+            left=False,
+            right=False,
+            labelleft=True,
+            labelright=False,
+            labelsize=label_size,
         )
         axes.xaxis.set_tick_params(
-            bottom=True, top=False, labelbottom=show_distance, labeltop=False,
-            labelsize=label_size
+            bottom=True,
+            top=False,
+            labelbottom=show_distance,
+            labeltop=False,
+            labelsize=label_size,
         )
     elif orientation == "bottom":
         axes.set_ylim(zero_limit, max_distance)
@@ -159,12 +192,18 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
         axes.set_xticks(np.arange(0, len(indices)))
         axes.set_xticklabels(labels)
         axes.xaxis.set_tick_params(
-            bottom=False, top=False, labelbottom=False, labeltop=True,
-            labelsize=label_size
+            bottom=False,
+            top=False,
+            labelbottom=False,
+            labeltop=True,
+            labelsize=label_size,
         )
         axes.yaxis.set_tick_params(
-            left=True, right=False, labelleft=show_distance, labelright=False,
-            labelsize=label_size
+            left=True,
+            right=False,
+            labelleft=show_distance,
+            labelright=False,
+            labelsize=label_size,
         )
     elif orientation == "top":
         axes.set_ylim(max_distance, zero_limit)
@@ -172,12 +211,18 @@ def plot_dendrogram(axes, tree, orientation="left", use_distances=True,
         axes.set_xticks(np.arange(0, len(indices)))
         axes.set_xticklabels(labels)
         axes.xaxis.set_tick_params(
-            bottom=False, top=False, labelbottom=True, labeltop=False,
-            labelsize=label_size
+            bottom=False,
+            top=False,
+            labelbottom=True,
+            labeltop=False,
+            labelsize=label_size,
         )
         axes.yaxis.set_tick_params(
-            left=True, right=False, labelleft=show_distance, labelright=False,
-            labelsize=label_size
+            left=True,
+            right=False,
+            labelleft=show_distance,
+            labelright=False,
+            labelsize=label_size,
         )
     else:
         raise ValueError(f"'{orientation}' is not a valid orientation")

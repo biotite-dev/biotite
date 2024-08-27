@@ -8,9 +8,9 @@ __all__ = ["standardize_order"]
 
 import warnings
 import numpy as np
-from .ccd import get_from_ccd
-from ..residues import get_residue_starts
-from ..error import BadStructureError
+from biotite.structure.error import BadStructureError
+from biotite.structure.info.ccd import get_from_ccd
+from biotite.structure.residues import get_residue_starts
 
 
 def standardize_order(atoms):
@@ -116,26 +116,24 @@ def standardize_order(atoms):
     reordered_indices = np.zeros(atoms.array_length(), dtype=int)
 
     starts = get_residue_starts(atoms, add_exclusive_stop=True)
-    for i in range(len(starts)-1):
+    for i in range(len(starts) - 1):
         start = starts[i]
-        stop = starts[i+1]
+        stop = starts[i + 1]
 
         res_name = atoms.res_name[start]
-        standard_atom_names = get_from_ccd(
-            "chem_comp_atom", res_name, "atom_id"
-        )
+        standard_atom_names = get_from_ccd("chem_comp_atom", res_name, "atom_id")
         if standard_atom_names is None:
             # If the residue is not in the CCD, keep the current order
             warnings.warn(
                 f"Residue '{res_name}' is not in the CCD, "
                 f"keeping current atom order"
             )
-            reordered_indices[start : stop] = np.arange(start, stop)
+            reordered_indices[start:stop] = np.arange(start, stop)
             continue
 
-        reordered_indices[start : stop] = _reorder(
-            atoms.atom_name[start : stop], standard_atom_names
-        ) + start
+        reordered_indices[start:stop] = (
+            _reorder(atoms.atom_name[start:stop], standard_atom_names) + start
+        )
 
     return reordered_indices
 
@@ -164,17 +162,13 @@ def _reorder(origin, target):
         Indices for `origin` that that changes the order of `origin`
         to the order of `target`.
     """
-    target_hits, origin_hits = np.where(
-        target[:, np.newaxis] == origin[np.newaxis, :]
-    )
+    target_hits, origin_hits = np.where(target[:, np.newaxis] == origin[np.newaxis, :])
 
     counts = np.bincount(target_hits, minlength=len(target))
     if (counts > 1).any():
         counts = np.bincount(target_hits, minlength=len(target))
         # Identify which atom is duplicate
-        duplicate_i = np.where(
-            counts > 1
-        )[0][0]
+        duplicate_i = np.where(counts > 1)[0][0]
         duplicate_name = target[duplicate_i]
         raise BadStructureError(
             f"Input structure has duplicate atom '{duplicate_name}'"
@@ -185,12 +179,7 @@ def _reorder(origin, target):
         # to the target structure
         # -> Identify which atoms are missing in the target structure
         # and append these to the end of the residue
-        missing_atom_mask = np.bincount(
-            origin_hits, minlength=len(origin)
-        ).astype(bool)
-        return np.concatenate([
-            origin_hits,
-            np.where(~missing_atom_mask)[0]
-        ])
+        missing_atom_mask = np.bincount(origin_hits, minlength=len(origin)).astype(bool)
+        return np.concatenate([origin_hits, np.where(~missing_atom_mask)[0]])
     else:
         return origin_hits

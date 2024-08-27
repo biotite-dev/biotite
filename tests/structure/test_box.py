@@ -2,18 +2,17 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import itertools
 import warnings
+from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
 from biotite.structure.io import load_structure
-from ..util import data_dir, cannot_import
+from tests.util import data_dir
 
-
-SAMPLE_BOXES = [
+SAMPLE_CELLS = [
     (1, 1, 1,  90,  90,  90),
     (9, 5, 2,  90,  90,  90),
     (5, 5, 8,  90,  90, 120),
@@ -21,86 +20,69 @@ SAMPLE_BOXES = [
     (2, 4, 6, 100, 110, 120),
     (9, 9, 9,  90,  90, 170),
     (9, 8, 7,  50,  80,  50),
-]
+]  # fmt: skip
 
 SAMPLE_COORD = [
     ( 1,  1,  1),
     ( 5, 10, 20),
     (-1,  5,  8),
     ( 3,  1, 54)
-]
+]  # fmt: skip
 
 
-
-# Ignore warning about dummy unit cell vector
-@pytest.mark.filterwarnings("ignore")
-@pytest.mark.skipif(
-    cannot_import("mdtraj"),
-    reason="MDTraj is not installed"
-)
-@pytest.mark.parametrize(
-    "len_a, len_b, len_c, alpha, beta, gamma", SAMPLE_BOXES
-)
-def test_box_vector_calculation(len_a, len_b, len_c, alpha, beta, gamma):
-    box = struc.vectors_from_unitcell(
-        len_a, len_b, len_c,
-        np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
-    )
-
-    from mdtraj.utils import lengths_and_angles_to_box_vectors
-    ref_box = np.stack(
-        lengths_and_angles_to_box_vectors(
-            len_a, len_b, len_c, alpha, beta, gamma
-        )
-    )
-    assert np.allclose(box, ref_box)
-
-    assert struc.unitcell_from_vectors(box) == pytest.approx(
-        (len_a, len_b, len_c,
-         alpha * 2*np.pi / 360, beta * 2*np.pi / 360, gamma * 2*np.pi / 360)
-    )
+@pytest.mark.parametrize("ref_cell", SAMPLE_CELLS)
+def test_box_vector_conversion(ref_cell):
+    """
+    Converting a unit cell into box vectors and back should restore the same
+    unit cell.
+    """
+    len_a, len_b, len_c, alpha, beta, gamma = ref_cell
+    alpha, beta, gamma = [np.deg2rad(angle) for angle in (alpha, beta, gamma)]
+    box = struc.vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
+    test_cell = struc.unitcell_from_vectors(box)
+    assert test_cell == pytest.approx((len_a, len_b, len_c, alpha, beta, gamma))
 
 
 def test_volume():
-    # Very rudimentary test
-    box = np.array([
-        [5,0,0],
-        [0,8,0],
-        [0,0,2],
-    ])
+    """
+    Test the volume calculation of a simple orthorhombic box.
+    """
+    box = np.array(
+        [
+            [5, 0, 0],
+            [0, 8, 0],
+            [0, 0, 2],
+        ]
+    )
     assert struc.box_volume(box) == pytest.approx(80)
     boxes = np.stack([box, box])
-    assert struc.box_volume(boxes) == pytest.approx(80,80)
+    assert struc.box_volume(boxes) == pytest.approx(80, 80)
 
 
 @pytest.mark.parametrize(
     "len_a, len_b, len_c, alpha, beta, gamma, x, y,z",
-    [box+coord for box, coord in itertools.product(SAMPLE_BOXES, SAMPLE_COORD)]
+    [box + coord for box, coord in itertools.product(SAMPLE_CELLS, SAMPLE_COORD)],
 )
 def test_move_into_box(len_a, len_b, len_c, alpha, beta, gamma, x, y, z):
     box = struc.vectors_from_unitcell(
-        len_a, len_b, len_c,
-        np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
+        len_a, len_b, len_c, np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
     )
-    coord = np.array([x,y,z])
+    coord = np.array([x, y, z])
 
     moved_coord = struc.move_inside_box(coord, box)
     fractions = struc.coord_to_fraction(moved_coord, box)
-    assert ((fractions >= 0) & (fractions <=1)).all()
+    assert ((fractions >= 0) & (fractions <= 1)).all()
 
 
 @pytest.mark.parametrize(
     "len_a, len_b, len_c, alpha, beta, gamma, x, y,z",
-    [box+coord for box, coord in itertools.product(SAMPLE_BOXES, SAMPLE_COORD)]
+    [box + coord for box, coord in itertools.product(SAMPLE_CELLS, SAMPLE_COORD)],
 )
-def test_conversion_to_fraction(len_a, len_b, len_c,
-                                alpha, beta, gamma,
-                                x, y, z):
+def test_conversion_to_fraction(len_a, len_b, len_c, alpha, beta, gamma, x, y, z):
     box = struc.vectors_from_unitcell(
-        len_a, len_b, len_c,
-        np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
+        len_a, len_b, len_c, np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
     )
-    coord = np.array([x,y,z])
+    coord = np.array([x, y, z])
 
     fractions = struc.coord_to_fraction(coord, box)
     if struc.is_orthogonal(box):
@@ -119,12 +101,11 @@ def test_conversion_to_fraction(len_a, len_b, len_c,
 def test_repeat_box(multi_model):
     model = None if multi_model else 1
     array = pdbx.get_structure(
-        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "3o5r.bcif")),
-        model=model
+        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "3o5r.bcif")), model=model
     )
     repeat_array, _ = struc.repeat_box(array)
     assert repeat_array.array_length() == array.array_length() * 27
-    assert repeat_array[..., :array.array_length()] == array
+    assert repeat_array[..., : array.array_length()] == array
 
 
 @pytest.mark.parametrize("multi_model", [True, False])
@@ -135,14 +116,12 @@ def test_remove_pbc_unsegmented(multi_model):
     """
     model = None if multi_model else 1
     ref_array = load_structure(
-        join(data_dir("structure"), "3o5r.bcif"),
-        model=model,
-        include_bonds=True
+        join(data_dir("structure"), "3o5r.bcif"), model=model, include_bonds=True
     )
     # Center structure in box
     centroid = struc.centroid(ref_array)
     box_center = np.diag(ref_array.box) / 2
-    ref_array = struc.translate(ref_array, box_center-centroid)
+    ref_array = struc.translate(ref_array, box_center - centroid)
     test_array = struc.remove_pbc(ref_array)
 
     assert ref_array.equal_annotation_categories(test_array)
@@ -150,11 +129,7 @@ def test_remove_pbc_unsegmented(multi_model):
 
 
 @pytest.mark.parametrize(
-    "multi_model, seed",
-    itertools.product(
-        [False, True],
-        range(10)
-    )
+    "multi_model, seed", itertools.product([False, True], range(10))
 )
 def test_remove_pbc_restore(multi_model, seed):
     BUFFER = 5
@@ -162,14 +137,12 @@ def test_remove_pbc_restore(multi_model, seed):
     def get_distance_matrices(array):
         if isinstance(array, struc.AtomArray):
             matrix = struc.distance(
-                array.coord[:, np.newaxis, :],
-                array.coord[np.newaxis, :, :],
-                box=None
+                array.coord[:, np.newaxis, :], array.coord[np.newaxis, :, :], box=None
             )
             matrix_pbc = struc.distance(
                 array.coord[:, np.newaxis, :],
                 array.coord[np.newaxis, :, :],
-                box=array.box
+                box=array.box,
             )
         elif isinstance(array, struc.AtomArrayStack):
             matrices = [get_distance_matrices(model) for model in array]
@@ -177,9 +150,7 @@ def test_remove_pbc_restore(multi_model, seed):
             matrix_pbc = np.stack([m[1] for m in matrices])
         return matrix, matrix_pbc
 
-    stack = load_structure(
-        join(data_dir("structure"), "1l2y.bcif"), include_bonds=True
-    )
+    stack = load_structure(join(data_dir("structure"), "1l2y.bcif"), include_bonds=True)
 
     # Only consider a single molecule
     # -> remove all other atoms (in this case some unbound hydrogen)
@@ -188,10 +159,12 @@ def test_remove_pbc_restore(multi_model, seed):
     stack = stack[..., largest_mask]
 
     # Create a relatively tight box around the protein
-    stack.box = np.array([
-        np.diag(np.max(coord, axis=0) - np.min(coord, axis=0) + BUFFER)
-        for coord in stack.coord
-    ])
+    stack.box = np.array(
+        [
+            np.diag(np.max(coord, axis=0) - np.min(coord, axis=0) + BUFFER)
+            for coord in stack.coord
+        ]
+    )
     stack.coord -= np.min(stack.coord, axis=-2)[:, np.newaxis, :] + BUFFER / 2
     if multi_model:
         array = stack
@@ -203,8 +176,7 @@ def test_remove_pbc_restore(multi_model, seed):
     np.random.seed(seed)
     size = (array.stack_depth(), 3) if isinstance(array, struc.AtomArrayStack) else 3
     translation_vector = np.sum(
-        np.random.uniform(-5, 5, size)[:, np.newaxis] * array.box,
-        axis=-2
+        np.random.uniform(-5, 5, size)[:, np.newaxis] * array.box, axis=-2
     )[..., np.newaxis, :]
     # Move atoms over periodic boundary...
     array = struc.translate(array, translation_vector)
@@ -226,10 +198,7 @@ def test_remove_pbc_restore(multi_model, seed):
 
     # The centroid of the structure should be inside the box dimensions
     centroid = struc.centroid(array)
-    assert np.all(
-        (centroid > np.zeros(3)) &
-        (centroid < np.sum(array.box, axis=-2))
-    )
+    assert np.all((centroid > np.zeros(3)) & (centroid < np.sum(array.box, axis=-2)))
 
 
 @pytest.mark.parametrize("multi_model", [True, False])

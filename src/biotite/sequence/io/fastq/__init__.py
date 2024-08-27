@@ -15,5 +15,5 @@ values.
 __name__ = "biotite.sequence.io.fastq"
 __author__ = "Patrick Kunzmann"
 
-from .file import *
 from .convert import *
+from .file import *

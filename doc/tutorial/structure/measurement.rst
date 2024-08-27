@@ -152,8 +152,9 @@ An ``'a'`` means alpha-helix, ``'b'`` beta-sheet, and ``'c'`` means coil.
 .. jupyter-execute::
 
     array = pdbx.get_structure(pdbx_file, model=1)
+    array = array[array.chain_id == 'A']
     # Estimate secondary structure
-    sse = struc.annotate_sse(array, chain_id="A")
+    sse = struc.annotate_sse(array)
     # Pretty print
     print("".join(sse))
 

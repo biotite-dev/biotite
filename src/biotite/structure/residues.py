@@ -9,14 +9,27 @@ atom level.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_residue_starts", "apply_residue_wise", "spread_residue_wise",
-           "get_residue_masks", "get_residue_starts_for",
-           "get_residue_positions", "get_residues", "get_residue_count",
-           "residue_iter"]
+__all__ = [
+    "get_residue_starts",
+    "apply_residue_wise",
+    "spread_residue_wise",
+    "get_residue_masks",
+    "get_residue_starts_for",
+    "get_residue_positions",
+    "get_residues",
+    "get_residue_count",
+    "residue_iter",
+]
 
 import numpy as np
-from .atoms import AtomArray, AtomArrayStack
-from .resutil import *
+from biotite.structure.segments import (
+    apply_segment_wise,
+    get_segment_masks,
+    get_segment_positions,
+    get_segment_starts_for,
+    segment_iter,
+    spread_segment_wise,
+)
 
 
 def get_residue_starts(array, add_exclusive_stop=False):
@@ -57,23 +70,20 @@ def get_residue_starts(array, add_exclusive_stop=False):
      278 292 304]
     """
     # These mask are 'true' at indices where the value changes
-    chain_id_changes = (array.chain_id[1:] != array.chain_id[:-1])
-    res_id_changes   = (array.res_id[1:]   != array.res_id[:-1]  )
-    ins_code_changes = (array.ins_code[1:] != array.ins_code[:-1])
-    res_name_changes = (array.res_name[1:] != array.res_name[:-1])
+    chain_id_changes = array.chain_id[1:] != array.chain_id[:-1]
+    res_id_changes = array.res_id[1:] != array.res_id[:-1]
+    ins_code_changes = array.ins_code[1:] != array.ins_code[:-1]
+    res_name_changes = array.res_name[1:] != array.res_name[:-1]
 
     # If any of these annotation arrays change, a new residue starts
     residue_change_mask = (
-        chain_id_changes |
-        res_id_changes |
-        ins_code_changes |
-        res_name_changes
+        chain_id_changes | res_id_changes | ins_code_changes | res_name_changes
     )
 
     # Convert mask to indices
     # Add 1, to shift the indices from the end of a residue
     # to the start of a new residue
-    residue_starts = np.where(residue_change_mask)[0] +1
+    residue_starts = np.where(residue_change_mask)[0] + 1
 
     # The first residue is not included yet -> Insert '[0]'
     if add_exclusive_stop:
@@ -197,7 +207,7 @@ def spread_residue_wise(array, input_data):
     Spread secondary structure annotation to every atom of a 20 residue
     peptide (with 304 atoms).
 
-        >>> sse = annotate_sse(atom_array, "A")
+        >>> sse = annotate_sse(atom_array)
         >>> print(len(sse))
         20
         >>> print(sse)

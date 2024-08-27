@@ -28,22 +28,24 @@ respect to their RMSD.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.stats import spearmanr
+import biotite.application.autodock as autodock
+import biotite.database.rcsb as rcsb
 import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io.pdbx as pdbx
-import biotite.database.rcsb as rcsb
-import biotite.application.autodock as autodock
-
 
 # Get the receptor structure
 # and the original 'correct' conformation of the ligand
 pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("2RTG", "bcif"))
 structure = pdbx.get_structure(
     # Include formal charge for accurate partial charge calculation
-    pdbx_file, model=1, include_bonds=True, extra_fields=["charge"]
+    pdbx_file,
+    model=1,
+    include_bonds=True,
+    extra_fields=["charge"],
 )
 # The asymmetric unit describes a streptavidin homodimer
 # However, we are only interested in a single monomer
@@ -79,9 +81,7 @@ energies = app.get_energies()
 docked_ligand = struc.from_template(ligand, docked_coord)
 # As Vina discards all nonpolar hydrogen atoms, their respective
 # coordinates are NaN -> remove these atoms
-docked_ligand = docked_ligand[
-    ..., ~np.isnan(docked_ligand.coord[0]).any(axis=-1)
-]
+docked_ligand = docked_ligand[..., ~np.isnan(docked_ligand.coord[0]).any(axis=-1)]
 
 
 # For comparison of the docked pose with the experimentally determined
@@ -142,8 +142,8 @@ docked_ligand = docked_ligand[np.argmin(rmsd)]
 # Vina only keeps polar hydrogens in the modeled structure
 # For consistency, remove all hydrogen atoms in the reference and
 # modelled structure
-ref_ligand = ref_ligand[ref_ligand.element!= "H"]
-docked_ligand = docked_ligand[docked_ligand.element!= "H"]
+ref_ligand = ref_ligand[ref_ligand.element != "H"]
+docked_ligand = docked_ligand[docked_ligand.element != "H"]
 
 # Visualization with PyMOL...
 # sphinx_gallery_thumbnail_number = 2

@@ -14,7 +14,7 @@ interface to this format, and high-level functions for extracting
    GFF 3 files. This means, that you cannot directly access the the
    parent or child of a feature.
    However, the ``Id`` and ``Name`` attributes are stored in the
-   qualifiers of the created :class:`Feature` objects. 
+   qualifiers of the created :class:`Feature` objects.
    Hence, it is possible to implement such a data structure from this
    information.
 """
@@ -22,5 +22,5 @@ interface to this format, and high-level functions for extracting
 __name__ = "biotite.sequence.io.gff"
 __author__ = "Patrick Kunzmann"
 
-from .file import *
 from .convert import *
+from .file import *

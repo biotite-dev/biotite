@@ -18,10 +18,12 @@ def _generate_cigar(seed):
         # Alternatingly insert matches and insertions/deletions
         cigar += f"{np.random.randint(1, 100)}M"
         op = align.CigarOp(
-            np.random.choice([
-                align.CigarOp.INSERTION,
-                align.CigarOp.DELETION,
-            ])
+            np.random.choice(
+                [
+                    align.CigarOp.INSERTION,
+                    align.CigarOp.DELETION,
+                ]
+            )
         ).to_cigar_symbol()
         cigar += f"{np.random.randint(1, 100)}{op}"
     # Alignment must end with a match
@@ -34,8 +36,9 @@ def _generate_cigar(seed):
     return cigar
 
 
-def _mutate_sequence(original,
-                     max_subsitutions=50, max_insertions=50, max_deletions=50):
+def _mutate_sequence(
+    original, max_subsitutions=50, max_insertions=50, max_deletions=50
+):
     """
     Introduce random deletions, insertions and substitutions into a
     sequence.
@@ -47,9 +50,7 @@ def _mutate_sequence(original,
     subsitution_indices = np.random.choice(
         np.arange(len(mutant)), size=n_subsitutions, replace=False
     )
-    subsitution_values = np.random.randint(
-        len(original.alphabet), size=n_subsitutions
-    )
+    subsitution_values = np.random.randint(len(original.alphabet), size=n_subsitutions)
     mutant.code[subsitution_indices] = subsitution_values
 
     # Random insertions
@@ -57,9 +58,7 @@ def _mutate_sequence(original,
     insertion_indices = np.random.choice(
         np.arange(len(mutant)), size=n_insertions, replace=False
     )
-    insertion_values = np.random.randint(
-        len(original.alphabet), size=n_insertions
-    )
+    insertion_values = np.random.randint(len(original.alphabet), size=n_insertions)
     mutant.code = np.insert(mutant.code, insertion_indices, insertion_values)
 
     # Random deletions
@@ -83,8 +82,8 @@ def test_cigar_conversion(cigar):
     # The sequences are arbitrary, only the alignment trace matters
     # However, they still need to be long enough for the number of CIGAR
     # operations
-    ref = seq.NucleotideSequence(["A"]*LENGTH)
-    seg = seq.NucleotideSequence(["A"]*LENGTH)
+    ref = seq.NucleotideSequence(["A"] * LENGTH)
+    seg = seq.NucleotideSequence(["A"] * LENGTH)
     alignment = align.read_alignment_from_cigar(cigar, 0, ref, seg)
     print(alignment)
 
@@ -103,10 +102,9 @@ def test_cigar_conversion(cigar):
         [False, True],
         [False, True],
         [False, True],
-    )
+    ),
 )
-def test_alignment_conversion(seed, local, distinguish_matches,
-                              include_terminal_gaps):
+def test_alignment_conversion(seed, local, distinguish_matches, include_terminal_gaps):
     """
     Check whether an :class:`Alignment` converted into a CIGAR string
     and back again into an :class:`Alignment` gives the same result.
@@ -114,20 +112,16 @@ def test_alignment_conversion(seed, local, distinguish_matches,
     REF_LENGTH = 1000
     np.random.seed(seed)
     ref = seq.NucleotideSequence(ambiguous=False)
-    ref.code = np.random.randint(
-        0, len(ref.alphabet), REF_LENGTH, dtype=np.uint8
-    )
+    ref.code = np.random.randint(0, len(ref.alphabet), REF_LENGTH, dtype=np.uint8)
 
     excerpt_start = np.random.randint(0, 200)
-    excerpt_stop = np.random.randint(REF_LENGTH-200, REF_LENGTH)
-    seg = ref[excerpt_start: excerpt_stop]
+    excerpt_stop = np.random.randint(REF_LENGTH - 200, REF_LENGTH)
+    seg = ref[excerpt_start:excerpt_stop]
     seg = _mutate_sequence(seg)
 
     matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
     if local:
-        ref_ali = align.align_optimal(
-            ref, seg, matrix, local=True, max_number=1
-        )[0]
+        ref_ali = align.align_optimal(ref, seg, matrix, local=True, max_number=1)[0]
     else:
         ref_ali = align.align_optimal(
             ref, seg, matrix, terminal_penalty=False, max_number=1
@@ -138,17 +132,15 @@ def test_alignment_conversion(seed, local, distinguish_matches,
     # Remove score as the compared reconstructed alignment does not
     # contain it either
     ref_ali.score = None
-    start_position = ref_ali.trace[0,0]
+    start_position = ref_ali.trace[0, 0]
 
     cigar = align.write_alignment_to_cigar(
         ref_ali,
         distinguish_matches=distinguish_matches,
-        include_terminal_gaps=include_terminal_gaps
+        include_terminal_gaps=include_terminal_gaps,
     )
 
-    test_ali = align.read_alignment_from_cigar(
-        cigar, start_position, ref, seg
-    )
+    test_ali = align.read_alignment_from_cigar(cigar, start_position, ref, seg)
 
     print(cigar)
     print("\n\n")

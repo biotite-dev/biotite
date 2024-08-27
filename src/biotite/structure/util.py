@@ -11,31 +11,30 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["vector_dot", "norm_vector", "distance", "matrix_rotate"]
 
 import numpy as np
-from .atoms import Atom, array
 
 
-def vector_dot(v1,v2):
+def vector_dot(v1, v2):
     """
     Calculate vector dot product of two vectors.
-    
+
     Parameters
     ----------
     v1,v2 : ndarray
         The arrays to calculate the product from.
         The vectors are represented by the last axis.
-    
+
     Returns
     -------
     product : float or ndarray
         Scalar product over the last dimension of the arrays.
     """
-    return (v1*v2).sum(axis=-1)
+    return (v1 * v2).sum(axis=-1)
 
 
 def norm_vector(v):
     """
     Normalise a vector.
-    
+
     Parameters
     ----------
     v : ndarray
@@ -47,25 +46,25 @@ def norm_vector(v):
         v /= factor[..., np.newaxis]
     else:
         v /= factor
-        
 
-def distance(v1,v2):
+
+def distance(v1, v2):
     """
     Calculate the distance between two position vectors.
-    
+
     Parameters
     ----------
     v1,v2 : ndarray
         The arrays to calculate the product from.
         The vectors are represented by the last axis.
-    
+
     Returns
     -------
     product : float or ndarray
         Vector distance over the last dimension of the array.
     """
     dif = v1 - v2
-    return np.sqrt((dif*dif).sum(axis=-1))
+    return np.sqrt((dif * dif).sum(axis=-1))
 
 
 def matrix_rotate(v, matrix):
@@ -78,7 +77,7 @@ def matrix_rotate(v, matrix):
         The coordinates to rotate.
     matrix : ndarray
         The rotation matrix.
-    
+
     Returns
     -------
     rotated : ndarray
@@ -95,4 +94,3 @@ def matrix_rotate(v, matrix):
     if orig_ndim > 2:
         v = v.reshape(*orig_shape)
     return v
-

@@ -2,14 +2,13 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import pytest
 import json
+from os.path import join
 import numpy as np
-import pickle as pkl
+import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
-from os.path import join
-from ..util import data_dir
+from tests.util import data_dir
 
 
 @pytest.fixture
@@ -19,6 +18,7 @@ def nuc_sample_array():
     """
     return strucio.load_structure(join(data_dir("structure"), "4p5j.cif"))
 
+
 def test_pseudoknots(nuc_sample_array):
     """
     Check the output of :func:`pseudoknots()`.
@@ -26,11 +26,9 @@ def test_pseudoknots(nuc_sample_array):
     # Known base pairs with pseudoknot-order = 1:
     pseudoknot_order_one = [{2, 74}, {58, 72}, {59, 71}, {60, 70}]
     # Known base pairs that can either be of order one or two
-    pseudoknot_order_one_or_two =  [{9, 48}, {10, 49}]
-    order_one_count = (
-        len(pseudoknot_order_one) + (len(pseudoknot_order_one_or_two)/2)
-    )
-    order_two_count = len(pseudoknot_order_one_or_two)/2
+    pseudoknot_order_one_or_two = [{9, 48}, {10, 49}]
+    order_one_count = len(pseudoknot_order_one) + (len(pseudoknot_order_one_or_two) / 2)
+    order_two_count = len(pseudoknot_order_one_or_two) / 2
 
     base_pairs = struc.base_pairs(nuc_sample_array)
     pseudoknot_order = struc.pseudoknots(base_pairs)
@@ -51,15 +49,14 @@ def test_pseudoknots(nuc_sample_array):
         for base_pair, order in zip(
             nuc_sample_array[base_pairs].res_id, optimal_solution
         ):
-            if(order == 1):
+            if order == 1:
                 assert (
-                    set(base_pair) in pseudoknot_order_one or
-                    set(base_pair) in pseudoknot_order_one_or_two
+                    set(base_pair) in pseudoknot_order_one
+                    or set(base_pair) in pseudoknot_order_one_or_two
                 )
-            elif (order == 2):
-                assert (
-                    set(base_pair) in pseudoknot_order_one_or_two
-                )
+            elif order == 2:
+                assert set(base_pair) in pseudoknot_order_one_or_two
+
 
 def load_test(name):
     """
@@ -67,19 +64,18 @@ def load_test(name):
     """
     # Base pairs as numpy array (input for `pseudoknots()`)
     with open(
-        join(data_dir("structure"), "pseudoknots", f"{name}_knotted.json"),
-        "r"
+        join(data_dir("structure"), "pseudoknots", f"{name}_knotted.json"), "r"
     ) as f:
         basepairs = np.array(json.load(f))
     # List of solutions (set of tuples)
     with open(
-        join(data_dir("structure"), "pseudoknots", f"{name}_unknotted.json"),
-        "rb"
+        join(data_dir("structure"), "pseudoknots", f"{name}_unknotted.json"), "rb"
     ) as f:
         solutions = json.load(f)
     for i, solution in enumerate(solutions):
         solutions[i] = set([tuple(pair) for pair in solution])
     return basepairs, solutions
+
 
 @pytest.mark.parametrize("name", [f"test{x}" for x in range(21)])
 def test_pseudoknot_removal(name):
@@ -116,6 +112,7 @@ def test_pseudoknot_removal(name):
     # Verify that the number of solutions matches the reference
     assert len(reference_solutions) == solutions_count
 
+
 @pytest.mark.parametrize("seed", range(10))
 def test_pseudoknot_orders(seed):
     """
@@ -136,7 +133,7 @@ def test_pseudoknot_orders(seed):
     for solution in solutions:
         # Number of base pairs in the previous order
         previous_order = -1
-        for order in range(np.max(solution)+1):
+        for order in range(np.max(solution) + 1):
             # Ensure that the base pairs of the same order are unknotted
             assert (struc.pseudoknots(basepairs[solution == order]) == 0).all()
 
@@ -148,9 +145,10 @@ def test_pseudoknot_orders(seed):
                 assert this_order <= previous_order
             previous_order = this_order
 
+
 def test_empty_base_pairs():
     """
     Assert than an empty array of base pairs generates an empty array of
-    pseudoknot orders. 
+    pseudoknot orders.
     """
-    assert struc.pseudoknots([]).shape == (1,0)
+    assert struc.pseudoknots([]).shape == (1, 0)

@@ -18,26 +18,33 @@ This script downloads the GenBank file for a *pET15* plasmid from
 # License: BSD 3 clause
 
 import io
-import requests
 import matplotlib.pyplot as plt
-import numpy as np
+import requests
 import biotite
-import biotite.sequence.io.genbank as gb
 import biotite.sequence.graphics as graphics
-import biotite.database.entrez as entrez
+import biotite.sequence.io.genbank as gb
 
-
-PLASMID_URL = "https://media.addgene.org/snapgene-media/v1.7.9-0-g88a3305/"\
-              "sequences/12250/9998fdbe-051f-4dc6-ba0f-24e65127a0c5/" \
-              "addgene-plasmid-26092-sequence-12250.gbk"
+PLASMID_URL = (
+    "https://media.addgene.org/snapgene-media/v1.7.9-0-g88a3305/"
+    "sequences/12250/9998fdbe-051f-4dc6-ba0f-24e65127a0c5/"
+    "addgene-plasmid-26092-sequence-12250.gbk"
+)
 
 
 response = requests.get(PLASMID_URL)
 gb_file = gb.GenBankFile.read(io.StringIO(response.text))
-annotation = gb.get_annotation(gb_file, include_only=[
-    "promoter", "terminator", "protein_bind",
-    "RBS", "CDS", "rep_origin", "primer_bind"
-])
+annotation = gb.get_annotation(
+    gb_file,
+    include_only=[
+        "promoter",
+        "terminator",
+        "protein_bind",
+        "RBS",
+        "CDS",
+        "rep_origin",
+        "primer_bind",
+    ],
+)
 _, seq_length, _, _, _, _ = gb.get_locus(gb_file)
 # AddGene stores the plasmid name in the 'KEYWORDS' field
 # [0][0][0] ->
@@ -69,8 +76,11 @@ def custom_feature_formatter(feature):
 fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.add_subplot(111, projection="polar")
 graphics.plot_plasmid_map(
-    ax, annotation, plasmid_size=seq_length,
-    label=plasmid_name, feature_formatter=custom_feature_formatter
+    ax,
+    annotation,
+    plasmid_size=seq_length,
+    label=plasmid_name,
+    feature_formatter=custom_feature_formatter,
 )
 fig.tight_layout()
 plt.show()

@@ -11,5 +11,5 @@ __author__ = "Patrick Kunzmann"
 
 from .dbnames import *
 from .download import *
-from .query import *
 from .key import *
+from .query import *

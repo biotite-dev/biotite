@@ -6,18 +6,17 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["bond_type", "bonds_in_residue"]
 
-from ..bonds import BondType
-from .ccd import get_from_ccd
-
+from biotite.structure.bonds import BondType
+from biotite.structure.info.ccd import get_from_ccd
 
 BOND_TYPES = {
-    ("SING", "N") : BondType.SINGLE,
-    ("DOUB", "N") : BondType.DOUBLE,
-    ("TRIP", "N") : BondType.TRIPLE,
-    ("QUAD", "N") : BondType.QUADRUPLE,
-    ("SING", "Y") : BondType.AROMATIC_SINGLE,
-    ("DOUB", "Y") : BondType.AROMATIC_DOUBLE,
-    ("TRIP", "Y") : BondType.AROMATIC_TRIPLE,
+    ("SING", "N"): BondType.SINGLE,
+    ("DOUB", "N"): BondType.DOUBLE,
+    ("TRIP", "N"): BondType.TRIPLE,
+    ("QUAD", "N"): BondType.QUADRUPLE,
+    ("SING", "Y"): BondType.AROMATIC_SINGLE,
+    ("DOUB", "Y"): BondType.AROMATIC_DOUBLE,
+    ("TRIP", "Y"): BondType.AROMATIC_TRIPLE,
 }
 
 _intra_bonds = {}
@@ -48,13 +47,13 @@ def bond_type(res_name, atom_name1, atom_name2):
     Examples
     --------
 
-    >>> print(bond_type("PHE", "CA", "CB"))
-    BondType.SINGLE
-    >>> print(bond_type("PHE", "CG", "CD1"))
-    BondType.AROMATIC_DOUBLE
-    >>> print(bond_type("PHE", "CA", "CG"))
+    >>> print(repr(bond_type("PHE", "CA", "CB")))
+    <BondType.SINGLE: 1>
+    >>> print(repr(bond_type("PHE", "CG", "CD1")))
+    <BondType.AROMATIC_DOUBLE: 6>
+    >>> print(repr(bond_type("PHE", "CA", "CG")))
     None
-    >>> print(bond_type("PHE", "FOO", "BAR"))
+    >>> print(repr(bond_type("PHE", "FOO", "BAR")))
     None
     """
     bonds_for_residue = bonds_in_residue(res_name)
@@ -62,8 +61,7 @@ def bond_type(res_name, atom_name1, atom_name2):
         return None
     # Try both atom orders
     bond_type_int = bonds_for_residue.get(
-        (atom_name1, atom_name2),
-        bonds_for_residue.get((atom_name2, atom_name1))
+        (atom_name1, atom_name2), bonds_for_residue.get((atom_name2, atom_name1))
     )
     if bond_type_int is not None:
         return BondType(bond_type_int)
@@ -101,30 +99,30 @@ def bonds_in_residue(res_name):
     >>> bonds = bonds_in_residue("PHE")
     >>> for atoms, bond_type_int in sorted(bonds.items()):
     ...     atom1, atom2 = sorted(atoms)
-    ...     print(f"{atom1:3} + {atom2:3} -> {str(BondType(bond_type_int))}")
-    C   + O   -> BondType.DOUBLE
-    C   + OXT -> BondType.SINGLE
-    C   + CA  -> BondType.SINGLE
-    CA  + CB  -> BondType.SINGLE
-    CA  + HA  -> BondType.SINGLE
-    CB  + CG  -> BondType.SINGLE
-    CB  + HB2 -> BondType.SINGLE
-    CB  + HB3 -> BondType.SINGLE
-    CD1 + CE1 -> BondType.AROMATIC_SINGLE
-    CD1 + HD1 -> BondType.SINGLE
-    CD2 + CE2 -> BondType.AROMATIC_DOUBLE
-    CD2 + HD2 -> BondType.SINGLE
-    CE1 + CZ  -> BondType.AROMATIC_DOUBLE
-    CE1 + HE1 -> BondType.SINGLE
-    CE2 + CZ  -> BondType.AROMATIC_SINGLE
-    CE2 + HE2 -> BondType.SINGLE
-    CD1 + CG  -> BondType.AROMATIC_DOUBLE
-    CD2 + CG  -> BondType.AROMATIC_SINGLE
-    CZ  + HZ  -> BondType.SINGLE
-    CA  + N   -> BondType.SINGLE
-    H   + N   -> BondType.SINGLE
-    H2  + N   -> BondType.SINGLE
-    HXT + OXT -> BondType.SINGLE
+    ...     print(f"{atom1:3} + {atom2:3} -> {BondType(bond_type_int).name}")
+    C   + O   -> DOUBLE
+    C   + OXT -> SINGLE
+    C   + CA  -> SINGLE
+    CA  + CB  -> SINGLE
+    CA  + HA  -> SINGLE
+    CB  + CG  -> SINGLE
+    CB  + HB2 -> SINGLE
+    CB  + HB3 -> SINGLE
+    CD1 + CE1 -> AROMATIC_SINGLE
+    CD1 + HD1 -> SINGLE
+    CD2 + CE2 -> AROMATIC_DOUBLE
+    CD2 + HD2 -> SINGLE
+    CE1 + CZ  -> AROMATIC_DOUBLE
+    CE1 + HE1 -> SINGLE
+    CE2 + CZ  -> AROMATIC_SINGLE
+    CE2 + HE2 -> SINGLE
+    CD1 + CG  -> AROMATIC_DOUBLE
+    CD2 + CG  -> AROMATIC_SINGLE
+    CZ  + HZ  -> SINGLE
+    CA  + N   -> SINGLE
+    H   + N   -> SINGLE
+    H2  + N   -> SINGLE
+    HXT + OXT -> SINGLE
     """
     global _intra_bonds
     if res_name not in _intra_bonds:
@@ -137,7 +135,7 @@ def bonds_in_residue(res_name):
                 chem_comp_bond_dict["atom_id_1"],
                 chem_comp_bond_dict["atom_id_2"],
                 chem_comp_bond_dict["value_order"],
-                chem_comp_bond_dict["pdbx_aromatic_flag"]
+                chem_comp_bond_dict["pdbx_aromatic_flag"],
             ):
                 bond_type = BOND_TYPES[order, aromatic_flag]
                 bonds_for_residue[atom1.item(), atom2.item()] = bond_type

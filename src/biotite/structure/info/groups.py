@@ -7,8 +7,6 @@ __author__ = "Tom David Müller, Patrick Kunzmann"
 __all__ = ["amino_acid_names", "nucleotide_names", "carbohydrate_names"]
 
 from pathlib import Path
-import copy
-
 
 CCD_DIR = Path(__file__).parent / "ccd"
 

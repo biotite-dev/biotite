@@ -15,6 +15,6 @@ def parse_error_details(response_text):
     for message_line_indicator in ["Detail: ", "Message: "]:
         for line in response_text.splitlines():
             if line.startswith(message_line_indicator):
-                return line[len(message_line_indicator):]
+                return line[len(message_line_indicator) :]
     # No 'Detail: ...' or 'Message: ' line found
     return "Unknown error"

@@ -2,64 +2,70 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from distutils.version import Version
-import biotite.sequence as seq
-import biotite.sequence.phylo as phylo
-import biotite.sequence.align as align
-from biotite.application import VersionError
-from biotite.application.muscle import MuscleApp, Muscle5App
-from biotite.application.mafft import MafftApp
-from biotite.application.clustalo import ClustalOmegaApp
 import numpy as np
 import pytest
-import shutil
-from ..util import is_not_installed
-
+import biotite.sequence as seq
+import biotite.sequence.align as align
+import biotite.sequence.phylo as phylo
+from biotite.application import VersionError
+from biotite.application.clustalo import ClustalOmegaApp
+from biotite.application.mafft import MafftApp
+from biotite.application.muscle import Muscle5App, MuscleApp
+from tests.util import is_not_installed
 
 BIN_PATH = {
-    MuscleApp : "muscle",
-    Muscle5App : "muscle",
-    MafftApp : "mafft",
-    ClustalOmegaApp: "clustalo"
+    MuscleApp: "muscle",
+    Muscle5App: "muscle",
+    MafftApp: "mafft",
+    ClustalOmegaApp: "clustalo",
 }
 
 
 @pytest.fixture
 def sequences():
-    return [seq.ProteinSequence(string) for string in [
-        "BIQTITE",
-        "TITANITE",
-        "BISMITE",
-        "IQLITE"
-]]
+    return [
+        seq.ProteinSequence(string)
+        for string in ["BIQTITE", "TITANITE", "BISMITE", "IQLITE"]
+    ]
 
 
-@pytest.mark.parametrize("app_cls, exp_ali, exp_order",
-    [(MuscleApp,
-      "BIQT-ITE\n"
-      "TITANITE\n"
-      "BISM-ITE\n"
-      "-IQL-ITE",
-      [1, 2, 0, 3]),
-     (Muscle5App,
-      "BI-QTITE\n"
-      "TITANITE\n"
-      "BI-SMITE\n"
-      "-I-QLITE",
-      [0, 3, 1, 2]),
-     (MafftApp,
-      "-BIQTITE\n"
-      "TITANITE\n"
-      "-BISMITE\n"
-      "--IQLITE",
-      [0, 3, 2, 1]),
-     (ClustalOmegaApp,
-      "-BIQTITE\n"
-      "TITANITE\n"
-      "-BISMITE\n"
-      "--IQLITE",
-     [1, 2, 0, 3])]
-)
+@pytest.mark.parametrize(
+    "app_cls, exp_ali, exp_order",
+    [
+        (
+            MuscleApp,
+            "BIQT-ITE\n"
+            "TITANITE\n"
+            "BISM-ITE\n"
+            "-IQL-ITE",
+            [1, 2, 0, 3]
+        ),
+        (
+            Muscle5App,
+            "BI-QTITE\n"
+            "TITANITE\n"
+            "BI-SMITE\n"
+            "-I-QLITE",
+            [0, 3, 1, 2]
+        ),
+        (
+            MafftApp,
+            "-BIQTITE\n"
+            "TITANITE\n"
+            "-BISMITE\n"
+            "--IQLITE",
+            [0, 3, 2, 1]
+        ),
+        (
+            ClustalOmegaApp,
+            "-BIQTITE\n"
+            "TITANITE\n"
+            "-BISMITE\n"
+            "--IQLITE",
+            [1, 2, 0, 3]
+        )
+    ]
+)  # fmt: skip
 def test_msa(sequences, app_cls, exp_ali, exp_order):
     """
     Test MSA software on short toy sequences with known alignment
@@ -72,7 +78,7 @@ def test_msa(sequences, app_cls, exp_ali, exp_order):
     try:
         app = app_cls(sequences)
     except VersionError:
-        pytest.skip(f"Invalid software version")
+        pytest.skip("Invalid software version")
     app.start()
     app.join()
     alignment = app.get_alignment()
@@ -104,14 +110,13 @@ def test_large_sequence_number(app_cls):
     try:
         app = app_cls(sequences)
     except VersionError:
-        pytest.skip(f"Invalid software version")
+        pytest.skip("Invalid software version")
     app.start()
     app.join()
     alignment = app.get_alignment()
     # Expect completely matching sequences
-    assert alignment.trace.tolist() == [
-        [i]*SEQ_NUMBER for i in range(SEQ_LENGTH)
-    ]
+    assert alignment.trace.tolist() == [[i] * SEQ_NUMBER for i in range(SEQ_LENGTH)]
+
 
 def test_additional_options(sequences):
     bin_path = BIN_PATH[ClustalOmegaApp]
@@ -120,15 +125,15 @@ def test_additional_options(sequences):
 
     app1 = ClustalOmegaApp(sequences)
     app1.start()
-    
+
     app2 = ClustalOmegaApp(sequences)
     app2.add_additional_options(["--full"])
     app2.start()
-    
+
     app1.join()
     app2.join()
     assert "--full" not in app1.get_command()
-    assert "--full"     in app2.get_command()
+    assert "--full" in app2.get_command()
     assert app1.get_alignment() == app2.get_alignment()
 
 
@@ -137,7 +142,7 @@ def test_custom_substitution_matrix(sequences, app_cls):
     bin_path = BIN_PATH[app_cls]
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
-    
+
     alph = seq.ProteinSequence.alphabet
     # Strong identity matrix
     score_matrix = np.identity(len(alph)) * 1000
@@ -147,11 +152,11 @@ def test_custom_substitution_matrix(sequences, app_cls):
         "TITANITE\n"
         "BI-SMITE\n"
         "-I-QLITE"
-    )
+    )  # fmt: skip
     try:
         app = app_cls(sequences, matrix=matrix)
     except VersionError:
-        pytest.skip(f"Invalid software version")
+        pytest.skip("Invalid software version")
     app.start()
     app.join()
     alignment = app.get_alignment()
@@ -165,21 +170,21 @@ def test_custom_sequence_type(app_cls):
     bin_path = BIN_PATH[app_cls]
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
-    
+
     alph = seq.Alphabet(("foo", "bar", 42))
     sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
         ["foo", "bar", 42, "foo",        "foo", 42, 42],
         ["foo",        42, "foo", "bar", "foo", 42, 42],
-    ]]
+    ]]  # fmt: skip
     exp_trace = [
-        [ 0,  0],
-        [ 1, -1],
-        [ 2,  1],
-        [ 3,  2],
-        [-1,  3],
-        [ 4,  4],
-        [ 5,  5],
-        [ 6,  6],
+        [0, 0],
+        [1, -1],
+        [2, 1],
+        [3, 2],
+        [-1, 3],
+        [4, 4],
+        [5, 5],
+        [6, 6],
     ]
     # Strong identity matrix
     score_matrix = np.identity(len(alph))
@@ -189,7 +194,7 @@ def test_custom_sequence_type(app_cls):
     try:
         app = app_cls(sequences, matrix=matrix)
     except VersionError:
-        pytest.skip(f"Invalid software version")
+        pytest.skip("Invalid software version")
     app.start()
     app.join()
     alignment = app.get_alignment()
@@ -206,17 +211,17 @@ def test_invalid_sequence_type_no_matrix(app_cls):
     bin_path = BIN_PATH[app_cls]
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
-    
+
     alph = seq.Alphabet(("foo", "bar", 42))
     sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
         ["foo", "bar", 42, "foo",        "foo", 42, 42],
         ["foo",        42, "foo", "bar", "foo", 42, 42],
-    ]]
+    ]]  # fmt: skip
     with pytest.raises(TypeError):
         try:
             app_cls(sequences)
         except VersionError:
-            pytest.skip(f"Invalid software version")
+            pytest.skip("Invalid software version")
 
 
 @pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])
@@ -228,17 +233,20 @@ def test_invalid_sequence_type_unsuitable_alphabet(app_cls):
     bin_path = BIN_PATH[app_cls]
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
-    
+
     alph = seq.Alphabet(range(50))
-    sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
-        [1,2,3],
-        [1,2,3],
-    ]]
+    sequences = [
+        seq.GeneralSequence(alph, sequence)
+        for sequence in [
+            [1, 2, 3],
+            [1, 2, 3],
+        ]
+    ]
     with pytest.raises(TypeError):
         try:
             app_cls(sequences)
         except VersionError:
-            pytest.skip(f"Invalid software version")
+            pytest.skip("Invalid software version")
 
 
 def test_invalid_muscle_version(sequences):
@@ -249,9 +257,9 @@ def test_invalid_muscle_version(sequences):
     bin_path = BIN_PATH[MuscleApp]
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
-    
+
     if is_not_installed("muscle"):
-        pytest.skip(f"'muscle' is not installed")
+        pytest.skip("'muscle' is not installed")
 
     with pytest.raises(VersionError):
         MuscleApp(sequences)
@@ -262,13 +270,13 @@ def test_clustalo_matrix(sequences):
     bin_path = BIN_PATH[ClustalOmegaApp]
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
-    
+
     ref_matrix = [
         [0, 1, 2, 3],
         [1, 0, 1, 2],
         [2, 1, 0, 1],
         [3, 2, 1, 0]
-    ]
+    ]  # fmt: skip
     app = ClustalOmegaApp(sequences)
     app.full_matrix_calculation()
     app.set_distance_matrix(np.array(ref_matrix))
@@ -282,7 +290,7 @@ def test_clustalo_tree(sequences):
     bin_path = BIN_PATH[ClustalOmegaApp]
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
-    
+
     leaves = [phylo.TreeNode(index=i) for i in range(len(sequences))]
     inter1 = phylo.TreeNode([leaves[0], leaves[1]], [1.0, 1.0])
     inter2 = phylo.TreeNode([leaves[2], leaves[3]], [2.5, 2.5])
@@ -305,7 +313,7 @@ def test_mafft_tree(sequences):
     bin_path = BIN_PATH[MafftApp]
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
-    
+
     app = MafftApp(sequences)
     app.start()
     app.join()
@@ -317,11 +325,11 @@ def test_muscle_tree(sequences):
     bin_path = BIN_PATH[MuscleApp]
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
-    
+
     try:
         app = MuscleApp(sequences)
     except VersionError:
-        pytest.skip(f"Invalid software version")
+        pytest.skip("Invalid software version")
     app.start()
     app.join()
     tree1 = app.get_guide_tree(iteration="kmer")
@@ -334,11 +342,11 @@ def test_muscle5_options(sequences):
     bin_path = BIN_PATH[Muscle5App]
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
-    
+
     try:
         app = Muscle5App(sequences)
     except VersionError:
-        pytest.skip(f"Invalid software version")
+        pytest.skip("Invalid software version")
     app.use_super5()
     app.set_iterations(2, 100)
     app.set_thread_number(2)
@@ -350,7 +358,9 @@ def test_muscle5_options(sequences):
     assert "-threads" in app.get_command()
 
     app.join()
-    assert str(app.get_alignment()) == "BI-QTITE\n" \
-                                       "TITANITE\n" \
-                                       "BI-SMITE\n" \
-                                       "-I-QLITE"
+    assert str(app.get_alignment()) == (
+        "BI-QTITE\n" \
+        "TITANITE\n" \
+        "BI-SMITE\n" \
+        "-I-QLITE"
+    )  # fmt: skip

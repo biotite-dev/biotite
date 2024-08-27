@@ -6,17 +6,15 @@ __name__ = "biotite.application.tantan"
 __author__ = "Patrick Kunzmann"
 __all__ = ["TantanApp"]
 
-from collections.abc import Sequence as SequenceABC
 import io
+from collections.abc import Sequence as SequenceABC
 from tempfile import NamedTemporaryFile
 import numpy as np
-from ..localapp import LocalApp, cleanup_tempfile
-from ..application import AppState, requires_state
-from ...sequence.seqtypes import NucleotideSequence, ProteinSequence
-from ...sequence.alphabet import common_alphabet
-from ...sequence.io.fasta.file import FastaFile
-from ..util import map_sequence, map_matrix
-
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.sequence.alphabet import common_alphabet
+from biotite.sequence.io.fasta.file import FastaFile
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
 MASKING_LETTER = "!"
 
@@ -43,7 +41,7 @@ class TantanApp(LocalApp):
 
     References
     ----------
-    
+
     .. footbibliography::
 
     Examples
@@ -59,10 +57,10 @@ class TantanApp(LocalApp):
       True  True  True  True  True  True  True  True False False False False
      False]
     >>> print(sequence, "\n" + "".join(["^" if e else " " for e in repeat_mask]))
-    GGCATCGATATATATATATAGTCAA 
-             ^^^^^^^^^^^         
+    GGCATCGATATATATATATAGTCAA
+             ^^^^^^^^^^^
     """
-    
+
     def __init__(self, sequence, matrix=None, bin_path="tantan"):
         super().__init__(bin_path)
 
@@ -93,59 +91,43 @@ class TantanApp(LocalApp):
                     )
                 self._is_protein = True
             else:
-                raise TypeError(
-                    "A NucleotideSequence or ProteinSequence is required"
-                )
-        
+                raise TypeError("A NucleotideSequence or ProteinSequence is required")
+
         if matrix is None:
             self._matrix_file = None
         else:
-            common_alph = common_alphabet(
-                (seq.alphabet for seq in self._sequences)
-            )
+            common_alph = common_alphabet((seq.alphabet for seq in self._sequences))
             if common_alph is None:
-                raise ValueError(
-                    "There is no common alphabet within the sequences"
-                )
+                raise ValueError("There is no common alphabet within the sequences")
             if not matrix.get_alphabet1().extends(common_alph):
                 raise ValueError(
                     "The alphabet of the sequence(s) do not fit the matrix"
                 )
             if not matrix.is_symmetric():
                 raise ValueError("A symmetric matrix is required")
-            self._matrix_file = NamedTemporaryFile(
-                "w", suffix=".mat", delete=False
-            )
+            self._matrix_file = NamedTemporaryFile("w", suffix=".mat", delete=False)
         self._matrix = matrix
-        
-        self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
 
+        self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
 
     def run(self):
         FastaFile.write_iter(
             self._in_file,
-            (
-                (f"sequence_{i:d}", str(seq))
-                for i, seq in enumerate(self._sequences)
-            )
+            ((f"sequence_{i:d}", str(seq)) for i, seq in enumerate(self._sequences)),
         )
         self._in_file.flush()
         if self._matrix is not None:
             self._matrix_file.write(str(self._matrix))
             self._matrix_file.flush()
-        
+
         args = []
         if self._matrix is not None:
             args += ["-m", self._matrix_file.name]
         if self._is_protein:
-             args += ["-p"]
-        args += [
-            "-x", MASKING_LETTER,
-            self._in_file.name
-        ]
+            args += ["-p"]
+        args += ["-x", MASKING_LETTER, self._in_file.name]
         self.set_arguments(args)
         super().run()
-    
 
     def evaluate(self):
         super().evaluate()
@@ -154,18 +136,14 @@ class TantanApp(LocalApp):
         self._masks = []
         encoded_masking_letter = MASKING_LETTER.encode("ASCII")[0]
         for _, masked_seq_string in FastaFile.read_iter(out_file):
-            array = np.frombuffer(
-                masked_seq_string.encode("ASCII"), dtype=np.ubyte
-            )
+            array = np.frombuffer(masked_seq_string.encode("ASCII"), dtype=np.ubyte)
             self._masks.append(array == encoded_masking_letter)
-    
 
     def clean_up(self):
         super().clean_up()
         cleanup_tempfile(self._in_file)
         if self._matrix_file is not None:
             cleanup_tempfile(self._matrix_file)
-    
 
     @requires_state(AppState.JOINED)
     def get_mask(self):
@@ -185,7 +163,6 @@ class TantanApp(LocalApp):
             return self._masks
         else:
             return self._masks[0]
-
 
     @staticmethod
     def mask_repeats(sequence, matrix=None, bin_path="tantan"):

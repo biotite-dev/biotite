@@ -15,9 +15,8 @@ from/to these files.
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 
-from .convert import *
 from .bcif import *
 from .cif import *
 from .component import *
+from .convert import *
 from .encoding import *
-from .legacy import *

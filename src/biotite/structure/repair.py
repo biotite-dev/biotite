@@ -8,80 +8,14 @@ This module contains functionalities for repairing malformed structures.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann, Daniel Bauer"
-__all__ = ["renumber_atom_ids", "renumber_res_ids",
-           "create_continuous_res_ids", "infer_elements", "create_atom_names"]
+__all__ = ["create_continuous_res_ids", "infer_elements", "create_atom_names"]
 
-from collections import Counter
 import warnings
+from collections import Counter
 import numpy as np
-from .atoms import AtomArray, AtomArrayStack
-from .residues import get_residue_starts
-from .chains import get_chain_starts
-
-
-def renumber_atom_ids(array, start=None):
-    """
-    Renumber the atom IDs of the given array.
-
-    DEPRECATED.
-
-    Parameters
-    ----------
-    array : AtomArray or AtomArrayStack
-        The array to be checked.
-    start : int, optional
-        The starting index for renumbering.
-        The first ID in the array is taken by default.
-
-    Returns
-    -------
-    array : AtomArray or AtomArrayStack
-        The renumbered array.
-    """
-    warnings.warn(
-      "'renumber_atom_ids()' is deprecated",
-        DeprecationWarning
-    )
-    if "atom_id" not in array.get_annotation_categories():
-        raise ValueError("The atom array must have the 'atom_id' annotation")
-    if start is None:
-        start = array.atom_id[0]
-    array = array.copy()
-    array.atom_id = np.arange(start, array.shape[-1]+1)
-    return array
-
-
-def renumber_res_ids(array, start=None):
-    """
-    Renumber the residue IDs of the given array, so that are continuous.
-
-    DEPRECATED: Use :func:`create_continuous_res_ids()`instead.
-
-    Parameters
-    ----------
-    array : AtomArray or AtomArrayStack
-        The array to be checked.
-    start : int, optional
-        The starting index for renumbering.
-        The first ID in the array is taken by default.
-
-    Returns
-    -------
-    array : AtomArray or AtomArrayStack
-        The renumbered array.
-    """
-    warnings.warn(
-      "'renumber_res_ids()' is deprecated, use 'create_continuous_res_ids()'",
-        DeprecationWarning
-    )
-    if start is None:
-        start = array.res_id[0]
-    diff = np.diff(array.res_id)
-    diff[diff != 0] = 1
-    new_res_ids =  np.concatenate(([start], diff)).cumsum()
-    array = array.copy()
-    array.res_id = new_res_ids
-    return array
+from biotite.structure.atoms import AtomArray, AtomArrayStack
+from biotite.structure.chains import get_chain_starts
+from biotite.structure.residues import get_residue_starts
 
 
 def create_continuous_res_ids(atoms, restart_each_chain=True):
@@ -217,18 +151,131 @@ def create_atom_names(atoms):
     return atom_names
 
 
-_elements = [elem.upper() for elem in
-["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg",
-"Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe",
-"Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr", "Rb", "Sr", "Y",
-"Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te",
-"I", "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb",
-"Dy", "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt",
-"Au", "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", "Pa",
-"U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", "Md", "No", "Lr", "Rf",
-"Db", "Sg", "Bh", "Hs", "Mt", "Ds", "Rg", "Cn", "Nh", "Fl", "Mc", "Lv", "Ts",
-"Og"]
+_elements = [
+    elem.upper()
+    for elem in [
+        "H",
+        "He",
+        "Li",
+        "Be",
+        "B",
+        "C",
+        "N",
+        "O",
+        "F",
+        "Ne",
+        "Na",
+        "Mg",
+        "Al",
+        "Si",
+        "P",
+        "S",
+        "Cl",
+        "Ar",
+        "K",
+        "Ca",
+        "Sc",
+        "Ti",
+        "V",
+        "Cr",
+        "Mn",
+        "Fe",
+        "Co",
+        "Ni",
+        "Cu",
+        "Zn",
+        "Ga",
+        "Ge",
+        "As",
+        "Se",
+        "Br",
+        "Kr",
+        "Rb",
+        "Sr",
+        "Y",
+        "Zr",
+        "Nb",
+        "Mo",
+        "Tc",
+        "Ru",
+        "Rh",
+        "Pd",
+        "Ag",
+        "Cd",
+        "In",
+        "Sn",
+        "Sb",
+        "Te",
+        "I",
+        "Xe",
+        "Cs",
+        "Ba",
+        "La",
+        "Ce",
+        "Pr",
+        "Nd",
+        "Pm",
+        "Sm",
+        "Eu",
+        "Gd",
+        "Tb",
+        "Dy",
+        "Ho",
+        "Er",
+        "Tm",
+        "Yb",
+        "Lu",
+        "Hf",
+        "Ta",
+        "W",
+        "Re",
+        "Os",
+        "Ir",
+        "Pt",
+        "Au",
+        "Hg",
+        "Tl",
+        "Pb",
+        "Bi",
+        "Po",
+        "At",
+        "Rn",
+        "Fr",
+        "Ra",
+        "Ac",
+        "Th",
+        "Pa",
+        "U",
+        "Np",
+        "Pu",
+        "Am",
+        "Cm",
+        "Bk",
+        "Cf",
+        "Es",
+        "Fm",
+        "Md",
+        "No",
+        "Lr",
+        "Rf",
+        "Db",
+        "Sg",
+        "Bh",
+        "Hs",
+        "Mt",
+        "Ds",
+        "Rg",
+        "Cn",
+        "Nh",
+        "Fl",
+        "Mc",
+        "Lv",
+        "Ts",
+        "Og",
+    ]
 ]
+
+
 def _guess_element(atom_name):
     # remove digits (1H -> H)
     elem = "".join([i for i in atom_name if not i.isdigit()])
@@ -237,9 +284,13 @@ def _guess_element(atom_name):
         return ""
 
     # Some often used elements for biomolecules
-    if elem.startswith("C") or elem.startswith("N") or \
-        elem.startswith("O") or elem.startswith("S") or \
-        elem.startswith("H"):
+    if (
+        elem.startswith("C")
+        or elem.startswith("N")
+        or elem.startswith("O")
+        or elem.startswith("S")
+        or elem.startswith("H")
+    ):
         return elem[0]
 
     # Exactly match element abbreviations

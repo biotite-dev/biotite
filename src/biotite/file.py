@@ -4,16 +4,19 @@
 
 __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
-__all__ = ["File", "TextFile", "InvalidFileError",
-           "SerializationError", "DeserializationError"]
+__all__ = [
+    "File",
+    "TextFile",
+    "InvalidFileError",
+    "SerializationError",
+    "DeserializationError",
+]
 
 import abc
-import io
-import warnings
-from os import PathLike
-
-from .copyable import Copyable
 import copy
+import io
+from os import PathLike
+from biotite.copyable import Copyable
 
 
 class File(Copyable, metaclass=abc.ABCMeta):
@@ -26,13 +29,6 @@ class File(Copyable, metaclass=abc.ABCMeta):
     In order to write the instance content into a file the
     :func:`write()` method is used.
     """
-
-    def __init__(self):
-        # Support for deprecated instance method 'read()':
-        # When creating an instance, the 'read()' class method is
-        # replaced by the instance method, so that subsequent
-        # 'read()' calls are delegated to the instance method
-        self.read = self._deprecated_read
 
     @classmethod
     @abc.abstractmethod
@@ -53,23 +49,6 @@ class File(Copyable, metaclass=abc.ABCMeta):
             representing the parsed file.
         """
         pass
-
-    def _deprecated_read(self, file, *args, **kwargs):
-        """
-        Support for deprecated instance method :func:`read()`.
-
-        Internally this calls the :func:`read()` class method and
-        replaces the data in `self` with the data from the newly created
-        :class:`File` object
-        """
-        warnings.warn(
-            "Instance method 'read()' is deprecated, "
-            "use class method instead",
-            DeprecationWarning
-        )
-        cls = type(self)
-        new_file = cls.read(file, *args, **kwargs)
-        self.__dict__.update(new_file.__dict__)
 
     @abc.abstractmethod
     def write(self, file):
@@ -209,11 +188,13 @@ class InvalidFileError(Exception):
     either because the file does not contain the required data or
     because the file is malformed.
     """
+
     pass
 
 
 class SerializationError(Exception):
     pass
+
 
 class DeserializationError(Exception):
     pass
@@ -229,7 +210,7 @@ def wrap_string(text, width):
     """
     lines = []
     for i in range(0, len(text), width):
-        lines.append(text[i : i+width])
+        lines.append(text[i : i + width])
     return lines
 
 

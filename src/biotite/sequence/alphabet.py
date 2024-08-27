@@ -4,14 +4,18 @@
 
 __name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
-__all__ = ["Alphabet", "LetterAlphabet", "AlphabetMapper", "AlphabetError",
-           "common_alphabet"]
+__all__ = [
+    "Alphabet",
+    "LetterAlphabet",
+    "AlphabetMapper",
+    "AlphabetError",
+    "common_alphabet",
+]
 
-import copy
-from numbers import Integral
 import string
+from numbers import Integral
 import numpy as np
-from .codec import encode_chars, decode_to_chars, map_sequence_code
+from biotite.sequence.codec import decode_to_chars, encode_chars, map_sequence_code
 
 
 class Alphabet(object):
@@ -100,14 +104,14 @@ class Alphabet(object):
     def __init__(self, symbols):
         if len(symbols) == 0:
             raise ValueError("Symbol list is empty")
-        self._symbols = copy.deepcopy(list(symbols))
+        self._symbols = tuple(symbols)
         self._symbol_dict = {}
         for i, symbol in enumerate(symbols):
             self._symbol_dict[symbol] = i
 
     def __repr__(self):
         """Represent Alphabet as a string for debugging."""
-        return f'Alphabet({self._symbols})'
+        return f"Alphabet({self._symbols})"
 
     def get_symbols(self):
         """
@@ -115,10 +119,10 @@ class Alphabet(object):
 
         Returns
         -------
-        symbols : list
-            Copy of the internal list of symbols.
+        symbols : tuple
+            The symbols.
         """
-        return copy.deepcopy(self._symbols)
+        return self._symbols
 
     def extends(self, alphabet):
         """
@@ -139,8 +143,7 @@ class Alphabet(object):
         elif len(alphabet) > len(self):
             return False
         else:
-            return alphabet.get_symbols() \
-                == self.get_symbols()[:len(alphabet)]
+            return alphabet.get_symbols() == self.get_symbols()[: len(alphabet)]
 
     def encode(self, symbol):
         """
@@ -164,9 +167,7 @@ class Alphabet(object):
         try:
             return self._symbol_dict[symbol]
         except KeyError:
-            raise AlphabetError(
-                f"Symbol {repr(symbol)} is not in the alphabet"
-            )
+            raise AlphabetError(f"Symbol {repr(symbol)} is not in the alphabet")
 
     def decode(self, code):
         """
@@ -238,12 +239,11 @@ class Alphabet(object):
             have length 1 and are printable.
         """
         for symbol in self:
-            if not isinstance(symbol, (str, bytes)) \
-                or len(symbol) > 1:
-                    return False
+            if not isinstance(symbol, (str, bytes)) or len(symbol) > 1:
+                return False
             if isinstance(symbol, str):
                 symbol = symbol.encode("ASCII")
-            if symbol not in LetterAlphabet.PRINATBLES:
+            if symbol not in LetterAlphabet.PRINTABLES:
                 return False
         return True
 
@@ -260,7 +260,11 @@ class Alphabet(object):
         return symbol in self.get_symbols()
 
     def __hash__(self):
-        return hash(tuple(self._symbols))
+        symbols = self.get_symbols()
+        if isinstance(symbols, tuple):
+            return hash(symbols)
+        else:
+            return hash(tuple(symbols))
 
     def __eq__(self, item):
         if item is self:
@@ -292,8 +296,9 @@ class LetterAlphabet(Alphabet):
         in this list.
     """
 
-    PRINATBLES = (string.digits + string.ascii_letters + string.punctuation) \
-                 .encode("ASCII")
+    PRINTABLES = (string.digits + string.ascii_letters + string.punctuation).encode(
+        "ASCII"
+    )
 
     def __init__(self, symbols):
         if len(symbols) == 0:
@@ -304,7 +309,7 @@ class LetterAlphabet(Alphabet):
                 raise ValueError(f"Symbol '{symbol}' is not a single letter")
             if isinstance(symbol, str):
                 symbol = symbol.encode("ASCII")
-            if symbol not in LetterAlphabet.PRINATBLES:
+            if symbol not in LetterAlphabet.PRINTABLES:
                 raise ValueError(
                     f"Symbol {repr(symbol)} is not printable or whitespace"
                 )
@@ -312,47 +317,33 @@ class LetterAlphabet(Alphabet):
         # Direct 'astype' conversion is not allowed by numpy
         # -> frombuffer()
         self._symbols = np.frombuffer(
-            np.array(self._symbols, dtype="|S1"),
-            dtype=np.ubyte
+            np.array(self._symbols, dtype="|S1"), dtype=np.ubyte
         )
 
     def __repr__(self):
         """Represent LetterAlphabet as a string for debugging."""
-        return f'LetterAlphabet({self.get_symbols()})'
+        return f"LetterAlphabet({self.get_symbols()})"
 
     def extends(self, alphabet):
         if alphabet is self:
             return True
-        elif type(alphabet) == LetterAlphabet:
+        elif isinstance(alphabet, LetterAlphabet):
             if len(alphabet._symbols) > len(self._symbols):
                 return False
-            return np.all(
-                alphabet._symbols == self._symbols[:len(alphabet._symbols)]
-            )
+            return np.all(alphabet._symbols == self._symbols[: len(alphabet._symbols)])
         else:
             return super().extends(alphabet)
 
     def get_symbols(self):
-        """
-        Get the symbols in the alphabet.
-
-        Returns
-        -------
-        symbols : list
-            Copy of the internal list of symbols.
-        """
-        return [symbol.decode("ASCII") for symbol
-                in self._symbols_as_bytes()]
+        return tuple([symbol.decode("ASCII") for symbol in self._symbols_as_bytes()])
 
     def encode(self, symbol):
         if not isinstance(symbol, (str, bytes)) or len(symbol) > 1:
             raise AlphabetError(f"Symbol '{symbol}' is not a single letter")
         indices = np.where(self._symbols == ord(symbol))[0]
         if len(indices) == 0:
-            raise AlphabetError(
-                f"Symbol {repr(symbol)} is not in the alphabet"
-            )
-        return indices[0]
+            raise AlphabetError(f"Symbol {repr(symbol)} is not in the alphabet")
+        return indices[0].item()
 
     def decode(self, code, as_bytes=False):
         if code < 0 or code >= len(self._symbols):
@@ -382,13 +373,10 @@ class LetterAlphabet(Alphabet):
         elif isinstance(symbols, bytes):
             symbols = np.frombuffer(symbols, dtype=np.ubyte)
         elif isinstance(symbols, np.ndarray):
-            symbols = np.frombuffer(
-                symbols.astype(dtype="|S1"), dtype=np.ubyte
-            )
+            symbols = np.frombuffer(symbols.astype(dtype="|S1"), dtype=np.ubyte)
         else:
             symbols = np.frombuffer(
-                np.array(list(symbols), dtype="|S1"),
-                dtype=np.ubyte
+                np.array(list(symbols), dtype="|S1"), dtype=np.ubyte
             )
         return encode_chars(alphabet=self._symbols, symbols=symbols)
 
@@ -433,7 +421,6 @@ class LetterAlphabet(Alphabet):
     def _symbols_as_bytes(self):
         "Properly convert from dtype 'np.ubyte' to '|S1'"
         return np.frombuffer(self._symbols, dtype="|S1")
-
 
 
 class AlphabetMapper(object):
@@ -486,8 +473,7 @@ class AlphabetMapper(object):
         else:
             self._necessary_mapping = True
             self._mapper = np.zeros(
-                len(source_alphabet),
-                dtype=AlphabetMapper._dtype(len(target_alphabet))
+                len(source_alphabet), dtype=AlphabetMapper._dtype(len(target_alphabet))
             )
             for old_code in range(len(source_alphabet)):
                 symbol = source_alphabet.decode(old_code)
@@ -500,26 +486,25 @@ class AlphabetMapper(object):
                 return self._mapper[code]
             else:
                 return code
-        if not isinstance(code, np.ndarray) \
-           or code.dtype not in (np.uint8, np.uint16, np.uint32, np.uint64):
-                code = np.array(code, dtype=np.uint64)
+        if not isinstance(code, np.ndarray) or code.dtype not in (
+            np.uint8,
+            np.uint16,
+            np.uint32,
+            np.uint64,
+        ):
+            code = np.array(code, dtype=np.uint64)
         if self._necessary_mapping:
             mapped_code = np.empty(len(code), dtype=self._mapper.dtype)
-            map_sequence_code(
-                self._mapper,
-                code,
-                mapped_code
-            )
+            map_sequence_code(self._mapper, code, mapped_code)
             return mapped_code
         else:
             return code
 
-
     @staticmethod
     def _dtype(alphabet_size):
-        _size_uint8  = np.iinfo(np.uint8 ).max +1
-        _size_uint16 = np.iinfo(np.uint16).max +1
-        _size_uint32 = np.iinfo(np.uint32).max +1
+        _size_uint8 = np.iinfo(np.uint8).max + 1
+        _size_uint16 = np.iinfo(np.uint16).max + 1
+        _size_uint32 = np.iinfo(np.uint32).max + 1
         if alphabet_size <= _size_uint8:
             return np.uint8
         elif alphabet_size <= _size_uint16:
@@ -535,6 +520,7 @@ class AlphabetError(Exception):
     This exception is raised, when a code or a symbol is not in an
     :class:`Alphabet`.
     """
+
     pass
 
 

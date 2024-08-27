@@ -19,21 +19,20 @@ which is out of scope of *Biotite*.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-from io import StringIO
 import functools
-import multiprocessing
 import gzip
-import numpy as np
+import multiprocessing
+from io import StringIO
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import requests
 import biotite
+import biotite.application.sra as sra
 import biotite.sequence as seq
+import biotite.sequence.align as align
 import biotite.sequence.io.fasta as fasta
 import biotite.sequence.io.fastq as fastq
-import biotite.sequence.align as align
-import biotite.application.sra as sra
-
 
 # The number of processes for read mapping
 N_PROCESS = 2
@@ -93,6 +92,7 @@ fastq_path = app.get_file_paths()[0]
 # extracts the gene symbols, i.e. the 'names' of the genes, and the
 # corresponding cDNA sequences.
 
+
 def get_gene_symbol(header):
     fields = header.split()
     for field in fields:
@@ -102,6 +102,7 @@ def get_gene_symbol(header):
             return field.replace("gene_symbol:", "")
     # No gene symbol for this cDNA (e.g. non-coding)
     return None
+
 
 response = requests.get(CDNA_URL)
 fasta_content = gzip.decompress(response.content).decode("UTF-8")
@@ -123,9 +124,7 @@ for header, seq_string in fasta.FastaFile.read_iter(StringIO(fasta_content)):
             # The k-mer code in restricted to int64, so a larger number
             # of base alphabet codes decreases the *k* that fits into
             # the integer type
-            sequences.append(
-                seq.NucleotideSequence(seq_string, ambiguous=False)
-            )
+            sequences.append(seq.NucleotideSequence(seq_string, ambiguous=False))
         except seq.AlphabetError:
             # For the simplicity of this example just ignore sequences
             # with unambiguous symbols
@@ -172,13 +171,10 @@ for symbol in gene_symbols[:20]:
 
 base_alph = seq.NucleotideSequence.alphabet_unamb
 kmer_alph = align.KmerAlphabet(base_alph, K)
-min_selector = align.MinimizerSelector(
-    kmer_alph, WINDOW, align.RandomPermutation()
-)
+min_selector = align.MinimizerSelector(kmer_alph, WINDOW, align.RandomPermutation())
 
 kmer_table = align.BucketKmerTable.from_kmer_selection(
-    kmer_alph,
-    *zip(*[min_selector.select(sequence) for sequence in sequences])
+    kmer_alph, *zip(*[min_selector.select(sequence) for sequence in sequences])
 )
 
 ########################################################################
@@ -201,6 +197,7 @@ kmer_table = align.BucketKmerTable.from_kmer_selection(
 # flat constant is used here.
 # After all alignments have been collected, simply the highest-scoring
 # one is chosen as the *correct* one.
+
 
 def map_read(read_string, kmer_table, gene_sequences, substitution_matrix):
     try:
@@ -226,10 +223,13 @@ def map_read(read_string, kmer_table, gene_sequences, substitution_matrix):
         (
             gene_i,
             align.align_banded(
-                read, gene_sequences[gene_i], substitution_matrix,
+                read,
+                gene_sequences[gene_i],
+                substitution_matrix,
                 band=(diagonal - BAND_WIDTH, diagonal + BAND_WIDTH),
-                gap_penalty= -10, max_number=1
-            )[0]
+                gap_penalty=-10,
+                max_number=1,
+            )[0],
         )
         for gene_i, diagonal in zip(matched_gene_indices, matched_diagonals)
     ]
@@ -243,9 +243,9 @@ def map_read(read_string, kmer_table, gene_sequences, substitution_matrix):
 
 substitution_matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
 
-for i, (_, (seq_string, q)) in enumerate(fastq.FastqFile.read_iter(
-    fastq_path, offset="Sanger"
-)):
+for i, (_, (seq_string, q)) in enumerate(
+    fastq.FastqFile.read_iter(fastq_path, offset="Sanger")
+):
     # For demonstration only a single clean read is mapped
     if i == 3:
         read_string = seq_string
@@ -266,10 +266,11 @@ print(alignment)
 # However, for the large number of reads which can be then processed in
 # parallel, it is still worth it.
 
+
 def read_iter(fastq_path):
-    for i, (_, (read_string, quality)) in enumerate(fastq.FastqFile.read_iter(
-        fastq_path, offset="Sanger"
-    )):
+    for i, (_, (read_string, quality)) in enumerate(
+        fastq.FastqFile.read_iter(fastq_path, offset="Sanger")
+    ):
         # For the purpose of this example only a faction of the reads
         # are processed to save computation time
         if i >= EXCERPT:
@@ -279,21 +280,24 @@ def read_iter(fastq_path):
             continue
         yield read_string
 
+
 with multiprocessing.Pool(processes=N_PROCESS) as p:
     # Use multiprocessing to map reads to genes
     # and remove non-mappable reads (None values) afterwards
-    mapping_results = list(filter(
-        lambda mapping: mapping is not None,
-        p.map(
-            functools.partial(
-                map_read,
-                kmer_table=kmer_table,
-                gene_sequences=sequences,
-                substitution_matrix=substitution_matrix
+    mapping_results = list(
+        filter(
+            lambda mapping: mapping is not None,
+            p.map(
+                functools.partial(
+                    map_read,
+                    kmer_table=kmer_table,
+                    gene_sequences=sequences,
+                    substitution_matrix=substitution_matrix,
+                ),
+                read_iter(fastq_path),
             ),
-            read_iter(fastq_path)
         )
-    ))
+    )
 
 ########################################################################
 # Now the genes are counted:
@@ -324,7 +328,7 @@ ranked_counts = counts[order]
 # Put into dataframe for prettier printing
 counts = pd.DataFrame(
     {"gene_symbol": ranked_gene_symbols, "count": ranked_counts},
-    index = np.arange(1, len(ranked_counts) + 1)
+    index=np.arange(1, len(ranked_counts) + 1),
 )
 
 # Show Top N
@@ -335,10 +339,7 @@ top_counts
 # Finally the top expressed genes are plotted.
 
 figure, ax = plt.subplots(figsize=(8.0, 6.0), constrained_layout=True)
-ax.barh(
-    top_counts["gene_symbol"], top_counts["count"],
-    color=biotite.colors["orange"]
-)
+ax.barh(top_counts["gene_symbol"], top_counts["count"], color=biotite.colors["orange"])
 ax.invert_yaxis()
 ax.set_title(f"Top {N_TOP_LIST} expressed genes", weight="semibold")
 ax.set_xlabel("Counts")

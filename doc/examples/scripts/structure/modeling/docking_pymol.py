@@ -1,23 +1,17 @@
-import numpy as np
+import ammolite
 from matplotlib.colors import to_rgb
 import biotite
-import biotite.structure as struc
-import ammolite
-
 
 PNG_SIZE = (1000, 400)
 
 
 # Define colors
 for color_name, color_value in biotite.colors.items():
-    ammolite.cmd.set_color(
-        "biotite_" + color_name,
-        to_rgb(color_value)
-    )
+    ammolite.cmd.set_color("biotite_" + color_name, to_rgb(color_value))
 
 # Convert to PyMOL
-pymol_receptor      = ammolite.PyMOLObject.from_structure(receptor)
-pymol_ref_ligand    = ammolite.PyMOLObject.from_structure(ref_ligand)
+pymol_receptor = ammolite.PyMOLObject.from_structure(receptor)
+pymol_ref_ligand = ammolite.PyMOLObject.from_structure(ref_ligand)
 pymol_docked_ligand = ammolite.PyMOLObject.from_structure(docked_ligand)
 
 # Visualize receptor as surface

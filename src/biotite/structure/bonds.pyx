@@ -85,8 +85,8 @@ class BondType(IntEnum):
         Examples
         --------
 
-        >>> print(BondType.AROMATIC_DOUBLE.without_aromaticity())
-        BondType.DOUBLE
+        >>> print(BondType.AROMATIC_DOUBLE.without_aromaticity().name)
+        DOUBLE
         """
         difference = BondType.AROMATIC_SINGLE - BondType.SINGLE
         if self >= BondType.AROMATIC_SINGLE:
@@ -212,21 +212,21 @@ class BondList(Copyable):
     ... )
     >>> for i, j, bond_type in benzene.bonds.as_array():
     ...     print(
-    ...         f"{str(BondType(bond_type))} bond between "
+    ...         f"{BondType(bond_type).name} bond between "
     ...         f"{benzene.atom_name[i]} and {benzene.atom_name[j]}"
     ...     )
-    BondType.AROMATIC_SINGLE bond between C1 and C2
-    BondType.AROMATIC_DOUBLE bond between C2 and C3
-    BondType.AROMATIC_SINGLE bond between C3 and C4
-    BondType.AROMATIC_DOUBLE bond between C4 and C5
-    BondType.AROMATIC_SINGLE bond between C5 and C6
-    BondType.AROMATIC_DOUBLE bond between C1 and C6
-    BondType.SINGLE bond between C1 and H1
-    BondType.SINGLE bond between C2 and H2
-    BondType.SINGLE bond between C3 and H3
-    BondType.SINGLE bond between C4 and H4
-    BondType.SINGLE bond between C5 and H5
-    BondType.SINGLE bond between C6 and H6
+    AROMATIC_SINGLE bond between C1 and C2
+    AROMATIC_DOUBLE bond between C2 and C3
+    AROMATIC_SINGLE bond between C3 and C4
+    AROMATIC_DOUBLE bond between C4 and C5
+    AROMATIC_SINGLE bond between C5 and C6
+    AROMATIC_DOUBLE bond between C1 and C6
+    SINGLE bond between C1 and H1
+    SINGLE bond between C2 and H2
+    SINGLE bond between C3 and H3
+    SINGLE bond between C4 and H4
+    SINGLE bond between C5 and H5
+    SINGLE bond between C6 and H6
 
     Obtain the bonded atoms for the :math:`C_1`:
 
@@ -248,14 +248,14 @@ class BondList(Copyable):
     ... ]
     >>> for i, j, bond_type in half_benzene.bonds.as_array():
     ...     print(
-    ...         f"{str(BondType(bond_type))} bond between "
+    ...         f"{BondType(bond_type).name} bond between "
     ...         f"{half_benzene.atom_name[i]} and {half_benzene.atom_name[j]}"
     ...     )
-    BondType.AROMATIC_DOUBLE bond between C4 and C5
-    BondType.AROMATIC_SINGLE bond between C5 and C6
-    BondType.SINGLE bond between C4 and H4
-    BondType.SINGLE bond between C5 and H5
-    BondType.SINGLE bond between C6 and H6
+    AROMATIC_DOUBLE bond between C4 and C5
+    AROMATIC_SINGLE bond between C5 and C6
+    SINGLE bond between C4 and H4
+    SINGLE bond between C5 and H5
+    SINGLE bond between C6 and H6
     """
 
     def __init__(self, uint32 atom_count, np.ndarray bonds=None):
@@ -449,9 +449,9 @@ class BondList(Copyable):
         >>> bond_list.add_bond(1, 2, BondType.AROMATIC_DOUBLE)
         >>> bond_list.remove_aromaticity()
         >>> for i, j, bond_type in bond_list.as_array():
-        ...     print(i, j, BondType(bond_type))
-        0 1 BondType.SINGLE
-        1 2 BondType.DOUBLE
+        ...     print(i, j, BondType(bond_type).name)
+        0 1 SINGLE
+        1 2 DOUBLE
         """
         bonds = self._bonds
         difference = BondType.AROMATIC_SINGLE - BondType.SINGLE
@@ -1330,6 +1330,7 @@ def _invert_index(IndexType[:] index_v, uint32 length):
 
 
 
+# fmt: off
 _DEFAULT_DISTANCE_RANGE = {
     # Taken from Allen et al.
     #               min   - 2*std     max   + 2*std
@@ -1376,9 +1377,9 @@ _DEFAULT_DISTANCE_RANGE = {
     ("SE", "SE") : (2.340 - 2*0.024,  2.340 + 2*0.024),
     ("SI", "SE") : (2.359 - 2*0.012,  2.359 + 2*0.012),
 }
+# fmt: on
 
-def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
-                          bint inter_residue=True,
+def connect_via_distances(atoms, dict distance_range=None, bint inter_residue=True,
                           default_bond_type=BondType.ANY, bint periodic=False):
     """
     connect_via_distances(atoms, distance_range=None, atom_mask=None,
@@ -1410,8 +1411,6 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
         Hence, the default bond distances for missing element pairs are
         still taken from the default dictionary.
         The default bond distances are taken from :footcite:`Allen1987`.
-    atom_mask : ndarray, dtype=bool, shape=(n,), optional
-        DEPRECATED: This option has no effect.
     inter_residue : bool, optional
         If true, connections between consecutive amino acids and
         nucleotides are also added.
@@ -1532,7 +1531,7 @@ def connect_via_distances(atoms, dict distance_range=None, atom_mask=None,
 
 
 
-def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True,
+def connect_via_residue_names(atoms, bint inter_residue=True,
                               dict custom_bond_dict=None):
     """
     connect_via_residue_names(atoms, atom_mask=None, inter_residue=True)
@@ -1549,8 +1548,6 @@ def connect_via_residue_names(atoms, atom_mask=None, bint inter_residue=True,
     ----------
     atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
         The structure to create the :class:`BondList` for.
-    atom_mask : ndarray, dtype=bool, shape=(n,), optional
-        DEPRECATED: This option has no effect.
     inter_residue : bool, optional
         If true, connections between consecutive amino acids and
         nucleotides are also added.

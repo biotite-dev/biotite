@@ -35,14 +35,13 @@ is described as 3 integers instead of 3 letters.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-import tempfile
 import itertools
+import tempfile
 import numpy as np
-import biotite.sequence as seq
-import biotite.sequence.io.genbank as gb
-import biotite.sequence.io.fasta as fasta
 import biotite.database.entrez as entrez
-
+import biotite.sequence as seq
+import biotite.sequence.io.fasta as fasta
+import biotite.sequence.io.genbank as gb
 
 # Get the E. coli K-12 genome as annotated sequence
 gb_file = gb.GenBankFile.read(
@@ -56,8 +55,8 @@ k12_genome = gb.get_annotated_sequence(gb_file, include_only=["CDS"])
 # For increased performance the dictionary uses symbol codes ([0 3 2])
 # instead of symbols (['A' 'T' 'G']) as keys
 codon_counter = {
-    codon: 0 for codon
-    in itertools.product( *([range(len(k12_genome.sequence.alphabet))] * 3) )
+    codon: 0
+    for codon in itertools.product(*([range(len(k12_genome.sequence.alphabet))] * 3))
 }
 # For demonstration purposes print the 64 codons in symbol code form
 print(list(codon_counter.keys()))
@@ -82,7 +81,7 @@ for cds in k12_genome.annotation:
     # Iterate over the sequence in non-overlapping frames of 3
     # and count the occurence of each codon
     for i in range(0, len(cds_seq), 3):
-        codon_code = tuple(cds_seq.code[i:i+3])
+        codon_code = tuple(cds_seq.code[i : i + 3])
         codon_counter[codon_code] += 1
 
 # Convert the total frequencies into relative frequencies

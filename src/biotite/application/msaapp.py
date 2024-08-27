@@ -7,22 +7,22 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["MSAApp"]
 
 import abc
-from tempfile import NamedTemporaryFile
 from collections import OrderedDict
+from tempfile import NamedTemporaryFile
 import numpy as np
-from .localapp import LocalApp, cleanup_tempfile
-from .application import AppState, requires_state
-from ..sequence.seqtypes import NucleotideSequence, ProteinSequence
-from ..sequence.io.fasta.file import FastaFile
-from ..sequence.align.alignment import Alignment
-from .util import map_sequence, map_matrix
+from biotite.application.application import AppState, requires_state
+from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.application.util import map_matrix, map_sequence
+from biotite.sequence.align.alignment import Alignment
+from biotite.sequence.io.fasta.file import FastaFile
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
 
 class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     """
     This is an abstract base class for multiple sequence alignment
     software.
-    
+
     It handles conversion of :class:`Sequence` objects to FASTA input
     and FASTA output to an :class:`Alignment` object.
     Inheriting subclasses only need to incorporate the file path
@@ -41,10 +41,10 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     sequences are mapped back into the original sequence types.
     The mapping does not work, when the alphabet of the exotic
     sequences is larger than the amino acid alphabet.
-    
+
     Internally this creates a :class:`Popen` instance, which handles
     the execution.
-    
+
     Parameters
     ----------
     sequences : iterable object of Sequence
@@ -54,10 +54,10 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     matrix : SubstitutionMatrix, optional
         A custom substitution matrix.
     """
-    
+
     def __init__(self, sequences, bin_path, matrix=None):
         super().__init__(bin_path)
-        
+
         if len(sequences) < 2:
             raise ValueError("At least two sequences are required")
         # Check if all sequences share the same alphabet
@@ -68,40 +68,39 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         # Check matrix symmetry
         if matrix is not None and not matrix.is_symmetric():
             raise ValueError(
-                "A symmetric matrix is required for "
-                "multiple sequence alignments"
+                "A symmetric matrix is required for " "multiple sequence alignments"
             )
 
-        
         # Check whether the program supports the alignment for the given
         # sequence type
-        if ProteinSequence.alphabet.extends(alphabet) \
-            and self.supports_protein():
-                self._is_mapped = False
-                self._seqtype = "protein"
-                if matrix is not None:
-                    if not self.supports_custom_protein_matrix():
-                        raise TypeError(
-                            "The software does not support custom "
-                            "substitution matrices for protein sequences"
-                        )
-                    self._matrix = matrix
-                else:
-                    self._matrix = None
+        if ProteinSequence.alphabet.extends(alphabet) and self.supports_protein():
+            self._is_mapped = False
+            self._seqtype = "protein"
+            if matrix is not None:
+                if not self.supports_custom_protein_matrix():
+                    raise TypeError(
+                        "The software does not support custom "
+                        "substitution matrices for protein sequences"
+                    )
+                self._matrix = matrix
+            else:
+                self._matrix = None
 
-        elif NucleotideSequence.alphabet_amb.extends(alphabet) \
-            and self.supports_nucleotide():
-                self._is_mapped = False
-                self._seqtype = "nucleotide"
-                if matrix is not None:
-                    if not self.supports_custom_nucleotide_matrix():
-                        raise TypeError(
-                            "The software does not support custom "
-                            "substitution matrices for nucleotide sequences"
-                        )
-                    self._matrix = matrix
-                else:
-                    self._matrix = None
+        elif (
+            NucleotideSequence.alphabet_amb.extends(alphabet)
+            and self.supports_nucleotide()
+        ):
+            self._is_mapped = False
+            self._seqtype = "nucleotide"
+            if matrix is not None:
+                if not self.supports_custom_nucleotide_matrix():
+                    raise TypeError(
+                        "The software does not support custom "
+                        "substitution matrices for nucleotide sequences"
+                    )
+                self._matrix = matrix
+            else:
+                self._matrix = None
 
         else:
             # For all other sequence types, try to map the sequence into
@@ -126,26 +125,16 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             self._sequences = sequences
             # Sequence masquerades as protein
             self._seqtype = "protein"
-            self._mapped_sequences = [
-                map_sequence(sequence) for sequence in sequences
-            ]
+            self._mapped_sequences = [map_sequence(sequence) for sequence in sequences]
             self._matrix = map_matrix(matrix)
 
-
         self._sequences = sequences
-        self._in_file = NamedTemporaryFile(
-            "w", suffix=".fa", delete=False
-        )
-        self._out_file = NamedTemporaryFile(
-            "r", suffix=".fa", delete=False
-        )
-        self._matrix_file = NamedTemporaryFile(
-            "w", suffix=".mat", delete=False
-        )
+        self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
+        self._out_file = NamedTemporaryFile("r", suffix=".fa", delete=False)
+        self._matrix_file = NamedTemporaryFile("w", suffix=".mat", delete=False)
 
     def run(self):
-        sequences = self._sequences if not self._is_mapped \
-                    else self._mapped_sequences
+        sequences = self._sequences if not self._is_mapped else self._mapped_sequences
         sequences_file = FastaFile()
         for i, seq in enumerate(sequences):
             sequences_file[str(i)] = str(seq)
@@ -155,7 +144,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             self._matrix_file.write(str(self._matrix))
             self._matrix_file.flush()
         super().run()
-    
+
     def evaluate(self):
         super().evaluate()
         alignment_file = FastaFile.read(self._out_file)
@@ -169,26 +158,26 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         # Also obtain original order
         self._order = np.zeros(len(seq_dict), dtype=int)
         for i, seq_index in enumerate(seq_dict):
-             self._order[i] = int(seq_index)
-    
+            self._order[i] = int(seq_index)
+
     def clean_up(self):
         super().clean_up()
         cleanup_tempfile(self._in_file)
         cleanup_tempfile(self._out_file)
         cleanup_tempfile(self._matrix_file)
-    
+
     @requires_state(AppState.JOINED)
     def get_alignment(self):
         """
         Get the resulting multiple sequence alignment.
-        
+
         Returns
         -------
         alignment : Alignment
             The global multiple sequence alignment.
         """
         return self._alignment
-    
+
     @requires_state(AppState.JOINED)
     def get_alignment_order(self):
         """
@@ -202,12 +191,12 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         order.
         This method returns the order of the sequences intended by the
         MSA software.
-        
+
         Returns
         -------
         order : ndarray, dtype=int
             The sequence order intended by the MSA software.
-        
+
         Examples
         --------
         Align sequences and restore the original order:
@@ -220,39 +209,39 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         alignment = alignment[:, order]
         """
         return self._order
-    
+
     def get_input_file_path(self):
         """
         Get input file path (FASTA format).
-        
+
         PROTECTED: Do not call from outside.
-        
+
         Returns
         -------
         path : str
             Path of input file.
         """
         return self._in_file.name
-    
+
     def get_output_file_path(self):
         """
         Get output file path (FASTA format).
-        
+
         PROTECTED: Do not call from outside.
-        
+
         Returns
         -------
         path : str
             Path of output file.
         """
         return self._out_file.name
-    
+
     def get_matrix_file_path(self):
         """
         Get file path for custom substitution matrix.
-        
+
         PROTECTED: Do not call from outside.
-        
+
         Returns
         -------
         path : str or None
@@ -260,7 +249,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             None if no matrix was given.
         """
         return self._matrix_file.name if self._matrix is not None else None
-    
+
     def get_seqtype(self):
         """
         Get the type of aligned sequences.
@@ -268,16 +257,16 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         When a custom sequence type (neither nucleotide nor protein)
         is mapped onto a protein sequence, the return value is also
         ``'protein'``.
-        
+
         PROTECTED: Do not call from outside.
-        
+
         Returns
         -------
         seqtype : {'nucleotide', 'protein'}
             Type of sequences to be aligned.
         """
         return self._seqtype
-    
+
     @staticmethod
     @abc.abstractmethod
     def supports_nucleotide():
@@ -289,11 +278,11 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         -------
         support : bool
             True, if the class has support, false otherwise.
-        
+
         PROTECTED: Override when inheriting.
         """
         pass
-    
+
     @staticmethod
     @abc.abstractmethod
     def supports_protein():
@@ -305,11 +294,11 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         -------
         support : bool
             True, if the class has support, false otherwise.
-        
+
         PROTECTED: Override when inheriting.
         """
         pass
-    
+
     @staticmethod
     @abc.abstractmethod
     def supports_custom_nucleotide_matrix():
@@ -321,11 +310,11 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         -------
         support : bool
             True, if the class has support, false otherwise.
-        
+
         PROTECTED: Override when inheriting.
         """
         pass
-    
+
     @staticmethod
     @abc.abstractmethod
     def supports_custom_protein_matrix():
@@ -337,19 +326,19 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         -------
         support : bool
             True, if the class has support, false otherwise.
-        
+
         PROTECTED: Override when inheriting.
         """
         pass
-    
+
     @classmethod
     def align(cls, sequences, bin_path=None, matrix=None):
         """
         Perform a multiple sequence alignment.
-        
+
         This is a convenience function, that wraps the :class:`MSAApp`
         execution.
-        
+
         Parameters
         ----------
         sequences : iterable object of Sequence
@@ -359,7 +348,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
             path will be used.
         matrix : SubstitutionMatrix, optional
             A custom substitution matrix.
-        
+
         Returns
         -------
         alignment : Alignment

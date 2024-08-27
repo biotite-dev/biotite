@@ -18,26 +18,24 @@ def array():
     :class:`AtomArray`.
     """
     MOL_NAMES = [
-        "ARG", # Molecule with multiple branches
-        "TRP", # Molecule with a cycle
-        "GLC", # Molecule with a cycle
+        "ARG",  # Molecule with multiple branches
+        "TRP",  # Molecule with a cycle
+        "GLC",  # Molecule with a cycle
         "NA",  # A single atom
-        "ATP"  # Larger molecule
+        "ATP",  # Larger molecule
     ]
     N_MOLECULES = 20
 
     np.random.seed(0)
-    
+
     atom_array = struc.AtomArray(0)
     for i, mol_name in enumerate(np.random.choice(MOL_NAMES, N_MOLECULES)):
         molecule = info.residue(mol_name)
-        molecule.res_id[:] = i+1
+        molecule.res_id[:] = i + 1
         atom_array += molecule
-    
+
     reordered_indices = np.random.choice(
-        np.arange(atom_array.array_length()),
-        atom_array.array_length(),
-        replace=False
+        np.arange(atom_array.array_length()), atom_array.array_length(), replace=False
     )
     atom_array = atom_array[reordered_indices]
 
@@ -45,12 +43,7 @@ def array():
 
 
 @pytest.mark.parametrize(
-    "as_stack, as_bonds",
-    [
-        (False, False),
-        (True,  False),
-        (False, True )
-    ]
+    "as_stack, as_bonds", [(False, False), (True, False), (False, True)]
 )
 def test_get_molecule_indices(array, as_stack, as_bonds):
     """
@@ -59,12 +52,12 @@ def test_get_molecule_indices(array, as_stack, as_bonds):
     """
     if as_stack:
         array = struc.stack([array])
-    
+
     if as_bonds:
         test_indices = struc.get_molecule_indices(array.bonds)
     else:
         test_indices = struc.get_molecule_indices(array)
-    
+
     seen_atoms = 0
     for indices in test_indices:
         molecule = array[..., indices]
@@ -72,20 +65,16 @@ def test_get_molecule_indices(array, as_stack, as_bonds):
         # -> all atoms from the same molecule
         assert (molecule.res_id == molecule.res_id[0]).all()
         # Assert that no atom is missing from the molecule
-        assert molecule.array_length() \
-            == info.residue(molecule.res_name[0]).array_length()
+        assert (
+            molecule.array_length() == info.residue(molecule.res_name[0]).array_length()
+        )
         seen_atoms += molecule.array_length()
     # Assert that all molecules are fond
     assert seen_atoms == array.array_length()
 
 
 @pytest.mark.parametrize(
-    "as_stack, as_bonds",
-    [
-        (False, False),
-        (True,  False),
-        (False, True )
-    ]
+    "as_stack, as_bonds", [(False, False), (True, False), (False, True)]
 )
 def test_get_molecule_masks(array, as_stack, as_bonds):
     """
@@ -95,18 +84,18 @@ def test_get_molecule_masks(array, as_stack, as_bonds):
     """
     if as_stack:
         array = struc.stack([array])
-    
+
     if as_bonds:
         ref_indices = struc.get_molecule_indices(array.bonds)
         test_masks = struc.get_molecule_masks(array.bonds)
     else:
         ref_indices = struc.get_molecule_indices(array)
         test_masks = struc.get_molecule_masks(array)
-    
+
     for i in range(len(test_masks)):
         # Assert that the mask is 'True' for all indices
         # and that these 'True' values are the only ones in the mask
-        assert (test_masks[i, ref_indices[i]] == True).all()
+        assert test_masks[i, ref_indices[i]].all()
         assert np.count_nonzero(test_masks[i]) == len(ref_indices[i])
 
 
