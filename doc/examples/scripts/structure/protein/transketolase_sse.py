@@ -245,7 +245,8 @@ visualize_secondary_structure(sse, tk_mono.res_id[0])
 # Last but not least we calculate the secondary structure using
 # *Biotite*'s built-in method, based on the P-SEA algorithm.
 
-sse = struc.annotate_sse(array, chain_id="A")
+array = array[array.chain_id == "A"]
+sse = struc.annotate_sse(array)
 visualize_secondary_structure(sse, tk_mono.res_id[0])
 
 plt.show()
