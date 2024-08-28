@@ -3,22 +3,22 @@
 # information.
 
 import itertools
-from os.path import join
-from tempfile import NamedTemporaryFile
+from pathlib import Path
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io as strucio
 import biotite.structure.io.dcd as dcd
 import biotite.structure.io.netcdf as netcdf
+import biotite.structure.io.pdbx as pdbx
 import biotite.structure.io.trr as trr
 import biotite.structure.io.xtc as xtc
 from tests.util import data_dir
 
 
 @pytest.mark.parametrize("format", ["trr", "xtc", "dcd", "netcdf"])
-def test_array_conversion(format):
-    template = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))[0]
+def test_array_conversion(format, tmp_path):
+    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1l2y.bcif")
+    template = pdbx.get_structure(pdbx_file, model=1)
     # Add fake box
     template.box = np.diag([1, 2, 3])
     if format == "trr":
@@ -29,16 +29,15 @@ def test_array_conversion(format):
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
-    traj_file = traj_file_cls.read(join(data_dir("structure"), f"1l2y.{format}"))
+    traj_file = traj_file_cls.read(Path(data_dir("structure")) / f"1l2y.{format}")
     ref_array = traj_file.get_structure(template)
 
     traj_file = traj_file_cls()
     traj_file.set_structure(ref_array)
-    temp = NamedTemporaryFile("w+b")
-    traj_file.write(temp.name)
+    temp = tmp_path / f"temp.{format}"
+    traj_file.write(temp)
 
-    traj_file = traj_file_cls.read(temp.name)
-    temp.close()
+    traj_file = traj_file_cls.read(temp)
     array = traj_file.get_structure(template)
     assert ref_array.bonds == array.bonds
     assert ref_array.equal_annotation_categories(array)
@@ -64,10 +63,11 @@ def test_bcif_consistency(format, start, stop, step, chunk_size):
         # is dependent on the 'stride' parameter
         return
 
-    ref_traj = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1l2y.bcif")
+    ref_traj = pdbx.get_structure(pdbx_file)
     ref_traj = ref_traj[slice(start, stop, step)]
 
-    # Template is first model of the reference
+    # Template is the first model of the trajectory
     template = ref_traj[0]
     if format == "trr":
         traj_file_cls = trr.TRRFile
@@ -78,7 +78,7 @@ def test_bcif_consistency(format, start, stop, step, chunk_size):
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
     traj_file = traj_file_cls.read(
-        join(data_dir("structure"), f"1l2y.{format}"),
+        Path(data_dir("structure")) / f"1l2y.{format}",
         start,
         stop,
         step,
@@ -135,9 +135,9 @@ def test_read_iter(format, start, stop, step, stack_size):
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
-    file_name = join(data_dir("structure"), f"1l2y.{format}")
+    input_path = Path(data_dir("structure")) / f"1l2y.{format}"
 
-    traj_file = traj_file_cls.read(file_name, start, stop, step)
+    traj_file = traj_file_cls.read(input_path, start, stop, step)
     ref_coord = traj_file.get_coord()
     ref_box = traj_file.get_box()
     ref_time = traj_file.get_time()
@@ -146,7 +146,7 @@ def test_read_iter(format, start, stop, step, stack_size):
     test_box = []
     test_time = []
     for coord, box, time in traj_file.read_iter(
-        file_name, start, stop, step, stack_size=stack_size
+        input_path, start, stop, step, stack_size=stack_size
     ):
         test_coord.append(coord)
         test_box.append(box)
@@ -198,7 +198,8 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
         # is dependent on the 'stride' parameter
         return
 
-    template = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1l2y.bcif")
+    template = pdbx.get_structure(pdbx_file)
 
     if format == "trr":
         traj_file_cls = trr.TRRFile
@@ -208,15 +209,15 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
-    file_name = join(data_dir("structure"), f"1l2y.{format}")
+    input_path = Path(data_dir("structure")) / f"1l2y.{format}"
 
-    traj_file = traj_file_cls.read(file_name, start, stop, step)
+    traj_file = traj_file_cls.read(input_path, start, stop, step)
     ref_traj = traj_file.get_structure(template)
 
     frames = [
         frame
         for frame in traj_file_cls.read_iter_structure(
-            file_name, template, start, stop, step, stack_size=stack_size
+            input_path, template, start, stop, step, stack_size=stack_size
         )
     ]
 
@@ -240,7 +241,7 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
         [False, True],
     ),
 )
-def test_write_iter(format, n_models, n_atoms, include_box, include_time):
+def test_write_iter(format, n_models, n_atoms, include_box, include_time, tmp_path):
     """
     Expect that `write_iter()` and `write()` create files with equal content.
     """
@@ -261,27 +262,25 @@ def test_write_iter(format, n_models, n_atoms, include_box, include_time):
     box = np.random.rand(n_models, 3, 3) * 100 if include_box else None
     time = np.random.rand(n_models) * 10 if include_time else None
 
-    ref_file = NamedTemporaryFile("w+b")
+    ref_file = tmp_path / f"ref.{format}"
     traj_file = traj_file_cls()
     traj_file.set_coord(coord)
     traj_file.set_box(box)
     traj_file.set_time(time)
-    traj_file.write(ref_file.name)
+    traj_file.write(ref_file)
 
-    traj_file = traj_file_cls.read(ref_file.name)
+    traj_file = traj_file_cls.read(ref_file)
     ref_coord = traj_file.get_coord()
     ref_box = traj_file.get_box()
     ref_time = traj_file.get_time()
-    ref_file.close()
 
-    test_file = NamedTemporaryFile("w+b")
-    traj_file_cls.write_iter(test_file.name, coord, box, time)
+    test_file = tmp_path / f"test.{format}"
+    traj_file_cls.write_iter(test_file, coord, box, time)
 
-    traj_file = traj_file_cls.read(test_file.name)
+    traj_file = traj_file_cls.read(test_file)
     test_coord = traj_file.get_coord()
     test_box = traj_file.get_box()
     test_time = traj_file.get_time()
-    test_file.close()
 
     assert np.allclose(test_coord, ref_coord, atol=1e-2)
     if include_box:
