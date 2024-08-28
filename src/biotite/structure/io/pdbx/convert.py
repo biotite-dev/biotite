@@ -39,7 +39,7 @@ from biotite.structure.io.pdbx.encoding import StringArrayEncoding
 from biotite.structure.residues import get_residue_count, get_residue_starts_for
 from biotite.structure.util import matrix_rotate
 
-# Cond types in `struct_conn` category that refer to covalent bonds
+# Bond types in `struct_conn` category that refer to covalent bonds
 PDBX_COVALENT_TYPES = [
     "covale",
     "covale_base",
