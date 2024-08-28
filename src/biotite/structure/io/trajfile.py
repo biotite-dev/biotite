@@ -54,9 +54,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        file_name : str
+        file_name : str or Path
             The path of the file to be read.
-            A file-like-object cannot be used.
+            Any other file-like object cannot be used.
         start : int, optional
             The frame index, where file parsing is started. If no value
             is given, parsing starts at the first frame.
@@ -101,7 +101,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 chunk_size = ((chunk_size // step) + 1) * step
 
         traj_type = cls.traj_type()
-        with traj_type(file_name, "r") as f:
+        with traj_type(str(file_name), "r") as f:
             if start is None:
                 start = 0
             # Discard atoms before start
@@ -153,9 +153,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        file_name : str
+        file_name : str or Path
             The path of the file to be read.
-            A file-like-object cannot be used.
+            Any other file-like object cannot be used.
         start : int, optional
             The frame index, where file parsing is started. If no value
             is given, parsing starts at the first frame.
@@ -196,7 +196,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         The `step` parameter does currently not work for *DCD* files.
         """
         traj_type = cls.traj_type()
-        with traj_type(file_name, "r") as f:
+        with traj_type(str(file_name), "r") as f:
             if start is None:
                 start = 0
             # Discard atoms before start
@@ -280,9 +280,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        file_name : str
+        file_name : str or Path
             The path of the file to be read.
-            A file-like-object cannot be used.
+            Any other file-like object cannot be used.
         template : AtomArray or AtomArrayStack
             The template array or stack, where the atom annotation data
             is taken from.
@@ -354,13 +354,13 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        file_name : str
-            The path of the file to be written to.
-            A file-like-object cannot be used.
+        file_name : str or Path
+            The path of the file to be read.
+            Any other file-like object cannot be used.
         """
         traj_type = self.traj_type()
         param = self.prepare_write_values(self._coord, self._box, self._time)
-        with traj_type(file_name, "w") as f:
+        with traj_type(str(file_name), "w") as f:
             f.write(**param)
 
     @classmethod
@@ -378,9 +378,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        file_name : str
-            The path of the file to be written to.
-            A file-like-object cannot be used.
+        file_name : str or Path
+            The path of the file to be read.
+            Any other file-like object cannot be used.
         coord : generator or array-like of ndarray, shape=(n,3), dtype=float
             The atom coordinates for each frame.
         box : generator or array-like of ndarray, shape=(3,3), dtype=float, optional
@@ -398,7 +398,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             time = itertools.repeat(None)
 
         traj_type = cls.traj_type()
-        with traj_type(file_name, "w") as f:
+        with traj_type(str(file_name), "w") as f:
             for c, b, t in zip(coord, box, time):
                 if c.ndim != 2:
                     raise IndexError(
