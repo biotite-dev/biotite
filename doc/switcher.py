@@ -5,6 +5,7 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["create_switcher_json"]
 
+import functools
 import json
 import re
 from dataclasses import dataclass
@@ -16,6 +17,7 @@ BIOTITE_URL = "https://www.biotite-python.org"
 SEMVER_TAG_REGEX = r"^v?(\d+)\.(\d+)\.(\d+)"
 
 
+@functools.total_ordering
 @dataclass(frozen=True)
 class Version:
     major: ...
@@ -41,11 +43,18 @@ class Version:
         )
 
 
-def _get_previous_versions(min_tag, n_versions):
-    response = requests.get(RELEASE_REQUEST, params={"per_page": n_versions})
+def _get_previous_versions(min_tag, n_versions, current_version):
+    # The current version might already be released on GitHub
+    # -> request one more version than necessary
+    response = requests.get(RELEASE_REQUEST, params={"per_page": n_versions + 1})
     release_data = json.loads(response.text)
     versions = [Version.from_tag(release["tag_name"]) for release in release_data]
-    return [version for version in versions if version >= Version.from_tag(min_tag)]
+    applicable_versions = [
+        version
+        for version in versions
+        if version >= Version.from_tag(min_tag) and version < current_version
+    ]
+    return applicable_versions[:n_versions]
 
 
 def _get_current_version():
@@ -66,7 +75,8 @@ def create_switcher_json(file_path, min_tag, n_versions):
         The maximum number of previously released versions to be included.
     """
     version_config = []
-    for version in _get_previous_versions(min_tag, n_versions)[::-1]:
+    current_version = _get_current_version()
+    for version in _get_previous_versions(min_tag, n_versions, current_version)[::-1]:
         if version.patch != 0:
             # Documentation is not uploaded for patch versions
             continue
@@ -77,7 +87,6 @@ def create_switcher_json(file_path, min_tag, n_versions):
                 "url": f"{BIOTITE_URL}/{version}/",
             }
         )
-    current_version = _get_current_version()
     version_config.append(
         {
             "name": f"{current_version.major}.{current_version.minor}",
