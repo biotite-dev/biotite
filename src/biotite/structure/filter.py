@@ -577,7 +577,7 @@ def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
         if len(letter_altloc_ids) > 0:
             highest = -1.0
             highest_id = None
-            for id in set(letter_altloc_ids):
+            for id in sorted(set(letter_altloc_ids)):
                 occupancy_sum = np.sum(occupancies_in_res[altloc_ids_in_res == id])
                 if occupancy_sum > highest:
                     highest = occupancy_sum
