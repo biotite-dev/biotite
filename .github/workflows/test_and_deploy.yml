@@ -260,6 +260,22 @@ jobs:
         path: dist//doc.zip
 
 
+  benchmark:
+    name: Run benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install .[test]
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@v3
+        with:
+          run: pytest --codspeed benchmarks
+
+
   upload-package:
     name: Upload package to GitHub Releases & PyPI
     permissions:
