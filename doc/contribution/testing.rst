@@ -41,8 +41,25 @@ run the tests:
 
 .. code-block:: console
 
-   $ pip install -e .
+   $ pip install -e ".[test]"
    $ pytest
+
+Benchmarks
+----------
+As outlined before, computation speed is one of the project's main goals.
+Therefore `CodSpeed <https://docs.codspeed.io>`_ benchmarks are used to ensure code
+changes do not decrease the performance.
+The benchmarks are simply ``pytest`` functions residing in the separate ``benchmarks/``
+directory, with the addition of the ``@pytest.mark.parametrize.benchmark`` decorator.
+These can also run with the ``pytest`` command, to ensure that they work.
+However, the actual benchmarking is done by the respective CI job.
+
+If you introduce a change that might significantly affect the performance of a function,
+please add a benchmark function, which runs the affected code, first and create a draft
+pull request.
+This will benchmark the code without the change.
+Afterwards, add and push the actual code change.
+This way, one can compare the performance of the code before and after the change.
 
 Doctests
 --------

@@ -25,6 +25,7 @@ dependencies:
   - requests >=2.12
   # Testing
   - pytest >=7.0
+  - pytest-codspeed >=2.0
   # Code style
   - ruff =0.5.2
   # Interfaced software in biotite.application (can also be installed separately)
