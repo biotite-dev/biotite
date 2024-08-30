@@ -99,9 +99,24 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         See Also
         --------
         set_annotation
+
+        Notes
+        -----
+        If the annotation category already exists, a compatible dtype is chosen,
+        that is also able to represent the old values.
         """
         if category not in self._annot:
             self._annot[str(category)] = np.zeros(self._array_length, dtype=dtype)
+        elif np.can_cast(self._annot[str(category)].dtype, dtype):
+            self._annot[str(category)] = self._annot[str(category)].astype(dtype)
+        elif np.can_cast(dtype, self._annot[str(category)].dtype):
+            # The existing dtype is more general
+            pass
+        else:
+            raise ValueError(
+                f"Cannot cast '{str(category)}' "
+                f"with dtype '{self._annot[str(category)].dtype}' into '{dtype}'"
+            )
 
     def del_annotation(self, category):
         """
@@ -145,16 +160,25 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         array : ndarray or None
             The new value of the annotation category. The size of the
             array must be the same as the array length.
+
+        Notes
+        -----
+        If the annotation category already exists, a compatible dtype is chosen,
+        that is able to represent the old and new array values.
         """
+        array = np.asarray(array)
         if len(array) != self._array_length:
             raise IndexError(
                 f"Expected array length {self._array_length}, " f"but got {len(array)}"
             )
         if category in self._annot:
-            # Keep the dtype if the annotation already exists
-            self._annot[category] = np.asarray(array, dtype=self._annot[category].dtype)
+            # If the annotation already exists, find the compatible dtype
+            self._annot[category] = array.astype(
+                dtype=np.promote_types(self._annot[category].dtype, array.dtype),
+                copy=False,
+            )
         else:
-            self._annot[category] = np.asarray(array)
+            self._annot[category] = array
 
     def get_annotation_categories(self):
         """
