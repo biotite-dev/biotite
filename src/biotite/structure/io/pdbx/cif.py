@@ -370,7 +370,7 @@ class CIFCategory(_Component, MutableMapping):
         if category_name is None:
             raise DeserializationError("Failed to parse category name")
 
-        lines = _to_single(lines, is_looped)
+        lines = _to_single(lines)
         if is_looped:
             category_dict = CIFCategory._deserialize_looped(lines, expect_whitespace)
         else:
@@ -439,11 +439,28 @@ class CIFCategory(_Component, MutableMapping):
         Process a category where each field has a single value.
         """
         category_dict = {}
-        for line in lines:
+        line_i = 0
+        while line_i < len(lines):
+            line = lines[line_i]
             parts = _split_one_line(line)
-            column_name = parts[0].split(".")[1]
-            column = parts[1]
-            category_dict[column_name] = CIFColumn(column)
+            if len(parts) == 2:
+                # Standard case -> name and value in one line
+                name_part, value_part = parts
+                line_i += 1
+            elif len(parts) == 1:
+                # Value is a multiline value on the next line
+                name_part = parts[0]
+                parts = _split_one_line(lines[line_i + 1])
+                if len(parts) == 1:
+                    value_part = parts[0]
+                else:
+                    raise DeserializationError(f"Failed to parse line '{line}'")
+                line_i += 2
+            elif len(parts) == 0:
+                raise DeserializationError("Empty line within category")
+            else:
+                raise DeserializationError(f"Failed to parse line '{line}'")
+            category_dict[name_part.split(".")[1]] = CIFColumn(value_part)
         return category_dict
 
     @staticmethod
@@ -468,7 +485,7 @@ class CIFCategory(_Component, MutableMapping):
         data_lines = lines[i:]
         # Rows may be split over multiple lines -> do not rely on
         # row-line-alignment at all and simply cycle through columns
-        column_names = itertools.cycle(column_names)
+        column_indices = itertools.cycle(range(len(column_names)))
         for data_line in data_lines:
             # If whitespace is expected in quote protected values,
             # use regex-based _split_one_line() to split
@@ -485,8 +502,17 @@ class CIFCategory(_Component, MutableMapping):
                     ):
                         values[k] = values[k][1:-1]
             for val in values:
-                column_name = next(column_names)
+                column_index = next(column_indices)
+                column_name = column_names[column_index]
                 category_dict[column_name].append(val)
+
+        # Check if all columns have the same length
+        # Otherwise, this would indicate a parsing error or an invalid CIF file
+        column_index = next(column_indices)
+        if column_index != 0:
+            raise DeserializationError(
+                "Category contains columns with different lengths"
+            )
 
         return category_dict
 
@@ -496,7 +522,8 @@ class CIFCategory(_Component, MutableMapping):
         # "+3" Because of three whitespace chars after longest key
         req_len = max_len + 3
         return [
-            key.ljust(req_len) + _multiline(_quote(column.as_item()))
+            # Remove potential terminal newlines from multiline values
+            (key.ljust(req_len) + _escape(column.as_item())).strip()
             for key, column in zip(keys, self.values())
         ]
 
@@ -508,7 +535,7 @@ class CIFCategory(_Component, MutableMapping):
             array = column.as_array(str)
             # Quote before measuring the number of chars,
             # as the quote characters modify the length
-            array = np.array([_multiline(_quote(element)) for element in array])
+            array = np.array([_escape(element) for element in array])
             column_arrays.append(array)
 
         # Number of characters the longest string in the column needs
@@ -522,7 +549,8 @@ class CIFCategory(_Component, MutableMapping):
             for j, array in enumerate(column_arrays):
                 value_lines[i] += array[i].ljust(column_n_chars[j])
             # Remove trailing justification of last column
-            value_lines[i].rstrip()
+            # and potential terminal newlines from multiline values
+            value_lines[i] = value_lines[i].strip()
 
         return ["loop_"] + key_lines + value_lines
 
@@ -927,52 +955,50 @@ def _is_loop_start(line):
     return line.startswith("loop_")
 
 
-def _to_single(lines, is_looped):
-    """
+def _to_single(lines):
+    r"""
     Convert multiline values into singleline values
     (in terms of 'lines' list elements).
-    Linebreaks are preserved.
+    Linebreaks are preserved as ``'\n'`` characters within a list element.
+    The initial ``';'`` character is also preserved, while the final ``';'`` character
+    is removed.
     """
-    processed_lines = [None] * len(lines)
-    in_i = 0
-    out_i = 0
-    while in_i < len(lines):
-        if lines[in_i][0] == ";":
-            # Multiline value
-            multi_line_str = lines[in_i][1:]
-            j = in_i + 1
-            while lines[j] != ";":
-                # Preserve linebreaks
-                multi_line_str += "\n" + lines[j]
-                j += 1
-            if is_looped:
-                # Create a line for the multiline string only
-                processed_lines[out_i] = f"'{multi_line_str}'"
-                out_i += 1
+    processed_lines = []
+    in_multi_line = False
+    mutli_line_value = []
+    for line in lines:
+        # Multiline value are enclosed by ';' at the start of the beginning and end line
+        if line[0] == ";":
+            if not in_multi_line:
+                # Start of multiline value
+                in_multi_line = True
+                mutli_line_value.append(line)
             else:
-                # Append multiline string to previous line
-                processed_lines[out_i - 1] += " " + f"'{multi_line_str}'"
-            in_i = j + 1
-
-        elif not is_looped and lines[in_i][0] != "_":
-            # Singleline value in the line after the corresponding key
-            processed_lines[out_i - 1] += " " + lines[in_i]
-            in_i += 1
-
+                # End of multiline value
+                in_multi_line = False
+                # The current line contains only the end character ';'
+                # Hence this line is not added to the processed lines
+                processed_lines.append("\n".join(mutli_line_value))
+                mutli_line_value = []
         else:
-            # Normal singleline value in the same row as the key
-            processed_lines[out_i] = lines[in_i]
-            in_i += 1
-            out_i += 1
+            if in_multi_line:
+                mutli_line_value.append(line)
+            else:
+                processed_lines.append(line)
+    return processed_lines
 
-    return [line for line in processed_lines if line is not None]
 
-
-def _quote(value):
+def _escape(value):
     """
-    A less secure but much quicker version of ``shlex.quote()``.
+    Escape special characters in a value to make it compatible with CIF.
     """
-    if len(value) == 0:
+    if "\n" in value:
+        # A value with linebreaks must be represented as multiline value
+        return _multiline(value)
+    elif "'" in value and '"' in value:
+        # If both quote types are present, you cannot use them for escaping
+        return _multiline(value)
+    elif len(value) == 0:
         return "''"
     elif value[0] == "_":
         return "'" + value + "'"
@@ -990,12 +1016,10 @@ def _quote(value):
 
 def _multiline(value):
     """
-    Convert a string containing linebreaks into CIF-compatible
+    Convert a string that may contain linebreaks into CIF-compatible
     multiline string.
     """
-    if "\n" in value:
-        return "\n;" + value + "\n;\n"
-    return value
+    return "\n;" + value + "\n;\n"
 
 
 def _split_one_line(line):
@@ -1003,6 +1027,10 @@ def _split_one_line(line):
     Split a line into its fields.
     Supporting embedded quotes (' or "), like `'a dog's life'` to  `a dog's life`
     """
+    # Special case of multiline value, where the line starts with ';'
+    if line[0] == ";":
+        return [line[1:]]
+
     # Define the patterns for different types of fields
     single_quote_pattern = r"('(?:'(?! )|[^'])*')(?:\s|$)"
     double_quote_pattern = r'("(?:"(?! )|[^"])*")(?:\s|$)'
