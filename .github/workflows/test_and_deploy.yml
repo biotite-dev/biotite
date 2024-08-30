@@ -18,7 +18,6 @@ env:
   CIBW_TEST_COMMAND: >
     pytest {project}
     --durations=50
-    --ignore={project}//tests//structure//test_trajectory.py
     --ignore={project}//tests//sequence//align//test_statistics.py
     --ignore={project}//tests//application
     --ignore={project}//tests//database
