@@ -964,25 +964,38 @@ def _set_intra_residue_bonds(array, atom_site):
         aromatic_flag[i] = aromatic
     any_mask = bond_array[:, 2] == BondType.ANY
 
-    chem_comp_bond = Category()
+    # Remove already existing residue and atom name combinations
+    # These appear when the structure contains a residue multiple times
+    atom_id_1 = array.atom_name[bond_array[:, 0]]
+    atom_id_2 = array.atom_name[bond_array[:, 1]]
     # Take the residue name from the first atom index, as the residue
     # name is the same for both atoms, since we have only intra bonds
-    chem_comp_bond["comp_id"] = array.res_name[bond_array[:, 0]]
-    chem_comp_bond["atom_id_1"] = array.atom_name[bond_array[:, 0]]
-    chem_comp_bond["atom_id_2"] = array.atom_name[bond_array[:, 1]]
+    comp_id = array.res_name[bond_array[:, 0]]
+    _, unique_indices = np.unique(
+        np.stack([comp_id, atom_id_1, atom_id_2], axis=-1), axis=0, return_index=True
+    )
+    unique_indices.sort()
+
+    chem_comp_bond = Category()
+    n_bonds = len(unique_indices)
+    chem_comp_bond["pdbx_ordinal"] = np.arange(1, n_bonds + 1, dtype=np.int32)
+    chem_comp_bond["comp_id"] = comp_id[unique_indices]
+    chem_comp_bond["atom_id_1"] = atom_id_1[unique_indices]
+    chem_comp_bond["atom_id_2"] = atom_id_2[unique_indices]
     chem_comp_bond["value_order"] = Column(
-        value_order, np.where(any_mask, MaskValue.MISSING, MaskValue.PRESENT)
+        value_order[unique_indices],
+        np.where(any_mask[unique_indices], MaskValue.MISSING, MaskValue.PRESENT),
     )
     chem_comp_bond["pdbx_aromatic_flag"] = Column(
-        aromatic_flag, np.where(any_mask, MaskValue.MISSING, MaskValue.PRESENT)
+        aromatic_flag[unique_indices],
+        np.where(any_mask[unique_indices], MaskValue.MISSING, MaskValue.PRESENT),
     )
     # BondList does not contain stereo information
     # -> all values are missing
     chem_comp_bond["pdbx_stereo_config"] = Column(
-        np.zeros(len(bond_array), dtype="U1"),
-        np.full(len(bond_array), MaskValue.MISSING),
+        np.zeros(n_bonds, dtype="U1"),
+        np.full(n_bonds, MaskValue.MISSING),
     )
-    chem_comp_bond["pdbx_ordinal"] = np.arange(1, len(bond_array) + 1, dtype=np.int32)
     return chem_comp_bond
 
 
@@ -1007,6 +1020,7 @@ def _set_inter_residue_bonds(array, atom_site):
     bond_array = _filter_bonds(array, "inter")
     if len(bond_array) == 0:
         return None
+
     struct_conn = Category()
     struct_conn["id"] = np.arange(1, len(bond_array) + 1)
     struct_conn["conn_type_id"] = np.full(len(bond_array), "covale")
