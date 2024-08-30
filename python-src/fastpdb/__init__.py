@@ -137,6 +137,18 @@ class PDBFile(BiotitePDBFile):
         element   = np.frombuffer(element,   dtype="U2")
         altloc_id = np.frombuffer(altloc_id, dtype="U1")
 
+        # Replace empty strings for elements with guessed types
+        # This is used e.g. for PDB files created by Gromacs
+        empty_element_mask = element == ""
+        if empty_element_mask.any():
+            warnings.warn(
+                f"{np.count_nonzero(empty_element_mask)} elements "
+                "were guessed from atom name"
+            )
+            element[empty_element_mask] = struc.infer_elements(
+                atom_name[empty_element_mask]
+            )
+
         if coord.ndim == 3:
             atoms = struc.AtomArrayStack(coord.shape[0], coord.shape[1])
             atoms.coord = coord
