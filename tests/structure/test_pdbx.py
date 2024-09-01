@@ -169,7 +169,7 @@ def test_bond_conversion(tmpdir, format, path):
     ref_bonds = atoms.bonds
 
     pdbx_file = File()
-    # The import difference to `test_conversion()` is `include_bonds`
+    # The important difference to `test_conversion()` is `include_bonds`
     pdbx.set_structure(pdbx_file, atoms, include_bonds=True)
     file_path = join(tmpdir, f"test.{format}")
     pdbx_file.write(file_path)
@@ -182,6 +182,30 @@ def test_bond_conversion(tmpdir, format, path):
         test_bonds = pdbx.get_structure(pdbx_file, model=1, include_bonds=True).bonds
 
     assert test_bonds == ref_bonds
+
+
+def test_bond_sparsity():
+    """
+    Ensure that only as much intra-residue bonds are written as necessary,
+    i.e. the created ``chem_comp_bond`` category has at maximum category many rows as
+    the reference NextGen CIF file.
+
+    Less bonds are allowed, as not all atoms that a residue has in the CCD are actually
+    present in the structure.
+
+    This tests a previous bug, where duplicate intra-residue bonds were written
+    (https://github.com/biotite-dev/biotite/issues/652).
+    """
+    path = join(data_dir("structure"), "nextgen", "pdb_00001l2y_xyz-enrich.cif")
+    ref_pdbx_file = pdbx.CIFFile.read(path)
+    ref_bond_number = ref_pdbx_file.block["chem_comp_bond"].row_count
+
+    atoms = pdbx.get_structure(ref_pdbx_file, model=1, include_bonds=True)
+    test_pdbx_file = pdbx.CIFFile()
+    pdbx.set_structure(test_pdbx_file, atoms, include_bonds=True)
+    test_bond_number = test_pdbx_file.block["chem_comp_bond"].row_count
+
+    assert test_bond_number <= ref_bond_number
 
 
 @pytest.mark.parametrize("format", ["cif", "bcif"])
