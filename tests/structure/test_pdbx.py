@@ -44,6 +44,8 @@ def test_get_model_count(format):
             '"',
             "te\nxt",
             "\t",
+            """single"anddouble"marks""",
+            """single' and double" marks with whitespace""",
         ],
         [False, True],
     ),
