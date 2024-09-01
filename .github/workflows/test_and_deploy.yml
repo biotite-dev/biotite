@@ -185,22 +185,23 @@ jobs:
     name: Compile the CCD subset for structure.info from the wwPDB CCD
 
     runs-on: ubuntu-latest
+    needs:
+      - test-and-build
     defaults:
       run:
         shell: bash -l {0}
 
     steps:
     - uses: actions/checkout@v4
-    - uses: conda-incubator/setup-miniconda@v2
+    - uses: actions/download-artifact@v4
       with:
-        activate-environment: biotite-dev
-        miniforge-variant: Mambaforge
-        python-version: "3.10"
-        channels: conda-forge,defaults
-    - name: Build distribution
-      run: pip wheel -w dist .
+        name: release-cp312-manylinux_x86_64
+        path: dist
+    - uses: actions/setup-python@v3
+      with:
+        python-version: "3.12"
     - name: Install distribution
-      run: pip install .//dist//*.whl pytest
+      run: pip install dist//*.whl
     - name: Compile CCD subset
       run: python setup_ccd.py
     - name: Zip CCD
@@ -218,6 +219,8 @@ jobs:
     name: Build documentation
 
     runs-on: ubuntu-20.04
+    needs:
+      - test-and-build
     defaults:
       run:
         shell: bash -l {0}
@@ -230,14 +233,16 @@ jobs:
         # Make sure to fetch the latest tag, so 'switcher.py' works correctly
         fetch-depth: 0
         fetch-tags: true
+    - uses: actions/download-artifact@v4
+      with:
+        name: release-cp311-manylinux_x86_64
+        path: dist
     - uses: conda-incubator/setup-miniconda@v2
       with:
         environment-file: environment.yml
         miniforge-variant: Mambaforge
-    - name: Build distribution
-      run: pip wheel --no-deps -w dist .
     - name: Install distribution
-      run: pip install .//dist//*.whl
+      run: pip install dist//*.whl
     - name: Build base documentation
       run: sphinx-build -a -D plot_gallery=0 doc build//doc
     - name: Build tutorial and gallery
@@ -259,12 +264,35 @@ jobs:
         path: dist//doc.zip
 
 
+  benchmark:
+    name: Run benchmarks
+    runs-on: ubuntu-latest
+    needs:
+      - test-and-build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-cp312-manylinux_x86_64
+          path: dist
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install dist//*.whl pytest pytest-codspeed
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@v3
+        with:
+          run: pytest --codspeed benchmarks
+
+
   upload-package:
     name: Upload package to GitHub Releases & PyPI
     permissions:
       contents: write
     needs:
     - lint
+    - benchmark
     - test-and-build
     - make-sdist
     - test-interfaces

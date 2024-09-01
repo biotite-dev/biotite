@@ -34,6 +34,7 @@ dynamic = ["version"]
 [project.optional-dependencies]
 test = [
   "pytest",
+  "pytest-codspeed",
 ]
 
 [project.urls]
@@ -78,6 +79,18 @@ order-by-type = true
 known-first-party = ["biotite"]
 
 [tool.pytest.ini_options]
+testpaths = [
+  "tests",
+  "benchmarks"
+]
+python_files = [
+  "test_*.py",
+  "benchmark_*.py",
+]
+python_functions = [
+  "test_*",
+  "benchmark_*",
+]
 filterwarnings = [
   # Appears in loading NetCDF trajectory files
   "ignore:The 'netCDF4' Python package is not installed.",
@@ -87,6 +100,7 @@ filterwarnings = [
 [tool.hatch.build.targets.sdist]
 exclude = [
   "tests",
+  "benchmarks",
   "doc",
   "environment.yml",
   "setup_ccd.py",
