@@ -270,6 +270,7 @@ jobs:
   benchmark:
     name: Run benchmarks
     runs-on: ubuntu-latest
+    if: github.event_name != 'release'
     needs:
       - test-and-build
     steps:
