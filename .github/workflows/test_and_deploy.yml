@@ -296,7 +296,6 @@ jobs:
       contents: write
     needs:
     - lint
-    - benchmark
     - test-and-build
     - make-sdist
     - test-interfaces
