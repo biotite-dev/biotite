@@ -72,6 +72,7 @@ jobs:
 
   benchmarks:
     runs-on: ubuntu-latest
+    if: github.event_name != 'release'
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
