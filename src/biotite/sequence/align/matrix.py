@@ -7,7 +7,11 @@ __author__ = "Patrick Kunzmann"
 
 import os
 import numpy as np
-from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
+from biotite.sequence.seqtypes import (
+    NucleotideSequence,
+    PositionalSequence,
+    ProteinSequence,
+)
 
 __all__ = ["SubstitutionMatrix"]
 
@@ -77,6 +81,11 @@ class SubstitutionMatrix(object):
         Either a symbol code indexed :class:`ndarray` containing the scores,
         or a dictionary mapping the symbol pairing to scores,
         or a string referencing a matrix in the internal database.
+
+    Attributes
+    ----------
+    shape : tuple
+        The shape of the substitution matrix.
 
     Raises
     ------
@@ -151,34 +160,18 @@ class SubstitutionMatrix(object):
         # score matrix -> make the score matrix read-only
         self._matrix.setflags(write=False)
 
-    def __repr__(self):
-        """Represent SubstitutionMatrix as a string for debugging."""
-        return (
-            f"SubstitutionMatrix({self._alph1.__repr__()}, {self._alph2.__repr__()}, "
-            f"np.{np.array_repr(self._matrix)})"
-        )
+    @property
+    def shape(self):
+        """
+        Get the shape (i.e. the length of both alphabets)
+        of the substitution matrix.
 
-    def __eq__(self, item):
-        if not isinstance(item, SubstitutionMatrix):
-            return False
-        if self._alph1 != item.get_alphabet1():
-            return False
-        if self._alph2 != item.get_alphabet2():
-            return False
-        if not np.array_equal(self.score_matrix(), item.score_matrix()):
-            return False
-        return True
-
-    def __ne__(self, item):
-        return not self == item
-
-    def _fill_with_matrix_dict(self, matrix_dict):
-        self._matrix = np.zeros((len(self._alph1), len(self._alph2)), dtype=np.int32)
-        for i in range(len(self._alph1)):
-            for j in range(len(self._alph2)):
-                sym1 = self._alph1.decode(i)
-                sym2 = self._alph2.decode(j)
-                self._matrix[i, j] = int(matrix_dict[sym1, sym2])
+        Returns
+        -------
+        shape : tuple
+            Matrix shape.
+        """
+        return (len(self._alph1), len(self._alph2))
 
     def get_alphabet1(self):
         """
@@ -280,26 +273,155 @@ class SubstitutionMatrix(object):
         code2 = self._alph2.encode(symbol2)
         return self._matrix[code1, code2]
 
-    def shape(self):
+    def as_positional(self, sequence1, sequence2):
         """
-        Get the shape (i.e. the length of both alphabets)
-        of the subsitution matrix.
+        Transform this substitution matrix and two sequences into positional
+        equivalents.
+
+        This means the new substitution matrix is position-specific: It has the lengths
+        of the sequences instead of the lengths of their alphabets.
+        Its scores represent the same scores as the original matrix, but now mapped
+        onto the positions of the sequences.
+
+        Parameters
+        ----------
+        sequence1, sequence2 : seq.Sequence, length=n
+            The sequences to create the positional equivalents from.
 
         Returns
         -------
-        shape : tuple
-            Matrix shape.
+        pos_matrix : align.SubstitutionMatrix, shape=(n, n)
+            The position-specific substitution matrix.
+        pos_sequence1, pos_sequence2 : PositionalSequence, length=n
+            The positional sequences.
+
+        Notes
+        -----
+        After the transformation the substitution scores remain the same, i.e.
+        `substitution_matrix.get_score(sequence1[i], sequence2[j])` is equal to
+        `pos_matrix.get_score(pos_sequence1[i], pos_sequence2[j])`.
+
+        Examples
+        --------
+
+        Run an alignment with the usual substitution matrix:
+
+        >>> seq1 = ProteinSequence("BIQTITE")
+        >>> seq2 = ProteinSequence("IQLITE")
+        >>> matrix = SubstitutionMatrix.std_protein_matrix()
+        >>> print(matrix)
+            A   C   D   E   F   G   H   I   K   L   M   N   P   Q   R   S   T   V   W   Y   B   Z   X   *
+        A   4   0  -2  -1  -2   0  -2  -1  -1  -1  -1  -2  -1  -1  -1   1   0   0  -3  -2  -2  -1   0  -4
+        C   0   9  -3  -4  -2  -3  -3  -1  -3  -1  -1  -3  -3  -3  -3  -1  -1  -1  -2  -2  -3  -3  -2  -4
+        D  -2  -3   6   2  -3  -1  -1  -3  -1  -4  -3   1  -1   0  -2   0  -1  -3  -4  -3   4   1  -1  -4
+        E  -1  -4   2   5  -3  -2   0  -3   1  -3  -2   0  -1   2   0   0  -1  -2  -3  -2   1   4  -1  -4
+        F  -2  -2  -3  -3   6  -3  -1   0  -3   0   0  -3  -4  -3  -3  -2  -2  -1   1   3  -3  -3  -1  -4
+        G   0  -3  -1  -2  -3   6  -2  -4  -2  -4  -3   0  -2  -2  -2   0  -2  -3  -2  -3  -1  -2  -1  -4
+        H  -2  -3  -1   0  -1  -2   8  -3  -1  -3  -2   1  -2   0   0  -1  -2  -3  -2   2   0   0  -1  -4
+        I  -1  -1  -3  -3   0  -4  -3   4  -3   2   1  -3  -3  -3  -3  -2  -1   3  -3  -1  -3  -3  -1  -4
+        K  -1  -3  -1   1  -3  -2  -1  -3   5  -2  -1   0  -1   1   2   0  -1  -2  -3  -2   0   1  -1  -4
+        L  -1  -1  -4  -3   0  -4  -3   2  -2   4   2  -3  -3  -2  -2  -2  -1   1  -2  -1  -4  -3  -1  -4
+        M  -1  -1  -3  -2   0  -3  -2   1  -1   2   5  -2  -2   0  -1  -1  -1   1  -1  -1  -3  -1  -1  -4
+        N  -2  -3   1   0  -3   0   1  -3   0  -3  -2   6  -2   0   0   1   0  -3  -4  -2   3   0  -1  -4
+        P  -1  -3  -1  -1  -4  -2  -2  -3  -1  -3  -2  -2   7  -1  -2  -1  -1  -2  -4  -3  -2  -1  -2  -4
+        Q  -1  -3   0   2  -3  -2   0  -3   1  -2   0   0  -1   5   1   0  -1  -2  -2  -1   0   3  -1  -4
+        R  -1  -3  -2   0  -3  -2   0  -3   2  -2  -1   0  -2   1   5  -1  -1  -3  -3  -2  -1   0  -1  -4
+        S   1  -1   0   0  -2   0  -1  -2   0  -2  -1   1  -1   0  -1   4   1  -2  -3  -2   0   0   0  -4
+        T   0  -1  -1  -1  -2  -2  -2  -1  -1  -1  -1   0  -1  -1  -1   1   5   0  -2  -2  -1  -1   0  -4
+        V   0  -1  -3  -2  -1  -3  -3   3  -2   1   1  -3  -2  -2  -3  -2   0   4  -3  -1  -3  -2  -1  -4
+        W  -3  -2  -4  -3   1  -2  -2  -3  -3  -2  -1  -4  -4  -2  -3  -3  -2  -3  11   2  -4  -3  -2  -4
+        Y  -2  -2  -3  -2   3  -3   2  -1  -2  -1  -1  -2  -3  -1  -2  -2  -2  -1   2   7  -3  -2  -1  -4
+        B  -2  -3   4   1  -3  -1   0  -3   0  -4  -3   3  -2   0  -1   0  -1  -3  -4  -3   4   1  -1  -4
+        Z  -1  -3   1   4  -3  -2   0  -3   1  -3  -1   0  -1   3   0   0  -1  -2  -3  -2   1   4  -1  -4
+        X   0  -2  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -2  -1  -1   0   0  -1  -2  -1  -1  -1  -1  -4
+        *  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4  -4   1
+        >>> alignment = align_optimal(seq1, seq2, matrix, gap_penalty=-10)[0]
+        >>> print(alignment)
+        BIQTITE
+        -IQLITE
+
+        Running the alignment with positional equivalents gives the same result:
+
+        >>> pos_matrix, pos_seq1, pos_seq2 = matrix.as_positional(seq1, seq2)
+        >>> print(pos_matrix)
+            I   Q   L   I   T   E
+        B  -3   0  -4  -3  -1   1
+        I   4  -3   2   4  -1  -3
+        Q  -3   5  -2  -3  -1   2
+        T  -1  -1  -1  -1   5  -1
+        I   4  -3   2   4  -1  -3
+        T  -1  -1  -1  -1   5  -1
+        E  -3   2  -3  -3  -1   5
+        >>> pos_alignment = align_optimal(pos_seq1, pos_seq2, pos_matrix, gap_penalty=-10)[0]
+        >>> print(pos_alignment)
+        BIQTITE
+        -IQLITE
+
+        Increase the substitution score for the first symbols in both sequences to align
+        to each other:
+
+        >>> score_matrix = pos_matrix.score_matrix().copy()
+        >>> score_matrix[0, 0] = 100
+        >>> biased_matrix = SubstitutionMatrix(
+        ...     pos_matrix.get_alphabet1(), pos_matrix.get_alphabet2(), score_matrix
+        ... )
+        >>> print(biased_matrix)
+            I   Q   L   I   T   E
+        B 100   0  -4  -3  -1   1
+        I   4  -3   2   4  -1  -3
+        Q  -3   5  -2  -3  -1   2
+        T  -1  -1  -1  -1   5  -1
+        I   4  -3   2   4  -1  -3
+        T  -1  -1  -1  -1   5  -1
+        E  -3   2  -3  -3  -1   5
+        >>> biased_alignment = align_optimal(pos_seq1, pos_seq2, biased_matrix, gap_penalty=-10)[0]
+        >>> print(biased_alignment)
+        BIQTITE
+        I-QLITE
         """
-        return (len(self._alph1), len(self._alph2))
+        pos_sequence1 = PositionalSequence(sequence1)
+        pos_sequence2 = PositionalSequence(sequence2)
+
+        pos_score_matrix = self._matrix[
+            tuple(_cartesian_product(sequence1.code, sequence2.code).T)
+        ].reshape(len(sequence1), len(sequence2))
+        pos_matrix = SubstitutionMatrix(
+            pos_sequence1.get_alphabet(),
+            pos_sequence2.get_alphabet(),
+            pos_score_matrix,
+        )
+
+        return pos_matrix, pos_sequence1, pos_sequence2
+
+    def __repr__(self):
+        """Represent SubstitutionMatrix as a string for debugging."""
+        return (
+            f"SubstitutionMatrix({self._alph1.__repr__()}, {self._alph2.__repr__()}, "
+            f"np.{np.array_repr(self._matrix)})"
+        )
+
+    def __eq__(self, item):
+        if not isinstance(item, SubstitutionMatrix):
+            return False
+        if self._alph1 != item.get_alphabet1():
+            return False
+        if self._alph2 != item.get_alphabet2():
+            return False
+        if not np.array_equal(self.score_matrix(), item.score_matrix()):
+            return False
+        return True
+
+    def __ne__(self, item):
+        return not self == item
 
     def __str__(self):
         # Create matrix in NCBI format
         string = " "
         for symbol in self._alph2:
-            string += f" {symbol:>3}"
+            string += f" {str(symbol):>3}"
         string += "\n"
         for i, symbol in enumerate(self._alph1):
-            string += f"{symbol:>1}"
+            string += f"{str(symbol):>1}"
             for j in range(len(self._alph2)):
                 string += f" {int(self._matrix[i,j]):>3d}"
             string += "\n"
@@ -394,6 +516,14 @@ class SubstitutionMatrix(object):
         """
         return _matrix_nuc
 
+    def _fill_with_matrix_dict(self, matrix_dict):
+        self._matrix = np.zeros((len(self._alph1), len(self._alph2)), dtype=np.int32)
+        for i in range(len(self._alph1)):
+            for j in range(len(self._alph2)):
+                sym1 = self._alph1.decode(i)
+                sym2 = self._alph2.decode(j)
+                self._matrix[i, j] = int(matrix_dict[sym1, sym2])
+
 
 # Preformatted BLOSUM62 and NUC substitution matrix from NCBI
 _matrix_blosum62 = SubstitutionMatrix(
@@ -402,3 +532,15 @@ _matrix_blosum62 = SubstitutionMatrix(
 _matrix_nuc = SubstitutionMatrix(
     NucleotideSequence.alphabet_amb, NucleotideSequence.alphabet_amb, "NUC"
 )
+
+
+def _cartesian_product(array1, array2):
+    """
+    Create all combinations of elements from two arrays.
+    """
+    return np.transpose(
+        [
+            np.repeat(array1, len(array2)),
+            np.tile(array2, len(array1)),
+        ]
+    )
