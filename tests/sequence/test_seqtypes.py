@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import numpy as np
 import pytest
 import biotite.sequence as seq
 
@@ -90,3 +91,23 @@ def test_get_molecular_weight(monoisotopic, expected_mol_weight_protein):
     protein = seq.ProteinSequence("ACDEFGHIKLMNPQRSTVW")
     mol_weight_protein = protein.get_molecular_weight(monoisotopic=monoisotopic)
     assert mol_weight_protein == pytest.approx(expected_mol_weight_protein, abs=1e-2)
+
+
+def test_positional_sequence():
+    """
+    Check whether the original sequence symbols can be reconstructed from a
+    :class:`PositionalSequence`.
+    """
+    SEQ_LENGTH = 100
+
+    np.random.seed(0)
+    orig_sequence = seq.ProteinSequence()
+    orig_sequence.code = np.random.randint(
+        0, len(orig_sequence.alphabet), size=SEQ_LENGTH
+    )
+    positional_sequence = seq.PositionalSequence(orig_sequence)
+
+    assert str(positional_sequence) == str(orig_sequence)
+    reconstructed_sequence = positional_sequence.reconstruct()
+    assert np.all(reconstructed_sequence.code == orig_sequence.code)
+    assert reconstructed_sequence.alphabet == orig_sequence.alphabet
