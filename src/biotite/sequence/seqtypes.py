@@ -4,10 +4,17 @@
 
 __name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann", "Thomas Nevolianis"
-__all__ = ["GeneralSequence", "NucleotideSequence", "ProteinSequence"]
+__all__ = [
+    "GeneralSequence",
+    "NucleotideSequence",
+    "ProteinSequence",
+    "PositionalSequence",
+    "PositionalSymbol",
+]
 
+from dataclasses import dataclass
 import numpy as np
-from biotite.sequence.alphabet import AlphabetError, AlphabetMapper, LetterAlphabet
+from biotite.sequence.alphabet import AlphabetError, Alphabet, AlphabetMapper, LetterAlphabet
 from biotite.sequence.sequence import Sequence
 
 
@@ -590,3 +597,57 @@ class ProteinSequence(Sequence):
                 "Sequence contains ambiguous amino acids, " "cannot calculate weight"
             )
         return weight
+
+
+@dataclass(frozen=True)
+class PositionalSymbol:
+    """
+    Combination of a symbol and its position in a sequence.
+
+    Attributes
+    ----------
+    symbol : object
+        The symbol from the original alphabet.
+    position : int
+        The 0-based position of the symbol in the sequence.
+
+    See Also
+    --------
+    PositionalSequence
+        The sequence type containing :class:`PositionalSymbol` objects.
+    """
+
+    symbol: ...
+    position: ...
+
+    def __str__(self):
+        return str(self.symbol)
+
+
+class PositionalSequence(Sequence):
+    """
+    A sequence where each symbol is associated with a position.
+
+    The alphabet contains `PositionalSymbol` objects as symbols.
+    This is useful for aligning sequences based on a position-specific
+    substitution matrix.
+
+    Parameters
+    ----------
+    base_sequence : seq.Sequence
+        The base sequence to create the positional sequence from.
+    """
+
+    def __init__(self, base_sequence):
+        self._alphabet = Alphabet(
+            [PositionalSymbol(sym, i) for i, sym in enumerate(base_sequence.symbols)]
+        )
+        self.code = np.arange(
+            len(base_sequence), dtype=Sequence.dtype(len(self._alphabet))
+        )
+
+    def get_alphabet(self):
+        return self._alphabet
+
+    def __str__(self) -> str:
+        return "".join([str(sym) for sym in self.symbols])
