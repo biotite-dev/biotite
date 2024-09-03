@@ -3,13 +3,11 @@
 Loading structures from file
 ============================
 Usually structures are not built from scratch, but they are read from a file.
-Probably one of the most popular structure file formats to date is the
-*Protein Data Bank Exchange* (PDB) format.
 For this tutorial, we will work on a protein structure as small as possible,
 namely the miniprotein *TC5b* (PDB: ``1L2Y``).
 The structure of this 20-residue protein (304 atoms) has been elucidated via
 NMR.
-Thus, the corresponding PDB file consists of multiple (namely 38) models, each
+Thus, the corresponding structure file consists of multiple (namely 38) models, each
 showing another conformation.
 
 Reading PDB files
@@ -17,6 +15,8 @@ Reading PDB files
 
 .. currentmodule:: biotite.structure.io.pdb
 
+Probably one of the most popular structure file formats to date is the
+*Protein Data Bank Exchange* (PDB) format.
 At first we load the structure from a PDB file via the class
 :class:`PDBFile` in the subpackage :mod:`biotite.structure.io.pdb`.
 
