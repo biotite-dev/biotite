@@ -542,7 +542,7 @@ class SDFile(File, MutableMapping):
     ----------
     record : CIFBlock
         The sole record of the file.
-        If the file contains multiple blocks, an exception is raised.
+        If the file contains multiple records, an exception is raised.
 
     Examples
     --------
