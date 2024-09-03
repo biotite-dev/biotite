@@ -40,28 +40,30 @@ from biotite.structure.residues import get_residue_count, get_residue_starts_for
 from biotite.structure.util import matrix_rotate
 
 # Bond types in `struct_conn` category that refer to covalent bonds
-PDBX_COVALENT_TYPES = [
-    "covale",
-    "covale_base",
-    "covale_phosphate",
-    "covale_sugar",
-    "disulf",
-    "modres",
-    "modres_link",
-    "metalc",
-]
-# Map 'struct_conn' bond orders to 'BondType'...
-PDBX_BOND_ORDER_TO_TYPE = {
-    "": BondType.ANY,
-    "sing": BondType.SINGLE,
-    "doub": BondType.DOUBLE,
-    "trip": BondType.TRIPLE,
-    "quad": BondType.QUADRUPLE,
+PDBX_BOND_TYPE_ID_TO_TYPE = {
+    # Although a covalent bond, could in theory have a higher bond order,
+    # practically inter-residue bonds are always single
+    "covale": BondType.SINGLE,
+    "covale_base": BondType.SINGLE,
+    "covale_phosphate": BondType.SINGLE,
+    "covale_sugar": BondType.SINGLE,
+    "disulf": BondType.SINGLE,
+    "modres": BondType.SINGLE,
+    "modres_link": BondType.SINGLE,
+    "metalc": BondType.COORDINATION,
 }
-# ...and vice versa
+PDBX_BOND_TYPE_TO_TYPE_ID = {
+    BondType.ANY: "covale",
+    BondType.SINGLE: "covale",
+    BondType.DOUBLE: "covale",
+    BondType.TRIPLE: "covale",
+    BondType.QUADRUPLE: "covale",
+    BondType.AROMATIC_SINGLE: "covale",
+    BondType.AROMATIC_DOUBLE: "covale",
+    BondType.AROMATIC_TRIPLE: "covale",
+    BondType.COORDINATION: "metalc",
+}
 PDBX_BOND_TYPE_TO_ORDER = {
-    # 'ANY' is masked later, it is merely added here to avoid a KeyError
-    BondType.ANY: "",
     BondType.SINGLE: "sing",
     BondType.DOUBLE: "doub",
     BondType.TRIPLE: "trip",
@@ -69,6 +71,9 @@ PDBX_BOND_TYPE_TO_ORDER = {
     BondType.AROMATIC_SINGLE: "sing",
     BondType.AROMATIC_DOUBLE: "doub",
     BondType.AROMATIC_TRIPLE: "trip",
+    # These are masked later, it is merely added here to avoid a KeyError
+    BondType.ANY: "",
+    BondType.COORDINATION: "",
 }
 # Map 'chem_comp_bond' bond orders and aromaticity to 'BondType'...
 COMP_BOND_ORDER_TO_TYPE = {
@@ -536,7 +541,8 @@ def _parse_inter_residue_bonds(atom_site, struct_conn):
     ]
 
     covale_mask = np.isin(
-        struct_conn["conn_type_id"].as_array(str), PDBX_COVALENT_TYPES
+        struct_conn["conn_type_id"].as_array(str),
+        list(PDBX_BOND_TYPE_ID_TO_TYPE.keys()),
     )
     if "ptnr1_symmetry" in struct_conn:
         covale_mask &= struct_conn["ptnr1_symmetry"].as_array(str, IDENTITY) == IDENTITY
@@ -576,13 +582,14 @@ def _parse_inter_residue_bonds(atom_site, struct_conn):
     atoms_indices_1 = atoms_indices_1[mapping_exists_mask]
     atoms_indices_2 = atoms_indices_2[mapping_exists_mask]
 
-    # Interpret missing values as ANY bonds
-    bond_order = struct_conn["pdbx_value_order"].as_array(str, "")
+    bond_type_id = struct_conn["conn_type_id"].as_array()
     # Consecutively apply the same masks as applied to the atom indices
     # Logical combination does not work here,
     # as the second mask was created based on already filtered data
-    bond_order = bond_order[covale_mask][mapping_exists_mask]
-    bond_types = [PDBX_BOND_ORDER_TO_TYPE[order] for order in bond_order]
+    bond_type_id = bond_type_id[covale_mask][mapping_exists_mask]
+    # The type ID is always present in the dictionary,
+    # as it was used to filter the applicable bonds
+    bond_types = [PDBX_BOND_TYPE_ID_TO_TYPE[type_id] for type_id in bond_type_id]
 
     return BondList(
         atom_site.row_count,
@@ -1023,11 +1030,13 @@ def _set_inter_residue_bonds(array, atom_site):
 
     struct_conn = Category()
     struct_conn["id"] = np.arange(1, len(bond_array) + 1)
-    struct_conn["conn_type_id"] = np.full(len(bond_array), "covale")
+    struct_conn["conn_type_id"] = [
+        PDBX_BOND_TYPE_TO_TYPE_ID[btype] for btype in bond_array[:, 2]
+    ]
     struct_conn["pdbx_value_order"] = Column(
         np.array([PDBX_BOND_TYPE_TO_ORDER[btype] for btype in bond_array[:, 2]]),
         np.where(
-            bond_array[:, 2] == BondType.ANY,
+            np.isin(bond_array[:, 2], (BondType.ANY, BondType.COORDINATION)),
             MaskValue.MISSING,
             MaskValue.PRESENT,
         ),
