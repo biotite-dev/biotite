@@ -61,7 +61,7 @@ class BinaryCIFData(_Component):
     >>> print(data.array)
     ['apple']
 
-    Well-chosen encoding can significantly reduce the serialized data
+    A well-chosen encoding can significantly reduce the serialized data
     size:
 
     >>> # Default uncompressed encoding
