@@ -921,7 +921,7 @@ def _create_element_dict(lines, element_names, element_starts):
     # Lazy deserialization
     # -> keep as text for now and deserialize later if needed
     return {
-        element_name: "\n".join(lines[element_starts[i] : element_starts[i + 1]])
+        element_name: "\n".join(lines[element_starts[i] : element_starts[i + 1]]) + "\n"
         for i, element_name in enumerate(element_names)
     }
 
