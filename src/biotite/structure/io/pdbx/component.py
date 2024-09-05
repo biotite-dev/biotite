@@ -171,10 +171,10 @@ class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
         Parameters
         ----------
         store_key_in: str, optional
-        If given, the key of each element is stored as value in the
-        serialized element.
-        This is basically the reverse operation of `take_key_from` in
-        :meth:`_deserialize_elements()`.
+            If given, the key of each element is stored as value in the
+            serialized element.
+            This is basically the reverse operation of `take_key_from` in
+            :meth:`_deserialize_elements()`.
         """
         serialized_elements = []
         for key, element in self._elements.items():
