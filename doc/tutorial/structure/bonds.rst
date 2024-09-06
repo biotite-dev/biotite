@@ -143,3 +143,20 @@ every molecule that appears in any PDB entry.
     print(tyrosine.bonds.as_array())
     print("Bonds (atoms names):")
     print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])
+
+Filtering and editing bonds
+---------------------------
+The recommended way to apply changes to a :class:`BondList` (apart from adding/removing
+single bonds) is to use the :class:`ndarray` obtained via :meth:`BondList.as_array()`
+as transient representation and creating a new :class:`BondList` from the modified
+:class:`ndarray`.
+
+.. jupyter-execute::
+
+    # Transiently convert the bond list to an array
+    bond_array = tyrosine.bonds.as_array()
+    # As example Remove all single bonds
+    bond_array = bond_array[bond_array[:, 2] != struc.BondType.SINGLE]
+    # Create a new bond list from the modified array
+    tyrosine.bonds = struc.BondList(tyrosine.array_length(), bond_array)
+    print(tyrosine.atom_name[tyrosine.bonds.as_array()[:, :2]])

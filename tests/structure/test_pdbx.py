@@ -184,6 +184,32 @@ def test_bond_conversion(tmpdir, format, path):
     assert test_bonds == ref_bonds
 
 
+def test_metal_coordination_bonds():
+    """
+    Test if metal coordination bonds are properly written and read,
+    based on an known example.
+    """
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1crr.bcif"))
+    atoms = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
+
+    bond_array = atoms.bonds.as_array()
+    # Filter bonds to bonds containing the magnesium atom
+    metal_bond_array = bond_array[
+        (atoms.res_name[bond_array[:, 0]] == "MG")
+        | (atoms.res_name[bond_array[:, 1]] == "MG")
+    ]
+    assert np.all(metal_bond_array[:, 2] == struc.BondType.COORDINATION)
+
+    # Only keep the metal bonds
+    atoms.bonds = struc.BondList(atoms.array_length(), metal_bond_array)
+    pdbx_file = pdbx.BinaryCIFFile()
+    pdbx.set_structure(pdbx_file, atoms)
+    conn_type_id = pdbx_file.block["struct_conn"]["conn_type_id"].as_array(str)
+    # All inter-residue bonds in the chosen structure are metal bonds
+    assert len(conn_type_id) == len(metal_bond_array)
+    assert np.all(conn_type_id == "metalc")
+
+
 def test_bond_sparsity():
     """
     Ensure that only as much intra-residue bonds are written as necessary,
@@ -287,7 +313,6 @@ def test_any_bonds(tmpdir, format):
     """
     Check if ``BondType.ANY`` bonds can be written and read from a PDBx
     file, i.e. the ``chem_comp_bond`` and ``struct_conn`` categories.
-    ``BondType.ANY`` is represented by missing values.
     """
     N_ATOMS = 4
 
@@ -320,6 +345,7 @@ def test_any_bonds(tmpdir, format):
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         test_bonds = pdbx.get_structure(pdbx_file, model=1, include_bonds=True).bonds
+    test_bonds.remove_bond_order()
 
     assert test_bonds == ref_bonds
 

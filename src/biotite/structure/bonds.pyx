@@ -59,6 +59,7 @@ class BondType(IntEnum):
         - `AROMATIC_SINGLE` - Aromatic bond with a single formal bond
         - `AROMATIC_DOUBLE` - Aromatic bond with a double formal bond
         - `AROMATIC_TRIPLE` - Aromatic bond with a triple formal bond
+        - `COORDINATION` - Coordination complex involving a metal atom
     """
     ANY = 0
     SINGLE = 1
@@ -68,6 +69,7 @@ class BondType(IntEnum):
     AROMATIC_SINGLE = 5
     AROMATIC_DOUBLE = 6
     AROMATIC_TRIPLE = 7
+    COORDINATION = 8
 
 
     def without_aromaticity(self):
@@ -88,10 +90,12 @@ class BondType(IntEnum):
         >>> print(BondType.AROMATIC_DOUBLE.without_aromaticity().name)
         DOUBLE
         """
-        difference = BondType.AROMATIC_SINGLE - BondType.SINGLE
-        if self >= BondType.AROMATIC_SINGLE:
-            difference = BondType.AROMATIC_SINGLE - BondType.SINGLE
-            return BondType(self - difference)
+        if self == BondType.AROMATIC_SINGLE:
+            return BondType.SINGLE
+        elif self == BondType.AROMATIC_DOUBLE:
+            return BondType.DOUBLE
+        elif self == BondType.AROMATIC_TRIPLE:
+            return BondType.TRIPLE
         else:
             return self
 
@@ -453,9 +457,13 @@ class BondList(Copyable):
         0 1 SINGLE
         1 2 DOUBLE
         """
-        bonds = self._bonds
-        difference = BondType.AROMATIC_SINGLE - BondType.SINGLE
-        bonds[bonds[:, 2] >= BondType.AROMATIC_SINGLE, 2] -= difference
+        bond_types = self._bonds[:,2]
+        for aromatic_type, non_aromatic_type in [
+            (BondType.AROMATIC_SINGLE, BondType.SINGLE),
+            (BondType.AROMATIC_DOUBLE, BondType.DOUBLE),
+            (BondType.AROMATIC_TRIPLE, BondType.TRIPLE)
+        ]:
+            bond_types[bond_types == aromatic_type] = non_aromatic_type
 
     def remove_bond_order(self):
         """

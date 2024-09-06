@@ -103,8 +103,8 @@ def test_invalid_creation():
             5,
             np.array(
                 [
-                    # BondType '8' does not exist
-                    [1, 2, 8]
+                    # BondType '42' does not exist
+                    [1, 2, 42]
                 ]
             ),
         )
