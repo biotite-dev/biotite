@@ -9,12 +9,17 @@ __all__ = [
     "NucleotideSequence",
     "ProteinSequence",
     "PositionalSequence",
-    "PositionalSymbol",
+    "PurePositionalSequence",
 ]
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import numpy as np
-from biotite.sequence.alphabet import AlphabetError, Alphabet, AlphabetMapper, LetterAlphabet
+from biotite.sequence.alphabet import (
+    Alphabet,
+    AlphabetError,
+    AlphabetMapper,
+    LetterAlphabet,
+)
 from biotite.sequence.sequence import Sequence
 
 
@@ -599,55 +604,108 @@ class ProteinSequence(Sequence):
         return weight
 
 
-@dataclass(frozen=True)
-class PositionalSymbol:
-    """
-    Combination of a symbol and its position in a sequence.
-
-    Attributes
-    ----------
-    symbol : object
-        The symbol from the original alphabet.
-    position : int
-        The 0-based position of the symbol in the sequence.
-
-    See Also
-    --------
-    PositionalSequence
-        The sequence type containing :class:`PositionalSymbol` objects.
-    """
-
-    symbol: ...
-    position: ...
-
-    def __str__(self):
-        return str(self.symbol)
-
-
 class PositionalSequence(Sequence):
     """
     A sequence where each symbol is associated with a position.
 
-    The alphabet contains `PositionalSymbol` objects as symbols.
+    Its symbols are
     This is useful for aligning sequences based on a position-specific
     substitution matrix.
 
     Parameters
     ----------
-    base_sequence : seq.Sequence
-        The base sequence to create the positional sequence from.
+    original_sequence : seq.Sequence
+        The original sequence to create the positional sequence from.
     """
 
-    def __init__(self, base_sequence):
+    @dataclass(frozen=True)
+    class Symbol:
+        """
+        Combination of a symbol and its position in a sequence.
+
+        Attributes
+        ----------
+        original_alphabet : Alphabet
+            The original alphabet, where the symbol stems from.
+        original_code : int
+            The code of the original symbol in the original alphabet.
+        position : int
+            The 0-based position of the symbol in the sequence.
+        symbol : object
+            The symbol from the original alphabet.
+
+        See Also
+        --------
+        PositionalSequence
+            The sequence type containing :class:`PositionalSymbol` objects.
+        """
+
+        original_alphabet: ...
+        original_code: ...
+        position: ...
+        symbol: ... = field(init=False)
+
+        def __post_init__(self):
+            sym = self.original_alphabet.decode(self.original_code)
+            super().__setattr__("symbol", sym)
+
+        def __str__(self):
+            return str(self.symbol)
+
+    def __init__(self, original_sequence):
+        self._orig_alphabet = original_sequence.get_alphabet()
         self._alphabet = Alphabet(
-            [PositionalSymbol(sym, i) for i, sym in enumerate(base_sequence.symbols)]
+            [
+                PositionalSequence.Symbol(self._orig_alphabet, code, pos)
+                for pos, code in enumerate(original_sequence.code)
+            ]
         )
         self.code = np.arange(
-            len(base_sequence), dtype=Sequence.dtype(len(self._alphabet))
+            len(original_sequence), dtype=Sequence.dtype(len(self._alphabet))
         )
+
+    def reconstruct(self):
+        """
+        Reconstruct the original sequence from the positional sequence.
+
+        Returns
+        -------
+        original_sequence : GeneralSequence
+            The original sequence.
+            Although the actual type of the returned sequence is always a
+            :class:`GeneralSequence`, the alphabet and the symbols of the returned
+            sequence are equal to the original sequence.
+        """
+        original_sequence = GeneralSequence(self._orig_alphabet)
+        original_sequence.code = np.array([sym.original_code for sym in self._alphabet])
+        return original_sequence
 
     def get_alphabet(self):
         return self._alphabet
 
     def __str__(self) -> str:
         return "".join([str(sym) for sym in self.symbols])
+
+    def __repr__(self):
+        return f"PositionalSequence({self.reconstruct()!r})"
+
+
+class PurePositionalSequence(Sequence):
+    """
+    An object of this class is a 'placeholder' sequence, where each symbol is the
+    position in the sequence itself.
+
+    This class is similar to :class:`PositionalSequence`, but the symbols are not
+    derived from an original sequence, but are the pure position.
+    Hence, there is no meaningful string representation of the sequence and its symbols.
+    """
+
+    def __init__(self, length):
+        self._alphabet = Alphabet(range(length))
+        self.code = np.arange(length, dtype=Sequence.dtype(length))
+
+    def get_alphabet(self):
+        return self._alphabet
+
+    def __repr__(self):
+        return f"PurePositionalSequence({len(self)})"

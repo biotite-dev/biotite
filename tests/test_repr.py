@@ -15,7 +15,9 @@ from biotite.sequence import (
     LetterAlphabet,
     Location,
     NucleotideSequence,
+    PositionalSequence,
     ProteinSequence,
+    PurePositionalSequence,
     SequenceProfile,
 )
 from biotite.sequence.align import Alignment, SubstitutionMatrix
@@ -30,6 +32,8 @@ __author__ = "Maximilian Greil"
         NucleotideSequence("AACTGCTA"),
         NucleotideSequence("AACTGCTA", ambiguous=True),
         ProteinSequence("BIQTITE"),
+        PositionalSequence(NucleotideSequence("AACTGCTA")),
+        PurePositionalSequence(123),
         Alphabet(["X", "Y", "Z"]),
         GeneralSequence(Alphabet(["X", 42, False]), ["X", 42, "X"]),
         LetterAlphabet(["X", "Y", "Z"]),

@@ -7,7 +7,11 @@ __author__ = "Patrick Kunzmann"
 
 import os
 import numpy as np
-from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence, PositionalSequence
+from biotite.sequence.seqtypes import (
+    NucleotideSequence,
+    PositionalSequence,
+    ProteinSequence,
+)
 
 __all__ = ["SubstitutionMatrix"]
 
@@ -269,7 +273,7 @@ class SubstitutionMatrix(object):
         code2 = self._alph2.encode(symbol2)
         return self._matrix[code1, code2]
 
-    def into_positional(self, sequence1, sequence2):
+    def as_positional(self, sequence1, sequence2):
         """
         Transform this substitution matrix and two sequences into positional
         equivalents.
