@@ -43,5 +43,5 @@ For an unambiguous DNA sequence, the alphabet comprises the four nucleobases.
     align_optimal
     align_heuristic
     align_multiple
-    annotations
     profiles
+    annotations
