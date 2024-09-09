@@ -608,7 +608,9 @@ class PositionalSequence(Sequence):
     """
     A sequence where each symbol is associated with a position.
 
-    Its symbols are
+    For each individual position the sequence contains a separate
+    :class:`PositionalSequence.Symbol`, encoded by a custom alphabet for this sequence.
+    In consequence the symbol code is the position in the sequence itself.
     This is useful for aligning sequences based on a position-specific
     substitution matrix.
 
