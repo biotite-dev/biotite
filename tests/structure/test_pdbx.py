@@ -704,6 +704,43 @@ def test_serialization_consistency(format, create_new_encoding):
             raise Exception(f"Comparison failed for '{category_name}.{key}'")
 
 
+@pytest.mark.parametrize(
+    "format, level", itertools.product(["cif", "bcif"], ["block", "category", "column"])
+)
+def test_editing(tmpdir, format, level):
+    """
+    Check if editing an existing PDBx file works, by checking if replacing some
+    category/block/column with a copy of itself does not affect the content.
+    """
+    File = pdbx.CIFFile if format == "cif" else pdbx.BinaryCIFFile
+    Block = File.subcomponent_class()
+    Category = Block.subcomponent_class()
+    Column = Category.subcomponent_class()
+
+    column = Column(["a", "b", "c"])
+    category = Category({"foo_col": column, "bar_col": column, "baz_col": column})
+    block = Block({"foo_cat": category, "bar_cat": category, "baz_cat": category})
+    ref_pdbx_file = File({"foo_block": block, "bar_block": block, "baz_block": block})
+    ref_pdbx_file.write(join(tmpdir, f"original.{format}"))
+
+    pdbx_file = File.read(join(tmpdir, f"original.{format}"))
+    if level == "block":
+        # Replace block in the mid,
+        # to check if the block before and after remain the same
+        pdbx_file["bar_block"] = pdbx_file["bar_block"]
+    elif level == "category":
+        pdbx_file["bar_block"]["bar_cat"] = pdbx_file["bar_block"]["bar_cat"]
+    elif level == "column":
+        pdbx_file["bar_block"]["bar_cat"]["bar_col"] = pdbx_file["bar_block"][
+            "bar_cat"
+        ]["bar_col"]
+    pdbx_file.write(join(tmpdir, f"edited.{format}"))
+
+    test_pdbx_file = File.read(join(tmpdir, f"edited.{format}"))
+    # As the content should not have changed, the serialized files should be identical
+    assert test_pdbx_file.serialize() == ref_pdbx_file.serialize()
+
+
 def _clear_encoding(category):
     columns = {}
     for key, col in category.items():

@@ -569,6 +569,17 @@ class CIFBlock(_Component, MutableMapping):
         The keys are the category names and the values are the
         :class:`CIFCategory` objects.
         By default, an empty block is created.
+    name : str, optional
+        The name of the block.
+        This is only used for serialization and is automatically set,
+        when the :class:`CIFBlock` is added to a :class:`CIFFile`.
+        It only needs to be set manually, when the block is directly
+        serialized.
+
+    Attributes
+    ----------
+    name : str
+        The name of the block.
 
     Notes
     -----
@@ -580,13 +591,15 @@ class CIFBlock(_Component, MutableMapping):
     --------
 
     >>> # Add category on creation
-    >>> block = CIFBlock({"foo": CIFCategory({"some_column": 1})})
+    >>> block = CIFBlock({"foo": CIFCategory({"some_column": 1})}, name="baz")
     >>> # Add category later on
     >>> block["bar"] = CIFCategory({"another_column": [2, 3]})
     >>> # Access a column
     >>> print(block["bar"]["another_column"].as_array())
     ['2' '3']
     >>> print(block.serialize())
+    data_baz
+    #
     _foo.some_column   1
     #
     loop_
@@ -596,10 +609,19 @@ class CIFBlock(_Component, MutableMapping):
     #
     """
 
-    def __init__(self, categories=None):
+    def __init__(self, categories=None, name=None):
+        self._name = name
         if categories is None:
             categories = {}
         self._categories = categories
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
 
     @staticmethod
     def subcomponent_class():
@@ -634,7 +656,10 @@ class CIFBlock(_Component, MutableMapping):
         return CIFBlock(_create_element_dict(lines, category_names, category_starts))
 
     def serialize(self):
-        text_blocks = []
+        if self._name is None:
+            raise SerializationError("Block name is required")
+        # The block starts with the black name line followed by a comment line
+        text_blocks = ["data_" + self._name + "\n#\n"]
         for category_name, category in self._categories.items():
             if isinstance(category, str):
                 # Category is already stored as lines
@@ -806,14 +831,12 @@ class CIFFile(_Component, File, MutableMapping):
     def serialize(self):
         text_blocks = []
         for block_name, block in self._blocks.items():
-            text_blocks.append("data_" + block_name + "\n")
-            # A comment line is set after the block indicator
-            text_blocks.append("#\n")
             if isinstance(block, str):
                 # Block is already stored as text
                 text_blocks.append(block)
             else:
                 try:
+                    block.name = block_name
                     text_blocks.append(block.serialize())
                 except Exception:
                     raise SerializationError(
@@ -884,6 +907,7 @@ class CIFFile(_Component, File, MutableMapping):
     def __setitem__(self, key, block):
         if not isinstance(block, CIFBlock):
             raise TypeError(f"Expected 'CIFBlock', but got '{type(block).__name__}'")
+        block.name = key
         self._blocks[key] = block
 
     def __delitem__(self, key):
@@ -921,7 +945,7 @@ def _create_element_dict(lines, element_names, element_starts):
     # Lazy deserialization
     # -> keep as text for now and deserialize later if needed
     return {
-        element_name: "\n".join(lines[element_starts[i] : element_starts[i + 1]])
+        element_name: "\n".join(lines[element_starts[i] : element_starts[i + 1]]) + "\n"
         for i, element_name in enumerate(element_names)
     }
 

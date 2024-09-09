@@ -457,7 +457,12 @@ class BinaryCIFBlock(_HierarchicalContainer):
     """
 
     def __init__(self, categories=None):
-        super().__init__(categories)
+        if categories is None:
+            categories = {}
+        super().__init__(
+            # Actual bcif files use leading '_' as category names
+            {"_" + name: category for name, category in categories.items()}
+        )
 
     @staticmethod
     def subcomponent_class():
@@ -470,21 +475,36 @@ class BinaryCIFBlock(_HierarchicalContainer):
     @staticmethod
     def deserialize(content):
         return BinaryCIFBlock(
-            BinaryCIFBlock._deserialize_elements(content["categories"], "name")
+            {
+                # The superclass uses leading '_' in category names,
+                # but on the level of this class, the leading '_' is omitted
+                name.lstrip("_"): category
+                for name, category in BinaryCIFBlock._deserialize_elements(
+                    content["categories"], "name"
+                ).items()
+            }
         )
 
     def serialize(self):
         return {"categories": self._serialize_elements("name")}
 
     def __getitem__(self, key):
-        # Actual bcif files use leading '_' as categories
-        return super().__getitem__("_" + key)
+        try:
+            return super().__getitem__("_" + key)
+        except KeyError:
+            raise KeyError(key)
 
     def __setitem__(self, key, element):
-        return super().__setitem__("_" + key, element)
+        try:
+            return super().__setitem__("_" + key, element)
+        except KeyError:
+            raise KeyError(key)
 
     def __delitem__(self, key):
-        return super().__setitem__("_" + key)
+        try:
+            return super().__setitem__("_" + key)
+        except KeyError:
+            raise KeyError(key)
 
     def __iter__(self):
         return (key.lstrip("_") for key in super().__iter__())
