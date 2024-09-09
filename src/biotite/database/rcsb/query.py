@@ -868,7 +868,7 @@ def search(
     ...     query, return_type="polymer_entity", return_groups=True,
     ...     group_by=UniprotGrouping(sort_by="rcsb_accession_info.initial_release_date"),
     ... ))
-     {'P24297': ['5NW3_1'], 'P27707': ['4JLJ_1'], 'P80176': ['5D8V_1'], 'O29777': ['7R0H_1'], 'P01542': ['1EJG_1', '3NIR_1']}
+    {'P24297': ['5NW3_1'], 'P27707': ['4JLJ_1'], 'P80176': ['5D8V_1'], 'O29777': ['7R0H_1'], 'P01542': ['3NIR_1', '1EJG_1']}
     """
     query_dict = _initialize_query_dict(query, return_type, group_by, content_types)
 
