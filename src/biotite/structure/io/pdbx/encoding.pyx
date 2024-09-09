@@ -919,7 +919,7 @@ def decode_stepwise(data, encoding):
 
 
 def _camel_to_snake_case(attribute_name):
-    return re.sub(CAMEL_CASE_PATTERN, "_", attribute_name).lower()
+    return CAMEL_CASE_PATTERN.sub("_", attribute_name).lower()
 
 
 def _snake_to_camel_case(attribute_name):

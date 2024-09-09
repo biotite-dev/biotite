@@ -6,6 +6,7 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_ccd", "get_from_ccd"]
 
+import functools
 from pathlib import Path
 import numpy as np
 
@@ -48,6 +49,7 @@ def get_ccd():
     return _ccd_block
 
 
+@functools.cache
 def get_from_ccd(category_name, comp_id, column_name=None):
     """
     Get the rows for the given residue in the given category from the
@@ -70,6 +72,10 @@ def get_from_ccd(category_name, comp_id, column_name=None):
     value : ndarray or dict or None
         The array of the given column or all columns as dictionary.
         ``None`` if the `comp_id` is not found in the category.
+
+    Notes
+    -----
+    The returned values are cached for faster access in subsequent calls.
 
     References
     ----------

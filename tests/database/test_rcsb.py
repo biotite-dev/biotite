@@ -305,9 +305,9 @@ def test_search_content_types():
                     ("4HP2_1",),
                     ("2DSX_1",),
                     ("2VB1_1",),
-                    ("3A38_1", "5D8V_1", "7VOS_1"),
+                    ("7VOS_1", "3A38_1", "5D8V_1"),
                     ("1UCS_1",),
-                    ("1EJG_1", "3NIR_1", "9EWK_1"),
+                    ("3NIR_1", "9EWK_1", "1EJG_1"),
                 ]
             ),
         ),
@@ -325,9 +325,9 @@ def test_search_content_types():
                     ("4HP2_1",),
                     ("2DSX_1",),
                     ("2VB1_1",),
-                    ("3A38_1", "5D8V_1", "7VOS_1"),
+                    ("7VOS_1", "3A38_1", "5D8V_1"),
                     ("1UCS_1",),
-                    ("1EJG_1", "3NIR_1", "9EWK_1"),
+                    ("3NIR_1", "9EWK_1", "1EJG_1"),
                 ]
             ),
         ),
@@ -335,7 +335,7 @@ def test_search_content_types():
             rcsb.DepositGrouping(sort_by="rcsb_accession_info.initial_release_date"),
             0.9,
             "entry",
-            set([("5R32",), ("5RBR", "5RDH"), ("7FXV", "7G0Z")]),
+            set([("5R32",), ("5RDH", "5RBR"), ("7G0Z", "7FXV")]),
         ),
     ],
 )
