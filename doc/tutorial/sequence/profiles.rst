@@ -1,8 +1,7 @@
 .. include:: /tutorial/preamble.rst
 
-Sequence profiles and position-specific scoring matrices
-========================================================
-
+Profiles and position-specific matrices
+=======================================
 Often sequences are not viewed in isolation:
 For example, if you investigate a protein family, you do not handle a single sequence,
 but an arbitrarily large collection of highly similar sequences.
@@ -65,7 +64,6 @@ occurrences for each symbol.
         gap_penalty=-5,
     )
     profile = seq.SequenceProfile.from_alignment(alignment)
-    count_matrix = profile.symbols
     print(profile)
 
 Each row in the displayed count matrix
@@ -73,15 +71,39 @@ Each row in the displayed count matrix
 column in the input MSA, and each column refers to a symbol in the underlying alphabet
 (accessible via :attr:`SequenceProfile.alphabet`).
 For completeness it should be noted that :attr:`SequenceProfile.gaps` also tracks the
-gaps for each position in the alignment, but we will not further use this in this
+gaps for each position in the alignment, but we will not further use them in this
 tutorial.
+
+Note that the information about the individual sequences is lost in the condensation
+process: There is no way to reconstruct the original sequences from the profile.
+However, we can still extract a consensus sequence from the profile, which is a
+sequence that represents the most frequent symbol at each position.
 
 .. jupyter-execute::
 
     print(profile.to_consensus())
 
-Note that the information about the individual sequences is lost in the condensation
-process: There is no way to reconstruct the original sequences from the profile.
+Profile visualization as sequence logo
+--------------------------------------
+
+.. currentmodule:: biotite.sequence.align
+
+A common way to visualize a sequence profile is a sequence logo.
+It depicts each profile position as a stack of letters:
+The degree of conversation (more precisely the
+`Shannon entropy <https://en.wikipedia.org/wiki/Entropy_(information_theory)>`_)
+is the height of a stack and each letter's height in the stack is proportional to its
+frequency at the respective position.
+
+.. jupyter-execute::
+
+    import matplotlib.pyplot as plt
+    from biotite.sequence.graphics import plot_sequence_logo
+
+    fig, ax = plt.subplots(figsize=(8.0, 2.0), constrained_layout=True)
+    plot_sequence_logo(ax, profile)
+    ax.set_xlabel("Residue position")
+    ax.set_ylabel("Bits")
 
 Position-specific scoring matrices
 ----------------------------------
@@ -132,3 +154,4 @@ sought length.
 
 More on positional sequences
 ----------------------------
+Sequence profiles are just one application of position-specific substitution matrices.
