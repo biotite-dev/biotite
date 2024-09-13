@@ -62,6 +62,8 @@ ignore = [
 "__init__.py" = ["F403", "TID252"]
 # Due to pymol scripts that are evaluated in other example scripts
 "doc/examples/**/*_pymol.py" = ["F821"]
+# Due to 'Table' class used as parametrized argument in test functions
+"benchmarks/sequence/align/benchmark_kmers.py" = ["N803"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
