@@ -3119,9 +3119,12 @@ def _pickle_c_arrays(ptr[:] ptr_array):
         if bucket_ptr != NULL:
             length = (<int64*>bucket_ptr)[0]
             lengths[pointer_i] = length
-            for bucket_i in range(length):
-                concatenated_array[concat_i] = bucket_ptr[bucket_i]
-                concat_i += 1
+            memcpy(
+                &concatenated_array[concat_i],
+                bucket_ptr,
+                length * sizeof(uint32),
+            )
+            concat_i += length
         else:
             lengths[pointer_i] = 0
 
@@ -3134,7 +3137,7 @@ def _unpickle_c_arrays(ptr[:] ptr_array, state):
     """
     Unpickle the pickled `state` into the given `ptr_array`.
     """
-    cdef int64 pointer_i, bucket_i, concat_i
+    cdef int64 pointer_i, concat_i
     cdef int64 length
     cdef uint32* bucket_ptr
 
@@ -3148,9 +3151,12 @@ def _unpickle_c_arrays(ptr[:] ptr_array, state):
             bucket_ptr = <uint32*>malloc(length * sizeof(uint32))
             if not bucket_ptr:
                 raise MemoryError
-            for bucket_i in range(length):
-                bucket_ptr[bucket_i] = concatenated_array[concat_i]
-                concat_i += 1
+            memcpy(
+                bucket_ptr,
+                &concatenated_array[concat_i],
+                length * sizeof(uint32),
+            )
+            concat_i += length
             ptr_array[pointer_i] = <ptr>bucket_ptr
 
 
