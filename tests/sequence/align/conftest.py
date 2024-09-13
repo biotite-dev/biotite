@@ -4,8 +4,6 @@
 
 from os.path import join
 import pytest
-import biotite.sequence as seq
-import biotite.sequence.io.fasta as fasta
 from tests.util import data_dir
 
 
@@ -14,5 +12,10 @@ def sequences():
     """
     10 Cas9 sequences.
     """
+    # Import in function to avoid 'ModuleNotFoundError',
+    # if a Cython module is not compiled yet
+    import biotite.sequence as seq
+    import biotite.sequence.io.fasta as fasta
+
     fasta_file = fasta.FastaFile.read(join(data_dir("sequence"), "cas9.fasta"))
     return [seq.ProteinSequence(sequence) for sequence in fasta_file.values()]
