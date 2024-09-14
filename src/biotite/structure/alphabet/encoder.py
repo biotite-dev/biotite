@@ -9,6 +9,7 @@ import enum
 import functools
 import struct
 import typing
+from importlib.resources import files as resource_files
 
 import numpy
 import numpy.ma
@@ -17,21 +18,13 @@ from . import _unkerasify
 from .layers import Layer, CentroidLayer, Model
 from .utils import normalize, last
 
-try:
-    from importlib.resources import files as resource_files
-except ImportError:
-    from importlib_resources import files as resource_files
+from biotite.structure.atoms import AtomArray
+
 
 T = typing.TypeVar("T")
 if typing.TYPE_CHECKING:
-    from Bio.PDB import Chain
+    from typing import Literal
     from .utils import ArrayN, ArrayNx2, ArrayNx3, ArrayNx10, ArrayNxM
-
-    try:
-        from typing import Literal
-    except ImportError:
-        from typing_extensions import Literal
-
 
 DISTANCE_ALPHA_BETA = 1.5336
 ALPHABET = numpy.array(list("ACDEFGHIKLMNPQRSTVWYX"))
@@ -39,7 +32,7 @@ ALPHABET = numpy.array(list("ACDEFGHIKLMNPQRSTVWYX"))
 
 class _BaseEncoder(abc.ABC, typing.Generic[T]):
     @abc.abstractmethod
-    def encode_atoms(
+    def encode(
         self,
         ca: ArrayNx3[numpy.floating],
         cb: ArrayNx3[numpy.floating],
@@ -61,56 +54,42 @@ class _BaseEncoder(abc.ABC, typing.Generic[T]):
         """
         raise NotImplementedError
 
-    def encode_chain(
+    def encode_atoms(
         self,
-        chain: Chain,
+        array: AtomArray,
         ca_residue: bool = True,
         disordered_atom: Literal["best", "last"] = "best",
     ) -> T:
-        """Encode the given chain to a different representation.
+        if not numpy.all(array.chain_id == array.chain_id[0]):
+            raise BadStructureError("structure contains more than one chain")
 
-        Arguments:
-            chain (`Bio.PDB.Chain`): A single chain object parsed from a
-                PDB structure.
-            ca_residue (`bool`, *optional*): Only extract coordinates of
-                residues which have a *CA* atom. Set to `False` to use every
-                residue returned by the `~Bio.PDB.Chain.Chain.get_residues`
-                method.
-            disordered_atom (`str`): How to handle disordered atoms in the
-                source chain. The default (`"best"`) will retain the atom
-                with the best occupancy. Setting this to `"last"` will
-                use the last atom instead, in order to produce the same
-                results as Foldseek.
+        ca_atoms = array[array.atom_name == 'CA']
+        cb_atoms = array[array.atom_name == 'CB']
+        n_atoms = array[array.atom_name == 'N']
+        c_atoms = array[array.atom_name == 'C']
 
-        .. versionadded:: 0.2.0
-           The ``disordered_atom`` argument.
+        r = array.res_id.max()
 
-        """
-        # extract residues
-        if ca_residue:
-            residues = [residue for residue in chain.get_residues() if "CA" in residue]
-        else:
-            residues = list(chain.get_residues())
-        # extract atom coordinates
-        r = len(residues)
-        ca = numpy.array(numpy.nan, dtype=numpy.float32).repeat(3 * r).reshape(r, 3)
+        ca = numpy.zeros((r + 1, 3), dtype=numpy.float32)
+        ca.fill(numpy.nan)
         cb = ca.copy()
         n = ca.copy()
         c = ca.copy()
-        for i, residue in enumerate(residues):
-            for atom in residue.get_atoms():
-                if atom.is_disordered() and disordered_atom == "last":
-                    atom = last(atom)
-                if atom.get_name() == "CA":
-                    ca[i, :] = atom.coord
-                elif atom.get_name() == "N":
-                    n[i, :] = atom.coord
-                elif atom.get_name() == "C":
-                    c[i, :] = atom.coord
-                elif atom.get_name() == "CB" or atom.get_name() == "CB A":
-                    cb[i, :] = atom.coord
-        # encode coordinates
-        return self.encode_atoms(ca, cb, n, c)
+        
+        ca[ca_atoms.res_id, :] = ca_atoms.coord
+        cb[cb_atoms.res_id, :] = cb_atoms.coord
+        n[n_atoms.res_id, :] = n_atoms.coord
+        c[c_atoms.res_id, :] = c_atoms.coord
+
+        if ca_residue:
+            ca = ca[ca_atoms.res_id]
+            cb = cb[ca_atoms.res_id]
+            n = n[ca_atoms.res_id]
+            c = c[ca_atoms.res_id]
+        else:
+            raise NotImplementedError
+
+        return self.encode(ca, cb, n, c)
 
 
 class VirtualCenterEncoder(_BaseEncoder["ArrayNx3[numpy.float32]"]):
@@ -240,7 +219,7 @@ class VirtualCenterEncoder(_BaseEncoder["ArrayNx3[numpy.float32]"]):
         mask_c = numpy.isnan(n).max(axis=1)
         return (mask_ca | mask_n | mask_c).repeat(3).reshape(-1, 3)
 
-    def encode_atoms(
+    def encode(
         self,
         ca: ArrayNx3[numpy.floating],
         cb: ArrayNx3[numpy.floating],
@@ -299,7 +278,7 @@ class PartnerIndexEncoder(_BaseEncoder["ArrayN[numpy.int64]"]):
         # get the closest non-masked residue
         return numpy.nan_to_num(D, copy=False, nan=numpy.inf).argmin(axis=1)
 
-    def encode_atoms(
+    def encode(
         self,
         ca: ArrayNx3[numpy.floating],
         cb: ArrayNx3[numpy.floating],
@@ -307,7 +286,7 @@ class PartnerIndexEncoder(_BaseEncoder["ArrayN[numpy.int64]"]):
         c: ArrayNx3[numpy.floating],
     ) -> ArrayN[numpy.int64]:
         # encode backbone atoms to virtual center
-        vc = self.vc_encoder.encode_atoms(ca, cb, n, c)
+        vc = self.vc_encoder.encode(ca, cb, n, c)
         # find closest neighbor for each residue
         return self._find_residue_partners(vc)
 
@@ -363,7 +342,7 @@ class FeatureEncoder(_BaseEncoder["ArrayN[numpy.float32]"]):
         out[0] = out[-1] = True
         return out
 
-    def encode_atoms(
+    def encode(
         self,
         ca: ArrayNx3[numpy.floating],
         cb: ArrayNx3[numpy.floating],
@@ -371,7 +350,7 @@ class FeatureEncoder(_BaseEncoder["ArrayN[numpy.float32]"]):
         c: ArrayNx3[numpy.floating],
     ) -> ArrayN[numpy.uint8]:
         # encode backbone atoms to virtual center
-        vc = self.vc_encoder.encode_atoms(ca, cb, n, c)
+        vc = self.vc_encoder.encode(ca, cb, n, c)
         # find closest neighbor for each residue
         partner_index = self.partner_index_encoder._find_residue_partners(vc)
         # build position features from residue angles
@@ -422,14 +401,14 @@ class Encoder(_BaseEncoder["ArrayN[numpy.uint8]"]):
             layers.append(CentroidLayer(self._CENTROIDS))
         self.vae_encoder = Model(layers)
 
-    def encode_atoms(
+    def encode(
         self,
         ca: ArrayNx3[numpy.floating],
         cb: ArrayNx3[numpy.floating],
         n: ArrayNx3[numpy.floating],
         c: ArrayNx3[numpy.floating],
     ) -> ArrayN[numpy.uint8]:
-        descriptors = self.feature_encoder.encode_atoms(ca, cb, n, c)
+        descriptors = self.feature_encoder.encode(ca, cb, n, c)
         states = self.vae_encoder(descriptors.data)
         return numpy.ma.masked_array(
             states,
