@@ -67,7 +67,7 @@ bacterium_seq = seqio.load_sequence(fasta_file)
 # Second, spaced *k-mers* :footcite:`Ma2002` are used instead of
 # continuous ones to increase the sensitivity.
 # However, not every spacing model performs equally well, so the proven
-# one ``111∗1∗11∗1∗∗11∗111`` :footcite:`Choi2004` is used here.
+# one ``111*1*11*1*11*111`` :footcite:`Choi2004` is used here.
 
 repeat_mask = tantan.TantanApp.mask_repeats(bacterium_seq)
 bacterium_seqs = [bacterium_seq, bacterium_seq.reverse(copy=False).complement()]
@@ -75,7 +75,7 @@ bacterium_seqs = [bacterium_seq, bacterium_seq.reverse(copy=False).complement()]
 table = align.KmerTable.from_sequences(
     k=12,
     sequences=bacterium_seqs,
-    spacing="111∗1∗11∗1∗∗11∗111",
+    spacing="111*1*11*1*11*111",
     ignore_masks=[repeat_mask, repeat_mask[::-1].copy()],
 )
 
