@@ -1,76 +1,65 @@
-import unittest
 import pathlib
-
-import numpy
-
-from biotite.structure.io.pdb import PDBFile
-from biotite.structure.atoms import AtomArray
-from biotite.structure.alphabet import to_3di
-from biotite.structure.alphabet.encoder import Encoder, PartnerIndexEncoder, VirtualCenterEncoder
-from biotite.structure.chains import apply_chain_wise
+import pytest
+import biotite.structure.alphabet as strucalph
+import biotite.structure.io.pdb as pdb
 from tests.util import data_dir
 
 
-def _get_structure(name):
-    path = pathlib.Path(data_dir("structure")).joinpath(f"{name}.pdb")
-    file = PDBFile.read(path)
-    structure = file.get_structure()
-    return structure if isinstance(structure, AtomArray) else structure[0]
-
-
-class TestEncoder(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.encoder = Encoder()
-
-    def test_encode_3bww(self):
-        structure = _get_structure("3bww")
-        chain = structure[structure.chain_id == 'A']
-        sequence = to_3di(chain)
-        self.assertEqual(
-            str(sequence),
+@pytest.mark.parametrize(
+    "pdb_id, chain_id, ref_3di",
+    [
+        (
+            "3bww",
+            "A",
             "DKDFFEAAEDDLVCLVVLLPPPACPQRQAYEDALVVQVPDDPVSVVSVVNSLVHHAYAYEYEAQQL"
             "LDDPQGDVVSLVSVLVCCVVSVPQEYEYENDPPDADALDVVSLVSSLVSQLVSCVSSVGAYAYEDA"
             "ADQDHDPRHPDDVLVSRQSNCVSNVHAHAYELVRLVRCCVRPVPDDSLVSLVRHPLQRHQHYEYQV"
             "VSVVSVLVNLVDHQAHHYYYHDYPDDVVVNSVVRVVSRVSNVVSCVVVVHYIDMD",
-        )
-
-    def test_encode_8crb(self):
-        structure = _get_structure("8crb")
-        sequences = apply_chain_wise(structure, structure, to_3di, axis=None)
-        self.assertEqual(len(sequences), 3)
-
-    def test_encode_8crb_A(self):
-        structure = _get_structure("8crb")
-        chain = structure[structure.chain_id == 'A']
-        sequence = to_3di(chain)
-        self.assertEqual(
-            str(sequence),
+        ),
+        (
+            "8crb",
+            "A",
             "DWAKDKDWADEDAAQAKTKIKMATPPDLLQDFFKFKWFDAPPDDIDGQAPGACPSPPLADDVHHHH"
             "GKGWHDDSVRRMIMIMGGNDDQVVFGKMKMFTADDADPQVVVPDGDDTDDMHDIDTYGHPPDDFFA"
             "WDKDKDQDDPVPCPVQKPKIKMKTDDGDDDDKDKAWLVNPGDPQKDDFDWDADPVRGIIDMIIGMD"
             "GNVCFQVGFTKIWMAGVVVRDIDIDGGHD",
-        )
-
-    def test_encode_8crb_B(self):
-        structure = _get_structure("8crb")
-        chain = structure[structure.chain_id == 'B']
-        sequence = to_3di(chain)
-        self.assertEqual(
-            str(sequence),
+        ),
+        (
+            "8crb",
+            "B",
             "DAAKDFDQQEEEAAQAKDKGWIFAADVPPVPDAFWKWWDAPPDDIDTAADPNQAGDPVDHSQKGWD"
             "ADHGITIIMGGRDDNSRQGFIWRAQPDDPDHNGHTDDTHGYYHCPDDQDDKDKDWDDAAVVVLVVL"
             "FGKTKIKIDDGDDPPKDKFKDLQNHTDDAQWDWDDWDLDPVRTIMTMIIRRDGVVSCVVSQKMKMW"
             "IDDDVHTDIDMDGNVVHD",
-        )
-
-    def test_encode_8crb_C(self):
-        structure = _get_structure("8crb")
-        chain = structure[structure.chain_id == 'C']
-        sequence = to_3di(chain)
-        self.assertEqual(
-            str(sequence),
+        ),
+        (
+            "8crb",
+            "C",
             "DPCVLVVLVLQLVLVVLLLVVVVVVLVVCVVVLFKDWQDPVHDWQLACVSPDHDCPDCCSVPGSNN"
             "VQQCPKPLDDVTATNQSVQQIDDGDLDHDDDDDTIQGCPPPVRCSVVVVVVSVVSVVVSVVSCVVS"
             "VVVVVVD",
-        )
+        ),
+    ],
+)
+def test_to_3di(pdb_id, chain_id, ref_3di):
+    """
+    Check if the 3di sequence of a chain is correctly generated, by comparing the result
+    to a reference sequence generated with *foldseek*.
+    """
+    path = pathlib.Path(data_dir("structure")) / f"{pdb_id}.pdb"
+    file = pdb.PDBFile.read(path)
+    atoms = file.get_structure(model=1)
+    chain = atoms[atoms.chain_id == chain_id]
+
+    test_3di, _ = strucalph.to_3di(chain)
+
+    # We filtered one chain -> There should be only one 3di sequence
+    assert len(test_3di) == 1
+    assert str(test_3di[0]) == ref_3di
+
+
+def test_missing():
+    """
+    Test if missing or non-peptide residues within a chain are correctly handled.
+    """
+    pass
