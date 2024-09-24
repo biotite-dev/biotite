@@ -8,13 +8,10 @@ Parser for extracting weights from Keras files.
 Adapted from `moof2k/kerasify <https://github.com/moof2k/kerasify>`_.
 
 """
-from __future__ import annotations
-
 import enum
 import itertools
 import struct
 import typing
-from typing import BinaryIO, Iterable, List
 
 import numpy
 
@@ -55,7 +52,7 @@ class KerasifyParser:
         self.buffer = bytearray(1024)
         (self.n_layers,) = self._get("I")
 
-    def __iter__(self) -> KerasifyParser:
+    def __iter__(self):
         return self
 
     def __next__(self) -> Layer:
@@ -102,5 +99,5 @@ class KerasifyParser:
             raise NotImplementedError(f"Unsupported layer type: {layer_type!r}")
 
 
-def load(fh: BinaryIO) -> List[Layer]:
+def load(fh):
     return list(KerasifyParser(fh))
