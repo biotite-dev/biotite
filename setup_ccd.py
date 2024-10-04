@@ -191,6 +191,34 @@ ATOM_COLUMNS = {
         ],
         alternative="model_Cartn_z",
     ),
+    "alt_atom_id": ColumnInfo(
+        "U6",
+        [StringArrayEncoding(
+            # The unique strings in the column are sorted
+            # -> Indices do not follow distinct pattern
+            data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
+            offset_encoding=[
+                DeltaEncoding(src_type=TypeCode.INT32),
+                RunLengthEncoding(),
+                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                ByteArrayEncoding()
+            ]
+        )]
+    ),
+    "alt_atom_id": ColumnInfo(
+        "U6",
+        [StringArrayEncoding(
+            # The unique strings in the column are sorted
+            # -> Indices do not follow distinct pattern
+            data_encoding=[ByteArrayEncoding(type=TypeCode.INT16)],
+            offset_encoding=[
+                DeltaEncoding(src_type=TypeCode.INT32),
+                RunLengthEncoding(),
+                IntegerPackingEncoding(byte_count=1, is_unsigned=True),
+                ByteArrayEncoding()
+            ]
+        )]
+    ),
 }
 
 BOND_COLUMNS = {
