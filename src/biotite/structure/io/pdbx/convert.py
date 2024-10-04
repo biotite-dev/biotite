@@ -480,16 +480,50 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
     array.set_annotation("element", atom_site["type_symbol"].as_array(str))
 
     if "atom_id" in extra_fields:
-        array.set_annotation("atom_id", atom_site["id"].as_array(int))
+        if "id" in atom_site:
+            array.set_annotation("atom_id", atom_site["id"].as_array(int))
+        else:
+            warnings.warn(
+                "Missing 'id' in 'atom_site' category. 'atom_id' generated automatically.",
+                UserWarning,
+            )
+            array.set_annotation("atom_id", np.arange(array.array_length()))
         extra_fields.remove("atom_id")
     if "b_factor" in extra_fields:
-        array.set_annotation("b_factor", atom_site["B_iso_or_equiv"].as_array(float))
+        if "B_iso_or_equiv" in atom_site:
+            array.set_annotation(
+                "b_factor", atom_site["B_iso_or_equiv"].as_array(float)
+            )
+        else:
+            warnings.warn(
+                "Missing 'B_iso_or_equiv' in 'atom_site' category. 'b_factor' will be set to `nan`.",
+                UserWarning,
+            )
+            array.set_annotation("b_factor", np.full(array.array_length(), np.nan))
         extra_fields.remove("b_factor")
     if "occupancy" in extra_fields:
-        array.set_annotation("occupancy", atom_site["occupancy"].as_array(float))
+        if "occupancy" in atom_site:
+            array.set_annotation("occupancy", atom_site["occupancy"].as_array(float))
+        else:
+            warnings.warn(
+                "Missing 'occupancy' in 'atom_site' category. 'occupancy' will be assumed to be 1.0",
+                UserWarning,
+            )
+            array.set_annotation(
+                "occupancy", np.ones(array.array_length(), dtype=float)
+            )
         extra_fields.remove("occupancy")
     if "charge" in extra_fields:
-        array.set_annotation("charge", atom_site["pdbx_formal_charge"].as_array(int, 0))
+        if "pdbx_formal_charge" in atom_site:
+            array.set_annotation(
+                "charge", atom_site["pdbx_formal_charge"].as_array(int)
+            )
+        else:
+            warnings.warn(
+                "Missing 'pdbx_formal_charge' in 'atom_site' category. 'charge' will be set to 0",
+                UserWarning,
+            )
+            array.set_annotation("charge", np.zeros(array.array_length(), dtype=int))
         extra_fields.remove("charge")
 
     # Handle all remaining custom fields
