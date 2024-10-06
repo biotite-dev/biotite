@@ -646,7 +646,7 @@ def _parse_inter_residue_bonds(atom_site, struct_conn):
 def _find_matches(query_arrays, reference_arrays):
     """
     For each index in the `query_arrays` find the indices in the
-    `reference_arrays` where all query values the reference counterpart.
+    `reference_arrays` where all query values match the reference counterpart.
     If no match is found for a query, the corresponding index is -1.
     """
     match_masks_for_all_columns = np.stack(
