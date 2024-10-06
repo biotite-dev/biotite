@@ -6,14 +6,18 @@
 Parser for extracting weights from Keras files.
 
 Adapted from `moof2k/kerasify <https://github.com/moof2k/kerasify>`_.
-
 """
+
+__name__ = "biotite.structure.alphabet"
+__author__ = "Martin Larralde"
+__all__ = ["load_kerasify"]
+
+import functools
 import enum
 import itertools
 import struct
-import typing
 
-import numpy
+import numpy as np
 
 from .layers import Layer, DenseLayer
 
@@ -47,7 +51,7 @@ class KerasifyParser:
 
     """
 
-    def __init__(self, file: typing.BinaryIO) -> None:
+    def __init__(self, file) -> None:
         self.file = file
         self.buffer = bytearray(1024)
         (self.n_layers,) = self._get("I")
@@ -71,11 +75,11 @@ class KerasifyParser:
         self.file.readinto(v)  # type: ignore
         return v
 
-    def _get(self, format: str) -> typing.Tuple[typing.Any, ...]:
+    def _get(self, format: str):
         v = self._read(format)
         return struct.unpack(format, v)
 
-    def read(self) -> typing.Optional[Layer]:
+    def read(self):
         if self.n_layers == 0:
             return None
 
@@ -86,11 +90,11 @@ class KerasifyParser:
             (w1,) = self._get("I")
             (b0,) = self._get("I")
             weights = (
-                numpy.frombuffer(self._read(f"={w0*w1}f"), dtype="f4")
+                np.frombuffer(self._read(f"={w0*w1}f"), dtype="f4")
                 .reshape(w0, w1)
                 .copy()
             )
-            biases = numpy.frombuffer(self._read(f"={b0}f"), dtype="f4").copy()
+            biases = np.frombuffer(self._read(f"={b0}f"), dtype="f4").copy()
             activation = ActivationType(self._get("I")[0])
             if activation not in (ActivationType.LINEAR, ActivationType.RELU):
                 raise NotImplementedError(f"Unsupported activation type: {activation!r}")
@@ -99,5 +103,7 @@ class KerasifyParser:
             raise NotImplementedError(f"Unsupported layer type: {layer_type!r}")
 
 
-def load(fh):
-    return list(KerasifyParser(fh))
+@functools.cache
+def load_kerasify(file_path):
+    with open(file_path, "rb") as file:
+        return list(KerasifyParser(file))

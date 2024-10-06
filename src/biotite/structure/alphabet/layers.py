@@ -5,6 +5,11 @@
 """
 Mini implementation of the neural network layers used in ``foldseek``.
 """
+
+__name__ = "biotite.structure.alphabet"
+__author__ = "Martin Larralde"
+__all__ = ["Layer", "DenseLayer", "CentroidLayer", "Model"]
+
 import abc
 import functools
 from typing import Iterable, Optional

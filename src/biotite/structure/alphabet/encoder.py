@@ -8,16 +8,17 @@ Mini implementation of the encoder neural network adapted from ``foldseek``.
 
 __name__ = "biotite.structure.alphabet"
 __author__ = "Martin Larralde"
+__all__ = ["Encoder", "VirtualCenterEncoder", "PartnerIndexEncoder", "FeatureEncoder"]
 
 import abc
-import typing
 from importlib.resources import files as resource_files
 
 import numpy
 import numpy.ma
 
-from biotite.structure.alphabet.unkerasify import unkerasify
+from biotite.structure.alphabet.unkerasify import load
 from biotite.structure.alphabet.layers import CentroidLayer, Model
+from biotite.structure.alphabet.unkerasify import load_kerasify
 
 
 class _BaseEncoder(abc.ABC):
@@ -351,9 +352,8 @@ class Encoder(_BaseEncoder):
 
     def __init__(self) -> None:
         self.feature_encoder = FeatureEncoder()
-        with resource_files(__package__).joinpath("encoder_weights_3di.kerasify").open("rb") as f:
-            layers = unkerasify.load(f)
-            layers.append(CentroidLayer(self._CENTROIDS))
+        layers = load_kerasify(resource_files(__package__).joinpath("encoder_weights_3di.kerasify"))
+        layers.append(CentroidLayer(self._CENTROIDS))
         self.vae_encoder = Model(layers)
 
     def encode(

@@ -8,11 +8,13 @@ NumPy port of the ``foldseek`` code for encoding structures to 3di.
 
 __name__ = "biotite.structure.alphabet"
 __author__ = "Martin Larralde"
-__all__ = ["I3DSequence"]
+__all__ = ["I3DSequence", "to_3di"]
 
 from biotite.sequence.alphabet import LetterAlphabet
 from biotite.sequence.sequence import Sequence
 from biotite.structure.alphabet.encoder import Encoder
+from biotite.structure.error import BadStructureError
+import numpy as np
 
 
 class I3DSequence(Sequence):
@@ -70,7 +72,7 @@ class I3DSequence(Sequence):
         return f'I3DSequence("{"".join(self.symbols)}")'
 
 
-def to_3di(array):
+def to_3di(atoms):
     r"""
     Encode the atoms to the 3di structure alphabet.
 
@@ -98,22 +100,20 @@ def to_3di(array):
 
 
 def _encode_atoms(
-        atoms,
-        ca_residue: bool = True,
-        disordered_atom: Literal["best", "last"] = "best",
-    ) -> T:
-        if not numpy.all(array.chain_id == array.chain_id[0]):
-            raise BadStructureError("structure contains more than one chain")
+        atoms
+    ):
+        if not np.all(atoms.chain_id == atoms.chain_id[0]):
+            raise BadStructureError("Structure contains more than one chain")
 
-        ca_atoms = array[array.atom_name == 'CA']
-        cb_atoms = array[array.atom_name == 'CB']
-        n_atoms = array[array.atom_name == 'N']
-        c_atoms = array[array.atom_name == 'C']
+        ca_atoms = atoms[atoms.atom_name == 'CA']
+        cb_atoms = atoms[atoms.atom_name == 'CB']
+        n_atoms = atoms[atoms.atom_name == 'N']
+        c_atoms = atoms[atoms.atom_name == 'C']
 
-        r = array.res_id.max()
+        r = atoms.res_id.max()
 
-        ca = numpy.zeros((r + 1, 3), dtype=numpy.float32)
-        ca.fill(numpy.nan)
+        ca = np.zeros((r + 1, 3), dtype=np.float32)
+        ca.fill(np.nan)
         cb = ca.copy()
         n = ca.copy()
         c = ca.copy()
@@ -123,12 +123,9 @@ def _encode_atoms(
         n[n_atoms.res_id, :] = n_atoms.coord
         c[c_atoms.res_id, :] = c_atoms.coord
 
-        if ca_residue:
-            ca = ca[ca_atoms.res_id]
-            cb = cb[ca_atoms.res_id]
-            n = n[ca_atoms.res_id]
-            c = c[ca_atoms.res_id]
-        else:
-            raise NotImplementedError
+        ca = ca[ca_atoms.res_id]
+        cb = cb[ca_atoms.res_id]
+        n = n[ca_atoms.res_id]
+        c = c[ca_atoms.res_id]
 
         return Encoder().encode(ca, cb, n, c)
