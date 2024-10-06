@@ -568,6 +568,23 @@ class KmerAlphabet(Alphabet):
         return int(len(self._base_alph) ** self._k)
 
 
+    def __iter__(self):
+        # Creating all symbols is expensive
+        # -> Use a generator instead
+        if isinstance(self._base_alph, LetterAlphabet):
+            return ("".join(self.decode(code)) for code in range(len(self)))
+        else:
+            return (list(self.decode(code)) for code in range(len(self)))
+
+
+    def __contains__(self, symbol):
+        try:
+            self.fuse(self._base_alph.encode_multiple(symbol))
+            return True
+        except AlphabetError:
+            return False
+
+
 def _to_array_form(model_string):
     """
     Convert the the common string representation of a *k-mer* spacing
