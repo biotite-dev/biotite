@@ -3,7 +3,7 @@
 # information.
 
 """
-Mini implementation of the neural network layers used in ``foldseek``.
+Implementation of the neural network layers used in ``foldseek``.
 """
 
 __name__ = "biotite.structure.alphabet"
@@ -12,8 +12,6 @@ __all__ = ["Layer", "DenseLayer", "CentroidLayer", "Model"]
 
 import abc
 import functools
-from typing import Iterable, Optional
-
 import numpy
 
 
@@ -24,12 +22,7 @@ class Layer(abc.ABC):
 
 
 class DenseLayer(Layer):
-    def __init__(
-        self,
-        weights,
-        biases = None,
-        activation: bool = True
-    ):
+    def __init__(self, weights, biases=None, activation: bool = True):
         self.activation = activation
         self.weights = numpy.asarray(weights)
         if biases is None:
@@ -49,7 +42,6 @@ class DenseLayer(Layer):
 
 
 class CentroidLayer(Layer):
-
     def __init__(self, centroids) -> None:
         self.centroids = numpy.asarray(centroids)
         self.r2 = numpy.sum(self.centroids**2, axis=1).reshape(-1, 1).T
@@ -65,8 +57,7 @@ class CentroidLayer(Layer):
 
 
 class Model:
-
-    def __init__(self, layers: Iterable[Layer] = ()):
+    def __init__(self, layers=()):
         self.layers = list(layers)
 
     def __call__(self, x):

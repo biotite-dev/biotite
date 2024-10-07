@@ -10,11 +10,11 @@ __name__ = "biotite.structure.alphabet"
 __author__ = "Martin Larralde"
 __all__ = ["I3DSequence", "to_3di"]
 
+import numpy as np
 from biotite.sequence.alphabet import LetterAlphabet
 from biotite.sequence.sequence import Sequence
 from biotite.structure.alphabet.encoder import Encoder
-from biotite.structure.error import BadStructureError
-import numpy as np
+from biotite.structure.chains import get_chain_starts
 
 
 class I3DSequence(Sequence):
@@ -60,8 +60,7 @@ class I3DSequence(Sequence):
             sequence = sequence.upper()
         else:
             sequence = [symbol.upper() for symbol in sequence]
-        self._alphabet = I3DSequence.alphabet
-        seq_code = self._alphabet.encode_multiple(sequence)
+        seq_code = I3DSequence.alphabet.encode_multiple(sequence)
         super().__init__()
         self.code = seq_code
 
@@ -74,58 +73,57 @@ class I3DSequence(Sequence):
 
 def to_3di(atoms):
     r"""
-    Encode the atoms to the 3di structure alphabet.
+    Encode each chain in the given structure to the 3Di structure alphabet.
 
     Parameters
     ----------
     atoms : AtomArray
         The atom array to encode. All atoms must be part of
         a single chain.
+        May contain multiple chains.
 
     Returns
     -------
-    sequence : I3DSequence
-        The encoded 3di sequence.
+    sequences : list of Sequence, length=n
+        The encoded 3Di sequence for each peptide chain in the structure.
 
-    Note
-    ----
-    To encode atoms in different chains, use :func:`apply_chain_wise` to
-    return a list with one sequence per chain.
+    chain_start_indices : ndarray, shape=(n,), dtype=int
+        The atom index where each chain starts.
     """
+    sequences = []
+    chain_start_indices = get_chain_starts(atoms, add_exclusive_stop=True)
+    for i in range(len(chain_start_indices) - 1):
+        start = chain_start_indices[i]
+        stop = chain_start_indices[i + 1]
+        chain = atoms[start:stop]
+        sequence = I3DSequence()
+        sequence.code = _encode_atoms(chain).filled()
+        sequences.append(sequence)
+    return sequences, chain_start_indices[:-1]
 
-    sequence = I3DSequence()
-    sequence.code = _encode_atoms(atoms).filled()
 
-    return sequence
+def _encode_atoms(atoms):
+    ca_atoms = atoms[atoms.atom_name == "CA"]
+    cb_atoms = atoms[atoms.atom_name == "CB"]
+    n_atoms = atoms[atoms.atom_name == "N"]
+    c_atoms = atoms[atoms.atom_name == "C"]
 
+    r = atoms.res_id.max()
 
-def _encode_atoms(
-        atoms
-    ):
-        if not np.all(atoms.chain_id == atoms.chain_id[0]):
-            raise BadStructureError("Structure contains more than one chain")
+    ca = np.zeros((r + 1, 3), dtype=np.float32)
+    ca.fill(np.nan)
+    cb = ca.copy()
+    n = ca.copy()
+    c = ca.copy()
 
-        ca_atoms = atoms[atoms.atom_name == 'CA']
-        cb_atoms = atoms[atoms.atom_name == 'CB']
-        n_atoms = atoms[atoms.atom_name == 'N']
-        c_atoms = atoms[atoms.atom_name == 'C']
+    ca[ca_atoms.res_id, :] = ca_atoms.coord
+    cb[cb_atoms.res_id, :] = cb_atoms.coord
+    n[n_atoms.res_id, :] = n_atoms.coord
+    c[c_atoms.res_id, :] = c_atoms.coord
 
-        r = atoms.res_id.max()
+    ca = ca[ca_atoms.res_id]
+    cb = cb[ca_atoms.res_id]
+    n = n[ca_atoms.res_id]
+    c = c[ca_atoms.res_id]
 
-        ca = np.zeros((r + 1, 3), dtype=np.float32)
-        ca.fill(np.nan)
-        cb = ca.copy()
-        n = ca.copy()
-        c = ca.copy()
-
-        ca[ca_atoms.res_id, :] = ca_atoms.coord
-        cb[cb_atoms.res_id, :] = cb_atoms.coord
-        n[n_atoms.res_id, :] = n_atoms.coord
-        c[c_atoms.res_id, :] = c_atoms.coord
-
-        ca = ca[ca_atoms.res_id]
-        cb = cb[ca_atoms.res_id]
-        n = n[ca_atoms.res_id]
-        c = c[ca_atoms.res_id]
-
-        return Encoder().encode(ca, cb, n, c)
+    return Encoder().encode(ca, cb, n, c)

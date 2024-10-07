@@ -12,14 +12,12 @@ __name__ = "biotite.structure.alphabet"
 __author__ = "Martin Larralde"
 __all__ = ["load_kerasify"]
 
-import functools
 import enum
+import functools
 import itertools
 import struct
-
 import numpy as np
-
-from .layers import Layer, DenseLayer
+from biotite.structure.alphabet.layers import DenseLayer, Layer
 
 
 class LayerType(enum.IntEnum):
@@ -97,8 +95,10 @@ class KerasifyParser:
             biases = np.frombuffer(self._read(f"={b0}f"), dtype="f4").copy()
             activation = ActivationType(self._get("I")[0])
             if activation not in (ActivationType.LINEAR, ActivationType.RELU):
-                raise NotImplementedError(f"Unsupported activation type: {activation!r}")
-            return DenseLayer(weights, biases, activation==ActivationType.RELU)
+                raise NotImplementedError(
+                    f"Unsupported activation type: {activation!r}"
+                )
+            return DenseLayer(weights, biases, activation == ActivationType.RELU)
         else:
             raise NotImplementedError(f"Unsupported layer type: {layer_type!r}")
 
@@ -106,4 +106,4 @@ class KerasifyParser:
 @functools.cache
 def load_kerasify(file_path):
     with open(file_path, "rb") as file:
-        return list(KerasifyParser(file))
+        return tuple(KerasifyParser(file))

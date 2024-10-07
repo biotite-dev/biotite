@@ -3,7 +3,7 @@
 # information.
 
 """
-Mini implementation of the encoder neural network adapted from ``foldseek``.
+Implementation of the encoder neural network adapted from ``foldseek``.
 """
 
 __name__ = "biotite.structure.alphabet"
@@ -12,24 +12,15 @@ __all__ = ["Encoder", "VirtualCenterEncoder", "PartnerIndexEncoder", "FeatureEnc
 
 import abc
 from importlib.resources import files as resource_files
-
 import numpy
 import numpy.ma
-
-from biotite.structure.alphabet.unkerasify import load
 from biotite.structure.alphabet.layers import CentroidLayer, Model
 from biotite.structure.alphabet.unkerasify import load_kerasify
 
 
 class _BaseEncoder(abc.ABC):
     @abc.abstractmethod
-    def encode(
-        self,
-        ca,
-        cb,
-        n,
-        c,
-    ):
+    def encode(self, ca, cb, n, c):
         """
         Encode the given atom coordinates to a different representation.
 
@@ -69,12 +60,13 @@ class VirtualCenterEncoder(_BaseEncoder):
         The dihedral angle τ between the virtual center *V* and the ``CA``, ``CB``
         and ``N`` atoms, used to compute the virtual center coordinates.
     """
+
     _DISTANCE_ALPHA_BETA = 1.5336
 
     def __init__(
         self,
         *,
-        distance_alpha_beta = _DISTANCE_ALPHA_BETA,
+        distance_alpha_beta=_DISTANCE_ALPHA_BETA,
         distance_alpha_v: float = 2.0,
         theta: float = 270.0,
         tau: float = 0.0,
@@ -104,12 +96,7 @@ class VirtualCenterEncoder(_BaseEncoder):
         self._cos_tau = numpy.cos(self._tau)
         self._sin_tau = numpy.sin(self._tau)
 
-    def _compute_virtual_center(
-        self,
-        ca,
-        cb,
-        n,
-    ):
+    def _compute_virtual_center(self, ca, cb, n):
         assert ca.shape == n.shape
         assert ca.shape == cb.shape
         v = cb - ca
@@ -134,12 +121,7 @@ class VirtualCenterEncoder(_BaseEncoder):
         v += ca
         return v
 
-    def _approximate_cb_position(
-        self,
-        ca,
-        n,
-        c,
-    ):
+    def _approximate_cb_position(self, ca, n, c):
         """
         Approximate the position of ``CB`` from the backbone atoms.
         """
@@ -159,12 +141,7 @@ class VirtualCenterEncoder(_BaseEncoder):
         out += ca
         return out
 
-    def _create_nan_mask(
-        self,
-        ca,
-        n,
-        c,
-    ):
+    def _create_nan_mask(self, ca, n, c):
         """
         Mask any column which contains at least one *NaN* value.
         """
@@ -173,13 +150,7 @@ class VirtualCenterEncoder(_BaseEncoder):
         mask_c = numpy.isnan(c).max(axis=1)
         return (mask_ca | mask_n | mask_c).repeat(3).reshape(-1, 3)
 
-    def encode(
-        self,
-        ca,
-        cb,
-        n,
-        c,
-    ):
+    def encode(self, ca, cb, n, c):
         ca = numpy.asarray(ca)
         cb = numpy.asarray(cb)
         n = numpy.asarray(n)
@@ -232,13 +203,7 @@ class PartnerIndexEncoder(_BaseEncoder):
         # get the closest non-masked residue
         return numpy.nan_to_num(D, copy=False, nan=numpy.inf).argmin(axis=1)
 
-    def encode(
-        self,
-        ca,
-        cb,
-        n,
-        c,
-    ):
+    def encode(self, ca, cb, n, c):
         # encode backbone atoms to virtual center
         vc = self.vc_encoder.encode(ca, cb, n, c)
         # find closest neighbor for each residue
@@ -254,56 +219,40 @@ class FeatureEncoder(_BaseEncoder):
         self.partner_index_encoder = PartnerIndexEncoder()
         self.vc_encoder = self.partner_index_encoder.vc_encoder
 
-    def _calc_conformation_descriptors(
-        self,
-        ca,
-        partner_index,
-        dtype = numpy.float32,
-    ):
+    def _calc_conformation_descriptors(self, ca, partner_index, dtype=numpy.float32):
         # build arrays of indices to use for vectorized angles
-        n = ca.shape[0]
-        I = numpy.arange(1, ca.shape[-2] - 1)
-        J = partner_index[I]
+        i = numpy.arange(1, ca.shape[-2] - 1)
+        j = partner_index[i]
         # compute conformational descriptors
-        u1 = _normalize(ca[..., I, :] - ca[..., I - 1, :], inplace=True)
-        u2 = _normalize(ca[..., I + 1, :] - ca[..., I, :], inplace=True)
-        u3 = _normalize(ca[..., J, :] - ca[..., J - 1, :], inplace=True)
-        u4 = _normalize(ca[..., J + 1, :] - ca[..., J, :], inplace=True)
-        u5 = _normalize(ca[..., J, :] - ca[..., I, :], inplace=True)
+        u1 = _normalize(ca[..., i, :] - ca[..., i - 1, :], inplace=True)
+        u2 = _normalize(ca[..., i + 1, :] - ca[..., i, :], inplace=True)
+        u3 = _normalize(ca[..., j, :] - ca[..., j - 1, :], inplace=True)
+        u4 = _normalize(ca[..., j + 1, :] - ca[..., j, :], inplace=True)
+        u5 = _normalize(ca[..., j, :] - ca[..., i, :], inplace=True)
         desc = numpy.zeros((ca.shape[0], 10), dtype=dtype)
-        desc[I, 0] = numpy.sum(u1 * u2, axis=-1)
-        desc[I, 1] = numpy.sum(u3 * u4, axis=-1)
-        desc[I, 2] = numpy.sum(u1 * u5, axis=-1)
-        desc[I, 3] = numpy.sum(u3 * u5, axis=-1)
-        desc[I, 4] = numpy.sum(u1 * u4, axis=-1)
-        desc[I, 5] = numpy.sum(u2 * u3, axis=-1)
-        desc[I, 6] = numpy.sum(u1 * u3, axis=-1)
-        desc[I, 7] = numpy.linalg.norm(ca[I] - ca[J], axis=-1)
-        desc[I, 8] = numpy.clip(J - I, -4, 4)
-        desc[I, 9] = numpy.copysign(numpy.log(numpy.abs(J - I) + 1), J - I)
+        desc[i, 0] = numpy.sum(u1 * u2, axis=-1)
+        desc[i, 1] = numpy.sum(u3 * u4, axis=-1)
+        desc[i, 2] = numpy.sum(u1 * u5, axis=-1)
+        desc[i, 3] = numpy.sum(u3 * u5, axis=-1)
+        desc[i, 4] = numpy.sum(u1 * u4, axis=-1)
+        desc[i, 5] = numpy.sum(u2 * u3, axis=-1)
+        desc[i, 6] = numpy.sum(u1 * u3, axis=-1)
+        desc[i, 7] = numpy.linalg.norm(ca[i] - ca[j], axis=-1)
+        desc[i, 8] = numpy.clip(j - i, -4, 4)
+        desc[i, 9] = numpy.copysign(numpy.log(numpy.abs(j - i) + 1), j - i)
         return desc
 
-    def _create_descriptor_mask(
-        self,
-        mask,
-        partner_index,
-    ):
-        I = numpy.arange(1, mask.shape[0] - 1)
-        J = partner_index[I]
+    def _create_descriptor_mask(self, mask, partner_index):
+        i = numpy.arange(1, mask.shape[0] - 1)
+        j = partner_index[i]
         out = numpy.zeros((mask.shape[0], 10), dtype=numpy.bool_)
         out[1:-1, :] |= (
-            mask[I - 1] | mask[I] | mask[I + 1] | mask[J - 1] | mask[J] | mask[J + 1]
-        ).reshape(mask.shape[0]-2, 1)
+            mask[i - 1] | mask[i] | mask[i + 1] | mask[j - 1] | mask[j] | mask[j + 1]
+        ).reshape(mask.shape[0] - 2, 1)
         out[0] = out[-1] = True
         return out
 
-    def encode(
-        self,
-        ca,
-        cb,
-        n,
-        c,
-    ):
+    def encode(self, ca, cb, n, c):
         # encode backbone atoms to virtual center
         vc = self.vc_encoder.encode(ca, cb, n, c)
         # find closest neighbor for each residue
@@ -352,9 +301,10 @@ class Encoder(_BaseEncoder):
 
     def __init__(self) -> None:
         self.feature_encoder = FeatureEncoder()
-        layers = load_kerasify(resource_files(__package__).joinpath("encoder_weights_3di.kerasify"))
-        layers.append(CentroidLayer(self._CENTROIDS))
-        self.vae_encoder = Model(layers)
+        layers = load_kerasify(
+            resource_files(__package__).joinpath("encoder_weights_3di.kerasify")
+        )
+        self.vae_encoder = Model(layers + (CentroidLayer(self._CENTROIDS),))
 
     def encode(
         self,
@@ -372,6 +322,6 @@ class Encoder(_BaseEncoder):
         )
 
 
-def _normalize(x: numpy.ndarray[numpy.number], *, inplace=False):
+def _normalize(x, *, inplace=False):
     norm = numpy.linalg.norm(x, axis=-1).reshape(*x.shape[:-1], 1)
     return numpy.divide(x, norm, out=x if inplace else None, where=norm != 0)
