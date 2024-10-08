@@ -137,8 +137,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          mamba-version: "*"
           environment-file: environment.yml
+          miniforge-version: latest
       - name: Build distribution
         run: pip wheel --no-deps -w dist .
       - name: Install distribution
@@ -182,9 +182,8 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: biotite-dev
-          miniforge-variant: Mambaforge
+          miniforge-version: latest
           python-version: "3.12"
-          channels: conda-forge,defaults
       - name: Install Muscle 5
         run: conda install -c bioconda "muscle=5"
       - name: Install distribution and pytest
@@ -249,10 +248,10 @@ jobs:
       with:
         name: internal-build
         path: dist
-    - uses: conda-incubator/setup-miniconda@v2
+    - uses: conda-incubator/setup-miniconda@v3
       with:
         environment-file: environment.yml
-        miniforge-variant: Mambaforge
+        miniforge-version: latest
     - name: Install distribution
       run: pip install dist//*.whl
     - name: Build base documentation
