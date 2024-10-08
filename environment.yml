@@ -26,7 +26,7 @@ dependencies:
   - pytest >=7.0
   - pytest-codspeed >=2.0
   # Code style
-  - ruff =0.5.2
+  - ruff =0.6.9  # Keep in sync with the ruff version in pyproject.toml
   # Interfaced software in biotite.application (can also be installed separately)
   - autodock-vina
   - clustalo
