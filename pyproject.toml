@@ -36,6 +36,9 @@ test = [
   "pytest",
   "pytest-codspeed",
 ]
+lint = [
+  "ruff == 0.6.9"
+]
 
 [project.urls]
 homepage = "https://www.biotite-python.org"

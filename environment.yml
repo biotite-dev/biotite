@@ -6,11 +6,10 @@ name: biotite-dev
 channels:
   - anaconda
   - conda-forge
-  - salilab
   - bioconda
 
 dependencies:
-  - python =3.11
+  - python =3.12
   # Package building
   - cython >=3.0
   - pip >=10.0
@@ -27,11 +26,11 @@ dependencies:
   - pytest >=7.0
   - pytest-codspeed >=2.0
   # Code style
-  - ruff =0.5.2
+  - ruff =0.6.9  # Keep in sync with the ruff version in pyproject.toml
   # Interfaced software in biotite.application (can also be installed separately)
   - autodock-vina
   - clustalo
-  - dssp
+  - dssp =4
   - mafft
   - muscle =3
   - sra-tools
