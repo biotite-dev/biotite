@@ -715,7 +715,7 @@ def set_structure(
     array,
     data_block=None,
     include_bonds=False,
-    include_custom_annotations=False,
+    extra_fields=[],
 ):
     """
     Set the ``atom_site`` category with atom information from an
@@ -750,10 +750,10 @@ def set_structure(
         category.
         Inter-residue bonds will be written into the ``struct_conn``
         independent of this parameter.
-    include_custom_annotations : bool, optional
-        If set to true, custom annotations will be written into the
-        ``atom_site`` category.
-        Default is false.
+    extra_fields : list of str, optional
+        List of additional fields from the ``atom_site`` category
+        that should be written into the file.
+        Default is an empty list.
 
     Notes
     -----
@@ -815,8 +815,8 @@ def set_structure(
         )
 
     # Handle all remaining custom fields
-    if include_custom_annotations:
-        # ... collect all annotations that were already set above or are used in standard cif files
+    if len(extra_fields) > 0:
+        # ... check to avoid clashes with standard annotations
         _standard_annotations = [
             "hetero",
             "element",
@@ -831,13 +831,13 @@ def set_structure(
             "charge",
         ]
         _reserved_annotation_names = list(atom_site.keys()) + _standard_annotations
-        # ... filter out the ones that are already used or standard and set the remaining ones
-        custom_annotations = [
-            annot
-            for annot in array.get_annotation_categories()
-            if annot not in _reserved_annotation_names
-        ]
-        for annot in custom_annotations:
+
+        for annot in extra_fields:
+            if annot in _reserved_annotation_names:
+                raise ValueError(
+                    f"Annotation name '{annot}' is reserved and cannot be written to as extra field. "
+                    "Please choose another name."
+                )
             atom_site[annot] = np.copy(array.get_annotation(annot))
 
     if array.bonds is not None:
