@@ -869,3 +869,29 @@ def _file_size(bcif_file):
     bcif_file.write(written_file)
     written_file.seek(0)
     return len(written_file.read())
+
+
+def test_writing_and_reading_extra_fields(tmpdir):
+    """
+    Check if writing and reading extra fields works.
+    """
+    # Set up a custom atom array with an additional annotation
+    cif_file = pdbx.CIFFile.read(join(data_dir("structure"), "5ugo.cif"))
+    atoms = pdbx.get_structure(cif_file)
+    atoms.set_annotation("my_custom_annotation", np.arange(atoms.array_length()))
+
+    # Write to file
+    new_cif_file = pdbx.CIFFile()
+    pdbx.set_structure(new_cif_file, atoms, extra_fields=["my_custom_annotation"])
+    new_cif_file.write(join(tmpdir, "test.cif"))
+
+    # Read again
+    atoms = pdbx.get_structure(
+        pdbx.CIFFile.read(join(tmpdir, "test.cif")),
+        extra_fields=["my_custom_annotation"],
+    )
+    assert "my_custom_annotation" in atoms.get_annotation_categories()
+    assert np.all(
+        atoms.get_annotation("my_custom_annotation").astype(int)
+        == np.arange(atoms.array_length())
+    )
