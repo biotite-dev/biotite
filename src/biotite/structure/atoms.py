@@ -157,7 +157,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         ----------
         category : str
             The annotation category to be set.
-        array : ndarray or None
+        array : ndarray
             The new value of the annotation category. The size of the
             array must be the same as the array length.
 
