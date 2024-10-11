@@ -750,7 +750,7 @@ class StringArrayEncoding(Encoding):
         If omitted, the unique strings are determined from the data the
         first time :meth:`encode()` is called.
     data_encoding : list of Encoding, optional
-        The encodings that are applied to the indiy array.
+        The encodings that are applied to the index array.
         If omitted, the array is directly encoded into bytes without
         further compression.
     offset_encoding : list of Encoding, optional
@@ -888,6 +888,19 @@ _encoding_classes_kinds = {
 
 
 def deserialize_encoding(content):
+    """
+    Create a :class:`Encoding` by deserializing the given *BinaryCIF* content.
+
+    Parameters
+    ----------
+    content : dict
+        The encoding represenet as *BinaryCIF* dictionary.
+
+    Returns
+    -------
+    encoding : Encoding
+        The deserialized encoding.
+    """
     try:
         encoding_class = _encoding_classes[content["kind"]]
     except KeyError:
@@ -898,21 +911,62 @@ def deserialize_encoding(content):
 
 
 def create_uncompressed_encoding(array):
-    dtype = array.dtype
+    """
+    Create a simple encoding for the given array that does not compress the data.
 
-    if np.issubdtype(dtype, np.str_):
+    Parameters
+    ----------
+    array : ndarray
+        The array to to create the encoding for.
+
+    Returns
+    -------
+    encoding : list of Encoding
+        The encoding for the data.
+    """
+    if np.issubdtype(array.dtype, np.str_):
         return [StringArrayEncoding()]
     else:
         return [ByteArrayEncoding()]
 
 
 def encode_stepwise(data, encoding):
+    """
+    Apply a list of encodings stepwise to the given data.
+
+    Parameters
+    ----------
+    data : ndarray
+        The data to be encoded.
+    encoding : list of Encoding
+        The encodings to be applied.
+
+    Returns
+    -------
+    encoded_data : ndarray or bytes
+        The encoded data.
+    """
     for encoding in encoding:
         data = encoding.encode(data)
     return data
 
 
 def decode_stepwise(data, encoding):
+    """
+    Apply a list of encodings stepwise to the given data.
+
+    Parameters
+    ----------
+    data : ndarray or bytes
+        The data to be decoded.
+    encoding : list of Encoding
+        The encodings to be applied.
+
+    Returns
+    -------
+    decoded_data : ndarray
+        The decoded data.
+    """
     for enc in reversed(encoding):
         data = enc.decode(data)
     return data
