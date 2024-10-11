@@ -287,7 +287,8 @@ class FixedPointEncoding(Encoding):
         The data type of the array to be encoded.
         Either a NumPy dtype or a *BinaryCIF* type code is accepted.
         The dtype must be a float type.
-        If omitted, 32-bit floats are assumed.
+        If omitted, the data type is taken from the data the
+        first time :meth:`encode()` is called.
 
     Attributes
     ----------
@@ -304,7 +305,7 @@ class FixedPointEncoding(Encoding):
     [987 654]
     """
     factor: ...
-    src_type: ... = TypeCode.FLOAT32
+    src_type: ... = None
 
     def __post_init__(self):
         if self.src_type is not None:
@@ -315,6 +316,14 @@ class FixedPointEncoding(Encoding):
                 )
 
     def encode(self, data):
+        # If not given in constructor, it is determined from the data
+        if self.src_type is None:
+            self.src_type = TypeCode.from_dtype(data.dtype)
+            if self.src_type not in (TypeCode.FLOAT32, TypeCode.FLOAT64):
+                raise ValueError(
+                    "Only floating point types are supported"
+                )
+
         # Round to avoid wrong values due to floating point inaccuracies
         return np.round(data * self.factor).astype(np.int32)
 
@@ -340,7 +349,8 @@ class IntervalQuantizationEncoding(Encoding):
         The data type of the array to be encoded.
         Either a NumPy dtype or a *BinaryCIF* type code is accepted.
         The dtype must be a float type.
-        If omitted, 32-bit floats are assumed.
+        If omitted, the data type is taken from the data the
+        first time :meth:`encode()` is called.
 
     Attributes
     ----------
@@ -367,13 +377,17 @@ class IntervalQuantizationEncoding(Encoding):
     min: ...
     max: ...
     num_steps: ...
-    src_type: ... = TypeCode.FLOAT32
+    src_type: ... = None
 
     def __post_init__(self):
         if self.src_type is not None:
             self.src_type = TypeCode.from_dtype(self.src_type)
 
     def encode(self, data):
+        # If not given in constructor, it is determined from the data
+        if self.src_type is None:
+            self.src_type = TypeCode.from_dtype(data.dtype)
+
         steps = np.linspace(
             self.min, self.max, self.num_steps, dtype=data.dtype
         )
@@ -524,7 +538,8 @@ class DeltaEncoding(Encoding):
         first time :meth:`encode()` is called.
     origin : int, optional
         The starting value from which the differences are calculated.
-        If omitted, the origin is set to 0.
+        If omitted, the value is taken from the first array element the
+        first time :meth:`encode()` is called.
 
     Attributes
     ----------
@@ -539,7 +554,7 @@ class DeltaEncoding(Encoding):
     [1 0 1 1 2 3]
     """
     src_type: ... = None
-    origin: ... = 0
+    origin: ... = None
 
     def __post_init__(self):
         if self.src_type is not None:
@@ -549,6 +564,8 @@ class DeltaEncoding(Encoding):
         # If not given in constructor, it is determined from the data
         if self.src_type is None:
             self.src_type = TypeCode.from_dtype(data.dtype)
+        if self.origin is None:
+            self.origin = data[0]
 
         data = data - self.origin
         return np.diff(data, prepend=0).astype(np.int32, copy=False)
@@ -582,7 +599,8 @@ class IntegerPackingEncoding(Encoding):
     is_unsigned : bool, optional
         Whether the values should be packed into signed or unsigned
         integers.
-        If omitted, the values are packed into signed integers.
+        If omitted, first time :meth:`encode()` is called, determines whether
+        the values fit into unsigned integers.
 
     Attributes
     ----------
@@ -601,7 +619,7 @@ class IntegerPackingEncoding(Encoding):
     """
     byte_count: ...
     src_size: ... = None
-    is_unsigned: ... = False
+    is_unsigned: ... = None
 
     def encode(self, data):
         if self.src_size is None:
@@ -610,6 +628,9 @@ class IntegerPackingEncoding(Encoding):
             raise IndexError(
                 "Given source size does not match actual data size"
             )
+        if self.is_unsigned is None:
+            # Only positive values -> use unsigned integers
+            self.is_unsigned = data.min().item() >= 0
 
         data = data.astype(np.int32, copy=False)
         return self._encode(
@@ -837,8 +858,11 @@ class StringArrayEncoding(Encoding):
             raise TypeError("Data must be of string type")
 
         if self.strings is None:
-            # 'unique()' already sorts the strings
-            self.strings = np.unique(data)
+            # 'unique()' already sorts the strings, but this is not necessarily
+            # desired, as this makes efficient encoding of the indices more difficult
+            # -> Bring into the original order
+            _, unique_indices = np.unique(data, return_index=True)
+            self.strings = data[np.sort(unique_indices)]
             check_present = False
         else:
             check_present = True
