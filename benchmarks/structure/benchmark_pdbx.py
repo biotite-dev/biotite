@@ -8,8 +8,12 @@ PDB_ID = "1aki"
 
 
 @pytest.fixture
-def deserialized_data():
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / f"{PDB_ID}.bcif")
+def pdbx_file():
+    return pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / f"{PDB_ID}.bcif")
+
+
+@pytest.fixture
+def deserialized_data(pdbx_file):
     categories = {}
     for category_name, category in pdbx_file.block.items():
         columns = {}
@@ -98,3 +102,11 @@ def benchmark_set_structure(atoms, tmp_path, format, include_bonds):
     pdbx_file = File()
     pdbx.set_structure(pdbx_file, atoms, include_bonds=include_bonds)
     pdbx_file.write(tmp_path / f"{PDB_ID}.{format}")
+
+
+@pytest.mark.benchmark
+def benchmark_compress(pdbx_file):
+    """
+    Compress a CIF file.
+    """
+    pdbx.compress(pdbx_file)
