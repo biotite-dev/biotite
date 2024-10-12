@@ -204,6 +204,21 @@ A well chosen encoding can reduce the file size significantly.
         ).serialize()
     )
 
+As finding good encodings manually can be tedious, :func:`compress()` does this
+automatically - from a single :class:`BinaryCIFData` to an entire
+:class:`BinaryCIFFile`.
+
+.. jupyter-execute::
+
+    uncompressed_data = pdbx.BinaryCIFData(np.arange(100))
+    print(f"Uncompressed size: {len(uncompressed_data.serialize()["data"])} bytes")
+    compressed_data = pdbx.compress(uncompressed_data)
+    print(f"Compressed size: {len(compressed_data.serialize()["data"])} bytes")
+
+
+Using structures from a PDBx file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 While this low-level API is useful for using the entire potential of
 the PDBx format, most applications require only reading/writing a
 structure.
