@@ -37,6 +37,26 @@ def compress(data, float_tolerance=1e-6):
         Hence, the return value is no deep copy of the input data.
     float_tolerance : float, optional
         The relative error that is accepted when compressing floating point numbers.
+
+    Examples
+    --------
+
+    >>> from io import BytesIO
+    >>> pdbx_file = BinaryCIFFile()
+    >>> set_structure(pdbx_file, atom_array_stack)
+    >>> # Write uncompressed file
+    >>> uncompressed_file = BytesIO()
+    >>> pdbx_file.write(uncompressed_file)
+    >>> _ = uncompressed_file.seek(0)
+    >>> print(f"{len(uncompressed_file.read()) // 1000} KB")
+    931 KB
+    >>> # Write compressed file
+    >>> pdbx_file = compress(pdbx_file)
+    >>> compressed_file = BytesIO()
+    >>> pdbx_file.write(compressed_file)
+    >>> _ = compressed_file.seek(0)
+    >>> print(f"{len(compressed_file.read()) // 1000} KB")
+    113 KB
     """
     match type(data):
         case bcif.BinaryCIFFile:

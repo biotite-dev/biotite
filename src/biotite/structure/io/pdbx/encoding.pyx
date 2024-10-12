@@ -550,8 +550,11 @@ class DeltaEncoding(Encoding):
     --------
 
     >>> data = np.array([1, 1, 2, 3, 5, 8])
-    >>> print(DeltaEncoding().encode(data))
-    [1 0 1 1 2 3]
+    >>> encoding = DeltaEncoding()
+    >>> print(encoding.encode(data))
+    [0 0 1 1 2 3]
+    >>> print(encoding.origin)
+    1
     """
     src_type: ... = None
     origin: ... = None
