@@ -224,7 +224,7 @@ def get_reference_index(pair, array):
     """
     pair = sorted(pair)
     if np.any((array[:, 0] == pair[0]) & (array[:, 1] == pair[1])):
-        return np.where((array[:, 0] == pair[0]) & (array[:, 1] == pair[1]))
+        return np.where((array[:, 0] == pair[0]) & (array[:, 1] == pair[1]))[0][0]
     return None
 
 

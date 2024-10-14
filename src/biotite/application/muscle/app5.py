@@ -7,8 +7,8 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["Muscle5App"]
 
 from biotite.application.application import AppState, VersionError, requires_state
+from biotite.application.localapp import get_version
 from biotite.application.msaapp import MSAApp
-from biotite.application.muscle.app3 import get_version
 
 
 class Muscle5App(MSAApp):
@@ -49,7 +49,7 @@ class Muscle5App(MSAApp):
     """
 
     def __init__(self, sequences, bin_path="muscle"):
-        major_version = get_version(bin_path)[0]
+        major_version = get_version(bin_path, "-version")[0]
         if major_version < 5:
             raise VersionError(
                 f"At least Muscle 5 is required, got version {major_version}"

@@ -146,9 +146,9 @@ class BasicQuery(SingleQuery):
     Examples
     --------
 
-    >>> query = BasicQuery("tc5b")
+    >>> query = BasicQuery("Miniprotein Construct")
     >>> print(sorted(search(query)))
-    ['1L2Y', '8ANG', '8ANH', '8ANI', '8ANM', '8QWW']
+    ['1L2Y']
     """
 
     def __init__(self, term):
@@ -346,9 +346,9 @@ class SequenceQuery(SingleQuery):
     --------
 
     >>> sequence = "NLYIQWLKDGGPSSGRPPPS"
-    >>> query = SequenceQuery(sequence, scope="protein", min_identity=0.8)
+    >>> query = SequenceQuery(sequence, scope="protein", min_identity=0.95)
     >>> print(sorted(search(query)))
-    ['1L2Y', '1RIJ', '2JOF', '2LDJ', '2LL5', '2MJ9', '3UC7', '3UC8']
+    ['1L2Y', '2LDJ', '9G22', '9G2N', '9G2O', '9G31', '9G32', '9GDL', '9GDN', '9GDT', '9GDU', '9GE1']
     """
 
     def __init__(self, sequence, scope, min_identity=0.0, max_expect_value=10000000.0):
