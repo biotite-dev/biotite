@@ -109,8 +109,8 @@ def test_search_basic():
         (
             "struct.title",
             False,
-            {"contains_words": "tc5b"},
-            ["1L2Y", "8ANH", "8ANM", "8ANG", "8ANI", "8QWW"],
+            {"contains_phrase": "Trp-Cage Miniprotein"},
+            ["1L2Y"],
         ),
         (
             "reflns.d_resolution_high",
