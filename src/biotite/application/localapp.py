@@ -8,7 +8,10 @@ __all__ = ["LocalApp"]
 
 import abc
 import copy
+import re
+import subprocess
 from os import chdir, getcwd, remove
+from pathlib import Path
 from subprocess import PIPE, Popen, SubprocessError, TimeoutExpired
 from biotite.application.application import (
     Application,
@@ -306,3 +309,34 @@ def cleanup_tempfile(temp_file):
     except FileNotFoundError:
         # File was already deleted, e.g. due to `TemporaryFile(delete=True)`
         pass
+
+
+def get_version(bin_path, version_option="--version"):
+    """
+    Get the version of a locally installed application.
+
+    Parameters
+    ----------
+    bin_path : str or Path
+        Path of the application.
+    version_option : str, optional
+        The command line option to get the version.
+
+    Returns
+    -------
+    major, minor : int
+        The major and minor version number.
+    """
+    output = subprocess.run(
+        [bin_path, version_option], capture_output=True, text=True
+    ).stdout
+    # Find matches for version string containing major and minor version
+    match = re.search(r"\d+\.\d+", output)
+    if match is None:
+        raise subprocess.SubprocessError(
+            f"Could not determine '{Path(bin_path).name}' version "
+            f"from the string '{output}'"
+        )
+    version_string = match.group(0)
+    splitted = version_string.split(".")
+    return int(splitted[0]), int(splitted[1])
