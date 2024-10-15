@@ -7,13 +7,11 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["MuscleApp"]
 
 import numbers
-import re
-import subprocess
 import warnings
 from collections.abc import Sequence
 from tempfile import NamedTemporaryFile
 from biotite.application.application import AppState, VersionError, requires_state
-from biotite.application.localapp import cleanup_tempfile
+from biotite.application.localapp import cleanup_tempfile, get_version
 from biotite.application.msaapp import MSAApp
 from biotite.sequence.phylo.tree import Tree
 
@@ -54,7 +52,7 @@ class MuscleApp(MSAApp):
     """
 
     def __init__(self, sequences, bin_path="muscle", matrix=None):
-        major_version = get_version(bin_path)[0]
+        major_version = get_version(bin_path, "-version")[0]
         if major_version != 3:
             raise VersionError(f"Muscle 3 is required, got version {major_version}")
 
@@ -227,14 +225,3 @@ class MuscleApp(MSAApp):
         app.start()
         app.join()
         return app.get_alignment()
-
-
-def get_version(bin_path="muscle"):
-    output = subprocess.run([bin_path, "-version"], capture_output=True, text=True)
-    # Find matches for version string containing major and minor version
-    match = re.search(r"\d+\.\d+", output.stdout)
-    if match is None:
-        raise subprocess.SubprocessError("Could not determine Muscle version")
-    version_string = match.group(0)
-    splitted = version_string.split(".")
-    return int(splitted[0]), int(splitted[1])

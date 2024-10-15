@@ -6,10 +6,11 @@ __name__ = "biotite.application.dssp"
 __author__ = "Patrick Kunzmann"
 __all__ = ["DsspApp"]
 
+from subprocess import SubprocessError
 from tempfile import NamedTemporaryFile
 import numpy as np
 from biotite.application.application import AppState, requires_state
-from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.application.localapp import LocalApp, cleanup_tempfile, get_version
 from biotite.structure.io.pdbx.cif import CIFFile
 from biotite.structure.io.pdbx.convert import set_structure
 
@@ -72,7 +73,13 @@ class DsspApp(LocalApp):
             self._array.set_annotation(
                 "occupancy", np.ones(self._array.array_length(), dtype=float)
             )
-
+        try:
+            # The parameters have changed in version 4
+            self._new_cli = get_version(bin_path)[0] >= 4
+        except SubprocessError:
+            # In older versions, the no version is returned with `--version`
+            # -> a SubprocessError is raised
+            self._new_cli = False
         self._in_file = NamedTemporaryFile("w", suffix=".cif", delete=False)
         self._out_file = NamedTemporaryFile("r", suffix=".dssp", delete=False)
 
@@ -81,7 +88,10 @@ class DsspApp(LocalApp):
         set_structure(in_file, self._array)
         in_file.write(self._in_file)
         self._in_file.flush()
-        self.set_arguments(["-i", self._in_file.name, "-o", self._out_file.name])
+        if self._new_cli:
+            self.set_arguments([self._in_file.name, self._out_file.name])
+        else:
+            self.set_arguments(["-i", self._in_file.name, "-o", self._out_file.name])
         super().run()
 
     def evaluate(self):
