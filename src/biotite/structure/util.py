@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 import numpy as np
-from biotite.structure.atoms import AtomArray
+from biotite.structure.atoms import AtomArrayStack
 from biotite.structure.error import BadStructureError
 from biotite.structure.residues import get_residue_masks, get_residue_starts
 
@@ -105,7 +105,7 @@ def matrix_rotate(v, matrix):
     return v
 
 
-def coord_for_atom_name_per_residue(atoms, atom_names):
+def coord_for_atom_name_per_residue(atoms, atom_names, mask=None):
     """
     Get the coordinates of a specific atom for every residue.
 
@@ -118,39 +118,51 @@ def coord_for_atom_name_per_residue(atoms, atom_names):
     atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
         The atom array or stack to get the residue-wise coordinates from.
     atom_names : list of str, length=k
+        The atom names to get the coordinates for.
+    mask : ndarray, shape=(n,), dtype=bool, optional
+        A boolean mask to further select valid atoms from `atoms`.
 
     Returns
     -------
     coord: ndarray, shape=(k, m, r, 3) or shape=(k, r, 3)
         The coordinates of the specified atom for each residue.
     """
+    is_multi_model = isinstance(atoms, AtomArrayStack)
     residue_starts = get_residue_starts(atoms)
     all_residue_masks = get_residue_masks(atoms, residue_starts)
 
-    if isinstance(atoms, AtomArray):
-        coord = np.full(
-            (len(atom_names), len(residue_starts), 3),
-            np.nan,
-            dtype=np.float32,
-        )
-    else:
+    if is_multi_model:
         coord = np.full(
             (len(atom_names), atoms.stack_depth(), len(residue_starts), 3),
             np.nan,
             dtype=np.float32,
         )
+    else:
+        coord = np.full(
+            (len(atom_names), len(residue_starts), 3),
+            np.nan,
+            dtype=np.float32,
+        )
 
     for i, atom_name in enumerate(atom_names):
-        atom_mask_for_name = atoms.atom_name == atom_name
-        all_residue_masks_for_specified_atom = all_residue_masks & atom_mask_for_name
+        specified_atom_mask = atoms.atom_name == atom_name
+        if mask is not None:
+            specified_atom_mask &= mask
+        all_residue_masks_for_specified_atom = all_residue_masks & specified_atom_mask
         number_of_specified_atoms_per_residue = np.count_nonzero(
             all_residue_masks_for_specified_atom, axis=-1
         )
         if np.any(number_of_specified_atoms_per_residue > 1):
             raise BadStructureError(f"Multiple '{atom_name}' atoms per residue")
         residues_with_specified_atom = number_of_specified_atoms_per_residue == 1
-        coord[i, ..., residues_with_specified_atom, :] = atoms.coord[
-            ..., atom_mask_for_name, :
-        ]
+        coord_of_specified_atoms = atoms.coord[..., specified_atom_mask, :]
+        if is_multi_model:
+            # Swap dimensions due to NumPy's behavior when using advanced indexing
+            # (https://numpy.org/devdocs/user/basics.indexing.html#combining-advanced-and-basic-indexing)
+            coord[i, ..., residues_with_specified_atom, :] = (
+                coord_of_specified_atoms.transpose(1, 0, 2)
+            )
+        else:
+            coord[i, residues_with_specified_atom, :] = coord_of_specified_atoms
 
     return coord
