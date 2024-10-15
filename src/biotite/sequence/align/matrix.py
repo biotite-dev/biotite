@@ -2,14 +2,17 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+__all__ = ["SubstitutionMatrix"]
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 
-import os
+import functools
+from pathlib import Path
 import numpy as np
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
-__all__ = ["SubstitutionMatrix"]
+# Directory of matrix files
+_DB_DIR = Path(__file__).parent / "matrix_data"
 
 
 class SubstitutionMatrix(object):
@@ -58,6 +61,10 @@ class SubstitutionMatrix(object):
             - **BLOSUM<n>_<BLOCKS>**
             - **RBLOSUM<n>_<BLOCKS>**
             - **CorBLOSUM<n>_<BLOCKS>**
+
+        - Structural alphabet substitution matrices
+
+            - **3Di** - For 3Di alphabet from ``foldseek`` :footcite:`VanKempen2024`
 
     A list of all available matrix names is returned by
     :meth:`list_db()`.
@@ -123,9 +130,6 @@ class SubstitutionMatrix(object):
     >>> alph = ProteinSequence.alphabet
     >>> matrix = SubstitutionMatrix(alph, alph, "BLOSUM50")
     """
-
-    # Directory of matrix files
-    _db_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "matrix_data")
 
     def __init__(self, alphabet1, alphabet2, score_matrix):
         self._alph1 = alphabet1
@@ -350,7 +354,7 @@ class SubstitutionMatrix(object):
         matrix_dict : dict
             A dictionary representing the substitution matrix.
         """
-        filename = SubstitutionMatrix._db_dir + os.sep + matrix_name + ".mat"
+        filename = _DB_DIR / f"{matrix_name}.mat"
         with open(filename, "r") as f:
             return SubstitutionMatrix.dict_from_str(f.read())
 
@@ -364,11 +368,10 @@ class SubstitutionMatrix(object):
         db_list : list
             List of matrix names in the internal database.
         """
-        files = os.listdir(SubstitutionMatrix._db_dir)
-        # Remove '.mat' from files
-        return [file[:-4] for file in sorted(files)]
+        return [path.stem for path in _DB_DIR.glob("*.mat")]
 
     @staticmethod
+    @functools.cache
     def std_protein_matrix():
         """
         Get the default :class:`SubstitutionMatrix` for protein sequence
@@ -379,9 +382,12 @@ class SubstitutionMatrix(object):
         matrix : SubstitutionMatrix
             Default matrix.
         """
-        return _matrix_blosum62
+        return SubstitutionMatrix(
+            ProteinSequence.alphabet, ProteinSequence.alphabet, "BLOSUM62"
+        )
 
     @staticmethod
+    @functools.cache
     def std_nucleotide_matrix():
         """
         Get the default :class:`SubstitutionMatrix` for DNA sequence
@@ -392,13 +398,23 @@ class SubstitutionMatrix(object):
         matrix : SubstitutionMatrix
             Default matrix.
         """
-        return _matrix_nuc
+        return SubstitutionMatrix(
+            NucleotideSequence.alphabet_amb, NucleotideSequence.alphabet_amb, "NUC"
+        )
 
+    @staticmethod
+    @functools.cache
+    def std_3di_matrix():
+        """
+        Get the default :class:`SubstitutionMatrix` for 3Di sequence
+        alignments.
 
-# Preformatted BLOSUM62 and NUC substitution matrix from NCBI
-_matrix_blosum62 = SubstitutionMatrix(
-    ProteinSequence.alphabet, ProteinSequence.alphabet, "BLOSUM62"
-)
-_matrix_nuc = SubstitutionMatrix(
-    NucleotideSequence.alphabet_amb, NucleotideSequence.alphabet_amb, "NUC"
-)
+        Returns
+        -------
+        matrix : SubstitutionMatrix
+            Default matrix.
+        """
+        # Import inside function to avoid circular import
+        from biotite.structure.alphabet.i3d import I3DSequence
+
+        return SubstitutionMatrix(I3DSequence.alphabet, I3DSequence.alphabet, "3Di")
