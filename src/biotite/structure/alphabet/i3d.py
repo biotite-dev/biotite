@@ -10,24 +10,29 @@ __name__ = "biotite.structure.alphabet"
 __author__ = "Martin Larralde"
 __all__ = ["I3DSequence", "to_3di"]
 
-import numpy as np
 from biotite.sequence.alphabet import LetterAlphabet
 from biotite.sequence.sequence import Sequence
 from biotite.structure.alphabet.encoder import Encoder
 from biotite.structure.chains import get_chain_starts
+from biotite.structure.util import coord_for_atom_name_per_residue
 
 
 class I3DSequence(Sequence):
     """
-    Representation of a structure sequence (in 3di alphabet).
+    Representation of a structure in 3Di structural alphabet. :footcite:`VanKempen2024`
 
     Parameters
     ----------
     sequence : iterable object, optional
-        The initial 3Di sequence.
+        The 3Di sequence.
         This may either be a list or a string.
         May take upper or lower case letters.
         By default the sequence is empty.
+
+    References
+    ----------
+
+    .. footbibliography::
     """
 
     alphabet = LetterAlphabet(
@@ -75,6 +80,7 @@ class I3DSequence(Sequence):
 def to_3di(atoms):
     r"""
     Encode each chain in the given structure to the 3Di structure alphabet.
+    :footcite:`VanKempen2024`
 
     Parameters
     ----------
@@ -90,6 +96,11 @@ def to_3di(atoms):
 
     chain_start_indices : ndarray, shape=(n,), dtype=int
         The atom index where each chain starts.
+
+    References
+    ----------
+
+    .. footbibliography::
     """
     sequences = []
     chain_start_indices = get_chain_starts(atoms, add_exclusive_stop=True)
@@ -98,33 +109,12 @@ def to_3di(atoms):
         stop = chain_start_indices[i + 1]
         chain = atoms[start:stop]
         sequence = I3DSequence()
-        sequence.code = _encode_atoms(chain).filled()
+        sequence.code = (
+            Encoder()
+            .encode(
+                *coord_for_atom_name_per_residue(chain, ["CA", "CB", "N", "C"]),
+            )
+            .filled()
+        )
         sequences.append(sequence)
     return sequences, chain_start_indices[:-1]
-
-
-def _encode_atoms(atoms):
-    ca_atoms = atoms[atoms.atom_name == "CA"]
-    cb_atoms = atoms[atoms.atom_name == "CB"]
-    n_atoms = atoms[atoms.atom_name == "N"]
-    c_atoms = atoms[atoms.atom_name == "C"]
-
-    r = atoms.res_id.max()
-
-    ca = np.zeros((r + 1, 3), dtype=np.float32)
-    ca.fill(np.nan)
-    cb = ca.copy()
-    n = ca.copy()
-    c = ca.copy()
-
-    ca[ca_atoms.res_id, :] = ca_atoms.coord
-    cb[cb_atoms.res_id, :] = cb_atoms.coord
-    n[n_atoms.res_id, :] = n_atoms.coord
-    c[c_atoms.res_id, :] = c_atoms.coord
-
-    ca = ca[ca_atoms.res_id]
-    cb = cb[ca_atoms.res_id]
-    n = n[ca_atoms.res_id]
-    c = c[ca_atoms.res_id]
-
-    return Encoder().encode(ca, cb, n, c)
