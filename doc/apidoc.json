@@ -356,7 +356,6 @@
             "set_component",
             "list_assemblies",
             "get_assembly"
-
         ],
         "CIF format" : [
             "CIFFile",
@@ -381,6 +380,14 @@
             "IntegerPackingEncoding",
             "StringArrayEncoding",
             "TypeCode"
+        ]
+    },
+    "biotite.structure.alphabet" : {
+        "Structural alphabets": [
+            "I3DSequence"
+        ],
+        "Conversion Function": [
+            "to_3di"
         ]
     }
 }
