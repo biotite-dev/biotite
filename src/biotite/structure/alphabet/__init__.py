@@ -10,3 +10,4 @@ __name__ = "biotite.structure.alphabet"
 __author__ = "Martin Larralde, Patrick Kunzmann"
 
 from .i3d import *
+from .pb import *

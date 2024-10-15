@@ -384,10 +384,12 @@
     },
     "biotite.structure.alphabet" : {
         "Structural alphabets": [
-            "I3DSequence"
+            "I3DSequence",
+            "ProteinBlocksAlphabet"
         ],
         "Conversion Function": [
-            "to_3di"
+            "to_3di",
+            "to_protein_blocks"
         ]
     }
 }

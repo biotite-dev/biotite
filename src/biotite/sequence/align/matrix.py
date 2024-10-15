@@ -418,3 +418,46 @@ class SubstitutionMatrix(object):
         from biotite.structure.alphabet.i3d import I3DSequence
 
         return SubstitutionMatrix(I3DSequence.alphabet, I3DSequence.alphabet, "3Di")
+
+    @staticmethod
+    @functools.cache
+    def std_protein_blocks_matrix(unknown_match=200, unkown_mismatch=-200):
+        """
+        Get the substitution matrix for Protein Blocks sequences.
+
+        The matrix is adapted from *PBxplore* :footcite:`Barnoud2017`.
+
+        Parameters
+        ----------
+        unknown_match, unkown_mismatch : int, optional
+            The match and mismatch score for unknown/missing residues.
+            The default values were chose arbitrarily.
+
+        Returns
+        -------
+        matrix : SubstitutionMatrix
+            Default matrix.
+
+        References
+        ----------
+
+        .. footbibliography::
+
+        """
+        from biotite.structure.alphabet.pb import ProteinBlocksSequence
+
+        alphabet = ProteinBlocksSequence.alphabet
+        unknown_symbol = ProteinBlocksSequence.unknown_symbol
+        matrix_dict = SubstitutionMatrix.dict_from_db("PB")
+        # Add match/mismatch scores for unknown/missing residues
+        for symbol in alphabet:
+            if symbol == unknown_symbol:
+                continue
+            matrix_dict[symbol, unknown_symbol] = unkown_mismatch
+            matrix_dict[unknown_symbol, symbol] = unkown_mismatch
+        matrix_dict[unknown_symbol, unknown_symbol] = unknown_match
+        return SubstitutionMatrix(
+            alphabet,
+            alphabet,
+            matrix_dict,
+        )
