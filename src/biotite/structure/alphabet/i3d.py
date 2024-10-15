@@ -19,7 +19,8 @@ from biotite.structure.util import coord_for_atom_name_per_residue
 
 class I3DSequence(Sequence):
     """
-    Representation of a structure in 3Di structural alphabet. :footcite:`VanKempen2024`
+    Representation of a structure in the 3Di structural alphabet.
+    :footcite:`VanKempen2024`
 
     Parameters
     ----------
@@ -29,10 +30,15 @@ class I3DSequence(Sequence):
         May take upper or lower case letters.
         By default the sequence is empty.
 
+    See also
+    --------
+    to_3di : Create 3Di sequences from a structure.
+
     References
     ----------
 
     .. footbibliography::
+
     """
 
     alphabet = LetterAlphabet(
@@ -78,22 +84,20 @@ class I3DSequence(Sequence):
 
 
 def to_3di(atoms):
-    r"""
+    """
     Encode each chain in the given structure to the 3Di structure alphabet.
     :footcite:`VanKempen2024`
 
     Parameters
     ----------
     atoms : AtomArray
-        The atom array to encode. All atoms must be part of
-        a single chain.
+        The atom array to encode.
         May contain multiple chains.
 
     Returns
     -------
     sequences : list of Sequence, length=n
         The encoded 3Di sequence for each peptide chain in the structure.
-
     chain_start_indices : ndarray, shape=(n,), dtype=int
         The atom index where each chain starts.
 
@@ -101,6 +105,13 @@ def to_3di(atoms):
     ----------
 
     .. footbibliography::
+
+    Examples
+    --------
+
+    >>> sequences, chain_starts = to_3di(atom_array)
+    >>> print(sequences[0])
+    DQQVVCVVCPNVVNVDHGDD
     """
     sequences = []
     chain_start_indices = get_chain_starts(atoms, add_exclusive_stop=True)
