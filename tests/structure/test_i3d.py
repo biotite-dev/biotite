@@ -84,6 +84,7 @@ def test_missing_residues():
     atoms = pdbx.get_structure(pdbx_file, model=1)
     atoms = atoms[struc.filter_amino_acids(atoms)]
 
+    # Randomly delete some backbone atoms
     rng = np.random.default_rng(1)
     del_backbone_residue_ids = rng.choice(
         np.unique(atoms.res_id), N_DELETIONS, replace=False
@@ -94,6 +95,7 @@ def test_missing_residues():
     ]
     test_sequences, _ = strucalph.to_3di(atoms)
 
+    # Apply the same deletions to the reference sequence
     ref_sequence = _get_ref_3di_sequence(PDB_ID, atoms.chain_id[0])
     for res_id in del_backbone_residue_ids:
         seq_index = res_id - atoms.res_id[0]

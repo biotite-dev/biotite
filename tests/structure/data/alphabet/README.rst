@@ -16,3 +16,10 @@ The 3Di sequences in `i3d.fasta` were generated with `foldseek` according to
     $ foldseek createdb --chain-name-mode 1 tests/structure/data/*.cif /tmp/biotite_3di
     $ foldseek lndb /tmp/biotite_3di_h /tmp/biotite_3di_ss_h
     $ foldseek convert2fasta /tmp/biotite_3di_ss tests/structure/data/alphabet/i3d.fasta
+
+Protein Blocks sequences
+------------------------
+
+Only one sequence is available in `pb.fasta`, that is taken from
+`https://pbxplore.readthedocs.io/en/latest/PBassign.html`.
+`1ay7.bcif` contains the corresponding structure.
