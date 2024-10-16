@@ -38,8 +38,9 @@ class BinaryCIFData(_Component):
     array : array_like or int or float or str
         The data array to be stored.
         If a single item is given, it is converted into an array.
-    encoding : list of Encoding
+    encoding : list of Encoding , optional
         The encoding steps that are successively applied to the data.
+        By default, the data is stored uncompressed directly as bytes.
 
     Attributes
     ----------

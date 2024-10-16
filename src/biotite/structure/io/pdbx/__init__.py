@@ -18,5 +18,6 @@ __author__ = "Patrick Kunzmann"
 from .bcif import *
 from .cif import *
 from .component import *
+from .compress import *
 from .convert import *
 from .encoding import *

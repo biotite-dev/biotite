@@ -5,7 +5,9 @@
 import glob
 import itertools
 import warnings
+from io import BytesIO
 from os.path import join, splitext
+import msgpack
 import numpy as np
 import pytest
 from pytest import approx
@@ -13,6 +15,8 @@ import biotite
 import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
+from biotite.structure.io.pdbx.bcif import _encode_numpy as encode_numpy
+from biotite.structure.io.pdbx.compress import _get_decimal_places as get_decimal_places
 from tests.util import data_dir
 
 
@@ -741,6 +745,111 @@ def test_editing(tmpdir, format, level):
     assert test_pdbx_file.serialize() == ref_pdbx_file.serialize()
 
 
+def test_compress_data():
+    """
+    Check if the size of :class:`BinaryCIFData` compressed with :func:`compress()` is
+    at least as small as the original data compressed by the RCSB PDB.
+    """
+    PDB_ID = "1aki"
+
+    path = join(data_dir("structure"), f"{PDB_ID}.bcif")
+    bcif_file = pdbx.BinaryCIFFile.read(path)
+    for category_name, category in bcif_file.block.items():
+        for column_name, column in category.items():
+            try:
+                for attr_name, data in [("data", column.data), ("mask", column.mask)]:
+                    if data is None:
+                        continue
+                    ref_size = len(
+                        msgpack.packb(
+                            data.serialize(), use_bin_type=True, default=encode_numpy
+                        )
+                    )
+                    # Remove original encoding
+                    # and find a new encoding with good compression
+                    compressed_data = pdbx.compress(pdbx.BinaryCIFData(data.array))
+                    serialized_compressed_data = compressed_data.serialize()
+                    # The compressed data should be as small as the original data
+                    test_size = len(serialized_compressed_data["data"])
+                    test_size = len(
+                        msgpack.packb(
+                            serialized_compressed_data,
+                            use_bin_type=True,
+                            default=encode_numpy,
+                        )
+                    )
+                    assert test_size <= ref_size
+                    # Check if the data is unaltered after compression
+                    restored_data = pdbx.BinaryCIFData.deserialize(
+                        serialized_compressed_data
+                    )
+                    assert restored_data.array.tolist() == data.array.tolist()
+            except AssertionError:
+                raise AssertionError(f"{category_name}.{column_name} {attr_name}")
+
+
+@pytest.mark.parametrize(
+    "path",
+    glob.glob(join(data_dir("structure"), "*.bcif")),
+)
+def test_compress_file(path):
+    """
+    Check if the content read from a BinaryCIF file created by :func:`compress()`, is
+    the same as from the uncompressed file, while the file size it at least as small
+    as the file compressed by the RCSB PDB.
+    """
+    orig_file = pdbx.BinaryCIFFile.read(path)
+
+    # Create an equivalent file without the original encoding
+    uncompressed_file = pdbx.BinaryCIFFile()
+    block = pdbx.BinaryCIFBlock()
+    for category_name, category in orig_file.block.items():
+        block[category_name] = _clear_encoding(category)
+    uncompressed_file["block"] = block
+
+    compressed_file = pdbx.compress(uncompressed_file)
+
+    # Check if the data is unaltered after compression
+    # Direct equality check is not possible, as the encoding may be different
+    for category_name, category in orig_file.block.items():
+        for column_name, column in category.items():
+            for attr_name, ref_data in [("data", column.data), ("mask", column.mask)]:
+                test_data = getattr(
+                    compressed_file.block[category_name][column_name], attr_name
+                )
+                try:
+                    if ref_data is None:
+                        assert test_data is None
+                    else:
+                        assert test_data.array.tolist() == ref_data.array.tolist()
+                except AssertionError:
+                    raise AssertionError(f"{category_name}.{column_name} {attr_name}")
+
+    # Check if the file size is at least as small as the original file
+    assert _file_size(compressed_file) <= _file_size(orig_file)
+
+
+@pytest.mark.parametrize(
+    "number, ref_decimals",
+    [
+        (1.0, 0),
+        (1.2345, 4),
+        (0.00012345, 8),
+        (12300, -2),
+        (123.456, 3),
+        (123.0000000001, 0),
+        (0.0, 0),
+    ],
+)
+def test_decimal_places(number, ref_decimals):
+    """
+    Check if :func`:_get_decimal_places()` returns the correct number of decimal places
+    for known examples.
+    """
+    test_decimals = get_decimal_places(np.array([number]), 1e-6)
+    assert test_decimals == ref_decimals
+
+
 def _clear_encoding(category):
     columns = {}
     for key, col in category.items():
@@ -753,3 +862,10 @@ def _clear_encoding(category):
             mask = None
         columns[key] = pdbx.BinaryCIFColumn(data, mask)
     return pdbx.BinaryCIFCategory(columns)
+
+
+def _file_size(bcif_file):
+    written_file = BytesIO()
+    bcif_file.write(written_file)
+    written_file.seek(0)
+    return len(written_file.read())
