@@ -710,7 +710,13 @@ def _get_box(block):
     return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
 
 
-def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
+def set_structure(
+    pdbx_file,
+    array,
+    data_block=None,
+    include_bonds=False,
+    extra_fields=[],
+):
     """
     Set the ``atom_site`` category with atom information from an
     :class:`AtomArray` or :class:`AtomArrayStack`.
@@ -744,6 +750,10 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
         category.
         Inter-residue bonds will be written into the ``struct_conn``
         independent of this parameter.
+    extra_fields : list of str, optional
+        List of additional fields from the ``atom_site`` category
+        that should be written into the file.
+        Default is an empty list.
 
     Notes
     -----
@@ -803,6 +813,32 @@ def set_structure(pdbx_file, array, data_block=None, include_bonds=False):
             np.array([f"{c:+d}" if c != 0 else "?" for c in array.charge]),
             np.where(array.charge == 0, MaskValue.MISSING, MaskValue.PRESENT),
         )
+
+    # Handle all remaining custom fields
+    if len(extra_fields) > 0:
+        # ... check to avoid clashes with standard annotations
+        _standard_annotations = [
+            "hetero",
+            "element",
+            "atom_name",
+            "res_name",
+            "chain_id",
+            "res_id",
+            "ins_code",
+            "atom_id",
+            "b_factor",
+            "occupancy",
+            "charge",
+        ]
+        _reserved_annotation_names = list(atom_site.keys()) + _standard_annotations
+
+        for annot in extra_fields:
+            if annot in _reserved_annotation_names:
+                raise ValueError(
+                    f"Annotation name '{annot}' is reserved and cannot be written to as extra field. "
+                    "Please choose another name."
+                )
+            atom_site[annot] = np.copy(array.get_annotation(annot))
 
     if array.bonds is not None:
         struct_conn = _set_inter_residue_bonds(array, atom_site)
