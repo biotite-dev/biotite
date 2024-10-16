@@ -516,7 +516,10 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
     if "charge" in extra_fields:
         if "pdbx_formal_charge" in atom_site:
             array.set_annotation(
-                "charge", atom_site["pdbx_formal_charge"].as_array(int, 0)  # masked values are set to 0
+                "charge",
+                atom_site["pdbx_formal_charge"].as_array(
+                    int, 0
+                ),  # masked values are set to 0
             )
         else:
             warnings.warn(
