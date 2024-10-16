@@ -9,7 +9,6 @@ import numbers
 import textwrap
 from collections.abc import Sequence
 import numpy as np
-from biotite.sequence.alphabet import LetterAlphabet
 
 __all__ = [
     "Alignment",
@@ -111,7 +110,7 @@ class Alignment(object):
         for i in range(len(self.trace)):
             j = self.trace[i][seq_index]
             if j != -1:
-                seq_str += self.sequences[seq_index][j]
+                seq_str += str(self.sequences[seq_index][j])
             else:
                 seq_str += "-"
         return seq_str
@@ -133,7 +132,7 @@ class Alignment(object):
         # has an non-single letter alphabet
         all_single_letter = True
         for seq in self.sequences:
-            if not isinstance(seq.get_alphabet(), LetterAlphabet):
+            if not _is_single_letter(seq.alphabet):
                 all_single_letter = False
         if all_single_letter:
             # First dimension: sequence number,
@@ -665,3 +664,17 @@ def remove_terminal_gaps(alignment):
             "no overlap and the resulting alignment would be empty"
         )
     return alignment[start:stop]
+
+
+def _is_single_letter(alphabet):
+    """
+    More relaxed version of :func:`biotite.sequence.alphabet.is_letter_alphabet()`:
+    It is sufficient that only only the string representation of each symbol is only
+    a single character.
+    """
+    if alphabet.is_letter_alphabet():
+        return True
+    for symbol in alphabet:
+        if len(str(symbol)) != 1:
+            return False
+    return True
