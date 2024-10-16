@@ -878,7 +878,8 @@ def test_writing_and_reading_extra_fields(tmpdir):
     # Set up a custom atom array with an additional annotation
     cif_file = pdbx.CIFFile.read(join(data_dir("structure"), "5ugo.cif"))
     atoms = pdbx.get_structure(cif_file)
-    atoms.set_annotation("my_custom_annotation", np.arange(atoms.array_length()))
+    custom_annotation = np.arange(atoms.array_length())
+    atoms.set_annotation("my_custom_annotation", custom_annotation)
 
     # Write to file
     new_cif_file = pdbx.CIFFile()
@@ -892,6 +893,5 @@ def test_writing_and_reading_extra_fields(tmpdir):
     )
     assert "my_custom_annotation" in atoms.get_annotation_categories()
     assert np.all(
-        atoms.get_annotation("my_custom_annotation").astype(int)
-        == np.arange(atoms.array_length())
+        atoms.get_annotation("my_custom_annotation").astype(int) == custom_annotation
     )
