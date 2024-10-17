@@ -49,14 +49,14 @@ def compress(data, float_tolerance=1e-6):
     >>> pdbx_file.write(uncompressed_file)
     >>> _ = uncompressed_file.seek(0)
     >>> print(f"{len(uncompressed_file.read()) // 1000} KB")
-    931 KB
+    927 KB
     >>> # Write compressed file
     >>> pdbx_file = compress(pdbx_file)
     >>> compressed_file = BytesIO()
     >>> pdbx_file.write(compressed_file)
     >>> _ = compressed_file.seek(0)
     >>> print(f"{len(compressed_file.read()) // 1000} KB")
-    113 KB
+    111 KB
     """
     match type(data):
         case bcif.BinaryCIFFile:
