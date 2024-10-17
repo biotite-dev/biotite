@@ -148,28 +148,49 @@ def _find_best_integer_compression(array):
     Try different data encodings on an integer array and return the one that results in
     the smallest size.
     """
-    # Default is no compression at all
-    best_encoding_sequence = [ByteArrayEncoding()]
-    smallest_size = _data_size_in_file(
-        bcif.BinaryCIFData(array, best_encoding_sequence)
-    )
-    for (
-        use_delta,
-        use_run_length,
-        packed_byte_count,
-    ) in itertools.product([False, True], [False, True], [None, 1, 2]):
-        encoding_sequence = []
+    best_encoding_sequence = None
+    smallest_size = np.inf
+
+    for use_delta in [False, True]:
         if use_delta:
-            encoding_sequence.append(DeltaEncoding())
-        if use_run_length:
-            encoding_sequence.append(RunLengthEncoding())
-        if packed_byte_count is not None:
-            encoding_sequence.append(IntegerPackingEncoding(packed_byte_count))
-        encoding_sequence.append(ByteArrayEncoding())
-        size = _data_size_in_file(bcif.BinaryCIFData(array, encoding_sequence))
-        if size < smallest_size:
-            best_encoding_sequence = encoding_sequence
-            smallest_size = size
+            encoding = DeltaEncoding()
+            array_after_delta = encoding.encode(array)
+            encodings_after_delta = [encoding]
+        else:
+            encodings_after_delta = []
+            array_after_delta = array
+        for use_run_length in [False, True]:
+            # Use encoded data from previous step to save time
+            if use_run_length:
+                encoding = RunLengthEncoding()
+                array_after_rle = encoding.encode(array_after_delta)
+                encodings_after_rle = encodings_after_delta + [encoding]
+            else:
+                encodings_after_rle = encodings_after_delta
+                array_after_rle = array_after_delta
+            for packed_byte_count in [None, 1, 2]:
+                if packed_byte_count is not None:
+                    encoding = IntegerPackingEncoding(packed_byte_count)
+                    array_after_packing = encoding.encode(array_after_rle)
+                    encodings_after_packing = encodings_after_rle + [encoding]
+                else:
+                    encodings_after_packing = encodings_after_rle
+                    array_after_packing = array_after_rle
+                encoding = ByteArrayEncoding()
+                encoded_array = encoding.encode(array_after_packing)
+                encodings = encodings_after_packing + [encoding]
+                # Pack data directly instead of using the BinaryCIFData class
+                # to avoid the unnecessary re-encoding of the array,
+                # as it is already available in 'encoded_array'
+                serialized_encoding = [enc.serialize() for enc in encodings]
+                serilaized_data = {
+                    "data": encoded_array,
+                    "encoding": serialized_encoding,
+                }
+                size = _data_size_in_file(serilaized_data)
+                if size < smallest_size:
+                    best_encoding_sequence = encodings
+                    smallest_size = size
     return best_encoding_sequence, smallest_size
 
 
@@ -202,22 +223,22 @@ def _to_smallest_integer_type(array):
 
 def _data_size_in_file(data):
     """
-    Get the size of a :class:`BinaryCIFData` object, it would have when written into a
-    file.
+    Get the size of the data, it would have when written into a *BinaryCIF* file.
 
     Parameters
     ----------
-    data : BinaryCIFData
+    data : BinaryCIFData or dict
         The data array whose size is measured.
+        Can be either a :class:`BinaryCIFData` object or already serialized data.
 
     Returns
     -------
     size : int
         The size of the data array in the file in bytes.
     """
-    bytes_in_file = msgpack.packb(
-        data.serialize(), use_bin_type=True, default=encode_numpy
-    )
+    if isinstance(data, bcif.BinaryCIFData):
+        data = data.serialize()
+    bytes_in_file = msgpack.packb(data, use_bin_type=True, default=encode_numpy)
     return len(bytes_in_file)
 
 
