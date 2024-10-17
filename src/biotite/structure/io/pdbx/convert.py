@@ -24,6 +24,10 @@ from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
 from biotite.structure.bonds import BondList, BondType, connect_via_residue_names
 from biotite.structure.box import unitcell_from_vectors, vectors_from_unitcell
 from biotite.structure.error import BadStructureError
+from biotite.structure.filter import _canonical_aa_list as canonical_aa_list
+from biotite.structure.filter import (
+    _canonical_nucleotide_list as canonical_nucleotide_list,
+)
 from biotite.structure.filter import (
     filter_first_altloc,
     filter_highest_occupancy_altloc,
@@ -36,7 +40,11 @@ from biotite.structure.io.pdbx.bcif import (
 from biotite.structure.io.pdbx.cif import CIFBlock, CIFFile
 from biotite.structure.io.pdbx.component import MaskValue
 from biotite.structure.io.pdbx.encoding import StringArrayEncoding
-from biotite.structure.residues import get_residue_count, get_residue_starts_for
+from biotite.structure.residues import (
+    get_residue_count,
+    get_residue_positions,
+    get_residue_starts_for,
+)
 from biotite.structure.util import matrix_rotate
 
 # Bond types in `struct_conn` category that refer to covalent bonds
@@ -89,6 +97,7 @@ COMP_BOND_ORDER_TO_TYPE = {
 COMP_BOND_TYPE_TO_ORDER = {
     bond_type: order for order, bond_type in COMP_BOND_ORDER_TO_TYPE.items()
 }
+CANONICAL_RESIDUE_LIST = canonical_aa_list + canonical_nucleotide_list
 
 _proteinseq_type_list = ["polypeptide(D)", "polypeptide(L)"]
 _nucleotideseq_type_list = [
@@ -1028,6 +1037,12 @@ def _set_inter_residue_bonds(array, atom_site):
     if len(bond_array) == 0:
         return None
 
+    # Filter out 'standard' links, i.e. backbone bonds between adjacent canonical
+    # nucleotide/amino acid residues
+    bond_array = bond_array[~_filter_canonical_links(array, bond_array)]
+    if len(bond_array) == 0:
+        return None
+
     struct_conn = Category()
     struct_conn["id"] = np.arange(1, len(bond_array) + 1)
     struct_conn["conn_type_id"] = [
@@ -1070,6 +1085,27 @@ def _filter_bonds(array, connection):
         return bond_array[residue_starts_1 != residue_starts_2]
     else:
         raise ValueError("Invalid 'connection' option")
+
+
+def _filter_canonical_links(array, bond_array):
+    """
+    Filter out peptide bonds between adjacent canonical amino acid residues.
+    """
+    # Get the residue index for each bonded atom
+    residue_indices = get_residue_positions(array, bond_array[:, :2].flatten()).reshape(
+        -1, 2
+    )
+
+    return (
+        # Must be canonical residues
+        np.isin(array.res_name[bond_array[:, 0]], CANONICAL_RESIDUE_LIST) &
+        np.isin(array.res_name[bond_array[:, 1]], CANONICAL_RESIDUE_LIST) &
+        # Must be backbone bond
+        np.isin(array.atom_name[bond_array[:, 0]], ("C", "O3'")) &
+        np.isin(array.atom_name[bond_array[:, 1]], ("N", "P")) &
+        # Must connect adjacent residues
+        residue_indices[:, 1] - residue_indices[:, 0] == 1
+    )  # fmt: skip
 
 
 def get_component(pdbx_file, data_block=None, use_ideal_coord=True, res_name=None):
