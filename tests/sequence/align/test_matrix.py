@@ -46,6 +46,7 @@ def test_structural_alphabet_matrices(matrix_name, alphabet):
         "std_nucleotide_matrix",
         "std_3di_matrix",
         "std_protein_blocks_matrix",
+        "std_clepaps_matrix",
     ],
 )
 def test_default_matrices(method_name):

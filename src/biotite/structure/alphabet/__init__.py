@@ -9,5 +9,6 @@ A subpackage for converting structures to structural alphabet sequences.
 __name__ = "biotite.structure.alphabet"
 __author__ = "Martin Larralde, Patrick Kunzmann"
 
+from .clepaps import *
 from .i3d import *
 from .pb import *

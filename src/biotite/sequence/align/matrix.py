@@ -66,6 +66,7 @@ class SubstitutionMatrix(object):
 
             - **3Di** - For 3Di alphabet from ``foldseek`` :footcite:`VanKempen2024`
             - **PB** - For Protein Blocks alphabet from *PBexplore* :footcite:`Barnoud2017`
+            - **CLESUM** - For CLePAPS alphabet :footcite:`Wang2008`
 
     A list of all available matrix names is returned by
     :meth:`list_db()`.
@@ -451,7 +452,47 @@ class SubstitutionMatrix(object):
         alphabet = ProteinBlocksSequence.alphabet
         unknown_symbol = ProteinBlocksSequence.unknown_symbol
         matrix_dict = SubstitutionMatrix.dict_from_db("PB")
-        # Add match/mismatch scores for undefined symbols residues
+        for symbol in alphabet:
+            if symbol == unknown_symbol:
+                continue
+            matrix_dict[symbol, unknown_symbol] = unkown_mismatch
+            matrix_dict[unknown_symbol, symbol] = unkown_mismatch
+        matrix_dict[unknown_symbol, unknown_symbol] = unknown_match
+        return SubstitutionMatrix(
+            alphabet,
+            alphabet,
+            matrix_dict,
+        )
+
+    @staticmethod
+    @functools.cache
+    def std_clepaps_matrix(unknown_match=200, unkown_mismatch=-200):
+        """
+        Get the default :class:`SubstitutionMatrix` for *CLePAPS* sequences.
+
+        Parameters
+        ----------
+        unknown_match, unkown_mismatch : int, optional
+            The match and mismatch score for undefined symbols.
+            The default values were chose arbitrarily.
+
+        Returns
+        -------
+        matrix : SubstitutionMatrix
+            Default matrix.
+
+        References
+        ----------
+
+        .. footbibliography::
+
+        """
+        from biotite.structure.alphabet.pb import ProteinBlocksSequence
+
+        alphabet = ProteinBlocksSequence.alphabet
+        unknown_symbol = ProteinBlocksSequence.unknown_symbol
+        matrix_dict = SubstitutionMatrix.dict_from_db("CLESUM")
+        # Add match/mismatch scores for undefined symbols
         for symbol in alphabet:
             if symbol == unknown_symbol:
                 continue

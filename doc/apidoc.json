@@ -385,11 +385,13 @@
     "biotite.structure.alphabet" : {
         "Structural alphabets": [
             "I3DSequence",
-            "ProteinBlocksAlphabet"
+            "ProteinBlocksAlphabet",
+            "ClepapsAlphabet"
         ],
         "Conversion Function": [
             "to_3di",
-            "to_protein_blocks"
+            "to_protein_blocks",
+            "to_clepaps"
         ]
     }
 }

@@ -23,3 +23,9 @@ Protein Blocks sequences
 Only one sequence is available in `pb.fasta`, that is taken from
 `https://pbxplore.readthedocs.io/en/latest/PBassign.html`.
 `1ay7.bcif` contains the corresponding structure.
+
+CLePAPS sequences
+-----------------
+
+The CLePAPS sequences in `clepaps.fasta` were taken from
+`presentation slides <https://slideplayer.com/slide/8109226/>`_.
