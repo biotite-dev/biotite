@@ -183,11 +183,11 @@ def _find_best_integer_compression(array):
                 # to avoid the unnecessary re-encoding of the array,
                 # as it is already available in 'encoded_array'
                 serialized_encoding = [enc.serialize() for enc in encodings]
-                serilaized_data = {
+                serialized_data = {
                     "data": encoded_array,
                     "encoding": serialized_encoding,
                 }
-                size = _data_size_in_file(serilaized_data)
+                size = _data_size_in_file(serialized_data)
                 if size < smallest_size:
                     best_encoding_sequence = encodings
                     smallest_size = size
