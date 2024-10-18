@@ -92,9 +92,12 @@ TEST_PARAMETERS = [
     pytest.param(
         "biotite.database.pubchem",
         ["biotite.structure.info"],
-        marks=pytest.mark.skipif(
-            cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available"
-        ),
+        marks=[
+            pytest.mark.skipif(
+                cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available"
+            ),
+            pytest.mark.skip("Server is regularly busy"),
+        ],
     ),
     pytest.param(
         "biotite.application",
@@ -107,13 +110,16 @@ TEST_PARAMETERS = [
         "biotite.application.blast",
         [],
     ),
-    # Do not test Muscle due to version clash
-    # pytest.param(
-    #    "biotite.application.muscle",
-    #    ["biotite.sequence"],
-    #    marks = pytest.mark.skipif(
-    #        is_not_installed("muscle"), reason="Software is not installed")
-    #    ),
+    pytest.param(
+        "biotite.application.muscle",
+        ["biotite.sequence"],
+        marks=[
+            pytest.mark.skipif(
+                is_not_installed("muscle"), reason="Software is not installed"
+            ),
+            pytest.mark.skip("Possible version clash with Muscle software"),
+        ],
+    ),
     pytest.param(
         "biotite.application.clustalo",
         ["biotite.sequence"],
