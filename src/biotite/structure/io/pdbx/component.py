@@ -223,6 +223,11 @@ class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
     def __delitem__(self, key):
         del self._elements[key]
 
+    # Implement `__contains__()` explicitly,
+    # because the mixin method unnecessarily deserializes the value, if available
+    def __contains__(self, key):
+        return key in self._elements
+
     def __iter__(self):
         return iter(self._elements)
 

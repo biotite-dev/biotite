@@ -510,6 +510,9 @@ class BinaryCIFBlock(_HierarchicalContainer):
     def __iter__(self):
         return (key.lstrip("_") for key in super().__iter__())
 
+    def __contains__(self, key):
+        return super().__contains__("_" + key)
+
 
 class BinaryCIFFile(File, _HierarchicalContainer):
     """
