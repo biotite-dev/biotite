@@ -416,6 +416,9 @@ class CIFCategory(_Component, MutableMapping):
             raise ValueError("At least one column must remain")
         del self._columns[key]
 
+    def __contains__(self, key):
+        return key in self._columns
+
     def __iter__(self):
         return iter(self._columns)
 
@@ -708,6 +711,9 @@ class CIFBlock(_Component, MutableMapping):
     def __delitem__(self, key):
         del self._categories[key]
 
+    def __contains__(self, key):
+        return key in self._categories
+
     def __iter__(self):
         return iter(self._categories)
 
@@ -912,6 +918,9 @@ class CIFFile(_Component, File, MutableMapping):
 
     def __delitem__(self, key):
         del self._blocks[key]
+
+    def __contains__(self, key):
+        return key in self._blocks
 
     def __iter__(self):
         return iter(self._blocks)
