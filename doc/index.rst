@@ -128,7 +128,7 @@ Biotite documentation
             <h2>Analyze sequence data</h2>
 
         Work with sequences of any kind: from the usual nucleotide and protein
-        sequences to your own sequence types created from a custom alphabet.
+        sequences to structural alphabets like *3Di*.
         Use the rapid and modular alignment tools to identify homologous
         regions or to map reads.
         Eventually, visualize your results in different *Matplotlib* based
