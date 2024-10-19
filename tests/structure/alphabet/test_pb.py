@@ -50,7 +50,7 @@ def test_missing_residues(reference_chain, reference_sequence):
     """
     N_DELETIONS = 5
     # The 'Z' symbol
-    UKNOWN_SYMBOL = strucalph.ProteinBlocksSequence.unknown_symbol
+    UNDEFINED_SYMBOL = strucalph.ProteinBlocksSequence.undefined_symbol
 
     # Randomly delete some backbone atoms
     rng = np.random.default_rng(1)
@@ -68,7 +68,7 @@ def test_missing_residues(reference_chain, reference_sequence):
         # Convert the PB symbol for residue and adjacent ones to 'Z'
         start_index = max(0, seq_index - 2)
         end_index = min(len(reference_sequence), seq_index + 2)
-        reference_sequence[start_index : end_index + 1] = UKNOWN_SYMBOL
+        reference_sequence[start_index : end_index + 1] = UNDEFINED_SYMBOL
 
     test_pb_sequences, _ = strucalph.to_protein_blocks(reference_chain)
 
