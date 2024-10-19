@@ -19,3 +19,4 @@ CONTRIBUTORS
 - Benjamin E. Mayer <https://github.com/entropybit>
 - Natasha Jaffe <https://github.com/tcjaffe>
 - Tristen J. Mier  <https://github.com/tjmier>
+- Simon V. Mathis <https://github.com/Croydon-Brixton>
