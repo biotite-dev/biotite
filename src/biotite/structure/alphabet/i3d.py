@@ -41,40 +41,15 @@ class I3DSequence(Sequence):
 
     """
 
-    alphabet = LetterAlphabet(
-        [
-            "A",
-            "C",
-            "D",
-            "E",
-            "F",
-            "G",
-            "H",
-            "I",
-            "K",
-            "L",
-            "M",
-            "N",
-            "P",
-            "Q",
-            "R",
-            "S",
-            "T",
-            "V",
-            "W",
-            "Y",
-        ]
-    )
-    undefined_symbol = "D"
+    alphabet = LetterAlphabet("acdefghiklmnpqrstvwy")
+    undefined_symbol = "d"
 
     def __init__(self, sequence=""):
         if isinstance(sequence, str):
-            sequence = sequence.upper()
+            sequence = sequence.lower()
         else:
             sequence = [symbol.upper() for symbol in sequence]
-        seq_code = I3DSequence.alphabet.encode_multiple(sequence)
-        super().__init__()
-        self.code = seq_code
+        super().__init__(sequence)
 
     def get_alphabet(self):
         return I3DSequence.alphabet
@@ -111,7 +86,7 @@ def to_3di(atoms):
 
     >>> sequences, chain_starts = to_3di(atom_array)
     >>> print(sequences[0])
-    DQQVVCVVCPNVVNVDHGDD
+    dqqvvcvvcpnvvnvdhgdd
     """
     sequences = []
     chain_start_indices = get_chain_starts(atoms, add_exclusive_stop=True)
