@@ -78,7 +78,7 @@ def test_missing_residues():
     PDB_ID = "1aki"
     N_DELETIONS = 5
     MAX_MISMATCH_PERCENTAGE = 0.1
-    UKNOWN_SYMBOL = strucalph.I3DSequence.unknown_symbol
+    UNDEFINED_SYMBOL = strucalph.I3DSequence.undefined_symbol
 
     pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / f"{PDB_ID}.bcif")
     atoms = pdbx.get_structure(pdbx_file, model=1)
@@ -102,7 +102,7 @@ def test_missing_residues():
         # Convert the PDB symbol for residue and adjacent ones to 'Z'
         start_index = max(0, seq_index - 1)
         end_index = min(len(ref_sequence), seq_index + 1)
-        ref_sequence[start_index : end_index + 1] = UKNOWN_SYMBOL
+        ref_sequence[start_index : end_index + 1] = UNDEFINED_SYMBOL
 
     assert len(test_sequences) == 1
     # 3Di sequences are quite complex, i.e. removing backbone atoms at some position

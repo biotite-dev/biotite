@@ -65,7 +65,7 @@ class I3DSequence(Sequence):
             "Y",
         ]
     )
-    unknown_symbol = "D"
+    undefined_symbol = "D"
 
     def __init__(self, sequence=""):
         if isinstance(sequence, str):

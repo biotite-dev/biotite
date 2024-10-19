@@ -64,10 +64,27 @@ class ProteinBlocksSequence(Sequence):
     """
 
     alphabet = LetterAlphabet("abcdefghijklmnopZ")
-    unknown_symbol = "Z"
+    undefined_symbol = "Z"
 
     def get_alphabet(self):
         return ProteinBlocksSequence.alphabet
+
+    def remove_undefined(self):
+        """
+        Remove undefined symbols from the sequence.
+
+        Returns
+        -------
+        filtered_sequence : ProteinBlocksSequence
+            The sequence without undefined symbols.
+        """
+        undefined_code = ProteinBlocksSequence.alphabet.encode(
+            ProteinBlocksSequence.undefined_symbol
+        )
+        filtered_code = self.code[self.code != undefined_code]
+        filtered_sequence = ProteinBlocksSequence()
+        filtered_sequence.code = filtered_code
+        return filtered_sequence
 
 
 def to_protein_blocks(atoms):

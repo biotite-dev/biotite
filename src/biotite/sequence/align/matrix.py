@@ -449,15 +449,15 @@ class SubstitutionMatrix(object):
         from biotite.structure.alphabet.pb import ProteinBlocksSequence
 
         alphabet = ProteinBlocksSequence.alphabet
-        unknown_symbol = ProteinBlocksSequence.unknown_symbol
+        undefined_symbol = ProteinBlocksSequence.undefined_symbol
         matrix_dict = SubstitutionMatrix.dict_from_db("PB")
         # Add match/mismatch scores for undefined symbols residues
         for symbol in alphabet:
-            if symbol == unknown_symbol:
+            if symbol == undefined_symbol:
                 continue
-            matrix_dict[symbol, unknown_symbol] = unkown_mismatch
-            matrix_dict[unknown_symbol, symbol] = unkown_mismatch
-        matrix_dict[unknown_symbol, unknown_symbol] = unknown_match
+            matrix_dict[symbol, undefined_symbol] = unkown_mismatch
+            matrix_dict[undefined_symbol, symbol] = unkown_mismatch
+        matrix_dict[undefined_symbol, undefined_symbol] = unknown_match
         return SubstitutionMatrix(
             alphabet,
             alphabet,
