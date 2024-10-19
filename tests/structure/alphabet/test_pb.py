@@ -45,7 +45,7 @@ def test_to_protein_blocks(reference_chain, reference_sequence):
 def test_missing_residues(reference_chain, reference_sequence):
     """
     Like, `test_to_protein_blocks()`, but in some residues backbone atoms are missing.
-    Expect that these and adjacent residues get the unknown symbol 'Z' in the
+    Expect that these and adjacent residues get the unknown symbol 'z' in the
     PB sequence.
     """
     N_DELETIONS = 5
@@ -65,7 +65,7 @@ def test_missing_residues(reference_chain, reference_sequence):
     # Apply the same deletions to the reference sequence
     for res_id in del_backbone_residue_ids:
         seq_index = res_id - reference_chain.res_id[0]
-        # Convert the PB symbol for residue and adjacent ones to 'Z'
+        # Convert the PB symbol for residue and adjacent ones to 'z'
         start_index = max(0, seq_index - 2)
         end_index = min(len(reference_sequence), seq_index + 2)
         reference_sequence[start_index : end_index + 1] = UNDEFINED_SYMBOL
