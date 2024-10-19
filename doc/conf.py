@@ -183,6 +183,7 @@ sphinx_gallery_conf = {
             "examples/scripts/structure/molecule",
             "examples/scripts/structure/contacts",
             "examples/scripts/structure/modeling",
+            "examples/scripts/structure/alphabet",
             "examples/scripts/structure/misc",
         ]
     ),
