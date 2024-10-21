@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import functools
 import itertools
 import re
 import tempfile
@@ -15,10 +16,36 @@ from tests.util import cannot_connect_to
 PUBCHEM_URL = "https://pubchem.ncbi.nlm.nih.gov/"
 
 
+def accept_busy_pubchem(func):
+    """
+    Accept that PubChem is currently busy. and the test fails for this reason.
+
+    Although the
+    `Dynamic Request Throttling <https://pubchem.ncbi.nlm.nih.gov/docs/dynamic-request-throttling>`_
+    is implemented in :mod:`biotite.database.pubchem`, it does not work properly in the
+    CI.
+
+    This decorator must be added before any other decorator from ``pytest``
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except RequestError as e:
+            if str(e) == "Too many requests or server too busy":
+                pytest.skip(str(e))
+            else:
+                raise e
+
+    return wrapper
+
+
 @pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="Pubchem is not available")
 @pytest.mark.parametrize(
     "format, as_file_like", itertools.product(["sdf", "png"], [False, True])
 )
+@accept_busy_pubchem
 def test_fetch(format, as_file_like):
     """
     Check download of a record in binary and text form.
@@ -36,6 +63,7 @@ def test_fetch(format, as_file_like):
 
 @pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
 @pytest.mark.parametrize("as_structural_formula", [False, True])
+@accept_busy_pubchem
 def test_fetch_structural_formula(as_structural_formula):
     """
     Check download of structure as structural formula and 3D conformer.
@@ -56,6 +84,7 @@ def test_fetch_structural_formula(as_structural_formula):
 
 
 @pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
+@accept_busy_pubchem
 def test_fetch_invalid():
     """
     An exception is expected when the CID is not available.
@@ -77,6 +106,7 @@ def test_fetch_invalid():
     ],
     ids=["NameQuery", "SmilesQuery", "InchiQuery", "InchiKeyQuery"],
 )
+@accept_busy_pubchem
 def test_search_simple(query, ref_ids):
     """
     Checks for the simpler `Query` types, where the output is known.
@@ -89,6 +119,7 @@ def test_search_simple(query, ref_ids):
 
 
 @pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
+@accept_busy_pubchem
 def test_search_formula():
     """
     Download a structure and search for its molecular formula in
@@ -110,6 +141,7 @@ def test_search_formula():
         [2244], [False, True], [pubchem.SuperstructureQuery, pubchem.SubstructureQuery]
     ),
 )
+@accept_busy_pubchem
 def test_search_super_and_substructure(cid, from_atoms, query_type):
     """
     Super- and substructure searches should return structures with less
@@ -151,6 +183,7 @@ def test_search_super_and_substructure(cid, from_atoms, query_type):
 @pytest.mark.parametrize(
     "conformation_based, from_atoms", itertools.product([False, True], [False, True])
 )
+@accept_busy_pubchem
 def test_search_similarity(conformation_based, from_atoms):
     """
     The input structure should have a similarity of 1.0 to itself.
@@ -175,6 +208,7 @@ def test_search_similarity(conformation_based, from_atoms):
 
 @pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
 @pytest.mark.parametrize("from_atoms", [False, True])
+@accept_busy_pubchem
 def test_search_identity(from_atoms):
     """
     The input structure should be identical to itself.
