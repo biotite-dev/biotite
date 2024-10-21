@@ -54,3 +54,4 @@ contains functions for structure analysis and manipulation.
     measurement
     segments
     nucleotide
+    alphabet
