@@ -2,13 +2,16 @@
 
 Guide trees and multiple sequence alignments
 ============================================
+
+.. currentmodule:: biotite.sequence.align
+
 In :doc:`a previous chapter <align_optimal>` we have learned how to align *two*
 sequences with each other.
 However, for many use cases we require an alignment of more than two
 sequences.
 For example, one such use case is the analysis of homologous regions within a
 protein family.
-Although the *dynamic programming* algorithm behind :doc:`align_optimal` can in
+Although the *dynamic programming* algorithm behind :func:`align_optimal()` can in
 theory be extended to any number of sequences, the computation time scales
 linearly with the length *each* aligned sequence.
 Thus, the method becomes infeasible for already a few sequences.
