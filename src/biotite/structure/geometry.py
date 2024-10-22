@@ -25,10 +25,12 @@ __all__ = [
 import numpy as np
 from biotite.structure.atoms import AtomArray, AtomArrayStack, coord
 from biotite.structure.box import coord_to_fraction, fraction_to_coord, is_orthogonal
-from biotite.structure.chains import chain_iter
-from biotite.structure.error import BadStructureError
-from biotite.structure.filter import filter_peptide_backbone
-from biotite.structure.util import norm_vector, vector_dot
+from biotite.structure.filter import filter_amino_acids
+from biotite.structure.util import (
+    coord_for_atom_name_per_residue,
+    norm_vector,
+    vector_dot,
+)
 
 
 def displacement(atoms1, atoms2, box=None):
@@ -480,139 +482,84 @@ def index_dihedral(*args, **kwargs):
 
 def dihedral_backbone(atom_array):
     """
-    Measure the characteristic backbone dihedral angles of a protein
-    structure.
+    Measure the characteristic backbone dihedral angles of a chain.
 
     Parameters
     ----------
-    atom_array: AtomArray or AtomArrayStack
-        The protein structure. A complete backbone, without gaps,
-        is required here.
-        Chain transitions are allowed, the angles at the transition are
-        `NaN`.
-        The order of the backbone atoms for each residue must be
-        (N, CA, C).
+    atoms: AtomArray or AtomArrayStack
+        The protein structure to measure the dihedral angles for.
+        For missing backbone atoms the corresponding angles are `NaN`.
 
     Returns
     -------
     phi, psi, omega : ndarray
-        An array containing the 3 backbone dihedral angles for every
-        CA. 'phi' is not defined at the N-terminus, 'psi' and 'omega'
-        are not defined at the C-terminus. In these places the arrays
-        have *NaN* values. If an :class:`AtomArrayStack` is given, the
-        output angles are 2-dimensional, the first dimension corresponds
-        to the model number.
-
-    Raises
-    ------
-    BadStructureError
-        If the amount of backbone atoms is not equal to amount of
-        residues times 3 (for N, CA and C).
-
-    See Also
-    --------
-    dihedral
-
-    Examples
-    --------
-
-    >>> phi, psi, omega = dihedral_backbone(atom_array)
-    >>> print(np.stack([np.rad2deg(phi), np.rad2deg(psi)]).T)
-    [[     nan  -56.145]
-     [ -43.980  -51.309]
-     [ -66.466  -30.898]
-     [ -65.219  -45.945]
-     [ -64.747  -30.346]
-     [ -73.136  -43.425]
-     [ -64.882  -43.255]
-     [ -59.509  -25.698]
-     [ -77.989   -8.823]
-     [ 110.784    8.079]
-     [  55.244 -124.371]
-     [ -57.983  -28.766]
-     [ -81.834   19.125]
-     [-124.057   13.401]
-     [  67.931   25.218]
-     [-143.952  131.297]
-     [ -70.100  160.068]
-     [ -69.484  145.669]
-     [ -77.264  124.223]
-     [ -78.100      nan]]
+        An array containing the 3 backbone dihedral angles for every CA atom.
+        `phi` is not defined at the N-terminus, `psi` and `omega` are not defined at the
+        C-terminus.
+        In these places the arrays have *NaN* values.
+        If an :class:`AtomArrayStack` is given, the output angles are 2-dimensional,
+        the first dimension corresponds to the model number.
     """
-    bb_filter = filter_peptide_backbone(atom_array)
-    backbone = atom_array[..., bb_filter]
+    amino_acid_mask = filter_amino_acids(atom_array)
 
-    if (
-        backbone.array_length() % 3 != 0
-        or (backbone.atom_name[0::3] != "N").any()
-        or (backbone.atom_name[1::3] != "CA").any()
-        or (backbone.atom_name[2::3] != "C").any()
-    ):
-        raise BadStructureError(
-            "The backbone is invalid, must be repeats of (N, CA, C), "
-            "maybe a backbone atom is missing"
-        )
-    phis = []
-    psis = []
-    omegas = []
-    for chain_bb in chain_iter(backbone):
-        phi, psi, omega = _dihedral_backbone(chain_bb)
-        phis.append(phi)
-        psis.append(psi)
-        omegas.append(omega)
-    return (
-        np.concatenate(phis, axis=-1),
-        np.concatenate(psis, axis=-1),
-        np.concatenate(omegas, axis=-1),
+    # Coordinates for dihedral angle calculation
+    coord_n, coord_ca, coord_c = coord_for_atom_name_per_residue(
+        atom_array,
+        ("N", "CA", "C"),
+        amino_acid_mask,
     )
+    n_residues = coord_n.shape[-2]
 
-
-def _dihedral_backbone(chain_bb):
-    bb_coord = chain_bb.coord
     # Coordinates for dihedral angle calculation
     # Dim 0: Model index (only for atom array stacks)
     # Dim 1: Angle index
     # Dim 2: X, Y, Z coordinates
     # Dim 3: Atoms involved in dihedral angle
-    if isinstance(chain_bb, AtomArray):
-        angle_coord_shape = (len(bb_coord) // 3, 3, 4)
-    elif isinstance(chain_bb, AtomArrayStack):
-        angle_coord_shape = (bb_coord.shape[0], bb_coord.shape[1] // 3, 3, 4)
-    phi_coord = np.full(angle_coord_shape, np.nan)
-    psi_coord = np.full(angle_coord_shape, np.nan)
-    omega_coord = np.full(angle_coord_shape, np.nan)
+    if isinstance(atom_array, AtomArray):
+        angle_coord_shape: tuple[int, ...] = (n_residues, 3, 4)
+    elif isinstance(atom_array, AtomArrayStack):
+        angle_coord_shape = (atom_array.stack_depth(), n_residues, 3, 4)
+    coord_for_phi = np.full(angle_coord_shape, np.nan, dtype=np.float32)
+    coord_for_psi = np.full(angle_coord_shape, np.nan, dtype=np.float32)
+    coord_for_omg = np.full(angle_coord_shape, np.nan, dtype=np.float32)
 
-    # Indices for coordinates of CA atoms
-    ca_i = np.arange(bb_coord.shape[-2] // 3) * 3 + 1
     # fmt: off
-    phi_coord  [..., 1:,  :, 0] = bb_coord[..., ca_i[1: ]-2, :]
-    phi_coord  [..., 1:,  :, 1] = bb_coord[..., ca_i[1: ]-1, :]
-    phi_coord  [..., 1:,  :, 2] = bb_coord[..., ca_i[1: ],   :]
-    phi_coord  [..., 1:,  :, 3] = bb_coord[..., ca_i[1: ]+1, :]
-    psi_coord  [..., :-1, :, 0] = bb_coord[..., ca_i[:-1]-1, :]
-    psi_coord  [..., :-1, :, 1] = bb_coord[..., ca_i[:-1],   :]
-    psi_coord  [..., :-1, :, 2] = bb_coord[..., ca_i[:-1]+1, :]
-    psi_coord  [..., :-1, :, 3] = bb_coord[..., ca_i[:-1]+2, :]
-    omega_coord[..., :-1, :, 0] = bb_coord[..., ca_i[:-1],   :]
-    omega_coord[..., :-1, :, 1] = bb_coord[..., ca_i[:-1]+1, :]
-    omega_coord[..., :-1, :, 2] = bb_coord[..., ca_i[:-1]+2, :]
-    omega_coord[..., :-1, :, 3] = bb_coord[..., ca_i[:-1]+3, :]
+    coord_for_phi[..., 1:,   :, 0] =  coord_c[..., 0:-1, :]
+    coord_for_phi[..., 1:,   :, 1] =  coord_n[..., 1:,   :]
+    coord_for_phi[..., 1:,   :, 2] = coord_ca[..., 1:,   :]
+    coord_for_phi[..., 1:,   :, 3] =  coord_c[..., 1:,   :]
+
+    coord_for_psi[..., 0:-1, :, 0] =  coord_n[..., 0:-1, :]
+    coord_for_psi[..., 0:-1, :, 1] = coord_ca[..., 0:-1, :]
+    coord_for_psi[..., 0:-1, :, 2] =  coord_c[..., 0:-1, :]
+    coord_for_psi[..., 0:-1, :, 3] =  coord_n[..., 1:,   :]
+
+    coord_for_omg[..., 0:-1, :, 0] = coord_ca[..., 0:-1, :]
+    coord_for_omg[..., 0:-1, :, 1] =  coord_c[..., 0:-1, :]
+    coord_for_omg[..., 0:-1, :, 2] =  coord_n[..., 1:,   :]
+    coord_for_omg[..., 0:-1, :, 3] = coord_ca[..., 1:,   :]
     # fmt: on
 
     phi = dihedral(
-        phi_coord[..., 0], phi_coord[..., 1], phi_coord[..., 2], phi_coord[..., 3]
+        coord_for_phi[..., 0],
+        coord_for_phi[..., 1],
+        coord_for_phi[..., 2],
+        coord_for_phi[..., 3],
     )
     psi = dihedral(
-        psi_coord[..., 0], psi_coord[..., 1], psi_coord[..., 2], psi_coord[..., 3]
+        coord_for_psi[..., 0],
+        coord_for_psi[..., 1],
+        coord_for_psi[..., 2],
+        coord_for_psi[..., 3],
     )
-    omega = dihedral(
-        omega_coord[..., 0],
-        omega_coord[..., 1],
-        omega_coord[..., 2],
-        omega_coord[..., 3],
+    omg = dihedral(
+        coord_for_omg[..., 0],
+        coord_for_omg[..., 1],
+        coord_for_omg[..., 2],
+        coord_for_omg[..., 3],
     )
 
-    return phi, psi, omega
+    return phi, psi, omg
 
 
 def centroid(atoms):

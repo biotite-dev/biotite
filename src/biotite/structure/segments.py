@@ -16,7 +16,7 @@ __all__ = [
 import numpy as np
 
 
-def apply_segment_wise(starts, data, function, axis):
+def apply_segment_wise(starts, data, function, axis=None):
     """
     Generalized version of :func:`apply_residue_wise()` for
     residues and chains.
@@ -36,7 +36,6 @@ def apply_segment_wise(starts, data, function, axis):
             value = function(segment)
         else:
             value = function(segment, axis=axis)
-        value = function(segment, axis=axis)
         # Identify the shape of the resulting array by evaluation
         # of the function return value for the first segment
         if processed_data is None:
