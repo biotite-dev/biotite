@@ -99,8 +99,12 @@ class RNAplotApp(LocalApp):
         self._in_file.write(self._dot_bracket)
         self._in_file.flush()
         self.set_arguments(
-            ["-i", self._in_file.name, "-o", "xrna", "-t", self._layout_type]
-        )
+            [
+                "-i", self._in_file.name,
+                "--output-format", "xrna",
+                "-t", self._layout_type,
+            ]
+        )  # fmt: skip
         super().run()
 
     def evaluate(self):
