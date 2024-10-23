@@ -11,17 +11,13 @@ from pathlib import Path
 import numpy as np
 
 CCD_DIR = Path(__file__).parent / "ccd"
-INDEX_COLUMN_NAME = {
+SPECIAL_ID_COLUMN_NAMES = {
     "chem_comp": "id",
-    "chem_comp_atom": "comp_id",
-    "chem_comp_bond": "comp_id",
 }
-
-_ccd_block = None
-# For each category this index gives the start and stop for each residue
-_residue_index = {}
+DEFAULT_ID_COLUMN_NAME = "comp_id"
 
 
+@functools.cache
 def get_ccd():
     """
     Get the internal subset of the PDB
@@ -30,8 +26,15 @@ def get_ccd():
 
     Returns
     -------
-    ccd : BinaryCIFFile
+    ccd : BinaryCIFBlock
         The CCD.
+
+    Warnings
+    --------
+
+    Consider the return value as read-only.
+    As other functions cache data from it, changing data may lead to undefined
+    behavior.
 
     References
     ----------
@@ -42,11 +45,7 @@ def get_ccd():
     # Avoid circular import
     from biotite.structure.io.pdbx.bcif import BinaryCIFFile
 
-    global _ccd_block
-    if _ccd_block is None:
-        # Load CCD once and cache it for subsequent calls
-        _ccd_block = BinaryCIFFile.read(CCD_DIR / "components.bcif").block
-    return _ccd_block
+    return BinaryCIFFile.read(CCD_DIR / "components.bcif").block
 
 
 @functools.cache
@@ -83,18 +82,12 @@ def get_from_ccd(category_name, comp_id, column_name=None):
     .. footbibliography::
 
     """
-    global _residue_index
-    ccd = get_ccd()
-    category = ccd[category_name]
-    if category_name not in _residue_index:
-        _residue_index[category_name] = _index_residues(
-            category[INDEX_COLUMN_NAME[category_name]].as_array()
-        )
     try:
-        start, stop = _residue_index[category_name][comp_id]
+        start, stop = _residue_index(category_name)[comp_id]
     except KeyError:
         return None
 
+    category = get_ccd()[category_name]
     if column_name is None:
         return {
             col_name: category[col_name].as_array()[start:stop]
@@ -104,7 +97,27 @@ def get_from_ccd(category_name, comp_id, column_name=None):
         return category[column_name].as_array()[start:stop]
 
 
-def _index_residues(id_column):
+@functools.cache
+def _residue_index(category_name):
+    """
+    Get the start and stop index for each component name in the given
+    CCD category.
+
+    Parameters
+    ----------
+    category_name : str
+        The category to determine start and stop indices for each component in.
+
+    Returns
+    -------
+    index : dict (str -> (int, int))
+        The index maps each present component name to the corresponding
+        start and exclusive stop index in `id_column`.
+    """
+    category = get_ccd()[category_name]
+    id_column_name = SPECIAL_ID_COLUMN_NAMES.get(category_name, DEFAULT_ID_COLUMN_NAME)
+    id_column = category[id_column_name].as_array()
+
     residue_starts = np.where(id_column[:-1] != id_column[1:])[0] + 1
     # The final start is the exclusive stop of last residue
     residue_starts = np.concatenate(([0], residue_starts, [len(id_column)]))
