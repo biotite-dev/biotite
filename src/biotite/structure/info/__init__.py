@@ -16,6 +16,7 @@ __author__ = "Patrick Kunzmann, Tom David Müller"
 
 from .atoms import *
 from .bonds import *
+from .ccd import *
 from .groups import *
 from .masses import *
 from .misc import *
