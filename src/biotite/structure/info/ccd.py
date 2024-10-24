@@ -45,7 +45,46 @@ def get_ccd():
     # Avoid circular import
     from biotite.structure.io.pdbx.bcif import BinaryCIFFile
 
-    return BinaryCIFFile.read(CCD_DIR / "components.bcif").block
+    try:
+        return BinaryCIFFile.read(CCD_DIR / "components.bcif").block
+    except FileNotFoundError:
+        raise RuntimeError(
+            "Internal CCD not found. Please run 'setup_ccd.py' and reinstall Biotite."
+        )
+
+
+def set_ccd_path(ccd_path):
+    """
+    Replace the internal *Chemical Component Dictionary* (CCD) with a custom one.
+
+    This function also clears the cache of functions depending on the CCD to ensure
+    that the new CCD is used.
+
+    Parameters
+    ----------
+    ccd_path : path-like
+        The path to the custom CCD in BinaryCIF format, prepared with the
+        ``setup_ccd.py`` script.
+
+    Notes
+    -----
+    This function is intended for advanced users who need to add information for
+    compounds, which are not part of the internal CCD.
+    The reason might be that an updated version already exists upstream or that
+    the user wants to add custom compounds to the CCD.
+    """
+    global _CCD_FILE
+    _CCD_FILE = Path(ccd_path)
+
+    # Clear caches in all functions in biotite.structure.info
+    info_modules = [
+        importlib.import_module(f"biotite.structure.info.{mod_name}")
+        for _, mod_name, _ in pkgutil.iter_modules([Path(__file__).parent])
+    ]
+    for module in info_modules:
+        for _, function in inspect.getmembers(module, callable):
+            if hasattr(function, "cache_clear"):
+                function.cache_clear()
 
 
 @functools.cache

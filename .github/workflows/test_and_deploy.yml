@@ -30,6 +30,8 @@ env:
   # Once GHA and cibuildwheel are updated this can be removed
   # mussllinux takes 6+ hrs to build and test so ignore it
   CIBW_TEST_SKIP: "*musllinux* *-macosx_arm64"
+  # Configuration for the architecture-agnostic jobs
+  PY_VERSION: "3.12"  # Keep in sync with version in environment.yml
 
 
 jobs:
@@ -48,6 +50,32 @@ jobs:
       run: ruff format --diff
     - name: Lint code base
       run: ruff check
+
+
+  build-internal:
+    name: Build CCD and wheel for reusing it in several CI jobs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PY_VERSION }}
+      - name: Install Biotite
+        run: pip install .
+      - name: Build internal CCD
+        run: python setup_ccd.py
+      - name: Install build backend
+        run: pip install build
+      - name: Build distribution including CCD
+        run: python -m build --wheel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: internal-build
+          path: ./dist/*.whl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ccd
+          path: ./src/biotite/structure/info/components.bcif
 
 
   generate-wheels-matrix:
@@ -85,13 +113,20 @@ jobs:
 
   test-and-build:
     name: "Build & Test"
-    needs: "generate-wheels-matrix"
+    needs:
+      - generate-wheels-matrix
+      - build-internal
     strategy:
       matrix:
         include: ${{ fromJson(needs.generate-wheels-matrix.outputs.include) }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Add internal CCD to Biotite
+        uses: actions/download-artifact@v4
+        with:
+          name: ccd
+          path: src/biotite/structure/info
 
       # QEMU enables building/testing for non-native architectures (ie arm64)
       # at the cost of speed
@@ -113,11 +148,18 @@ jobs:
           path: ./wheelhouse/*.whl
 
 
-  make-sdist:
+  sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
+    needs:
+      - build-internal
     steps:
     - uses: actions/checkout@v4
+    - name: Add internal CCD to Biotite
+      uses: actions/download-artifact@v4
+      with:
+        name: ccd
+        path: src/biotite/structure/info
     - name: Build source distribution
       run: pipx run build --sdist
     - uses: actions/upload-artifact@v4
@@ -130,20 +172,24 @@ jobs:
     name: Test interfaces to databases and applications
 
     runs-on: ubuntu-latest
+    needs:
+      - build-internal
     defaults:
       run:
         shell: bash -l {0}
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: internal-build
+          path: dist
       - uses: conda-incubator/setup-miniconda@v3
         with:
           environment-file: environment.yml
           miniforge-version: latest
-      - name: Build distribution
-        run: pip wheel --no-deps -w dist .
       - name: Install distribution
-        run: pip install .//dist//*.whl
+        run: pip install ./dist/*.whl
       - name: "TEMP: Skip DSSP tests"
         # TEMP: Omit DSSP tests for now until conda-forge DSSP is functional
         # (https://github.com/conda-forge/dssp-feedstock/pull/4)
@@ -161,11 +207,6 @@ jobs:
           tests//test_modname.py
           tests//database
           tests//application
-      # Use the built distribution for other downstream jobs to reduce build time
-      - uses: actions/upload-artifact@v4
-        with:
-          name: internal-build
-          path: ./dist/*.whl
 
 
   test-muscle5:
@@ -173,7 +214,7 @@ jobs:
 
     runs-on: ubuntu-latest
     needs:
-      - test-interfaces
+      - build-internal
     defaults:
       run:
         shell: bash -l {0}
@@ -188,7 +229,7 @@ jobs:
         with:
           activate-environment: biotite-dev
           miniforge-version: latest
-          python-version: "3.12"
+          python-version: ${{ env.PY_VERSION }}
       - name: Install Muscle 5
         run: conda install -c bioconda "muscle=5"
       - name: Install distribution and pytest
@@ -197,46 +238,12 @@ jobs:
         run: pytest --durations=50 tests//application//test_msa.py
 
 
-  make-ccd:
-    name: Compile the CCD subset for structure.info from the wwPDB CCD
+  docs:
+    name: Build documentation
 
     runs-on: ubuntu-latest
     needs:
-      - test-interfaces
-    defaults:
-      run:
-        shell: bash -l {0}
-
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/download-artifact@v4
-      with:
-        name: internal-build
-        path: dist
-    - uses: actions/setup-python@v3
-      with:
-        python-version: "3.12"
-    - name: Install distribution
-      run: pip install dist//*.whl
-    - name: Compile CCD subset
-      run: python setup_ccd.py
-    - name: Zip CCD
-      run: |
-          cd src/biotite/structure/info
-          zip -r ${{ github.workspace }}//dist//ccd.zip ccd
-          cd ${{ github.workspace }}
-    - uses: actions/upload-artifact@v4
-      with:
-        name: ccd
-        path: dist//ccd.zip
-
-
-  make-docs:
-    name: Build documentation
-
-    runs-on: ubuntu-20.04
-    needs:
-      - test-interfaces
+      - build-internal
     defaults:
       run:
         shell: bash -l {0}
@@ -258,7 +265,7 @@ jobs:
         environment-file: environment.yml
         miniforge-version: latest
     - name: Install distribution
-      run: pip install dist//*.whl
+      run: pip install dist/*.whl
     - name: Build base documentation
       run: sphinx-build -a -D plot_gallery=0 doc build//doc
     - name: Build tutorial and gallery
@@ -285,16 +292,16 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name != 'release'
     needs:
-      - test-interfaces
+      - build-internal
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: internal-build
           path: dist
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PY_VERSION }}
       - name: Install dependencies
         run: pip install dist//*.whl pytest pytest-codspeed
       - name: Run benchmarks
@@ -310,7 +317,7 @@ jobs:
     needs:
     - lint
     - test-and-build
-    - make-sdist
+    - sdist
     - test-interfaces
     - test-muscle5
     runs-on: ubuntu-latest
@@ -334,12 +341,31 @@ jobs:
         password: ${{ secrets.PYPI_TOKEN }}
 
 
+  upload-ccd:
+    name: Upload CCD to GitHub Releases
+    permissions:
+      contents: write
+    needs:
+    - build-internal
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: ccd
+        path: dist
+    - name: Upload to GitHub Releases
+      uses: softprops/action-gh-release@v2.0.5
+      if: github.event_name == 'release' && github.event.action == 'published'
+      with:
+        files: dist//components.bcif
+
+
   upload-docs:
     name: Upload documentation to GitHub Releases
     permissions:
       contents: write
     needs:
-    - make-docs
+    - docs
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v4

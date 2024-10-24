@@ -6,14 +6,13 @@ __name__ = "biotite.structure.info"
 __author__ = "Tom David Müller, Patrick Kunzmann"
 __all__ = ["amino_acid_names", "nucleotide_names", "carbohydrate_names"]
 
+import functools
 from pathlib import Path
 
 CCD_DIR = Path(__file__).parent / "ccd"
 
 
-group_lists = {}
-
-
+@functools.cache
 def amino_acid_names():
     """
     Get a tuple of amino acid three-letter codes according to the
@@ -35,6 +34,7 @@ def amino_acid_names():
     return _get_group_members("amino_acids")
 
 
+@functools.cache
 def nucleotide_names():
     """
     Get a tuple of nucleotide three-letter codes according to the
@@ -56,6 +56,7 @@ def nucleotide_names():
     return _get_group_members("nucleotides")
 
 
+@functools.cache
 def carbohydrate_names():
     """
     Get a tuple of carbohydrate three-letter codes according to the
@@ -78,8 +79,5 @@ def carbohydrate_names():
 
 
 def _get_group_members(group_name):
-    global group_lists
-    if group_name not in group_lists:
-        with open(CCD_DIR / f"{group_name}.txt", "r") as file:
-            group_lists[group_name] = tuple(file.read().split())
-    return group_lists[group_name]
+    with open(CCD_DIR / f"{group_name}.txt", "r") as file:
+        return tuple(file.read().split())

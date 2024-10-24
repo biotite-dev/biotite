@@ -102,6 +102,7 @@ filterwarnings = [
   "ignore:Input structure has no associated 'BondList'",
 ]
 
+
 [tool.hatch.build.targets.sdist]
 exclude = [
   "tests",
@@ -111,6 +112,14 @@ exclude = [
   "setup_ccd.py",
   # .github, .gitignore, .gitattributes
   ".git*",
+]
+artifacts = [
+  "src/biotite/structure/info/components.bcif"
+]
+
+[tool.hatch.build.targets.wheel]
+artifacts = [
+  "src/biotite/structure/info/components.bcif"
 ]
 
 [tool.hatch.version]
