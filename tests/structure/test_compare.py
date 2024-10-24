@@ -2,11 +2,12 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import itertools
 from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
 
@@ -38,7 +39,8 @@ def test_rmsf(stack, as_coord):
 
 @pytest.fixture
 def load_stack_superimpose():
-    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    stack = pdbx.get_structure(pdbx_file)
     # Superimpose with first frame
     bb_mask = struc.filter_peptide_backbone(stack[0])
     supimp, _ = struc.superimpose(stack[0], stack, atom_mask=bb_mask)
@@ -196,3 +198,133 @@ def test_rmsf_gmx(load_stack_superimpose):
     )
 
     assert np.allclose(rmsf, rmsf_gmx, atol=1e-02)
+
+
+@pytest.mark.parametrize(
+    "multi_model, as_coord", itertools.product([False, True], [False, True])
+)
+def test_lddt_perfect(multi_model, as_coord):
+    """
+    Check if the lDDT of a structure with itself as reference is 1.0
+    """
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    atoms = pdbx.get_structure(pdbx_file)
+
+    reference = atoms[0]
+    if multi_model:
+        subject = atoms[0:1]
+    else:
+        subject = atoms[0]
+
+    if as_coord:
+        reference = reference.coord
+        subject = subject.coord
+        # Coordinates can only be used if 'exclude_same_residue' is False
+        exclude_same_residue = False
+    else:
+        exclude_same_residue = True
+
+    lddt = struc.lddt(reference, subject, exclude_same_residue=exclude_same_residue)
+
+    if multi_model:
+        assert lddt.tolist() == [1.0]
+    else:
+        assert lddt == 1.0
+
+
+def test_lddt_consistency():
+    """
+    Check if the computed lDDT via :func:`lddt` is the same as the reference value from
+    the https://swissmodel.expasy.org/assess web server.
+    """
+    # As each model needs to be uploaded separately, only the first 8 models were run
+    REFERENCE_LDDT = [
+        1.00,
+        0.86,
+        0.83,
+        0.85,
+        0.88,
+        0.85,
+        0.81,
+        0.89,
+    ]
+
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    atoms = pdbx.get_structure(pdbx_file)
+    # The web server computes the lDDT without hydrogen atoms
+    atoms = atoms[:, atoms.element != "H"]
+
+    reference = atoms[0]
+    subject = atoms[: len(REFERENCE_LDDT)]
+    lddt = struc.lddt(reference, subject)
+
+    assert lddt.tolist() == pytest.approx(REFERENCE_LDDT, abs=1e-2)
+
+
+@pytest.mark.parametrize("multi_model", [False, True])
+def test_lddt_custom_aggregation(multi_model):
+    """
+    Check if custom `aggregation` in :func:`lddt` works by giving a custom aggregation
+    that simply aggregates all values, i.e. it should give the same result as the
+    `all` aggregation.
+    """
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    atoms = pdbx.get_structure(pdbx_file)
+    reference = atoms[0]
+    if multi_model:
+        subject = atoms
+    else:
+        subject = atoms[0]
+    # Every atom goes into the same aggregation bin
+    aggregation_bins = np.zeros(atoms.array_length(), dtype=int)
+
+    ref_lddt = struc.lddt(reference, subject, aggregation="all")
+
+    test_lddt = struc.lddt(reference, subject, aggregation=aggregation_bins)
+
+    # There is only one aggregation bin -> only one lDDT value (for each value)
+    assert test_lddt.shape[-1] == 1
+    assert test_lddt[..., 0].tolist() == ref_lddt.tolist()
+
+
+@pytest.mark.parametrize(
+    "multi_model, aggregation",
+    itertools.product([False, True], ["chain", "residue", "atom"]),
+)
+def test_lddt_aggregation_levels(multi_model, aggregation):
+    """
+    Check if the predefined aggregation levels :func:`lddt()` return the expected shape.
+    Furthermore, the average of each aggregated lDDT values should be similar to the
+    global lDDT value (not exactly, as the global lDDT is weighted by the number of
+    contacts in each residue/chain).
+    """
+    ABS_ERROR = 0.02
+
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    atoms = pdbx.get_structure(pdbx_file)
+    reference = atoms[0]
+    if multi_model:
+        subject = atoms
+    else:
+        subject = atoms[0]
+
+    expected_shape = ()
+    if multi_model:
+        expected_shape = expected_shape + (subject.stack_depth(),)
+    if aggregation == "chain":
+        expected_shape = expected_shape + (struc.get_chain_count(subject),)
+    elif aggregation == "residue":
+        expected_shape = expected_shape + (struc.get_residue_count(subject),)
+    elif aggregation == "atom":
+        expected_shape = expected_shape + (atoms.array_length(),)
+
+    lddt = struc.lddt(reference, subject, aggregation=aggregation)
+    all_lddt = struc.lddt(reference, subject, aggregation="all")
+
+    assert lddt.shape == expected_shape
+    if multi_model:
+        assert np.mean(lddt, axis=-1).tolist() == pytest.approx(
+            all_lddt.tolist(), abs=ABS_ERROR
+        )
+    else:
+        assert np.mean(lddt) == pytest.approx(all_lddt, abs=ABS_ERROR)

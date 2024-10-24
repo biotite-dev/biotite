@@ -321,6 +321,7 @@
             "rmsd",
 	        "rmspd",
             "rmsf",
+            "lddt",
             "tm_score"
         ],
         "General analysis" : [
