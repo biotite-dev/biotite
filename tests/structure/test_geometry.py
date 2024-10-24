@@ -39,28 +39,23 @@ def test_dihedral():
     assert struc.dihedral(coord1, coord2, coord3, coord4) == pytest.approx(0.5 * np.pi)
 
 
-@pytest.mark.parametrize("multiple_chains", [False, True])
-def test_dihedral_backbone_general(multiple_chains):
+@pytest.mark.parametrize("multi_model", [False, True])
+def test_dihedral_backbone_general(multi_model):
     stack = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
     n_models = stack.stack_depth()
     n_res = stack.res_id[-1]
-    if multiple_chains:
-        stack2 = stack.copy()
-        stack2.chain_id[:] = "B"
-        stack = stack + stack2
-        n_res = n_res * 2
-    array = stack[0]
+
+    if multi_model:
+        atoms = stack
+        expected_shape = (n_models, n_res)
+    else:
+        atoms = stack[0]
+        expected_shape = (n_res,)
     # Test array
-    phi, psi, omega = struc.dihedral_backbone(array)
-    assert phi.shape == (n_res,)
-    assert psi.shape == (n_res,)
-    assert omega.shape == (n_res,)
-    _assert_plausible_omega(omega)
-    # Test stack
-    phi, psi, omega = struc.dihedral_backbone(stack)
-    assert phi.shape == (n_models, n_res)
-    assert psi.shape == (n_models, n_res)
-    assert omega.shape == (n_models, n_res)
+    phi, psi, omega = struc.dihedral_backbone(atoms)
+    assert phi.shape == expected_shape
+    assert psi.shape == expected_shape
+    assert omega.shape == expected_shape
     _assert_plausible_omega(omega)
 
 
@@ -72,13 +67,17 @@ def _assert_plausible_omega(omega):
     assert omega.tolist() == pytest.approx([np.pi] * len(omega), rel=0.6)
 
 
-def test_dihedral_backbone_consistency():
+@pytest.mark.parametrize("multi_model", [False, True])
+def test_dihedral_backbone_consistency(multi_model):
     """
     Check if the computed dihedral angles are equal to the reference computed with
     MDTraj.
     """
     pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
     atoms = pdbx.get_structure(pdbx_file, model=1)
+    if multi_model:
+        # Use models with equal coordinates
+        atoms = struc.stack([atoms] * 2)
 
     test_phi, test_psi, test_ome = struc.dihedral_backbone(atoms)
 
@@ -104,6 +103,14 @@ def test_dihedral_backbone_consistency():
         [-1.349,  2.168,  2.996],
         [-1.363, np.nan, np.nan],
     ])  # fmt: skip
+
+    if multi_model:
+        assert np.array_equal(test_phi[1], test_phi[0], equal_nan=True)
+        assert np.array_equal(test_psi[1], test_psi[0], equal_nan=True)
+        assert np.array_equal(test_ome[1], test_ome[0], equal_nan=True)
+        test_phi = test_phi[0]
+        test_psi = test_psi[0]
+        test_ome = test_ome[0]
 
     assert test_phi == pytest.approx(ref_dihedrals[:, 0], abs=1e-3, nan_ok=True)
     assert test_psi == pytest.approx(ref_dihedrals[:, 1], abs=1e-3, nan_ok=True)
