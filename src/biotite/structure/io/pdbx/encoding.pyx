@@ -696,7 +696,7 @@ class IntegerPackingEncoding(Encoding):
         # Get length of output array
         # by summing up required length of each element
         cdef int number
-        cdef int length = 0
+        cdef long length = 0
         for i in range(data.shape[0]):
             number = data[i]
             if number < 0:

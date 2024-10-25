@@ -170,6 +170,14 @@ def _find_best_integer_compression(array):
                 array_after_rle = array_after_delta
             for packed_byte_count in [None, 1, 2]:
                 if packed_byte_count is not None:
+                    # Quickly check this heuristic
+                    # to avoid computing an exploding packed data array
+                    if (
+                        _estimate_packed_length(array_after_rle, packed_byte_count)
+                        >= array_after_rle.nbytes
+                    ):
+                        # Packing would not reduce the size
+                        continue
                     encoding = IntegerPackingEncoding(packed_byte_count)
                     array_after_packing = encoding.encode(array_after_rle)
                     encodings_after_packing = encodings_after_rle + [encoding]
@@ -192,6 +200,29 @@ def _find_best_integer_compression(array):
                     best_encoding_sequence = encodings
                     smallest_size = size
     return best_encoding_sequence, smallest_size
+
+
+def _estimate_packed_length(array, packed_byte_count):
+    """
+    Estimate the length of an integer array after packing it with a given number of
+    bytes.
+
+    Parameters
+    ----------
+    array : numpy.ndarray
+        The array to pack.
+    packed_byte_count : int
+        The number of bytes used for packing.
+
+    Returns
+    -------
+    length : int
+        The estimated length of the packed array.
+    """
+    # Use int64 to avoid integer overflow in the following line
+    max_val_per_element = np.int64(2 ** (8 * packed_byte_count))
+    n_bytes_per_element = packed_byte_count * (np.abs(array // max_val_per_element) + 1)
+    return np.sum(n_bytes_per_element, dtype=np.int64)
 
 
 def _to_smallest_integer_type(array):
