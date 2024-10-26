@@ -121,8 +121,8 @@ def standardize_order(atoms):
         stop = starts[i + 1]
 
         res_name = atoms.res_name[start]
-        standard_atom_names = get_from_ccd("chem_comp_atom", res_name, "atom_id")
-        if standard_atom_names is None:
+        chem_comp_atom = get_from_ccd("chem_comp_atom", res_name, "atom_id")
+        if chem_comp_atom is None:
             # If the residue is not in the CCD, keep the current order
             warnings.warn(
                 f"Residue '{res_name}' is not in the CCD, "
@@ -131,6 +131,7 @@ def standardize_order(atoms):
             reordered_indices[start:stop] = np.arange(start, stop)
             continue
 
+        standard_atom_names = chem_comp_atom.as_array()
         reordered_indices[start:stop] = (
             _reorder(atoms.atom_name[start:stop], standard_atom_names) + start
         )

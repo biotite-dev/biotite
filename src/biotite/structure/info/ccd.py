@@ -107,9 +107,9 @@ def get_from_ccd(category_name, comp_id, column_name=None):
 
     Returns
     -------
-    value : ndarray or dict or None
-        The array of the given column or all columns as dictionary.
-        ``None`` if the `comp_id` is not found in the category.
+    slice : BinaryCIFCategory or BinaryCIFColumn
+        The category or column (if `column_name` is provided) containing only the rows
+        for the given residue.
 
     Notes
     -----
@@ -128,12 +128,9 @@ def get_from_ccd(category_name, comp_id, column_name=None):
 
     category = get_ccd()[category_name]
     if column_name is None:
-        return {
-            col_name: category[col_name].as_array()[start:stop]
-            for col_name in category.keys()
-        }
+        return _filter_category(category, slice(start, stop))
     else:
-        return category[column_name].as_array()[start:stop]
+        return _filter_column(category[column_name], slice(start, stop))
 
 
 @functools.cache
@@ -154,7 +151,9 @@ def _residue_index(category_name):
         start and exclusive stop index in `id_column`.
     """
     category = get_ccd()[category_name]
-    id_column_name = SPECIAL_ID_COLUMN_NAMES.get(category_name, DEFAULT_ID_COLUMN_NAME)
+    id_column_name = _SPECIAL_ID_COLUMN_NAMES.get(
+        category_name, _DEFAULT_ID_COLUMN_NAME
+    )
     id_column = category[id_column_name].as_array()
 
     residue_starts = np.where(id_column[:-1] != id_column[1:])[0] + 1
@@ -165,3 +164,35 @@ def _residue_index(category_name):
         comp_id = id_column[residue_starts[i]].item()
         index[comp_id] = (residue_starts[i], residue_starts[i + 1])
     return index
+
+
+def _filter_category(category, index):
+    """
+    Reduce the category to the values for the given index.∂
+    """
+    # Avoid circular import
+    from biotite.structure.io.pdbx.bcif import BinaryCIFCategory
+
+    return BinaryCIFCategory(
+        {key: _filter_column(column, index) for key, column in category.items()}
+    )
+
+
+def _filter_column(column, index):
+    """
+    Reduce the column to the values for the given index.
+    """
+    # Avoid circular import
+    from biotite.structure.io.pdbx.bcif import BinaryCIFColumn, BinaryCIFData
+    from biotite.structure.io.pdbx.component import MaskValue
+
+    data_array = column.data.array[index]
+    mask_array = column.mask.array[index] if column.mask is not None else None
+    return BinaryCIFColumn(
+        BinaryCIFData(data_array),
+        (
+            BinaryCIFData(mask_array)
+            if column.mask is not None and (mask_array != MaskValue.PRESENT).any()
+            else None
+        ),
+    )

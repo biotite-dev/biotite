@@ -6,6 +6,7 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["bond_type", "bonds_in_residue"]
 
+import functools
 from biotite.structure.bonds import BondType
 from biotite.structure.info.ccd import get_from_ccd
 
@@ -69,6 +70,7 @@ def bond_type(res_name, atom_name1, atom_name2):
         return None
 
 
+@functools.cache
 def bonds_in_residue(res_name):
     """
     Get a dictionary containing all atoms inside a given residue
@@ -93,6 +95,10 @@ def bonds_in_residue(res_name):
     Modifying the dictionary may lead to unexpected behavior.
     In other functionalities throughout *Biotite* that uses this
     function.
+
+    Notes
+    -----
+    The returned values are cached for faster access in subsequent calls.
 
     Examples
     --------
@@ -126,16 +132,16 @@ def bonds_in_residue(res_name):
     """
     global _intra_bonds
     if res_name not in _intra_bonds:
-        chem_comp_bond_dict = get_from_ccd("chem_comp_bond", res_name)
-        if chem_comp_bond_dict is None:
+        chem_comp_bond = get_from_ccd("chem_comp_bond", res_name)
+        if chem_comp_bond is None:
             _intra_bonds[res_name] = {}
         else:
             bonds_for_residue = {}
             for atom1, atom2, order, aromatic_flag in zip(
-                chem_comp_bond_dict["atom_id_1"],
-                chem_comp_bond_dict["atom_id_2"],
-                chem_comp_bond_dict["value_order"],
-                chem_comp_bond_dict["pdbx_aromatic_flag"],
+                chem_comp_bond["atom_id_1"].as_array(),
+                chem_comp_bond["atom_id_2"].as_array(),
+                chem_comp_bond["value_order"].as_array(),
+                chem_comp_bond["pdbx_aromatic_flag"].as_array(),
             ):
                 bond_type = BOND_TYPES[order, aromatic_flag]
                 bonds_for_residue[atom1.item(), atom2.item()] = bond_type

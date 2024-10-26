@@ -95,15 +95,11 @@ def mass(item, is_residue=None):
         if is_residue is None:
             result_mass = _atom_masses.get(item.upper())
             if result_mass is None:
-                result_mass = get_from_ccd(
-                    "chem_comp", item.upper(), "formula_weight"
-                ).item()
+                result_mass = _mass_for_residue(item)
         elif not is_residue:
             result_mass = _atom_masses.get(item.upper())
         else:
-            result_mass = get_from_ccd(
-                "chem_comp", item.upper(), "formula_weight"
-            ).item()
+            result_mass = _mass_for_residue(item)
 
     elif isinstance(item, Atom):
         result_mass = mass(item.element, is_residue=False)
@@ -116,3 +112,10 @@ def mass(item, is_residue=None):
     if result_mass is None:
         raise KeyError(f"{item} is not known")
     return result_mass
+
+
+def _mass_for_residue(res_name):
+    column = get_from_ccd("chem_comp", res_name.upper(), "formula_weight")
+    if column is None:
+        raise KeyError(f"Residue '{res_name}' is not known")
+    return column.as_item()
