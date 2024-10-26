@@ -7,42 +7,10 @@ import numpy as np
 import requests
 from biotite.structure.io.pdbx import *
 
-TARGET_DIR = Path(__file__).parent / "src" / "biotite" / "structure" / "info" / "ccd"
+OUTPUT_CCD = (
+    Path(__file__).parent / "src" / "biotite" / "structure" / "info" / "components.bcif"
+)
 CCD_URL = "https://files.wwpdb.org/pub/pdb/data/monomers/components.cif.gz"
-COMPONENT_GROUPS = {
-    "amino_acids": [
-        "D-beta-peptide, C-gamma linking",
-        "D-gamma-peptide, C-delta linking",
-        "D-peptide COOH carboxy terminus",
-        "D-peptide NH3 amino terminus",
-        "D-peptide linking",
-        "L-beta-peptide, C-gamma linking",
-        "L-gamma-peptide, C-delta linking",
-        "L-peptide COOH carboxy terminus",
-        "L-peptide NH3 amino terminus",
-        "L-peptide linking",
-        "peptide linking",
-    ],
-    "nucleotides": [
-        "DNA OH 3 prime terminus",
-        "DNA OH 5 prime terminus",
-        "DNA linking",
-        "L-DNA linking",
-        "L-RNA linking",
-        "RNA OH 3 prime terminus",
-        "RNA OH 5 prime terminus",
-        "RNA linking",
-    ],
-    "carbohydrates": [
-        "D-saccharide",
-        "D-saccharide, alpha linking",
-        "D-saccharide, beta linking",
-        "L-saccharide",
-        "L-saccharide, alpha linking",
-        "L-saccharide, beta linking",
-        "saccharide",
-    ],
-}
 
 
 def concatenate_ccd(categories=None):
@@ -79,29 +47,6 @@ def concatenate_ccd(categories=None):
     compressed_file = BinaryCIFFile()
     compressed_file["components"] = compressed_block
     return compressed_file
-
-
-def group_components(ccd, match_types):
-    """
-    Identify component IDs that matches a *given component type* from the given file.
-
-    Parameters
-    ----------
-    ccd : BinaryCIFFile
-        The file to look into-
-    match_types : list of str
-        The component types to extract.
-
-    Returns
-    -------
-    comp_ids : list of str
-        The extracted component IDs.
-    """
-    category = ccd.block["chem_comp"]
-    comp_ids = category["id"].as_array()
-    types = category["type"].as_array()
-    # Ignore case
-    return comp_ids[np.isin(np.char.lower(types), np.char.lower(match_types))].tolist()
 
 
 def _concatenate_blocks_into_category(pdbx_file, category_name):
@@ -241,13 +186,7 @@ def _into_fitting_type(string_array, mask):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
-    TARGET_DIR.mkdir(parents=True, exist_ok=True)
+    OUTPUT_CCD.parent.mkdir(parents=True, exist_ok=True)
 
     compressed_ccd = concatenate_ccd(["chem_comp", "chem_comp_atom", "chem_comp_bond"])
-    compressed_ccd.write(TARGET_DIR / "components.bcif")
-
-    for super_group, groups in COMPONENT_GROUPS.items():
-        logging.info(f"Identify all components belonging to '{super_group}' group...")
-        components = group_components(compressed_ccd, groups)
-        with open(TARGET_DIR / f"{super_group}.txt", "w") as file:
-            file.write("\n".join(components) + "\n")
+    compressed_ccd.write(OUTPUT_CCD)

@@ -10,11 +10,11 @@ import functools
 from pathlib import Path
 import numpy as np
 
-CCD_DIR = Path(__file__).parent / "ccd"
-SPECIAL_ID_COLUMN_NAMES = {
+_CCD_FILE = Path(__file__).parent / "components.bcif"
+_SPECIAL_ID_COLUMN_NAMES = {
     "chem_comp": "id",
 }
-DEFAULT_ID_COLUMN_NAME = "comp_id"
+_DEFAULT_ID_COLUMN_NAME = "comp_id"
 
 
 @functools.cache
@@ -46,7 +46,7 @@ def get_ccd():
     from biotite.structure.io.pdbx.bcif import BinaryCIFFile
 
     try:
-        return BinaryCIFFile.read(CCD_DIR / "components.bcif").block
+        return BinaryCIFFile.read(_CCD_FILE).block
     except FileNotFoundError:
         raise RuntimeError(
             "Internal CCD not found. Please run 'setup_ccd.py' and reinstall Biotite."
