@@ -445,7 +445,7 @@ class CIFCategory(_Component, MutableMapping):
         line_i = 0
         while line_i < len(lines):
             line = lines[line_i]
-            parts = _split_one_line(line)
+            parts = list(_split_one_line(line))
             if len(parts) == 2:
                 # Standard case -> name and value in one line
                 name_part, value_part = parts
@@ -453,7 +453,7 @@ class CIFCategory(_Component, MutableMapping):
             elif len(parts) == 1:
                 # Value is a multiline value on the next line
                 name_part = parts[0]
-                parts = _split_one_line(lines[line_i + 1])
+                parts = list(_split_one_line(lines[line_i + 1]))
                 if len(parts) == 1:
                     value_part = parts[0]
                 else:
@@ -1041,36 +1041,27 @@ def _split_one_line(line):
     """
     # Special case of multiline value, where the line starts with ';'
     if line[0] == ";":
-        return [line[1:]]
+        yield line[1:]
+    else:
+        # Loop over the line
+        while line:
+            # Strip leading whitespace(s)
+            striped_line = line.lstrip()
+            # Split the line on whitespace
+            word, _, line = striped_line.partition(" ")
+            # Handle the case where the word start with a quote
+            if word.startswith(("'", '"')):
+                # Set the separator to the quote found
+                separator = word[0]
+                # Handle the case of a quoted word without space
+                if word.endswith(separator) and len(word) > 1:
+                    # Yield the word without the opening and closing quotes
+                    yield word[1:-1]
+                    continue
+                # split the word on the separator
+                word, _, line = striped_line[1:].partition(separator)
 
-    # Initialize loop variables
-    res = []
-    separator = " "
-    # Loop over the line
-    while line:
-        # Split the line on separator
-        word, _, new_line = line.lstrip().partition(separator)
-        # Handle the case where the word strat with a quote
-        if word.startswith(("'", '"')):
-            # Set the separator to the quote found
-            separator = word[0]
-            # Handle the case of a quoted word without space
-            if word.endswith(separator) and len(word) > 1:
-                res.append(word[1:-1])
-                separator = " "
-                line = new_line
-                continue
-            # Reconstruct line without the starting quote
-            new_line = line.lstrip()[1:]
-            # Capture the word until the closing quote
-            word = "".join(itertools.takewhile(lambda x : x != separator, new_line))
-            # Reconstruct line without the captured word
-            new_line = new_line.removeprefix(word + separator)
-        # Reset separator to whitespace
-        separator = " "
-        res.append(word)
-        line = new_line
-    return res
+            yield word
 
 def _arrayfy(data):
     if not isinstance(data, (Sequence, np.ndarray)) or isinstance(data, str):
