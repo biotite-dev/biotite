@@ -362,7 +362,8 @@
         ],
         "Low-level CCD access": [
             "get_ccd",
-            "get_from_ccd"
+            "get_from_ccd",
+            "set_ccd_path"
         ]
     },
     "biotite.structure.io.pdbx" : {

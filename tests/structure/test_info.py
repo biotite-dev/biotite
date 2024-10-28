@@ -8,8 +8,28 @@ import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.info as strucinfo
+import biotite.structure.io.pdbx as pdbx
+from biotite.structure.info.ccd import _CCD_FILE as INTERNAL_CCD_FILE
 from biotite.structure.io import load_structure
 from tests.util import data_dir
+
+
+@pytest.fixture
+def fake_ccd_path(tmp_path):
+    block = pdbx.BinaryCIFBlock()
+    block["chem_comp"] = pdbx.BinaryCIFCategory({"id": "FOO", "name": "Foo"})
+    block["chem_comp_atom"] = pdbx.BinaryCIFCategory({"comp_id": "FOO"})
+    block["chem_comp_bond"] = pdbx.BinaryCIFCategory({"comp_id": "FOO"})
+    file = pdbx.BinaryCIFFile()
+    file["components"] = block
+    original_path = INTERNAL_CCD_FILE
+    path = tmp_path / "components.bcif"
+    file.write(path)
+
+    yield path
+
+    # Restore the original internal CCD path
+    strucinfo.set_ccd_path(original_path)
 
 
 @pytest.mark.parametrize(
@@ -159,3 +179,16 @@ def test_standardize_order(multi_model, seed):
     assert (
         restored[..., restored.element != "H"] == original[..., original.element != "H"]
     )
+
+
+def test_set_ccd_path(fake_ccd_path):
+    """
+    Test if the CCD path can be set and the CCD is loaded correctly from it.
+    """
+    # Access CCD before setting it to a new path to check if the cache is cleared
+    strucinfo.all_residues()
+
+    strucinfo.set_ccd_path(fake_ccd_path)
+
+    # The new fake CCD has only a single compound
+    assert strucinfo.all_residues() == ["FOO"]

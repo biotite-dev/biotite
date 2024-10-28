@@ -4,9 +4,12 @@
 
 __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_ccd", "get_from_ccd"]
+__all__ = ["get_ccd", "set_ccd_path", "get_from_ccd"]
 
 import functools
+import importlib
+import inspect
+import pkgutil
 from pathlib import Path
 import numpy as np
 
@@ -28,6 +31,7 @@ def get_ccd():
     -------
     ccd : BinaryCIFBlock
         The CCD.
+        It contains the categories `chem_comp`, `chem_comp_atom` and `chem_comp_bond`.
 
     Warnings
     --------
@@ -79,7 +83,7 @@ def set_ccd_path(ccd_path):
     # Clear caches in all functions in biotite.structure.info
     info_modules = [
         importlib.import_module(f"biotite.structure.info.{mod_name}")
-        for _, mod_name, _ in pkgutil.iter_modules([Path(__file__).parent])
+        for _, mod_name, _ in pkgutil.iter_modules([str(Path(__file__).parent)])
     ]
     for module in info_modules:
         for _, function in inspect.getmembers(module, callable):
