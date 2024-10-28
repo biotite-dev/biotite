@@ -7,7 +7,6 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["CIFFile", "CIFBlock", "CIFCategory", "CIFColumn", "CIFData"]
 
 import itertools
-import re
 from collections.abc import MutableMapping, Sequence
 import numpy as np
 from biotite.file import (
@@ -1062,6 +1061,7 @@ def _split_one_line(line):
                 word, _, line = striped_line[1:].partition(separator)
 
             yield word
+
 
 def _arrayfy(data):
     if not isinstance(data, (Sequence, np.ndarray)) or isinstance(data, str):
