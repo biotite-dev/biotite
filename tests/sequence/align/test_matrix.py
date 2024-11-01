@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
+import biotite.structure.alphabet as strucalph
 
 
 @pytest.mark.parametrize(
@@ -13,7 +14,7 @@ import biotite.sequence.align as align
     [
         entry
         for entry in align.SubstitutionMatrix.list_db()
-        if entry not in ["NUC", "GONNET"]
+        if entry not in ["NUC", "GONNET", "3Di", "PB"]
     ],
 )
 def test_matrices(db_entry):
@@ -23,6 +24,37 @@ def test_matrices(db_entry):
     alph1 = seq.ProteinSequence.alphabet
     alph2 = seq.ProteinSequence.alphabet
     align.SubstitutionMatrix(alph1, alph2, db_entry)
+
+
+@pytest.mark.parametrize(
+    "matrix_name, alphabet",
+    [
+        ("3Di", strucalph.I3DSequence.alphabet),
+    ],
+)
+def test_structural_alphabet_matrices(matrix_name, alphabet):
+    """
+    Test for exceptions when reading structural alphabet matrix files.
+    """
+    align.SubstitutionMatrix(alphabet, alphabet, matrix_name)
+
+
+@pytest.mark.parametrize(
+    "method_name",
+    [
+        "std_protein_matrix",
+        "std_nucleotide_matrix",
+        "std_3di_matrix",
+        "std_protein_blocks_matrix",
+        "std_clepaps_matrix",
+    ],
+)
+def test_default_matrices(method_name):
+    """
+    Test for exceptions when using the static methods for getting default matrices.
+    """
+    matrix = getattr(align.SubstitutionMatrix, method_name)()
+    assert isinstance(matrix, align.SubstitutionMatrix)
 
 
 def test_matrix_str():

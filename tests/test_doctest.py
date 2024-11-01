@@ -68,6 +68,7 @@ TEST_PARAMETERS = [
         "biotite.structure.io.mol", ["biotite.structure", "biotite.structure.info"]
     ),
     pytest.param("biotite.structure.info", ["biotite.structure"]),
+    pytest.param("biotite.structure.alphabet", ["biotite.structure"]),
     pytest.param(
         "biotite.database.entrez",
         [],

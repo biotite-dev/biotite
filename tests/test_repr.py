@@ -20,6 +20,7 @@ from biotite.sequence import (
 )
 from biotite.sequence.align import Alignment, SubstitutionMatrix
 from biotite.structure import Atom
+from biotite.structure.alphabet import I3DSequence
 
 __author__ = "Maximilian Greil"
 
@@ -32,6 +33,7 @@ __author__ = "Maximilian Greil"
         ProteinSequence("BIQTITE"),
         Alphabet(["X", "Y", "Z"]),
         GeneralSequence(Alphabet(["X", 42, False]), ["X", 42, "X"]),
+        I3DSequence("ACDE"),
         LetterAlphabet(["X", "Y", "Z"]),
         Location(98, 178),
         Feature("CDS", [Location(98, 178)], qual={"gene": "test1"}),
