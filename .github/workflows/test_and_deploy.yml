@@ -60,13 +60,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PY_VERSION }}
-      - name: Install Biotite
-        run: pip install .
+      - name: Get current CCD for hashing
+        run: wget https://files.wwpdb.org/pub/pdb/data/monomers/components.cif.gz
+      - name: Cache CCD
+        uses: actions/cache@v4
+        id: cache-ccd
+        with:
+          path: ./src/biotite/structure/info/components.bcif
+          key: cache-${{ hashFiles('setup_ccd.py') }}-${{ hashFiles('components.cif.gz') }}
+      - name: Remove CCD used for hashing
+        run: rm components.cif.gz
       - name: Build internal CCD
-        run: python setup_ccd.py
+        if: steps.cache-ccd.outputs.cache-hit != 'true'
+        run: |
+          pip install .
+          python setup_ccd.py
       - name: Install build backend
         run: pip install build
-      - name: Build distribution including CCD
+      - name: Build distribution
         run: python -m build --wheel
       - uses: actions/upload-artifact@v4
         with:
