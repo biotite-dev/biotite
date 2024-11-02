@@ -1279,17 +1279,28 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True, res_name=Non
         # Swap with the fallback option
         coord_fields, alt_coord_fields = alt_coord_fields, coord_fields
     try:
-        for i, field in enumerate(coord_fields):
-            array.coord[:, i] = atom_category[field].as_array(np.float32)
-    except KeyError as err:
-        key = err.args[0]
-        warnings.warn(
-            f"Attribute '{key}' not found within 'chem_comp_atom' category. "
-            f"The fallback coordinates will be used instead",
-            UserWarning,
+        array.coord = _parse_component_coordinates(
+            [atom_category[field] for field in coord_fields]
         )
-        for i, field in enumerate(alt_coord_fields):
-            array.coord[:, i] = atom_category[field].as_array(np.float32)
+    except Exception as err:
+        if isinstance(err, KeyError):
+            key = err.args[0]
+            warnings.warn(
+                f"Attribute '{key}' not found within 'chem_comp_atom' category. "
+                f"The fallback coordinates will be used instead",
+                UserWarning,
+            )
+        elif isinstance(err, ValueError):
+            warnings.warn(
+                "The coordinates are missing for some atoms. "
+                "The fallback coordinates will be used instead",
+                UserWarning,
+            )
+        else:
+            raise
+        array.coord = _parse_component_coordinates(
+            [atom_category[field] for field in alt_coord_fields]
+        )
 
     try:
         bond_category = block["chem_comp_bond"]
@@ -1317,6 +1328,17 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True, res_name=Non
         array.bonds = bonds
 
     return array
+
+
+def _parse_component_coordinates(coord_columns):
+    coord = np.zeros((len(coord_columns[0]), 3), dtype=np.float32)
+    for i, column in enumerate(coord_columns):
+        if column.mask is not None and column.mask.array.any():
+            raise ValueError(
+                "Missing coordinates for some atoms",
+            )
+        coord[:, i] = column.as_array(np.float32)
+    return coord
 
 
 def set_component(pdbx_file, array, data_block=None):

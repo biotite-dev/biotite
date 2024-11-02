@@ -53,37 +53,34 @@ Installation via Conda
 Installation from source
 ------------------------
 
-You can also install Biotite from the
+You can also install *Biotite* from the
 `project repository <https://github.com/biotite-dev/biotite>`_.
+However, in addition to building and installing the package, the internal
+`Chemical Component Dictionary (CCD) <https://www.wwpdb.org/data/ccd>`_. for
+:mod:`biotite.structure.info` needs to be built with the ``setup_ccd.py`` script.
+The script in turn requires *Biotite*.
+The solution to this chicken-and-egg problem is to first install Biotite without the
+CCD, then build the CCD and finally install Biotite again.
 After cloning the repository, navigate to its top-level directory (the one
 ``setup.py`` is in) and type the following:
 
 .. code-block:: console
 
    $ pip install .
+   $ python setup_ccd.py
+   $ pip install .
+
+The `setup_ccd.py` script can also be used to update the internal CCD to the current
+upstream version from the PDB.
 
 Having the *Biotite* installation always pointing to your repository clone is
 also possible.
-Type the following in the top-level directory:
+Substitute the installation with the following commands instead:
 
 .. code-block:: console
 
    $ pip install -e .
-
-Updating the Chemical Component Dictionary
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The :mod:`biotite.structure.info` subpackage contains a subset from the
-`PDB Chemical Component Dictionary (CCD) <https://www.wwpdb.org/data/ccd>`_.
-The repository ships a potentially outdated version of this subset.
-To update this subset to the current upstream CCD version, run
-
-.. code-block:: console
-
    $ python setup_ccd.py
-
-Afterwards, install *Biotite* again.
-
 
 Common issues and solutions
 ---------------------------

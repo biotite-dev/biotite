@@ -345,9 +345,29 @@
             "base_pairs_from_dot_bracket"
         ]
     },
-
+    "biotite.structure.info" : {
+        "Residues and bonds": [
+            "residue",
+            "bond_type",
+            "bonds_in_residue"
+        ],
+        "Component groups": [
+            "amino_acid_names",
+            "nucleotide_names",
+            "carbohydrate_names"
+        ],
+        "Atom radii": [
+            "vdw_radius_single",
+            "vdw_radius_protor"
+        ],
+        "Low-level CCD access": [
+            "get_ccd",
+            "get_from_ccd",
+            "set_ccd_path"
+        ]
+    },
     "biotite.structure.io.pdbx" : {
-        "High-level functionality": [
+        "High-level functionality" : [
             "get_sequence",
             "get_model_count",
             "get_structure",

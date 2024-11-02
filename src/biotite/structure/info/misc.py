@@ -11,19 +11,13 @@ from biotite.structure.info.ccd import get_ccd, get_from_ccd
 
 def all_residues():
     """
-    Get a list of all residues/compound names in the
-    PDB chemical components dictionary.
+    Get a list of all residues/compound names in the PDB
+    *Chemical Component Dictionary* (CCD).
 
     Returns
     -------
     residues : list of str
-        A list of all available The up to 3-letter residue names.
-
-    Examples
-    --------
-
-    >>> print(all_residues()[1000 : 1010])
-    ['0V9', '0VA', '0VB', '0VC', '0VD', '0VE', '0VF', '0VG', '0VH', '0VI']
+        A list of all available residue names.
     """
     return get_ccd()["chem_comp"]["id"].as_array().tolist()
 
@@ -51,10 +45,10 @@ def full_name(res_name):
     >>> print(full_name("MAN"))
     alpha-D-mannopyranose
     """
-    array = get_from_ccd("chem_comp", res_name.upper(), "name")
-    if array is None:
+    column = get_from_ccd("chem_comp", res_name.upper(), "name")
+    if column is None:
         return None
-    return array.item()
+    return column.as_item()
 
 
 def link_type(res_name):
@@ -84,10 +78,10 @@ def link_type(res_name):
     >>> print(link_type("HOH"))
     NON-POLYMER
     """
-    array = get_from_ccd("chem_comp", res_name.upper(), "type")
-    if array is None:
+    column = get_from_ccd("chem_comp", res_name.upper(), "type")
+    if column is None:
         return None
-    return array.item()
+    return column.as_item()
 
 
 def one_letter_code(res_name):
@@ -107,7 +101,7 @@ def one_letter_code(res_name):
     -------
     one_letter_code : str or None
         The one-letter code.
-        None if the compound is not present in the CCD or if no
+        ``None`` if the compound is not present in the CCD or if no
         one-letter code is defined for this compound.
 
     Examples
@@ -135,10 +129,10 @@ def one_letter_code(res_name):
     None
 
     """
-    array = get_from_ccd("chem_comp", res_name.upper(), "one_letter_code")
-    if array is None:
+    column = get_from_ccd("chem_comp", res_name.upper(), "one_letter_code")
+    if column is None:
         return None
-    item = array.item()
-    if item == "":
+    if column.mask is not None:
+        # Value is masked, i.e. inapplicable or missing
         return None
-    return item
+    return column.as_item()
