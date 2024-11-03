@@ -127,7 +127,7 @@ class SubstitutionMatrix(object):
     Creating an identity substitution matrix via the score matrix:
 
     >>> alph = NucleotideSequence.alphabet_unamb
-    >>> matrix = SubstitutionMatrix(alph, alph, np.identity(len(alph)))
+    >>> matrix = SubstitutionMatrix(alph, alph, np.identity(len(alph), dtype=int))
     >>> print(matrix)
         A   C   G   T
     A   1   0   0   0
@@ -153,7 +153,21 @@ class SubstitutionMatrix(object):
                     f"Matrix has shape {score_matrix.shape}, "
                     f"but {alph_shape} is required"
                 )
+            if not np.issubdtype(score_matrix.dtype, np.integer):
+                raise TypeError("Score matrix must be an integer ndarray")
             self._matrix = score_matrix.astype(np.int32)
+            # If the score matrix was converted from a a float matrix,
+            # inf values would be converted to 2**31,
+            # which is probably undesired and gives overflow issues in the alignment
+            # functions
+            if (
+                np.any(self._matrix == np.iinfo(np.int32).max) or
+                np.any(self._matrix == np.iinfo(np.int32).min)
+            ):  # fmt: skip
+                raise ValueError(
+                    "Score values are too large. "
+                    "Maybe it was converted from a float matrix containing inf values?"
+                )
         elif isinstance(score_matrix, str):
             matrix_dict = SubstitutionMatrix.dict_from_db(score_matrix)
             self._fill_with_matrix_dict(matrix_dict)

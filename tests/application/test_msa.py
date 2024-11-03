@@ -145,7 +145,7 @@ def test_custom_substitution_matrix(sequences, app_cls):
 
     alph = seq.ProteinSequence.alphabet
     # Strong identity matrix
-    score_matrix = np.identity(len(alph)) * 1000
+    score_matrix = np.identity(len(alph), dtype=int) * 1000
     matrix = align.SubstitutionMatrix(alph, alph, score_matrix)
     exp_ali = (
         "BI-QTITE\n"
@@ -187,7 +187,7 @@ def test_custom_sequence_type(app_cls):
         [6, 6],
     ]
     # Strong identity matrix
-    score_matrix = np.identity(len(alph))
+    score_matrix = np.identity(len(alph), dtype=int)
     score_matrix[score_matrix == 0] = -1000
     score_matrix[score_matrix == 1] = 1000
     matrix = align.SubstitutionMatrix(alph, alph, score_matrix)
