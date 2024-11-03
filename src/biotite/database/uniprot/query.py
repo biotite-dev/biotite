@@ -289,5 +289,5 @@ def search(query, number=500):
     params = {"query": str(query), "format": "list", "size": str(number)}
     r = requests.get(_base_url, params=params)
     content = r.text
-    assert_valid_response(r.status_code)
+    assert_valid_response(r)
     return content.split("\n")[:-1]
