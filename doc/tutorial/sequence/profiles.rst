@@ -143,7 +143,9 @@ sought length.
     matrix = align.SubstitutionMatrix(
         positional_seq.alphabet,
         profile.alphabet,
-        log_odds
+        # Substitution matrices require integer scores
+        # Multiply by 10 to increase value range and convert to integer
+        (log_odds * 10).astype(int)
     )
     alignment = align.align_optimal(
         positional_seq, query, matrix, gap_penalty=-5, max_number=1
