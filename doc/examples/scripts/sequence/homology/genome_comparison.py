@@ -335,7 +335,7 @@ gb_file = gb.GenBankFile.read(
 annotation = gb.get_annotation(gb_file, include_only=["CDS", "rRNA", "tRNA"])
 
 n_rows = int(np.ceil(len(unique_alignments) / N_COL))
-fig, axes = plt.subplots(n_rows, N_COL, figsize=(8.0, 24.0), constrained_layout=True)
+fig, axes = plt.subplots(n_rows, N_COL, figsize=(8.0, 1.5 * n_rows))
 
 for (alignment, log_evalue), ax in zip(unique_alignments, axes.flatten()):
     # Transform 0-based sequence index to 1-based sequence position

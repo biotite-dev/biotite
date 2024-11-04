@@ -25,9 +25,8 @@ import biotite.sequence.graphics as graphics
 import biotite.sequence.io.genbank as gb
 
 PLASMID_URL = (
-    "https://media.addgene.org/snapgene-media/v1.7.9-0-g88a3305/"
-    "sequences/12250/9998fdbe-051f-4dc6-ba0f-24e65127a0c5/"
-    "addgene-plasmid-26092-sequence-12250.gbk"
+    "https://media.addgene.org/snapgene-media/v2.0.0/sequences/12250/"
+    "9998fdbe-051f-4dc6-ba0f-24e65127a0c5/addgene-plasmid-26092-sequence-12250.gbk"
 )
 
 
@@ -46,12 +45,6 @@ annotation = gb.get_annotation(
     ],
 )
 _, seq_length, _, _, _, _ = gb.get_locus(gb_file)
-# AddGene stores the plasmid name in the 'KEYWORDS' field
-# [0][0][0] ->
-# The first (and only) 'KEYWORDS' field
-# The first entry in the tuple
-# The first (and only) line in the field
-plasmid_name = gb_file.get_fields("KEYWORDS")[0][0][0]
 
 
 def custom_feature_formatter(feature):
@@ -79,7 +72,7 @@ graphics.plot_plasmid_map(
     ax,
     annotation,
     plasmid_size=seq_length,
-    label=plasmid_name,
+    label="pET15-MHL",
     feature_formatter=custom_feature_formatter,
 )
 fig.tight_layout()

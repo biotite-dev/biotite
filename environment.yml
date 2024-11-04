@@ -45,7 +45,7 @@ dependencies:
   - sphinxcontrib-bibtex >=2.3
   - sphinx-copybutton >=0.5
   - sphinx-design >=0.5
-  - sphinx-gallery =0.15.0
+  - sphinx-gallery =0.18.0
   - sphinx-notfound-page >=1.0
   # Extra packages used in example gallery
   - pandas >=1.5.2
