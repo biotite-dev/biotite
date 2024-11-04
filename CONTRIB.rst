@@ -20,3 +20,4 @@ CONTRIBUTORS
 - Natasha Jaffe <https://github.com/tcjaffe>
 - Tristen J. Mier  <https://github.com/tjmier>
 - Simon V. Mathis <https://github.com/Croydon-Brixton>
+- Martin Larralde <https://github.com/althonos>
