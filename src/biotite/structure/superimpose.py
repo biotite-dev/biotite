@@ -539,6 +539,7 @@ def superimpose_homologs(
     --------
     superimpose : Superimposition without outlier removal
     superimpose_without_outliers : Internally used for outlier removal
+    superimpose_structural_homologs : Better suited for low sequence similarity
 
     Notes
     -----
