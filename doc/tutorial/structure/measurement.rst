@@ -98,8 +98,8 @@ simple *Ramachandran* plot for the first frame of *TC5b*.
     )
     ax.set_xlim(-180,180)
     ax.set_ylim(-180,180)
-    ax.set_xlabel("$\phi$")
-    _ = ax.set_ylabel("$\psi$")
+    ax.set_xlabel(r"$\phi$")
+    _ = ax.set_ylabel(r"$\psi$")
 
 Surface area
 ------------
