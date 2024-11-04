@@ -128,5 +128,6 @@ from .sasa import *
 from .sequence import *
 from .sse import *
 from .superimpose import *
+from .tm import *
 from .transform import *
 # util and segments are used internally
