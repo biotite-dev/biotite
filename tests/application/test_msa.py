@@ -46,7 +46,7 @@ def sequences():
             "TITANITE\n"
             "BI-SMITE\n"
             "-I-QLITE",
-            [0, 3, 1, 2]
+            [1, 3, 0, 2]
         ),
         (
             MafftApp,
