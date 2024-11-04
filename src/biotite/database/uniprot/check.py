@@ -10,7 +10,7 @@ from biotite.database.error import RequestError
 
 
 # Taken from https://www.uniprot.org/help/api_retrieve_entries
-def assert_valid_response(response_status_code):
+def assert_valid_response(response):
     """
     Checks whether the response is valid.
 
@@ -19,17 +19,22 @@ def assert_valid_response(response_status_code):
     response_status_code: int
         Status code of request.get.
     """
-    if response_status_code == 400:
-        raise RequestError("Bad request. There is a problem with your input.")
-    elif response_status_code == 404:
-        raise RequestError("Not found. The resource you requested doesn't exist.")
-    elif response_status_code == 410:
-        raise RequestError("Gone. The resource you requested was removed.")
-    elif response_status_code == 500:
-        raise RequestError(
-            "Internal server error. Most likely a temporary problem, but if the problem persists please contact UniProt team."
-        )
-    elif response_status_code == 503:
-        raise RequestError(
-            "Service not available. The server is being updated, try again later."
-        )
+    if len(response.content) == 0:
+        raise RequestError("No content returned")
+    match response.status_code:
+        case 400:
+            raise RequestError("Bad request. There is a problem with your input.")
+        case 404:
+            raise RequestError("Not found. The resource you requested doesn't exist.")
+        case 410:
+            raise RequestError("Gone. The resource you requested was removed.")
+        case 500:
+            raise RequestError(
+                "Internal server error. "
+                "Most likely a temporary problem, "
+                "but if the problem persists please contact UniProt team."
+            )
+        case 503:
+            raise RequestError(
+                "Service not available. The server is being updated, try again later."
+            )

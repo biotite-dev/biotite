@@ -111,7 +111,7 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
             if format in ["fasta", "gff", "txt", "xml", "rdf", "tab"]:
                 r = requests.get(_fetch_url + db_name + "/" + id + "." + format)
                 content = r.text
-                assert_valid_response(r.status_code)
+                assert_valid_response(r)
             else:
                 raise ValueError(f"Format '{format}' is not supported")
             if file is None:

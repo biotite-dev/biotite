@@ -156,8 +156,23 @@ class SequenceProfile(object):
             )
         self._gaps = new_gaps
 
+    def __str__(self):
+        # Add an additional row and column for the position and symbol indicators
+        print_matrix = np.full(
+            (self.symbols.shape[0] + 1, self.symbols.shape[1] + 1), "", dtype=object
+        )
+        print_matrix[1:, 1:] = self.symbols.astype(str)
+        print_matrix[0, 1:] = [str(sym) for sym in self.alphabet]
+        print_matrix[1:, 0] = [str(i) for i in range(self.symbols.shape[0])]
+        max_len = len(max(print_matrix.flatten(), key=len))
+        return "\n".join(
+            [
+                " ".join([str(cell).rjust(max_len) for cell in row])
+                for row in print_matrix
+            ]
+        )
+
     def __repr__(self):
-        """Represent SequenceProfile as a string for debugging."""
         return (
             f"SequenceProfile(np.{np.array_repr(self.symbols)}, "
             f"np.{np.array_repr(self.gaps)}, Alphabet({self.alphabet}))"

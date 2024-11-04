@@ -50,7 +50,7 @@ def map_matrix(matrix):
     # All trailing symbols are filled with zeros
     old_length = len(matrix.get_alphabet1())
     new_length = len(ProteinSequence.alphabet)
-    new_score_matrix = np.zeros((new_length, new_length))
+    new_score_matrix = np.zeros((new_length, new_length), dtype=np.int32)
     new_score_matrix[:old_length, :old_length] = matrix.score_matrix()
     return SubstitutionMatrix(
         ProteinSequence.alphabet, ProteinSequence.alphabet, new_score_matrix

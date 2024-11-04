@@ -410,6 +410,9 @@ class LetterAlphabet(Alphabet):
             symbols = symbols.astype("U1")
         return symbols
 
+    def is_letter_alphabet(self):
+        return True
+
     def __contains__(self, symbol):
         if not isinstance(symbol, (str, bytes)):
             return False
