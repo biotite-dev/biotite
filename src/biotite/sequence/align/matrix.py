@@ -423,7 +423,7 @@ class SubstitutionMatrix(object):
 
     @staticmethod
     @functools.cache
-    def std_protein_blocks_matrix(unknown_match=200, unkown_mismatch=-200):
+    def std_protein_blocks_matrix(undefined_match=200, undefined_mismatch=-200):
         """
         Get the default :class:`SubstitutionMatrix` for Protein Blocks sequences.
 
@@ -431,7 +431,7 @@ class SubstitutionMatrix(object):
 
         Parameters
         ----------
-        unknown_match, unknown_mismatch : int, optional
+        undefined_match, undefined_mismatch : int, optional
             The match and mismatch score for undefined symbols.
             The default values were chosen arbitrarily, but are in the order of
             magnitude of the other score values.
@@ -450,15 +450,15 @@ class SubstitutionMatrix(object):
         from biotite.structure.alphabet.pb import ProteinBlocksSequence
 
         alphabet = ProteinBlocksSequence.alphabet
-        unknown_symbol = ProteinBlocksSequence.unknown_symbol
+        undefined_symbol = ProteinBlocksSequence.undefined_symbol
         matrix_dict = SubstitutionMatrix.dict_from_db("PB")
         # Add match/mismatch scores for undefined symbols residues
         for symbol in alphabet:
-            if symbol == unknown_symbol:
+            if symbol == undefined_symbol:
                 continue
-            matrix_dict[symbol, unknown_symbol] = unkown_mismatch
-            matrix_dict[unknown_symbol, symbol] = unkown_mismatch
-        matrix_dict[unknown_symbol, unknown_symbol] = unknown_match
+            matrix_dict[symbol, undefined_symbol] = undefined_mismatch
+            matrix_dict[undefined_symbol, symbol] = undefined_mismatch
+        matrix_dict[undefined_symbol, undefined_symbol] = undefined_match
         return SubstitutionMatrix(
             alphabet,
             alphabet,

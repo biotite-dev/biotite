@@ -94,27 +94,32 @@ def get_color_scheme(name, alphabet, default="#FFFFFF"):
     >>> print(color_scheme)
     ['#3737f5', '#37f537', '#f5f537', '#f53737']
     """
+    # Try exact alphabet match first
+    for scheme in _color_schemes:
+        if scheme["name"] == name and scheme["alphabet"] == alphabet:
+            return _fit_color_scheme(alphabet, scheme, default)
+    # If no exact match was found, try to find a scheme for an alphabet
+    # that extends the given alphabet
     for scheme in _color_schemes:
         if scheme["name"] == name and scheme["alphabet"].extends(alphabet):
-            colors = scheme["colors"]
-            # Replace None values with default color
-            colors = [color if color is not None else default for color in colors]
-            # Only return colors that are in scope of this alphabet
-            # and not the extended alphabet
-            return colors[: len(alphabet)]
+            return _fit_color_scheme(alphabet, scheme, default)
+
     raise ValueError(f"Unkown scheme '{name}' for given alphabet")
 
 
-def list_color_scheme_names(alphabet):
+def list_color_scheme_names(alphabet, strict=False):
     """
     Get a list of available color scheme names for a given alphabet.
 
     Parameters
     ----------
     alphabet : Alphabet
-        The alphbet to get the color scheme names for.
-        The alphabet of the scheme must equal or extend this parameter,
-        to be included in the list.
+        The alphabet to get the color scheme names for.
+    strict : bool, optional
+        If set to true, only schemes with an exact match to the given
+        alphabet are included in the list.
+        If set to false, schemes with an alphabet that extends the given
+        alphabet are also included.
 
     Returns
     -------
@@ -123,7 +128,9 @@ def list_color_scheme_names(alphabet):
     """
     scheme_list = []
     for scheme in _color_schemes:
-        if scheme["alphabet"].extends(alphabet):
+        if strict and scheme["alphabet"] == alphabet:
+            scheme_list.append(scheme["name"])
+        if not strict and scheme["alphabet"].extends(alphabet):
             scheme_list.append(scheme["name"])
     return scheme_list
 
@@ -135,3 +142,29 @@ _color_schemes = []
 for file_name in glob.glob(_scheme_dir + os.sep + "*.json"):
     scheme = load_color_scheme(file_name)
     _color_schemes.append(scheme)
+
+
+def _fit_color_scheme(alphabet, color_scheme, default_color):
+    """
+    Fit a color scheme to the given alphabet.
+
+    Parameters
+    ----------
+    alphabet : Alphabet
+        The alphabet to get the color scheme for.
+    color_scheme : dict
+        The color scheme.
+    default_color : str or tuple
+        The default color.
+
+    Returns
+    -------
+    scheme : list of str
+        The colors from the scheme.
+    """
+    colors = color_scheme["colors"]
+    # Replace None values with default color
+    colors = [color if color is not None else default_color for color in colors]
+    # Only return colors that are in scope of this alphabet
+    # and not the extended alphabet
+    return colors[: len(alphabet)]

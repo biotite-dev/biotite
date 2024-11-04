@@ -2,7 +2,7 @@
 Biotite color schemes
 =====================
 
-This script displays the available color schemes.
+This script displays the available color schemes for the different built-in alphabets.
 """
 
 # Code source: Patrick Kunzmann
@@ -14,6 +14,7 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Rectangle
 import biotite.sequence as seq
 import biotite.sequence.graphics as graphics
+import biotite.structure.alphabet as strucalph
 
 
 def plot_colors(ax, alphabet):
@@ -48,25 +49,34 @@ def plot_colors(ax, alphabet):
 
 nuc_alphabet = seq.NucleotideSequence.alphabet_amb
 prot_alphabet = seq.ProteinSequence.alphabet
-pb_alphabet = seq.LetterAlphabet("abcdefghijklmnop")
+i3d_alphabet = strucalph.I3DSequence.alphabet
+pb_alphabet = strucalph.ProteinBlocksSequence.alphabet
 
-figure = plt.figure(figsize=(8.0, 5.0))
+figure = plt.figure(figsize=(8.0, 7.0))
 gs = GridSpec(
-    3,
+    4,
     1,
     height_ratios=[
         len(graphics.list_color_scheme_names(alphabet))
-        for alphabet in (nuc_alphabet, prot_alphabet, pb_alphabet)
+        for alphabet in (nuc_alphabet, prot_alphabet, i3d_alphabet, pb_alphabet)
     ],
 )
+
 ax = figure.add_subplot(gs[0, 0])
-ax.set_title("Nucleotide color schemes")
+ax.set_title("Nucleotide")
 plot_colors(ax, nuc_alphabet)
+
 ax = figure.add_subplot(gs[1, 0])
-ax.set_title("Protein color schemes")
+ax.set_title("Protein")
 plot_colors(ax, prot_alphabet)
+
 ax = figure.add_subplot(gs[2, 0])
-ax.set_title("Protein block color schemes")
+ax.set_title("3Di")
+plot_colors(ax, i3d_alphabet)
+
+ax = figure.add_subplot(gs[3, 0])
+ax.set_title("Protein Blocks")
 plot_colors(ax, pb_alphabet)
+
 plt.tight_layout()
 plt.show()

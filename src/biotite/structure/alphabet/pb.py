@@ -63,11 +63,35 @@ class ProteinBlocksSequence(Sequence):
 
     """
 
-    alphabet = LetterAlphabet("abcdefghijklmnopZ")
-    unknown_symbol = "Z"
+    alphabet = LetterAlphabet("abcdefghijklmnopz")
+    undefined_symbol = "z"
+
+    def __init__(self, sequence=""):
+        if isinstance(sequence, str):
+            sequence = sequence.lower()
+        else:
+            sequence = [symbol.upper() for symbol in sequence]
+        super().__init__(sequence)
 
     def get_alphabet(self):
         return ProteinBlocksSequence.alphabet
+
+    def remove_undefined(self):
+        """
+        Remove undefined symbols from the sequence.
+
+        Returns
+        -------
+        filtered_sequence : ProteinBlocksSequence
+            The sequence without undefined symbols.
+        """
+        undefined_code = ProteinBlocksSequence.alphabet.encode(
+            ProteinBlocksSequence.undefined_symbol
+        )
+        filtered_code = self.code[self.code != undefined_code]
+        filtered_sequence = ProteinBlocksSequence()
+        filtered_sequence.code = filtered_code
+        return filtered_sequence
 
 
 def to_protein_blocks(atoms):
@@ -99,7 +123,7 @@ def to_protein_blocks(atoms):
 
     >>> sequences, chain_starts = to_protein_blocks(atom_array)
     >>> print(sequences[0])
-    ZZmmmmmnopjmnopacdZZ
+    zzmmmmmnopjmnopacdzz
     """
     sequences = []
     chain_start_indices = get_chain_starts(atoms, add_exclusive_stop=True)
@@ -112,6 +136,10 @@ def to_protein_blocks(atoms):
 
 
 def _to_protein_blocks(chain):
+    undefined_code = ProteinBlocksSequence.alphabet.encode(
+        ProteinBlocksSequence.undefined_symbol
+    )
+
     phi, psi, _ = dihedral_backbone(chain)
 
     pb_angles = np.full((len(phi), 8), np.nan)
@@ -131,7 +159,7 @@ def _to_protein_blocks(chain):
         axis=-1,
     )
     # Where RMSDA is NaN, (missing atoms/residues or chain ends) set symbol to unknown
-    pb_seq_code = np.full(len(pb_angles), ProteinBlocksSequence.alphabet.encode("Z"))
+    pb_seq_code = np.full(len(pb_angles), undefined_code, dtype=np.uint8)
     pb_available_mask = ~np.isnan(rmsda).any(axis=0)
     # Chose PB, where the RMSDA to the reference angle is lowest
     # Due to the definition of Biotite symbol codes

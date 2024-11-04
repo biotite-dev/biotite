@@ -257,8 +257,13 @@ def _is_relevant_type(obj):
             in [types.FunctionType, types.BuiltinFunctionType, types.MethodType]
         )
         | (
-            # Functions from C-extensions
-            type(obj).__name__ in ["cython_function_or_method", "fused_cython_function"]
+            # Functions from C-extensions and wrapped functions
+            type(obj).__name__
+            in [
+                "cython_function_or_method",
+                "fused_cython_function",
+                "_lru_cache_wrapper",
+            ]
         )
         | (
             # Enum instance
