@@ -19,6 +19,7 @@ __all__ = [
     "score",
     "find_terminal_gaps",
     "remove_terminal_gaps",
+    "remove_gaps",
 ]
 
 
@@ -664,6 +665,28 @@ def remove_terminal_gaps(alignment):
             "no overlap and the resulting alignment would be empty"
         )
     return alignment[start:stop]
+
+
+def remove_gaps(alignment):
+    """
+    Remove all gap columns from an alignment.
+
+    Parameters
+    ----------
+    alignment : Alignment
+        The alignment to be modified.
+
+    Returns
+    -------
+    truncated_alignment : Alignment
+        The alignment without gap columns.
+
+    See Also
+    --------
+    remove_terminal_gaps : Remove only terminal gap columns
+    """
+    non_gap_mask = (alignment.trace != -1).all(axis=1)
+    return alignment[non_gap_mask]
 
 
 def _is_single_letter(alphabet):
