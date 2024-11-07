@@ -10,7 +10,6 @@ from importlib import import_module
 from os.path import join
 import numpy as np
 import pytest
-import biotite.structure as struc
 import biotite.structure.io as strucio
 from tests.util import cannot_connect_to, cannot_import, is_not_installed
 
@@ -201,9 +200,8 @@ def test_doctest(package_name, context_package_names):
     globs["np"] = np
     # Add frequently used objects
     atoms = strucio.load_structure(
-        join(".", "tests", "structure", "data", "1l2y.bcif"),
+        join(".", "tests", "structure", "data", "1l2y.bcif"), include_bonds=True
     )
-    atoms.bonds = struc.connect_via_residue_names(atoms)
     globs["atom_array_stack"] = atoms
     globs["atom_array"] = globs["atom_array_stack"][0]
 
