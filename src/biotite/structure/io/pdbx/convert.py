@@ -1652,6 +1652,7 @@ def _apply_transformations(structure, transformation_dict, operations):
         coord = structure.coord
         # Execute for each transformation step
         # in the operation expression
+        coord.chain_id += "-" + "-".join(operation)
         for op_step in operation:
             rotation_matrix, translation_vector = transformation_dict[op_step]
             # Rotate
