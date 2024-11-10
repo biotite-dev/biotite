@@ -1646,22 +1646,35 @@ def _apply_transformations(structure, transformation_dict, operations):
     """
     # Additional first dimesion for 'structure.repeat()'
     assembly_coord = np.zeros((len(operations),) + structure.coord.shape)
-
+    assembly_chain_ids = []
     # Apply corresponding transformation for each copy in the assembly
     for i, operation in enumerate(operations):
         coord = structure.coord
         # Execute for each transformation step
         # in the operation expression
-        coord.chain_id += "-" + "-".join(operation)
         for op_step in operation:
             rotation_matrix, translation_vector = transformation_dict[op_step]
             # Rotate
             coord = matrix_rotate(coord, rotation_matrix)
             # Translate
             coord += translation_vector
+
+        chain_id = structure.chain_id
+        if (coord == structure.coord).all():
+            # null operation should not change the chain ID
+            assembly_chain_ids.append(chain_id.copy())
+        else:
+            operation_str = "-".join(list(operation))
+            assembly_chain_ids.append(
+                np.char.add(
+                    chain_id, np.array(["-" + operation_str]).astype(chain_id.dtype)
+                )
+            )
         assembly_coord[i] = coord
 
-    return repeat(structure, assembly_coord)
+    assembly = repeat(structure, assembly_coord)
+    assembly.chain_id = np.concatenate(assembly_chain_ids)
+    return assembly
 
 
 def _get_transformations(struct_oper):
