@@ -1481,6 +1481,7 @@ def get_assembly(
     extra_fields=None,
     use_author_fields=True,
     include_bonds=False,
+    include_sym_id=False,
 ):
     """
     Build the given biological assembly.
@@ -1553,6 +1554,12 @@ def get_assembly(
         (e.g. especially inter-residue bonds),
         have :attr:`BondType.ANY`, since the PDB format itself does
         not support bond orders.
+    include_sym_id : bool, optional
+        If set to true, the ``sym_id`` annotation array is added to the
+        returned structure. This array identifies the set of symmetry operations
+        that was applied to the corresponding chain in the asymmetric unit.
+        The sym_id annotation corresponds to ids in the ``pdbx_struct_oper_list``
+        category, separated by `-`.
 
     Returns
     -------
@@ -1622,7 +1629,7 @@ def get_assembly(
             # Filter affected asym IDs
             sub_structure = structure[..., np.isin(structure.label_asym_id, asym_ids)]
             sub_assembly = _apply_transformations(
-                sub_structure, transformations, operations
+                sub_structure, transformations, operations, include_sym_id
             )
             # Merge the chains with asym IDs for this operation
             # with chains from other operations
@@ -1639,14 +1646,14 @@ def get_assembly(
     return assembly
 
 
-def _apply_transformations(structure, transformation_dict, operations):
+def _apply_transformations(structure, transformation_dict, operations, include_sym_id):
     """
     Get subassembly by applying the given operations to the input
     structure containing affected asym IDs.
     """
     # Additional first dimesion for 'structure.repeat()'
     assembly_coord = np.zeros((len(operations),) + structure.coord.shape)
-    assembly_chain_ids = []
+    assembly_transform_ids = []
     # Apply corresponding transformation for each copy in the assembly
     for i, operation in enumerate(operations):
         coord = structure.coord
@@ -1659,21 +1666,14 @@ def _apply_transformations(structure, transformation_dict, operations):
             # Translate
             coord += translation_vector
 
-        chain_id = structure.chain_id
-        if (coord == structure.coord).all():
-            # null operation should not change the chain ID
-            assembly_chain_ids.append(chain_id.copy())
-        else:
-            operation_str = "-".join(list(operation))
-            assembly_chain_ids.append(
-                np.char.add(
-                    chain_id, np.array(["-" + operation_str]).astype(chain_id.dtype)
-                )
-            )
+        assembly_transform_ids.append(
+            np.full(len(structure), "-".join(list(operation)))
+        )
         assembly_coord[i] = coord
 
     assembly = repeat(structure, assembly_coord)
-    assembly.chain_id = np.concatenate(assembly_chain_ids)
+    if include_sym_id:
+        assembly.set_annotation("sym_id", np.concatenate(assembly_transform_ids))
     return assembly
 
 
