@@ -7,6 +7,7 @@ channels:
   - anaconda
   - conda-forge
   - bioconda
+  - salilab
 
 dependencies:
   - python =3.12
@@ -30,7 +31,7 @@ dependencies:
   # Interfaced software in biotite.application (can also be installed separately)
   - autodock-vina
   - clustalo
-  - dssp =4
+  - dssp =3
   - mafft
   - muscle =3
   - sra-tools
