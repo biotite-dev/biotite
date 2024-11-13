@@ -1,7 +1,7 @@
 .. include:: /tutorial/preamble.rst
 
-Profiles and position-specific matrices
-=======================================
+Profiles and position-specific scoring matrices
+===============================================
 Often sequences are not viewed in isolation:
 For example, if you investigate a protein family, you do not handle a single sequence,
 but an arbitrarily large collection of highly similar sequences.
@@ -116,12 +116,15 @@ regardless of their position in a sequence.
 However, as discussed above, the position is crucial information to determine how
 conserved a certain symbol is in a family of sequences.
 
-Hence, we extend the concept of substitution matrices to *position-specific* matrices,
+Hence, we extend the concept of substitution matrices to *position-specific scoring
+matrices*,
 which assign a score to a symbol and a position (instead of another symbols).
+A typical way to create a position-specific scoring matrix is to use the log-odds matrix
+from a profile.
 
 .. jupyter-execute::
 
-    # For a real analysis each amino acid background frequencies should be provided
+    # For a real analysis amino acid background frequencies should be provided
     log_odds = profile.log_odds_matrix(pseudocount=1)
 
 Now, we encounter a problem:
@@ -142,7 +145,7 @@ sought length.
     positional_seq = seq.PositionalSequence(profile.to_consensus())
     matrix = align.SubstitutionMatrix(
         positional_seq.alphabet,
-        profile.alphabet,
+        seq.ProteinSequence.alphabet,
         # Substitution matrices require integer scores
         # Multiply by 10 to increase value range and convert to integer
         (log_odds * 10).astype(int)
@@ -157,3 +160,45 @@ the alignment to work.
 The consensus sequence of the profile was merely chosen for cosmetic reasons, i.e.
 to have a meaningful string representation of the positional sequence and thus the
 alignment.
+
+Further applications
+^^^^^^^^^^^^^^^^^^^^
+
+Using a sequence profile is only one way to create a position-specific scoring matrix.
+The combination of :class:`.PositionalSequence` objects and a corresponding
+:class:`.SubstitutionMatrix` allows to assign a score between two sequence positions
+based on any property.
+
+As a toy example, let's say we want to harness the information that cyclotides have
+strongly conserved disulfide bridges.
+Hence, we want the score matrix not only to reward when cysteines are paired with
+cysteines in general, but specifically when cysteines are paired with cysteines at the
+corresponding position, i.e. the first cysteine with the first cysteine etc.
+As template we will use the standard *BLOSUM62* substitution matrix, expanded into
+a position-specific scoring matrix using :meth:`SubstitutionMatrix.as_positional()`:
+
+.. jupyter-execute::
+
+    cyclotide_n = query
+    cyclotide_c = sequences["C"]
+    aa_matrix = align.SubstitutionMatrix.std_protein_matrix()
+    # `as_positional()` expands the matrix into a position-specific scoring matrix
+    # for the given sequences while also giving us the positional sequences for them
+    pos_matrix, pos_cyclotide_n, pos_cyclotide_c = aa_matrix.as_positional(
+        cyclotide_n, cyclotide_c
+    )
+    # Introduce bias for cysteine positions
+    score_matrix = pos_matrix.score_matrix().copy()
+    cys_code = seq.ProteinSequence.alphabet.encode("C")
+    score_matrix[cyclotide_n.code == cys_code, cyclotide_c.code == cys_code] = 100
+    disulfide_matrix = align.SubstitutionMatrix(
+        pos_matrix.get_alphabet1(),
+        pos_matrix.get_alphabet2(),
+        score_matrix,
+    )
+    print(disulfide_matrix)
+
+You might notice the new shape of the substitution matrix:
+Instead of spanning the 24 x 24 amino acids including ambiguous symbols, it now matches
+the lengths of the two input sequences.
+In this matrix you can spot the biased scores at the matching cysteine positions.
