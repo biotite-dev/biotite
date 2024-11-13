@@ -37,22 +37,31 @@ def test_rmsf(stack, as_coord):
     )
 
 
-@pytest.fixture
-def load_stack_superimpose():
+@pytest.fixture(scope="module")
+def models():
+    """
+    Get a short multi-model structure
+    """
     pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
-    stack = pdbx.get_structure(pdbx_file)
-    # Superimpose with first frame
-    bb_mask = struc.filter_peptide_backbone(stack[0])
-    supimp, _ = struc.superimpose(stack[0], stack, atom_mask=bb_mask)
-    return stack, supimp
+    return pdbx.get_structure(pdbx_file)
 
 
-def test_rmsd_gmx(load_stack_superimpose):
+@pytest.fixture
+def superimposed_models(models):
+    """
+    Models superimposed on the first model
+    """
+    bb_mask = struc.filter_peptide_backbone(models[0])
+    supimp, _ = struc.superimpose(models[0], models, atom_mask=bb_mask)
+    return models, supimp
+
+
+def test_rmsd_gmx(superimposed_models):
     """
     Comparison of RMSD values computed with Biotite with results
     obtained from GROMACS 2021.5.
     """
-    stack, supimp = load_stack_superimpose
+    stack, supimp = superimposed_models
     rmsd = struc.rmsd(stack[0], supimp) / 10
 
     # Gromacs RMSDs -> Without mass-weighting:
@@ -104,12 +113,12 @@ def test_rmsd_gmx(load_stack_superimpose):
     assert np.allclose(rmsd, rmsd_gmx, atol=1e-03)
 
 
-def test_rmspd_gmx(load_stack_superimpose):
+def test_rmspd_gmx(superimposed_models):
     """
     Comparison of the RMSPD computed with Biotite with results
     obtained from GROMACS 2021.5.
     """
-    stack, _ = load_stack_superimpose
+    stack, _ = superimposed_models
     rmspd = struc.rmspd(stack[0], stack) / 10
 
     # Gromacs RMSDist:
@@ -161,12 +170,12 @@ def test_rmspd_gmx(load_stack_superimpose):
     assert np.allclose(rmspd, rmspd_gmx, atol=1e-03)
 
 
-def test_rmsf_gmx(load_stack_superimpose):
+def test_rmsf_gmx(superimposed_models):
     """
     Comparison of RMSF values computed with Biotite with results
     obtained from GROMACS 2021.5.
     """
-    stack, supimp = load_stack_superimpose
+    stack, supimp = superimposed_models
     ca_mask = (stack[0].atom_name == "CA") & (stack[0].element == "C")
     rmsf = struc.rmsf(struc.average(supimp[:, ca_mask]), supimp[:, ca_mask]) / 10
 
@@ -203,18 +212,15 @@ def test_rmsf_gmx(load_stack_superimpose):
 @pytest.mark.parametrize(
     "multi_model, as_coord", itertools.product([False, True], [False, True])
 )
-def test_lddt_perfect(multi_model, as_coord):
+def test_lddt_perfect(models, multi_model, as_coord):
     """
     Check if the lDDT of a structure with itself as reference is 1.0
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
-    atoms = pdbx.get_structure(pdbx_file)
-
-    reference = atoms[0]
+    reference = models[0]
     if multi_model:
-        subject = atoms[0:1]
+        subject = models[0:1]
     else:
-        subject = atoms[0]
+        subject = models[0]
 
     if as_coord:
         reference = reference.coord
@@ -232,7 +238,7 @@ def test_lddt_perfect(multi_model, as_coord):
         assert lddt == 1.0
 
 
-def test_lddt_consistency():
+def test_lddt_consistency(models):
     """
     Check if the computed lDDT via :func:`lddt` is the same as the reference value from
     the https://swissmodel.expasy.org/assess web server.
@@ -249,34 +255,30 @@ def test_lddt_consistency():
         0.89,
     ]
 
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
-    atoms = pdbx.get_structure(pdbx_file)
     # The web server computes the lDDT without hydrogen atoms
-    atoms = atoms[:, atoms.element != "H"]
+    models = models[:, models.element != "H"]
 
-    reference = atoms[0]
-    subject = atoms[: len(REFERENCE_LDDT)]
+    reference = models[0]
+    subject = models[: len(REFERENCE_LDDT)]
     lddt = struc.lddt(reference, subject)
 
     assert lddt.tolist() == pytest.approx(REFERENCE_LDDT, abs=1e-2)
 
 
 @pytest.mark.parametrize("multi_model", [False, True])
-def test_lddt_custom_aggregation(multi_model):
+def test_lddt_custom_aggregation(models, multi_model):
     """
     Check if custom `aggregation` in :func:`lddt` works by giving a custom aggregation
     that simply aggregates all values, i.e. it should give the same result as the
     `all` aggregation.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
-    atoms = pdbx.get_structure(pdbx_file)
-    reference = atoms[0]
+    reference = models[0]
     if multi_model:
-        subject = atoms
+        subject = models
     else:
-        subject = atoms[0]
+        subject = models[1]
     # Every atom goes into the same aggregation bin
-    aggregation_bins = np.zeros(atoms.array_length(), dtype=int)
+    aggregation_bins = np.zeros(models.array_length(), dtype=int)
 
     ref_lddt = struc.lddt(reference, subject, aggregation="all")
 
@@ -291,7 +293,7 @@ def test_lddt_custom_aggregation(multi_model):
     "multi_model, aggregation",
     itertools.product([False, True], ["chain", "residue", "atom"]),
 )
-def test_lddt_aggregation_levels(multi_model, aggregation):
+def test_lddt_aggregation_levels(models, multi_model, aggregation):
     """
     Check if the predefined aggregation levels :func:`lddt()` return the expected shape.
     Furthermore, the average of each aggregated lDDT values should be similar to the
@@ -300,13 +302,11 @@ def test_lddt_aggregation_levels(multi_model, aggregation):
     """
     ABS_ERROR = 0.02
 
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
-    atoms = pdbx.get_structure(pdbx_file)
-    reference = atoms[0]
+    reference = models[0]
     if multi_model:
-        subject = atoms
+        subject = models
     else:
-        subject = atoms[0]
+        subject = models[1]
 
     expected_shape = ()
     if multi_model:
@@ -316,7 +316,7 @@ def test_lddt_aggregation_levels(multi_model, aggregation):
     elif aggregation == "residue":
         expected_shape = expected_shape + (struc.get_residue_count(subject),)
     elif aggregation == "atom":
-        expected_shape = expected_shape + (atoms.array_length(),)
+        expected_shape = expected_shape + (models.array_length(),)
 
     lddt = struc.lddt(reference, subject, aggregation=aggregation)
     all_lddt = struc.lddt(reference, subject, aggregation="all")
@@ -328,3 +328,78 @@ def test_lddt_aggregation_levels(multi_model, aggregation):
         )
     else:
         assert np.mean(lddt) == pytest.approx(all_lddt, abs=ABS_ERROR)
+
+
+# Dividing by zero contacts for masked atoms would normally raise a warning
+@pytest.mark.filterwarnings("error:.*invalid value encountered in divide")
+@pytest.mark.parametrize("seed", range(10))
+def test_lddt_mask(models, seed):
+    """
+    Using the same `subject_mask` and `partner_mask` should give the same score as
+    using the same mask on the structure directly, before it is passed to
+    :func:`lddt()`.
+    """
+    rng = np.random.default_rng(seed)
+    mask = rng.choice([False, True], size=models.array_length())
+
+    reference = models[0]
+    subject = models[1]
+
+    # Do not aggregate to make the test more strict
+    ref_lddt = struc.lddt(reference[mask], subject[mask], aggregation="atom")
+
+    test_lddt = struc.lddt(
+        reference, subject, aggregation="atom", atom_mask=mask, partner_mask=mask
+    )
+
+    # The subject mask defines for which atoms the contact partners should be identified
+    # In consequence, for all atoms that are masked out, the lDDT should be NaN
+    assert np.isnan(test_lddt[..., ~mask]).all()
+    test_lddt = test_lddt[mask]
+    assert test_lddt.tolist() == pytest.approx(ref_lddt.tolist())
+
+
+def test_custom_lddt_symmetric(models):
+    """
+    Check that in :func:`lddt()` with ``symmetric=True`` the *lDDT* score is independent
+    of the order of the structures.
+    """
+    model1 = models[0]
+    model2 = models[1]
+
+    # Do not aggregate to make the test more strict
+    model1_symmetric_lddt = struc.lddt(model1, model2, "atom", symmetric=True)
+    model2_symmetric_lddt = struc.lddt(model2, model1, "atom", symmetric=True)
+
+    # The order of the structures should not matter
+    assert model1_symmetric_lddt.tolist() == pytest.approx(
+        model2_symmetric_lddt.tolist()
+    )
+
+
+@pytest.mark.parametrize(
+    "what_is_nan, ref_lddt",
+    [
+        # No reference coordinates (except one atom)
+        # -> set of reference contacts is empty
+        ("reference", np.nan),
+        # No subject coordinates (except one atom)
+        # -> no recovered contacts
+        ("subject", 0.0),
+    ],
+)
+def test_lddt_with_missing_atoms(models, what_is_nan, ref_lddt):
+    """
+    Check if NaN values in the coordinates are handled correctly.
+    """
+    reference = models[0].copy()
+    subject = models[1].copy()
+    if what_is_nan == "reference":
+        reference.coord[1:, :] = np.nan
+    elif what_is_nan == "subject":
+        subject.coord[1:, :] = np.nan
+
+    test_lddt = struc.lddt(reference, subject)
+
+    # Use 'np.array_equal()' to handle equality of NaN values
+    assert np.array_equal(test_lddt, ref_lddt, equal_nan=True)

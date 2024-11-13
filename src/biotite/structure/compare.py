@@ -14,11 +14,11 @@ __all__ = ["rmsd", "rmspd", "rmsf", "average", "lddt"]
 import collections.abc
 import warnings
 import numpy as np
-from biotite.structure.atoms import AtomArray, AtomArrayStack, coord
+from biotite.structure.atoms import AtomArrayStack, coord
 from biotite.structure.celllist import CellList
-from biotite.structure.chains import get_chain_positions
+from biotite.structure.chains import get_chain_count, get_chain_positions
 from biotite.structure.geometry import index_distance
-from biotite.structure.residues import get_residue_positions
+from biotite.structure.residues import get_residue_count, get_residue_positions
 from biotite.structure.util import vector_dot
 
 
@@ -251,9 +251,12 @@ def lddt(
     reference,
     subject,
     aggregation="all",
+    atom_mask=None,
+    partner_mask=None,
     inclusion_radius=15,
     distance_bins=(0.5, 1.0, 2.0, 4.0),
     exclude_same_residue=True,
+    symmetric=False,
 ):
     """
     Calculate the *local Distance Difference Test* (lDDT) score of a structure with
@@ -262,10 +265,8 @@ def lddt(
 
     Parameters
     ----------
-    reference : AtomArray or ndarray, dtype=float, shape=(n,3)
+    reference : AtomArray
         The reference structure.
-        Alternatively, coordinates can be provided directly as
-        :class:`ndarray`, if `exclude_same_residue` is set to ``False``.
     subject : AtomArray or AtomArrayStack or ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
         The structure(s) to evaluate with respect to `reference`.
         The number of atoms must be the same as in `reference`.
@@ -281,6 +282,17 @@ def lddt(
 
         Alternatively, an array of aggregation bins can be provided, i.e. each contact
         is assigned to the corresponding bin.
+    atom_mask : ndarray, shape=(n,), dtype=bool, optional
+        If given, the contacts are only computed for the masked atoms.
+        Atoms excluded by the mask do not have any contacts and their *lDDT* would
+        be NaN in case of ``aggregation="atom"``.
+        Providing this mask can significantly speed up the computation, if
+        only for certain chains/residues/atoms the *lDDT* is of interest.
+    partner_mask : ndarray, shape=(n,), dtype=bool, optional
+        If given, only contacts **to** the masked atoms are considered.
+        While `atom_mask` does not alter the *lDDT* for the masked atoms,
+        `partner_mask` does, as for each atom only the masked atoms are considered
+        as potential contact partners.
     inclusion_radius : float, optional
         Pairwise atom distances are considered within this radius in `reference`.
     distance_bins : list of float, optional
@@ -290,6 +302,14 @@ def lddt(
         If set to False, distances between atoms of the same residue are also
         considered.
         By default, only atom distances between different residues are considered.
+    symmetric : bool, optional
+        If set to true, the *lDDT* score is computed symmetrically.
+        This means both contacts found in the `reference` and `subject` structure are
+        considered.
+        Hence the score is independent of which structure is given as `reference` and
+        `subject`.
+        Note that in this case `subject` must be an :class:`AtomArray` as well.
+        By default, only contacts in the `reference` are considered.
 
     Returns
     -------
@@ -347,56 +367,60 @@ def lddt(
     ...     [np.where(unique_elements == element)[0][0] for element in reference.element]
     ... )
     >>> element_lddt = lddt(reference, subject, aggregation=element_bins)
-    >>> for element, lddt in zip(unique_elements, element_lddt):
-    ...     print(f"{element}: {lddt:.3f}")
+    >>> for element, lddt_for_element in zip(unique_elements, element_lddt):
+    ...     print(f"{element}: {lddt_for_element:.3f}")
     C: 0.837
     H: 0.770
     N: 0.811
     O: 0.808
+
+    If the reference structure has more atoms resolved than the subject structure,
+    the missing atoms can be indicated with *NaN* values:
+
+    >>> reference = atom_array_stack[0]
+    >>> subject = atom_array_stack[1].copy()
+    >>> # Simulate the situation where the first residue is missing in the subject
+    >>> subject.coord[subject.res_id == 1] = np.nan
+    >>> global_lddt = lddt(reference, subject)
+    >>> print(f"{global_lddt:.3f}")
+    0.751
     """
-    distance_bins = np.asarray(distance_bins)
     reference_coord = coord(reference)
     subject_coord = coord(subject)
+    if subject_coord.shape[-2] != reference_coord.shape[-2]:
+        raise IndexError(
+            f"The given reference has {reference_coord.shape[-2]} atoms, but the "
+            f"subject has {subject_coord.shape[-2]} atoms"
+        )
 
-    # Use a cell list to find atoms within inclusion radius in O(n) time complexity
-    cell_list = CellList(reference_coord, inclusion_radius)
-    # Pairs of indices for atoms within the inclusion radius
-    contacts = _to_sparse_indices(
-        cell_list.get_atoms(reference_coord, inclusion_radius)
+    contacts = _find_contacts(
+        reference, atom_mask, partner_mask, inclusion_radius, exclude_same_residue
     )
-
-    if isinstance(aggregation, str) and aggregation == "all":
+    if symmetric:
+        subject_contacts = _find_contacts(
+            subject, atom_mask, partner_mask, inclusion_radius, exclude_same_residue
+        )
+        contacts = np.concatenate((contacts, subject_contacts), axis=0)
+        # Adding additional contacts may introduce duplicates between the existing and
+        # new ones -> filter them out
+        contacts = np.unique(contacts, axis=0)
+    if (
+        isinstance(aggregation, str)
+        and aggregation == "all"
+        and atom_mask is None
+        and partner_mask is None
+    ):
         # Remove duplicate pairs as each pair appears twice
         # (if i is in threshold distance to j, j is also in threshold distance to i)
         # keep only the pair where i < j
         # This improves performance due to less distances that need to be computed
-        # and also removes self-contacts
+        # The assumption also only works when no atoms are masked
         contacts = contacts[contacts[:, 0] < contacts[:, 1]]
-    else:
-        # On all other aggregation levels, the duplicate contacts cannot be removed,
-        # as i and j are possibly in different aggregation bins
-        # Still, self-contacts are removed
-        contacts = contacts[contacts[:, 0] != contacts[:, 1]]
 
-    if exclude_same_residue:
-        if not isinstance(reference, AtomArray):
-            raise ValueError(
-                "If 'exclude_same_residue' is set to True, "
-                "'reference' must be an AtomArray"
-            )
-        # Find the index of the residue for each atom
-        residue_indices = get_residue_positions(reference, contacts.flatten()).reshape(
-            contacts.shape
-        )
-        # Remove contacts between atoms of the same residue
-        contacts = contacts[residue_indices[:, 0] != residue_indices[:, 1]]
-    if len(contacts) == 0:
-        warnings.warn("No contacts found within the inclusion radius")
-
-    # Measure the deviation in the distances for the filtered contacts
     reference_distances = index_distance(reference_coord, contacts)
     subject_distances = index_distance(subject_coord, contacts)
     deviations = np.abs(subject_distances - reference_distances)
+    distance_bins = np.asarray(distance_bins)
     fraction_preserved_bins = np.count_nonzero(
         deviations[..., np.newaxis] <= distance_bins[np.newaxis, :], axis=-1
     ) / len(distance_bins)
@@ -411,16 +435,28 @@ def lddt(
         if isinstance(
             aggregation, (np.ndarray, collections.abc.Sequence)
         ) and not isinstance(aggregation, str):
-            aggregation_bins = np.asarray(aggregation)[contacts[:, 0]]
+            return _average_over_indices(
+                fraction_preserved_bins,
+                bins=np.asarray(aggregation)[contacts[:, 0]],
+            )
         elif aggregation == "chain":
-            aggregation_bins = get_chain_positions(reference, contacts[:, 0])
+            return _average_over_indices(
+                fraction_preserved_bins,
+                bins=get_chain_positions(reference, contacts[:, 0]),
+                n_bins=get_chain_count(reference),
+            )
         elif aggregation == "residue":
-            aggregation_bins = get_residue_positions(reference, contacts[:, 0])
+            return _average_over_indices(
+                fraction_preserved_bins,
+                bins=get_residue_positions(reference, contacts[:, 0]),
+                n_bins=get_residue_count(reference),
+            )
         elif aggregation == "atom":
-            aggregation_bins = contacts[:, 0]
+            return _average_over_indices(
+                fraction_preserved_bins, contacts[:, 0], reference.array_length()
+            )
         else:
             raise ValueError(f"Invalid aggregation level '{aggregation}'")
-        return _average_over_indices(fraction_preserved_bins, aggregation_bins)
 
 
 def _sq_euclidian(reference, subject):
@@ -486,7 +522,81 @@ def _to_sparse_indices(all_contacts):
     return combined_indices[contact_indices != -1]
 
 
-def _average_over_indices(values, bins):
+def _find_contacts(
+    atoms=None,
+    atom_mask=None,
+    partner_mask=None,
+    inclusion_radius=15,
+    exclude_same_residue=True,
+):
+    """
+    Find contacts between the atoms in the given structure.
+
+    Parameters
+    ----------
+    atoms : AtomArray
+        The structure to find the contacts for.
+    atom_mask : ndarray, shape=(n,), dtype=bool, optional
+        If given, the contacts are only computed for the masked atoms.
+        Atoms excluded by the mask do not have any contacts and their *lDDT* would
+        be NaN in case of ``aggregation="atom"``.
+        Providing this mask can significantly speed up the computation, if
+        only for certain chains/residues/atoms the *lDDT* is of interest.
+    partner_mask : ndarray, shape=(n,), dtype=bool, optional
+        If given, only contacts **to** the masked atoms are considered.
+        While `atom_mask` does not alter the *lDDT* for the masked atoms,
+        `partner_mask` does, as for each atom only the masked atoms are considered
+        as potential contact partners.
+    inclusion_radius : float, optional
+        Pairwise atom distances are considered within this radius.
+    exclude_same_residue : bool, optional
+        If set to False, distances between atoms of the same residue are also
+        considered.
+        By default, only atom distances between different residues are considered.
+
+    Returns
+    -------
+    contacts : ndarray, shape=(n,2), dtype=int
+        The array of contacts.
+        Each element represents a pair of atom indices that are in contact.
+    """
+    coords = coord(atoms)
+    selection = ~np.isnan(coords).any(axis=-1)
+    if partner_mask is not None:
+        selection &= partner_mask
+    # Use a cell list to find atoms within inclusion radius in O(n) time complexity
+    cell_list = CellList(coords, inclusion_radius, selection=selection)
+    # Pairs of indices for atoms within the inclusion radius
+    if atom_mask is None:
+        all_contacts = cell_list.get_atoms(coords, inclusion_radius)
+    else:
+        filtered_contacts = cell_list.get_atoms(coords[atom_mask], inclusion_radius)
+        # Map the contacts for the masked atoms to the original coordinates
+        # Rows that were filtered out by the mask are fully padded with -1
+        # consistent with the padding of `get_atoms()`
+        all_contacts = np.full(
+            (coords.shape[0], filtered_contacts.shape[-1]),
+            -1,
+            dtype=filtered_contacts.dtype,
+        )
+        all_contacts[atom_mask] = filtered_contacts
+    # Convert into pairs of indices
+    contacts = _to_sparse_indices(all_contacts)
+
+    if exclude_same_residue:
+        # Find the index of the residue for each atom
+        residue_indices = get_residue_positions(atoms, contacts.flatten()).reshape(
+            contacts.shape
+        )
+        # Remove contacts between atoms of the same residue
+        contacts = contacts[residue_indices[:, 0] != residue_indices[:, 1]]
+    else:
+        # In any case self-contacts should not be considered
+        contacts = contacts[contacts[:, 0] != contacts[:, 1]]
+    return contacts
+
+
+def _average_over_indices(values, bins, n_bins=None):
     """
     For each unique index in `bins`, average the corresponding values in `values`.
 
@@ -498,6 +608,11 @@ def _average_over_indices(values, bins):
     values : ndarray, shape=(..., n)
         The values to average.
     bins : ndarray, shape=(n,) dtype=int
+        Associates each value from `values` with a bin.
+    n_bins : int
+        The total number of bins.
+        This is necessary as the some bin in `bins`may be empty.
+        By default the number of bins is determined from `bins`.
 
     Returns
     -------
@@ -505,11 +620,18 @@ def _average_over_indices(values, bins):
         The averaged values.
         *k* is the maximum value in `bins` + 1.
     """
-    n_elements_per_bin = np.bincount(bins)
-    n_bins = len(n_elements_per_bin)
+    if n_bins is None:
+        n_elements_per_bin = np.bincount(bins)
+        n_bins = len(n_elements_per_bin)
+    else:
+        n_elements_per_bin = np.bincount(bins, minlength=n_bins)
     # The last dimension is replaced by the number of bins
     # Broadcasting in 'np.add.at()' requires the replaced dimension to be the first
     aggregated = np.zeros((n_bins, *values.shape[:-1]), dtype=values.dtype)
     np.add.at(aggregated, bins, np.swapaxes(values, 0, -1))
-    # Bring the bin dimension into the last dimension again
-    return np.swapaxes(aggregated, 0, -1) / n_elements_per_bin
+    # If an atom has no contacts, the corresponding value is NaN
+    # This result is expected, hence the warning is ignored
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        # Bring the bin dimension into the last dimension again
+        return np.swapaxes(aggregated, 0, -1) / n_elements_per_bin

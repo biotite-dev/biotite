@@ -28,10 +28,10 @@ ctypedef np.uint8_t uint8
 cdef class CellList:
     """
     __init__(atom_array, cell_size, periodic=False, box=None, selection=None)
-    
+
     This class enables the efficient search of atoms in vicinity of a
     defined location.
-    
+
     This class stores the indices of an atom array in virtual "cells",
     each corresponding to a specific coordinate interval.
     If the atoms in vicinity of a specific location are searched, only
@@ -41,7 +41,7 @@ cdef class CellList:
     after the :class:`CellList` has been created.
     Therefore a :class:`CellList` saves calculation time in those
     cases, where vicinity is checked for multiple locations.
-    
+
     Parameters
     ----------
     atom_array : AtomArray or ndarray, dtype=float, shape=(n,3)
@@ -64,14 +64,14 @@ cdef class CellList:
         If provided, only the atoms masked by this array are stored in
         the cell list. However, the indices stored in the cell list
         will still refer to the original unfiltered `atom_array`.
-            
+
     Examples
     --------
-    
+
     >>> cell_list = CellList(atom_array, cell_size=5)
     >>> near_atoms = atom_array[cell_list.get_atoms(np.array([1,2,3]), radius=7.0)]
     """
-    
+
     # The atom coordinates
     cdef float32[:,:] _coord
     # A boolean mask that covers the selected atoms
@@ -99,8 +99,8 @@ cdef class CellList:
     cdef int _orig_length
     cdef float32[:] _orig_min_coord
     cdef float32[:] _orig_max_coord
-    
-    
+
+
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -119,14 +119,10 @@ cdef class CellList:
         # if 'periodic' is true
         self._orig_length = coord.shape[0]
         self._box = None
-        if coord.ndim != 2:
-            raise ValueError("Coordinates must have shape (n,3)")
-        if coord.shape[0] == 0:
-            raise ValueError("Coordinates must not be empty")
-        if coord.shape[1] != 3:
-            raise ValueError("Coordinates must have form (x,y,z)")
-        if np.isnan(coord).any():
-            raise ValueError("Coordinates contain NaN values")
+        if selection is None:
+            _check_coord(coord)
+        else:
+            _check_coord(coord[selection])
 
         if periodic:
             if box is not None:
@@ -145,7 +141,7 @@ cdef class CellList:
                 raise ValueError("Box contains NaN values")
             coord = move_inside_box(coord, self._box)
             coord, indices = repeat_box_coord(coord, self._box)
-        
+
         if self._has_initialized_cells():
             raise Exception("Duplicate call of constructor")
         self._cells = None
@@ -155,23 +151,23 @@ cdef class CellList:
         self._coord = coord.astype(np.float32, copy=False)
         self._cellsize = cell_size
         # calculate how many cells are required for each dimension
-        min_coord = np.min(coord, axis=0).astype(np.float32)
-        max_coord = np.max(coord, axis=0).astype(np.float32)
+        min_coord = np.nanmin(coord, axis=0).astype(np.float32)
+        max_coord = np.nanmax(coord, axis=0).astype(np.float32)
         self._min_coord = min_coord
         self._max_coord = max_coord
         cell_count = (((max_coord - min_coord) / cell_size) +1).astype(int)
         if self._periodic:
-            self._orig_min_coord = np.min(coord[:self._orig_length], axis=0) \
+            self._orig_min_coord = np.nanmin(coord[:self._orig_length], axis=0) \
                                    .astype(np.float32)
-            self._orig_max_coord = np.max(coord[:self._orig_length], axis=0) \
+            self._orig_max_coord = np.nanmax(coord[:self._orig_length], axis=0) \
                                    .astype(np.float32)
-        
+
         # ndarray of pointers to C-arrays
         # containing indices to atom array
         self._cells = np.zeros(cell_count, dtype=np.uint64)
         # Stores the length of the C-arrays
         self._cell_length = np.zeros(cell_count, dtype=np.int32)
-        
+
         # Prepare selection
         if selection is not None:
             self._has_selection = True
@@ -183,7 +179,7 @@ cdef class CellList:
                 )
         else:
             self._has_selection = False
-        
+
         # Fill cells
         for atom_array_i in range(self._coord.shape[0]):
             # Only put selected atoms into cell list
@@ -208,34 +204,34 @@ cdef class CellList:
                     # Store new cell pointer and length
                     self._cell_length[i,j,k] = length
                     self._cells[i,j,k] = <ptr> cell_ptr
-            
-    
+
+
     def __dealloc__(self):
         if self._has_initialized_cells():
             deallocate_ptrs(self._cells)
-    
-    
+
+
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def create_adjacency_matrix(self, float32 threshold_distance):
         """
         create_adjacency_matrix(threshold_distance)
-        
+
         Create an adjacency matrix for the atoms in this cell list.
 
         An adjacency matrix depicts which atoms *i* and *j* have
         a distance lower than a given threshold distance.
         The values in the adjacency matrix ``m`` are
         ``m[i,j] = 1 if distance(i,j) <= threshold else 0``
-        
+
         Parameters
         ----------
         threshold_distance : float
             The threshold distance. All atom pairs that have a distance
             lower than this value are indicated by ``True`` values in
             the resulting matrix.
-        
+
         Returns
         -------
         matrix : ndarray, dtype=bool, shape=(n,n)
@@ -244,7 +240,7 @@ cdef class CellList:
             :class:`CellList`, the rows and columns corresponding to
             atoms, that are not masked by the selection, have all
             elements set to ``False``.
-        
+
         Notes
         -----
         The highest performance is achieved when the the cell size is
@@ -269,7 +265,7 @@ cdef class CellList:
         if threshold_distance < 0:
             raise ValueError("Threshold must be a positive value")
         cdef int i=0
-        
+
         # Get atom position for all original positions
         # (no periodic copies)
         coord = np.asarray(self._coord[:self._orig_length])
@@ -287,17 +283,17 @@ cdef class CellList:
             return matrix
         else:
             return self.get_atoms(coord, threshold_distance, as_mask=True)
-        
-    
+
+
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def get_atoms(self, np.ndarray coord, radius, bint as_mask=False):
         """
         get_atoms(coord, radius, as_mask=False)
-        
+
         Find atoms with a maximum distance from given coordinates.
-        
+
         Parameters
         ----------
         coord : ndarray, dtype=float, shape=(3,) or shape=(m,3)
@@ -321,7 +317,7 @@ cdef class CellList:
         as_mask : bool, optional
             If true, the result is returned as boolean mask, instead
             of an index array.
-        
+
         Returns
         -------
         indices : ndarray, dtype=int32, shape=(p,) or shape=(m,p)
@@ -335,7 +331,7 @@ cdef class CellList:
             The values are true for atoms in the atom array,
             that are in the defined vicinity.
             Only returned with `as_mask` set to true.
-            
+
         See Also
         --------
         get_atoms_in_cells
@@ -376,7 +372,7 @@ cdef class CellList:
             A      18  PRO HA     H         2.719    3.181    1.316
             A      18  PRO HB3    H         2.781    3.223    3.618
             A      18  PRO CB     C         3.035    4.190    3.187
-        
+
         Get adjacent atoms for mutliple positions:
 
         >>> cell_list = CellList(atom_array, 3)
@@ -403,14 +399,14 @@ cdef class CellList:
         cdef float32 sq_radius
         cdef float32[:] sq_radii
         cdef np.ndarray cell_radii
-        
+
         cdef int[:,:] all_indices
         cdef int[:,:] indices
         cdef float32[:,:] coord_v
 
         if len(coord) == 0:
             return _empty_result(as_mask)
-        
+
         # Handle periodicity for the input coordinates
         if self._periodic:
             coord = move_inside_box(coord, self._box)
@@ -437,7 +433,7 @@ cdef class CellList:
         )
         # These have to be narrowed down in the next step
         # using the Euclidian distance
-        
+
         # Filter all indices from all_indices
         # where squared distance is smaller than squared radius
         # Using the squared distance is computationally cheaper than
@@ -464,23 +460,23 @@ cdef class CellList:
                         array_i += 1
             if array_i > max_array_length:
                 max_array_length = array_i
-        
+
         return self._post_process(
             np.asarray(indices)[:, :max_array_length],
             as_mask, is_multi_coord
         )
-    
-    
+
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def get_atoms_in_cells(self, np.ndarray coord,
                            cell_radius=1, bint as_mask=False):
         """
         get_atoms_in_cells(coord, cell_radius=1, as_mask=False)
-        
+
         Find atoms with a maximum cell distance from given
         coordinates.
-        
+
         Instead of using the radius as maximum euclidian distance to the
         given coordinates,
         the radius is measured as the amount of cells:
@@ -489,7 +485,7 @@ cdef class CellList:
         that the atoms indices from this cell and the 8 surrounding
         cells are returned and so forth.
         This is more efficient than `get_atoms()`.
-        
+
         Parameters
         ----------
         coord : ndarray, dtype=float, shape=(3,) or shape=(m,3)
@@ -518,7 +514,7 @@ cdef class CellList:
         as_mask : bool, optional
             If true, the result is returned as boolean mask, instead
             of an index array.
-        
+
         Returns
         -------
         indices : ndarray, dtype=int32, shape=(p,) or shape=(m,p)
@@ -563,8 +559,8 @@ cdef class CellList:
             coord, cell_radius, is_multi_radius
         )
         return self._post_process(array_indices, as_mask, is_multi_coord)
-    
-    
+
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def _get_atoms_in_cells(self,
@@ -573,7 +569,7 @@ cdef class CellList:
                             bint is_multi_radius):
         """
         Get the indices of atoms in `cell_radii` adjacency of `coord`.
-        
+
         Parameters
         ----------
         coord : ndarray, dtype=float32, shape=(n,3)
@@ -583,7 +579,7 @@ cdef class CellList:
         is_multi_radius : bool
             True indicates, that all values in `cell_radii` are the
             same.
-        
+
         Returns
         -------
         array_indices : ndarray, dtype=int32, shape=(m,p)
@@ -607,8 +603,8 @@ cdef class CellList:
         cdef int max_array_length \
             = self._find_adjacent_atoms(coord, array_indices, cell_radii)
         return array_indices[:, :max_array_length]
-    
-    
+
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef int _find_adjacent_atoms(self,
@@ -618,7 +614,7 @@ cdef class CellList:
         """
         This method fills the given empty index array
         with actual indices of adjacent atoms.
-    
+
         Since the length of 'indices' (second dimension) is
         the worst case assumption, this method returns the actual
         required length, i.e. the highest length of all arrays
@@ -632,7 +628,7 @@ cdef class CellList:
         cdef int pos_i, array_i, cell_i
         cdef int max_array_length = 0
         cdef int cell_r
-        
+
         cdef ptr[:,:,:] cells = self._cells
         cdef int[:,:,:] cell_length = self._cell_length
 
@@ -663,7 +659,7 @@ cdef class CellList:
             if array_i > max_array_length:
                 max_array_length = array_i
         return max_array_length
-    
+
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -695,8 +691,8 @@ cdef class CellList:
                 return indices
             else:
                 return indices[0]
-    
-    
+
+
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -706,7 +702,7 @@ cdef class CellList:
         i[0] = <int>((x - self._min_coord[0]) / self._cellsize)
         j[0] = <int>((y - self._min_coord[1]) / self._cellsize)
         k[0] = <int>((z - self._min_coord[2]) / self._cellsize)
-    
+
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -718,7 +714,7 @@ cdef class CellList:
         if z < self._min_coord[2] or z > self._max_coord[2]:
             return False
         return True
-    
+
     @cython.initializedcheck(False)
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -737,7 +733,7 @@ cdef class CellList:
                     break
                 matrix[i, index] = True
         return np.asarray(matrix, dtype=bool)
-    
+
     cdef inline bint _has_initialized_cells(self):
         # Memoryviews are not initialized on class creation
         # This method checks if the _cells memoryview was initialized
@@ -749,6 +745,20 @@ cdef class CellList:
                 return False
         except AttributeError:
             return False
+
+
+def _check_coord(coord):
+    """
+    Perform checks on validity of coordinates.
+    """
+    if coord.ndim != 2:
+        raise ValueError("Coordinates must have shape (n,3)")
+    if coord.shape[0] == 0:
+        raise ValueError("Coordinates must not be empty")
+    if coord.shape[1] != 3:
+        raise ValueError("Coordinates must have form (x,y,z)")
+    if np.isnan(coord).any():
+        raise ValueError("Coordinates contain NaN values")
 
 
 def _empty_result(as_mask):
@@ -774,11 +784,11 @@ def _prepare_vectorization(np.ndarray coord, radius, radius_dtype):
     radii/coordinates were given.
 
     The shapes before and after conversion are:
-       
+
        - coord: (3, ), radius: scalar -> coord: (1,3), radius: (1,)
        - coord: (n,3), radius: scalar -> coord: (n,3), radius: (n,)
        - coord: (n,3), radius: (n,  ) -> coord: (n,3), radius: (n,)
-    
+
     Thes resulting values have the same dimensionality for all cases and
     can be handeled uniformly by `get_atoms()` and
     `get_atoms_in_cells()`.
@@ -798,7 +808,7 @@ def _prepare_vectorization(np.ndarray coord, radius, radius_dtype):
         raise ValueError(
             f"Invalid shape for input coordinates"
         )
-    
+
     if isinstance(radius, np.ndarray):
         # Multiple radii
         # Check whether amount of coordinates match amount of radii
