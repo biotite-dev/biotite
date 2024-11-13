@@ -1,7 +1,11 @@
+"""
+Note that in order to get a representative sequence profile, it is crucial to have a
+high number of sequences the target sequence can be aligned to.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
-import biotite.application.clustalo as clustalo
 import biotite.database.uniprot as uniprot
 import biotite.sequence as seq
 import biotite.sequence.align as align
@@ -9,13 +13,13 @@ import biotite.sequence.graphics as graphics
 import biotite.sequence.io.fasta as fasta
 from biotite.database import RequestError
 
-TARGET_UNIPROT_ID = "P10145"
-TARGET_SCOP_FAMILY_ID = "4000912"
-QUERY_UNIPROT_ID = "P03212"
+TARGET_UNIPROT_ID = "P04746"
+TARGET_SCOP_FAMILY_ID = "4003138"
+QUERY_UNIPROT_ID = "P00722"
 
-#TARGET_UNIPROT_ID = "P09467"
-#TARGET_SCOP_FAMILY_ID = "4002766"
-#QUERY_UNIPROT_ID = "P73922"
+# TARGET_UNIPROT_ID = "P09467"
+# TARGET_SCOP_FAMILY_ID = "4002766"
+# QUERY_UNIPROT_ID = "P73922"
 
 
 target_sequence = fasta.get_sequence(
@@ -27,11 +31,11 @@ query_sequence = fasta.get_sequence(
 
 aa_matrix = align.SubstitutionMatrix.std_protein_matrix()
 alignment = align.align_optimal(
-    target_sequence,
     query_sequence,
+    target_sequence,
     aa_matrix,
     gap_penalty=(-10, -1),
-    local=True,
+    local=False,
     max_number=1,
 )[0]
 
@@ -68,18 +72,38 @@ def get_sequence_family(scop_id):
     return sequences
 
 
+def merge_pairwise_alignments(alignments):
+    traces = []
+    sequences = []
+    for alignment in alignments:
+        trace = alignment.trace
+        # Remove gaps in first sequence
+        trace = trace[trace[:, 0] != -1]
+        traces.append(trace[:, 1])
+        sequences.append(alignment.sequences[1])
+    return align.Alignment(sequences, np.stack(traces, axis=-1))
+
+
 sequences = get_sequence_family(TARGET_SCOP_FAMILY_ID)
-app = clustalo.ClustalOmegaApp(list(sequences.values()))
-app.start()
-app.join()
-msa = app.get_alignment()
-order = app.get_alignment_order()
+# This is not a 'true' MSA, in the sense that it only merges the pairwise alignments
+# with respect to the target sequence
+pseudo_msa = merge_pairwise_alignments(
+    [
+        align.align_optimal(
+            target_sequence,
+            sequence,
+            aa_matrix,
+            gap_penalty=(-10, -1),
+            max_number=1,
+        )[0]
+        for sequence in sequences.values()
+    ]
+)
+
 labels = np.array(list(sequences.keys()))
 
 fig, ax = plt.subplots(figsize=(8.0, 24.0))
-graphics.plot_alignment_type_based(
-    ax, msa[:, order], labels=labels[order], show_numbers=True
-)
+graphics.plot_alignment_type_based(ax, pseudo_msa, labels=labels, show_numbers=True)
 
 ########################################################################################
 # :footcite:`Robinson1991`
@@ -114,53 +138,44 @@ AA_FREQUENCY = {
 }
 
 
-profile = seq.SequenceProfile.from_alignment(msa)
+profile = seq.SequenceProfile.from_alignment(pseudo_msa)
 background_frequencies = np.array(list(AA_FREQUENCY.values()))
 # Normalize background frequencies
 background_frequencies = background_frequencies / background_frequencies.sum()
 
-score_matrix = profile.log_odds_matrix(background_frequencies, pseudocount=1)
+score_matrix = profile.log_odds_matrix(background_frequencies, pseudocount=1).T
 score_matrix *= 10
 score_matrix = score_matrix.astype(np.int32)
 
 profile_seq = seq.PositionalSequence(profile.to_consensus())
 positional_matrix = align.SubstitutionMatrix(
-    profile_seq.alphabet, seq.ProteinSequence.alphabet, score_matrix=score_matrix
+    seq.ProteinSequence.alphabet, profile_seq.alphabet, score_matrix=score_matrix
 )
 profile_alignment = align.align_optimal(
-    profile_seq,
     query_sequence,
+    profile_seq,
     positional_matrix,
     gap_penalty=(-10, -1),
     local=False,
     terminal_penalty=False,
     max_number=1,
 )[0]
-print(profile_alignment)
 
 
 ########################################################################################
-# Map the profile alignment to the original target sequence
-# Chimeric alignment from target in the MSA and the query in the profile alignment
-sequence_pos_in_msa = np.where(labels == TARGET_UNIPROT_ID)[0][0]
-target_trace = msa.trace[:, sequence_pos_in_msa]
-# Remove parts of query aligned to gaps in in the profile
-gap_mask = profile_alignment.trace[:, 0] != -1
-query_trace = profile_alignment.trace[gap_mask, 1]
-print(msa.trace.shape)
-print(profile_alignment.trace.shape)
-print(profile.symbols.shape)
-print()
-print(query_trace.shape)
-print(target_trace.shape)
-target_alignment = align.Alignment(
-    [target_sequence, query_sequence],
-    np.stack([target_trace, query_trace], axis=-1),
+# Map the profile alignment to the original target sequence.
+# As the pseudo-MSA was designed to have the same length as the target sequence,
+# the sequence needs to be exchanged only, the trace remains the same
+refined_alignment = align.Alignment(
+    [query_sequence, target_sequence], profile_alignment.trace
 )
 
 fig, ax = plt.subplots(figsize=(8.0, 4.0))
 graphics.plot_alignment_similarity_based(
-    ax, target_alignment, matrix=aa_matrix, labels=[TARGET_UNIPROT_ID, QUERY_UNIPROT_ID]
+    ax,
+    refined_alignment,
+    matrix=aa_matrix,
+    labels=[TARGET_UNIPROT_ID, QUERY_UNIPROT_ID],
 )
 
 
