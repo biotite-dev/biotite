@@ -31,7 +31,7 @@ def test_fetch(format, as_file_like):
     if format == "pdb":
         file = pdb.PDBFile.read(file_path_or_obj)
         pdb.get_structure(file)
-    elif format == "pdbx":
+    elif format == "cif":
         file = pdbx.CIFFile.read(file_path_or_obj)
         pdbx.get_structure(file)
     elif format == "bcif":

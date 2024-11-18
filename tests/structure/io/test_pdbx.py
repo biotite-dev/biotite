@@ -85,7 +85,7 @@ def test_split_one_line(cif_line, expected_fields):
     """
     Test whether values that have an embedded quote are properly escaped.
     """
-    assert pdbx.cif._split_one_line(cif_line) == expected_fields
+    assert list(pdbx.cif._split_one_line(cif_line)) == expected_fields
 
 
 @pytest.mark.parametrize(

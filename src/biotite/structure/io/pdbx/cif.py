@@ -7,7 +7,6 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["CIFFile", "CIFBlock", "CIFCategory", "CIFColumn", "CIFData"]
 
 import itertools
-import re
 from collections.abc import MutableMapping, Sequence
 import numpy as np
 from biotite.file import (
@@ -357,7 +356,7 @@ class CIFCategory(_Component, MutableMapping):
         return CIFBlock
 
     @staticmethod
-    def deserialize(text, expect_whitespace=True):
+    def deserialize(text):
         lines = [line.strip() for line in text.splitlines() if not _is_empty(line)]
 
         if _is_loop_start(lines[0]):
@@ -372,7 +371,7 @@ class CIFCategory(_Component, MutableMapping):
 
         lines = _to_single(lines)
         if is_looped:
-            category_dict = CIFCategory._deserialize_looped(lines, expect_whitespace)
+            category_dict = CIFCategory._deserialize_looped(lines)
         else:
             category_dict = CIFCategory._deserialize_single(lines)
         return CIFCategory(category_dict, category_name)
@@ -445,7 +444,7 @@ class CIFCategory(_Component, MutableMapping):
         line_i = 0
         while line_i < len(lines):
             line = lines[line_i]
-            parts = _split_one_line(line)
+            parts = list(_split_one_line(line))
             if len(parts) == 2:
                 # Standard case -> name and value in one line
                 name_part, value_part = parts
@@ -453,7 +452,7 @@ class CIFCategory(_Component, MutableMapping):
             elif len(parts) == 1:
                 # Value is a multiline value on the next line
                 name_part = parts[0]
-                parts = _split_one_line(lines[line_i + 1])
+                parts = list(_split_one_line(lines[line_i + 1]))
                 if len(parts) == 1:
                     value_part = parts[0]
                 else:
@@ -467,7 +466,7 @@ class CIFCategory(_Component, MutableMapping):
         return category_dict
 
     @staticmethod
-    def _deserialize_looped(lines, expect_whitespace):
+    def _deserialize_looped(lines):
         """
         Process a category where each field has multiple values
         (category is a table).
@@ -490,20 +489,7 @@ class CIFCategory(_Component, MutableMapping):
         # row-line-alignment at all and simply cycle through columns
         column_indices = itertools.cycle(range(len(column_names)))
         for data_line in data_lines:
-            # If whitespace is expected in quote protected values,
-            # use regex-based _split_one_line() to split
-            # Otherwise use much more faster whitespace split
-            # and quote removal if applicable.
-            if expect_whitespace:
-                values = _split_one_line(data_line)
-            else:
-                values = data_line.split()
-                for k in range(len(values)):
-                    # Remove quotes
-                    if (values[k][0] == '"' and values[k][-1] == '"') or (
-                        values[k][0] == "'" and values[k][-1] == "'"
-                    ):
-                        values[k] = values[k][1:-1]
+            values = _split_one_line(data_line)
             for val in values:
                 column_index = next(column_indices)
                 column_name = column_names[column_index]
@@ -685,15 +671,7 @@ class CIFBlock(_Component, MutableMapping):
             # Element is stored in serialized form
             # -> must be deserialized first
             try:
-                # Special optimization for "atom_site":
-                # Even if the values are quote protected,
-                # no whitespace is expected in escaped values
-                # Therefore slow regex-based _split_one_line() call is not necessary
-                if key == "atom_site":
-                    expect_whitespace = False
-                else:
-                    expect_whitespace = True
-                category = CIFCategory.deserialize(category, expect_whitespace)
+                category = CIFCategory.deserialize(category)
             except Exception:
                 raise DeserializationError(f"Failed to deserialize category '{key}'")
             # Update with deserialized object
@@ -1062,29 +1040,27 @@ def _split_one_line(line):
     """
     # Special case of multiline value, where the line starts with ';'
     if line[0] == ";":
-        return [line[1:]]
+        yield line[1:]
+    else:
+        # Loop over the line
+        while line:
+            # Strip leading whitespace(s)
+            stripped_line = line.lstrip()
+            # Split the line on whitespace
+            word, _, line = stripped_line.partition(" ")
+            # Handle the case where the word start with a quote
+            if word.startswith(("'", '"')):
+                # Set the separator to the quote found
+                separator = word[0]
+                # Handle the case of a quoted word without space
+                if word.endswith(separator) and len(word) > 1:
+                    # Yield the word without the opening and closing quotes
+                    yield word[1:-1]
+                    continue
+                # split the word on the separator
+                word, _, line = stripped_line[1:].partition(separator)
 
-    # Define the patterns for different types of fields
-    single_quote_pattern = r"('(?:'(?! )|[^'])*')(?:\s|$)"
-    double_quote_pattern = r'("(?:"(?! )|[^"])*")(?:\s|$)'
-    unquoted_pattern = r"([^\s]+)"
-
-    # Combine the patterns using alternation
-    combined_pattern = (
-        f"{single_quote_pattern}|{double_quote_pattern}|{unquoted_pattern}"
-    )
-
-    # Find all matches
-    matches = re.findall(combined_pattern, line)
-
-    # Extract non-empty groups from the matches
-    fields = []
-    for match in matches:
-        field = next(group for group in match if group)
-        if field[0] == field[-1] == "'" or field[0] == field[-1] == '"':
-            field = field[1:-1]
-        fields.append(field)
-    return fields
+            yield word
 
 
 def _arrayfy(data):
