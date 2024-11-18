@@ -1481,7 +1481,6 @@ def get_assembly(
     extra_fields=None,
     use_author_fields=True,
     include_bonds=False,
-    include_sym_id=False,
 ):
     """
     Build the given biological assembly.
@@ -1554,12 +1553,6 @@ def get_assembly(
         (e.g. especially inter-residue bonds),
         have :attr:`BondType.ANY`, since the PDB format itself does
         not support bond orders.
-    include_sym_id : bool, optional
-        If set to true, the ``sym_id`` annotation array is added to the
-        returned structure. This array identifies the set of symmetry operations
-        that was applied to the corresponding chain in the asymmetric unit.
-        The sym_id annotation corresponds to ids in the ``pdbx_struct_oper_list``
-        category, separated by `-`.
 
     Returns
     -------
@@ -1629,7 +1622,7 @@ def get_assembly(
             # Filter affected asym IDs
             sub_structure = structure[..., np.isin(structure.label_asym_id, asym_ids)]
             sub_assembly = _apply_transformations(
-                sub_structure, transformations, operations, include_sym_id
+                sub_structure, transformations, operations
             )
             # Merge the chains with asym IDs for this operation
             # with chains from other operations
@@ -1646,14 +1639,14 @@ def get_assembly(
     return assembly
 
 
-def _apply_transformations(structure, transformation_dict, operations, include_sym_id):
+def _apply_transformations(structure, transformation_dict, operations):
     """
     Get subassembly by applying the given operations to the input
     structure containing affected asym IDs.
     """
     # Additional first dimesion for 'structure.repeat()'
     assembly_coord = np.zeros((len(operations),) + structure.coord.shape)
-    assembly_transform_ids = []
+    sym_ids = []
     # Apply corresponding transformation for each copy in the assembly
     for i, operation in enumerate(operations):
         coord = structure.coord
@@ -1666,14 +1659,11 @@ def _apply_transformations(structure, transformation_dict, operations, include_s
             # Translate
             coord += translation_vector
 
-        assembly_transform_ids.append(
-            np.full(len(structure), "-".join(list(operation)))
-        )
+        sym_ids.append("-".join(list(operation)))
         assembly_coord[i] = coord
 
     assembly = repeat(structure, assembly_coord)
-    if include_sym_id:
-        assembly.set_annotation("sym_id", np.concatenate(assembly_transform_ids))
+    assembly.set_annotation("sym_id", np.repeat(sym_ids, structure.array_length()))
     return assembly
 
 
