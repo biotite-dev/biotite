@@ -1045,9 +1045,9 @@ def _split_one_line(line):
         # Loop over the line
         while line:
             # Strip leading whitespace(s)
-            striped_line = line.lstrip()
+            stripped_line = line.lstrip()
             # Split the line on whitespace
-            word, _, line = striped_line.partition(" ")
+            word, _, line = stripped_line.partition(" ")
             # Handle the case where the word start with a quote
             if word.startswith(("'", '"')):
                 # Set the separator to the quote found
@@ -1058,7 +1058,7 @@ def _split_one_line(line):
                     yield word[1:-1]
                     continue
                 # split the word on the separator
-                word, _, line = striped_line[1:].partition(separator)
+                word, _, line = stripped_line[1:].partition(separator)
 
             yield word
 
