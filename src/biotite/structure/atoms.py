@@ -13,6 +13,7 @@ __all__ = [
     "Atom",
     "AtomArray",
     "AtomArrayStack",
+    "concatenate",
     "array",
     "stack",
     "repeat",
@@ -22,6 +23,7 @@ __all__ = [
 
 import abc
 import numbers
+from collections.abc import Sequence
 import numpy as np
 from biotite.copyable import Copyable
 from biotite.structure.bonds import BondList
@@ -420,42 +422,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         return self._array_length
 
     def __add__(self, array):
-        if not isinstance(self, type(array)):
-            raise TypeError("Can only concatenate two arrays or two stacks")
-        # Create either new array or stack, depending of the own type
-        if isinstance(self, AtomArray):
-            concat = AtomArray(length=self._array_length + array._array_length)
-        if isinstance(self, AtomArrayStack):
-            concat = AtomArrayStack(
-                self.stack_depth(), self._array_length + array._array_length
-            )
-
-        concat._coord = np.concatenate((self._coord, array.coord), axis=-2)
-
-        # Transfer only annotations,
-        # which are existent in both operands
-        arr_categories = list(array._annot.keys())
-        for category in self._annot.keys():
-            if category in arr_categories:
-                annot = self._annot[category]
-                arr_annot = array._annot[category]
-                concat._annot[category] = np.concatenate((annot, arr_annot))
-
-        # Concatenate bonds lists,
-        # if at least one of them contains bond information
-        if self._bonds is not None or array._bonds is not None:
-            bonds1 = self._bonds
-            bonds2 = array._bonds
-            if bonds1 is None:
-                bonds1 = BondList(self._array_length)
-            if bonds2 is None:
-                bonds2 = BondList(array._array_length)
-            concat._bonds = bonds1 + bonds2
-
-        # Copy box
-        if self._box is not None:
-            concat._box = np.copy(self._box)
-        return concat
+        return concatenate([self, array])
 
     def __copy_fill__(self, clone):
         super().__copy_fill__(clone)
@@ -619,6 +586,7 @@ class AtomArray(_AtomArrayBase):
     :class:`AtomArray` is done with the '+' operator.
     Only the annotation categories, which are existing in both arrays,
     are transferred to the new array.
+    For a list of :class:`AtomArray` objects, use :func:`concatenate()`.
 
     Optionally, an :class:`AtomArray` can store chemical bond
     information via a :class:`BondList` object.
@@ -891,7 +859,9 @@ class AtomArrayStack(_AtomArrayBase):
     :class:`AtomArray` instance.
 
     Concatenation of atoms for each array in the stack is done using the
-    '+' operator. For addition of atom arrays onto the stack use the
+    '+' operator.
+    For a list of :class:`AtomArray` objects, use :func:`concatenate()`.
+    For addition of atom arrays onto the stack use the
     :func:`stack()` method.
 
     The :attr:`box` attribute has the shape *m x 3 x 3*, as the cell
@@ -1303,6 +1273,112 @@ def stack(arrays):
     if all([array.box is not None for array in arrays]):
         array_stack.box = np.array([array.box for array in arrays])
     return array_stack
+
+
+def concatenate(atoms):
+    """
+    Concatenate multiple :class:`AtomArray` or :class:`AtomArrayStack` objects into
+    a single :class:`AtomArray` or :class:`AtomArrayStack`, respectively.
+
+    Parameters
+    ----------
+    atoms : iterable object of AtomArray or AtomArrayStack
+        The atoms to be concatenated.
+        :class:`AtomArray` cannot be mixed with :class:`AtomArrayStack`.
+
+    Returns
+    -------
+    concatenated_atoms : AtomArray or AtomArrayStack
+        The concatenated atoms, i.e. its ``array_length()`` is the sum of the
+        ``array_length()`` of the input ``atoms``.
+
+    Notes
+    -----
+    The following rules apply:
+
+    - Only the annotation categories that exist in all elements are transferred.
+    - The box of the first element that has a box is transferred, if any.
+    - The bonds of all elements are concatenated, if any element has associated bonds.
+      For elements without a :class:`BondList` an empty :class:`BondList` is assumed.
+
+    Examples
+    --------
+
+    >>> atoms1 = array([
+    ...     Atom([1,2,3], res_id=1, atom_name="N"),
+    ...     Atom([4,5,6], res_id=1, atom_name="CA"),
+    ...     Atom([7,8,9], res_id=1, atom_name="C")
+    ... ])
+    >>> atoms2 = array([
+    ...     Atom([1,2,3], res_id=2, atom_name="N"),
+    ...     Atom([4,5,6], res_id=2, atom_name="CA"),
+    ...     Atom([7,8,9], res_id=2, atom_name="C")
+    ... ])
+    >>> print(concatenate([atoms1, atoms2]))
+                1      N                1.000    2.000    3.000
+                1      CA               4.000    5.000    6.000
+                1      C                7.000    8.000    9.000
+                2      N                1.000    2.000    3.000
+                2      CA               4.000    5.000    6.000
+                2      C                7.000    8.000    9.000
+    """
+    # Ensure that the atoms can be iterated over multiple times
+    if not isinstance(atoms, Sequence):
+        atoms = list(atoms)
+
+    length = 0
+    depth = None
+    element_type = None
+    common_categories = set(atoms[0].get_annotation_categories())
+    box = None
+    has_bonds = False
+    for element in atoms:
+        if element_type is None:
+            element_type = type(element)
+        else:
+            if not isinstance(element, element_type):
+                raise TypeError(
+                    f"Cannot concatenate '{type(element).__name__}' "
+                    f"with '{element_type.__name__}'"
+                )
+        length += element.array_length()
+        if isinstance(element, AtomArrayStack):
+            if depth is None:
+                depth = element.stack_depth()
+            else:
+                if element.stack_depth() != depth:
+                    raise IndexError("The stack depths are not equal")
+        common_categories &= set(element.get_annotation_categories())
+        if element.box is not None and box is None:
+            box = element.box
+        if element.bonds is not None:
+            has_bonds = True
+
+    if element_type == AtomArray:
+        concat_atoms = AtomArray(length)
+    elif element_type == AtomArrayStack:
+        concat_atoms = AtomArrayStack(depth, length)
+    concat_atoms.coord = np.concatenate([element.coord for element in atoms], axis=-2)
+    for category in common_categories:
+        concat_atoms.set_annotation(
+            category,
+            np.concatenate(
+                [element.get_annotation(category) for element in atoms], axis=0
+            ),
+        )
+    concat_atoms.box = box
+    if has_bonds:
+        # Concatenate bonds of all elements
+        concat_atoms.bonds = BondList.concatenate(
+            [
+                element.bonds
+                if element.bonds is not None
+                else BondList(element.array_length())
+                for element in atoms
+            ]
+        )
+
+    return concat_atoms
 
 
 def repeat(atoms, coord):
