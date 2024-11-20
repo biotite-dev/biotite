@@ -10,6 +10,7 @@ __name__ = "biotite.structure.alphabet"
 __author__ = "Martin Larralde"
 __all__ = ["I3DSequence", "to_3di"]
 
+import warnings
 from biotite.sequence.alphabet import LetterAlphabet
 from biotite.sequence.sequence import Sequence
 from biotite.structure.alphabet.encoder import Encoder
@@ -95,12 +96,15 @@ def to_3di(atoms):
         stop = chain_start_indices[i + 1]
         chain = atoms[start:stop]
         sequence = I3DSequence()
-        sequence.code = (
-            Encoder()
-            .encode(
-                *coord_for_atom_name_per_residue(chain, ["CA", "CB", "N", "C"]),
+        if chain.array_length() == 0:
+            warnings.warn("Ignoring empty chain")
+        else:
+            sequence.code = (
+                Encoder()
+                .encode(
+                    *coord_for_atom_name_per_residue(chain, ["CA", "CB", "N", "C"]),
+                )
+                .filled()
             )
-            .filled()
-        )
         sequences.append(sequence)
     return sequences, chain_start_indices[:-1]
