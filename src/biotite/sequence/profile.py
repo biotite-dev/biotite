@@ -3,6 +3,7 @@
 # information.
 
 import warnings
+from numbers import Integral
 import numpy as np
 from biotite.sequence.align.alignment import get_codes
 from biotite.sequence.alphabet import LetterAlphabet
@@ -66,15 +67,15 @@ class SequenceProfile(object):
     It also saves the number of gaps at each position in the array
     'gaps'.
 
+    With :meth:`from_alignment()` a :class:`SequenceProfile` object can
+    be created from an indefinite number of aligned sequences.
+
     With :meth:`probability_matrix()` the position probability matrix
     can be created based on 'symbols' and a pseudocount.
 
     With :meth:`log_odds_matrix()` the position weight matrix can
     be created based on the before calculated position probability
     matrix and the background frequencies.
-
-    With :meth:`from_alignment()` a :class:`SequenceProfile` object can
-    be created from an indefinite number of aligned sequences.
 
     With :meth:`sequence_probability_from_matrix()` the probability of a
     sequence can be calculated based on the before calculated position
@@ -105,6 +106,63 @@ class SequenceProfile(object):
         Array which indicates the number of gaps at each position.
     alphabet : Alphabet, length=k
         Alphabet of sequences of sequence profile
+
+    Examples
+    --------
+
+    Create a profile from a multiple sequence alignment:
+
+    >>> sequences = [
+    ...     NucleotideSequence("CGCTCATTC"),
+    ...     NucleotideSequence("CGCTATTC"),
+    ...     NucleotideSequence("CCCTCAATC"),
+    ... ]
+    >>> msa, _, _, _ = align_multiple(
+    ...     sequences, SubstitutionMatrix.std_nucleotide_matrix(), gap_penalty=-5
+    ... )
+    >>> print(msa)
+    CGCTCATTC
+    CGCT-ATTC
+    CCCTCAATC
+    >>> profile = SequenceProfile.from_alignment(msa)
+    >>> print(profile)
+      A C G T
+    0 0 3 0 0
+    1 0 1 2 0
+    2 0 3 0 0
+    3 0 0 0 3
+    4 0 2 0 0
+    5 3 0 0 0
+    6 1 0 0 2
+    7 0 0 0 3
+    8 0 3 0 0
+    >>> print(profile.gaps)
+    [0 0 0 0 1 0 0 0 0]
+
+    Slice the profile (masks and index arrays are also supported):
+
+    >>> print(profile[2:])
+      A C G T
+    0 0 3 0 0
+    1 0 0 0 3
+    2 0 2 0 0
+    3 3 0 0 0
+    4 1 0 0 2
+    5 0 0 0 3
+    6 0 3 0 0
+
+    Use the profile to compute the position probability matrix:
+
+    >>> print(profile.probability_matrix())
+    [[0.000 1.000 0.000 0.000]
+     [0.000 0.333 0.667 0.000]
+     [0.000 1.000 0.000 0.000]
+     [0.000 0.000 0.000 1.000]
+     [0.000 1.000 0.000 0.000]
+     [1.000 0.000 0.000 0.000]
+     [0.333 0.000 0.000 0.667]
+     [0.000 0.000 0.000 1.000]
+     [0.000 1.000 0.000 0.000]]
     """
 
     def __init__(self, symbols, gaps, alphabet):
@@ -498,3 +556,12 @@ class SequenceProfile(object):
                 f"as 'symbols' {self.symbols.shape}"
             )
         return np.sum(pwm[np.arange(len(sequence)), sequence.code])
+
+    def __getitem__(self, index):
+        if isinstance(index, Integral):
+            # Do not allow to collapse dimensions
+            index = slice(index, index + 1)
+        return SequenceProfile(self.symbols[index], self.gaps[index], self.alphabet)
+
+    def __len__(self):
+        return len(self.symbols)

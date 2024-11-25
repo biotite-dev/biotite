@@ -23,7 +23,7 @@ PUBCHEM_URL = "https://pubchem.ncbi.nlm.nih.gov/"
 # Keep test parameters in separate variable to generate IDs from them
 TEST_PARAMETERS = [
     pytest.param("biotite", []),
-    pytest.param("biotite.sequence", []),
+    pytest.param("biotite.sequence", ["biotite.sequence.align"]),
     pytest.param("biotite.sequence.align", ["biotite.sequence"]),
     pytest.param("biotite.sequence.phylo", ["biotite.sequence"]),
     pytest.param(
