@@ -7,6 +7,7 @@ __author__ = "Patrick Kunzmann, Daniel Bauer, Claude J. Rogers"
 __all__ = ["PDBFile"]
 
 import warnings
+from collections import namedtuple
 import numpy as np
 from biotite.file import InvalidFileError, TextFile
 from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
@@ -53,6 +54,8 @@ _c = slice(24, 33)
 _alpha = slice(33, 40)
 _beta = slice(40, 47)
 _gamma = slice(47, 54)
+_space = slice(55, 66)
+_z = slice(66, 70)
 
 
 class PDBFile(TextFile):
@@ -545,6 +548,37 @@ class PDBFile(TextFile):
 
         return array
 
+    def get_space_group(self):
+        """
+        Extract the space group and Z value from the CRYST1 record.
+
+        Returns
+        -------
+        SpaceGroupInfo : A namedtuple
+            space_group (str): The extracted space group, or "P 1" if not found.
+            z_val (int): The extracted Z value, or 1 if not found.
+        """
+        # Initialize the namedtuple
+        SpaceGroupInfo = namedtuple("SpaceGroupInfo", ["space_group", "z_val"])
+
+        # CRYST1 is a one-time record so we can extract it directly
+        for line in self.lines:
+            if line.startswith("CRYST1"):
+                try:
+                    # Extract space group and Z value
+                    space_group = str(line[_space])
+                    z_val = int(line[_z])
+                except ValueError:
+                    # File contains invalid 'CRYST1' record
+                    warnings.warn(
+                        "File contains invalid 'CRYST1' record, using defaults"
+                    )
+                    # Set default values
+                    space_group = "P 1"
+                    z_val = 1
+                break
+        return SpaceGroupInfo(space_group=space_group, z_val=z_val)
+
     def set_structure(self, array, hybrid36=False):
         """
         Set the :class:`AtomArray` or :class:`AtomArrayStack` for the
@@ -699,6 +733,33 @@ class PDBFile(TextFile):
             self._set_bonds(BondList(array.array_length(), bond_array), pdb_atom_id)
 
         self._index_models_and_atoms()
+
+    def set_space_group(self, add_info):
+        """
+        Update the CRYST1 record with the provided space group and Z value.
+
+        Parameters
+        ----------
+            add_info : namedtuple or similar
+                Containes 'space_group' (str) and 'z_val' (int) attributes
+        """
+        for i, line in enumerate(self.lines):
+            if line.startswith("CRYST1"):
+                try:
+                    # Format the replacement string
+                    space_group_str = add_info.space_group.ljust(11)
+                    z_val_str = str(add_info.z_val).rjust(4)
+
+                    # Replace the existing CRYST1 record
+                    self.lines[i] = line[:55] + space_group_str + z_val_str + line[70:]
+                except (ValueError, AttributeError):
+                    # File contains invalid 'CRYST1' record
+                    warnings.warn(
+                        "File contains invalid 'CRYST1' record; defaulting to 'P 1'"
+                        "space group and '1' Z value"
+                    )
+                    break
+                break
 
     def list_assemblies(self):
         """
