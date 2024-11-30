@@ -1557,7 +1557,10 @@ def get_assembly(
     Returns
     -------
     assembly : AtomArray or AtomArrayStack
-        The assembly. The return type depends on the `model` parameter.
+        The assembly.
+        The return type depends on the `model` parameter.
+        Contains the `sym_id` annotation, which is derived from the name of the
+        applied symmetry operations.
 
     Examples
     --------
