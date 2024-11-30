@@ -790,6 +790,8 @@ class PDBFile(TextFile):
         assembly : AtomArray or AtomArrayStack
             The assembly.
             The return type depends on the `model` parameter.
+            Contains the `sym_id` annotation, which enumerates the copies of the
+            asymmetric unit in the assembly.
 
         Examples
         --------
