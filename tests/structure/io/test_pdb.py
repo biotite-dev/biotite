@@ -158,6 +158,9 @@ def test_pdbx_consistency_assembly(path, model):
     ref_assembly = pdbx.get_assembly(pdbx_file, model=model)
 
     for category in ref_assembly.get_annotation_categories():
+        if category == "sym_id":
+            # Symmetry ID annotation is currently not returned for PDB files
+            continue
         assert (
             test_assembly.get_annotation(category).tolist()
             == ref_assembly.get_annotation(category).tolist()
