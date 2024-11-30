@@ -13,6 +13,7 @@ __all__ = [
     "set_component",
     "list_assemblies",
     "get_assembly",
+    "get_sse"
 ]
 
 import itertools
@@ -1765,3 +1766,58 @@ def _convert_string_to_sequence(string, stype):
         return None
     else:
         raise InvalidFileError("mmCIF _entity_poly.type unsupported type: " + stype)
+
+
+def get_sse(pdbx_file, data_block=None):
+    """
+    Get the secondary structure from a PDBx file.
+
+    Parameters
+    ----------
+    pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
+        The file object.
+
+    Returns
+    -------
+    sec_struct_dic: keys are the different chains from the pdbx file
+    and values are a letter representing the secondary structure
+    'a' means alpha-helix, 'b' means beta-strand/sheet, 'c' means coil.
+    '' indicates that a residue is not an amino acid or it comprises
+    no CA atom for each atom in the atom array
+
+    """
+    sec_struct_dic = {}
+    block = _get_block(pdbx_file, data_block)
+    cif_feats = list(block.keys())
+
+    # Init all chains with "c" for coil
+    for idx, chain in enumerate(block["struct_ref_seq"]["pdbx_strand_id"].as_array(str)):
+        ref_id = block["struct_ref_seq"]["ref_id"].as_array(int)[idx]
+        chain_idxs = np.where(block['entity_poly_seq']['entity_id'].as_array(int) == ref_id)[0]
+        sec_struct_dic[chain] = np.repeat('c', len(chain_idxs))
+
+    # Get alpha helices
+    if "struct_conf" in cif_feats:
+        alpha = block["struct_conf"]
+        pdb_chain = alpha['beg_label_asym_id'].as_array(str)
+        start_pos = alpha['beg_label_seq_id'].as_array(int)
+        end_pos = alpha['end_label_seq_id'].as_array(int)
+
+        # set alpha helix positions
+        for idx in range(len(pdb_chain)):
+            # Translate the 1-based positions from PDBx into 0-based array indices
+            sec_struct_dic[pdb_chain[idx]][start_pos[idx]-1:(end_pos[idx])] = 'a'
+
+    # Get beta sheets
+    if "struct_sheet" in cif_feats:
+        beta = block["struct_sheet_range"]
+        pdb_chain = beta['beg_label_asym_id'].as_array(str)
+        start_pos = beta['beg_label_seq_id'].as_array(int)
+        end_pos = beta['end_label_seq_id'].as_array(int)
+
+        # set alpha helix positions
+        for idx in range(len(pdb_chain)):
+            sec_struct_dic[pdb_chain[idx]][start_pos[idx]:(end_pos[idx]+1)] = 'b'
+
+
+    return sec_struct_dic
