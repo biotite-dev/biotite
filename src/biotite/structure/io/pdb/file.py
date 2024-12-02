@@ -740,8 +740,8 @@ class PDBFile(TextFile):
 
         Parameters
         ----------
-            add_info : namedtuple or similar
-                Containes 'space_group' (str) and 'z_val' (int) attributes
+        info : tuple(str, int) or SpaceGroupInfo
+            Contains the space group and Z-value.
         """
         for i, line in enumerate(self.lines):
             if line.startswith("CRYST1"):
