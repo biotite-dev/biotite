@@ -554,9 +554,10 @@ class PDBFile(TextFile):
 
         Returns
         -------
-        SpaceGroupInfo : A namedtuple
-            space_group (str): The extracted space group, or "P 1" if not found.
-            z_val (int): The extracted Z value, or 1 if not found.
+        space_group : str
+            The extracted space group.
+        z_val : int
+            The extracted Z value.
         """
         # Initialize the namedtuple
         SpaceGroupInfo = namedtuple("SpaceGroupInfo", ["space_group", "z_val"])
