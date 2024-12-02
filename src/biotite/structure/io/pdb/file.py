@@ -734,7 +734,7 @@ class PDBFile(TextFile):
 
         self._index_models_and_atoms()
 
-    def set_space_group(self, add_info):
+    def set_space_group(self, info):
         """
         Update the CRYST1 record with the provided space group and Z value.
 
