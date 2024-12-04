@@ -17,6 +17,7 @@ cimport cython
 cimport numpy as np
 from libc.stdlib cimport free, realloc
 
+from collections.abc import Sequence
 import itertools
 import numbers
 from enum import IntEnum
@@ -308,6 +309,61 @@ class BondList(Copyable):
             # Create empty bond list
             self._bonds = np.zeros((0, 3), dtype=np.uint32)
             self._max_bonds_per_atom = 0
+
+    @staticmethod
+    def concatenate(bonds_lists):
+        """
+        Concatenate multiple :class:`BondList` objects into a single
+        :class:`BondList`, respectively.
+
+        Parameters
+        ----------
+        bonds_lists : iterable object of BondList
+            The bond lists to be concatenated.
+
+        Returns
+        -------
+        concatenated_bonds : BondList
+            The concatenated bond lists.
+
+        Examples
+        --------
+
+        >>> bonds1 = BondList(2, np.array([(0, 1)]))
+        >>> bonds2 = BondList(3, np.array([(0, 1), (0, 2)]))
+        >>> merged_bonds = BondList.concatenate([bonds1, bonds2])
+        >>> print(merged_bonds.get_atom_count())
+        5
+        >>> print(merged_bonds.as_array()[:, :2])
+        [[0 1]
+         [2 3]
+         [2 4]]
+        """
+        # Ensure that the bonds_lists can be iterated over multiple times
+        if not isinstance(bonds_lists, Sequence):
+            bonds_lists = list(bonds_lists)
+
+        cdef np.ndarray merged_bonds = np.concatenate(
+            [bond_list._bonds for bond_list in bonds_lists]
+        )
+        # Offset the indices of appended bonds list
+        # (consistent with addition of AtomArray)
+        cdef int start = 0, stop = 0
+        cdef int cum_atom_count = 0
+        for bond_list in bonds_lists:
+            stop = start + bond_list._bonds.shape[0]
+            merged_bonds[start : stop, :2] += cum_atom_count
+            cum_atom_count += bond_list._atom_count
+            start = stop
+
+        cdef merged_bond_list = BondList(cum_atom_count)
+        # Array is not used in constructor to prevent unnecessary
+        # maximum and redundant bond calculation
+        merged_bond_list._bonds = merged_bonds
+        merged_bond_list._max_bonds_per_atom = max(
+            [bond_list._max_bonds_per_atom for bond_list in bonds_lists]
+        )
+        return merged_bond_list
 
     def __copy_create__(self):
         # Create empty bond list to prevent
@@ -1002,20 +1058,7 @@ class BondList(Copyable):
         )
 
     def __add__(self, bond_list):
-        cdef np.ndarray merged_bonds \
-            = np.concatenate([self._bonds, bond_list._bonds])
-        # Offset the indices of appended bonds list
-        # (consistent with addition of AtomArray)
-        merged_bonds[len(self._bonds):, :2] += self._atom_count
-        cdef uint32 merged_count = self._atom_count + bond_list._atom_count
-        cdef merged_bond_list = BondList(merged_count)
-        # Array is not used in constructor to prevent unnecessary
-        # maximum and redundant bond calculation
-        merged_bond_list._bonds = merged_bonds
-        merged_bond_list._max_bonds_per_atom = max(
-            self._max_bonds_per_atom, bond_list._max_bonds_per_atom
-        )
-        return merged_bond_list
+        return BondList.concatenate([self, bond_list])
 
     def __getitem__(self, index):
         ## Variables for both, integer and boolean index arrays

@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import itertools
 from os.path import join
 import numpy as np
 import pytest
@@ -130,6 +131,41 @@ def test_modification(bond_list):
     # Remove mutliple bonds, one of them is not in list
     bond_list.remove_bonds(struc.BondList(10, np.array([(1, 0), (1, 2), (8, 9)])))
     assert bond_list.as_array().tolist() == [[1, 3, 1], [3, 4, 0], [4, 6, 0], [1, 4, 0]]
+
+
+@pytest.mark.parametrize("seed", range(10))
+def test_concatenation_and_splitting(seed):
+    """
+    Repeatedly concatenating and splitting a `BondList` with the same indices
+    should recover the same object.
+    """
+    N_BOND_LISTS = 5
+    MAX_ATOMS = 10
+    MAX_BONDS = 10
+
+    rng = np.random.default_rng(seed)
+    split_bond_lists = []
+    starts = [0]
+    for _ in range(N_BOND_LISTS):
+        n_atoms = rng.integers(1, MAX_ATOMS)
+        bonds = rng.integers(0, n_atoms, size=(MAX_BONDS, 2))
+        bond_types = rng.integers(0, len(struc.BondType), size=MAX_BONDS)
+        split_bond_lists.append(
+            struc.BondList(
+                n_atoms, np.concatenate([bonds, bond_types[:, np.newaxis]], axis=1)
+            )
+        )
+        starts.append(starts[-1] + n_atoms)
+
+    concatenated_bond_list = struc.BondList.concatenate(split_bond_lists)
+    resplit_bond_lists = [
+        concatenated_bond_list[start:stop] for start, stop in itertools.pairwise(starts)
+    ]
+
+    for ref_bond_list, test_bond_list in zip(
+        split_bond_lists, resplit_bond_lists, strict=True
+    ):
+        assert ref_bond_list == test_bond_list
 
 
 def test_add_two_bond_list():
