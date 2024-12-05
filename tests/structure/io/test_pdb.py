@@ -76,18 +76,16 @@ def test_array_conversion(path, model, hybrid36, include_bonds):
         )
     assert array1.coord.tolist() == array2.coord.tolist()
 
+
 @pytest.mark.parametrize(
     "path, model",
-    itertools.product(
-        glob.glob(join(data_dir("structure"), "*.pdb")), 
-        [None, 1, -1]
-    ),
+    itertools.product(glob.glob(join(data_dir("structure"), "*.pdb")), [None, 1, -1]),
 )
 def test_space_group(path, model):
     """
-    Test the preservation of space group information and structure 
+    Test the preservation of space group information and structure
     when reading and writing a PDB file.
-    
+
     Parameters
     ----------
     path : str
@@ -122,6 +120,7 @@ def test_space_group(path, model):
     # Assertions to check if the original and new data match
     assert stack1 == stack2, "Structure mismatch after writing and reading."
     assert cryst1 == cryst2, "Space group mismatch after writing and reading."
+
 
 @pytest.mark.parametrize(
     "path, model",

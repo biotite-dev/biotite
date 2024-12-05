@@ -572,7 +572,7 @@ class PDBFile(TextFile):
                 except ValueError:
                     # File contains invalid 'CRYST1' record
                     raise InvalidFileError(
-                        "File does not contain assembly information (REMARK 300)"
+                        "File does not contain valid space group and/or Z values"
                     )
                     # Set default values
                     space_group = "P 1"
