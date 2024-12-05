@@ -571,8 +571,8 @@ class PDBFile(TextFile):
                     z_val = int(line[_z])
                 except ValueError:
                     # File contains invalid 'CRYST1' record
-                    warnings.warn(
-                        "File contains invalid 'CRYST1' record, using defaults"
+                    raise InvalidFileError(
+                        "File does not contain assembly information (REMARK 300)"
                     )
                     # Set default values
                     space_group = "P 1"
@@ -753,13 +753,12 @@ class PDBFile(TextFile):
 
                     # Replace the existing CRYST1 record
                     self.lines[i] = line[:55] + space_group_str + z_val_str + line[70:]
-                except (ValueError, AttributeError):
-                    # File contains invalid 'CRYST1' record
-                    warnings.warn(
-                        "File contains invalid 'CRYST1' record; defaulting to 'P 1'"
-                        "space group and '1' Z value"
+                except (ValueError, AttributeError) as e:
+                    # Raise an exception with context
+                    raise AttributeError(
+                        f"Failed to update CRYST1 record. "
+                        f"Line: {line.strip()} | Error: {e}"
                     )
-                    break
                 break
 
     def list_assemblies(self):
