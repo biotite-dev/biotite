@@ -748,8 +748,8 @@ class PDBFile(TextFile):
             if line.startswith("CRYST1"):
                 try:
                     # Format the replacement string
-                    space_group_str = add_info.space_group.ljust(11)
-                    z_val_str = str(add_info.z_val).rjust(4)
+                    space_group_str = info.space_group.ljust(11)
+                    z_val_str = str(info.z_val).rjust(4)
 
                     # Replace the existing CRYST1 record
                     self.lines[i] = line[:55] + space_group_str + z_val_str + line[70:]
