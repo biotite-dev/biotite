@@ -76,7 +76,11 @@ def create_switcher_json(file_path, min_tag, n_versions):
     """
     version_config = []
     current_version = _get_current_version()
-    for version in _get_previous_versions(min_tag, n_versions, current_version)[::-1]:
+    versions = _get_previous_versions(min_tag, n_versions, current_version)
+    if current_version not in versions:
+        versions.append(current_version)
+    versions.sort()
+    for version in versions:
         if version.patch != 0:
             # Documentation is not uploaded for patch versions
             continue
@@ -87,13 +91,7 @@ def create_switcher_json(file_path, min_tag, n_versions):
                 "url": f"{BIOTITE_URL}/{version}/",
             }
         )
-    version_config.append(
-        {
-            "name": f"{current_version.major}.{current_version.minor}",
-            "version": str(current_version),
-            "url": f"{BIOTITE_URL}/{current_version}/",
-            "preferred": True,
-        }
-    )
+    # Mark the latest version as preferred
+    version_config[-1]["preferred"] = True
     with open(file_path, "w") as file:
         json.dump(version_config, file, indent=4)
