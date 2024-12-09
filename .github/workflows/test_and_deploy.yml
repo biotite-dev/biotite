@@ -57,6 +57,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Make sure to fetch the latest tag,
+          # so 'switcher.py' works correctly in 'docs' job
+          fetch-depth: 0
+          fetch-tags: true
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PY_VERSION }}
@@ -263,10 +268,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        # Make sure to fetch the latest tag, so 'switcher.py' works correctly
-        fetch-depth: 0
-        fetch-tags: true
     - uses: actions/download-artifact@v4
       with:
         name: internal-build
