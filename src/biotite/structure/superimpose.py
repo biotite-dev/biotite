@@ -17,10 +17,13 @@ __all__ = [
 
 
 import numpy as np
-from biotite.sequence.align import SubstitutionMatrix, align_optimal, get_codes
+from biotite.sequence.align.alignment import get_codes, remove_gaps
+from biotite.sequence.align.matrix import SubstitutionMatrix
+from biotite.sequence.align.pairwise import align_optimal
 from biotite.sequence.alphabet import common_alphabet
 from biotite.sequence.seqtypes import ProteinSequence
 from biotite.structure.atoms import coord
+from biotite.structure.chains import chain_iter
 from biotite.structure.filter import filter_amino_acids, filter_nucleotides
 from biotite.structure.geometry import centroid, distance
 from biotite.structure.sequence import to_sequence
@@ -464,10 +467,16 @@ def superimpose_without_outliers(
 
 
 def superimpose_homologs(
-    fixed, mobile, substitution_matrix=None, gap_penalty=-10, min_anchors=3, **kwargs
+    fixed,
+    mobile,
+    substitution_matrix=None,
+    gap_penalty=-10,
+    min_anchors=3,
+    terminal_penalty=False,
+    **kwargs,
 ):
     r"""
-    Superimpose one protein or nucleotide chain onto another one,
+    Superimpose a protein or nucleotide structure onto another one,
     considering sequence differences and conformational outliers.
 
     The method finds corresponding residues by sequence alignment and
@@ -480,11 +489,11 @@ def superimpose_homologs(
     ----------
     fixed : AtomArray, shape(n,) or AtomArrayStack, shape(m,n)
         The fixed structure(s).
-        Must comprise a single chain.
     mobile : AtomArray, shape(n,) or AtomArrayStack, shape(m,n)
-        The structure(s) which is/are superimposed on the `fixed`
-        structure.
-        Must comprise a single chain.
+        The structure(s) which is/are superimposed on the `fixed` structure.
+        Must contain the same number of chains as `fixed` with corresponding chains
+        being in the same order.
+        The specific chain IDs can be different.
     substitution_matrix : str or SubstitutionMatrix, optional
         The (name of the) substitution matrix used for sequence
         alignment.
@@ -504,6 +513,9 @@ def superimpose_homologs(
         `mobile` in this fallback case, an exception is raised.
         Furthermore, the outlier removal is stopped, if less than
         `min_anchors` anchors would be left.
+    terminal_penalty : bool, optional
+        If set to true, gap penalties are applied to terminal gaps in the sequence
+        alignment.
     **kwargs
         Additional parameters for
         :func:`superimpose_without_outliers()`.
@@ -527,6 +539,7 @@ def superimpose_homologs(
     --------
     superimpose : Superimposition without outlier removal
     superimpose_without_outliers : Internally used for outlier removal
+    superimpose_structural_homologs : Better suited for low sequence similarity
 
     Notes
     -----
@@ -540,7 +553,7 @@ def superimpose_homologs(
         or len(mobile_anchor_indices) < min_anchors
     ):
         raise ValueError(
-            "Structures have too few CA atoms for required number of anchors"
+            "Structures have too few backbone atoms for required number of anchors"
         )
 
     anchor_indices = _find_matching_anchors(
@@ -548,18 +561,19 @@ def superimpose_homologs(
         mobile[..., mobile_anchor_indices],
         substitution_matrix,
         gap_penalty,
+        terminal_penalty,
     )
     if len(anchor_indices) < min_anchors:
         # Fallback: Match all backbone anchors
         if len(fixed_anchor_indices) != len(mobile_anchor_indices):
             raise ValueError(
                 "Tried fallback due to low anchor number, "
-                "but number of CA atoms does not match"
+                "but number of backbone atoms does not match"
             )
         fixed_anchor_indices = fixed_anchor_indices
         mobile_anchor_indices = mobile_anchor_indices
     else:
-        # The anchor indices point to the CA atoms
+        # The anchor indices point to the backbone atoms
         # -> get the corresponding indices for the whole structure
         fixed_anchor_indices = fixed_anchor_indices[anchor_indices[:, 0]]
         mobile_anchor_indices = mobile_anchor_indices[anchor_indices[:, 1]]
@@ -639,51 +653,52 @@ def _find_matching_anchors(
     mobile_anchors_atoms,
     substitution_matrix,
     gap_penalty,
+    terminal_penalty,
 ):
     """
     Find corresponding residues using pairwise sequence alignment.
     """
-    fixed_seq = _to_sequence(fixed_anchor_atoms)
-    mobile_seq = _to_sequence(mobile_anchors_atoms)
-    common_alph = common_alphabet([fixed_seq.alphabet, mobile_seq.alphabet])
-    if common_alph is None:
-        raise ValueError("Cannot superimpose peptides with nucleic acids")
+    anchor_list = []
+    fixed_seq_offset = 0
+    mobile_seq_offset = 0
+    for fixed_chain, mobile_chain in zip(
+        chain_iter(fixed_anchor_atoms), chain_iter(mobile_anchors_atoms), strict=True
+    ):
+        # The input is a single chain -> expect a single sequence
+        fixed_seq = to_sequence(fixed_chain, allow_hetero=True)[0][0]
+        mobile_seq = to_sequence(mobile_chain, allow_hetero=True)[0][0]
 
-    if substitution_matrix is None:
-        if isinstance(fixed_seq, ProteinSequence):
-            substitution_matrix = SubstitutionMatrix.std_protein_matrix()
-        else:
-            substitution_matrix = SubstitutionMatrix.std_nucleotide_matrix()
-    elif isinstance(substitution_matrix, str):
-        substitution_matrix = SubstitutionMatrix(
-            common_alph, common_alph, substitution_matrix
-        )
-    score_matrix = substitution_matrix.score_matrix()
+        common_alph = common_alphabet([fixed_seq.alphabet, mobile_seq.alphabet])
+        if common_alph is None:
+            raise ValueError("Cannot superimpose peptides with nucleic acids")
+        if substitution_matrix is None:
+            if isinstance(fixed_seq, ProteinSequence):
+                substitution_matrix = SubstitutionMatrix.std_protein_matrix()
+            else:
+                substitution_matrix = SubstitutionMatrix.std_nucleotide_matrix()
+        elif isinstance(substitution_matrix, str):
+            substitution_matrix = SubstitutionMatrix(
+                common_alph, common_alph, substitution_matrix
+            )
 
-    alignment = align_optimal(
-        fixed_seq,
-        mobile_seq,
-        substitution_matrix,
-        gap_penalty,
-        terminal_penalty=False,
-        max_number=1,
-    )[0]
-    alignment_codes = get_codes(alignment)
-    anchor_mask = (
-        # Anchors must be similar amino acids
-        (score_matrix[alignment_codes[0], alignment_codes[1]] > 0)
+        alignment = align_optimal(
+            fixed_seq,
+            mobile_seq,
+            substitution_matrix,
+            gap_penalty,
+            terminal_penalty=terminal_penalty,
+            max_number=1,
+        )[0]
         # Cannot anchor gaps
-        & (alignment_codes[0] != -1)
-        & (alignment_codes[1] != -1)
-    )
-    anchors = alignment.trace[anchor_mask]
-    return anchors
+        alignment = remove_gaps(alignment)
+        ali_codes = get_codes(alignment)
+        score_matrix = substitution_matrix.score_matrix()
+        # Anchors must be similar amino acids
+        anchors = alignment.trace[score_matrix[ali_codes[0], ali_codes[1]] > 0]
 
+        anchors += fixed_seq_offset, mobile_seq_offset
+        fixed_seq_offset += len(fixed_seq)
+        mobile_seq_offset += len(mobile_seq)
+        anchor_list.append(anchors)
 
-def _to_sequence(atoms):
-    sequences, _ = to_sequence(atoms, allow_hetero=True)
-    if len(sequences) == 0:
-        raise ValueError("Structure does not contain any amino acids or nucleotides")
-    if len(sequences) > 1:
-        raise ValueError("Structure contains multiple chains, but only one is allowed")
-    return sequences[0]
+    return np.concatenate(anchor_list, axis=0)
