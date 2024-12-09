@@ -1557,7 +1557,10 @@ def get_assembly(
     Returns
     -------
     assembly : AtomArray or AtomArrayStack
-        The assembly. The return type depends on the `model` parameter.
+        The assembly.
+        The return type depends on the `model` parameter.
+        Contains the `sym_id` annotation, which is derived from the name of the
+        applied symmetry operations.
 
     Examples
     --------
@@ -1646,7 +1649,7 @@ def _apply_transformations(structure, transformation_dict, operations):
     """
     # Additional first dimesion for 'structure.repeat()'
     assembly_coord = np.zeros((len(operations),) + structure.coord.shape)
-
+    sym_ids = []
     # Apply corresponding transformation for each copy in the assembly
     for i, operation in enumerate(operations):
         coord = structure.coord
@@ -1658,9 +1661,13 @@ def _apply_transformations(structure, transformation_dict, operations):
             coord = matrix_rotate(coord, rotation_matrix)
             # Translate
             coord += translation_vector
+
+        sym_ids.append("-".join(list(operation)))
         assembly_coord[i] = coord
 
-    return repeat(structure, assembly_coord)
+    assembly = repeat(structure, assembly_coord)
+    assembly.set_annotation("sym_id", np.repeat(sym_ids, structure.array_length()))
+    return assembly
 
 
 def _get_transformations(struct_oper):
