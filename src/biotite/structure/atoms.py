@@ -233,7 +233,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         else:
             raise TypeError(f"Index must be integer, not '{type(index).__name__}'")
 
-    def equal_annotations(self, item):
+    def equal_annotations(self, item, equal_nan: bool = True):
         """
         Check, if this object shares equal annotation arrays with the
         given :class:`AtomArray` or :class:`AtomArrayStack`.
@@ -242,6 +242,8 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         ----------
         item : AtomArray or AtomArrayStack
             The object to compare the annotation arrays with.
+        equal_nan: bool
+            Whether to count `nan` values as equal. Default: True.
 
         Returns
         -------
@@ -253,7 +255,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         if not self.equal_annotation_categories(item):
             return False
         for name in self._annot:
-            if not np.array_equal(self._annot[name], item._annot[name]):
+            if not np.array_equal(self._annot[name], item._annot[name], equal_nan=equal_nan):
                 return False
         return True
 
