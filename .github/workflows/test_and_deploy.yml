@@ -57,6 +57,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Make sure to fetch the latest tag,
+          # so 'switcher.py' works correctly in 'docs' job
+          fetch-depth: 0
+          fetch-tags: true
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PY_VERSION }}
@@ -263,10 +268,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        # Make sure to fetch the latest tag, so 'switcher.py' works correctly
-        fetch-depth: 0
-        fetch-tags: true
     - uses: actions/download-artifact@v4
       with:
         name: internal-build
@@ -372,19 +373,41 @@ jobs:
 
 
   upload-docs:
-    name: Upload documentation to GitHub Releases
+    name: Upload documentation to GitHub Releases and documentation website
+    if: github.event_name == 'release' && github.event.action == 'published'
     permissions:
       contents: write
     needs:
     - docs
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Install dependencies for documentation upload
+      run: pip install requests
+    - uses: actions/checkout@v4
     - uses: actions/download-artifact@v4
       with:
         name: documentation
         path: dist
     - uses: softprops/action-gh-release@v2.0.5
-      if: github.event_name == 'release' && github.event.action == 'published'
       with:
-        files: dist//doc.zip
-
+        files: dist/doc.zip
+    - name: Unzip documentation
+      run: unzip dist/doc.zip -d build
+    - name: Assemble multi-version documentation
+      run: >
+        python .github/workflows/multiversion_docs.py
+        build/doc/_static/switcher.json
+        dist/assembled_doc
+    - name: Upload documentation to website (skip for patch releases)
+      if: endsWith(github.event.release.tag_name, 0)
+      uses: easingthemes/ssh-deploy@v5.1.0
+      with:
+        SSH_PRIVATE_KEY: ${{ secrets.DOC_PRIVATE_KEY }}
+        REMOTE_HOST: ${{ secrets.DOC_HOST }}
+        REMOTE_USER: ${{ secrets.DOC_USER }}
+        SOURCE: "dist/assembled_doc/*"
+        TARGET: "biotite"
+        SCRIPT_BEFORE: "rm -r biotite/*"
