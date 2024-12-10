@@ -231,15 +231,11 @@ def test_connect_via_residue_names_with_alt_atom_ids():
         pdbx_file_with_alt_ids, model=1, include_bonds=True
     )
 
-    # Assert bonds are the same
+    # Assert bonds are the same for the residue with alternative atom IDs (ZY9)
     assert (
         atoms_with_alt_ids[atoms_with_alt_ids.res_name == "ZY9"].bonds.as_array()
         == atoms[atoms.res_name == "ZY9"].bonds.as_array()
     ).all()
-
-    # zy9 = atoms.res_name == "ZY9"
-
-    print("Here.")
 
 
 def test_bond_sparsity():
