@@ -923,7 +923,3 @@ def test_writing_and_reading_extra_fields(tmpdir):
     assert np.all(
         atoms.get_annotation("my_custom_annotation").astype(int) == custom_annotation
     )
-
-
-if __name__ == "__main__":
-    test_connect_via_residue_names_with_alt_atom_ids()
