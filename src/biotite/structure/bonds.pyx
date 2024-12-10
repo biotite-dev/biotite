@@ -1647,7 +1647,11 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
                 res_names[curr_start_i], {}
             )
 
-        atom_names_in_res = atom_names[curr_start_i : next_start_i]
+        std_name_mapping = get_std_atom_names(res_names[curr_start_i])
+        atom_names_in_res = {
+            std_name_mapping[atom_name] for atom_name
+            in atom_names[curr_start_i : next_start_i]
+        }
 
         # Check if we should use alternative atom names
         std_atom_ids = get_from_ccd(
