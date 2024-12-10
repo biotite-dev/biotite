@@ -204,6 +204,7 @@
             "Atom",
             "AtomArray",
             "AtomArrayStack",
+            "concatenate",
             "array",
             "stack",
             "repeat",
