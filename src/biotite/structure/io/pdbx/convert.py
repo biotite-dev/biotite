@@ -1649,7 +1649,6 @@ def _apply_transformations(structure, transformation_dict, operations):
     """
     # Additional first dimesion for 'structure.repeat()'
     assembly_coord = np.zeros((len(operations),) + structure.coord.shape)
-    sym_ids = []
     # Apply corresponding transformation for each copy in the assembly
     for i, operation in enumerate(operations):
         coord = structure.coord
@@ -1661,12 +1660,12 @@ def _apply_transformations(structure, transformation_dict, operations):
             coord = matrix_rotate(coord, rotation_matrix)
             # Translate
             coord += translation_vector
-
-        sym_ids.append("-".join(list(operation)))
         assembly_coord[i] = coord
 
     assembly = repeat(structure, assembly_coord)
-    assembly.set_annotation("sym_id", np.repeat(sym_ids, structure.array_length()))
+    assembly.set_annotation(
+        "sym_id", np.repeat(np.arange(len(operations)), structure.array_length())
+    )
     return assembly
 
 
