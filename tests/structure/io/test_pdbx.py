@@ -479,19 +479,19 @@ def test_assembly_chain_count(format, pdb_id, model):
 
 
 @pytest.mark.parametrize(
-    "pdb_id, assembly_id, ref_sym_ids",
+    "pdb_id, assembly_id, symmetric_unit_count",
     [
         # Single operation
-        ("5zng", "1", np.array([1]).astype(str)),
+        ("5zng", "1", 1),
         # Multiple operations with continuous operation IDs
-        ("1f2n", "1", np.arange(1, 60 + 1).astype(str)),
+        ("1f2n", "1", 60),
         # Multiple operations with discontinuous operation IDs
-        ("1f2n", "4", np.array([1, 2, 6, 10, 23, 24]).astype(str)),
+        ("1f2n", "4", 6),
         # Multiple combined operations
-        ("1f2n", "6", np.char.add(np.arange(1, 60 + 1).astype(str), "-X0")),
+        ("1f2n", "6", 60),
     ],
 )
-def test_assembly_sym_id(pdb_id, assembly_id, ref_sym_ids):
+def test_assembly_sym_id(pdb_id, assembly_id, symmetric_unit_count):
     """
     Check if the :func:`get_assembly()` function returns the correct
     symmetry ID annotation for a known example.
@@ -500,11 +500,11 @@ def test_assembly_sym_id(pdb_id, assembly_id, ref_sym_ids):
     assembly = pdbx.get_assembly(pdbx_file, assembly_id=assembly_id)
     # 'unique_indices' contains the FIRST occurence of each unique value
     unique_sym_ids, unique_indices = np.unique(assembly.sym_id, return_index=True)
-    # Sort by first occurrence instead of alphabetically
+    # Sort by first occurrence
     order = np.argsort(unique_indices)
     unique_sym_ids = unique_sym_ids[order]
     unique_indices = unique_indices[order]
-    assert unique_sym_ids.tolist() == ref_sym_ids.tolist()
+    assert unique_sym_ids.tolist() == list(range(symmetric_unit_count))
     # Every asymmetric unit should have the same length,
     # as each operation is applied to all atoms in the asymmetric unit
     asym_lengths = np.diff(np.append(unique_indices, assembly.array_length()))
