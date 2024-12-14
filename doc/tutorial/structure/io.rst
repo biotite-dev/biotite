@@ -211,9 +211,9 @@ automatically - from a single :class:`BinaryCIFData` to an entire
 .. jupyter-execute::
 
     uncompressed_data = pdbx.BinaryCIFData(np.arange(100))
-    print(f"Uncompressed size: {len(uncompressed_data.serialize()["data"])} bytes")
+    print(f"Uncompressed size: {len(uncompressed_data.serialize()['data'])} bytes")
     compressed_data = pdbx.compress(uncompressed_data)
-    print(f"Compressed size: {len(compressed_data.serialize()["data"])} bytes")
+    print(f"Compressed size: {len(compressed_data.serialize()['data'])} bytes")
 
 
 Using structures from a PDBx file

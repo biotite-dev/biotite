@@ -10,7 +10,7 @@ channels:
   - salilab
 
 dependencies:
-  - python =3.12
+  - python =3.11
   # Package building
   - cython >=3.0
   - pip >=10.0
