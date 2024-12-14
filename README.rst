@@ -71,9 +71,6 @@ Some functions require some extra packages:
 
    $ pip install biotite
 
-After install, biotite's Chemical Component Dictionary (CCD) can be updated via
-
-   $ biotite-setup-ccd
 
 Usage
 -----

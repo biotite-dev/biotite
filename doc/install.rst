@@ -67,7 +67,7 @@ After cloning the repository, navigate to its top-level directory (the one
 .. code-block:: console
 
    $ pip install .
-   $ python setup_ccd.py
+   $ python -m biotite.setup_ccd
    $ pip install .
 
 The `setup_ccd.py` script can also be used to update the internal CCD to the current
@@ -80,7 +80,7 @@ Substitute the installation with the following commands instead:
 .. code-block:: console
 
    $ pip install -e .
-   $ python setup_ccd.py
+   $ python -m biotite.setup_ccd
 
 Common issues and solutions
 ---------------------------
