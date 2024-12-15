@@ -107,6 +107,9 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
         self._process = Popen(
             command, stdout=PIPE, stderr=PIPE, shell=True, encoding="UTF-8"
         )
+        self._stdout, self._stderr = self._process.communicate()
+        print(self._stdout)
+        print(self._stderr)
 
     def is_finished(self):
         code = self._process.poll()
