@@ -12,7 +12,9 @@ from biotite.sequence.io.fastq import FastqFile
 from tests.util import is_not_installed
 
 
-@pytest.mark.skipif(is_not_installed("fasterq-dump"), reason="sra-tools is not installed")
+@pytest.mark.skipif(
+    is_not_installed("fasterq-dump"), reason="sra-tools is not installed"
+)
 @pytest.mark.parametrize(
     "app_class, custom_prefix",
     itertools.product([FastqDumpApp, FastaDumpApp], [False, True]),
@@ -44,7 +46,9 @@ def test_objects(app_class, custom_prefix):
             assert isinstance(fasta_file, FastaFile)
 
 
-@pytest.mark.skipif(is_not_installed("fasterq-dump"), reason="sra-tools is not installed")
+@pytest.mark.skipif(
+    is_not_installed("fasterq-dump"), reason="sra-tools is not installed"
+)
 @pytest.mark.parametrize(
     "app_class, custom_prefix",
     itertools.product([FastqDumpApp, FastaDumpApp], [False, True]),
