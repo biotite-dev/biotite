@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - "main"
+      - "docs"
   pull_request:
   release:
     types:
@@ -31,7 +32,7 @@ env:
   # mussllinux takes 6+ hrs to build and test so ignore it
   CIBW_TEST_SKIP: "*musllinux* *-macosx_arm64"
   # Configuration for the architecture-agnostic jobs
-  PY_VERSION: "3.12"  # Keep in sync with version in environment.yml
+  PY_VERSION: "3.11"  # Keep in sync with version in environment.yml
 
 
 jobs:
@@ -278,15 +279,7 @@ jobs:
         miniforge-version: latest
     - name: Install distribution
       run: pip install dist/*.whl
-    - name: Build base documentation
-      run: sphinx-build -a -D plot_gallery=0 doc build//doc
-    - name: Build tutorial and gallery
-      if: >
-        (
-          github.event_name == 'release' &&
-          github.event.action == 'published'
-        )
-        || github.event_name == 'workflow_dispatch'
+    - name: Build documentation
       run: sphinx-build -a doc build//doc
     - name: Zip documentation
       run: |
