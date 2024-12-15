@@ -224,6 +224,7 @@ def test_connect_via_residue_names_with_alt_atom_ids():
     )
     atoms = pdbx.get_structure(pdbx_file_with_no_alt_ids, model=1, include_bonds=True)
 
+    # ZY9 modified to have alternative atom IDs
     pdbx_file_with_alt_ids = pdbx.CIFFile.read(
         join(data_dir("structure"), "6q9t_with_alt_ids.cif")
     )
@@ -231,15 +232,11 @@ def test_connect_via_residue_names_with_alt_atom_ids():
         pdbx_file_with_alt_ids, model=1, include_bonds=True
     )
 
-    # Assert bonds are the same
-    assert (
-        atoms_with_alt_ids[atoms_with_alt_ids.res_name == "ZY9"].bonds.as_array()
-        == atoms[atoms.res_name == "ZY9"].bonds.as_array()
-    ).all()
+    # Ensure bonds are the same
+    assert (atoms_with_alt_ids.bonds.as_array() == atoms.bonds.as_array()).all()
 
-    # zy9 = atoms.res_name == "ZY9"
-
-    print("Here.")
+    # Ensure atom names are the same (we mapped the alternative atom IDs to the standard atom IDs)
+    assert (atoms.atom_name == atoms_with_alt_ids.atom_name).all()
 
 
 def test_bond_sparsity():
@@ -923,7 +920,3 @@ def test_writing_and_reading_extra_fields(tmpdir):
     assert np.all(
         atoms.get_annotation("my_custom_annotation").astype(int) == custom_annotation
     )
-
-
-if __name__ == "__main__":
-    test_connect_via_residue_names_with_alt_atom_ids()

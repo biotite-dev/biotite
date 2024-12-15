@@ -1647,14 +1647,16 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
                 res_names[curr_start_i], {}
             )
 
-        atom_names_in_res = atom_names[curr_start_i : next_start_i]
-
         # Check if we should use alternative atom names
+        atom_names_in_res = atom_names[curr_start_i : next_start_i]
         std_atom_ids = get_from_ccd(
             "chem_comp_atom", 
             res_names[curr_start_i], 
             "atom_id"
         ) 
+
+        # Only lookup alternative atom names if we cannot match
+        # all atoms using standard names
         if (atom_names_in_res is not None and \
             std_atom_ids is not None and \
             not set(atom_names_in_res).issubset(std_atom_ids)):
@@ -1666,25 +1668,16 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
                 "alt_atom_id"
             ) 
             if set(atom_names_in_res).issubset(alt_atom_ids):
-                # Standardize atom IDs
+                # Residue uses alternative names; standardize them
                 mapping = dict(zip(alt_atom_ids, std_atom_ids))
-                mapped_atom_names_in_res = np.vectorize(
-                    mapping.get
-                )(atom_names_in_res)
-                atom_names_in_res = mapped_atom_names_in_res
-
-                # If we uncomment the line below, we modify the atom_name in-place
-                # And thus enforce standardized atom names (which may be an unexpected behavior)
-                # TODO: Is that a desired behavior?
-                # atoms.atom_name[curr_start_i : next_start_i] = atom_names_in_res
-
-            # TODO: How to handle cases that do not fit either mapping?
+                atom_names_in_res = [mapping.get(atom_name) for atom_name in atom_names_in_res]
 
         for (atom_name1, atom_name2), bond_type in bond_dict_for_res.items():
             atom_indices1 = np.where(atom_names_in_res == atom_name1)[0] \
                             .astype(np.int64, copy=False)
             atom_indices2 = np.where(atom_names_in_res == atom_name2)[0] \
                             .astype(np.int64, copy=False)
+
             # In rare cases the same atom name may appear multiple times
             # (e.g. in altlocs)
             # -> create all possible bond combinations
