@@ -32,7 +32,7 @@ env:
   # mussllinux takes 6+ hrs to build and test so ignore it
   CIBW_TEST_SKIP: "*musllinux* *-macosx_arm64"
   # Configuration for the architecture-agnostic jobs
-  PY_VERSION: "3.12"  # Keep in sync with version in environment.yml
+  PY_VERSION: "3.11"  # Keep in sync with version in environment.yml
 
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
       with:
-        python-version: "3.11"
+        python-version: "3.12"
     - name: Install ruff
       # Keep in sync with the ruff version in pyproject.toml
       run: pip install ruff==0.6.9
