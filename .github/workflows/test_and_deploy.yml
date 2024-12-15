@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - "main"
+      - "docs"
   pull_request:
   release:
     types:
@@ -278,15 +279,7 @@ jobs:
         miniforge-version: latest
     - name: Install distribution
       run: pip install dist/*.whl
-    - name: Build base documentation
-      run: sphinx-build -a -D plot_gallery=0 doc build//doc
-    - name: Build tutorial and gallery
-      if: >
-        (
-          github.event_name == 'release' &&
-          github.event.action == 'published'
-        )
-        || github.event_name == 'workflow_dispatch'
+    - name: Build documentation
       run: sphinx-build -a doc build//doc
     - name: Zip documentation
       run: |
