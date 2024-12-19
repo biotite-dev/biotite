@@ -1041,8 +1041,8 @@ def _split_one_line(line):
     # Special case of multiline value, where the line starts with ';'
     if line[0] == ";":
         yield line[1:]
-    else:
-        # Loop over the line
+    elif "'" in line or '"' in line:
+        # Quoted values in the line
         while line:
             # Strip leading whitespace(s)
             stripped_line = line.lstrip()
@@ -1061,6 +1061,10 @@ def _split_one_line(line):
                 word, _, line = stripped_line[1:].partition(separator)
 
             yield word
+    else:
+        # No quoted values in the line -> simple whitespace split
+        for line in line.split():
+            yield line
 
 
 def _arrayfy(data):
