@@ -34,7 +34,7 @@ dependencies:
   - dssp =3
   - mafft
   - muscle =3
-  - sra-tools
+  - sra-tools =3
   - tantan
   - viennarna >=2.5.0
   # Documentation building
