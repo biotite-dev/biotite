@@ -170,6 +170,13 @@ TEST_PARAMETERS = [
             is_not_installed("vina"), reason="Software is not installed"
         ),
     ),
+    pytest.param(
+        "biotite.interface.rdkit",
+        ["biotite.structure", "biotite.structure.info"],
+        marks=pytest.mark.skipif(
+            cannot_import("rdkit"), reason="Software is not installed"
+        ),
+    ),
 ]
 
 
