@@ -1,3 +1,6 @@
+__author__ = "Patrick Kunzmann"
+__all__ = []
+
 import gzip
 import logging
 from collections import defaultdict
@@ -7,9 +10,7 @@ import numpy as np
 import requests
 from biotite.structure.io.pdbx import *
 
-OUTPUT_CCD = (
-    Path(__file__).parent / "src" / "biotite" / "structure" / "info" / "components.bcif"
-)
+OUTPUT_CCD = Path(__file__).parent / "structure" / "info" / "components.bcif"
 CCD_URL = "https://files.wwpdb.org/pub/pdb/data/monomers/components.cif.gz"
 
 
@@ -184,9 +185,13 @@ def _into_fitting_type(string_array, mask):
     return array
 
 
-if __name__ == "__main__":
+def main():
     logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
     OUTPUT_CCD.parent.mkdir(parents=True, exist_ok=True)
 
     compressed_ccd = concatenate_ccd(["chem_comp", "chem_comp_atom", "chem_comp_bond"])
     compressed_ccd.write(OUTPUT_CCD)
+
+
+if __name__ == "__main__":
+    main()

@@ -57,21 +57,20 @@ You can also install *Biotite* from the
 `project repository <https://github.com/biotite-dev/biotite>`_.
 However, in addition to building and installing the package, the internal
 `Chemical Component Dictionary (CCD) <https://www.wwpdb.org/data/ccd>`_. for
-:mod:`biotite.structure.info` needs to be built with the ``setup_ccd.py`` script.
+:mod:`biotite.structure.info` needs to be built with the ``setup_ccd`` module.
 The script in turn requires *Biotite*.
 The solution to this chicken-and-egg problem is to first install Biotite without the
-CCD, then build the CCD and finally install Biotite again.
+CCD and build the CCD afterwards.
 After cloning the repository, navigate to its top-level directory (the one
 ``setup.py`` is in) and type the following:
 
 .. code-block:: console
 
    $ pip install .
-   $ python setup_ccd.py
-   $ pip install .
+   $ python -m biotite.setup_ccd
 
-The `setup_ccd.py` script can also be used to update the internal CCD to the current
-upstream version from the PDB.
+``setup_ccd.py`` can also be used to update the internal CCD to the current upstream
+version from the PDB.
 
 Having the *Biotite* installation always pointing to your repository clone is
 also possible.
@@ -80,7 +79,7 @@ Substitute the installation with the following commands instead:
 .. code-block:: console
 
    $ pip install -e .
-   $ python setup_ccd.py
+   $ python -m biotite.setup_ccd
 
 Common issues and solutions
 ---------------------------

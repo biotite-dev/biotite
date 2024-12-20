@@ -53,7 +53,7 @@ def get_ccd():
         return BinaryCIFFile.read(_CCD_FILE).block
     except FileNotFoundError:
         raise RuntimeError(
-            "Internal CCD not found. Please run 'setup_ccd.py' and reinstall Biotite."
+            "Internal CCD not found. Please run 'python -m biotite.setup_ccd'."
         )
 
 
@@ -68,7 +68,7 @@ def set_ccd_path(ccd_path):
     ----------
     ccd_path : path-like
         The path to the custom CCD in BinaryCIF format, prepared with the
-        ``setup_ccd.py`` script.
+        ``setup_ccd.py`` module.
 
     Notes
     -----
