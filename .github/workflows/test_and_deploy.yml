@@ -72,14 +72,14 @@ jobs:
         id: cache-ccd
         with:
           path: ./src/biotite/structure/info/components.bcif
-          key: cache-${{ hashFiles('setup_ccd.py') }}-${{ hashFiles('components.cif.gz') }}
+          key: cache-${{ hashFiles('src/biotite/setup_ccd.py') }}-${{ hashFiles('components.cif.gz') }}
       - name: Remove CCD used for hashing
         run: rm components.cif.gz
       - name: Build internal CCD
         if: steps.cache-ccd.outputs.cache-hit != 'true'
         run: |
-          pip install .
-          python setup_ccd.py
+          pip install -e .
+          python -m biotite.setup_ccd
       - name: Install build backend
         run: pip install build
       - name: Build distribution

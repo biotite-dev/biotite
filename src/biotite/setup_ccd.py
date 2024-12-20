@@ -7,9 +7,7 @@ import numpy as np
 import requests
 from biotite.structure.io.pdbx import *
 
-OUTPUT_CCD = (
-    Path(__file__).parent / "structure" / "info" / "components.bcif"
-)
+OUTPUT_CCD = Path(__file__).parent / "structure" / "info" / "components.bcif"
 CCD_URL = "https://files.wwpdb.org/pub/pdb/data/monomers/components.cif.gz"
 
 
