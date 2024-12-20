@@ -122,6 +122,14 @@ def test_stack_indexing(stack):
     assert filtered_stack.array_length() == 1
 
 
+def test_concatenate_single(array, stack):
+    """
+    Concatenation of a single array or stack should return the same object.
+    """
+    assert array == struc.concatenate([array])
+    assert stack == struc.concatenate([stack])
+
+
 def test_concatenation(array, stack):
     concat_array = array[2:] + array[:2]
     assert concat_array.chain_id.tolist() == ["B", "B", "B", "A", "A"]
