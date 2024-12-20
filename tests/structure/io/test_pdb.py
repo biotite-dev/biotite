@@ -78,6 +78,45 @@ def test_array_conversion(path, model, hybrid36, include_bonds):
 
 
 @pytest.mark.parametrize(
+    "path",
+    glob.glob(join(data_dir("structure"), "*.pdb")),
+)
+def test_space_group(path):
+    """
+    Test the preservation of space group information and structure
+    when reading and writing a PDB file.
+
+    Parameters
+    ----------
+    path : str
+        Path to the PDB file.
+    """
+    # Read the PDB file
+    pdb_file = pdb.PDBFile.read(path)
+    print(f"Testing file: {path}")
+
+    try:
+        # Extract structure and space group
+        stack1 = pdb_file.get_structure(model=1)
+        cryst1 = pdb_file.get_space_group()
+    except biotite.InvalidFileError:
+        raise
+
+    # Write the structure and space group back to a new PDB file
+    pdb_file = pdb.PDBFile()
+    pdb_file.set_structure(stack1)
+    pdb_file.set_space_group(cryst1)
+
+    # Re-read the structure and space group
+    stack2 = pdb_file.get_structure(model=1)
+    cryst2 = pdb_file.get_space_group()
+
+    # Assertions to check if the original and new data match
+    assert stack1 == stack2, "Structure mismatch after writing and reading."
+    assert cryst1 == cryst2, "Space group mismatch after writing and reading."
+
+
+@pytest.mark.parametrize(
     "path, model",
     itertools.product(glob.glob(join(data_dir("structure"), "*.pdb")), [None, 1, -1]),
 )
