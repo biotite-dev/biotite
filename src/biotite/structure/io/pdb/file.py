@@ -790,6 +790,8 @@ class PDBFile(TextFile):
         assembly : AtomArray or AtomArrayStack
             The assembly.
             The return type depends on the `model` parameter.
+            Contains the `sym_id` annotation, which enumerates the copies of the
+            asymmetric unit in the assembly.
 
         Examples
         --------
@@ -853,8 +855,12 @@ class PDBFile(TextFile):
             affected_chain_ids = []
             transform_start = None
             for j, line in enumerate(assembly_lines[start:stop]):
-                if line.startswith("APPLY THE FOLLOWING TO CHAINS:") or line.startswith(
-                    "                   AND CHAINS:"
+                if any(
+                    line.startswith(chain_signal_string)
+                    for chain_signal_string in [
+                        "APPLY THE FOLLOWING TO CHAINS:",
+                        "                   AND CHAINS:",
+                    ]
                 ):
                     affected_chain_ids += [
                         chain_id.strip() for chain_id in line[30:].split(",")
@@ -1148,7 +1154,11 @@ def _apply_transformations(structure, rotations, translations):
         coord += translation
         assembly_coord[i] = coord
 
-    return repeat(structure, assembly_coord)
+    assembly = repeat(structure, assembly_coord)
+    assembly.set_annotation(
+        "sym_id", np.repeat(np.arange(len(rotations)), structure.array_length())
+    )
+    return assembly
 
 
 def _check_pdb_compatibility(array, hybrid36):

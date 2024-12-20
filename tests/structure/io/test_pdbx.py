@@ -430,7 +430,7 @@ def test_list_assemblies(format):
     "format, pdb_id, model",
     itertools.product(["cif", "bcif"], ["1f2n", "5zng"], [None, 1, -1]),
 )
-def test_get_assembly(format, pdb_id, model):
+def test_assembly_chain_count(format, pdb_id, model):
     """
     Test whether the :func:`get_assembly()` function produces the same
     number of peptide chains as the
@@ -476,6 +476,39 @@ def test_get_assembly(format, pdb_id, model):
         # a monomer,
         monomer_atom_count = pdbx.get_structure(pdbx_file).array_length()
         assert assembly.array_length() % monomer_atom_count == 0
+
+
+@pytest.mark.parametrize(
+    "pdb_id, assembly_id, symmetric_unit_count",
+    [
+        # Single operation
+        ("5zng", "1", 1),
+        # Multiple operations with continuous operation IDs
+        ("1f2n", "1", 60),
+        # Multiple operations with discontinuous operation IDs
+        ("1f2n", "4", 6),
+        # Multiple combined operations
+        ("1f2n", "6", 60),
+    ],
+)
+def test_assembly_sym_id(pdb_id, assembly_id, symmetric_unit_count):
+    """
+    Check if the :func:`get_assembly()` function returns the correct
+    symmetry ID annotation for a known example.
+    """
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{pdb_id}.bcif"))
+    assembly = pdbx.get_assembly(pdbx_file, assembly_id=assembly_id)
+    # 'unique_indices' contains the FIRST occurence of each unique value
+    unique_sym_ids, unique_indices = np.unique(assembly.sym_id, return_index=True)
+    # Sort by first occurrence
+    order = np.argsort(unique_indices)
+    unique_sym_ids = unique_sym_ids[order]
+    unique_indices = unique_indices[order]
+    assert unique_sym_ids.tolist() == list(range(symmetric_unit_count))
+    # Every asymmetric unit should have the same length,
+    # as each operation is applied to all atoms in the asymmetric unit
+    asym_lengths = np.diff(np.append(unique_indices, assembly.array_length()))
+    assert (asym_lengths == asym_lengths[0]).all()
 
 
 @pytest.mark.parametrize(
