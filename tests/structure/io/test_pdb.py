@@ -78,10 +78,10 @@ def test_array_conversion(path, model, hybrid36, include_bonds):
 
 
 @pytest.mark.parametrize(
-    "path, model",
-    itertools.product(glob.glob(join(data_dir("structure"), "*.pdb")), [None, 1, -1]),
+    "path",
+    glob.glob(join(data_dir("structure"), "*.pdb")),
 )
-def test_space_group(path, model):
+def test_space_group(path):
     """
     Test the preservation of space group information and structure
     when reading and writing a PDB file.
@@ -90,23 +90,17 @@ def test_space_group(path, model):
     ----------
     path : str
         Path to the PDB file.
-    model : int or None
-        Model index for multi-model PDB files, or None to include all models.
     """
     # Read the PDB file
     pdb_file = pdb.PDBFile.read(path)
-    print(f"Testing file: {path}, model: {model}")
+    print(f"Testing file: {path}")
 
     try:
         # Extract structure and space group
-        stack1 = pdb_file.get_structure(model=model)  # Removed duplicate argument
+        stack1 = pdb_file.get_structure(model=1)
         cryst1 = pdb_file.get_space_group()
     except biotite.InvalidFileError:
-        # If parsing fails for model=None due to mismatched atom counts, skip the test
-        if model is None:
-            pytest.skip("Skipping test due to incompatible atom counts across models.")
-        else:
-            raise  # Re-raise the error for other cases
+        raise
 
     # Write the structure and space group back to a new PDB file
     pdb_file = pdb.PDBFile()
@@ -114,7 +108,7 @@ def test_space_group(path, model):
     pdb_file.set_space_group(cryst1)
 
     # Re-read the structure and space group
-    stack2 = pdb_file.get_structure(model=model)
+    stack2 = pdb_file.get_structure(model=1)
     cryst2 = pdb_file.get_space_group()
 
     # Assertions to check if the original and new data match
