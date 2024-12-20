@@ -110,8 +110,8 @@ def test_space_group(path, model):
 
     # Write the structure and space group back to a new PDB file
     pdb_file = pdb.PDBFile()
-    pdb.set_structure(pdb_file, stack1)
-    pdb.PDBFile.set_space_group(pdb_file, cryst1)
+    pdb_file.set_structure(stack1)
+    pdb_file.set_space_group(cryst1)
 
     # Re-read the structure and space group
     stack2 = pdb_file.get_structure(model=model)
