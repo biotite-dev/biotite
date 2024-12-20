@@ -15,3 +15,5 @@ for more flexibility.
 
 __name__ = "biotite.interface"
 __author__ = "Patrick Kunzmann"
+
+from .warning import *
