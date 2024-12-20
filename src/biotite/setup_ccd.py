@@ -1,3 +1,6 @@
+__author__ = "Patrick Kunzmann"
+__all__ = []
+
 import gzip
 import logging
 from collections import defaultdict
