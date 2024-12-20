@@ -92,6 +92,7 @@ def create_switcher_json(file_path, min_tag, n_versions):
             }
         )
     # Mark the latest version as preferred
-    version_config[-1]["preferred"] = True
+    if len(version_config) > 0:
+        version_config[-1]["preferred"] = True
     with open(file_path, "w") as file:
         json.dump(version_config, file, indent=4)
