@@ -214,9 +214,6 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     else:
         is_swapped = False
     lower_diag, upper_diag = min(band), max(band)
-    band_width = upper_diag - lower_diag + 1
-    if band_width < 1:
-        raise ValueError("The width of the band is 0")
     if len(seq1) + upper_diag <= 0 or lower_diag >= len(seq2):
         raise ValueError(
             "Alignment band is out of range, the band allows no overlap "
@@ -226,6 +223,9 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     # covers the search space of an unbanded alignment
     lower_diag = max(lower_diag, -len(seq1)+1)
     upper_diag = min(upper_diag,  len(seq2)-1)
+    band_width = upper_diag - lower_diag + 1
+    if band_width < 1:
+        raise ValueError("The width of the band is 0")
 
     # This implementation uses transposed tables in comparison
     # to the common visualization
@@ -249,12 +249,12 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     ###############
     
     # A score value that signals that the respective direction in the
-    # dynamic programming matrix should not be used since, it would be
+    # dynamic programming matrix should not be used, since it would be
     # outside the band
     # It is the 'worst' score available, so the trace table will never
     # include such a direction
     neg_inf = np.iinfo(np.int32).min
-    # Correct the 'negative infinity' integer, by making it more positve
+    # Correct the 'negative infinity' integer, by making it more positive
     # This prevents an integer underflow when the gap penalty or
     # match score is added to this value
     neg_inf -= min(gap_penalty) if affine_penalty else gap_penalty
