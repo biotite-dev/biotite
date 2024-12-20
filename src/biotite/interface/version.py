@@ -11,7 +11,6 @@ import functools
 import importlib.metadata
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
-from .version import *
 
 # Stores the variant of interface functions
 # compatible with the respective installed package version
