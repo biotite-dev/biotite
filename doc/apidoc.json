@@ -319,7 +319,8 @@
             "average",
             "rmsd",
 	        "rmspd",
-            "rmsf"
+            "rmsf",
+            "lddt"
         ],
         "General analysis" : [
             "sasa",
