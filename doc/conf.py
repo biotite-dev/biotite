@@ -30,7 +30,7 @@ PACKAGE_PATH = join(dirname(DOC_PATH), "src")
 sys.path.insert(0, DOC_PATH)
 import apidoc
 import bibliography
-import key
+import preamble
 import scraper
 import switcher
 import viewcode
@@ -206,7 +206,7 @@ sphinx_gallery_conf = {
     "backreferences_dir": "examples/backreferences",
     "doc_module": ("biotite",),
     # Set the NCBI API key
-    "reset_modules": (key.set_ncbi_api_key_from_env,),
+    "reset_modules": (preamble.setup_script),
     "remove_config_comments": True,
 }
 
