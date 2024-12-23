@@ -2,7 +2,7 @@ import os
 import numpy as np
 
 
-def setup_script():
+def setup_script(*args, **kwargs):
     """
     Prepare API keys, formatting, etc. for running a tutorial or example script.
     """
