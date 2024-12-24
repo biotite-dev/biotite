@@ -22,6 +22,7 @@ functions to directly obtain useful objects from a :class:`GenBankFile` object.
 .. jupyter-execute::
 
     from tempfile import gettempdir
+    import biotite.database.entrez as entrez
     import biotite.sequence.io.genbank as gb
 
     file_path = entrez.fetch(
