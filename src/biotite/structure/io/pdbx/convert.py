@@ -1299,7 +1299,7 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True, res_name=Non
         else:
             raise
         array.coord = _parse_component_coordinates(
-            [atom_category[field] for field in alt_coord_fields]
+            [atom_category[field] for field in alt_coord_fields], keep_missing=True
         )
 
     try:
@@ -1330,14 +1330,20 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True, res_name=Non
     return array
 
 
-def _parse_component_coordinates(coord_columns):
+def _parse_component_coordinates(coord_columns, keep_missing=False):
     coord = np.zeros((len(coord_columns[0]), 3), dtype=np.float32)
     for i, column in enumerate(coord_columns):
         if column.mask is not None and column.mask.array.any():
-            raise ValueError(
-                "Missing coordinates for some atoms",
-            )
-        coord[:, i] = column.as_array(np.float32)
+            if not keep_missing:
+                raise ValueError(
+                    "Missing coordinates for some atoms",
+                )
+            else:
+                warnings.warn(
+                    "Missing coordinates for some atoms. Those will be set to nan"
+                    UserWarning,
+                )
+        coord[:, i] = column.as_array(np.float32, masked_value=np.nan)
     return coord
 
 
