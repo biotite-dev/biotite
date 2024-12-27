@@ -1340,7 +1340,7 @@ def _parse_component_coordinates(coord_columns, keep_missing=False):
                 )
             else:
                 warnings.warn(
-                    "Missing coordinates for some atoms. Those will be set to nan"
+                    "Missing coordinates for some atoms. Those will be set to nan",
                     UserWarning,
                 )
         coord[:, i] = column.as_array(np.float32, masked_value=np.nan)
