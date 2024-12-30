@@ -255,8 +255,9 @@
         ],
         "Superimpositions" : [
             "superimpose",
-            "superimpose_homologs",
             "superimpose_without_outliers",
+            "superimpose_homologs",
+            "superimpose_structural_homologs",
             "AffineTransformation"
         ],
         "Filters" : [
@@ -319,7 +320,8 @@
             "average",
             "rmsd",
 	        "rmspd",
-            "rmsf"
+            "rmsf",
+            "tm_score"
         ],
         "General analysis" : [
             "sasa",
