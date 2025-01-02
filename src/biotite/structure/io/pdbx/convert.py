@@ -1311,7 +1311,7 @@ def get_component(
             raise
         array.coord = _parse_component_coordinates(
             [atom_category[field] for field in alt_coord_fields],
-            keep_missing=allow_missing_coords,
+            allow_missing=allow_missing_coords,
         )
 
     try:
@@ -1342,11 +1342,11 @@ def get_component(
     return array
 
 
-def _parse_component_coordinates(coord_columns, keep_missing=False):
+def _parse_component_coordinates(coord_columns, allow_missing=False):
     coord = np.zeros((len(coord_columns[0]), 3), dtype=np.float32)
     for i, column in enumerate(coord_columns):
         if column.mask is not None and column.mask.array.any():
-            if not keep_missing:
+            if not allow_missing:
                 raise ValueError(
                     "Missing coordinates for some atoms",
                 )
