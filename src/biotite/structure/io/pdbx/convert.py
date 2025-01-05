@@ -836,7 +836,11 @@ def set_structure(
     )
     atom_site["label_comp_id"] = np.copy(array.res_name)
     atom_site["label_asym_id"] = np.copy(array.chain_id)
-    atom_site["label_entity_id"] = _determine_entity_id(array.chain_id)
+    atom_site["label_entity_id"] = (
+        np.copy(array.label_entity_id)
+        if "label_entity_id" in array.get_annotation_categories()
+        else _determine_entity_id(array.chain_id)
+    )
     atom_site["label_seq_id"] = np.copy(array.res_id)
     atom_site["pdbx_PDB_ins_code"] = Column(
         np.copy(array.ins_code),
