@@ -18,7 +18,7 @@ NON_HETERO_RESIDUES = set([
 # fmt: on
 
 
-def residue(res_name):
+def residue(res_name, allow_missing_coord=False):
     """
     Get an atom array, representing the residue with the given name.
 
@@ -30,6 +30,11 @@ def residue(res_name):
     ----------
     res_name : str
         The up to 3-letter name of the residue.
+    allow_missing_coord: bool, optional
+        Whether to allow missing coordinate values in the residue.
+        If ``True``, these will be represented as ``nan`` values.
+        If ``False``, a ``ValueError`` is raised when missing coordinates
+        are encountered.
 
     Returns
     -------
@@ -74,7 +79,11 @@ def residue(res_name):
     from biotite.structure.io.pdbx import get_component
 
     try:
-        component = get_component(get_ccd(), res_name=res_name)
+        component = get_component(
+            get_ccd(),
+            res_name=res_name,
+            allow_missing_coord=allow_missing_coord,
+        )
     except KeyError:
         raise KeyError(f"No atom information found for residue '{res_name}' in CCD")
     component.hetero[:] = res_name not in NON_HETERO_RESIDUES

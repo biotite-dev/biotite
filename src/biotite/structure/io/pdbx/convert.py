@@ -1186,7 +1186,7 @@ def get_component(
     data_block=None,
     use_ideal_coord=True,
     res_name=None,
-    allow_missing_coords=False,
+    allow_missing_coord=False,
 ):
     """
     Create an :class:`AtomArray` for a chemical component from the
@@ -1215,10 +1215,10 @@ def get_component(
         In this case, the component with the given residue name is
         read.
         By default, all rows would be read in this case.
-    allow_missing_coords: bool
+    allow_missing_coord: bool, optional
         Whether to allow missing coordinate values in components.
-        If `True`, these will be represented as `nan` values.
-        If `False`, a `ValueError` is raised when missing coordinates
+        If ``True``, these will be represented as ``nan`` values.
+        If ``False``, a ``ValueError`` is raised when missing coordinates
         are encountered.
 
     Returns
@@ -1311,7 +1311,7 @@ def get_component(
             raise
         array.coord = _parse_component_coordinates(
             [atom_category[field] for field in alt_coord_fields],
-            keep_missing=allow_missing_coords,
+            allow_missing=allow_missing_coord,
         )
 
     try:
@@ -1342,18 +1342,18 @@ def get_component(
     return array
 
 
-def _parse_component_coordinates(coord_columns, keep_missing=False):
+def _parse_component_coordinates(coord_columns, allow_missing=False):
     coord = np.zeros((len(coord_columns[0]), 3), dtype=np.float32)
     for i, column in enumerate(coord_columns):
         if column.mask is not None and column.mask.array.any():
-            if not keep_missing:
-                raise ValueError(
-                    "Missing coordinates for some atoms",
-                )
-            else:
+            if allow_missing:
                 warnings.warn(
                     "Missing coordinates for some atoms. Those will be set to nan",
                     UserWarning,
+                )
+            else:
+                raise ValueError(
+                    "Missing coordinates for some atoms",
                 )
         coord[:, i] = column.as_array(np.float32, masked_value=np.nan)
     return coord
