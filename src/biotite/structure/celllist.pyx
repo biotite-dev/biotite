@@ -631,8 +631,14 @@ cdef class CellList:
 
         cdef ptr[:,:,:] cells = self._cells
         cdef int[:,:,:] cell_length = self._cell_length
+        cdef uint8[:] finite_mask = (
+            np.isfinite(np.asarray(coord)).all(axis=-1).astype(np.uint8, copy=False)
+        )
 
         for pos_i in range(coord.shape[0]):
+            if not finite_mask[pos_i]:
+                # For non-finite coordinates, there are no adjacent atoms
+                continue
             array_i = 0
             cell_r = cell_radius[pos_i]
             x = coord[pos_i, 0]
@@ -757,8 +763,8 @@ def _check_coord(coord):
         raise ValueError("Coordinates must not be empty")
     if coord.shape[1] != 3:
         raise ValueError("Coordinates must have form (x,y,z)")
-    if np.isnan(coord).any():
-        raise ValueError("Coordinates contain NaN values")
+    if not np.isfinite(coord).all():
+        raise ValueError("Coordinates contain non-finite values")
 
 
 def _empty_result(as_mask):
