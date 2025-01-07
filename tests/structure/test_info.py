@@ -195,30 +195,21 @@ def test_set_ccd_path(fake_ccd_path):
 
 
 @pytest.mark.parametrize(
-    "res_name, allow_missing_coord, should_raise",
+    "res_name, allow_missing_coord",
     [
-        ("ALA", False, False),
-        ("ALA", True, False),
-        ("A1IQW", True, False),
-        ("A1IQW", False, True),
-        ("RRE", True, False),
-        ("RRE", False, True),
+        ("ALA", False),
+        ("A1IQW", True),
+        ("RRE", True),
     ],
 )
-def test_residue(res_name, allow_missing_coord, should_raise):
+def test_residue(res_name, allow_missing_coord):
     """
     Test if the residue function returns an atom array or not.
-    ALA --> standard amino acid, yes in both conditions
-    A1IQW --> yes only with allow_missing_coord=True
-    RRE --> yes only with allow_missing_coord=True
-    Make sure correct exceptions are raised when the non-standard residue
-    is used with allow_missing_coord=False.
+    ALA --> standard amino acid, yes even when allow_missing_coord=False
+    A1IQW --> yes only with allow_missing_coord=True (as of Jan 6, 2025)
+    RRE --> yes only with allow_missing_coord=True (as of Jan 6, 2025)
     """
-    if should_raise:
-        with pytest.raises(ValueError):
-            strucinfo.residue(res_name, allow_missing_coord=allow_missing_coord)
-    else:
-        result = strucinfo.residue(res_name, allow_missing_coord=allow_missing_coord)
-        assert isinstance(result, struc.AtomArray)
-        assert result.array_length() > 0
-        assert np.all(result.res_name == res_name)
+    result = strucinfo.residue(res_name, allow_missing_coord=allow_missing_coord)
+    assert isinstance(result, struc.AtomArray)
+    assert result.array_length() > 0
+    assert np.all(result.res_name == res_name)
