@@ -192,3 +192,24 @@ def test_set_ccd_path(fake_ccd_path):
 
     # The new fake CCD has only a single compound
     assert strucinfo.all_residues() == ["FOO"]
+
+
+@pytest.mark.parametrize(
+    "res_name, allow_missing_coord",
+    [
+        ("ALA", False),
+        ("A1IQW", True),
+        ("RRE", True),
+    ],
+)
+def test_residue(res_name, allow_missing_coord):
+    """
+    Test if the residue function returns an atom array or not.
+    ALA --> standard amino acid, yes even when allow_missing_coord=False
+    A1IQW --> yes only with allow_missing_coord=True (as of Jan 6, 2025)
+    RRE --> yes only with allow_missing_coord=True (as of Jan 6, 2025)
+    """
+    result = strucinfo.residue(res_name, allow_missing_coord=allow_missing_coord)
+    assert isinstance(result, struc.AtomArray)
+    assert result.array_length() > 0
+    assert np.all(result.res_name == res_name)

@@ -1185,7 +1185,13 @@ def _filter_canonical_links(array, bond_array):
     )  # fmt: skip
 
 
-def get_component(pdbx_file, data_block=None, use_ideal_coord=True, res_name=None):
+def get_component(
+    pdbx_file,
+    data_block=None,
+    use_ideal_coord=True,
+    res_name=None,
+    allow_missing_coord=False,
+):
     """
     Create an :class:`AtomArray` for a chemical component from the
     ``chem_comp_atom`` and, if available, the ``chem_comp_bond``
@@ -1213,6 +1219,11 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True, res_name=Non
         In this case, the component with the given residue name is
         read.
         By default, all rows would be read in this case.
+    allow_missing_coord: bool, optional
+        Whether to allow missing coordinate values in components.
+        If ``True``, these will be represented as ``nan`` values.
+        If ``False``, a ``ValueError`` is raised when missing coordinates
+        are encountered.
 
     Returns
     -------
@@ -1303,7 +1314,8 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True, res_name=Non
         else:
             raise
         array.coord = _parse_component_coordinates(
-            [atom_category[field] for field in alt_coord_fields]
+            [atom_category[field] for field in alt_coord_fields],
+            allow_missing=allow_missing_coord,
         )
 
     try:
@@ -1334,14 +1346,20 @@ def get_component(pdbx_file, data_block=None, use_ideal_coord=True, res_name=Non
     return array
 
 
-def _parse_component_coordinates(coord_columns):
+def _parse_component_coordinates(coord_columns, allow_missing=False):
     coord = np.zeros((len(coord_columns[0]), 3), dtype=np.float32)
     for i, column in enumerate(coord_columns):
         if column.mask is not None and column.mask.array.any():
-            raise ValueError(
-                "Missing coordinates for some atoms",
-            )
-        coord[:, i] = column.as_array(np.float32)
+            if allow_missing:
+                warnings.warn(
+                    "Missing coordinates for some atoms. Those will be set to nan",
+                    UserWarning,
+                )
+            else:
+                raise ValueError(
+                    "Missing coordinates for some atoms",
+                )
+        coord[:, i] = column.as_array(np.float32, masked_value=np.nan)
     return coord
 
 
