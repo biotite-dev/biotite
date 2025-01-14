@@ -490,7 +490,7 @@ def _mask_by_d0_threshold(fixed_ca_coord, mobile_ca_coord, reference_length):
     """
     mask = distance(fixed_ca_coord, mobile_ca_coord) < _d0(reference_length)
     if not np.any(mask):
-        raise ValueError("No anchors found")
+        raise ValueError("No anchors found, the structures are too dissimilar")
     return mask
 
 
