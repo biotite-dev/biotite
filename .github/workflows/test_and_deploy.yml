@@ -23,6 +23,7 @@ env:
     --durations=50
     --ignore={project}//tests//sequence//align//test_statistics.py
     --ignore={project}//tests//application
+    --ignore={project}//tests//interface
     --ignore={project}//tests//database
     --ignore={project}//tests//test_doctest.py
     --ignore={project}//tests//test_modname.py
@@ -223,6 +224,7 @@ jobs:
           tests//test_modname.py
           tests//database
           tests//application
+          tests//interface
 
 
   test-muscle5:
