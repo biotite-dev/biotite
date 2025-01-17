@@ -60,6 +60,7 @@ class BondType(IntEnum):
         - `AROMATIC_SINGLE` - Aromatic bond with a single formal bond
         - `AROMATIC_DOUBLE` - Aromatic bond with a double formal bond
         - `AROMATIC_TRIPLE` - Aromatic bond with a triple formal bond
+        - `AROMATIC` - Aromatic bond without specification of the formal bond
         - `COORDINATION` - Coordination complex involving a metal atom
     """
     ANY = 0
@@ -71,6 +72,7 @@ class BondType(IntEnum):
     AROMATIC_DOUBLE = 6
     AROMATIC_TRIPLE = 7
     COORDINATION = 8
+    AROMATIC = 9
 
 
     def without_aromaticity(self):
@@ -97,6 +99,8 @@ class BondType(IntEnum):
             return BondType.DOUBLE
         elif self == BondType.AROMATIC_TRIPLE:
             return BondType.TRIPLE
+        elif self == BondType.AROMATIC:
+            return BondType.ANY
         else:
             return self
 
@@ -517,7 +521,8 @@ class BondList(Copyable):
         for aromatic_type, non_aromatic_type in [
             (BondType.AROMATIC_SINGLE, BondType.SINGLE),
             (BondType.AROMATIC_DOUBLE, BondType.DOUBLE),
-            (BondType.AROMATIC_TRIPLE, BondType.TRIPLE)
+            (BondType.AROMATIC_TRIPLE, BondType.TRIPLE),
+            (BondType.AROMATIC, BondType.ANY),
         ]:
             bond_types[bond_types == aromatic_type] = non_aromatic_type
 

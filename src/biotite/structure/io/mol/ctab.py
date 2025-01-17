@@ -24,19 +24,13 @@ BOND_TYPE_MAPPING = {
     1: BondType.SINGLE,
     2: BondType.DOUBLE,
     3: BondType.TRIPLE,
+    4: BondType.AROMATIC,
     5: BondType.ANY,
-    6: BondType.SINGLE,
-    7: BondType.DOUBLE,
+    6: BondType.AROMATIC_SINGLE,
+    7: BondType.AROMATIC_DOUBLE,
     8: BondType.ANY,
 }
-BOND_TYPE_MAPPING_REV = {
-    BondType.SINGLE: 1,
-    BondType.DOUBLE: 2,
-    BondType.TRIPLE: 3,
-    BondType.AROMATIC_SINGLE: 1,
-    BondType.AROMATIC_DOUBLE: 2,
-    BondType.ANY: 8,
-}
+BOND_TYPE_MAPPING_REV = {v: k for k, v in BOND_TYPE_MAPPING.items()}
 
 CHARGE_MAPPING = {0: 0, 1: 3, 2: 2, 3: 1, 5: -1, 6: -2, 7: -3}
 CHARGE_MAPPING_REV = {val: key for key, val in CHARGE_MAPPING.items()}
