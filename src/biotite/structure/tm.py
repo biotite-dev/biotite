@@ -533,8 +533,7 @@ def _tm_score(distance, reference_length):
     tm_score : float or ndarray
         The TM score for the given distances.
     """
-    d0 = max(_d0(reference_length), _D0_MIN)
-    return 1 / (1 + (distance / d0) ** 2)
+    return 1 / (1 + (distance / _d0(reference_length)) ** 2)
 
 
 def _d0(reference_length):
@@ -552,7 +551,12 @@ def _d0(reference_length):
         The :math:`d_0` threshold.
     """
     # Constants taken from Zhang2004
-    return 1.24 * (reference_length - 15) ** (1 / 3) - 1.8
+    return max(
+        # Avoid complex solutions -> clip to positive values
+        # For short sequence lengths _D0_MIN takes precedence anyway
+        1.24 * max((reference_length - 15), 0) ** (1 / 3) - 1.8,
+        _D0_MIN,
+    )
 
 
 def _get_reference_length(user_parameter, reference_length, subject_length):

@@ -158,6 +158,23 @@ def test_superimpose_consistency(fixed_pdb_id, mobile_pdb_id, ref_tm_score):
     )
 
 
+def test_short_structure():
+    """
+    Check that the :func:`tm_score()` and :func:`superimpose_structural_homologs()` work
+    for structures shorter than 15 residues, because in that case we got
+
+    ``TypeError: '>' not supported between instances of 'float' and 'complex'``
+
+    before.
+    """
+    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1l2y.bcif")
+    atoms = pdbx.get_structure(pdbx_file, model=1)
+    atoms = atoms[atoms.res_id < 15]
+
+    _, _, fixed_i, mobile_i = struc.superimpose_structural_homologs(atoms, atoms)
+    struc.tm_score(atoms, atoms, fixed_i, mobile_i)
+
+
 def _transform_random_affine(coord, rng):
     coord = struc.translate(coord, rng.uniform(low=0, high=10, size=3))
     coord = struc.rotate(coord, rng.uniform(low=0, high=2 * np.pi, size=3))
