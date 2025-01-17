@@ -14,7 +14,7 @@ __all__ = ["rmsd", "rmspd", "rmsf", "average", "lddt"]
 import collections.abc
 import warnings
 import numpy as np
-from biotite.structure.atoms import AtomArrayStack, coord
+from biotite.structure.atoms import AtomArray, AtomArrayStack, coord
 from biotite.structure.celllist import CellList
 from biotite.structure.chains import get_chain_count, get_chain_positions
 from biotite.structure.geometry import index_distance
@@ -397,6 +397,11 @@ def lddt(
         reference, atom_mask, partner_mask, inclusion_radius, exclude_same_residue
     )
     if symmetric:
+        if not isinstance(subject, AtomArray):
+            raise TypeError(
+                "Expected 'AtomArray' as subject, as symmetric lDDT is enabled, "
+                f"but got '{type(subject).__name__}'"
+            )
         subject_contacts = _find_contacts(
             subject, atom_mask, partner_mask, inclusion_radius, exclude_same_residue
         )
