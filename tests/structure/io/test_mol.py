@@ -10,6 +10,7 @@ from tempfile import TemporaryFile
 import numpy as np
 import pytest
 import biotite.structure as struc
+import biotite.structure.info as info
 import biotite.structure.io.mol as mol
 import biotite.structure.io.pdbx as pdbx
 from biotite.structure.bonds import BondType
@@ -83,7 +84,7 @@ def test_header_conversion():
         [False, True],
     ),
 )
-def test_structure_conversion(
+def test_structure_conversion_from_file(
     FileClass,  # noqa: N803
     path,
     version,
@@ -116,7 +117,6 @@ def test_structure_conversion(
 
     temp.seek(0)
     mol_file = FileClass.read(temp)
-    print(mol_file)
     test_atoms = mol.get_structure(mol_file)
     if omit_charge:
         assert np.all(test_atoms.charge == 0)
@@ -124,6 +124,58 @@ def test_structure_conversion(
     temp.close()
 
     assert test_atoms == ref_atoms
+
+
+@pytest.mark.parametrize(
+    "FileClass, component_name, version, omit_charge, use_charge_property",
+    itertools.product(
+        [mol.MOLFile, mol.SDFile],
+        [
+            "ALA",  # Alanine
+            "BNZ",  # Benzene (has aromatic bonds)
+            "3P8",  # Methylammonium ion (has charge)
+            "MCH",  # Trichloromethane (has element with multiple letters)
+        ],
+        ["V2000", "V3000"],
+        [False, True],
+        [False, True],
+    ),
+)
+def test_structure_conversion_to_file(
+    FileClass,  # noqa: N803
+    component_name,
+    version,
+    omit_charge,
+    use_charge_property,
+):
+    """
+    Writing a component to a file and reading it again should give the same
+    structure.
+    """
+    ref_atoms = info.residue(component_name)
+
+    mol_file = FileClass()
+    mol.set_structure(mol_file, ref_atoms, version=version)
+    temp = TemporaryFile("w+")
+    mol_file.write(temp)
+
+    if version == "V2000":
+        if use_charge_property:
+            # Enforce usage of 'M  CHG' entries
+            _delete_charge_columns(temp)
+        else:
+            # Enforce usage of charge column in atom block
+            _delete_charge_property(temp)
+
+    temp.seek(0)
+    mol_file = FileClass.read(temp)
+    test_atoms = mol.get_structure(mol_file)
+    temp.close()
+
+    assert np.all(test_atoms.element == ref_atoms.element)
+    assert np.all(test_atoms.charge == ref_atoms.charge)
+    assert np.allclose(test_atoms.coord, ref_atoms.coord)
+    assert test_atoms.bonds == ref_atoms.bonds
 
 
 @pytest.mark.parametrize(

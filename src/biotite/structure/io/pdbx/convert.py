@@ -81,6 +81,7 @@ PDBX_BOND_TYPE_TO_ORDER = {
     BondType.AROMATIC_TRIPLE: "trip",
     # These are masked later, it is merely added here to avoid a KeyError
     BondType.ANY: "",
+    BondType.AROMATIC: "",
     BondType.COORDINATION: "",
 }
 # Map 'chem_comp_bond' bond orders and aromaticity to 'BondType'...
@@ -92,6 +93,7 @@ COMP_BOND_ORDER_TO_TYPE = {
     ("SING", "Y"): BondType.AROMATIC_SINGLE,
     ("DOUB", "Y"): BondType.AROMATIC_DOUBLE,
     ("TRIP", "Y"): BondType.AROMATIC_TRIPLE,
+    ("AROM", "Y"): BondType.AROMATIC,
 }
 # ...and vice versa
 COMP_BOND_TYPE_TO_ORDER = {
