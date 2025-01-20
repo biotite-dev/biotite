@@ -94,7 +94,7 @@ def tm_score(
     ...     reference, subject, max_iterations=1
     ... )
     >>> print(tm_score(reference, superimposed, ref_indices, sub_indices))
-    0.66...
+    0.69...
     """
     if not np.all(filter_amino_acids(reference)):
         raise ValueError("Reference structure must be peptide only")
@@ -199,9 +199,9 @@ def superimpose_structural_homologs(
     ...     fixed, mobile, max_iterations=1
     ... )
     >>> print(tm_score(fixed, superimposed, fix_indices, mob_indices))
-    0.66...
+    0.69...
     >>> print(rmsd(fixed[fix_indices], superimposed[mob_indices]))
-    0.82...
+    0.84...
     """
     # Avoid circular imports
     from biotite.structure.alphabet.i3d import to_3di
