@@ -67,6 +67,7 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.mathjax",
     "sphinx.ext.linkcode",
+    "sphinx.ext.intersphinx",
     "sphinxcontrib.bibtex",
     "sphinx_gallery.gen_gallery",
     "sphinx_design",
@@ -110,6 +111,10 @@ bibtex_bibfiles = ["references.bib"]
 bibtex_default_style = "ieee"
 
 notfound_urls_prefix = "/latest/"
+
+intersphinx_mapping = {"rdkit": ("https://www.rdkit.org/docs/", None)}
+intersphinx_timeout = 60
+
 
 #### HTML ####
 
