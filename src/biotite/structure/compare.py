@@ -256,6 +256,8 @@ def lddt(
     inclusion_radius=15,
     distance_bins=(0.5, 1.0, 2.0, 4.0),
     exclude_same_residue=True,
+    exclude_same_chain=False,
+    filter_function=None,
     symmetric=False,
 ):
     """
@@ -299,9 +301,16 @@ def lddt(
         The distance bins for the score calculation, i.e if a distance deviation is
         within the first bin, the score is 1, if it is outside all bins, the score is 0.
     exclude_same_residue : bool, optional
-        If set to False, distances between atoms of the same residue are also
-        considered.
-        By default, only atom distances between different residues are considered.
+        If true, only atom distances between different residues are considered.
+        Otherwise, also atom distances within the same residue are included.
+    exclude_same_chain : bool, optional
+        If true, only atom distances between different chains are considered.
+        Otherwise, also atom distances within the same chain are included.
+    filter_function : Callable(ndarray, shape=(n,2), dtype=int -> ndarray, shape=(n,), dtype=bool), optional
+        Used for custom contact filtering, if the other parameters are not sufficient.
+        A function that takes an array of contact atom indices and returns a mask that
+        is ``True`` for all contacts that should be retained.
+        All other contacts are not considered for lDDT computation.
     symmetric : bool, optional
         If set to true, the *lDDT* score is computed symmetrically.
         This means both contacts found in the `reference` and `subject` structure are
@@ -394,7 +403,13 @@ def lddt(
         )
 
     contacts = _find_contacts(
-        reference, atom_mask, partner_mask, inclusion_radius, exclude_same_residue
+        reference,
+        atom_mask,
+        partner_mask,
+        inclusion_radius,
+        exclude_same_residue,
+        exclude_same_chain,
+        filter_function,
     )
     if symmetric:
         if not isinstance(subject, AtomArray):
@@ -403,7 +418,13 @@ def lddt(
                 f"but got '{type(subject).__name__}'"
             )
         subject_contacts = _find_contacts(
-            subject, atom_mask, partner_mask, inclusion_radius, exclude_same_residue
+            subject,
+            atom_mask,
+            partner_mask,
+            inclusion_radius,
+            exclude_same_residue,
+            exclude_same_chain,
+            filter_function,
         )
         contacts = np.concatenate((contacts, subject_contacts), axis=0)
         # Adding additional contacts may introduce duplicates between the existing and
@@ -532,7 +553,9 @@ def _find_contacts(
     atom_mask=None,
     partner_mask=None,
     inclusion_radius=15,
-    exclude_same_residue=True,
+    exclude_same_residue=False,
+    exclude_same_chain=True,
+    filter_function=None,
 ):
     """
     Find contacts between the atoms in the given structure.
@@ -555,9 +578,16 @@ def _find_contacts(
     inclusion_radius : float, optional
         Pairwise atom distances are considered within this radius.
     exclude_same_residue : bool, optional
-        If set to False, distances between atoms of the same residue are also
-        considered.
-        By default, only atom distances between different residues are considered.
+        If true, only atom distances between different residues are considered.
+        Otherwise, also atom distances within the same residue are included.
+    exclude_same_chain : bool, optional
+        If true, only atom distances between different chains are considered.
+        Otherwise, also atom distances within the same chain are included.
+    filter_function : Callable(ndarray, shape=(n,2), dtype=int -> ndarray, shape=(n,), dtype=bool), optional
+        Used for custom contact filtering, if the other parameters are not sufficient.
+        A function that takes an array of contact atom indices and returns a mask that
+        is ``True`` for all contacts that should be retained.
+        All other contacts are not considered for lDDT computation.
 
     Returns
     -------
@@ -588,7 +618,13 @@ def _find_contacts(
     # Convert into pairs of indices
     contacts = _to_sparse_indices(all_contacts)
 
-    if exclude_same_residue:
+    if exclude_same_chain:
+        # Do the same for the chain level
+        chain_indices = get_chain_positions(atoms, contacts.flatten()).reshape(
+            contacts.shape
+        )
+        contacts = contacts[chain_indices[:, 0] != chain_indices[:, 1]]
+    elif exclude_same_residue:
         # Find the index of the residue for each atom
         residue_indices = get_residue_positions(atoms, contacts.flatten()).reshape(
             contacts.shape
@@ -598,6 +634,14 @@ def _find_contacts(
     else:
         # In any case self-contacts should not be considered
         contacts = contacts[contacts[:, 0] != contacts[:, 1]]
+    if filter_function is not None:
+        mask = filter_function(contacts)
+        if mask.shape != (contacts.shape[0],):
+            raise IndexError(
+                f"Mask returned from filter function has shape {mask.shape}, "
+                f"but expected ({contacts.shape[0]},)"
+            )
+        contacts = contacts[filter_function(contacts), :]
     return contacts
 
 

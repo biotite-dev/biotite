@@ -359,6 +359,67 @@ def test_lddt_mask(models, seed):
     assert test_lddt.tolist() == pytest.approx(ref_lddt.tolist())
 
 
+@pytest.mark.parametrize("exclude_same_chain", [False, True])
+@pytest.mark.parametrize("exclude_same_residue", [False, True])
+def test_lddt_filter_function(models, exclude_same_residue, exclude_same_chain):
+    """
+    In :func:`lddt()`, mimic the `exclude_same_residue` or `exclude_same_chain`
+    parameter using a custom `filter_function` and expect to get the same results
+    compared to using these parameters directly.
+    """
+    # Cut the model into two chains to test 'exclude_same_chain'
+    models = models.copy()
+    models.chain_id[models.res_id >= 11] = "B"
+    reference = models[0]
+    subject = models[1]
+
+    if exclude_same_residue and exclude_same_chain:
+
+        def filter_function(contacts):
+            return (
+                reference.res_id[contacts[:, 0]] != reference.res_id[contacts[:, 1]]
+            ) & (
+                reference.chain_id[contacts[:, 0]] != reference.chain_id[contacts[:, 1]]
+            )
+
+    elif exclude_same_residue:
+
+        def filter_function(contacts):
+            return reference.res_id[contacts[:, 0]] != reference.res_id[contacts[:, 1]]
+
+    elif exclude_same_chain:
+
+        def filter_function(contacts):
+            return (
+                reference.chain_id[contacts[:, 0]] != reference.chain_id[contacts[:, 1]]
+            )
+
+    else:
+
+        def filter_function(contacts):
+            return np.full(contacts.shape[0], True)
+
+    # Do not aggregate to make the test more strict
+    ref_lddt = struc.lddt(
+        reference,
+        subject,
+        exclude_same_residue=exclude_same_residue,
+        exclude_same_chain=exclude_same_chain,
+        aggregation="atom",
+    )
+
+    test_lddt = struc.lddt(
+        reference,
+        subject,
+        exclude_same_residue=False,
+        exclude_same_chain=False,
+        filter_function=filter_function,
+        aggregation="atom",
+    )
+
+    assert test_lddt.tolist() == pytest.approx(ref_lddt.tolist())
+
+
 def test_custom_lddt_symmetric(models):
     """
     Check that in :func:`lddt()` with ``symmetric=True`` the *lDDT* score is independent
