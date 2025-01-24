@@ -76,6 +76,7 @@ def to_mol(
     kekulize=False,
     use_dative_bonds=False,
     include_extra_annotations=(),
+    explicit_hydrogen=True,
 ):
     """
     Convert an :class:`.AtomArray` or :class:`.AtomArrayStack` into a
@@ -105,6 +106,11 @@ def to_mol(
         are always included per default. These standard annotations can be accessed
         with :meth:`rdkit.Chem.rdchem.Atom.GetPDBResidueInfo()` for each atom in the
         returned :class:`rdkit.Chem.rdchem.Mol`.
+    explicit_hydrogen : bool, optional
+        If set to true, the conversion process expects that all hydrogen atoms are
+        explicit, i.e. each each hydrogen atom must be part of the :class:`AtomArray`.
+        If set to false, the conversion process treats all hydrogen atoms as implicit
+        and all hydrogen atoms in the :class:`AtomArray` are removed.
 
     Returns
     -------
@@ -141,12 +147,24 @@ def to_mol(
     HB3
     HXT
     """
+    hydrogen_mask = atoms.element == "H"
+    if explicit_hydrogen:
+        if not hydrogen_mask.any():
+            warnings.warn(
+                "No hydrogen found in the input, although 'explicit_hydrogen' is 'True'"
+            )
+    else:
+        atoms = atoms[..., ~hydrogen_mask]
+
     mol = EditableMol(Mol())
 
     has_annot = frozenset(atoms.get_annotation_categories())
     extra_annot = set(include_extra_annotations) - _STANDARD_ANNOTATIONS
+
     for i in range(atoms.array_length()):
         rdkit_atom = Atom(atoms.element[i].capitalize())
+        if explicit_hydrogen:
+            rdkit_atom.SetNoImplicit(True)
         if "charge" in has_annot:
             rdkit_atom.SetFormalCharge(atoms.charge[i].item())
 
@@ -176,11 +194,12 @@ def to_mol(
 
     if atoms.bonds is None:
         raise BadStructureError("An AtomArray with associated BondList is required")
-    bonds = atoms.bonds.as_array()
     if kekulize:
-        bonds = bonds.copy()
+        bonds = atoms.bonds.copy()
         bonds.remove_aromaticity()
-    for atom_i, atom_j, bond_type in atoms.bonds.as_array():
+    else:
+        bonds = atoms.bonds
+    for atom_i, atom_j, bond_type in bonds.as_array():
         if not use_dative_bonds and bond_type == BondType.COORDINATION:
             bond_type = BondType.SINGLE
         mol.AddBond(
@@ -367,7 +386,7 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         except KekulizeException:
             warnings.warn(
                 "Kekulization failed, "
-                "using 'BondType.ANY' instead for aromatic bonds instead",
+                "using 'BondType.AROMATIC' instead for aromatic bonds instead",
                 LossyConversionWarning,
             )
         rdkit_bonds = list(mol.GetBonds())
