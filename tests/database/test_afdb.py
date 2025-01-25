@@ -4,18 +4,16 @@
 
 import tempfile
 import pytest
-import biotite.database.alphafold as alphafold
+import biotite.database.afdb as afdb
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
 from biotite.database import RequestError
 from tests.util import cannot_connect_to
 
-ALPHAFOLD_URL = "https://alphafold.ebi.ac.uk/"
+AFDB_URL = "https://alphafold.ebi.ac.uk/"
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(ALPHAFOLD_URL), reason="AlphaFold DB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available")
 @pytest.mark.parametrize("as_file_like", [False, True])
 @pytest.mark.parametrize("entry_id", ["P12345", "AF-P12345-F1"])
 @pytest.mark.parametrize("format", ["pdb", "cif", "bcif"])
@@ -24,7 +22,7 @@ def test_fetch(as_file_like, entry_id, format):
     Check if files in different formats can be downloaded by being able to parse them.
     """
     path = None if as_file_like else tempfile.gettempdir()
-    file_path_or_obj = alphafold.fetch(entry_id, format, path, overwrite=True)
+    file_path_or_obj = afdb.fetch(entry_id, format, path, overwrite=True)
     if format == "pdb":
         file = pdb.PDBFile.read(file_path_or_obj)
         pdb.get_structure(file)
@@ -36,22 +34,18 @@ def test_fetch(as_file_like, entry_id, format):
         pdbx.get_structure(file)
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(ALPHAFOLD_URL), reason="AlphaFold DB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available")
 def test_fetch_multiple():
     """
     Check if multiple files can be downloaded by being able to parse them.
     """
     ids = ["P12345", "Q8K9I1"]
-    files = alphafold.fetch(ids, "cif", tempfile.gettempdir(), overwrite=True)
+    files = afdb.fetch(ids, "cif", tempfile.gettempdir(), overwrite=True)
     for file in files:
         assert "citation_author" in pdbx.CIFFile.read(file).block
 
 
-@pytest.mark.skipif(
-    cannot_connect_to(ALPHAFOLD_URL), reason="AlphaFold DB is not available"
-)
+@pytest.mark.skipif(cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available")
 @pytest.mark.parametrize("format", ["pdb", "cif", "bcif"])
 @pytest.mark.parametrize("invalid_id", ["", "XYZ", "A0A12345"])
 @pytest.mark.parametrize("bypass_metadata", [False, True])
@@ -61,7 +55,7 @@ def test_fetch_invalid(monkeypatch, format, invalid_id, bypass_metadata):
     Also check whether the check works on the file retrieval level via
     :func:`_get_file_url()`, by bypassing the metadata check.
     """
-    import biotite.database.alphafold.download as module
+    import biotite.database.afdb.download as module
 
     if bypass_metadata:
         monkeypatch.setattr(
@@ -70,4 +64,4 @@ def test_fetch_invalid(monkeypatch, format, invalid_id, bypass_metadata):
             lambda id, f: f"https://alphafold.ebi.ac.uk/files/AF-{id}-F1-model_v4.{f}",
         )
     with pytest.raises((RequestError, ValueError)):
-        alphafold.fetch(invalid_id, format)
+        afdb.fetch(invalid_id, format)

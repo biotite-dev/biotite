@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-__name__ = "biotite.database.alphafold"
+__name__ = "biotite.database.afdb"
 __author__ = "Patrick Kunzmann, Alex Carlin"
 __all__ = ["fetch"]
 
