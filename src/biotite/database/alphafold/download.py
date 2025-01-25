@@ -6,19 +6,18 @@ __name__ = "biotite.database.alphafold"
 __author__ = "Alex Carlin"
 __all__ = ["fetch"]
 
-from os.path import isdir, isfile, join, getsize
-import os
 import io
+import os
+from os.path import getsize, isdir, isfile, join
 import requests
-from .check import assert_valid_response
-
+from biotite.database.alphafold.check import assert_valid_response
 
 _fetch_url = "https://alphafold.com/api/prediction"
 
 
 def fetch(ids, target_path=None, format="pdb", overwrite=False, verbose=False):
     """
-    Download predicted protein structures from the AlphaFold DB. 
+    Download predicted protein structures from the AlphaFold DB.
 
     This function requires an internet connection.
 
@@ -78,23 +77,19 @@ def fetch(ids, target_path=None, format="pdb", overwrite=False, verbose=False):
     for i, id in enumerate(ids):
         # Verbose output
         if verbose:
-            print(f"Fetching file {i + 1:d} / {len(ids):d} ({id})...",
-                  end="\r")
+            print(f"Fetching file {i + 1:d} / {len(ids):d} ({id})...", end="\r")
         # Fetch file from database
         if target_path is not None:
             file = join(target_path, id + "." + format)
         else:
             # 'file = None' -> store content in a file-like object
             file = None
-        if file is None \
-                or not isfile(file) \
-                or getsize(file) == 0 \
-                or overwrite:
+        if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
             if format in ["pdb", "cif"]:
                 metadata_response = requests.get(f"{_fetch_url}/{id}")
                 assert_valid_response(metadata_response.status_code)
                 metadata_json = metadata_response.json()[0]
-                # a list of length 1 is always returned 
+                # a list of length 1 is always returned
                 file_url = metadata_json[f"{format}Url"]
                 file_response = requests.get(file_url)
                 assert_valid_response(file_response.status_code)
@@ -114,8 +109,3 @@ def fetch(ids, target_path=None, format="pdb", overwrite=False, verbose=False):
         return files[0]
     else:
         return files
-
-
-
-
-
