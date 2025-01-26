@@ -21,7 +21,7 @@ _UNIPROT_PATTERN = (
 )
 
 
-def fetch(ids, format="pdb", target_path=None, overwrite=False, verbose=False):
+def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
     """
     Download predicted protein structures from the AlphaFold DB.
 
@@ -31,6 +31,8 @@ def fetch(ids, format="pdb", target_path=None, overwrite=False, verbose=False):
     ----------
     ids : str or iterable object of str
         A single ID or a list of IDs of the file(s) to be downloaded.
+        They can be either UniProt IDs (e.g. ``P12345``) or AlphaFold DB IDs
+        (e.g. ``AF-P12345F1``).
     format : {'pdb', 'pdbx', 'cif', 'mmcif', 'bcif', 'fasta'}
         The format of the files to be downloaded.
     target_path : str, optional
@@ -48,16 +50,16 @@ def fetch(ids, format="pdb", target_path=None, overwrite=False, verbose=False):
     -------
     files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
         The file path(s) to the downloaded files.
-        If a single string (a single ID) was given in `ids`,
-        a single string is returned. If a list (or other iterable
-        object) was given, a list of strings is returned.
-        If no `target_path` was given, the file contents are stored in
-        either `StringIO` or `BytesIO` objects.
+        If a single string (a single ID) was given in `ids`, a single string is
+        returned.
+        If a list (or other iterable object) was given, a list of strings is returned.
+        If no `target_path` was given, the file contents are stored in either
+        ``StringIO`` or ``BytesIO`` objects.
 
     Examples
     --------
 
-    >>> import os.path
+    >>> from pathlib import Path
     >>> file = fetch("P12345", "cif", path_to_directory)
     >>> print(Path(file).name)
     P12345.cif
