@@ -9,7 +9,14 @@ __all__ = ["to_mol", "from_mol"]
 import warnings
 from collections import defaultdict
 import numpy as np
-from rdkit.Chem.rdchem import Atom, Conformer, EditableMol, KekulizeException, Mol
+from rdkit.Chem.rdchem import (
+    Atom,
+    AtomPDBResidueInfo,
+    Conformer,
+    EditableMol,
+    KekulizeException,
+    Mol,
+)
 from rdkit.Chem.rdchem import BondType as RDKitBondType
 from rdkit.Chem.rdmolops import AddHs, Kekulize, SanitizeFlags, SanitizeMol
 from biotite.interface.version import requires_version
@@ -45,12 +52,30 @@ _RDKIT_TO_BIOTITE_BOND_TYPE = {
     RDKitBondType.QUADRUPLE: BondType.QUADRUPLE,
     RDKitBondType.DATIVE: BondType.COORDINATION,
 }
+_STANDARD_ANNOTATIONS = frozenset(
+    {
+        "chain_id",
+        "res_id",
+        "ins_code",
+        "res_name",
+        "hetero",
+        "atom_name",
+        "element",
+        "charge",
+        "b_factor",
+        "occupancy",
+        "label_alt_id",
+    }
+)
 
 
 # `Conformer.SetPositions()` was added in RDKit 2024.09.1
 @requires_version("rdkit", ">=2024.09.1")
 def to_mol(
-    atoms, kekulize=False, use_dative_bonds=False, include_annotations=("atom_name",)
+    atoms,
+    kekulize=False,
+    use_dative_bonds=False,
+    include_extra_annotations=(),
 ):
     """
     Convert an :class:`.AtomArray` or :class:`.AtomArrayStack` into a
@@ -72,10 +97,14 @@ def to_mol(
         This may have the undesired side effect that a
         :class:`rdkit.Chem.rdchem.KekulizeException` is raised for some molecules, when
         the returned :class:`rdkit.Chem.rdchem.Mol` is kekulized.
-    include_annotations : list of str, optional
+    include_extra_annotations : list of str, optional
         Names of annotation arrays in `atoms` that are added as atom-level property with
         the same name to the returned :class:`rdkit.Chem.rdchem.Mol`.
         These properties can be accessed with :meth:`rdkit.Chem.rdchem.Mol.GetProp()`.
+        Note that standard annotations (e.g. ``'chain_id', 'atom_name', 'res_name'``)
+        are always included per default. These standard annotations can be accessed
+        with :meth:`rdkit.Chem.rdchem.Atom.GetPDBResidueInfo()` for each atom in the
+        returned :class:`rdkit.Chem.rdchem.Mol`.
 
     Returns
     -------
@@ -113,13 +142,35 @@ def to_mol(
     """
     mol = EditableMol(Mol())
 
-    has_charge_annot = "charge" in atoms.get_annotation_categories()
+    has_annot = frozenset(atoms.get_annotation_categories())
+    extra_annot = set(include_extra_annotations) - _STANDARD_ANNOTATIONS
     for i in range(atoms.array_length()):
         rdkit_atom = Atom(atoms.element[i].capitalize())
-        if has_charge_annot:
-            rdkit_atom.SetFormalCharge(atoms.charge[i].item())
-        for annot_name in include_annotations:
+
+        # add standard pdb annotations
+        rdkit_atom_res_info = AtomPDBResidueInfo(
+            atomName=atoms.atom_name[i].item(),
+            residueName=atoms.res_name[i].item(),
+            chainId=atoms.chain_id[i].item(),
+            residueNumber=atoms.res_id[i].item(),
+            isHeteroAtom=atoms.hetero[i].item(),
+            insertionCode=atoms.ins_code[i].item(),
+        )
+        if "charge" in has_annot:
+            rdkit_atom_res_info.SetFormalCharge(atoms.charge[i].item())
+        if "occupancy" in has_annot:
+            rdkit_atom_res_info.SetOccupancy(atoms.occupancy[i].item())
+        if "b_factor" in has_annot:
+            rdkit_atom_res_info.SetTempFactor(atoms.b_factor[i].item())
+        if "label_alt_id" in has_annot:
+            rdkit_atom_res_info.SetAltLoc(atoms.label_alt_id[i].item())
+        rdkit_atom.SetPDBResidueInfo(rdkit_atom_res_info)
+
+        # add extra annotations
+        for annot_name in extra_annot:
             rdkit_atom.SetProp(annot_name, atoms.get_annotation(annot_name)[i].item())
+
+        # add atom to molecule
         mol.AddAtom(rdkit_atom)
 
     if atoms.bonds is None:
@@ -241,14 +292,45 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         lambda: np.full(atoms.array_length(), "", dtype=object)
     )
     atoms.add_annotation("charge", int)
+    atoms.add_annotation("b_factor", float)
+    atoms.add_annotation("occupancy", float)
+    atoms.add_annotation("label_alt_id", str)
+
     for rdkit_atom in rdkit_atoms:
+        _atom_idx = rdkit_atom.GetIdx()
+        _is_implicit_hydrogen = False
+        residue_info = rdkit_atom.GetPDBResidueInfo()
+        if residue_info is None:
+            _is_implicit_hydrogen = True
+            nearest_heavy_atom = rdkit_atom.GetNeighbors()[0]
+            residue_info = nearest_heavy_atom.GetPDBResidueInfo()
+
+        # ... add standard annotations
+        atoms.element[_atom_idx] = rdkit_atom.GetSymbol().upper()
+        atoms.charge[_atom_idx] = rdkit_atom.GetFormalCharge()
+        atoms.chain_id[_atom_idx] = residue_info.GetChainId()
+        atoms.res_id[_atom_idx] = residue_info.GetResidueNumber()
+        atoms.ins_code[_atom_idx] = residue_info.GetInsertionCode()
+        atoms.res_name[_atom_idx] = residue_info.GetResidueName()
+        atoms.label_alt_id[_atom_idx] = residue_info.GetAltLoc()
+        atoms.hetero[_atom_idx] = (
+            False if _is_implicit_hydrogen else residue_info.GetIsHeteroAtom()
+        )
+        atoms.atom_name[_atom_idx] = (
+            "H" if _is_implicit_hydrogen else residue_info.GetName()
+        )
+        atoms.b_factor[_atom_idx] = (
+            np.nan if _is_implicit_hydrogen else residue_info.GetTempFactor()
+        )
+        atoms.occupancy[_atom_idx] = (
+            0.0 if _is_implicit_hydrogen else residue_info.GetOccupancy()
+        )
+
+        # ... add extra annotations
         annot_names = rdkit_atom.GetPropNames()
         for annot_name in annot_names:
-            extra_annotations[annot_name][rdkit_atom.GetIdx()] = rdkit_atom.GetProp(
-                annot_name
-            )
-        atoms.element[rdkit_atom.GetIdx()] = rdkit_atom.GetSymbol().upper()
-        atoms.charge[rdkit_atom.GetIdx()] = rdkit_atom.GetFormalCharge()
+            extra_annotations[annot_name][_atom_idx] = rdkit_atom.GetProp(annot_name)
+
     for annot_name, array in extra_annotations.items():
         atoms.set_annotation(annot_name, array.astype(str))
 
