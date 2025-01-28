@@ -69,6 +69,9 @@ def get_residue_starts(array, add_exclusive_stop=False):
     [  0  16  35  56  75  92 116 135 157 169 176 183 197 208 219 226 250 264
      278 292 304]
     """
+    if array.array_length() == 0:
+        return np.array([], dtype=int)
+
     # These mask are 'true' at indices where the value changes
     chain_id_changes = array.chain_id[1:] != array.chain_id[:-1]
     res_id_changes = array.res_id[1:] != array.res_id[:-1]

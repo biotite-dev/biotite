@@ -64,6 +64,9 @@ def get_chain_starts(array, add_exclusive_stop=False):
     --------
     get_residue_starts
     """
+    if array.array_length() == 0:
+        return np.array([], dtype=int)
+
     diff = np.diff(array.res_id)
     res_id_decrement = diff < 0
     # This mask is 'true' at indices where the value changes
