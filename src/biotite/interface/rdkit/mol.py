@@ -142,7 +142,10 @@ def to_mol(
         coord = coord[None, :, :]
     for model_coord in coord:
         conformer = Conformer(mol.GetNumAtoms())
-        conformer.SetPositions(model_coord.astype(np.float64))
+        # RDKit silently expects the data to be in C-contiguous order
+        # Otherwise the coordinates would be completely misassigned
+        # (https://github.com/rdkit/rdkit/issues/8221)
+        conformer.SetPositions(np.ascontiguousarray(model_coord, dtype=np.float64))
         conformer.Set3D(True)
         mol.AddConformer(conformer)
 
