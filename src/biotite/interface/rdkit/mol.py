@@ -146,6 +146,8 @@ def to_mol(
     extra_annot = set(include_extra_annotations) - _STANDARD_ANNOTATIONS
     for i in range(atoms.array_length()):
         rdkit_atom = Atom(atoms.element[i].capitalize())
+        if "charge" in has_annot:
+            rdkit_atom.SetFormalCharge(atoms.charge[i].item())
 
         # add standard pdb annotations
         rdkit_atom_res_info = AtomPDBResidueInfo(
@@ -156,8 +158,6 @@ def to_mol(
             isHeteroAtom=atoms.hetero[i].item(),
             insertionCode=atoms.ins_code[i].item(),
         )
-        if "charge" in has_annot:
-            rdkit_atom_res_info.SetFormalCharge(atoms.charge[i].item())
         if "occupancy" in has_annot:
             rdkit_atom_res_info.SetOccupancy(atoms.occupancy[i].item())
         if "b_factor" in has_annot:
@@ -271,7 +271,7 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         add_hydrogen = not _has_explicit_hydrogen(mol)
     if add_hydrogen:
         SanitizeMol(mol, SanitizeFlags.SANITIZE_ADJUSTHS)
-        mol = AddHs(mol)
+        mol = AddHs(mol, addCoords=False, addResidueInfo=False)
 
     rdkit_atoms = mol.GetAtoms()
     if rdkit_atoms is None:
@@ -296,35 +296,73 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     atoms.add_annotation("occupancy", float)
     atoms.add_annotation("label_alt_id", str)
 
+    element_counter = defaultdict(lambda: 1)
     for rdkit_atom in rdkit_atoms:
         _atom_idx = rdkit_atom.GetIdx()
-        _is_implicit_hydrogen = False
-        residue_info = rdkit_atom.GetPDBResidueInfo()
-        if residue_info is None:
-            _is_implicit_hydrogen = True
-            nearest_heavy_atom = rdkit_atom.GetNeighbors()[0]
-            residue_info = nearest_heavy_atom.GetPDBResidueInfo()
 
         # ... add standard annotations
-        atoms.element[_atom_idx] = rdkit_atom.GetSymbol().upper()
+        element = rdkit_atom.GetSymbol().upper().strip()
+        atoms.element[_atom_idx] = element
         atoms.charge[_atom_idx] = rdkit_atom.GetFormalCharge()
+
+        # ... add PDB related annotations
+        residue_info = rdkit_atom.GetPDBResidueInfo()
+        if residue_info is None:
+            residue_info = AtomPDBResidueInfo(
+                atomName="",
+                occupancy=0.0,
+                tempFactor=float("nan"),
+                altLoc=".",
+            )
+            if element == "H":
+                # ... attempt inferring residue information from nearest heavy atom
+                #     in case of a hydrogen atom without explicit residue information
+                nearest_heavy_atom = rdkit_atom.GetNeighbors()[0]
+                nearest_heavy_atom_res_info = nearest_heavy_atom.GetPDBResidueInfo()
+                if nearest_heavy_atom_res_info is not None:
+                    residue_info.SetChainId(nearest_heavy_atom_res_info.GetChainId())
+                    residue_info.SetResidueName(
+                        nearest_heavy_atom_res_info.GetResidueName()
+                    )
+                    residue_info.SetResidueNumber(
+                        nearest_heavy_atom_res_info.GetResidueNumber()
+                    )
+                    residue_info.SetInsertionCode(
+                        nearest_heavy_atom_res_info.GetInsertionCode()
+                    )
+                    residue_info.SetIsHeteroAtom(
+                        nearest_heavy_atom_res_info.GetIsHeteroAtom()
+                    )
+                    residue_info.SetAltLoc(nearest_heavy_atom_res_info.GetAltLoc())
+            element_count = element_counter[
+                (
+                    residue_info.GetChainId(),
+                    residue_info.GetResidueName(),
+                    residue_info.GetResidueNumber(),
+                    residue_info.GetInsertionCode(),
+                    element,
+                )
+            ]
+            residue_info.SetName(f"{element}{element_count}")
+
         atoms.chain_id[_atom_idx] = residue_info.GetChainId()
         atoms.res_id[_atom_idx] = residue_info.GetResidueNumber()
         atoms.ins_code[_atom_idx] = residue_info.GetInsertionCode()
         atoms.res_name[_atom_idx] = residue_info.GetResidueName()
         atoms.label_alt_id[_atom_idx] = residue_info.GetAltLoc()
-        atoms.hetero[_atom_idx] = (
-            False if _is_implicit_hydrogen else residue_info.GetIsHeteroAtom()
-        )
-        atoms.atom_name[_atom_idx] = (
-            "H" if _is_implicit_hydrogen else residue_info.GetName()
-        )
-        atoms.b_factor[_atom_idx] = (
-            np.nan if _is_implicit_hydrogen else residue_info.GetTempFactor()
-        )
-        atoms.occupancy[_atom_idx] = (
-            0.0 if _is_implicit_hydrogen else residue_info.GetOccupancy()
-        )
+        atoms.hetero[_atom_idx] = residue_info.GetIsHeteroAtom()
+        atoms.b_factor[_atom_idx] = residue_info.GetTempFactor()
+        atoms.occupancy[_atom_idx] = residue_info.GetOccupancy()
+        atoms.atom_name[_atom_idx] = residue_info.GetName().strip()
+        element_counter[
+            (
+                residue_info.GetChainId(),
+                residue_info.GetResidueName(),
+                residue_info.GetResidueNumber(),
+                residue_info.GetInsertionCode(),
+                element,
+            )
+        ] += 1
 
         # ... add extra annotations
         annot_names = rdkit_atom.GetPropNames()
