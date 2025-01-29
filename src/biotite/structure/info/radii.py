@@ -33,30 +33,76 @@ _PROTOR_RADII = {
 }
 
 _SINGLE_RADII = {
-    "H":  1.20,
+    # Main group
+    # Row 1 (Period 1)
+    "H":  1.10,
     "HE": 1.40,
 
+    # Row 2 (Period 2)
+    "LI": 1.81,
+    "BE": 1.53,
+    "B":  1.92,
     "C":  1.70,
     "N":  1.55,
     "O":  1.52,
     "F":  1.47,
     "NE": 1.54,
 
+    # Row 3 (Period 3)
+    "NA": 2.27,
+    "MG": 1.73,
+    "AL": 1.84,
     "SI": 2.10,
     "P":  1.80,
     "S":  1.80,
     "CL": 1.75,
     "AR": 1.88,
 
+    # Row 4 (Period 4)
+    "K":  2.75,
+    "CA": 2.31,
+    "GA": 1.87,
+    "GE": 2.11,
     "AS": 1.85,
     "SE": 1.90,
-    "BR": 1.85,
+    "BR": 1.83,
     "KR": 2.02,
 
+    # Row 5 (Period 5)
+    "RB": 3.03,
+    "SR": 2.49,
+    "IN": 1.93,
+    "SN": 2.17,
+    "SB": 2.06,
     "TE": 2.06,
     "I":  1.98,
     "XE": 2.16,
+
+    # Row 6 (Period 6)
+    "CS": 3.43,
+    "BA": 2.68,
+    "TL": 1.96,
+    "PB": 2.02,
+    "BI": 2.07,
+    "PO": 1.97,
+    "AT": 2.02,
+    "RN": 2.20,
+
+    # Row 7 (Period 7)
+    "FR": 3.48,
+    "RA": 2.83,
 }
+"""
+Van der Waals radii for main group and transition elements.
+
+Main group:
+Source: https://pubs.acs.org/doi/10.1021/jp8111556, Table 12 (Mantina et al. 2009)
+
+Where available, these values were cross-checked vs the CRC Handbook of
+Chemistry and Physics (105th edition) and verified that they are closely
+in line (barring very minor discrepancies). We cannot use the CRC values
+here as they are not permissively licensed.
+"""
 # fmt: on
 
 # A dictionary that caches radii for each residue
@@ -167,7 +213,7 @@ def _calculate_protor_radii(res_name):
 def vdw_radius_single(element):
     """
     Get the Van-der-Waals radius of an atom from the given element.
-    :footcite:`Bondi1964`
+    :footcite:`Mantina2009`
 
     Parameters
     ----------
