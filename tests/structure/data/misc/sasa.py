@@ -2,7 +2,7 @@ import json
 import warnings
 from pathlib import Path
 import mdtraj
-from biotite.structure.info.radii import _SINGLE_RADII as SINGLE_RADII
+from biotite.structure.info.radii import _SINGLE_ELEMENT_VDW_RADII as SINGLE_RADII
 
 PDB_IDS = ["1l2y", "1gya"]
 STRUCTURE_DIR = Path(__file__).parents[1]

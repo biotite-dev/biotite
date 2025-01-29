@@ -26,13 +26,13 @@ _PROTOR_RADII = {
     ("S",  1, 0) : 1.77,
     ("S",  2, 0) : 1.77, # Not official, added for completeness (MET)
     ("S",  2, 1) : 1.77,
-    ("F",  1, 0) : 1.47, # Taken from _SINGLE_RADII
-    ("CL", 1, 0) : 1.75, # Taken from _SINGLE_RADII
-    ("BR", 1, 0) : 1.85, # Taken from _SINGLE_RADII
+    ("F",  1, 0) : 1.47, # Taken from _SINGLE_ELEMENT_VDW_RADII
+    ("CL", 1, 0) : 1.75, # Taken from _SINGLE_ELEMENT_VDW_RADII
+    ("BR", 1, 0) : 1.85, # Taken from _SINGLE_ELEMENT_VDW_RADII
     ("I",  1, 0) : 1.98, # Taken from _SINGLE_RADII
 }
 
-_SINGLE_RADII = {
+_SINGLE_ELEMENT_VDW_RADII = {
     # Main group
     # Row 1 (Period 1)
     "H":  1.10,
@@ -91,6 +91,24 @@ _SINGLE_RADII = {
     # Row 7 (Period 7)
     "FR": 3.48,
     "RA": 2.83,
+
+    # Transition metals (relevant ones only)
+    # Row 1
+    "FE": 2.05,
+    "CU": 2.00,
+    "ZN": 2.10,
+    "MN": 2.05,
+    "CO": 2.00,
+    "NI": 2.00,
+    
+    # Row 2
+    'MO': 2.10,
+    'RU': 2.05,
+    
+    # Row 3
+    'W': 2.10,
+    'PT': 2.05,
+    'AU': 2.10,
 }
 """
 Van der Waals radii for main group and transition elements.
@@ -98,11 +116,16 @@ Van der Waals radii for main group and transition elements.
 Main group:
 Source: https://pubs.acs.org/doi/10.1021/jp8111556, Table 12 (Mantina et al. 2009)
 
+Transition metals:
+Source: RDKit, 2024.9.4 Release
+https://github.com/rdkit/rdkit/blob/af6347963f25cfe8fe4db0638410b2f3a8e8bd89/Code/GraphMol/atomic_data.cpp#L51
+
 Where available, these values were cross-checked vs the CRC Handbook of
 Chemistry and Physics (105th edition) and verified that they are closely
-in line (barring very minor discrepancies). We cannot use the CRC values
-here as they are not permissively licensed.
+in line (barring very minor discrepancies, usually < 0.05 Å). 
+We cannot use the CRC values directly as they are not permissively licensed.
 """
+
 # fmt: on
 
 # A dictionary that caches radii for each residue
@@ -240,4 +263,4 @@ def vdw_radius_single(element):
     >>> print(vdw_radius_single("C"))
     1.7
     """
-    return _SINGLE_RADII.get(element.upper())
+    return _SINGLE_ELEMENT_VDW_RADII.get(element.upper())
