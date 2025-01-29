@@ -83,7 +83,8 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
             - **Single** - A set, which uses a defined VdW radius for
               every single atom, therefore hydrogen atoms are required
               in the model (e.g. NMR elucidated structures).
-              :footcite:`Bondi1964`
+              Values for main group elements are taken from :footcite:`Mantina2009`,
+              and for relevant transition metals from the RDKit.
               
         By default *ProtOr* is used.
               
