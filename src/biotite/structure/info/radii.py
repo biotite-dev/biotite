@@ -100,11 +100,11 @@ _SINGLE_ELEMENT_VDW_RADII = {
     "MN": 2.05,
     "CO": 2.00,
     "NI": 2.00,
-    
+
     # Row 2
     'MO': 2.10,
     'RU': 2.05,
-    
+
     # Row 3
     'W': 2.10,
     'PT': 2.05,
@@ -122,7 +122,7 @@ https://github.com/rdkit/rdkit/blob/af6347963f25cfe8fe4db0638410b2f3a8e8bd89/Cod
 
 Where available, these values were cross-checked vs the CRC Handbook of
 Chemistry and Physics (105th edition) and verified that they are closely
-in line (barring very minor discrepancies, usually < 0.05 Å). 
+in line (barring very minor discrepancies, usually < 0.05 Å).
 We cannot use the CRC values directly as they are not permissively licensed.
 """
 
