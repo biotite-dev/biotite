@@ -158,3 +158,21 @@ def test_unmappable_bond_type():
 
     with pytest.warns(LossyConversionWarning):
         rdkit_interface.from_mol(mol)
+
+
+def test_fortran_ordered_coord():
+    """
+    Check if :func:`to_mol()` also works with ``ndarray`` objects in *Fortran*
+    contiguous order.
+
+    Currently *RDKit* cannot handle *Fortran*-ordered arrays directly as described
+    in https://github.com/rdkit/rdkit/issues/8221.
+    """
+    ref_atoms = info.residue("ALA", allow_missing_coord=True)
+    # Bring coordinates to Fortran order
+    ref_atoms.coord = np.asfortranarray(ref_atoms.coord)
+
+    mol = rdkit_interface.to_mol(ref_atoms)
+    test_atoms = rdkit_interface.from_mol(mol, add_hydrogen=False)
+
+    assert np.allclose(test_atoms.coord, ref_atoms.coord)
