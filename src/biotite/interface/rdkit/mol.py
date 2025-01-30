@@ -47,7 +47,8 @@ _RDKIT_TO_BIOTITE_BOND_TYPE = {
 }
 
 
-@requires_version("rdkit", ">=2020")
+# `Conformer.SetPositions()` was added in RDKit 2024.09.1
+@requires_version("rdkit", ">=2024.09.1")
 def to_mol(
     atoms, kekulize=False, use_dative_bonds=False, include_annotations=("atom_name",)
 ):
