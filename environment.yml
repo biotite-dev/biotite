@@ -56,4 +56,4 @@ dependencies:
   - scipy >=1.8.0
   - pip:
     # Conda provides no recent version of RDKit (required for biotite.interface)
-    - rdkit
+    - rdkit >=2024.09.1
