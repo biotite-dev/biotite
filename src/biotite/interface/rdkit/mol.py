@@ -296,7 +296,6 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     atoms.add_annotation("occupancy", float)
     atoms.add_annotation("label_alt_id", str)
 
-    element_counter = defaultdict(lambda: 1)
     for rdkit_atom in rdkit_atoms:
         _atom_idx = rdkit_atom.GetIdx()
 
@@ -308,6 +307,7 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         # ... add PDB related annotations
         residue_info = rdkit_atom.GetPDBResidueInfo()
         if residue_info is None:
+            # ... default values for atoms with missing residue information
             residue_info = AtomPDBResidueInfo(
                 atomName="",
                 occupancy=0.0,
@@ -334,16 +334,6 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
                         nearest_heavy_atom_res_info.GetIsHeteroAtom()
                     )
                     residue_info.SetAltLoc(nearest_heavy_atom_res_info.GetAltLoc())
-            element_count = element_counter[
-                (
-                    residue_info.GetChainId(),
-                    residue_info.GetResidueName(),
-                    residue_info.GetResidueNumber(),
-                    residue_info.GetInsertionCode(),
-                    element,
-                )
-            ]
-            residue_info.SetName(f"{element}{element_count}")
 
         atoms.chain_id[_atom_idx] = residue_info.GetChainId()
         atoms.res_id[_atom_idx] = residue_info.GetResidueNumber()
@@ -354,15 +344,6 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         atoms.b_factor[_atom_idx] = residue_info.GetTempFactor()
         atoms.occupancy[_atom_idx] = residue_info.GetOccupancy()
         atoms.atom_name[_atom_idx] = residue_info.GetName().strip()
-        element_counter[
-            (
-                residue_info.GetChainId(),
-                residue_info.GetResidueName(),
-                residue_info.GetResidueNumber(),
-                residue_info.GetInsertionCode(),
-                element,
-            )
-        ] += 1
 
         # ... add extra annotations
         annot_names = rdkit_atom.GetPropNames()
