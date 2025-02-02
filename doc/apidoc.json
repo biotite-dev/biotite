@@ -19,6 +19,40 @@
         ]
     },
 
+    "biotite.interface.pymol" : {
+        "Launching and resetting": [
+            "launch_pymol",
+            "launch_interactive_pymol",
+            "reset",
+            "setup_parameters",
+            "DuplicatePyMOLError"
+        ],
+        "Object handling" : [
+            "PyMOLObject"
+        ],
+        "Structure conversion" : [
+            "to_model",
+            "from_model"
+        ],
+        "Compiled Graphics Objects": [
+            "draw_cgo",
+            "get_cylinder_cgo",
+            "get_cone_cgo",
+            "get_sphere_cgo",
+            "get_point_cgo",
+            "get_line_cgo",
+            "get_multiline_cgo"
+        ],
+        "Combined shapes": [
+            "draw_arrows",
+            "draw_box"
+        ],
+        "Display": [
+            "show",
+            "play"
+        ]
+    },
+
     "biotite.database.entrez" : {
         "Queries" : [
             "Query",

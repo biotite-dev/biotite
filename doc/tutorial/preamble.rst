@@ -3,5 +3,6 @@
 
 .. jupyter-execute::
     :hide-code:
+    :hide-output:
 
     setup_script()
