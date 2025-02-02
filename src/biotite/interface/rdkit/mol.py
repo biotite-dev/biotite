@@ -122,10 +122,11 @@ def to_mol(
     >>> print(MolToSmiles(mol))
     [H]OC(=O)C([H])(N([H])[H])C([H])([H])[H]
 
-    By default, ``'atom_name'`` is stored as property of each atom.
+    By default, ``'atom_name'`` is stored in RDKit's PDBResidueInfo grouping
+    for each atom. We can access it manually as below
 
     >>> for atom in mol.GetAtoms():
-    ...     print(atom.GetProp("atom_name"))
+    ...     print(atom.GetPDBResidueInfo().GetName())
     N
     CA
     C
