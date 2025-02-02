@@ -38,6 +38,8 @@ dependencies:
   - sra-tools =3
   - tantan
   - viennarna >=2.5.0
+  # Interfaced packages in biotite.interface (can also be installed separately)
+  - pymol-open-source >=2
   # Documentation building
   - pydata-sphinx-theme =0.15
   - matplotlib >=3.3
