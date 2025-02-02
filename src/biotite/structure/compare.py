@@ -641,7 +641,7 @@ def _find_contacts(
                 f"Mask returned from filter function has shape {mask.shape}, "
                 f"but expected ({contacts.shape[0]},)"
             )
-        contacts = contacts[filter_function(contacts), :]
+        contacts = contacts[mask, :]
     return contacts
 
 
