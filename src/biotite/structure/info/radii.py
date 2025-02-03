@@ -26,13 +26,13 @@ _PROTOR_RADII = {
     ("S",  1, 0) : 1.77,
     ("S",  2, 0) : 1.77, # Not official, added for completeness (MET)
     ("S",  2, 1) : 1.77,
-    ("F",  1, 0) : 1.47, # Taken from _SINGLE_ELEMENT_VDW_RADII
-    ("CL", 1, 0) : 1.75, # Taken from _SINGLE_ELEMENT_VDW_RADII
-    ("BR", 1, 0) : 1.85, # Taken from _SINGLE_ELEMENT_VDW_RADII
+    ("F",  1, 0) : 1.47, # Taken from _SINGLE_ATOM_VDW_RADII
+    ("CL", 1, 0) : 1.75, # Taken from _SINGLE_ATOM_VDW_RADII
+    ("BR", 1, 0) : 1.85, # Taken from _SINGLE_ATOM_VDW_RADII
     ("I",  1, 0) : 1.98, # Taken from _SINGLE_RADII
 }
 
-_SINGLE_ELEMENT_VDW_RADII = {
+_SINGLE_ATOM_VDW_RADII = {
     # Main group
     # Row 1 (Period 1)
     "H":  1.10,
@@ -263,4 +263,4 @@ def vdw_radius_single(element):
     >>> print(vdw_radius_single("C"))
     1.7
     """
-    return _SINGLE_ELEMENT_VDW_RADII.get(element.upper())
+    return _SINGLE_ATOM_VDW_RADII.get(element.upper())
