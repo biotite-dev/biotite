@@ -19,7 +19,9 @@ def compute_mdtraj_sasa(pdb_path):
         warnings.simplefilter("ignore")
         traj = mdtraj.load(pdb_path)
     # Conversion from nm^2 to A^2
-    return mdtraj.shrake_rupley(traj, change_radii=radii, n_sphere_points=5000)[0] * 100.0
+    return (
+        mdtraj.shrake_rupley(traj, change_radii=radii, n_sphere_points=5000)[0] * 100.0
+    )
 
 
 if __name__ == "__main__":
