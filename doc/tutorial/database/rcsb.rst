@@ -128,3 +128,49 @@ Note that grouping may omit PDB IDs in search results, if such PDB IDs
 cannot be grouped.
 For example in the case shown above only a few PDB entries were
 uploaded as collection and hence are part of the search results.
+
+Getting computational models
+----------------------------
+By default :func:`search()` only returns experimental structures.
+In addition to that the RCSB lists an order of magnitude more computational models.
+They can be included in search results by adding ``"computational"`` to the
+``content_types`` parameter.
+
+.. jupyter-execute::
+
+    query = (
+        rcsb.FieldQuery("rcsb_polymer_entity.pdbx_description", contains_phrase="Hexokinase")
+        & rcsb.FieldQuery(
+            "rcsb_entity_source_organism.scientific_name", exact_match="Homo sapiens"
+        )
+    )
+    ids = rcsb.search(query, content_types=("experimental", "computational"))
+    print(ids)
+
+The returned four-character IDs are the RCSB PDB IDs of experimental structures
+like we already saw above.
+The IDs with the ``AF_`` on the other hand are computational models from
+*AlphaFold DB*.
+
+.. currentmodule:: biotite.database.afdb
+
+To download those we require another subpackage: :mod:`biotite.database.afdb`.
+Its :func:`fetch()` function works very similar.
+
+.. jupyter-execute::
+
+    import biotite.database.afdb as afdb
+
+    files = []
+    # For the sake of run time, only download the first 5 entries
+    for id in ids[:5]:
+        if id.startswith("AF_"):
+            # Entry is in AlphaFold DB
+            files.append(afdb.fetch(id, "cif", gettempdir()))
+        elif id.startswith("MA_"):
+            # Entry is in ModelArchive, which is not yet supported
+            raise NotImplementedError
+        else:
+            # Entry is in RCSB PDB
+            files.append(rcsb.fetch(id, "cif", gettempdir()))
+    print([basename(file) for file in files])

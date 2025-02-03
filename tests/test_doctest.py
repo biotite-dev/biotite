@@ -15,6 +15,7 @@ from tests.util import cannot_connect_to, cannot_import, is_not_installed
 
 NCBI_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/"
 RCSB_URL = "https://www.rcsb.org/"
+AFDB_URL = "https://alphafold.ebi.ac.uk/"
 UNIPROT_URL = "https://www.uniprot.org/"
 PUBCHEM_URL = "https://pubchem.ncbi.nlm.nih.gov/"
 
@@ -80,6 +81,13 @@ TEST_PARAMETERS = [
         [],
         marks=pytest.mark.skipif(
             cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available"
+        ),
+    ),
+    pytest.param(
+        "biotite.database.afdb",
+        [],
+        marks=pytest.mark.skipif(
+            cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available"
         ),
     ),
     pytest.param(
