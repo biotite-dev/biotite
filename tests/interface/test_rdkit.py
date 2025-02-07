@@ -20,11 +20,9 @@ def _load_smiles():
         return file.read().splitlines()
 
 
-@pytest.mark.filterwarnings(
-    "ignore:"
-    "The coordinates are missing for some atoms. "
-    "The fallback coordinates will be used instead"
-)
+@pytest.mark.filterwarnings("ignore:Missing coordinates.*")
+@pytest.mark.filterwarnings("ignore:.*coordinates are missing.*")
+@pytest.mark.filterwarnings("ignore::biotite.interface.LossyConversionWarning")
 @pytest.mark.parametrize(
     "res_name", np.random.default_rng(0).choice(info.all_residues(), size=200).tolist()
 )
@@ -46,7 +44,7 @@ def test_conversion_from_biotite(res_name):
     # Some compounds in the CCD have missing coordinates
     assert np.allclose(test_atoms.coord, ref_atoms.coord, equal_nan=True)
 
-    # There should be now undefined bonds
+    # There should be no undefined bonds
     assert (test_atoms.bonds.as_array()[:, 2] != struc.BondType.ANY).all()
     # Kekulization returns one of multiple resonance structures, so the returned one
     # might not be the same as the input

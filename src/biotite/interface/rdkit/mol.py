@@ -9,16 +9,8 @@ __all__ = ["to_mol", "from_mol"]
 import warnings
 from collections import defaultdict
 import numpy as np
-from rdkit.Chem.rdchem import (
-    Atom,
-    AtomPDBResidueInfo,
-    Conformer,
-    EditableMol,
-    KekulizeException,
-    Mol,
-)
-from rdkit.Chem.rdchem import BondType as RDKitBondType
-from rdkit.Chem.rdmolops import AddHs, Kekulize, SanitizeFlags, SanitizeMol
+import rdkit.Chem.AllChem as Chem
+from rdkit.Chem import SanitizeFlags
 from biotite.interface.version import requires_version
 from biotite.interface.warning import LossyConversionWarning
 from biotite.structure.atoms import AtomArray, AtomArrayStack
@@ -31,26 +23,26 @@ _KEKULIZED_TO_AROMATIC_BOND_TYPE = {
     BondType.TRIPLE: BondType.AROMATIC_TRIPLE,
 }
 _BIOTITE_TO_RDKIT_BOND_TYPE = {
-    BondType.ANY: RDKitBondType.UNSPECIFIED,
-    BondType.SINGLE: RDKitBondType.SINGLE,
-    BondType.DOUBLE: RDKitBondType.DOUBLE,
-    BondType.TRIPLE: RDKitBondType.TRIPLE,
-    BondType.QUADRUPLE: RDKitBondType.QUADRUPLE,
-    BondType.AROMATIC_SINGLE: RDKitBondType.AROMATIC,
-    BondType.AROMATIC_DOUBLE: RDKitBondType.AROMATIC,
-    BondType.AROMATIC_TRIPLE: RDKitBondType.AROMATIC,
-    BondType.AROMATIC: RDKitBondType.AROMATIC,
+    BondType.ANY: Chem.BondType.UNSPECIFIED,
+    BondType.SINGLE: Chem.BondType.SINGLE,
+    BondType.DOUBLE: Chem.BondType.DOUBLE,
+    BondType.TRIPLE: Chem.BondType.TRIPLE,
+    BondType.QUADRUPLE: Chem.BondType.QUADRUPLE,
+    BondType.AROMATIC_SINGLE: Chem.BondType.AROMATIC,
+    BondType.AROMATIC_DOUBLE: Chem.BondType.AROMATIC,
+    BondType.AROMATIC_TRIPLE: Chem.BondType.AROMATIC,
+    BondType.AROMATIC: Chem.BondType.AROMATIC,
     # Dative bonds may lead to a KekulizeException and may potentially be deprecated
     # in the future (https://github.com/rdkit/rdkit/discussions/6995)
-    BondType.COORDINATION: RDKitBondType.SINGLE,
+    BondType.COORDINATION: Chem.BondType.SINGLE,
 }
 _RDKIT_TO_BIOTITE_BOND_TYPE = {
-    RDKitBondType.UNSPECIFIED: BondType.ANY,
-    RDKitBondType.SINGLE: BondType.SINGLE,
-    RDKitBondType.DOUBLE: BondType.DOUBLE,
-    RDKitBondType.TRIPLE: BondType.TRIPLE,
-    RDKitBondType.QUADRUPLE: BondType.QUADRUPLE,
-    RDKitBondType.DATIVE: BondType.COORDINATION,
+    Chem.BondType.UNSPECIFIED: BondType.ANY,
+    Chem.BondType.SINGLE: BondType.SINGLE,
+    Chem.BondType.DOUBLE: BondType.DOUBLE,
+    Chem.BondType.TRIPLE: BondType.TRIPLE,
+    Chem.BondType.QUADRUPLE: BondType.QUADRUPLE,
+    Chem.BondType.DATIVE: BondType.COORDINATION,
 }
 _STANDARD_ANNOTATIONS = frozenset(
     {
@@ -76,6 +68,7 @@ def to_mol(
     kekulize=False,
     use_dative_bonds=False,
     include_extra_annotations=(),
+    explicit_hydrogen=True,
 ):
     """
     Convert an :class:`.AtomArray` or :class:`.AtomArrayStack` into a
@@ -105,6 +98,11 @@ def to_mol(
         are always included per default. These standard annotations can be accessed
         with :meth:`rdkit.Chem.rdchem.Atom.GetPDBResidueInfo()` for each atom in the
         returned :class:`rdkit.Chem.rdchem.Mol`.
+    explicit_hydrogen : bool, optional
+        If set to true, the conversion process expects that all hydrogen atoms are
+        explicit, i.e. each each hydrogen atom must be part of the :class:`AtomArray`.
+        If set to false, the conversion process treats all hydrogen atoms as implicit
+        and all hydrogen atoms in the :class:`AtomArray` are removed.
 
     Returns
     -------
@@ -141,17 +139,29 @@ def to_mol(
     HB3
     HXT
     """
-    mol = EditableMol(Mol())
+    hydrogen_mask = atoms.element == "H"
+    if explicit_hydrogen:
+        if not hydrogen_mask.any():
+            warnings.warn(
+                "No hydrogen found in the input, although 'explicit_hydrogen' is 'True'"
+            )
+    else:
+        atoms = atoms[..., ~hydrogen_mask]
+
+    mol = Chem.EditableMol(Chem.Mol())
 
     has_annot = frozenset(atoms.get_annotation_categories())
     extra_annot = set(include_extra_annotations) - _STANDARD_ANNOTATIONS
+
     for i in range(atoms.array_length()):
-        rdkit_atom = Atom(atoms.element[i].capitalize())
+        rdkit_atom = Chem.Atom(atoms.element[i].capitalize())
+        if explicit_hydrogen:
+            rdkit_atom.SetNoImplicit(True)
         if "charge" in has_annot:
             rdkit_atom.SetFormalCharge(atoms.charge[i].item())
 
         # add standard pdb annotations
-        rdkit_atom_res_info = AtomPDBResidueInfo(
+        rdkit_atom_res_info = Chem.AtomPDBResidueInfo(
             atomName=atoms.atom_name[i].item(),
             residueName=atoms.res_name[i].item(),
             chainId=atoms.chain_id[i].item(),
@@ -176,11 +186,12 @@ def to_mol(
 
     if atoms.bonds is None:
         raise BadStructureError("An AtomArray with associated BondList is required")
-    bonds = atoms.bonds.as_array()
     if kekulize:
-        bonds = bonds.copy()
+        bonds = atoms.bonds.copy()
         bonds.remove_aromaticity()
-    for atom_i, atom_j, bond_type in atoms.bonds.as_array():
+    else:
+        bonds = atoms.bonds
+    for atom_i, atom_j, bond_type in bonds.as_array():
         if not use_dative_bonds and bond_type == BondType.COORDINATION:
             bond_type = BondType.SINGLE
         mol.AddBond(
@@ -194,7 +205,7 @@ def to_mol(
         # Handle AtomArray and AtomArrayStack consistently
         coord = coord[None, :, :]
     for model_coord in coord:
-        conformer = Conformer(mol.GetNumAtoms())
+        conformer = Chem.Conformer(mol.GetNumAtoms())
         # RDKit silently expects the data to be in C-contiguous order
         # Otherwise the coordinates would be completely misassigned
         # (https://github.com/rdkit/rdkit/issues/8221)
@@ -271,8 +282,8 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     if add_hydrogen is None:
         add_hydrogen = not _has_explicit_hydrogen(mol)
     if add_hydrogen:
-        SanitizeMol(mol, SanitizeFlags.SANITIZE_ADJUSTHS)
-        mol = AddHs(mol, addCoords=False, addResidueInfo=False)
+        Chem.SanitizeMol(mol, SanitizeFlags.SANITIZE_ADJUSTHS)
+        mol = Chem.AddHs(mol, addCoords=False, addResidueInfo=False)
 
     rdkit_atoms = mol.GetAtoms()
     if rdkit_atoms is None:
@@ -309,7 +320,7 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         residue_info = rdkit_atom.GetPDBResidueInfo()
         if residue_info is None:
             # ... default values for atoms with missing residue information
-            residue_info = AtomPDBResidueInfo(
+            residue_info = Chem.AtomPDBResidueInfo(
                 atomName="",
                 occupancy=0.0,
                 tempFactor=float("nan"),
@@ -356,18 +367,18 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
 
     rdkit_bonds = list(mol.GetBonds())
     is_aromatic = np.array(
-        [bond.GetBondType() == RDKitBondType.AROMATIC for bond in rdkit_bonds]
+        [bond.GetBondType() == Chem.BondType.AROMATIC for bond in rdkit_bonds]
     )
     if np.any(is_aromatic):
         # Determine the kekulized order of aromatic bonds
         # Copy as 'Kekulize()' modifies the molecule in-place
-        mol = Mol(mol)
+        mol = Chem.Mol(mol)
         try:
-            Kekulize(mol)
-        except KekulizeException:
+            Chem.Kekulize(mol)
+        except Chem.KekulizeException:
             warnings.warn(
                 "Kekulization failed, "
-                "using 'BondType.ANY' instead for aromatic bonds instead",
+                "using 'BondType.AROMATIC' instead for aromatic bonds instead",
                 LossyConversionWarning,
             )
         rdkit_bonds = list(mol.GetBonds())
