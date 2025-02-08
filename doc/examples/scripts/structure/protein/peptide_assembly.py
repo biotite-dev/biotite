@@ -22,13 +22,12 @@ known peptide bond geometry taken from a reference structure.
 # License: BSD 3 clause
 
 import itertools
-from tempfile import NamedTemporaryFile
 import numpy as np
 from numpy.linalg import norm
+import biotite.interface.pymol as pymol_interface
 import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.info as info
-import biotite.structure.io as strucio
 
 C_N_LENGTH = 1.34
 N_CA_LENGTH = 1.46
@@ -40,7 +39,7 @@ N_CA_C_ANGLE = 110
 
 # Reference peptide bond atom coordinates taken from 1l2y:
 # CA, C, N, O, H
-PEPTIDE_COORD = np.array(
+peptide_coord = np.array(
     [
         [-8.608, 3.135, -1.618],
         [-7.117, 2.964, -1.897],
@@ -70,8 +69,8 @@ def create_raw_backbone_coord(number_of_res):
         else:
             # Rotate about z-axis -> backbone lies in z-plane
             rot_axis = [0, 0, angle_direction]
-            # Calculate the coordinates of a new atoms by rotating the
-            # previous bond by the given angle
+            # Calculate the coordinates of a new atoms by rotating the previous
+            # bond by the given angle
             new_coord = struc.rotate_about_axis(
                 coord[i - 2],
                 axis=rot_axis,
@@ -116,46 +115,42 @@ def append_residue(chain, residue):
     return chain
 
 
-def assemble_peptide(sequence):
-    res_names = [seq.ProteinSequence.convert_letter_1to3(r) for r in sequence]
-    backbone_coord = create_raw_backbone_coord(len(sequence))
-
-    chain = struc.AtomArray(0)
-    for i, res_name in enumerate(res_names):
-        residue = info.residue(res_name)
-
-        # Superimpose residue to corresponding backbone coordinates
-        _, transformation = struc.superimpose(
-            backbone_coord[3 * i : 3 * i + 3],
-            residue.coord[np.isin(residue.atom_name, ["N", "CA", "C"])],
-        )
-        residue = transformation.apply(residue)
-
-        chain = append_residue(chain, residue)
-
-        if i != 0:
-            # Fix positions of peptide hydrogen and oxygen atom
-            ca_i, c_i, o_i = [
-                np.where(chain.atom_name == atom_name)[0][-2]
-                for atom_name in ["CA", "C", "O"]
-            ]
-            n_i, h_i = [
-                np.where(chain.atom_name == atom_name)[0][-1]
-                for atom_name in ["N", "H"]
-            ]
-            _, transformation = struc.superimpose(
-                chain.coord[[ca_i, c_i, n_i]], PEPTIDE_COORD[:3]
-            )
-            chain.coord[[o_i, h_i]] = transformation.apply(PEPTIDE_COORD[3:])
-    return chain
-
-
-# Sequence of an antimicrobial peptide
 sequence = seq.ProteinSequence("WRKFWKYLK")
-chain = assemble_peptide(sequence)
-out_file = NamedTemporaryFile(suffix=".bcif", delete=False)
-strucio.save_structure(out_file.name, chain)
-# Visualization with PyMOL...
-# sphinx_gallery_ammolite_script = "peptide_assembly_pymol.py"
+res_names = [seq.ProteinSequence.convert_letter_1to3(r) for r in sequence]
+backbone_coord = create_raw_backbone_coord(len(sequence))
 
-out_file.close()
+
+chain = struc.AtomArray(0)
+for i, res_name in enumerate(res_names):
+    residue = info.residue(res_name)
+
+    # Superimpose residue to corresponding backbone coordinates
+    _, transformation = struc.superimpose(
+        backbone_coord[3 * i : 3 * i + 3],
+        residue.coord[np.isin(residue.atom_name, ["N", "CA", "C"])],
+    )
+    residue = transformation.apply(residue)
+
+    chain = append_residue(chain, residue)
+
+    if i != 0:
+        # Fix positions of peptide hydrogen and oxygen atom
+        ca_i, c_i, o_i = [
+            np.where(chain.atom_name == atom_name)[0][-2]
+            for atom_name in ["CA", "C", "O"]
+        ]
+        n_i, h_i = [
+            np.where(chain.atom_name == atom_name)[0][-1] for atom_name in ["N", "H"]
+        ]
+        _, transformation = struc.superimpose(
+            chain.coord[[ca_i, c_i, n_i]], peptide_coord[:3]
+        )
+        chain.coord[[o_i, h_i]] = transformation.apply(peptide_coord[3:])
+
+
+# Visualization with PyMOL
+pymol_object = pymol_interface.PyMOLObject.from_structure(chain)
+pymol_object.show_as("sticks")
+pymol_object.orient()
+pymol_object.zoom(buffer=-7.5)
+pymol_interface.show((1500, 600))
