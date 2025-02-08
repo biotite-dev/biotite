@@ -195,7 +195,7 @@ sphinx_gallery_conf = {
     "within_subsection_order": FileNameSortKey,
     # Do not run example scripts with a trailing '_noexec'
     "filename_pattern": "^((?!_noexec).)*$",
-    "ignore_pattern": r"(.*ignore\.py)|(.*pymol\.py)",
+    "ignore_pattern": r"(.*ignore\.py)",
     "download_all_examples": False,
     # Never report run time
     "min_reported_time": sys.maxsize,
