@@ -42,6 +42,7 @@ dependencies:
   - pymol-open-source >=2
   - ffmpeg  # Required for video rendering in PyMOL
   - imagemagick  # Required for video rendering in PyMOL
+  - openmm >=8
   # Documentation building
   - pydata-sphinx-theme =0.15
   - matplotlib >=3.3
