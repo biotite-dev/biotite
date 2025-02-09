@@ -112,7 +112,10 @@ bibtex_default_style = "ieee"
 
 notfound_urls_prefix = "/latest/"
 
-intersphinx_mapping = {"rdkit": ("https://www.rdkit.org/docs/", None)}
+intersphinx_mapping = {
+    "rdkit": ("https://www.rdkit.org/docs/", None),
+    "openmm": ("http://docs.openmm.org/latest/api-python/", None),
+}
 intersphinx_timeout = 60
 
 
