@@ -12,7 +12,8 @@ from tests.util import data_dir
 
 @pytest.fixture
 def test_path():
-    return join(data_dir("structure"), "1aki.cif")
+    # Use a structure with hydrogen atoms
+    return join(data_dir("structure"), "1l2y.cif")
 
 
 @pytest.mark.parametrize("multi_state", [False, True])
@@ -76,12 +77,14 @@ def test_system_consistency(test_path):
 
     assert test_system.getNumParticles() == ref_system.getNumParticles()
     test_masses = [
-        test_system.getParticleMass(i) for i in range(test_system.getNumParticles())
+        test_system.getParticleMass(i).value_in_unit(unit.dalton)
+        for i in range(test_system.getNumParticles())
     ]
     ref_masses = [
-        ref_system.getParticleMass(i) for i in range(ref_system.getNumParticles())
+        ref_system.getParticleMass(i).value_in_unit(unit.dalton)
+        for i in range(ref_system.getNumParticles())
     ]
-    assert test_masses == ref_masses
+    assert test_masses == pytest.approx(ref_masses, abs=1e-2)
     assert (
         test_system.getDefaultPeriodicBoxVectors()
         == ref_system.getDefaultPeriodicBoxVectors()
@@ -132,6 +135,11 @@ def test_topology_consistency(test_path):
     for i, j, _ in test_atoms.bonds.as_array():
         if test_atoms.element[i] == "S" and test_atoms.element[j] == "S":
             test_atoms.bonds.remove_bond(i, j)
+    # The first residue has 'loose' hydrogen atoms which are automatically fixed by
+    # OpenMM, resulting in a new name for the hydrogen atom and a new bond
+    # For easy comparison, simply remove the first residue
+    ref_atoms = ref_atoms[ref_atoms.res_id >= 2]
+    test_atoms = test_atoms[test_atoms.res_id >= 2]
 
     _assert_equal_atom_arrays(test_atoms, ref_atoms)
 
