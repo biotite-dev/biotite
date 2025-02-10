@@ -9,6 +9,16 @@ import openmm.unit as unit
 import biotite.structure as struc
 import biotite.structure.info as info
 
+_BOND_TYPE_TO_ORDER = {
+    struc.BondType.SINGLE: 1,
+    struc.BondType.DOUBLE: 2,
+    struc.BondType.TRIPLE: 3,
+    struc.BondType.QUADRUPLE: 4,
+    struc.BondType.AROMATIC_SINGLE: 1,
+    struc.BondType.AROMATIC_DOUBLE: 2,
+    struc.BondType.AROMATIC_TRIPLE: 3,
+}
+
 
 def to_system(atoms):
     """
@@ -19,6 +29,8 @@ def to_system(atoms):
     ----------
     atoms : AtomArray or AtomArrayStack
         The structure to be converted.
+        The box vectors are set from the ``box`` attribute.
+        If multiple models are given the box of the first model is selected.
 
     Returns
     -------
@@ -104,16 +116,11 @@ def to_topology(atoms):
     ## Add bonds
     if atoms.bonds is None:
         raise struc.BadStructureError("Input structure misses an associated BondList")
-    # Aromaticity has no special handling in OpenMM
-    bonds = atoms.bonds.copy()
-    bonds.remove_aromaticity()
-    for atom_i, atom_j, bond_type in bonds.as_array():
-        if bond_type == struc.BondType.ANY:
-            bond_type = None
-        # Without aromaticity and BondType.ANY,
-        # the BondType is equivalent to the bond order
+    for atom_i, atom_j, bond_type in atoms.bonds.as_array():
         topology.addBond(
-            atom_list[atom_i], atom_list[atom_j], type=None, order=int(bond_type)
+            atom_list[atom_i],
+            atom_list[atom_j],
+            order=_BOND_TYPE_TO_ORDER.get(bond_type),
         )
 
     ## Add box
