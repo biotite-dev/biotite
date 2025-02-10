@@ -63,11 +63,9 @@ def test_state_conversion(test_path, multi_state):
 
 def test_system_consistency(test_path):
     """
-    Test whether an :class:`System` converted from a
-    :class:`AtomArray` equal to a :class:`System`
-    directly read via OpenMM.
-    Forces and constraints are not tested, as they are not set by
-    :func:`to_system()`.
+    Test whether a :class:`System` converted from a :class:`AtomArray` is equal to a
+    :class:`System` directly read via OpenMM.
+    Forces and constraints are not tested, as they are not set by :func:`to_system()`.
     """
     topology = app.PDBxFile(test_path).topology
     force_field = app.ForceField("amber14-all.xml")
