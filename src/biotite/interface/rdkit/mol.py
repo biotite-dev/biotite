@@ -369,7 +369,25 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
             extra_annotations[annot_name][_atom_idx] = rdkit_atom.GetProp(annot_name)
 
     for annot_name, array in extra_annotations.items():
-        atoms.set_annotation(annot_name, array.astype(str))
+        # ... handle special case of implicit hydrogen atom flags
+        if annot_name == "isImplicit":
+            atoms.set_annotation(annot_name, array.astype(bool))
+            continue
+
+        # ... for all custom annotations, try numeric conversions in order of preference
+        for dtype in (bool, int, float):
+            try:
+                converted = array.astype(dtype)
+                # Verify the conversion was lossless by converting back
+                if np.array_equal(
+                    converted.astype(str), array.astype(str), equal_nan=True
+                ):
+                    atoms.set_annotation(annot_name, converted)
+                    break
+            except (ValueError, TypeError):
+                continue
+        else:  # ... if no numeric conversion succeeded
+            atoms.set_annotation(annot_name, array.astype(str))
 
     rdkit_bonds = list(mol.GetBonds())
     is_aromatic = np.array(
