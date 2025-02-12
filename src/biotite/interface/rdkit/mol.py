@@ -290,14 +290,20 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         raise BadStructureError("Could not obtains atoms from Mol")
 
     if conformer_id is None:
-        conformers = [conf for conf in mol.GetConformers() if conf.Is3D()]
+        conformers = [conf for conf in mol.GetConformers()]
         atoms = AtomArrayStack(len(conformers), len(rdkit_atoms))
         for i, conformer in enumerate(conformers):
-            atoms.coord[i] = np.array(conformer.GetPositions())
+            if conformer.Is3D():
+                atoms.coord[i] = np.array(conformer.GetPositions())
+            else:
+                atoms.coord[i] = np.full((len(rdkit_atoms), 3), np.nan)
     else:
         conformer = mol.GetConformer(conformer_id)
         atoms = AtomArray(len(rdkit_atoms))
-        atoms.coord = np.array(conformer.GetPositions())
+        if conformer.Is3D():
+            atoms.coord = np.array(conformer.GetPositions())
+        else:
+            atoms.coord = np.full((len(rdkit_atoms), 3), np.nan)
 
     extra_annotations = defaultdict(
         # Use 'object' dtype first, as the maximum string length is unknown
