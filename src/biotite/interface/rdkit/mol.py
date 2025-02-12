@@ -68,7 +68,7 @@ def to_mol(
     kekulize=False,
     use_dative_bonds=False,
     include_extra_annotations=(),
-    explicit_hydrogen=True,
+    explicit_hydrogen=False,
 ):
     """
     Convert an :class:`.AtomArray` or :class:`.AtomArrayStack` into a
@@ -103,6 +103,9 @@ def to_mol(
         explicit, i.e. each each hydrogen atom must be part of the :class:`AtomArray`.
         If set to false, the conversion process treats all hydrogen atoms as implicit
         and all hydrogen atoms in the :class:`AtomArray` are removed.
+        By default, explicit_hydrogen=False, i.e. hydrogen atoms are never assumed, to
+        avoid accidentally introducing radicals into the molecule upon calling
+        :func:`Chem.SanitizeMol()`.
 
     Returns
     -------
@@ -140,12 +143,24 @@ def to_mol(
     HXT
     """
     hydrogen_mask = atoms.element == "H"
+    _has_hydrogen = hydrogen_mask.any()
     if explicit_hydrogen:
-        if not hydrogen_mask.any():
+        if not _has_hydrogen:
             warnings.warn(
-                "No hydrogen found in the input, although 'explicit_hydrogen' is 'True'"
+                "No hydrogen found in the input, although 'explicit_hydrogen' is 'True'. "
+                "This may lead to unexpected results, as hydrogen atoms are not "
+                "implicitly added, which often results in radicals after sanitization "
+                "in RDKit. Make sure this is what you want.",
+                UserWarning,
             )
     else:
+        if _has_hydrogen:
+            warnings.warn(
+                "Hydrogen atoms are present in the input, although 'explicit_hydrogen' "
+                "is 'False'. All hydrogen atoms will be removed and then re-inferred "
+                "by RDKit. Make sure this is what you want.",
+                UserWarning,
+            )
         atoms = atoms[..., ~hydrogen_mask]
 
     mol = Chem.EditableMol(Chem.Mol())
