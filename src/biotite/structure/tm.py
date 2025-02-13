@@ -201,7 +201,7 @@ def superimpose_structural_homologs(
     >>> print(tm_score(fixed, superimposed, fix_indices, mob_indices))
     0.69...
     >>> print(rmsd(fixed[fix_indices], superimposed[mob_indices]))
-    0.84...
+    0.83...
     """
     # Avoid circular imports
     from biotite.structure.alphabet.i3d import to_3di
@@ -260,8 +260,6 @@ def superimpose_structural_homologs(
             fixed_ca_coord,
             mobile_ca_coord,
             anchors,
-            superimposed_ca_coord,
-            reference_length,
         )
     )
     superimposed_ca_coord = transform.apply(mobile_ca_coord)
@@ -363,7 +361,7 @@ def _find_anchors_structure_based(fixed_seq, mobile_seq, substitution_matrix):
     )[0]
     # Cannot anchor gaps
     alignment = remove_gaps(alignment)
-    # Anchors must be similar amino acids
+    # Anchors must be structurally similar
     alignment_codes = get_codes(alignment)
     score_matrix = substitution_matrix.score_matrix()
     anchor_mask = score_matrix[alignment_codes[0], alignment_codes[1]] > 0
