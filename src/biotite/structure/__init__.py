@@ -125,6 +125,7 @@ from .pseudoknots import *
 from .rdf import *
 from .repair import *
 from .residues import *
+from .rings import *
 from .sasa import *
 from .sequence import *
 from .sse import *

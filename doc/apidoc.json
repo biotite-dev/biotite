@@ -347,6 +347,11 @@
             "dot_bracket",
             "dot_bracket_from_structure",
             "base_pairs_from_dot_bracket"
+        ],
+        "Aromatic rings": [
+            "find_aromatic_rings",
+            "find_stacking_interactions",
+            "PiStacking"
         ]
     },
     "biotite.structure.info" : {
