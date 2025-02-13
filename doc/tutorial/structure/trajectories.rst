@@ -5,10 +5,9 @@ Working with molecular trajectories
 As :mod:`biotite.structure` provides efficient tools for analyzing multi-model
 structures, the package is predestined for handling trajectories from
 *molecular dynamics* (MD) simulations.
-If you like, you can even use the
-`Molmarbles <https://github.com/biotite-dev/molmarbles>`_ extension package for
-seamless interaction between *Biotite* and the
-`OpenMM <https://openmm.org/>`_ MD simulation toolkit.
+If you like, you can even use the :mod:`biotite.interface.openmm` subpackage with the
+`OpenMM <https://openmm.org/>`_ molecular simulation toolkit to integrate MD
+simulations.
 
 Reading trajectory files
 ------------------------
