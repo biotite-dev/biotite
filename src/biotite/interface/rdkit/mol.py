@@ -171,6 +171,7 @@ def to_mol(
     for i in range(atoms.array_length()):
         rdkit_atom = Chem.Atom(atoms.element[i].capitalize())
         if explicit_hydrogen:
+            # ... tell RDKit to not assume any implicit hydrogens
             rdkit_atom.SetNoImplicit(True)
         if "charge" in has_annot:
             rdkit_atom.SetFormalCharge(atoms.charge[i].item())
