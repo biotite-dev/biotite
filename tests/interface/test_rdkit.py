@@ -1,13 +1,7 @@
 from pathlib import Path
 import numpy as np
 import pytest
-from rdkit.Chem import MolFromSmiles, MolToSmiles
-from rdkit.Chem.rdchem import Atom, EditableMol, Mol
-from rdkit.Chem.rdchem import BondType as RDKitBondType
-from rdkit.Chem.rdmolops import (
-    AddHs,
-    RemoveStereochemistry,
-)
+import rdkit.Chem.AllChem as Chem
 import biotite.interface.rdkit as rdkit_interface
 import biotite.structure as struc
 import biotite.structure.info as info
@@ -102,19 +96,44 @@ def test_conversion_from_rdkit(smiles):
     Start from SMILES string to ensure that built-in functionality of RDKit is used
     to create the initial molecule.
     """
-    ref_mol = MolFromSmiles(smiles)
+    ref_mol = Chem.MolFromSmiles(smiles)
     atoms = rdkit_interface.from_mol(ref_mol)
     test_mol = rdkit_interface.to_mol(atoms)
 
     # The intermediate AtomArray has explicit hydrogen atoms so add them explicitly
     # to the reference as well for fair comparison
-    ref_mol = AddHs(ref_mol)
+    ref_mol = Chem.AddHs(ref_mol)
     # The intermediate AtomArray does not have stereochemistry information,
     # so this info cannot be preserved in the comparison
-    RemoveStereochemistry(ref_mol)
+    Chem.RemoveStereochemistry(ref_mol)
 
     # RDKit does not support equality checking -> Use SMILES string as proxy
-    assert MolToSmiles(test_mol) == MolToSmiles(ref_mol)
+    assert Chem.MolToSmiles(test_mol) == Chem.MolToSmiles(ref_mol)
+
+
+@pytest.mark.parametrize("selected_conformer_type", ["2D", "3D"])
+@pytest.mark.parametrize("present_conformer_type", ["2D", "3D"])
+def test_conformer_selection(present_conformer_type, selected_conformer_type):
+    """
+    Check if 2D and 3D conformers can be selected and that a model with *NaN*
+    coordinates is returned if an absent conformer type is selected.
+    """
+    mol = Chem.MolFromSmiles("C1=CC=CC=C1")
+    conformer = Chem.Conformer(mol.GetNumAtoms())
+    conformer.Set3D(present_conformer_type=="3D")
+    mol.AddConformer(conformer)
+
+    atoms = rdkit_interface.from_mol(mol, conformer_id=selected_conformer_type)
+
+    # In any case there should be a single model
+    assert atoms.stack_depth() == 1
+    if selected_conformer_type != present_conformer_type:
+        # In case the selected conformer type is not present, expect a model
+        # with all coordinates set to NaN
+        assert np.all(np.isnan(atoms.coord))
+    else:
+        # The default conformer set above contains zeros
+        assert np.all(atoms.coord == 0)
 
 
 def test_kekulization():
@@ -147,11 +166,11 @@ def test_unmappable_bond_type():
     """
     Test that a warning is raised when a bond type cannot be mapped to Biotite.
     """
-    mol = EditableMol(Mol())
-    mol.AddAtom(Atom("F"))
-    mol.AddAtom(Atom("F"))
+    mol = Chem.EditableMol(Chem.Mol())
+    mol.AddAtom(Chem.Atom("F"))
+    mol.AddAtom(Chem.Atom("F"))
     # 'HEXTUPLE' has no corresponding Biotite bond type
-    mol.AddBond(0, 1, RDKitBondType.HEXTUPLE)
+    mol.AddBond(0, 1, Chem.BondType.HEXTUPLE)
     mol = mol.GetMol()
 
     with pytest.warns(LossyConversionWarning):
