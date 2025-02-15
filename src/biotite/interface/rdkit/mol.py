@@ -68,7 +68,7 @@ def to_mol(
     kekulize=False,
     use_dative_bonds=False,
     include_extra_annotations=(),
-    explicit_hydrogen=False,
+    explicit_hydrogen=None,
 ):
     """
     Convert an :class:`.AtomArray` or :class:`.AtomArrayStack` into a
@@ -78,6 +78,7 @@ def to_mol(
     ----------
     atoms : AtomArray or AtomArrayStack
         The molecule to be converted.
+        Must have an associated :class:`BondList`.
     kekulize : bool, optional
         If set to true, aromatic bonds are represented by single, double and triple
         bonds.
@@ -101,11 +102,9 @@ def to_mol(
     explicit_hydrogen : bool, optional
         If set to true, the conversion process expects that all hydrogen atoms are
         explicit, i.e. each each hydrogen atom must be part of the :class:`AtomArray`.
-        If set to false, the conversion process treats all hydrogen atoms as implicit
-        and all hydrogen atoms in the :class:`AtomArray` are removed.
-        By default, explicit_hydrogen=False, i.e. hydrogen atoms are never assumed, to
-        avoid accidentally introducing radicals into the molecule upon calling
-        :func:`Chem.SanitizeMol()`.
+        If set to false, the conversion process treats all hydrogen atoms as implicit.
+        By default, explicit hydrogen atoms are only assumed of any hydrogen atoms are
+        present in `atoms`.
 
     Returns
     -------
@@ -113,6 +112,13 @@ def to_mol(
         The *RDKit* molecule.
         If the input `atoms` is an :class:`AtomArrayStack`, all models are included
         as conformers with conformer IDs starting from ``0``.
+
+    Raised
+    ------
+    BadStructureError
+        If the input `atoms` does not have an associated :class:`BondList`.
+        Also raises a :class:`BadStructureError`, if `explicit_hydrogen` is set to
+        ``False`` despite hydrogen atoms being present in `atoms`.
 
     Examples
     --------
@@ -144,22 +150,20 @@ def to_mol(
     """
     hydrogen_mask = atoms.element == "H"
     _has_hydrogen = hydrogen_mask.any()
-    if explicit_hydrogen:
+    if explicit_hydrogen is None:
+        explicit_hydrogen = _has_hydrogen
+    elif explicit_hydrogen:
         if not _has_hydrogen:
             warnings.warn(
-                "No hydrogen found in the input, although 'explicit_hydrogen' is 'True'. "
-                "This may lead to unexpected results, as hydrogen atoms are not "
-                "implicitly added, which often results in radicals after sanitization "
-                "in RDKit. Make sure this is what you want.",
+                "No hydrogen found, although 'explicit_hydrogen' is 'True'. "
+                "This may lead to radicals after sanitization in RDKit.",
                 UserWarning,
             )
     else:
         if _has_hydrogen:
-            warnings.warn(
+            raise BadStructureError(
                 "Hydrogen atoms are present in the input, although 'explicit_hydrogen' "
-                "is 'False'. All hydrogen atoms will be removed and then re-inferred "
-                "by RDKit. Make sure this is what you want.",
-                UserWarning,
+                "is set to 'False'"
             )
         atoms = atoms[..., ~hydrogen_mask]
 
