@@ -246,9 +246,12 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     ----------
     mol : rdkit.Chem.rdchem.Mol
         The molecule to be converted.
-    conformer_id : int, optional
-        The conformer to be converted.
-        By default, an :class:`AtomArrayStack` with all conformers is returned.
+    conformer_id : int or {"2D", "3D"}, optional
+        The ID of the conformer to be converted.
+        If set to "2D" or "3D", an :class:`AtomArrayStack` with only the 2D or 3D
+        conformer is returned, respectively.
+        By default, an :class:`AtomArrayStack` with all conformers (2D and 3D) is
+        returned.
     add_hydrogen : bool, optional
         If set to true, explicit hydrogen atoms are always added.
         If set to false, explicit hydrogen atoms are never added.
@@ -259,8 +262,10 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     -------
     atoms : AtomArray or AtomArrayStack
         The converted atoms.
-        An :class:`AtomArrayStack` is only returned, if the `conformer_id` parameter
-        is not set.
+        An :class:`AtomArray` is returned if an integer `conformer_id` is given.
+        Otherwise, an :class:`AtomArrayStack` is returned.
+        If the input `mol` does not have a conformer, an `AtomArrayStack` with a
+        single model, where all coordinates are *NaN*, is returned.
 
     Notes
     -----
@@ -309,21 +314,25 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     if rdkit_atoms is None:
         raise BadStructureError("Could not obtains atoms from Mol")
 
-    if conformer_id is None:
+    if conformer_id in (None, "2D", "3D"):
         conformers = [conf for conf in mol.GetConformers()]
-        atoms = AtomArrayStack(len(conformers), len(rdkit_atoms))
-        for i, conformer in enumerate(conformers):
-            if conformer.Is3D():
-                atoms.coord[i] = np.array(conformer.GetPositions())
-            else:
-                atoms.coord[i] = np.full((len(rdkit_atoms), 3), np.nan)
+        if conformer_id == "2D":
+            conformers = [conf for conf in conformers if not conf.Is3D()]
+        elif conformer_id == "3D":
+            conformers = [conf for conf in conformers if conf.Is3D()]
+        if len(conformers) == 0:
+            # No conformer in 'Mol' that fulfills the criteria
+            # -> create a single model with all coordinates set to NaN
+            atoms = AtomArrayStack(1, len(rdkit_atoms))
+            atoms.coord = np.full((1, len(rdkit_atoms), 3), np.nan)
+        else:
+            atoms = AtomArrayStack(len(conformers), len(rdkit_atoms))
+            for i, conformer in enumerate(conformers):
+                atoms.coord[i] = np.array(conformer.GetPositions(), dtype=np.float32)
     else:
         conformer = mol.GetConformer(conformer_id)
         atoms = AtomArray(len(rdkit_atoms))
-        if conformer.Is3D():
-            atoms.coord = np.array(conformer.GetPositions())
-        else:
-            atoms.coord = np.full((len(rdkit_atoms), 3), np.nan)
+        atoms.coord = np.array(conformer.GetPositions(), dtype=np.float32)
 
     extra_annotations = defaultdict(
         # Use 'object' dtype first, as the maximum string length is unknown
