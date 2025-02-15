@@ -3,7 +3,7 @@
 # information.
 
 __name__ = "biotite.interface.rdkit"
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann, Simon Mathis"
 __all__ = ["to_mol", "from_mol"]
 
 import warnings
