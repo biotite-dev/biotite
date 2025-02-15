@@ -1195,9 +1195,18 @@ def array(atoms):
                 f"annotation categories as the atom at index 0"
             )
     array = AtomArray(len(atoms))
+
     # Add all (also optional) annotation categories
     for name in names:
-        array.add_annotation(name, dtype=type(atoms[0]._annot[name]))
+        value = atoms[0]._annot[name]
+        if isinstance(value, str):
+            # Find maximum string length across all atoms for this annotation
+            max_len = max(len(str(atom._annot[name])) for atom in atoms)
+            dtype = f"<U{max_len}"
+        else:
+            dtype = type(value)
+        array.add_annotation(name, dtype=dtype)
+
     # Add all atoms to AtomArray
     for i in range(len(atoms)):
         for name in names:
