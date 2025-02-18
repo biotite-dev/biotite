@@ -6,6 +6,7 @@ __name__ = "biotite.interface.rdkit"
 __author__ = "Patrick Kunzmann, Simon Mathis"
 __all__ = ["to_mol", "from_mol"]
 
+import numbers
 import warnings
 from collections import defaultdict
 import numpy as np
@@ -199,7 +200,9 @@ def to_mol(
 
         # add extra annotations
         for annot_name in extra_annot:
-            rdkit_atom.SetProp(annot_name, atoms.get_annotation(annot_name)[i].item())
+            _set_property(
+                rdkit_atom, annot_name, atoms.get_annotation(annot_name)[i].item()
+            )
 
         # add atom to molecule
         mol.AddAtom(rdkit_atom)
@@ -270,8 +273,8 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     Notes
     -----
     All atom-level properties of `mol`
-    (obtainable with :meth:`rdkit.Chem.rdchem.Mol.GetProp()`) are added as string-type
-    annotation array with the same name.
+    (obtainable with :meth:`rdkit.Chem.rdchem.Mol.GetProp()`) are added as annotation
+    array with the same name.
     ``element`` and ``charge`` are not inferred from properties but from the
     dedicated attributes in the :class:`rdkit.Chem.rdchem.Mol` object.
 
@@ -335,8 +338,8 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         atoms.coord = np.array(conformer.GetPositions(), dtype=np.float32)
 
     extra_annotations = defaultdict(
-        # Use 'object' dtype first, as the maximum string length is unknown
-        lambda: np.full(atoms.array_length(), "", dtype=object)
+        # The dtype of each annotation array is inferred later
+        lambda: [None] * atoms.array_length()
     )
     atoms.add_annotation("charge", int)
     atoms.add_annotation("b_factor", float)
@@ -393,30 +396,17 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         atoms.atom_name[_atom_idx] = residue_info.GetName().strip()
 
         # ... add extra annotations
-        annot_names = rdkit_atom.GetPropNames()
-        for annot_name in annot_names:
-            extra_annotations[annot_name][_atom_idx] = rdkit_atom.GetProp(annot_name)
+        for annot, value in rdkit_atom.GetPropsAsDict(includePrivate=False).items():
+            extra_annotations[annot][_atom_idx] = value
 
-    for annot_name, array in extra_annotations.items():
-        # ... handle special case of implicit hydrogen atom flags
-        if annot_name == "isImplicit":
-            atoms.set_annotation(annot_name, array.astype(bool))
-            continue
-
-        # ... for all custom annotations, try numeric conversions in order of preference
-        for dtype in (bool, int, float):
-            try:
-                converted = array.astype(dtype)
-                # Verify the conversion was lossless by converting back
-                if np.array_equal(
-                    converted.astype(str), array.astype(str), equal_nan=True
-                ):
-                    atoms.set_annotation(annot_name, converted)
-                    break
-            except (ValueError, TypeError):
-                continue
-        else:  # ... if no numeric conversion succeeded
-            atoms.set_annotation(annot_name, array.astype(str))
+    for annot, array in extra_annotations.items():
+        # Handle special case of implicit hydrogen atom flags,
+        # that is set by 'AddHs()' to hydrogen atoms
+        if annot == "isImplicit":
+            annotation_array = np.array(array, dtype=bool)
+        else:
+            annotation_array = np.array(array)
+        atoms.set_annotation(annot, annotation_array)
 
     rdkit_bonds = list(mol.GetBonds())
     is_aromatic = np.array(
@@ -465,3 +455,18 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
 
 def _has_explicit_hydrogen(mol):
     return mol.GetNumAtoms() > mol.GetNumHeavyAtoms()
+
+
+def _set_property(atom, annot_name, value):
+    if isinstance(value, bool):
+        atom.SetBoolProp(annot_name, value)
+    elif isinstance(value, numbers.Integral):
+        atom.SetIntProp(annot_name, value)
+    elif isinstance(value, numbers.Real):
+        atom.SetDoubleProp(annot_name, value)
+    elif isinstance(value, str):
+        atom.SetProp(annot_name, value)
+    else:
+        raise TypeError(
+            f"Unsupported dtype '{type(value).__name__}' for annotation '{annot_name}'"
+        )

@@ -1,3 +1,4 @@
+import itertools
 from pathlib import Path
 import numpy as np
 import pytest
@@ -120,7 +121,7 @@ def test_conformer_selection(present_conformer_type, selected_conformer_type):
     """
     mol = Chem.MolFromSmiles("C1=CC=CC=C1")
     conformer = Chem.Conformer(mol.GetNumAtoms())
-    conformer.Set3D(present_conformer_type=="3D")
+    conformer.Set3D(present_conformer_type == "3D")
     mol.AddConformer(conformer)
 
     atoms = rdkit_interface.from_mol(mol, conformer_id=selected_conformer_type)
@@ -160,6 +161,31 @@ def test_kekulization():
         ]
         == ref_bond_types.tolist()
     )
+
+
+@pytest.mark.parametrize(
+    "values", [(False, True), (1, 2, 3), (1.0, 1.5, 2.0), ("foo", "bar", "baz")]
+)
+def test_extra_annotations(values):
+    """
+    Check if extra annotations can be added to a :class:`Mol` and recovered.
+    """
+    EXTRA_ANNOT_NAME = "extra"
+
+    ref_atoms = info.residue("ALA")
+    ref_annot = np.array(
+        list(itertools.islice(itertools.cycle(values), ref_atoms.array_length()))
+    )
+    ref_atoms.set_annotation(EXTRA_ANNOT_NAME, ref_annot)
+
+    mol = rdkit_interface.to_mol(
+        ref_atoms, include_extra_annotations=[EXTRA_ANNOT_NAME]
+    )
+    test_atoms = rdkit_interface.from_mol(mol)
+    test_annot = test_atoms.get_annotation(EXTRA_ANNOT_NAME)
+
+    assert test_annot.dtype == ref_annot.dtype
+    assert test_annot.tolist() == ref_annot.tolist()
 
 
 def test_unmappable_bond_type():
