@@ -4,12 +4,13 @@
 
 """
 Functions related to working with the simulation box or unit cell
-of a structure
+of a structure.
 """
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = [
+    "space_group_transforms",
     "vectors_from_unitcell",
     "unitcell_from_vectors",
     "box_volume",
@@ -23,14 +24,125 @@ __all__ = [
     "is_orthogonal",
 ]
 
+import functools
+import json
 from numbers import Integral
+from pathlib import Path
 import numpy as np
 import numpy.linalg as linalg
 from biotite.structure.atoms import repeat
 from biotite.structure.chains import get_chain_masks, get_chain_starts
 from biotite.structure.error import BadStructureError
 from biotite.structure.molecules import get_molecule_masks
+from biotite.structure.transform import AffineTransformation
 from biotite.structure.util import vector_dot
+
+
+def space_group_transforms(space_group):
+    """
+    Get the coordinate transformations for a given space group.
+
+    Applying each transformation to a structure (in fractional coordinates) reproduces
+    the entire unit cell.
+
+    Parameters
+    ----------
+    space_group : str or int
+        The space group name (full *Hermann-Mauguin* symbol) or
+        *International Table*'s number.
+
+    Returns
+    -------
+    transformations : list of AffineTransformation
+        The transformations that creates the symmetric copies of a structure in a unit
+        cell of the given space group.
+        Note that the transformations need to be applied to coordinates in fractions
+        of the unit cell and also return fractional coordinates, when applied.
+
+    See Also
+    --------
+    coord_to_fraction : Used to convert to fractional coordinates.
+    fraction_to_coord : Used to convert back to Cartesian coordinates.
+
+    Examples
+    --------
+
+    >>> transforms = space_group_transforms("P 21 21 21")
+    >>> for transform in transforms:
+    ...     print(transform.rotation)
+    ...     print(transform.target_translation)
+    ...     print()
+    [[[1. 0. 0.]
+      [0. 1. 0.]
+      [0. 0. 1.]]]
+    [[0. 0. 0.]]
+    <BLANKLINE>
+    [[[-1.  0.  0.]
+      [ 0. -1.  0.]
+      [ 0.  0.  1.]]]
+    [[0.5 0.0 0.5]]
+    <BLANKLINE>
+    [[[-1.  0.  0.]
+      [ 0.  1.  0.]
+      [ 0.  0. -1.]]]
+    [[0.0 0.5 0.5]]
+    <BLANKLINE>
+    [[[ 1.  0.  0.]
+      [ 0. -1.  0.]
+      [ 0.  0. -1.]]]
+    [[0.5 0.5 0.0]]
+    <BLANKLINE>
+
+    Reproduce the unit cell for some coordinates (in this case only one atom).
+
+    >>> asym_coord = np.array([[1.0, 2.0, 3.0]])
+    >>> box = np.eye(3) * 10
+    >>> transforms = space_group_transforms("P 21 21 21")
+    >>> # Apply the transformations to fractional coordinates of the asymmetric unit
+    >>> unit_cell = np.concatenate(
+    ...     [
+    ...         fraction_to_coord(transform.apply(coord_to_fraction(asym_coord, box)), box)
+    ...         for transform in transforms
+    ...     ]
+    ... )
+    >>> print(unit_cell)
+    [[ 1.  2.  3.]
+     [ 4. -2.  8.]
+     [-1.  7.  2.]
+     [ 6.  3. -3.]]
+    """
+    transformation_data = _get_transformation_data()
+
+    if isinstance(space_group, str):
+        try:
+            space_group_index = transformation_data["group_names"][space_group]
+        except KeyError:
+            raise ValueError(f"Space group '{space_group}' does not exist")
+    else:
+        try:
+            space_group_index = transformation_data["group_numbers"][str(space_group)]
+        except KeyError:
+            raise ValueError(f"Space group number {space_group} does not exist")
+
+    space_group = transformation_data["space_groups"][space_group_index]
+    transformations = []
+    for transformation_index in space_group:
+        matrix = np.zeros((3, 3), dtype=np.float32)
+        translation = np.zeros(3, dtype=np.float32)
+        for i, part_index in enumerate(
+            transformation_data["transformations"][transformation_index]
+        ):
+            part = transformation_data["transformation_parts"][part_index]
+            matrix[i, :] = part[:3]
+            translation[i] = part[3]
+        transformations.append(
+            AffineTransformation(
+                center_translation=np.zeros(3, dtype=np.float32),
+                rotation=matrix,
+                target_translation=translation,
+            )
+        )
+    return transformations
 
 
 def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
@@ -584,3 +696,9 @@ def is_orthogonal(box):
         & (np.abs(vector_dot(box[..., 0, :], box[..., 2, :])) < tol)
         & (np.abs(vector_dot(box[..., 1, :], box[..., 2, :])) < tol)
     )
+
+
+@functools.cache
+def _get_transformation_data():
+    with open(Path(__file__).parent / "spacegroups.json") as file:
+        return json.load(file)

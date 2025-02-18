@@ -245,6 +245,7 @@
             "from_template"
         ],
         "Boxes and unit cells" : [
+            "space_group_transforms",
             "vectors_from_unitcell",
             "unitcell_from_vectors",
             "box_volume",
