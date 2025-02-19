@@ -54,7 +54,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     aligned to each other, if :math:`D_L \leq j - i \leq D_U`.
     With increasing width of the diagonal band, the probability to find
     the optimal alignment, but also the computation time increases.
-    
+
     Parameters
     ----------
     seq1, seq2 : Sequence
@@ -84,15 +84,15 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
         The maximum number of alignments returned.
         When the number of branches exceeds this value in the traceback
         step, no further branches are created.
-    
+
     Returns
     -------
     alignments : list of Alignment
         The generated alignments.
         Each alignment in the list has the same similarity score,
         which is the maximum score possible within the defined band.
-    
-    See also
+
+    See Also
     --------
     align_optimal
         Guarantees to find the optimal alignment at the cost of greater
@@ -110,7 +110,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     yield a more optimal alignment.
     Considerations on how to find a suitable band width are discussed in
     :footcite:`Gibrat2018`.
-    
+
     The restriction to a limited band is the central difference between
     the banded alignment heuristic and the optimal alignment
     algorithms :footcite:`Needleman1970, Smith1981`.
@@ -151,12 +151,12 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     Filled cells, i.e. cells within the band, are indicated by ``x``.
     The shorter sequence is always represented by the first dimension
     of the table in this implementation.
-    
+
     References
     ----------
-    
+
     .. footbibliography::
-    
+
     Examples
     --------
 
@@ -203,7 +203,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
         raise ValueError(
             "Maximum number of returned alignments must be at least 1"
         )
-    
+
     # The shorter sequence is the one on the left of the matrix
     # -> shorter sequence is 'seq1'
     if len(seq2) < len(seq1):
@@ -243,11 +243,11 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
     trace_table = np.zeros((len(seq1)+1, band_width+2), dtype=np.uint8)
     code1 = seq1.code
     code2 = seq2.code
-    
+
 
     # Table filling
     ###############
-    
+
     # A score value that signals that the respective direction in the
     # dynamic programming matrix should not be used, since it would be
     # outside the band
@@ -294,7 +294,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
             code1, code2, matrix.score_matrix(), trace_table, score_table,
             lower_diag, upper_diag, gap_penalty, local
         )
-    
+
 
     # Traceback
     ###########
@@ -383,7 +383,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
             state_list = np.full(
                 len(i_list), TraceState.NO_STATE, dtype=int
             )
-    
+
     # Follow the traces specified in state and indices lists
     cdef int curr_trace_count
     for k in range(len(i_list)):
@@ -401,7 +401,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
             curr_trace_count=&curr_trace_count, max_trace_count=max_number,
             lower_diag=lower_diag, upper_diag=upper_diag
         )
-    
+
     # Replace gap entries in trace with -1
     for i, trace in enumerate(trace_list):
         trace = np.flip(trace, axis=0)
@@ -459,7 +459,7 @@ def _fill_align_table(CodeType1[:] code1 not None,
     local
         Indicates, whether a local alignment should be performed.
     """
-    
+
     cdef int i, j
     cdef int seq_i, seq_j
     cdef int32 from_diag, from_left, from_top
@@ -488,7 +488,7 @@ def _fill_align_table(CodeType1[:] code1 not None,
             from_top  = score_table[i-1, j+1] + gap_penalty
 
             trace = get_trace_linear(from_diag, from_left, from_top, &score)
-            
+
             # Local alignment specialty:
             # If score is less than or equal to 0,
             # then 0 is saved on the field and the trace ends here
@@ -541,7 +541,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     local
         Indicates, whether a local alignment should be performed.
     """
-    
+
     cdef int i, j
     cdef int seq_i, seq_j
     cdef int32 mm_score, g1m_score, g2m_score
@@ -550,7 +550,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     cdef uint8 trace
     cdef int32 m_score, g1_score, g2_score
     cdef int32 similarity_score
-    
+
     # Starts at 1 since the first row and column are already fil
     for seq_i in range(0, code1.shape[0]):
         i = seq_i + 1
@@ -572,7 +572,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
             g1g1_score = g1_table[i, j-1] + gap_ext
             mg2_score  =  m_table[i-1, j+1] + gap_open
             g2g2_score = g2_table[i-1, j+1] + gap_ext
-            
+
             trace = get_trace_affine(
                 mm_score, g1m_score, g2m_score,
                 mg1_score, g1g1_score,
@@ -600,7 +600,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                     m_table[i,j] = m_score
                 if g1_score <= 0:
                     trace &= ~(
-                        TraceDirectionAffine.MATCH_TO_GAP_LEFT | 
+                        TraceDirectionAffine.MATCH_TO_GAP_LEFT |
                         TraceDirectionAffine.GAP_LEFT_TO_GAP_LEFT
                     )
                     # g1_table[i,j] remains negative infinity
@@ -623,7 +623,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
 
 def get_global_trace_starts(seq1_len, seq2_len, lower_diag, upper_diag):
     band_width = upper_diag - lower_diag + 1
-    
+
     j = np.arange(1, band_width + 1)
     seq_j = j + (seq1_len-1) + lower_diag - 1
     # Start from the end from the first (shorter) sequence,

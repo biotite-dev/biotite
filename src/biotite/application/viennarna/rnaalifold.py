@@ -173,7 +173,7 @@ class RNAalifoldApp(LocalApp):
         minimization objective is the sum of the free energy and the
         covariance term.
 
-        See also
+        See Also
         --------
         get_covariance_energy
         """
@@ -196,7 +196,7 @@ class RNAalifoldApp(LocalApp):
         minimization objective is the sum of the free energy and the
         covariance term.
 
-        See also
+        See Also
         --------
         get_free_energy
         """

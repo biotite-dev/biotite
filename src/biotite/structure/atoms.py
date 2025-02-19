@@ -895,7 +895,7 @@ class AtomArrayStack(_AtomArrayBase):
         The numbers correspond to the stack depth
         and array length, respectively.
 
-    See also
+    See Also
     --------
     AtomArray
 

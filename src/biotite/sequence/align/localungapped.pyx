@@ -38,7 +38,7 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
     """
     align_local_ungapped(seq1, seq2, matrix, seed, threshold,
                          direction="both", score_only=False, check_matrix=True)
-    
+
     Perform a local alignment extending from given `seed` position
     without inserting gaps.
 
@@ -47,7 +47,7 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
     `threshold` below the maximum score found (*X-Drop*).
     The returned alignment contains the range that yielded the maximum
     score.
-    
+
     Parameters
     ----------
     seq1, seq2 : Sequence
@@ -86,7 +86,7 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
         However, unexpected results or crashes may occur, if an
         incompatible `matrix` is given.
 
-    
+
     Returns
     -------
     alignment : Alignment
@@ -95,12 +95,12 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
     score : int
         The alignment similarity score.
         Only returned, if `score_only` is ``True``.
-    
-    See also
+
+    See Also
     --------
     align_gapped
         For gapped local alignments with the same *X-Drop* technique.
-    
+
     Examples
     --------
 
@@ -130,7 +130,7 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
                     "The sequences' alphabets do not fit the matrix"
                 )
     cdef const int32[:,:] score_matrix = matrix.score_matrix()
-    
+
     cdef bint upstream
     cdef bint downstream
     if direction == "both":
@@ -144,10 +144,10 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
         downstream = True
     else:
         raise ValueError(f"Direction '{direction}' is invalid")
-    
+
     if threshold < 0:
         raise ValueError("The threshold value must be a non-negative integer")
-    
+
     cdef int seq1_start, seq2_start
     seq1_start, seq2_start = seed
     if seq1_start < 0 or seq2_start < 0:
@@ -200,7 +200,7 @@ def align_local_ungapped(seq1, seq2, matrix, seed, int32 threshold,
         total_score += score
         stop_offset += length
     total_score += score_matrix[code1[seq1_start], code2[seq2_start]]
-    
+
     if score_only:
         return total_score
     else:

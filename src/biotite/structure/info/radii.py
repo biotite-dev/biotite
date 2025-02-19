@@ -158,7 +158,7 @@ def vdw_radius_protor(res_name, atom_name):
     The Van-der-Waals radius of the given atom.
     If the radius cannot be estimated for the atom, `None` is returned.
 
-    See also
+    See Also
     --------
     vdw_radius_single
 
@@ -248,7 +248,7 @@ def vdw_radius_single(element):
     The Van-der-Waals radius of the atom.
     If the radius is unknown for the element, `None` is returned.
 
-    See also
+    See Also
     --------
     vdw_radius_protor
 

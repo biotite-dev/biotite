@@ -39,7 +39,7 @@ def get_molecule_indices(array):
         Consequently, the length of this list is equal to the number of
         molecules in the input `array`.
 
-    See also
+    See Also
     --------
     get_molecule_masks
     molecule_iter
@@ -157,7 +157,7 @@ def get_molecule_masks(array):
         Consequently, the length of this list is equal to the number of
         molecules in the input `array`.
 
-    See also
+    See Also
     --------
     get_molecule_indices
     molecule_iter
@@ -270,7 +270,7 @@ def molecule_iter(array):
     molecule : AtomArray or AtomArrayStack
         A single molecule of the input `array`.
 
-    See also
+    See Also
     --------
     get_molecule_indices
     get_molecule_masks

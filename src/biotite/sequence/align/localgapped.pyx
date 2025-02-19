@@ -46,7 +46,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
                        gap_penalty=-10, max_number=1,
                        direction="both", score_only=False,
                        max_table_size=None)
-    
+
     Perform a local gapped alignment extending from a given `seed`
     position.
 
@@ -104,7 +104,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
         in the internal dynamic programming table, i.e. approximately
         the product of the lengths of the aligned regions, would exceed
         the given value.
-    
+
     Returns
     -------
     alignments : list of Alignment
@@ -115,12 +115,12 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
     score : int
         The alignment similarity score.
         Only returned, if `score_only` is ``True``.
-    
-    See also
+
+    See Also
     --------
     align_ungapped
         For ungapped local alignments with the same *X-Drop* technique.
-    
+
     Notes
     -----
     Unilke :func:`align_optimal()`, this function does not allocate
@@ -135,12 +135,12 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
     of substitution matrix or gap penalty.
     You may set `max_table_size` to avoid excessive memory use and
     crashes.
-    
+
     References
     ----------
 
     .. footbibliography::
-    
+
     Examples
     --------
 
@@ -176,7 +176,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
         or not matrix.get_alphabet2().extends(seq2.get_alphabet()):
             raise ValueError("The sequences' alphabets do not fit the matrix")
     score_matrix = matrix.score_matrix()
-    
+
     # Check if gap penalty is linear or affine
     if type(gap_penalty) == int:
         if gap_penalty >= 0:
@@ -186,19 +186,19 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
                 raise ValueError("Gap penalty must be negative")
     else:
         raise TypeError("Gap penalty must be either integer or tuple")
-    
+
     # Check if max_number is reasonable
     if max_number < 1:
         raise ValueError(
             "Maximum number of returned alignments must be at least 1"
         )
-    
+
     # Check maximum table size
     if max_table_size is None:
         max_table_size = np.iinfo(np.int64).max
     elif max_table_size <= 0:
         raise ValueError("Maximum table size must be a positve value")
-    
+
 
     code1 = seq1.code
     code2 = seq2.code
@@ -212,7 +212,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
             f"Seed {(seq1_start, seq2_start)} is out of bounds "
             f"for the sequences of length {len(code1)} and {len(code2)}"
         )
-    
+
 
     cdef bint upstream
     cdef bint downstream
@@ -230,7 +230,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
     # Range check to avoid negative indices
     if seq1_start == 0 or seq2_start == 0:
         upstream = False
-    
+
     if threshold < 0:
         raise ValueError("The threshold value must be a non-negative integer")
 
@@ -261,7 +261,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
                 # Add seed offset to trace indices
                 trace[non_gap_mask[:, 0], 0] += offset[0]
                 trace[non_gap_mask[:, 1], 1] += offset[1]
-    
+
     if downstream:
         score, downstream_traces = _align_region(
             code1[seq1_start+1:], code2[seq2_start+1:],
@@ -274,9 +274,9 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
             for trace in downstream_traces:
                 trace[trace[:, 0] != -1, 0] += offset[0]
                 trace[trace[:, 1] != -1, 1] += offset[1]
-    
+
     total_score += score_matrix[code1[seq1_start], code2[seq2_start]]
-    
+
 
     if score_only:
         return total_score
@@ -304,7 +304,7 @@ def align_local_gapped(seq1, seq2, matrix, seed, int32 threshold,
             # upstream alignment is performed
             # -> the trace includes only the seed
             traces = [np.array(seed)[np.newaxis, :]]
-        
+
         return [Alignment([seq1, seq2], trace, total_score)
                 for trace in traces]
 
@@ -343,7 +343,7 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
     max_table_size : int
         Raise a :class:`MemoryError`, if a dynamic programming table
         exceeds this size.
-    
+
     Returns
     -------
     score : int or None
@@ -359,15 +359,15 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
         affine_penalty = False
     else:
         affine_penalty = True
-    
-    
-    
+
+
+
     init_size = (
         _min(len(code1)+1, INIT_SIZE),
         _min(len(code2)+1, INIT_SIZE)
     )
     trace_table = np.zeros(init_size, dtype=np.uint8)
-    
+
 
     # Table filling
     ###############
@@ -394,7 +394,7 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
             code1, code2, matrix, trace_table, score_table, threshold,
             gap_penalty, score_only, max_table_size
         )
-    
+
     # If only the score is desired, the traceback is not necessary
     if score_only:
         if affine_penalty:
@@ -409,8 +409,8 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
         # The initial score needs to be subtracted again,
         # since it was artificially added for convenience resaons
         return max_score - init_score, None
-    
-    
+
+
     # Traceback
     ###########
     # Stores all possible traces (= possible alignments)
@@ -425,7 +425,7 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
     state_list = np.zeros(0, dtype=int)
     # The start point is the maximal score in the table
     # Multiple starting points possible,
-    # when duplicates of maximal score exist 
+    # when duplicates of maximal score exist
     if affine_penalty:
         # Only consicder match table (see reason above)
         max_score = np.max(m_table)
@@ -456,7 +456,7 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
             # Diagonals are only needed for banded alignments
             lower_diag=0, upper_diag=0
         )
-    
+
     # Replace gap entries in trace with -1
     for i, trace in enumerate(trace_list):
         trace = np.flip(trace, axis=0)
@@ -465,7 +465,7 @@ def _align_region(code1, code2, matrix, threshold, gap_penalty,
         gap_filter[np.unique(trace[:,1], return_index=True)[1], 1] = True
         trace[~gap_filter] = -1
         trace_list[i] = trace
-    
+
     # Limit the number of generated alignments to `max_number`:
     # In most cases this is achieved by discarding branches in
     # 'follow_trace()', however, if multiple local alignment starts
@@ -514,7 +514,7 @@ def _fill_align_table(CodeType1[:] code1 not None,
     max_table_size : int64
         Raise a :class:`MemoryError`, if a dynamic programming table
         exceeds this size.
-    
+
     Returns
     -------
     trace_table
@@ -523,7 +523,7 @@ def _fill_align_table(CodeType1[:] code1 not None,
         The filled score table.
     """
     cdef int i, j, k=0
-    # The ranges for i in the current (k=0) 
+    # The ranges for i in the current (k=0)
     # and previous (k=1, k=2) antidiagonals, that point to valid cells
     cdef int i_min_k_0=0, i_max_k_0=0
     cdef int i_min_k_1=0, i_max_k_1=0
@@ -568,7 +568,7 @@ def _fill_align_table(CodeType1[:] code1 not None,
         # if the calculated antidiagonal has no range of valid cells
         if i_min > i_max:
             break
-        
+
         j_max = k - i_min
         # Expand ndarrays
         # if their size would be exceeded in the following iteration
@@ -593,7 +593,7 @@ def _fill_align_table(CodeType1[:] code1 not None,
 
         for i in range(i_min, i_max+1):
             j = k - i
-            
+
             # Evaluate score from diagonal direction
             if i != 0 and j != 0:
                 from_diag = score_table[i-1, j-1]
@@ -616,14 +616,14 @@ def _fill_align_table(CodeType1[:] code1 not None,
                 from_left = score_table[i, j-1] + gap_penalty
             else:
                 from_left = 0
-            
+
             if score_only:
                 score = _max(from_diag, _max(from_left, from_top))
             else:
                 trace = get_trace_linear(
                     from_diag, from_left, from_top, &score
                 )
-            
+
             # Check if the obtained score reaches the required threshold
             # and if they even exceed the maximum score
             if score >= req_score:
@@ -638,8 +638,8 @@ def _fill_align_table(CodeType1[:] code1 not None,
                 if score > max_score:
                     max_score = score
                     req_score = max_score - threshold
-                
-    
+
+
     return np.asarray(trace_table)[:i_max_total+1, :j_max_total+1], \
            np.asarray(score_table)[:i_max_total+1, :j_max_total+1]
 
@@ -690,7 +690,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     max_table_size : int64
         Raise a :class:`MemoryError`, if a dynamic programming table
         exceeds this size.
-    
+
     Returns
     -------
     trace_table
@@ -699,7 +699,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
         The filled score tables.
     """
     cdef int i, j, k=0
-    # The ranges for i in the current (k=0) 
+    # The ranges for i in the current (k=0)
     # and previous (k=1, k=2) antidiagonals, that point to valid cells
     cdef int i_min_k_0=0, i_max_k_0=0
     cdef int i_min_k_1=0, i_max_k_1=0
@@ -749,7 +749,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
         # if the calculated antidiagonal has no range of valid cells
         if i_min > i_max:
             break
-        
+
         j_max = k - i_min
         # Expand ndarrays
         # if their size would be exceeded in the following iteration
@@ -811,9 +811,9 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
             else:
                 mg2_score  = 0
                 g2g2_score = 0
-            
-            
-            
+
+
+
             if score_only:
                 m_score  = _max(mm_score, _max(g1m_score, g2m_score))
                 g1_score = _max(mg1_score, g1g1_score)
@@ -826,7 +826,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                     # The max score values to be written
                     &m_score, &g1_score, &g2_score
                 )
-            
+
 
             # Check if the obtained scores reach the required threshold
             # and if they even exceed the maximum score
@@ -841,7 +841,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                 if m_score > max_score:
                     max_score = m_score
                     req_score = max_score - threshold
-            
+
             if g1_score >= req_score:
                 if i_min_k_0 == k:
                     i_min_k_0 = i
@@ -851,7 +851,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                 if g1_score > max_score:
                     max_score = g1_score
                     req_score = max_score - threshold
-            
+
             if g2_score >= req_score:
                 if i_min_k_0 == k:
                     i_min_k_0 = i
@@ -861,11 +861,11 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
                 if g2_score > max_score:
                     max_score = g2_score
                     req_score = max_score - threshold
-            
+
             if is_valid_cell and not score_only:
                 trace_table[i,j] = trace
 
-    
+
     return np.asarray(trace_table)[:i_max_total+1, :j_max_total+1], \
            np.asarray(m_table    )[:i_max_total+1, :j_max_total+1], \
            np.asarray(g1_table   )[:i_max_total+1, :j_max_total+1], \

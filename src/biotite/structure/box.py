@@ -58,7 +58,7 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
         The value can be directly used as :attr:`box` attribute in an
         atom array.
 
-    See also
+    See Also
     --------
     unitcell_from_vectors
     """
@@ -96,7 +96,7 @@ def unitcell_from_vectors(box):
     alpha, beta, gamma : float
         The angles between the box vectors in radians.
 
-    See also
+    See Also
     --------
     vectors_from_unitcell
     """
@@ -164,7 +164,7 @@ def repeat_box(atoms, amount=1):
         Equal to
         ``numpy.tile(np.arange(atoms.array_length()), (1 + 2 * amount) ** 3)``.
 
-    See also
+    See Also
     --------
     repeat_box_coord
 
@@ -383,7 +383,7 @@ def remove_pbc(atoms, selection=None):
         The input structure with removed segmentation over periodic
         boundaries.
 
-    See also
+    See Also
     --------
     remove_pbc_from_coord
 
@@ -447,7 +447,7 @@ def remove_pbc_from_coord(coord, box):
     sanitized_coord : ndarray, dtype=float, shape=(m,n,3) or shape=(n,3)
         The reassembled coordinates.
 
-    See also
+    See Also
     --------
     remove_pbc_from_coord
     move_inside_box
@@ -501,7 +501,7 @@ def coord_to_fraction(coord, box):
     fraction : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
         The fractions of the box vectors.
 
-    See also
+    See Also
     --------
     fraction_to_coord
 
@@ -548,7 +548,7 @@ def fraction_to_coord(fraction, box):
     coord : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
         The coordinates.
 
-    See also
+    See Also
     --------
     coord_to_fraction
     """

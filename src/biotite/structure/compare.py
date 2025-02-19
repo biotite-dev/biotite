@@ -126,7 +126,7 @@ def rmspd(reference, subject, periodic=False, box=None):
     to ensure correct results.
     (e.g. with :func:`remove_pbc()`).
 
-    See also
+    See Also
     --------
     index_distance
     remove_pbc

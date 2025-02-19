@@ -263,7 +263,7 @@ def get_residue_masks(array, indices):
         Each array masks the atoms that belong to the same residue as
         the atom at the given index.
 
-    See also
+    See Also
     --------
     get_residue_starts_for
     get_residue_positions
@@ -341,7 +341,7 @@ def get_residue_starts_for(array, indices):
         The indices that point to the residue starts for the input
         `indices`.
 
-    See also
+    See Also
     --------
     get_residue_masks
     get_residue_positions
@@ -388,7 +388,7 @@ def get_residue_positions(array, indices):
     start_indices : ndarray, dtype=int, shape=(k,)
         The indices that point to the position of the residues.
 
-    See also
+    See Also
     --------
     get_residue_masks
     get_residue_starts_for
