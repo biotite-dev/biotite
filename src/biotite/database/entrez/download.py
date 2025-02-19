@@ -84,7 +84,7 @@ def fetch(
     When the issue occurs repeatedly, the error is probably in your
     input.
 
-    See also
+    See Also
     --------
     fetch_single_file
 
@@ -188,7 +188,7 @@ def fetch_single_file(
     When the issue occurs repeatedly, the error is probably in your
     input.
 
-    See also
+    See Also
     --------
     fetch
     """

@@ -22,7 +22,7 @@ class Muscle5App(MSAApp):
     bin_path : str, optional
         Path of the MUSCLE binary.
 
-    See also
+    See Also
     --------
     MuscleApp
 

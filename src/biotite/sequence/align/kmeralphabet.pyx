@@ -267,7 +267,7 @@ class KmerAlphabet(Alphabet):
         kmer_codes : int or ndarray, dtype=np.int64, shape=(n,)
             The fused *k-mer* code(s).
 
-        See also
+        See Also
         --------
         split
             The reverse operation.
@@ -319,7 +319,7 @@ class KmerAlphabet(Alphabet):
         codes : ndarray, dtype=np.uint64, shape=(k,) or shape=(n,k)
             The split symbol codes from the base alphabet.
 
-        See also
+        See Also
         --------
         fuse
             The reverse operation.

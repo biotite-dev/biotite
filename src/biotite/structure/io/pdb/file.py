@@ -70,7 +70,7 @@ class PDBFile(TextFile):
     records cannot be written.
     Additionally, *REMARK* records can be read
 
-    See also
+    See Also
     --------
     CIFFile
     BinaryCIFFile

@@ -187,7 +187,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         time : float or ndarray, dtype=float32, shape=(n,) or None
             The simulation time of the current frame or stack in *ps*.
 
-        See also
+        See Also
         --------
         read_iter_structure
 
@@ -315,7 +315,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             If `stack_size` is set, multiple frames are returned as
             :class:`AtomArrayStack`.
 
-        See also
+        See Also
         --------
         read_iter
 

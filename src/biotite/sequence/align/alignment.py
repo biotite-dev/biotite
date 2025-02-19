@@ -362,7 +362,7 @@ def get_sequence_identity(alignment, mode="not_terminal"):
     identity : float
         The sequence identity, ranging between 0 and 1.
 
-    See also
+    See Also
     --------
     get_pairwise_sequence_identity
     """
@@ -425,7 +425,7 @@ def get_pairwise_sequence_identity(alignment, mode="not_terminal"):
     identity : ndarray, dtype=float, shape=(n,n)
         The pairwise sequence identity, ranging between 0 and 1.
 
-    See also
+    See Also
     --------
     get_sequence_identity
     """
@@ -570,7 +570,7 @@ def find_terminal_gaps(alignment):
         When these indices are used as slice index for an alignment or
         trace, the index would remove terminal gaps.
 
-    See also
+    See Also
     --------
     remove_terminal_gaps
 
@@ -628,7 +628,7 @@ def remove_terminal_gaps(alignment):
         A shallow copy of the input `alignment` with an truncated trace,
         that does not contain alignment columns with terminal gaps.
 
-    See also
+    See Also
     --------
     find_terminal_gaps
 

@@ -66,7 +66,7 @@ def tm_score(
     tm_score : float
         The *TM*-score for the given structure.
 
-    See also
+    See Also
     --------
     superimpose_structural_homologs :
         Aims to minimize the *TM*-score between two structures.
@@ -163,7 +163,7 @@ def superimpose_structural_homologs(
         These atoms were used for the superimposition, if their pairwise distance is
         below the :math:`d_0` threshold :footcite:`Zhang2004`.
 
-    See also
+    See Also
     --------
     superimpose_homologs : Analogous functionality for structures with high sequence similarity.
 

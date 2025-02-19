@@ -1483,7 +1483,7 @@ def connect_via_distances(atoms, dict distance_range=None, bint inter_residue=Tr
     BondList
         The created bond list.
 
-    See also
+    See Also
     --------
     connect_via_residue_names
 
@@ -1622,7 +1622,7 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
         No bonds are added for residues that are not found in
         ``components.cif``.
 
-    See also
+    See Also
     --------
     connect_via_distances
 

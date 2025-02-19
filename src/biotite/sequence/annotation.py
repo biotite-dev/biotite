@@ -571,7 +571,7 @@ class AnnotatedSequence(Copyable):
     sequence_start : int
         The location of the first symbol in the sequence.
 
-    See also
+    See Also
     --------
     Annotation, Sequence
 

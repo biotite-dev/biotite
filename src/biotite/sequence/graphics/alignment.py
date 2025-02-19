@@ -552,7 +552,7 @@ def plot_alignment(
         А space is placed between each number of elements desired
         by variable.
 
-    See also
+    See Also
     --------
     plot_alignment_similarity_based
     plot_alignment_type_based
@@ -791,7 +791,7 @@ def plot_alignment_similarity_based(
         А space is placed between each number of elements desired
         by variable.
 
-    See also
+    See Also
     --------
     plot_alignment
     LetterSimilarityPlotter
@@ -942,7 +942,7 @@ def plot_alignment_type_based(
         А space is placed between each number of elements desired
         by variable.
 
-    See also
+    See Also
     --------
     plot_alignment
     LetterTypePlotter

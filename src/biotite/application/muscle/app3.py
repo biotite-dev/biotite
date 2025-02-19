@@ -29,7 +29,7 @@ class MuscleApp(MSAApp):
     matrix : SubstitutionMatrix, optional
         A custom substitution matrix.
 
-    See also
+    See Also
     --------
     Muscle5App
 

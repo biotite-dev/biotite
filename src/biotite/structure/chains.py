@@ -60,7 +60,7 @@ def get_chain_starts(array, add_exclusive_stop=False):
     This method is internally used by all other chain-related
     functions.
 
-    See also
+    See Also
     --------
     get_residue_starts
     """
@@ -119,7 +119,7 @@ def apply_chain_wise(array, data, function, axis=None):
         first dimension of this array is equal to the amount of
         chains.
 
-    See also
+    See Also
     --------
     apply_residue_wise
     """
@@ -152,7 +152,7 @@ def spread_chain_wise(array, input_data):
         Chain-wise spread `input_data`. Length is the same as
         `array_length()` of `array`.
 
-    See also
+    See Also
     --------
     spread_residue_wise
     """
@@ -181,7 +181,7 @@ def get_chain_masks(array, indices):
         Each array masks the atoms that belong to the same chain as
         the atom at the given index.
 
-    See also
+    See Also
     --------
     get_residue_masks
     """
@@ -209,7 +209,7 @@ def get_chain_starts_for(array, indices):
         The indices that point to the chain starts for the input
         `indices`.
 
-    See also
+    See Also
     --------
     get_residue_starts_for
     """
@@ -239,7 +239,7 @@ def get_chain_positions(array, indices):
     start_indices : ndarray, dtype=int, shape=(k,)
         The indices that point to the position of the chains.
 
-    See also
+    See Also
     --------
     get_residue_positions
     """
@@ -264,7 +264,7 @@ def get_chains(array):
     ids : ndarray, dtype=str
         List of chain IDs.
 
-    See also
+    See Also
     --------
     get_residues
     """
@@ -288,7 +288,7 @@ def get_chain_count(array):
     count : int
         Amount of chains.
 
-    See also
+    See Also
     --------
     get_residue_count
     """
@@ -309,7 +309,7 @@ def chain_iter(array):
     chain : AtomArray or AtomArrayStack
         A single chain of the input `array`.
 
-    See also
+    See Also
     --------
     residue_iter
     """

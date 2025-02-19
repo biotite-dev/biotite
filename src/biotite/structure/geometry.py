@@ -60,7 +60,7 @@ def displacement(atoms1, atoms2, box=None):
         The displacement vector(s). The shape is equal to the shape of
         the input `atoms` with the highest dimensionality.
 
-    See also
+    See Also
     --------
     index_displacement
     """
@@ -191,7 +191,7 @@ def index_displacement(*args, **kwargs):
     copy is found for non-orthorhombic boxes; this is especially true
     for heavily skewed boxes.
 
-    See also
+    See Also
     --------
     displacement
     """
@@ -224,7 +224,7 @@ def distance(atoms1, atoms2, box=None):
         The shape is equal to the shape of the input `atoms` with the
         highest dimensionality minus the last axis.
 
-    See also
+    See Also
     --------
     index_distance
     """
@@ -282,7 +282,7 @@ def index_distance(*args, **kwargs):
     copy is found for non-orthorhombic boxes; this is especially true
     for heavily skewed boxes.
 
-    See also
+    See Also
     --------
     distance
     """
@@ -312,7 +312,7 @@ def angle(atoms1, atoms2, atoms3, box=None):
         of the input `atoms` with the highest dimensionality minus the
         last axis.
 
-    See also
+    See Also
     --------
     index_angle
     """
@@ -371,7 +371,7 @@ def index_angle(*args, **kwargs):
     copy is found for non-orthorhombic boxes; this is especially true
     for heavily skewed boxes.
 
-    See also
+    See Also
     --------
     angle
     """
@@ -472,7 +472,7 @@ def index_dihedral(*args, **kwargs):
     copy is found for non-orthorhombic boxes; this is especially true
     for heavily skewed boxes.
 
-    See also
+    See Also
     --------
     dihedral
     dihedral_backbone
