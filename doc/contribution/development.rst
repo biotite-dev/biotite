@@ -113,6 +113,13 @@ The publicly accessible instance variables are documented under the
 docstrings.
 Methods do not need to be summarized in the class docstring.
 
+The CI validates the docstrings using ``numpydoc lint``.
+However, this validation sometimes also raised false positives.
+Hence, to exclude a specific functin/class from validation, add the name
+(or regular expression) to ``tool.numpydoc_validation.exclude`` in the
+``pyproject.toml``.
+
+
 Module imports
 --------------
 In *Biotite*, the user imports packages in contrast to single modules
