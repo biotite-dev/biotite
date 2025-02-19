@@ -37,7 +37,8 @@ test = [
   "pytest-codspeed",
 ]
 lint = [
-  "ruff == 0.6.9"
+  "ruff == 0.6.9",
+  "numpydoc == 1.8.0",
 ]
 
 [project.urls]
@@ -83,6 +84,28 @@ no-lines-before = [
 order-by-type = true
 known-first-party = ["biotite"]
 
+[tool.numpydoc_validation]
+# The description of each rule is documented at
+# https://numpydoc.readthedocs.io/en/latest/validation.html#built-in-validation-checks
+checks = [
+  "all",
+  # ... except:
+  "GL08",  # Properties do not have a docstring
+  "SS03",  # Sometimes the citation comes after the period
+  "SS05",  # Too error-prone; classes do not use infinite verbs
+  "SS06",  # Sometimes summaries are a bit longer
+  "ES01",  # Some functions are simple enough to not need an extended summary
+  "PR06",  # The types are quite descriptive (include shape, dtype, etc.)
+  "RT02",  # In Biotite all return values have names
+  # Intentionally not all docstrings contain these sections
+  "YD01",
+  "SA01",
+  "EX01",
+]
+exclude = [
+  '\._[_a-z0-9]+$',  # Do not validate private or special methods
+]
+
 [tool.pytest.ini_options]
 testpaths = [
   "tests",
@@ -101,7 +124,6 @@ filterwarnings = [
   "ignore:The 'netCDF4' Python package is not installed.",
   "ignore:Input structure has no associated 'BondList'",
 ]
-
 
 [tool.hatch.build.targets.sdist]
 exclude = [
