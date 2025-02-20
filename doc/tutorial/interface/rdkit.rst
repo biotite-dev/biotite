@@ -27,15 +27,14 @@ For a proper structural formula, we need to compute proper 2D coordinates first.
 
     import biotite.interface.rdkit as rdkit_interface
     import biotite.structure.info as struc
+    import rdkit.Chem.AllChem as Chem
     from rdkit.Chem.Draw import MolToImage
-    from rdkit.Chem.rdDepictor import Compute2DCoords
-    from rdkit.Chem.rdmolops import RemoveHs
 
     penicillin = struc.residue("PNN")
     mol = rdkit_interface.to_mol(penicillin)
     # We do not want to include explicit hydrogen atoms in the structural formula
-    mol = RemoveHs(mol)
-    Compute2DCoords(mol)
+    mol = Chem.RemoveHs(mol)
+    Chem.Compute2DCoords(mol)
     image = MolToImage(mol, size=(600, 400))
     display(image)
 
@@ -49,18 +48,13 @@ One way to to obtain them as :class:`.AtomArray` is passing a *SMILES* string to
 
 .. jupyter-execute::
 
-    from rdkit.Chem import MolFromSmiles
-    from rdkit.Chem.rdDistGeom import EmbedMolecule
-    from rdkit.Chem.rdForceFieldHelpers import UFFOptimizeMolecule
-    from rdkit.Chem.rdmolops import AddHs
-
     ERTAPENEM_SMILES = "C[C@@H]1[C@@H]2[C@H](C(=O)N2C(=C1S[C@H]3C[C@H](NC3)C(=O)NC4=CC=CC(=C4)C(=O)O)C(=O)O)[C@@H](C)O"
 
-    mol = MolFromSmiles(ERTAPENEM_SMILES)
+    mol = Chem.MolFromSmiles(ERTAPENEM_SMILES)
     # RDKit uses implicit hydrogen atoms by default, but Biotite requires explicit ones
-    mol = AddHs(mol)
+    mol = Chem.AddHs(mol)
     # Create a 3D conformer
-    conformer_id = EmbedMolecule(mol)
-    UFFOptimizeMolecule(mol)
+    conformer_id = Chem.EmbedMolecule(mol)
+    Chem.UFFOptimizeMolecule(mol)
     ertapenem = rdkit_interface.from_mol(mol, conformer_id)
     print(ertapenem)
