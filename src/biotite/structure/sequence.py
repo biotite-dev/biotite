@@ -58,7 +58,6 @@ def to_sequence(atoms, allow_hetero=False):
     >>> sequences, chain_starts = to_sequence(atom_array)
     >>> print(sequences)
     [ProteinSequence("NLYIQWLKDGGPSSGRPPPS")]
-
     """
     sequences = []
     chain_start_indices = get_chain_starts(atoms, add_exclusive_stop=True)

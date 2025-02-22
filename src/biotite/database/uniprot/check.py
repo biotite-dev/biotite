@@ -16,8 +16,8 @@ def assert_valid_response(response):
 
     Parameters
     ----------
-    response_status_code: int
-        Status code of request.get.
+    response : Response
+        Status code of :func:`requests.get()`.
     """
     if len(response.content) == 0:
         raise RequestError("No content returned")

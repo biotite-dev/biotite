@@ -86,7 +86,7 @@ def read_alignment_from_cigar(cigar, position, reference_sequence, segment_seque
 
     See Also
     --------
-    write_alignment_to_cigar
+    write_alignment_to_cigar : The reverse operation.
 
     Notes
     -----
@@ -253,7 +253,7 @@ def write_alignment_to_cigar(
 
     See Also
     --------
-    read_alignment_from_cigar
+    read_alignment_from_cigar : The reverse operation.
 
     Notes
     -----

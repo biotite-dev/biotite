@@ -47,7 +47,7 @@ def check_atom_id_continuity(array):
     Returns
     -------
     discontinuity : ndarray, dtype=int
-        Contains the indices of atoms after a discontinuity
+        Contains the indices of atoms after a discontinuity.
     """
     ids = array.atom_id
     return _check_continuity(ids)
@@ -69,7 +69,7 @@ def check_res_id_continuity(array):
     Returns
     -------
     discontinuity : ndarray, dtype=int
-        Contains the indices of atoms after a discontinuity
+        Contains the indices of atoms after a discontinuity.
     """
     ids = array.res_id
     return _check_continuity(ids)

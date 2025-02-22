@@ -167,15 +167,15 @@ class RNAalifoldApp(LocalApp):
         free_energy : float
             The free energy.
 
+        See Also
+        --------
+        get_covariance_energy : Get the energy of the artificial covariance term.
+
         Notes
         -----
         The total energy of the secondary structure regarding the
         minimization objective is the sum of the free energy and the
         covariance term.
-
-        See Also
-        --------
-        get_covariance_energy
         """
         return self._free_energy
 
@@ -190,15 +190,15 @@ class RNAalifoldApp(LocalApp):
         covariance_energy : float
             The energy of the covariance term.
 
+        See Also
+        --------
+        get_free_energy : Get the free energy.
+
         Notes
         -----
         The total energy of the secondary structure regarding the
         minimization objective is the sum of the free energy and the
         covariance term.
-
-        See Also
-        --------
-        get_free_energy
         """
         return self._covariance_energy
 

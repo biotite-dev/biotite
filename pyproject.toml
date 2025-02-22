@@ -103,7 +103,32 @@ checks = [
   "EX01",
 ]
 exclude = [
+  '__init__$', # Subpackage descriptions are not Numpydoc formatted
   '\._[_a-z0-9]+$',  # Do not validate private or special methods
+  # Dataclasses: Numpydoc complains about additional constructor parameters,
+  # but the constructor is absent
+  'sdf.Metadata\.Key',
+  'header.Header',
+  'throttle.ThrottleStatus',
+  # Numpydoc does not accept the parameters of inherited constructors
+  "query.DepositGrouping",
+  "query.UniprotGrouping",
+  # Function uses args/kwargs, but docstring describes parameter
+  'geometry.index_',
+  'query.FieldQuery',
+  'query.SimilarityQuery',
+  'query.IdentityQuery',
+  'query.StructureQuery',
+  'query.SuperOrSubstructureQuery',
+  'query.SuperstructureQuery',
+  'query.SubstructureQuery',
+  # Numpydoc expects a return value for decorators
+  'application.requires_state',
+  'version.requires_version',
+  'object.validate',
+  # Usage of the return value is not intended
+  'display.show',
+  'display.play',
 ]
 
 [tool.pytest.ini_options]

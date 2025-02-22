@@ -170,6 +170,11 @@ class PyMOLObject:
         delocalize_bonds : bool, optional
             If set to true, use *PyMOL*'s delocalized bond order for aromatic bonds.
             Otherwise, always use formal bond orders.
+
+        Returns
+        -------
+        pymol_object : PyMOLObject
+            The :class:`PyMOLObject` representing the given structure.
         """
         pymol_instance = get_and_set_pymol_instance(pymol_instance)
         cmd = pymol_instance.cmd
@@ -195,9 +200,7 @@ class PyMOLObject:
 
         return PyMOLObject(name, pymol_instance, delete)
 
-    def to_structure(
-        self, state=None, altloc="first", extra_fields=None, include_bonds=False
-    ):
+    def to_structure(self, state=None, altloc="first", include_bonds=False):
         """
         Convert this object into an :class:`AtomArray` or
         :class:`AtomArrayStack`.
@@ -668,7 +671,7 @@ class PyMOLObject:
             command on.
         cutoff : float, optional
             The longest distance to show.
-        mode: {0, 1, 2, 3, 4}, optional
+        mode : {0, 1, 2, 3, 4}, optional
 
             - ``0`` - All interatomic distances
             - ``1`` - Only bond distances
@@ -1075,7 +1078,7 @@ class PyMOLObject:
             *PyMOL* object.
         passes : int, optional
             The number of smoothing passes.
-        windows : int, optional
+        window : int, optional
             The size of the moving window.
         first, last : int, optional
             The interval of states to smooth.

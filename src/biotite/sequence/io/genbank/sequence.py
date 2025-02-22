@@ -82,6 +82,8 @@ def get_annotated_sequence(gb_file, format="gb", include_only=None):
     ----------
     gb_file : GenBankFile
         The GenBank file to read the fields from.
+    format : {'gb', 'gp'}
+        Whether the file is a *GenBank* or *GenPept* file.
     include_only : iterable object of str, optional
         List of names of feature keys, which should included
         in the annotation. By default all features are included.

@@ -95,7 +95,7 @@ class SequenceProfile(object):
     gaps : ndarray, dtype=int, shape=n
         Array which indicates the number of gaps at each position.
     alphabet : Alphabet, length=k
-        Alphabet of sequences of sequence profile
+        Alphabet of sequences of sequence profile.
 
     Attributes
     ----------
@@ -264,15 +264,14 @@ class SequenceProfile(object):
         alphabet : bool
             This alphabet will be used when creating the SequenceProfile
             object. If no alphabet is selected, the alphabet for this
-            SequenceProfile
+            :class:`SequenceProfile`.
             object will be calculated from the sequences of object
             Alignment.
-            (Default: None).
 
         Returns
         -------
         profile: SequenceProfile
-            The created SequenceProfile object
+            The created :class:`SequenceProfile` object.
         """
         sequences = get_codes(alignment)
         if alphabet is None:
@@ -306,13 +305,12 @@ class SequenceProfile(object):
             If true, returns consensus sequence as GeneralSequence
             object.
             Otherwise, the consensus sequence object type is chosen
-            based on the alphabet of this SequenceProfile object
-            (Default: False).
+            based on the alphabet of this SequenceProfile object.
 
         Returns
         -------
         consensus: Sequence
-            The calculated consensus sequence
+            The calculated consensus sequence.
         """
         # https://en.wikipedia.org/wiki/International_Union_of_Pure_and_Applied_Chemistry#Amino_acid_and_nucleotide_base_codes
         if as_general:
@@ -420,14 +418,13 @@ class SequenceProfile(object):
 
         Parameters
         ----------
-        pseudocount: int, optional
+        pseudocount : int, optional
             Amount added to the number of observed cases in order to
             change the expected probability of the PPM.
-            (Default: 0)
 
         Returns
         -------
-        ppm: ndarray, dtype=float, shape=(n,k)
+        ppm : ndarray, dtype=float, shape=(n,k)
             The calculated the position probability matrix.
         """
         if pseudocount < 0:
@@ -456,17 +453,16 @@ class SequenceProfile(object):
 
         Parameters
         ----------
-        pseudocount: int, optional
-            Amount added to the number of observed cases in order to change
-            the expected probability of the PPM.
-            (Default: 0)
-        background_frequencies: ndarray, shape=(k,), dtype=float, optional
+        background_frequencies : ndarray, shape=(k,), dtype=float, optional
             The background frequencies for each symbol in the alphabet.
             By default, a uniform distribution is assumed.
+        pseudocount : int, optional
+            Amount added to the number of observed cases in order to change
+            the expected probability of the PPM.
 
         Returns
         -------
-        pwm: ndarray, dtype=float, shape=(n,k)
+        pwm : ndarray, dtype=float, shape=(n,k)
             The calculated the position weight matrix.
         """
         if background_frequencies is None:
@@ -490,14 +486,13 @@ class SequenceProfile(object):
         ----------
         sequence : Sequence
            The input sequence.
-        pseudocount: int, optional
+        pseudocount : int, optional
             Amount added to the number of observed cases in order to change
             the expected probability of the PPM.
-            (Default: 0)
 
         Returns
         -------
-        probability: float
+        probability : float
            The calculated probability for the input sequence based on
            the PPM.
         """
@@ -526,17 +521,16 @@ class SequenceProfile(object):
         ----------
         sequence : Sequence
            The input sequence.
-        pseudocount: int, optional
-            Amount added to the number of observed cases in order to change
-            the expected probability of the PPM.
-            (Default: 0)
-        background_frequencies: ndarray, shape=(k,), dtype=float, optional
+        background_frequencies : ndarray, shape=(k,), dtype=float, optional
             The background frequencies for each symbol in the alphabet.
             By default a uniform distribution is assumed.
+        pseudocount : int, optional
+            Amount added to the number of observed cases in order to change
+            the expected probability of the PPM.
 
         Returns
         -------
-        score: float
+        score : float
            The calculated score for the input sequence based on
            the PWM.
         """

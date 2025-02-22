@@ -39,11 +39,6 @@ def get_molecule_indices(array):
         Consequently, the length of this list is equal to the number of
         molecules in the input `array`.
 
-    See Also
-    --------
-    get_molecule_masks
-    molecule_iter
-
     Examples
     --------
     Get an :class:`AtomArray` for ATP and show that it is a single
@@ -157,11 +152,6 @@ def get_molecule_masks(array):
         Consequently, the length of this list is equal to the number of
         molecules in the input `array`.
 
-    See Also
-    --------
-    get_molecule_indices
-    molecule_iter
-
     Examples
     --------
     Get an :class:`AtomArray` for ATP and show that it is a single
@@ -269,11 +259,6 @@ def molecule_iter(array):
     ------
     molecule : AtomArray or AtomArrayStack
         A single molecule of the input `array`.
-
-    See Also
-    --------
-    get_molecule_indices
-    get_molecule_masks
 
     Examples
     --------

@@ -35,6 +35,11 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     :class:`AtomArrayStack`.
     It implements functionality for annotation arrays and also
     rudimentarily for coordinates.
+
+    Parameters
+    ----------
+    length : int
+        The amount of atoms in the structure.
     """
 
     def __init__(self, length):
@@ -96,11 +101,11 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             The annotation category to be added.
         dtype : type or str
             A type instance or a valid *NumPy* *dtype* string.
-            Defines the type of the annotation
+            Defines the type of the annotation.
 
         See Also
         --------
-        set_annotation
+        set_annotation : Assign directly a value to an annotation.
 
         Notes
         -----
@@ -244,7 +249,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         ----------
         item : AtomArray or AtomArrayStack
             The object to compare the annotation arrays with.
-        equal_nan: bool
+        equal_nan : bool
             Whether to count `nan` values as equal. Default: True.
 
         Returns
@@ -448,9 +453,9 @@ class Atom(Copyable):
 
     Parameters
     ----------
-    coord: list or ndarray
+    coord : list or ndarray
         The x, y and z coordinates.
-    kwargs
+    **kwargs
         Atom annotations as key value pair.
 
     Attributes
@@ -472,7 +477,6 @@ class Atom(Copyable):
     CA
     >>> print(atom.coord)
     [1. 2. 3.]
-
     """
 
     def __init__(self, coord, **kwargs):
@@ -632,6 +636,10 @@ class AtomArray(_AtomArrayBase):
         The single value in the tuple is
         the length of the atom array.
 
+    See Also
+    --------
+    AtomArrayStack : Representation of multiple structure models.
+
     Examples
     --------
     Creating an atom array from atoms:
@@ -700,10 +708,6 @@ class AtomArray(_AtomArrayBase):
             Shape of the array.
             The single value in the tuple is
             the :func:`array_length()`.
-
-        See Also
-        --------
-        array_length
         """
         return (self.array_length(),)
 
@@ -897,7 +901,7 @@ class AtomArrayStack(_AtomArrayBase):
 
     See Also
     --------
-    AtomArray
+    AtomArray : Representation of a single structure model.
 
     Examples
     --------

@@ -48,7 +48,6 @@ def annotate_sse(atom_array):
         Non-peptide residues are also allowed and obtain a ``''``
         SSE.
 
-
     Returns
     -------
     sse : ndarray
@@ -81,7 +80,6 @@ def annotate_sse(atom_array):
     >>> print(sse)
     ['c' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
      'c' 'c']
-
     """
     residue_starts = get_residue_starts(atom_array)
     # Sort CA coord into the coord array at the respective residue index

@@ -44,7 +44,7 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
         Otherwise the respective file will only be downloaded, if the
         file does not exist yet in the specified target directory or if
         the file is empty.
-    verbose: bool, optional
+    verbose : bool, optional
         If set to true, the function will output the download progress.
 
     Returns

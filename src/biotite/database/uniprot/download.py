@@ -41,7 +41,6 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
     Download files from the UniProt in various formats.
 
     Available databases are UniProtKB, UniRef and UniParc.
-
     This function requires an internet connection.
 
     Parameters
@@ -58,11 +57,9 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
     overwrite : bool, optional
         If true, existing files will be overwritten. Otherwise the
         respective file will only be downloaded if the file does not
-        exist yet in the specified target directory or if the file is
-        empty. (Default: False)
-    verbose: bool, optional
+        exist yet in the specified target directory.
+    verbose : bool, optional
         If true, the function will output the download progress.
-        (Default: False)
 
     Returns
     -------

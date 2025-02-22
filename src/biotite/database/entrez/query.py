@@ -60,9 +60,9 @@ class CompositeQuery(Query):
 
     Parameters
     ----------
-    operator: str, {"AND", "OR", "NOT"}
+    operator : str, {"AND", "OR", "NOT"}
         The combination operator.
-    queries : iterable object of SimpleQuery
+    query1, query2 : SimpleQuery
         The queries to be combined.
 
     Examples
@@ -97,7 +97,7 @@ class SimpleQuery(Query):
 
     Parameters
     ----------
-    term: str
+    term : str
         The search term.
     field : str, optional
         The field to search the term in.

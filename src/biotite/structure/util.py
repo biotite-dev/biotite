@@ -3,7 +3,7 @@
 # information.
 
 """
-Utility functions for in internal use in `Bio.Structure` package
+Utility functions for in internal use in `Bio.Structure` package.
 """
 
 __name__ = "biotite.structure"
@@ -28,7 +28,7 @@ def vector_dot(v1, v2):
 
     Parameters
     ----------
-    v1,v2 : ndarray
+    v1, v2 : ndarray
         The arrays to calculate the product from.
         The vectors are represented by the last axis.
 
@@ -63,7 +63,7 @@ def distance(v1, v2):
 
     Parameters
     ----------
-    v1,v2 : ndarray
+    v1, v2 : ndarray
         The arrays to calculate the product from.
         The vectors are represented by the last axis.
 

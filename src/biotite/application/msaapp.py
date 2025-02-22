@@ -274,12 +274,12 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         Check whether this class supports nucleotide sequences for
         alignment.
 
+        PROTECTED: Override when inheriting.
+
         Returns
         -------
         support : bool
             True, if the class has support, false otherwise.
-
-        PROTECTED: Override when inheriting.
         """
         pass
 
@@ -290,12 +290,12 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         Check whether this class supports nucleotide sequences for
         alignment.
 
+        PROTECTED: Override when inheriting.
+
         Returns
         -------
         support : bool
             True, if the class has support, false otherwise.
-
-        PROTECTED: Override when inheriting.
         """
         pass
 
@@ -306,12 +306,12 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         Check whether this class supports custom substitution matrices
         for protein sequence alignment.
 
+        PROTECTED: Override when inheriting.
+
         Returns
         -------
         support : bool
             True, if the class has support, false otherwise.
-
-        PROTECTED: Override when inheriting.
         """
         pass
 
@@ -322,12 +322,12 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         Check whether this class supports custom substitution matrices
         for nucleotide sequence alignment.
 
+        PROTECTED: Override when inheriting.
+
         Returns
         -------
         support : bool
             True, if the class has support, false otherwise.
-
-        PROTECTED: Override when inheriting.
         """
         pass
 
@@ -342,7 +342,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         Parameters
         ----------
         sequences : iterable object of Sequence
-            The sequences to be aligned
+            The sequences to be aligned.
         bin_path : str, optional
             Path of the MSA software binary. By default, the default
             path will be used.

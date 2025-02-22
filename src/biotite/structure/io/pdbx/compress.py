@@ -27,6 +27,8 @@ def compress(data, float_tolerance=1e-6):
     ----------
     data : BinaryCIFFile or BinaryCIFBlock or BinaryCIFCategory or BinaryCIFColumn or BinaryCIFData
         The data to compress.
+    float_tolerance : float, optional
+        The relative error that is accepted when compressing floating point numbers.
 
     Returns
     -------
@@ -35,8 +37,6 @@ def compress(data, float_tolerance=1e-6):
         If no improved compression is found for a :class:`BinaryCIFData` array,
         the input data is kept.
         Hence, the return value is no deep copy of the input data.
-    float_tolerance : float, optional
-        The relative error that is accepted when compressing floating point numbers.
 
     Examples
     --------

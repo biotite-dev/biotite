@@ -24,7 +24,7 @@ class Muscle5App(MSAApp):
 
     See Also
     --------
-    MuscleApp
+    MuscleApp : Interface to MUSCLE version ``<5``.
 
     Notes
     -----
@@ -147,7 +147,7 @@ class Muscle5App(MSAApp):
         Parameters
         ----------
         sequences : iterable object of Sequence
-            The sequences to be aligned
+            The sequences to be aligned.
         bin_path : str, optional
             Path of the MSA software binary. By default, the default path
             will be used.
