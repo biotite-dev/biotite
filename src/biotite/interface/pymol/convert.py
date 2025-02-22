@@ -53,20 +53,18 @@ def to_model(atom_array, delocalize_bonds=False):
     chempy_model : Indexed
         The converted structure.
     """
+    if not np.isfinite(atom_array.coord).all():
+        raise ValueError("PyMOL does not support infinite or NaN coordinates")
+
     model = IndexedModel()
 
     annot_cat = atom_array.get_annotation_categories()
-
     for i in range(atom_array.array_length()):
         atom = Atom()
-
         atom.segi = atom_array.chain_id[i]
         atom.chain = atom_array.chain_id[i]
-
         atom.resi_number = atom_array.res_id[i]
-
         atom.ins_code = atom_array.ins_code[i]
-
         res_name = atom_array.res_name[i]
         atom.resn = res_name
         if len(res_name) == 1:
@@ -76,26 +74,17 @@ def to_model(atom_array, delocalize_bonds=False):
                 atom.resn_code = ProteinSequence.convert_letter_3to1(res_name)
             except KeyError:
                 atom.resn_code = "X"
-
         atom.hetatm = 1 if atom_array.hetero[i] else 0
-
         atom.name = atom_array.atom_name[i]
-
         atom.symbol = atom_array.element[i]
-
         if "b_factor" in annot_cat:
             atom.b = atom_array.b_factor[i]
-
         if "occupancy" in annot_cat:
             atom.q = atom_array.occupancy[i]
-
         if "charge" in annot_cat:
             atom.formal_charge = atom_array.charge[i]
-
         atom.coord = tuple(atom_array.coord[..., i, :])
-
         atom.index = i + 1
-
         model.add_atom(atom)
 
     bond_order_mapping = (
