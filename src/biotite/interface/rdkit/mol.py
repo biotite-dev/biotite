@@ -114,12 +114,18 @@ def to_mol(
         If the input `atoms` is an :class:`AtomArrayStack`, all models are included
         as conformers with conformer IDs starting from ``0``.
 
-    Raised
+    Raises
     ------
     BadStructureError
         If the input `atoms` does not have an associated :class:`BondList`.
         Also raises a :class:`BadStructureError`, if `explicit_hydrogen` is set to
         ``False`` despite hydrogen atoms being present in `atoms`.
+
+    Notes
+    -----
+    The atoms in the return value are in the same order as the input `atoms`,
+    i.e. indices pointing to the :class:`rdkit.Chem.rdchem.Mol` can be used to point to
+    the same atoms in the :class:`.AtomArray`.
 
     Examples
     --------
@@ -272,6 +278,10 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
 
     Notes
     -----
+    The atoms in the return value are in the same order as the input `mol`,
+    i.e. indices pointing to the :class:`rdkit.Chem.rdchem.Mol` can be used to point to
+    the same atoms in the :class:`.AtomArray`.
+
     All atom-level properties of `mol`
     (obtainable with :meth:`rdkit.Chem.rdchem.Mol.GetProp()`) are added as annotation
     array with the same name.
