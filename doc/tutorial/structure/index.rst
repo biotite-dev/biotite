@@ -52,6 +52,7 @@ contains functions for structure analysis and manipulation.
     bonds
     editing
     measurement
+    trajectories
     segments
     nucleotide
     alphabet

@@ -33,6 +33,7 @@ import numpy as np
 from scipy.stats import spearmanr
 import biotite.application.autodock as autodock
 import biotite.database.rcsb as rcsb
+import biotite.interface.pymol as pymol_interface
 import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io.pdbx as pdbx
@@ -145,6 +146,36 @@ docked_ligand = docked_ligand[np.argmin(rmsd)]
 ref_ligand = ref_ligand[ref_ligand.element != "H"]
 docked_ligand = docked_ligand[docked_ligand.element != "H"]
 
-# Visualization with PyMOL...
+
+# Visualization with PyMOL
 # sphinx_gallery_thumbnail_number = 2
-# sphinx_gallery_ammolite_script = "docking_pymol.py"
+pymol_receptor = pymol_interface.PyMOLObject.from_structure(receptor)
+pymol_ref_ligand = pymol_interface.PyMOLObject.from_structure(ref_ligand)
+pymol_docked_ligand = pymol_interface.PyMOLObject.from_structure(docked_ligand)
+# Visualize receptor as surface
+pymol_receptor.show_as("surface")
+pymol_receptor.color("white")
+pymol_interface.cmd.set("surface_quality", 2)
+# Visualize as stick model
+pymol_interface.cmd.set("stick_radius", 0.15)
+pymol_interface.cmd.set("sphere_scale", 0.25)
+pymol_interface.cmd.set("sphere_quality", 4)
+# The reference is a blue 'shadow'
+pymol_ref_ligand.show("spheres")
+pymol_ref_ligand.color("blue")
+pymol_ref_ligand.set("stick_color", "blue")
+pymol_ref_ligand.set("sphere_transparency", 0.6)
+pymol_ref_ligand.set_bond("stick_transparency", 0.6)
+# Visualize docked model
+pymol_docked_ligand.show("spheres")
+pymol_docked_ligand.color("gray", docked_ligand.element == "C")
+pymol_docked_ligand.set("stick_color", "grey80")
+# Adjust camera
+pymol_docked_ligand.orient()
+pymol_interface.cmd.rotate("y", 180)
+pymol_interface.cmd.rotate("x", -15)
+pymol_docked_ligand.zoom(buffer=-1)
+pymol_interface.cmd.set("depth_cue", 0)
+pymol_interface.cmd.clip("slab", 100)
+# Display
+pymol_interface.show((1500, 600))
