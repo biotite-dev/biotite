@@ -73,11 +73,6 @@ def launch_pymol():
     calls its :func:`start()` method and sets up necessary parameters using
     :func:`setup_parameters()`.
 
-    Parameters
-    ----------
-    *args : str
-        The command line options given to *PyMOL*.
-
     Returns
     -------
     pymol : PyMOL
@@ -155,6 +150,8 @@ def setup_parameters(pymol_instance):
     Sets *PyMOL* parameters that are necessary for *Biotite* to interact
     properly with *PyMOL*.
 
+    Parameters
+    ----------
     pymol_instance : module or SingletonPyMOL or PyMOL, optional
         If *PyMOL* is used in library mode, the :class:`PyMOL`
         or :class:`SingletonPyMOL` object is given here.

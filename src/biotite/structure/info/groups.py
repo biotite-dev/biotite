@@ -61,7 +61,6 @@ def amino_acid_names():
     ----------
 
     .. footbibliography::
-
     """
     return _get_group_members(_AMINO_ACID_TYPES)
 
@@ -83,7 +82,6 @@ def nucleotide_names():
     ----------
 
     .. footbibliography::
-
     """
     return _get_group_members(_NUCLEOTIDE_TYPES)
 
@@ -105,7 +103,6 @@ def carbohydrate_names():
     ----------
 
     .. footbibliography::
-
     """
     return _get_group_members(_CARBOHYDRATE_TYPES)
 

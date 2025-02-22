@@ -37,7 +37,7 @@ def set_api_key(key):
 
     Parameters
     ----------
-    api_key : str
+    key : str
         The API key.
     """
     global _API_KEY

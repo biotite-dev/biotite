@@ -25,8 +25,10 @@ def plot_dendrogram(
 
     Parameters
     ----------
+    axes : Axes
+        A *Matplotlib* axes, that is used as plotting area.
     tree : Tree
-        The tree to be visualized
+        The tree to be visualized.
     orientation : {'left', 'right', 'bottom', 'top'}, optional
         The position of the root node in the plot
     use_distances : bool, optional
@@ -38,7 +40,7 @@ def plot_dendrogram(
         The label of a leaf node is the entry at the position of its
         `index` attribute.
     label_size : float, optional
-        The font size of the labels
+        The font size of the labels.
     color : tuple or str, optional
         A *Matplotlib* compatible color, that is used to draw the lines
         of the dendrogram.

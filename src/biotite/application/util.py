@@ -17,6 +17,16 @@ def map_sequence(sequence):
     Map a sequence with an arbitrary alphabet into a
     :class:`ProteinSequence`, in order to support arbitrary sequence
     types in software that can handle protein sequences.
+
+    Parameters
+    ----------
+    sequence : Sequence
+        The sequence to be mapped.
+
+    Returns
+    -------
+    mapped_sequence : ProteinSequence
+        The mapped sequence.
     """
     if len(sequence.alphabet) > len(ProteinSequence.alphabet):
         # Cannot map into a protein sequence if the alphabet
@@ -40,6 +50,16 @@ def map_matrix(matrix):
     class:`SubstitutionMatrix` for protein sequences, in order to support
     arbitrary sequence types in software that can handle protein
     sequences.
+
+    Parameters
+    ----------
+    matrix : SubstitutionMatrix
+        The substitution matrix to be mapped.
+
+    Returns
+    -------
+    mapped_matrix : SubstitutionMatrix
+        The mapped substitution matrix.
     """
     if matrix is None:
         raise TypeError(

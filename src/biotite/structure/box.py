@@ -45,10 +45,10 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
     ----------
     len_a, len_b, len_c : float
         The lengths of the three box/unit cell vectors *a*, *b* and *c*.
-    alpha, beta, gamma:
+    alpha, beta, gamma : float
         The angles between the box vectors in radians.
         *alpha* is the angle between *b* and *c*,
-        *beta* between *a* and *c*, *gamma* between *a* and *b*
+        *beta* between *a* and *c*, *gamma* between *a* and *b*.
 
     Returns
     -------
@@ -60,7 +60,7 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
 
     See Also
     --------
-    unitcell_from_vectors
+    unitcell_from_vectors : The reverse operation.
     """
     a_x = len_a
     b_x = len_b * np.cos(gamma)
@@ -87,7 +87,7 @@ def unitcell_from_vectors(box):
     Parameters
     ----------
     box : ndarray, shape=(3,3)
-        The box vectors
+        The box vectors.
 
     Returns
     -------
@@ -98,7 +98,7 @@ def unitcell_from_vectors(box):
 
     See Also
     --------
-    vectors_from_unitcell
+    vectors_from_unitcell : The reverse operation.
     """
     a = box[0]
     b = box[1]
@@ -124,6 +124,7 @@ def box_volume(box):
     Returns
     -------
     volume : float or ndarray, shape=(m,)
+        The volume(s) of the given box(es).
     """
     # Using the triple product
     return np.abs(linalg.det(box))
@@ -166,7 +167,7 @@ def repeat_box(atoms, amount=1):
 
     See Also
     --------
-    repeat_box_coord
+    repeat_box_coord : Variant that acts directly on coordinates.
 
     Examples
     --------
@@ -385,7 +386,7 @@ def remove_pbc(atoms, selection=None):
 
     See Also
     --------
-    remove_pbc_from_coord
+    remove_pbc_from_coord : Variant that acts directly on coordinates.
 
     Notes
     -----
@@ -430,8 +431,6 @@ def remove_pbc_from_coord(coord, box):
     is moved inside the box.
     All other coordinates are assembled relative to the origin by using
     the displacement coordinates in adjacent array positions.
-    Basically, this function performs the reverse action of
-    :func:`move_inside_box()`.
 
     Parameters
     ----------
@@ -449,8 +448,7 @@ def remove_pbc_from_coord(coord, box):
 
     See Also
     --------
-    remove_pbc_from_coord
-    move_inside_box
+    move_inside_box : The reverse operation.
 
     Notes
     -----
@@ -503,7 +501,7 @@ def coord_to_fraction(coord, box):
 
     See Also
     --------
-    fraction_to_coord
+    fraction_to_coord : The reverse operation.
 
     Examples
     --------
@@ -550,7 +548,7 @@ def fraction_to_coord(fraction, box):
 
     See Also
     --------
-    coord_to_fraction
+    coord_to_fraction : The reverse operation.
     """
     return np.matmul(fraction, box)
 
@@ -570,7 +568,7 @@ def is_orthogonal(box):
     Returns
     -------
     is_orthgonal : bool or ndarray, shape=(m,), dtype=bool
-        True, if the box vectors are orthogonal, false otherwise
+        True, if the box vectors are orthogonal, false otherwise.
 
     Notes
     -----

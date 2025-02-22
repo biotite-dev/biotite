@@ -43,7 +43,7 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
         If true, existing files will be overwritten.
         Otherwise the respective file will only be downloaded if the file does not
         exist yet in the specified target directory or if the file is empty.
-    verbose: bool, optional
+    verbose : bool, optional
         If true, the function will output the download progress.
 
     Returns

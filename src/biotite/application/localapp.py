@@ -178,7 +178,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         Returns
         -------
         process : Popen
-            The `Popen` instance
+            The `Popen` instance.
         """
         return self._process
 

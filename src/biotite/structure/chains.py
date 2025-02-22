@@ -59,10 +59,6 @@ def get_chain_starts(array, add_exclusive_stop=False):
     -----
     This method is internally used by all other chain-related
     functions.
-
-    See Also
-    --------
-    get_residue_starts
     """
     if array.array_length() == 0:
         return np.array([], dtype=int)
@@ -118,10 +114,6 @@ def apply_chain_wise(array, data, function, axis=None):
         Chain-wise evaluation of `data` by `function`. The size of the
         first dimension of this array is equal to the amount of
         chains.
-
-    See Also
-    --------
-    apply_residue_wise
     """
     starts = get_chain_starts(array, add_exclusive_stop=True)
     return apply_segment_wise(starts, data, function, axis)
@@ -151,10 +143,6 @@ def spread_chain_wise(array, input_data):
     output_data : ndarray
         Chain-wise spread `input_data`. Length is the same as
         `array_length()` of `array`.
-
-    See Also
-    --------
-    spread_residue_wise
     """
     starts = get_chain_starts(array, add_exclusive_stop=True)
     return spread_segment_wise(starts, input_data)
@@ -180,10 +168,6 @@ def get_chain_masks(array, indices):
         Multiple boolean masks, one for each given index in `indices`.
         Each array masks the atoms that belong to the same chain as
         the atom at the given index.
-
-    See Also
-    --------
-    get_residue_masks
     """
     starts = get_chain_starts(array, add_exclusive_stop=True)
     return get_segment_masks(starts, indices)
@@ -208,10 +192,6 @@ def get_chain_starts_for(array, indices):
     start_indices : ndarray, dtype=int, shape=(k,)
         The indices that point to the chain starts for the input
         `indices`.
-
-    See Also
-    --------
-    get_residue_starts_for
     """
     starts = get_chain_starts(array, add_exclusive_stop=True)
     return get_segment_starts_for(starts, indices)
@@ -238,10 +218,6 @@ def get_chain_positions(array, indices):
     -------
     start_indices : ndarray, dtype=int, shape=(k,)
         The indices that point to the position of the chains.
-
-    See Also
-    --------
-    get_residue_positions
     """
     starts = get_chain_starts(array, add_exclusive_stop=True)
     return get_segment_positions(starts, indices)
@@ -263,10 +239,6 @@ def get_chains(array):
     -------
     ids : ndarray, dtype=str
         List of chain IDs.
-
-    See Also
-    --------
-    get_residues
     """
     return array.chain_id[get_chain_starts(array)]
 
@@ -287,10 +259,6 @@ def get_chain_count(array):
     -------
     count : int
         Amount of chains.
-
-    See Also
-    --------
-    get_residue_count
     """
     return len(get_chain_starts(array))
 
@@ -308,10 +276,7 @@ def chain_iter(array):
     ------
     chain : AtomArray or AtomArrayStack
         A single chain of the input `array`.
-
-    See Also
-    --------
-    residue_iter
     """
     starts = get_chain_starts(array, add_exclusive_stop=True)
-    return segment_iter(array, starts)
+    for chain in segment_iter(array, starts):
+        yield chain

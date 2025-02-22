@@ -201,7 +201,7 @@ class Alphabet(object):
         symbols : array-like
             The symbols to encode.
         dtype : dtype, optional
-            The dtype of the output ndarray. (Default: `int64`)
+            The dtype of the output ndarray.
 
         Returns
         -------
@@ -361,7 +361,7 @@ class LetterAlphabet(Alphabet):
             :class:`ndarray`, :class:`str` or :class:`bytes` object
             containing the symbols is provided, instead of e.g. a list.
         dtype : dtype, optional
-            For compatibility with superclass. The value is ignored
+            For compatibility with superclass. The value is ignored.
 
         Returns
         -------

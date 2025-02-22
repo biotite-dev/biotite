@@ -39,7 +39,6 @@ class I3DSequence(Sequence):
     ----------
 
     .. footbibliography::
-
     """
 
     alphabet = LetterAlphabet("acdefghiklmnpqrstvwy")

@@ -26,7 +26,7 @@ def rmsd(reference, subject):
     r"""
     Calculate the RMSD between two structures.
 
-    The *root-mean-square-deviation* (RMSD) indicates the overall
+    The *root mean square deviation* (RMSD) indicates the overall
     deviation of each model of a structure to a reference structure.
     It is defined as:
 
@@ -53,7 +53,7 @@ def rmsd(reference, subject):
 
     See Also
     --------
-    rmsf
+    rmsf : The *root mean square fluctuation*.
 
     Notes
     -----
@@ -128,9 +128,7 @@ def rmspd(reference, subject, periodic=False, box=None):
 
     See Also
     --------
-    index_distance
-    remove_pbc
-    rmsd
+    rmsd : The *root mean square fluctuation*.
     """
     # Compute index pairs in reference structure -> pair_ij for j < i
     reflen = reference.array_length()
@@ -178,7 +176,8 @@ def rmsf(reference, subject):
 
     See Also
     --------
-    rmsd
+    rmsd : The *root mean square deviation*.
+    average : Average the structure over the models to be used as reference in this function.
 
     Notes
     -----
@@ -222,10 +221,6 @@ def average(atoms):
         Structure with averaged atom coordinates.
         If `atoms` is a :class:`ndarray` and :class:`ndarray` is also
         returned.
-
-    See Also
-    --------
-    rmsd, rmsf
 
     Notes
     -----

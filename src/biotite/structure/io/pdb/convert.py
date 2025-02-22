@@ -89,14 +89,13 @@ def get_structure(
     -------
     array : AtomArray or AtomArrayStack
         The return type depends on the `model` parameter.
-
     """
     return pdb_file.get_structure(model, altloc, extra_fields, include_bonds)
 
 
 def set_structure(pdb_file, array, hybrid36=False):
     """
-    write an :class:`AtomArray` or :class:`AtomArrayStack` into a
+    Write an :class:`AtomArray` or :class:`AtomArrayStack` into a
     :class:`PDBFile`.
 
     This function is a thin wrapper around the :class:`PDBFile` method
@@ -114,7 +113,7 @@ def set_structure(pdb_file, array, hybrid36=False):
     array : AtomArray or AtomArrayStack
         The structure to be written. If a stack is given, each array in
         the stack will be in a separate model.
-    hybrid36: boolean, optional
+    hybrid36 : boolean, optional
         Defines wether the file should be written in hybrid-36 format.
 
     Notes

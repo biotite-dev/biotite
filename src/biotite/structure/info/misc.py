@@ -127,7 +127,6 @@ def one_letter_code(res_name):
     alpha-D-mannopyranose
     >>> print(one_letter_code("MAN"))
     None
-
     """
     column = get_from_ccd("chem_comp", res_name.upper(), "one_letter_code")
     if column is None:

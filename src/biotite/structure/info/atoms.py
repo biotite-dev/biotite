@@ -30,7 +30,7 @@ def residue(res_name, allow_missing_coord=False):
     ----------
     res_name : str
         The up to 3-letter name of the residue.
-    allow_missing_coord: bool, optional
+    allow_missing_coord : bool, optional
         Whether to allow missing coordinate values in the residue.
         If ``True``, these will be represented as ``nan`` values.
         If ``False``, a ``ValueError`` is raised when missing coordinates

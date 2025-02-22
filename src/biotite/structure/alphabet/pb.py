@@ -60,7 +60,6 @@ class ProteinBlocksSequence(Sequence):
     ----------
 
     .. footbibliography::
-
     """
 
     alphabet = LetterAlphabet("abcdefghijklmnopz")

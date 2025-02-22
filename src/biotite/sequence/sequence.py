@@ -139,7 +139,6 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
     >>> dna_seq_concat = dna_seq + dna_seq_rev
     >>> print(dna_seq_concat)
     ACGTAATGCA
-
     """
 
     def __init__(self, sequence=()):
@@ -354,7 +353,7 @@ class Sequence(Copyable, metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        alpahabet_size : int
+        alphabet_size : int
             The size of the alphabet.
 
         Returns

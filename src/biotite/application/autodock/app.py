@@ -153,7 +153,7 @@ class VinaApp(LocalApp):
 
         Parameters
         ----------
-        number : float
+        energy_range : float
             The energy range (kcal/mol).
         """
         self._energy_range = energy_range

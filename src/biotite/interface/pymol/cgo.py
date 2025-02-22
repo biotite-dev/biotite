@@ -116,10 +116,15 @@ def get_cylinder_cgo(start, end, radius, start_color, end_color):
     start, end : array-like, shape=(3,)
         The start and end position of the cylinder.
     radius : float
-        The radius of the cylinder
+        The radius of the cylinder.
     start_color, end_color : array-like, shape=(3,)
         The color at the start and end of the cylinder given as RGB
         values in the range *(0, 1)*.
+
+    Returns
+    -------
+    cgo : list of float
+        The CGO representation.
     """
     _expect_length(start, "start", 3)
     _expect_length(end, "end", 3)
@@ -148,6 +153,11 @@ def get_cone_cgo(
     start_cap, end_cap : bool
         If true, a cap is drawn at the start or end of the cone.
         Otherwise the cone is displayed as *open*.
+
+    Returns
+    -------
+    cgo : list of float
+        The CGO representation.
     """
     _expect_length(start, "start", 3)
     _expect_length(end, "end", 3)
@@ -181,6 +191,11 @@ def get_sphere_cgo(pos, radius, color):
     color : array-like, shape=(3,)
         The color of the sphere given as RGB values in the range
         *(0, 1)*.
+
+    Returns
+    -------
+    cgo : list of float
+        The CGO representation.
     """
     _expect_length(pos, "pos", 3)
     _expect_length(color, "color", 3)
@@ -201,6 +216,11 @@ def get_point_cgo(pos, color):
         *(0, 1)*.
         Either one color can be given that is used for all points or
         an individual color for each point can be supplied.
+
+    Returns
+    -------
+    cgo : list of float
+        The CGO representation.
     """
     pos = np.atleast_2d(pos)
     color = _arrayfy(color, len(pos), 2)
@@ -234,6 +254,11 @@ def get_line_cgo(pos, color, width=1.0):
     width : float, optional
         The rendered width of the line.
         The width is only visible after calling :func:`ray()`.
+
+    Returns
+    -------
+    cgo : list of float
+        The CGO representation.
     """
     color = _arrayfy(color, len(pos), 2)
 
@@ -267,6 +292,11 @@ def get_multiline_cgo(start, end, color, width=1.0):
     width : float, optional
         The rendered width of the lines.
         The width is only visible after calling :func:`ray()`.
+
+    Returns
+    -------
+    cgo : list of float
+        The CGO representation.
     """
     start = np.atleast_2d(start)
     end = np.atleast_2d(end)

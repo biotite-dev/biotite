@@ -39,7 +39,7 @@ def build_constraint_string(
     Returns
     -------
     constraints : str
-        The constraint string
+        The constraint string.
     """
     constraints = np.full(sequence_length, ".", dtype="U1")
 
