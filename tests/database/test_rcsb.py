@@ -222,6 +222,10 @@ def test_search_range(seed):
 
     np.random.seed(seed)
     range = sorted(np.random.choice(count, 2, replace=False))
+    if range[1] - range[0] > 10000:
+        # pagination only supports up to 10000 entries
+        # (https://search.rcsb.org/#pagination)
+        range[1] = range[0] + 10000
     test_entries = rcsb.search(query, range=range)
 
     assert test_entries == ref_entries[range[0] : range[1]]
