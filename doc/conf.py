@@ -195,22 +195,23 @@ sphinx_gallery_conf = {
     "within_subsection_order": FileNameSortKey,
     # Do not run example scripts with a trailing '_noexec'
     "filename_pattern": "^((?!_noexec).)*$",
-    "ignore_pattern": r"(.*ignore\.py)|(.*pymol\.py)",
+    "ignore_pattern": r"(.*ignore\.py)",
     "download_all_examples": False,
     # Never report run time
     "min_reported_time": sys.maxsize,
     "default_thumb_file": join(
         DOC_PATH, "static/assets/general/biotite_icon_thumb.png"
     ),
+    "capture_repr": (),
     "image_scrapers": (
         "matplotlib",
         scraper.static_image_scraper,
         scraper.pymol_scraper,
     ),
     "matplotlib_animations": True,
+    "image_srcset": ["2x"],
     "backreferences_dir": "examples/backreferences",
     "doc_module": ("biotite",),
-    # Set the NCBI API key
     "reset_modules": (preamble.setup_script),
     "remove_config_comments": True,
 }

@@ -38,6 +38,10 @@ dependencies:
   - sra-tools =3
   - tantan
   - viennarna >=2.5.0
+  # Interfaced packages in biotite.interface (can also be installed separately)
+  - pymol-open-source >=2
+  - ffmpeg  # Required for video rendering in PyMOL
+  - imagemagick  # Required for video rendering in PyMOL
   # Documentation building
   - pydata-sphinx-theme =0.15
   - matplotlib >=3.3
