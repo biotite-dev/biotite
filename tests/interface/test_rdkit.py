@@ -1,13 +1,8 @@
+import itertools
 from pathlib import Path
 import numpy as np
 import pytest
-from rdkit.Chem import MolFromSmiles, MolToSmiles
-from rdkit.Chem.rdchem import Atom, EditableMol, Mol
-from rdkit.Chem.rdchem import BondType as RDKitBondType
-from rdkit.Chem.rdmolops import (
-    AddHs,
-    RemoveStereochemistry,
-)
+import rdkit.Chem.AllChem as Chem
 import biotite.interface.rdkit as rdkit_interface
 import biotite.structure as struc
 import biotite.structure.info as info
@@ -20,11 +15,9 @@ def _load_smiles():
         return file.read().splitlines()
 
 
-@pytest.mark.filterwarnings(
-    "ignore:"
-    "The coordinates are missing for some atoms. "
-    "The fallback coordinates will be used instead"
-)
+@pytest.mark.filterwarnings("ignore:Missing coordinates.*")
+@pytest.mark.filterwarnings("ignore:.*coordinates are missing.*")
+@pytest.mark.filterwarnings("ignore::biotite.interface.LossyConversionWarning")
 @pytest.mark.parametrize(
     "res_name", np.random.default_rng(0).choice(info.all_residues(), size=200).tolist()
 )
@@ -46,7 +39,7 @@ def test_conversion_from_biotite(res_name):
     # Some compounds in the CCD have missing coordinates
     assert np.allclose(test_atoms.coord, ref_atoms.coord, equal_nan=True)
 
-    # There should be now undefined bonds
+    # There should be no undefined bonds
     assert (test_atoms.bonds.as_array()[:, 2] != struc.BondType.ANY).all()
     # Kekulization returns one of multiple resonance structures, so the returned one
     # might not be the same as the input
@@ -104,19 +97,44 @@ def test_conversion_from_rdkit(smiles):
     Start from SMILES string to ensure that built-in functionality of RDKit is used
     to create the initial molecule.
     """
-    ref_mol = MolFromSmiles(smiles)
+    ref_mol = Chem.MolFromSmiles(smiles)
     atoms = rdkit_interface.from_mol(ref_mol)
     test_mol = rdkit_interface.to_mol(atoms)
 
     # The intermediate AtomArray has explicit hydrogen atoms so add them explicitly
     # to the reference as well for fair comparison
-    ref_mol = AddHs(ref_mol)
+    ref_mol = Chem.AddHs(ref_mol)
     # The intermediate AtomArray does not have stereochemistry information,
     # so this info cannot be preserved in the comparison
-    RemoveStereochemistry(ref_mol)
+    Chem.RemoveStereochemistry(ref_mol)
 
     # RDKit does not support equality checking -> Use SMILES string as proxy
-    assert MolToSmiles(test_mol) == MolToSmiles(ref_mol)
+    assert Chem.MolToSmiles(test_mol) == Chem.MolToSmiles(ref_mol)
+
+
+@pytest.mark.parametrize("selected_conformer_type", ["2D", "3D"])
+@pytest.mark.parametrize("present_conformer_type", ["2D", "3D"])
+def test_conformer_selection(present_conformer_type, selected_conformer_type):
+    """
+    Check if 2D and 3D conformers can be selected and that a model with *NaN*
+    coordinates is returned if an absent conformer type is selected.
+    """
+    mol = Chem.MolFromSmiles("C1=CC=CC=C1")
+    conformer = Chem.Conformer(mol.GetNumAtoms())
+    conformer.Set3D(present_conformer_type == "3D")
+    mol.AddConformer(conformer)
+
+    atoms = rdkit_interface.from_mol(mol, conformer_id=selected_conformer_type)
+
+    # In any case there should be a single model
+    assert atoms.stack_depth() == 1
+    if selected_conformer_type != present_conformer_type:
+        # In case the selected conformer type is not present, expect a model
+        # with all coordinates set to NaN
+        assert np.all(np.isnan(atoms.coord))
+    else:
+        # The default conformer set above contains zeros
+        assert np.all(atoms.coord == 0)
 
 
 def test_kekulization():
@@ -145,15 +163,40 @@ def test_kekulization():
     )
 
 
+@pytest.mark.parametrize(
+    "values", [(False, True), (1, 2, 3), (1.0, 1.5, 2.0), ("foo", "bar", "baz")]
+)
+def test_extra_annotations(values):
+    """
+    Check if extra annotations can be added to a :class:`Mol` and recovered.
+    """
+    EXTRA_ANNOT_NAME = "extra"
+
+    ref_atoms = info.residue("ALA")
+    ref_annot = np.array(
+        list(itertools.islice(itertools.cycle(values), ref_atoms.array_length()))
+    )
+    ref_atoms.set_annotation(EXTRA_ANNOT_NAME, ref_annot)
+
+    mol = rdkit_interface.to_mol(
+        ref_atoms, include_extra_annotations=[EXTRA_ANNOT_NAME]
+    )
+    test_atoms = rdkit_interface.from_mol(mol)
+    test_annot = test_atoms.get_annotation(EXTRA_ANNOT_NAME)
+
+    assert test_annot.dtype == ref_annot.dtype
+    assert test_annot.tolist() == ref_annot.tolist()
+
+
 def test_unmappable_bond_type():
     """
     Test that a warning is raised when a bond type cannot be mapped to Biotite.
     """
-    mol = EditableMol(Mol())
-    mol.AddAtom(Atom("F"))
-    mol.AddAtom(Atom("F"))
+    mol = Chem.EditableMol(Chem.Mol())
+    mol.AddAtom(Chem.Atom("F"))
+    mol.AddAtom(Chem.Atom("F"))
     # 'HEXTUPLE' has no corresponding Biotite bond type
-    mol.AddBond(0, 1, RDKitBondType.HEXTUPLE)
+    mol.AddBond(0, 1, Chem.BondType.HEXTUPLE)
     mol = mol.GetMol()
 
     with pytest.warns(LossyConversionWarning):

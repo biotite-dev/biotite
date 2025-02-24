@@ -3,22 +3,15 @@
 # information.
 
 __name__ = "biotite.interface.rdkit"
-__author__ = "Patrick Kunzmann"
+__author__ = "Patrick Kunzmann, Simon Mathis"
 __all__ = ["to_mol", "from_mol"]
 
+import numbers
 import warnings
 from collections import defaultdict
 import numpy as np
-from rdkit.Chem.rdchem import (
-    Atom,
-    AtomPDBResidueInfo,
-    Conformer,
-    EditableMol,
-    KekulizeException,
-    Mol,
-)
-from rdkit.Chem.rdchem import BondType as RDKitBondType
-from rdkit.Chem.rdmolops import AddHs, Kekulize, SanitizeFlags, SanitizeMol
+import rdkit.Chem.AllChem as Chem
+from rdkit.Chem import SanitizeFlags
 from biotite.interface.version import requires_version
 from biotite.interface.warning import LossyConversionWarning
 from biotite.structure.atoms import AtomArray, AtomArrayStack
@@ -31,26 +24,26 @@ _KEKULIZED_TO_AROMATIC_BOND_TYPE = {
     BondType.TRIPLE: BondType.AROMATIC_TRIPLE,
 }
 _BIOTITE_TO_RDKIT_BOND_TYPE = {
-    BondType.ANY: RDKitBondType.UNSPECIFIED,
-    BondType.SINGLE: RDKitBondType.SINGLE,
-    BondType.DOUBLE: RDKitBondType.DOUBLE,
-    BondType.TRIPLE: RDKitBondType.TRIPLE,
-    BondType.QUADRUPLE: RDKitBondType.QUADRUPLE,
-    BondType.AROMATIC_SINGLE: RDKitBondType.AROMATIC,
-    BondType.AROMATIC_DOUBLE: RDKitBondType.AROMATIC,
-    BondType.AROMATIC_TRIPLE: RDKitBondType.AROMATIC,
-    BondType.AROMATIC: RDKitBondType.AROMATIC,
+    BondType.ANY: Chem.BondType.UNSPECIFIED,
+    BondType.SINGLE: Chem.BondType.SINGLE,
+    BondType.DOUBLE: Chem.BondType.DOUBLE,
+    BondType.TRIPLE: Chem.BondType.TRIPLE,
+    BondType.QUADRUPLE: Chem.BondType.QUADRUPLE,
+    BondType.AROMATIC_SINGLE: Chem.BondType.AROMATIC,
+    BondType.AROMATIC_DOUBLE: Chem.BondType.AROMATIC,
+    BondType.AROMATIC_TRIPLE: Chem.BondType.AROMATIC,
+    BondType.AROMATIC: Chem.BondType.AROMATIC,
     # Dative bonds may lead to a KekulizeException and may potentially be deprecated
     # in the future (https://github.com/rdkit/rdkit/discussions/6995)
-    BondType.COORDINATION: RDKitBondType.SINGLE,
+    BondType.COORDINATION: Chem.BondType.SINGLE,
 }
 _RDKIT_TO_BIOTITE_BOND_TYPE = {
-    RDKitBondType.UNSPECIFIED: BondType.ANY,
-    RDKitBondType.SINGLE: BondType.SINGLE,
-    RDKitBondType.DOUBLE: BondType.DOUBLE,
-    RDKitBondType.TRIPLE: BondType.TRIPLE,
-    RDKitBondType.QUADRUPLE: BondType.QUADRUPLE,
-    RDKitBondType.DATIVE: BondType.COORDINATION,
+    Chem.BondType.UNSPECIFIED: BondType.ANY,
+    Chem.BondType.SINGLE: BondType.SINGLE,
+    Chem.BondType.DOUBLE: BondType.DOUBLE,
+    Chem.BondType.TRIPLE: BondType.TRIPLE,
+    Chem.BondType.QUADRUPLE: BondType.QUADRUPLE,
+    Chem.BondType.DATIVE: BondType.COORDINATION,
 }
 _STANDARD_ANNOTATIONS = frozenset(
     {
@@ -76,6 +69,7 @@ def to_mol(
     kekulize=False,
     use_dative_bonds=False,
     include_extra_annotations=(),
+    explicit_hydrogen=None,
 ):
     """
     Convert an :class:`.AtomArray` or :class:`.AtomArrayStack` into a
@@ -85,6 +79,7 @@ def to_mol(
     ----------
     atoms : AtomArray or AtomArrayStack
         The molecule to be converted.
+        Must have an associated :class:`BondList`.
     kekulize : bool, optional
         If set to true, aromatic bonds are represented by single, double and triple
         bonds.
@@ -105,6 +100,12 @@ def to_mol(
         are always included per default. These standard annotations can be accessed
         with :meth:`rdkit.Chem.rdchem.Atom.GetPDBResidueInfo()` for each atom in the
         returned :class:`rdkit.Chem.rdchem.Mol`.
+    explicit_hydrogen : bool, optional
+        If set to true, the conversion process expects that all hydrogen atoms are
+        explicit, i.e. each each hydrogen atom must be part of the :class:`AtomArray`.
+        If set to false, the conversion process treats all hydrogen atoms as implicit.
+        By default, explicit hydrogen atoms are only assumed if any hydrogen atoms are
+        present in `atoms`.
 
     Returns
     -------
@@ -112,6 +113,19 @@ def to_mol(
         The *RDKit* molecule.
         If the input `atoms` is an :class:`AtomArrayStack`, all models are included
         as conformers with conformer IDs starting from ``0``.
+
+    Raises
+    ------
+    BadStructureError
+        If the input `atoms` does not have an associated :class:`BondList`.
+        Also raises a :class:`BadStructureError`, if `explicit_hydrogen` is set to
+        ``False`` despite hydrogen atoms being present in `atoms`.
+
+    Notes
+    -----
+    The atoms in the return value are in the same order as the input `atoms`,
+    i.e. indices pointing to the :class:`rdkit.Chem.rdchem.Mol` can be used to point to
+    the same atoms in the :class:`.AtomArray`.
 
     Examples
     --------
@@ -141,17 +155,40 @@ def to_mol(
     HB3
     HXT
     """
-    mol = EditableMol(Mol())
+    hydrogen_mask = atoms.element == "H"
+    _has_hydrogen = hydrogen_mask.any()
+    if explicit_hydrogen is None:
+        explicit_hydrogen = _has_hydrogen
+    elif explicit_hydrogen:
+        if not _has_hydrogen:
+            warnings.warn(
+                "No hydrogen found, although 'explicit_hydrogen' is 'True'. "
+                "This may lead to radicals after sanitization in RDKit.",
+                UserWarning,
+            )
+    else:
+        if _has_hydrogen:
+            raise BadStructureError(
+                "Hydrogen atoms are present in the input, although 'explicit_hydrogen' "
+                "is set to 'False'"
+            )
+        atoms = atoms[..., ~hydrogen_mask]
+
+    mol = Chem.EditableMol(Chem.Mol())
 
     has_annot = frozenset(atoms.get_annotation_categories())
     extra_annot = set(include_extra_annotations) - _STANDARD_ANNOTATIONS
+
     for i in range(atoms.array_length()):
-        rdkit_atom = Atom(atoms.element[i].capitalize())
+        rdkit_atom = Chem.Atom(atoms.element[i].capitalize())
+        if explicit_hydrogen:
+            # ... tell RDKit to not assume any implicit hydrogens
+            rdkit_atom.SetNoImplicit(True)
         if "charge" in has_annot:
             rdkit_atom.SetFormalCharge(atoms.charge[i].item())
 
         # add standard pdb annotations
-        rdkit_atom_res_info = AtomPDBResidueInfo(
+        rdkit_atom_res_info = Chem.AtomPDBResidueInfo(
             atomName=atoms.atom_name[i].item(),
             residueName=atoms.res_name[i].item(),
             chainId=atoms.chain_id[i].item(),
@@ -169,18 +206,21 @@ def to_mol(
 
         # add extra annotations
         for annot_name in extra_annot:
-            rdkit_atom.SetProp(annot_name, atoms.get_annotation(annot_name)[i].item())
+            _set_property(
+                rdkit_atom, annot_name, atoms.get_annotation(annot_name)[i].item()
+            )
 
         # add atom to molecule
         mol.AddAtom(rdkit_atom)
 
     if atoms.bonds is None:
         raise BadStructureError("An AtomArray with associated BondList is required")
-    bonds = atoms.bonds.as_array()
     if kekulize:
-        bonds = bonds.copy()
+        bonds = atoms.bonds.copy()
         bonds.remove_aromaticity()
-    for atom_i, atom_j, bond_type in atoms.bonds.as_array():
+    else:
+        bonds = atoms.bonds
+    for atom_i, atom_j, bond_type in bonds.as_array():
         if not use_dative_bonds and bond_type == BondType.COORDINATION:
             bond_type = BondType.SINGLE
         mol.AddBond(
@@ -194,7 +234,7 @@ def to_mol(
         # Handle AtomArray and AtomArrayStack consistently
         coord = coord[None, :, :]
     for model_coord in coord:
-        conformer = Conformer(mol.GetNumAtoms())
+        conformer = Chem.Conformer(mol.GetNumAtoms())
         # RDKit silently expects the data to be in C-contiguous order
         # Otherwise the coordinates would be completely misassigned
         # (https://github.com/rdkit/rdkit/issues/8221)
@@ -215,9 +255,12 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     ----------
     mol : rdkit.Chem.rdchem.Mol
         The molecule to be converted.
-    conformer_id : int, optional
-        The conformer to be converted.
-        By default, an :class:`AtomArrayStack` with all conformers is returned.
+    conformer_id : int or {"2D", "3D"}, optional
+        The ID of the conformer to be converted.
+        If set to "2D" or "3D", an :class:`AtomArrayStack` with only the 2D or 3D
+        conformer is returned, respectively.
+        By default, an :class:`AtomArrayStack` with all conformers (2D and 3D) is
+        returned.
     add_hydrogen : bool, optional
         If set to true, explicit hydrogen atoms are always added.
         If set to false, explicit hydrogen atoms are never added.
@@ -228,14 +271,20 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     -------
     atoms : AtomArray or AtomArrayStack
         The converted atoms.
-        An :class:`AtomArrayStack` is only returned, if the `conformer_id` parameter
-        is not set.
+        An :class:`AtomArray` is returned if an integer `conformer_id` is given.
+        Otherwise, an :class:`AtomArrayStack` is returned.
+        If the input `mol` does not have a conformer, an `AtomArrayStack` with a
+        single model, where all coordinates are *NaN*, is returned.
 
     Notes
     -----
+    The atoms in the return value are in the same order as the input `mol`,
+    i.e. indices pointing to the :class:`rdkit.Chem.rdchem.Mol` can be used to point to
+    the same atoms in the :class:`.AtomArray`.
+
     All atom-level properties of `mol`
-    (obtainable with :meth:`rdkit.Chem.rdchem.Mol.GetProp()`) are added as string-type
-    annotation array with the same name.
+    (obtainable with :meth:`rdkit.Chem.rdchem.Mol.GetProp()`) are added as annotation
+    array with the same name.
     ``element`` and ``charge`` are not inferred from properties but from the
     dedicated attributes in the :class:`rdkit.Chem.rdchem.Mol` object.
 
@@ -271,26 +320,36 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     if add_hydrogen is None:
         add_hydrogen = not _has_explicit_hydrogen(mol)
     if add_hydrogen:
-        SanitizeMol(mol, SanitizeFlags.SANITIZE_ADJUSTHS)
-        mol = AddHs(mol, addCoords=False, addResidueInfo=False)
+        Chem.SanitizeMol(mol, SanitizeFlags.SANITIZE_ADJUSTHS)
+        mol = Chem.AddHs(mol, addCoords=False, addResidueInfo=False)
 
     rdkit_atoms = mol.GetAtoms()
     if rdkit_atoms is None:
         raise BadStructureError("Could not obtains atoms from Mol")
 
-    if conformer_id is None:
-        conformers = [conf for conf in mol.GetConformers() if conf.Is3D()]
-        atoms = AtomArrayStack(len(conformers), len(rdkit_atoms))
-        for i, conformer in enumerate(conformers):
-            atoms.coord[i] = np.array(conformer.GetPositions())
+    if conformer_id in (None, "2D", "3D"):
+        conformers = [conf for conf in mol.GetConformers()]
+        if conformer_id == "2D":
+            conformers = [conf for conf in conformers if not conf.Is3D()]
+        elif conformer_id == "3D":
+            conformers = [conf for conf in conformers if conf.Is3D()]
+        if len(conformers) == 0:
+            # No conformer in 'Mol' that fulfills the criteria
+            # -> create a single model with all coordinates set to NaN
+            atoms = AtomArrayStack(1, len(rdkit_atoms))
+            atoms.coord = np.full((1, len(rdkit_atoms), 3), np.nan)
+        else:
+            atoms = AtomArrayStack(len(conformers), len(rdkit_atoms))
+            for i, conformer in enumerate(conformers):
+                atoms.coord[i] = np.array(conformer.GetPositions(), dtype=np.float32)
     else:
         conformer = mol.GetConformer(conformer_id)
         atoms = AtomArray(len(rdkit_atoms))
-        atoms.coord = np.array(conformer.GetPositions())
+        atoms.coord = np.array(conformer.GetPositions(), dtype=np.float32)
 
     extra_annotations = defaultdict(
-        # Use 'object' dtype first, as the maximum string length is unknown
-        lambda: np.full(atoms.array_length(), "", dtype=object)
+        # The dtype of each annotation array is inferred later
+        lambda: [None] * atoms.array_length()
     )
     atoms.add_annotation("charge", int)
     atoms.add_annotation("b_factor", float)
@@ -309,7 +368,7 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         residue_info = rdkit_atom.GetPDBResidueInfo()
         if residue_info is None:
             # ... default values for atoms with missing residue information
-            residue_info = AtomPDBResidueInfo(
+            residue_info = Chem.AtomPDBResidueInfo(
                 atomName="",
                 occupancy=0.0,
                 tempFactor=float("nan"),
@@ -347,27 +406,32 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         atoms.atom_name[_atom_idx] = residue_info.GetName().strip()
 
         # ... add extra annotations
-        annot_names = rdkit_atom.GetPropNames()
-        for annot_name in annot_names:
-            extra_annotations[annot_name][_atom_idx] = rdkit_atom.GetProp(annot_name)
+        for annot, value in rdkit_atom.GetPropsAsDict(includePrivate=False).items():
+            extra_annotations[annot][_atom_idx] = value
 
-    for annot_name, array in extra_annotations.items():
-        atoms.set_annotation(annot_name, array.astype(str))
+    for annot, array in extra_annotations.items():
+        # Handle special case of implicit hydrogen atom flags,
+        # that is set by 'AddHs()' to hydrogen atoms
+        if annot == "isImplicit":
+            annotation_array = np.array(array, dtype=bool)
+        else:
+            annotation_array = np.array(array)
+        atoms.set_annotation(annot, annotation_array)
 
     rdkit_bonds = list(mol.GetBonds())
     is_aromatic = np.array(
-        [bond.GetBondType() == RDKitBondType.AROMATIC for bond in rdkit_bonds]
+        [bond.GetBondType() == Chem.BondType.AROMATIC for bond in rdkit_bonds]
     )
     if np.any(is_aromatic):
         # Determine the kekulized order of aromatic bonds
         # Copy as 'Kekulize()' modifies the molecule in-place
-        mol = Mol(mol)
+        mol = Chem.Mol(mol)
         try:
-            Kekulize(mol)
-        except KekulizeException:
+            Chem.Kekulize(mol)
+        except Chem.KekulizeException:
             warnings.warn(
                 "Kekulization failed, "
-                "using 'BondType.ANY' instead for aromatic bonds instead",
+                "using 'BondType.AROMATIC' instead for aromatic bonds instead",
                 LossyConversionWarning,
             )
         rdkit_bonds = list(mol.GetBonds())
@@ -401,3 +465,18 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
 
 def _has_explicit_hydrogen(mol):
     return mol.GetNumAtoms() > mol.GetNumHeavyAtoms()
+
+
+def _set_property(atom, annot_name, value):
+    if isinstance(value, bool):
+        atom.SetBoolProp(annot_name, value)
+    elif isinstance(value, numbers.Integral):
+        atom.SetIntProp(annot_name, value)
+    elif isinstance(value, numbers.Real):
+        atom.SetDoubleProp(annot_name, value)
+    elif isinstance(value, str):
+        atom.SetProp(annot_name, value)
+    else:
+        raise TypeError(
+            f"Unsupported dtype '{type(value).__name__}' for annotation '{annot_name}'"
+        )
