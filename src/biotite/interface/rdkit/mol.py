@@ -104,7 +104,7 @@ def to_mol(
         If set to true, the conversion process expects that all hydrogen atoms are
         explicit, i.e. each each hydrogen atom must be part of the :class:`AtomArray`.
         If set to false, the conversion process treats all hydrogen atoms as implicit.
-        By default, explicit hydrogen atoms are only assumed of any hydrogen atoms are
+        By default, explicit hydrogen atoms are only assumed if any hydrogen atoms are
         present in `atoms`.
 
     Returns
