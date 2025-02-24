@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import biotite
 import biotite.database.rcsb as rcsb
+import biotite.interface.pymol as pymol_interface
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.sequence.graphics as graphics
@@ -374,8 +375,20 @@ target_anchors = target_chain[target_chain.atom_name == "CA"][anchor_indices[:, 
 _, transform = struc.superimpose(query_anchors, target_anchors)
 # Apply this transformation to full structure
 target_chain = transform.apply(target_chain)
-# Visualization with PyMOL...
-# sphinx_gallery_ammolite_script = "structure_search_pymol.py"
+
+# Visualization with PyMOL
+pymol_interface.cmd.set("cartoon_rect_length", 1.0)
+pymol_interface.cmd.set("depth_cue", 0)
+pymol_interface.cmd.set("cartoon_cylindrical_helices", 1)
+pymol_interface.cmd.set("cartoon_helix_radius", 1.5)
+pymol_query = pymol_interface.PyMOLObject.from_structure(query_chain)
+pymol_target = pymol_interface.PyMOLObject.from_structure(target_chain)
+pymol_query.show_as("cartoon")
+pymol_target.show_as("cartoon")
+pymol_query.color("biotite_lightgreen")
+pymol_target.color("biotite_lightorange")
+pymol_query.orient()
+pymol_interface.show((1500, 1000))
 # sphinx_gallery_thumbnail_number = 3
 
 ########################################################################################

@@ -78,7 +78,6 @@ class Metadata(MutableMapping):
     >>> print(metadata[Metadata.Key(number=42, name="bar")])
     dolor sit amet,
     consectetur
-
     """
 
     @dataclass(frozen=True, kw_only=True)
@@ -144,12 +143,18 @@ class Metadata(MutableMapping):
         @staticmethod
         def deserialize(text):
             """
-            Create an object by deserializing the given text content.
+            Create a :class:`Metadata.Key` object by deserializing the given text
+            content.
 
             Parameters
             ----------
-            content : str
+            text : str
                 The content to be deserialized.
+
+            Returns
+            -------
+            key : Metadata.Key
+                The parsed key.
             """
             # Omit the leading '>'
             key_components = text[1:].split()
@@ -207,12 +212,17 @@ class Metadata(MutableMapping):
     @staticmethod
     def deserialize(text):
         """
-        Create an object by deserializing the given text content.
+        Create a :class:`Metadata` objtect by deserializing the given text content.
 
         Parameters
         ----------
-        content : str
+        text : str
             The content to be deserialized.
+
+        Returns
+        -------
+        metadata : Metadata
+            The parsed metadata.
         """
         metadata = {}
         current_key = None
@@ -430,12 +440,17 @@ class SDRecord:
     @staticmethod
     def deserialize(text):
         """
-        Create an object by deserializing the given text content.
+        Create an :class:`SDRecord` by deserializing the given text content.
 
         Parameters
         ----------
-        content : str
+        text : str
             The content to be deserialized.
+
+        Returns
+        -------
+        record : SDRecord
+            The parsed record.
         """
         lines = text.splitlines()
         ctab_end = _get_ctab_stop(lines)
@@ -494,7 +509,7 @@ class SDRecord:
 
         Parameters
         ----------
-        array : AtomArray
+        atoms : AtomArray
             The array to be saved into this file.
             Must have an associated :class:`BondList`.
         default_bond_type : BondType, optional
@@ -538,6 +553,13 @@ class SDFile(File, MutableMapping):
     The structures can be parsed and written from/to each
     :class:`SDRecord` object via :func:`get_structure()` or
     :func:`set_structure()`, respectively.
+
+    Parameters
+    ----------
+    records : dict (str -> SDRecord), optional
+        The initial records of the file.
+        Maps the record names to the corresponding :class:`SDRecord` objects.
+        By default no initial records are added.
 
     Attributes
     ----------
@@ -732,12 +754,17 @@ class SDFile(File, MutableMapping):
     @staticmethod
     def deserialize(text):
         """
-        Create an object by deserializing the given text content.
+        Create an :class:`SDFile` by deserializing the given text content.
 
         Parameters
         ----------
-        content : str
+        text : str
             The content to be deserialized.
+
+        Returns
+        -------
+        file_object : SDFile
+            The parsed file.
         """
         lines = text.splitlines()
         record_ends = np.array(

@@ -34,7 +34,7 @@ def load_structure(file_path, template=None, **kwargs):
         The path to structure file.
     template : AtomArray or AtomArrayStack or file-like object or str, optional
         Only required when reading a trajectory file.
-    kwargs
+    **kwargs
         Additional parameters will be passed to either the
         :func:`get_structure()` or :func:`read()` method of the file
         object.
@@ -146,7 +146,7 @@ def save_structure(file_path, array, **kwargs):
         The path to structure file.
     array : AtomArray or AtomArrayStack
         The structure to be saved.
-    kwargs
+    **kwargs
         Additional parameters will be passed to the respective `set_structure`
         method.
 

@@ -50,9 +50,9 @@ class CompositeQuery(Query):
 
     Parameters
     ----------
-    operator: str, {"AND", "OR", "NOT"}
+    operator : str, {"AND", "OR", "NOT"}
         The combination operator.
-    queries : iterable object of SimpleQuery
+    query1, query2 : SimpleQuery
         The queries to be combined.
     """
 
@@ -114,7 +114,7 @@ class SimpleQuery(Query):
        The list of possible fields and the required search term
        formatting can be found
        `here <https://www.uniprot.org/help/query-fields>`_.
-    term: str
+    term : str
        The search term.
     """
 
@@ -264,7 +264,6 @@ def search(query, number=500):
         The search query.
     number : int
         The maximum number of IDs that are obtained.
-        (Default: 500)
 
     Returns
     -------

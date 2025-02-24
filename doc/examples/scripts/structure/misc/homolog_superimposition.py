@@ -2,9 +2,7 @@
 Superimposition of homologous protein structures
 ================================================
 
-This script superimposes the structure of a streptavidin monomer
-into an avidin monomer.
-The visualization was conducted with PyMOL.
+This script superimposes the structure of a streptavidin monomer into an avidin monomer.
 
 - *Green*:  Avidin
 - *Orange*: Strepatvidin
@@ -14,6 +12,7 @@ The visualization was conducted with PyMOL.
 # License: BSD 3 clause
 
 import biotite.database.rcsb as rcsb
+import biotite.interface.pymol as pymol_interface
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
 
@@ -32,5 +31,13 @@ streptavidin = _extract_monomer(
 )
 
 streptavidin, _, _, _ = struc.superimpose_homologs(avidin, streptavidin)
-# Visualization with PyMOL...
-# sphinx_gallery_ammolite_script = "homolog_superimposition_pymol.py"
+
+# Visualization with PyMOL
+pymol_avidin = pymol_interface.PyMOLObject.from_structure(avidin)
+pymol_streptavidin = pymol_interface.PyMOLObject.from_structure(streptavidin)
+pymol_avidin.color("biotite_lightgreen")
+pymol_streptavidin.color("biotite_lightorange")
+pymol_avidin.show_as("cartoon")
+pymol_streptavidin.show_as("cartoon")
+pymol_avidin.orient()
+pymol_interface.show((1500, 1000))

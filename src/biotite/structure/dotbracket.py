@@ -31,7 +31,7 @@ def dot_bracket_from_structure(
 
     Parameters
     ----------
-    atom_array : AtomArray
+    nucleic_acid_strand : AtomArray
         The nucleic acid strand to be represented in DBL-notation.
     scores : ndarray, dtype=int, shape=(n,) (default: None)
         The score for each base pair, which is passed on to
@@ -48,8 +48,9 @@ def dot_bracket_from_structure(
 
     See Also
     --------
-    base_pairs
-    pseudoknots
+    base_pairs : Compute the base pairs from a structure as passed to this function.
+    dot_bracket : Compute the dot bracket notation directly from base pairs.
+    pseudoknots : Get the pseudoknot order for each base pair.
 
     References
     ----------
@@ -82,8 +83,7 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
     length : int
         The number of bases in the strand.
     scores : ndarray, dtype=int, shape=(n,) (default: None)
-        The score for each base pair, which is passed on to
-        :func:`pseudoknots()`
+        The score for each base pair, which is passed on to :func:`pseudoknots()`.
     max_pseudoknot_order : int (default: None)
         The maximum pseudoknot order to be found. If a base pair would
         be of a higher order, it is represented as unpaired. If ``None``
@@ -93,6 +93,18 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
     -------
     notations : list [str, ...]
         The DBL-notation for each solution from :func:`pseudoknots()`.
+
+    See Also
+    --------
+    base_pairs_from_dot_bracket : The reverse operation.
+    dot_bracket_from_structure : Compute the dot bracket notation from a structure.
+    base_pairs : Compute the base pairs from a structure as passed to this function.
+    pseudoknots : Get the pseudoknot order for each base pair.
+
+    References
+    ----------
+
+    .. footbibliography::
 
     Examples
     --------
@@ -107,18 +119,6 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
 
     >>> dot_bracket(basepairs, 5)[0]
     '(..).'
-
-
-    See Also
-    --------
-    dot_bracket_from_structure
-    base_pairs
-    pseudoknots
-
-    References
-    ----------
-
-    .. footbibliography::
     """
     # Make sure the lower residue is on the left for each row
     basepairs = np.sort(basepairs, axis=1)
@@ -159,6 +159,15 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
         Each row corresponds to the positions of the bases in the
         sequence.
 
+    See Also
+    --------
+    dot_bracket : The reverse operation.
+
+    References
+    ----------
+
+    .. footbibliography::
+
     Examples
     --------
     The notation string ``'(..).'`` contains a base pair between the
@@ -167,15 +176,6 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
 
     >>> base_pairs_from_dot_bracket('(..).')
     array([[0, 3]])
-
-    See Also
-    --------
-    dot_bracket
-
-    References
-    ----------
-
-    .. footbibliography::
     """
     basepairs = []
     opened_brackets = [[] for _ in range(len(_OPENING_BRACKETS))]

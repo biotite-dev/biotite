@@ -275,7 +275,7 @@ class SyncmerSelector:
     permutation : Permutation
         The permutation.
 
-    See also
+    See Also
     --------
     CachedSyncmerSelector
         A cached variant with faster syncmer selection at the cost of
@@ -546,7 +546,7 @@ class CachedSyncmerSelector(SyncmerSelector):
     permutation : Permutation
         The permutation.
 
-    See also
+    See Also
     --------
     SyncmerSelector
         A standard variant for syncmer selection.

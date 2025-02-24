@@ -104,3 +104,4 @@ provided by the mentioned subpackages.
     sequence/index
     structure/index
     application/index
+    interface/index

@@ -43,30 +43,28 @@ def hbond(
     ----------
     atoms : AtomArray or AtomArrayStack
         The atoms to find hydrogen bonds in.
-    selection1, selection2: ndarray or None
+    selection1, selection2 : ndarray, optional
         Boolean mask for atoms to limit the hydrogen bond search to
         specific sections of the model. The shape must match the
         shape of the `atoms` argument. If None is given, the whole atoms
-        stack is used instead. (Default: None)
-    selection1_type: {'acceptor', 'donor', 'both'}, optional (default: 'both')
+        stack is used instead.
+    selection1_type : {'acceptor', 'donor', 'both'}, optional
         Determines the type of `selection1`.
         The type of `selection2` is chosen accordingly
         ('both' or the opposite).
-        (Default: 'both')
     cutoff_dist : float, optional
         The maximal distance between the hydrogen and acceptor to be
-        considered a hydrogen bond. (Default: 2.5)
+        considered a hydrogen bond.
     cutoff_angle : float, optional
         The angle cutoff in degree between Donor-H..Acceptor to be
-        considered a hydrogen bond (default: 120).
-    donor_elements, acceptor_elements: tuple of str
+        considered a hydrogen bond.
+    donor_elements, acceptor_elements : tuple of str
         Elements to be considered as possible donors or acceptors
         (Default: O, N, S).
     periodic : bool, optional
         If true, hydrogen bonds can also be detected in periodic
         boundary conditions.
         The `box` attribute of `atoms` is required in this case.
-        (Default: False).
 
     Returns
     -------
@@ -82,6 +80,10 @@ def hbond(
         `triplets` is present in the model *m* of the input `atoms`.
         Only returned if `atoms` is an :class:`AtomArrayStack`.
 
+    See Also
+    --------
+    hbond_frequency : Compute the frequency of each bond over the models.
+
     Notes
     -----
     The result of this function may include false positives:
@@ -91,6 +93,11 @@ def hbond(
     For example, a nitrogen atom with positive charge could be
     considered as acceptor atom by this method, although this does
     make sense from a chemical perspective.
+
+    References
+    ----------
+
+    .. footbibliography::
 
     Examples
     --------
@@ -122,15 +129,6 @@ def hbond(
         A      15  GLY N      N         8.320   -3.632   -0.318
         A      16  ARG N      N         8.043   -1.206   -1.866
         A       6  TRP NE1    N         3.420    0.332   -0.121
-
-    See Also
-    --------
-    hbond_frequency
-
-    References
-    ----------
-
-    .. footbibliography::
     """
     if not (atoms.element == "H").any():
         warnings.warn(
@@ -400,7 +398,7 @@ def hbond_frequency(mask):
 
     Parameters
     ----------
-    mask: ndarray, dtype=bool, shape=(m,n)
+    mask : ndarray, dtype=bool, shape=(m,n)
         Input mask obtained from `hbond` function.
 
     Returns
@@ -412,7 +410,7 @@ def hbond_frequency(mask):
 
     See Also
     --------
-    hbond
+    hbond : Returns the mask that can be input into this function.
 
     Examples
     --------

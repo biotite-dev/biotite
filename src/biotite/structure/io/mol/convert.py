@@ -52,7 +52,7 @@ def set_structure(
     ----------
     mol_file : MOLFile
         The MOL file.
-    array : AtomArray
+    atoms : AtomArray
         The array to be saved into this file.
         Must have an associated :class:`BondList`.
         Bond type fallback for the *Bond block*, if a

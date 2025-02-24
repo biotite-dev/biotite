@@ -214,7 +214,7 @@ class Application(metaclass=abc.ABCMeta):
         Returns
         -------
         finished : bool
-            True of the application has finished, false otherwise
+            True of the application has finished, false otherwise.
         """
         pass
 
@@ -230,7 +230,7 @@ class Application(metaclass=abc.ABCMeta):
         -------
         interval : float
             Time (in seconds) between calls of :func:`is_finished()` in
-            :func:`join()`
+            :func:`join()`.
         """
         pass
 

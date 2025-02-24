@@ -33,12 +33,11 @@ The file containing the eigenvectors can be downloaded via this
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-from tempfile import NamedTemporaryFile
 import numpy as np
 from numpy import newaxis
 import biotite.database.rcsb as rcsb
+import biotite.interface.pymol as pymol_interface
 import biotite.structure as struc
-import biotite.structure.io as strucio
 import biotite.structure.io.pdbx as pdbx
 
 # A CSV file containing the eigenvectors for the CA atoms
@@ -58,7 +57,7 @@ MAX_AMPLITUDE = 5
 
 # Load structure
 pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch(PDB_ID, "bcif"))
-structure = pdbx.get_structure(pdbx_file, model=1)
+structure = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
 
 
 # Filter first peptide chain
@@ -106,9 +105,33 @@ for i in range(len(residue_starts) - 1):
 
 # An atom array stack containing all frames
 oscillating_structure = struc.from_template(protein_chain, oscillation)
-# Save as PDB for rendering a video with PyMOL
-temp = NamedTemporaryFile(suffix=".pdb")
-strucio.save_structure(temp.name, oscillating_structure)
-# sphinx_gallery_static_image = "normal_modes.gif"
 
-temp.close()
+# Visualization with PyMOL
+pymol_object = pymol_interface.PyMOLObject.from_structure(oscillating_structure)
+pymol_object.color("biotite_lightgreen", oscillating_structure.chain_id == "A")
+# Set custom view
+pymol_interface.cmd.set_view(
+    (
+        0.605540633,
+        0.363677770,
+        -0.707855821,
+        -0.416691631,
+        0.902691007,
+        0.107316799,
+        0.678002179,
+        0.229972601,
+        0.698157668,
+        0.000000000,
+        0.000000000,
+        -115.912551880,
+        32.098876953,
+        31.005725861,
+        78.377349854,
+        89.280677795,
+        142.544403076,
+        -20.000000000,
+    )
+)
+# Prepare output video frames
+pymol_interface.cmd.mset()
+pymol_interface.play((600, 600))

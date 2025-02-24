@@ -70,10 +70,10 @@ class PDBFile(TextFile):
     records cannot be written.
     Additionally, *REMARK* records can be read
 
-    See also
+    See Also
     --------
-    CIFFile
-    BinaryCIFFile
+    CIFFile : Interface to CIF files, a modern replacement for PDB files.
+    BinaryCIFFile : Interface to BinaryCIF files, a binary variant of CIF files.
 
     Examples
     --------
@@ -597,7 +597,7 @@ class PDBFile(TextFile):
             The array or stack to be saved into this file. If a stack
             is given, each array in the stack is saved as separate
             model.
-        hybrid36: bool, optional
+        hybrid36 : bool, optional
             Defines wether the file should be written in hybrid-36
             format.
 

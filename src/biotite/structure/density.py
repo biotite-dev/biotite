@@ -49,7 +49,7 @@ def density(atoms, selection=None, delta=1.0, bins=None, density=False, weights=
         If False, the number of samples in each bin is returned.
         Otherwise, returns the probability density function of each bin.
         See :func:`numpy.histogramdd()` for further details.
-    weights: ndarray, shape=(n,) or shape=(m,n), optional
+    weights : ndarray, shape=(n,) or shape=(m,n), optional
         An array of values to weight the contribution of *n* atoms in
         *m* models.
         If the shape is *(n,)*, the weights will be interpreted as

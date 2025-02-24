@@ -45,11 +45,6 @@ class _DumpApp(Application, metaclass=abc.ABCMeta):
     prefetch_path, fasterq_dump_path : str, optional
         Path to the ``prefetch_path`` and ``fasterq-dump`` binary,
         respectively.
-    offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}, optional
-        This value is subtracted from the FASTQ ASCII code to obtain the
-        quality score.
-        Can either be directly the value, or a string that indicates
-        the score format.
     """
 
     def __init__(

@@ -22,12 +22,14 @@ dependencies:
   - msgpack-python >=0.5.6
   - networkx >=2.0
   - numpy >=2.0
+  - packaging >=24.0
   - requests >=2.12
   # Testing
   - pytest >=7.0
   - pytest-codspeed >=2.0
-  # Code style
-  - ruff =0.6.9  # Keep in sync with the ruff version in pyproject.toml
+  # Code style, keep in sync with the versions in pyproject.toml
+  - ruff =0.6.9
+  - numpydoc =1.8.0
   # Interfaced software in biotite.application (can also be installed separately)
   - autodock-vina
   - clustalo
@@ -37,10 +39,13 @@ dependencies:
   - sra-tools =3
   - tantan
   - viennarna >=2.5.0
+  # Interfaced packages in biotite.interface (can also be installed separately)
+  - pymol-open-source >=2
+  - ffmpeg  # Required for video rendering in PyMOL
+  - imagemagick  # Required for video rendering in PyMOL
   # Documentation building
   - pydata-sphinx-theme =0.15
   - matplotlib >=3.3
-  - numpydoc >=0.8
   - jupyter-sphinx >=0.5.3
   - sphinx >=7.0
   - sphinxcontrib-bibtex >=2.3
@@ -53,3 +58,6 @@ dependencies:
   - pydot >=1.4
   - scikit-learn >=0.18
   - scipy >=1.8.0
+  - pip:
+    # Conda provides no recent version of RDKit (required for biotite.interface)
+    - rdkit >=2024.09.1

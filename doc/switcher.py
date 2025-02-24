@@ -5,42 +5,13 @@
 __author__ = "Patrick Kunzmann"
 __all__ = ["create_switcher_json"]
 
-import functools
 import json
-import re
-from dataclasses import dataclass
 import requests
+from packaging.version import Version
 import biotite
 
 RELEASE_REQUEST = "https://api.github.com/repos/biotite-dev/biotite/releases"
 BIOTITE_URL = "https://www.biotite-python.org"
-SEMVER_TAG_REGEX = r"^v?(\d+)\.(\d+)\.(\d+)"
-
-
-@functools.total_ordering
-@dataclass(frozen=True)
-class Version:
-    major: ...
-    minor: ...
-    patch: ...
-
-    @staticmethod
-    def from_tag(tag):
-        match = re.match(SEMVER_TAG_REGEX, tag)
-        if match is None:
-            raise ValueError(f"Invalid tag: {tag}")
-        major, minor, patch = map(int, match.groups())
-        return Version(major, minor, patch)
-
-    def __str__(self):
-        return f"{self.major}.{self.minor}.{self.patch}"
-
-    def __ge__(self, other):
-        return (self.major, self.minor, self.patch) >= (
-            other.major,
-            other.minor,
-            other.patch,
-        )
 
 
 def _get_previous_versions(min_tag, n_versions, current_version):
@@ -48,17 +19,17 @@ def _get_previous_versions(min_tag, n_versions, current_version):
     # -> request one more version than necessary
     response = requests.get(RELEASE_REQUEST, params={"per_page": n_versions + 1})
     release_data = json.loads(response.text)
-    versions = [Version.from_tag(release["tag_name"]) for release in release_data]
+    versions = [Version(release["tag_name"]) for release in release_data]
     applicable_versions = [
         version
         for version in versions
-        if version >= Version.from_tag(min_tag) and version < current_version
+        if version >= Version(min_tag) and version < current_version
     ]
     return applicable_versions[:n_versions]
 
 
 def _get_current_version():
-    return Version(*biotite.__version_tuple__[:3])
+    return Version(biotite.__version__)
 
 
 def create_switcher_json(file_path, min_tag, n_versions):
@@ -81,7 +52,7 @@ def create_switcher_json(file_path, min_tag, n_versions):
         versions.append(current_version)
     versions.sort()
     for version in versions:
-        if version.patch != 0:
+        if version.micro != 0:
             # Documentation is not uploaded for patch versions
             continue
         version_config.append(

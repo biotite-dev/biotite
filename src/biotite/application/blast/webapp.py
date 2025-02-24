@@ -46,7 +46,7 @@ class BlastWebApp(WebApp):
     obey_rules : bool, optional
         If true, the application raises an :class:`RuleViolationError`,
         if the server is contacted too often, based on the NCBI BLAST
-        usage rules. (Default: True)
+        usage rules.
     mail : str, optional
         If a mail address is provided, it will be appended in the
         HTTP request. This allows the NCBI to contact you in case

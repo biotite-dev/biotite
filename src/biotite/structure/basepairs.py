@@ -338,8 +338,8 @@ def base_pairs_edge(atom_array, base_pairs):
 
     See Also
     --------
-    base_pairs
-    base_pairs_glycosidic_bond
+    base_pairs : Get the base pairs required for this function.
+    base_pairs_glycosidic_bond : Determine the orientation for each base pair.
 
     Notes
     -----
@@ -350,6 +350,11 @@ def base_pairs_edge(atom_array, base_pairs):
 
     The edge returned always corresponds to the edge with the most
     hydrogen bonding interactions.
+
+    References
+    ----------
+
+    .. footbibliography::
 
     Examples
     --------
@@ -392,11 +397,6 @@ def base_pairs_edge(atom_array, base_pairs):
     WATSON_CRICK to WATSON_CRICK
     WATSON_CRICK to WATSON_CRICK
     WATSON_CRICK to WATSON_CRICK
-
-    References
-    ----------
-
-    .. footbibliography::
     """
     # Result-``ndarray`` matches the dimensions of the input array
     results = np.zeros_like(base_pairs, dtype="uint8")
@@ -494,7 +494,7 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
 
     Returns
     -------
-    results : ndarray, dtype=edge, shape=(n,)
+    results : ndarray, dtype=int, shape=(n,)
         The ``ndarray`` has the same dimensions as ``base_pairs``. Each
         cell corresponds to the interacting edge of the referenced base
         in ``base_pairs``.
@@ -504,14 +504,19 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
 
     See Also
     --------
-    base_pairs
-    base_pairs_edge
-    GlycosidicBond
+    base_pairs : Get the base pairs required for this function.
+    base_pairs_edge : Determine the interacting edge for each base pair.
+    GlycosidicBond : The Enum type for interpretation of the return value.
 
     Notes
     -----
     The orientation is found using the geometric centers of the bases
     and the glycosidic bonds as described in :footcite:`Yang2003`.
+
+    References
+    ----------
+
+    .. footbibliography::
 
     Examples
     --------
@@ -544,11 +549,6 @@ def base_pairs_glycosidic_bond(atom_array, base_pairs):
     CIS
     CIS
     CIS
-
-    References
-    ----------
-
-    .. footbibliography::
     """
     results = np.zeros(len(base_pairs), dtype="uint8")
 
@@ -654,6 +654,11 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     Please note that ring normal vectors are assumed to be equal to the
     base normal vectors.
 
+    References
+    ----------
+
+    .. footbibliography::
+
     Examples
     --------
     Compute the stacking interactions for a DNA-double-helix (PDB ID
@@ -685,11 +690,6 @@ def base_stacking(atom_array, min_atoms_per_base=3):
      [21 22]
      [22 23]
      [23 24]]
-
-    References
-    ----------
-
-    .. footbibliography::
     """
     # Get the stacking candidates according to a cutoff distance, where
     # each base is identified as the first index of its respective
@@ -833,6 +833,11 @@ def base_pairs(atom_array, min_atoms_per_base=3, unique=True):
     1.00Å and 0.96Å respectively. Thus, including some buffer, a 3.6Å
     cutoff should cover all hydrogen bonds.
 
+    References
+    ----------
+
+    .. footbibliography::
+
     Examples
     --------
     Compute the base pairs for the structure with the PDB ID 1QXB:
@@ -855,11 +860,6 @@ def base_pairs(atom_array, min_atoms_per_base=3, unique=True):
      ['DG' 'DC']
      ['DC' 'DG']
      ['DG' 'DC']]
-
-    References
-    ----------
-
-    .. footbibliography::
     """
 
     # Get the nucleotides for the given atom_array

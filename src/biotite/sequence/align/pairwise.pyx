@@ -37,11 +37,11 @@ ctypedef fused CodeType2:
 def align_ungapped(seq1, seq2, matrix, score_only=False):
     """
     align_ungapped(seq1, seq2, matrix, score_only=False)
-    
+
     Align two sequences without insertion of gaps.
-    
+
     Both sequences need to have the same length.
-    
+
     Parameters
     ----------
     seq1, seq2 : Sequence
@@ -50,7 +50,7 @@ def align_ungapped(seq1, seq2, matrix, score_only=False):
         The substitution matrix used for scoring.
     score_only : bool, optional
         If true return only the score instead of an alignment.
-    
+
     Returns
     -------
     score : Alignment or int
@@ -105,27 +105,27 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
 
     Perform an optimal alignment of two sequences based on a
     dynamic programming algorithm.
-    
+
     This algorithm yields an optimal alignment, i.e. the sequences
     are aligned in the way that results in the highest similarity
     score. This operation can be very time and space consuming,
     because both scale linearly with each sequence length.
-    
+
     The aligned sequences do not need to be instances from the same
     :class:`Sequence` subclass, since they do not need to have the same
     alphabet. The only requirement is that the
     :class:`SubstitutionMatrix`' alphabets extend the alphabets of the
     two sequences.
-    
+
     This function can either perform a global alignment, based on the
     Needleman-Wunsch algorithm :footcite:`Needleman1970` or a local
     alignment, based on the Smith–Waterman algorithm
     :footcite:`Smith1981`.
-    
+
     Furthermore this function supports affine gap penalties using the
     Gotoh algorithm :footcite:`Gotoh1982`, however, this requires
     approximately 4 times the RAM space and execution time.
-    
+
     Parameters
     ----------
     seq1, seq2 : Sequence
@@ -141,7 +141,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         The values need to be negative. (Default: *-10*)
     terminal_penalty : bool, optional
         If true, gap penalties are applied to terminal gaps.
-        If `local` is true, this parameter has no effect. 
+        If `local` is true, this parameter has no effect.
         (Default: True)
     local : bool, optional
         If false, a global alignment is performed, otherwise a local
@@ -151,26 +151,26 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         When the number of branches exceeds this value in the traceback
         step, no further branches are created.
         (Default: 1000)
-    
+
     Returns
     -------
     alignments : list, type=Alignment
         A list of alignments.
         Each alignment in the list has the same maximum similarity
         score.
-    
-    See also
+
+    See Also
     --------
     align_banded
-    
+
     References
     ----------
-    
+
     .. footbibliography::
-    
+
     Examples
     --------
-    
+
     >>> seq1 = NucleotideSequence("ATACGCTTGCT")
     >>> seq2 = NucleotideSequence("AGGCGCAGCT")
     >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
@@ -178,10 +178,10 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     >>> for a in ali:
     ...     print(a, "\\n")
     ATACGCTTGCT
-    AGGCGCA-GCT 
+    AGGCGCA-GCT
     <BLANKLINE>
     ATACGCTTGCT
-    AGGCGC-AGCT 
+    AGGCGC-AGCT
     <BLANKLINE>
     """
     # Check matrix alphabets
@@ -204,7 +204,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         raise ValueError(
             "Maximum number of returned alignments must be at least 1"
         )
-    
+
 
     # This implementation uses transposed tables in comparison
     # to the common visualization
@@ -213,7 +213,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     trace_table = np.zeros(( len(seq1)+1, len(seq2)+1 ), dtype=np.uint8)
     code1 = seq1.code
     code2 = seq2.code
-    
+
     # Table filling
     ###############
     if affine_penalty:
@@ -275,8 +275,8 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
             trace_table[0,1:] = TraceDirectionLinear.GAP_LEFT
         _fill_align_table(code1, code2, matrix.score_matrix(), trace_table,
                           score_table, gap_penalty, terminal_penalty, local)
-    
-    
+
+
     # Traceback
     ###########
     # Stores all possible traces (= possible alignments)
@@ -292,7 +292,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
     if local:
         # The start point is the maximal score in the table
         # Multiple starting points possible,
-        # when duplicates of maximal score exist 
+        # when duplicates of maximal score exist
         if affine_penalty:
             # The maximum score in the gap score tables do not need to
             # be considered, as these starting positions would indicate
@@ -352,7 +352,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
             # Diagonals are only needed for banded alignments
             lower_diag=0, upper_diag=0
         )
-    
+
     # Replace gap entries in trace with -1
     for i, trace in enumerate(trace_list):
         trace = np.flip(trace, axis=0)
@@ -361,7 +361,7 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         gap_filter[np.unique(trace[:,1], return_index=True)[1], 1] = True
         trace[~gap_filter] = -1
         trace_list[i] = trace
-    
+
     # Limit the number of generated alignments to `max_number`:
     # In most cases this is achieved by discarding branches in
     # 'follow_trace()', however, if multiple local alignment starts
@@ -406,13 +406,13 @@ def _fill_align_table(CodeType1[:] code1 not None,
     local
         Indicates, whether a local alignment should be performed.
     """
-    
+
     cdef int i, j
     cdef int max_i, max_j
     cdef int32 from_diag, from_left, from_top
     cdef uint8 trace
     cdef int32 score
-    
+
     # For local alignments terminal gaps on the right side are ignored
     # anyway, as the alignment should stop before
     if local:
@@ -439,16 +439,16 @@ def _fill_align_table(CodeType1[:] code1 not None,
                 from_top = score_table[i-1, j]
             else:
                 from_top = score_table[i-1, j] + gap_penalty
-            
+
             trace = get_trace_linear(from_diag, from_left, from_top, &score)
-            
+
             # Local alignment specialty:
             # If score is less than or equal to 0,
             # then the score of the cell remains 0
             # and the trace ends here
             if local == True and score <= 0:
                 continue
-            
+
             score_table[i,j] = score
             trace_table[i,j] = trace
 
@@ -496,7 +496,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     local
         Indicates, whether a local alignment should be performed.
     """
-    
+
     cdef int i, j
     cdef int max_i, max_j
     cdef int32 mm_score, g1m_score, g2m_score
@@ -505,7 +505,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     cdef int32 m_score, g1_score, g2_score
     cdef int32 similarity_score
     cdef uint8 trace
-    
+
     # For local alignments terminal gaps on the right and the bottom are
     # ignored anyway, as the alignment should stop before
     if local:
@@ -513,7 +513,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
     # Used in case terminal gaps are not penalized
     i_max = trace_table.shape[0] -1
     j_max = trace_table.shape[1] -1
-    
+
     # Starts at 1 since the first row and column are already filled
     for i in range(1, trace_table.shape[0]):
         for j in range(1, trace_table.shape[1]):
@@ -538,7 +538,7 @@ def _fill_align_table_affine(CodeType1[:] code1 not None,
             else:
                 mg2_score  =  m_table[i-1,j] + gap_open
                 g2g2_score = g2_table[i-1,j] + gap_ext
-            
+
             trace = get_trace_affine(
                 mm_score, g1m_score, g2m_score,
                 mg1_score, g1g1_score,

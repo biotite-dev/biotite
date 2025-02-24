@@ -459,6 +459,11 @@ class SubstitutionMatrix(object):
         The keys of the dictionary consist of tuples containing the
         aligned symbols and the values are the corresponding scores.
 
+        Parameters
+        ----------
+        string : str
+            The string containing the substitution matrix in NCBI format.
+
         Returns
         -------
         matrix_dict : dict
@@ -485,6 +490,11 @@ class SubstitutionMatrix(object):
 
         The keys of the dictionary consist of tuples containing the
         aligned symbols and the values are the corresponding scores.
+
+        Parameters
+        ----------
+        matrix_name : str
+            The name of the matrix in the internal database.
 
         Returns
         -------
@@ -581,7 +591,6 @@ class SubstitutionMatrix(object):
         ----------
 
         .. footbibliography::
-
         """
         from biotite.structure.alphabet.pb import ProteinBlocksSequence
 

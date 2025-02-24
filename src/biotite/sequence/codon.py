@@ -216,7 +216,7 @@ class CodonTable(object):
         code : bool
             If true, the dictionary contains keys and values as code.
             Otherwise, the dictionary contains strings for codons and
-            amino acid. (Default: False)
+            amino acid.
 
         Returns
         -------
@@ -248,7 +248,6 @@ class CodonTable(object):
         ----------
         code : bool
             If true, the code will be returned instead of strings.
-            (Default: False)
 
         Returns
         -------

@@ -29,7 +29,7 @@ def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
     ----------
     axes : Axes
         The axes to draw the logo one.
-    profile: SequenceProfile
+    profile : SequenceProfile
         The logo is created based on this profile.
     scheme : str or list of (tuple or str)
         Either a valid color scheme name

@@ -41,7 +41,13 @@ class ActivationType(enum.IntEnum):
 
 
 class KerasifyParser:
-    """An incomplete parser for model files serialized with `kerasify`.
+    """
+    An incomplete parser for model files serialized with `kerasify`.
+
+    Parameters
+    ----------
+    file : file-like
+        The ``.kerasify`` file to parse.
 
     Notes
     -----

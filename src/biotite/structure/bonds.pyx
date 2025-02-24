@@ -943,7 +943,6 @@ class BondList(Copyable):
         ----------
         atom_index : int
             The index of the atom whose bonds should be removed.
-
         """
         cdef uint32 index = _to_positive_index(atom_index, self._atom_count)
 
@@ -1483,7 +1482,7 @@ def connect_via_distances(atoms, dict distance_range=None, bint inter_residue=Tr
     BondList
         The created bond list.
 
-    See also
+    See Also
     --------
     connect_via_residue_names
 
@@ -1622,7 +1621,7 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
         No bonds are added for residues that are not found in
         ``components.cif``.
 
-    See also
+    See Also
     --------
     connect_via_distances
 
@@ -1664,7 +1663,6 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
              ('OXT', 'HXT'): <BondType.SINGLE: 1>},
      'XYZ': {('A', 'B'): <BondType.SINGLE: 1>,
              ('B', 'C'): <BondType.SINGLE: 1>}}
-
     """
     from .info.bonds import bonds_in_residue
     from .residues import get_residue_starts

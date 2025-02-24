@@ -102,7 +102,7 @@ cdef class KmerTable:
     k : int
         The length of the *k-mers*.
 
-    See also
+    See Also
     --------
     BucketKmerTable
 
@@ -308,7 +308,7 @@ cdef class KmerTable:
             The number of *informative* positions must equal *k*.
             Refer to :class:`KmerAlphabet` for more details.
 
-        See also
+        See Also
         --------
         from_kmers : The same functionality based on already created *k-mers*
 
@@ -413,7 +413,7 @@ cdef class KmerTable:
             is false, is not added to the table.
             By default, all positions are added.
 
-        See also
+        See Also
         --------
         from_sequences : The same functionality based on undecomposed sequences
 
@@ -1548,7 +1548,7 @@ cdef class BucketKmerTable:
     n_buckets : int
         The number of buckets, the *k-mers* are divided into.
 
-    See also
+    See Also
     --------
     KmerTable
 
@@ -1774,7 +1774,7 @@ cdef class BucketKmerTable:
             purpose.
             By default, a load factor of approximately 0.8 is used.
 
-        See also
+        See Also
         --------
         from_kmers : The same functionality based on already created *k-mers*
 
@@ -1892,7 +1892,7 @@ cdef class BucketKmerTable:
             purpose.
             By default, a load factor of approximately 0.8 is used.
 
-        See also
+        See Also
         --------
         from_sequences : The same functionality based on undecomposed sequences
 

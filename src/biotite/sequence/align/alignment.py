@@ -304,7 +304,7 @@ def get_symbols(alignment):
 
     See Also
     --------
-    get_codes
+    get_codes : Get the sequence codes of the sequences in the alignment.
 
     Examples
     --------
@@ -362,9 +362,9 @@ def get_sequence_identity(alignment, mode="not_terminal"):
     identity : float
         The sequence identity, ranging between 0 and 1.
 
-    See also
+    See Also
     --------
-    get_pairwise_sequence_identity
+    get_pairwise_sequence_identity : Get sequence identity for each pair of alignment rows.
     """
     codes = get_codes(alignment)
 
@@ -425,9 +425,9 @@ def get_pairwise_sequence_identity(alignment, mode="not_terminal"):
     identity : ndarray, dtype=float, shape=(n,n)
         The pairwise sequence identity, ranging between 0 and 1.
 
-    See also
+    See Also
     --------
-    get_sequence_identity
+    get_sequence_identity : Get sequence identity over all alignment rows.
     """
     codes = get_codes(alignment)
     n_seq = len(codes)
@@ -490,10 +490,9 @@ def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
         penalty is used. The first integer in the tuple is the gap
         opening penalty, the second integer is the gap extension
         penalty.
-        The values need to be negative. (Default: *-10*)
+        The values need to be negative.
     terminal_penalty : bool, optional
         If true, gap penalties are applied to terminal gaps.
-        (Default: True)
 
     Returns
     -------
@@ -570,9 +569,9 @@ def find_terminal_gaps(alignment):
         When these indices are used as slice index for an alignment or
         trace, the index would remove terminal gaps.
 
-    See also
+    See Also
     --------
-    remove_terminal_gaps
+    remove_terminal_gaps : Remove terminal gap columns directly.
 
     Examples
     --------
@@ -628,9 +627,9 @@ def remove_terminal_gaps(alignment):
         A shallow copy of the input `alignment` with an truncated trace,
         that does not contain alignment columns with terminal gaps.
 
-    See also
+    See Also
     --------
-    find_terminal_gaps
+    find_terminal_gaps : Only find terminal gap columns.
 
     Examples
     --------
@@ -683,7 +682,7 @@ def remove_gaps(alignment):
 
     See Also
     --------
-    remove_terminal_gaps : Remove only terminal gap columns
+    remove_terminal_gaps : Remove only terminal gap columns.
     """
     non_gap_mask = (alignment.trace != -1).all(axis=1)
     return alignment[non_gap_mask]

@@ -82,11 +82,8 @@ To build the documentation without the gallery and the tutorial, run
 You may also ask the *Biotite* maintainers to run the example script and check
 the generated page, if building the gallery on your device is not possible.
 
-Static images and molecular visualizations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-In addition to *Matplotlib* plots, the *Biotite* example gallery can also
-show molecular visualizations, via the *PyMOL* software, and static images.
-
+Static images
+^^^^^^^^^^^^^
 Static images can be included by adding the following comment in the
 corresponding code block:
 
@@ -95,40 +92,6 @@ corresponding code block:
     # sphinx_gallery_static_image = <name_of_the_image>.png
 
 The image file must be stored in the same directory as the example script.
-
-|
-
-To visualize images using *PyMOL*, the
-`Ammolite <https://ammolite.biotite-python.org/>`_ package is required.
-Please make sure to use open-source *PyMOL* to avoid licensing issues.
-
-Let's assume you have an example script `<example_name>.py`.
-The visualization is initiated by adding the comment line
-
-.. code-block:: python
-
-    # sphinx_gallery_ammolite_script = <name_of_the_script>.py
-
-in the code block where you want show the visualization.
-Then the visualization script ``<name_of_the_script>.py`` is executed, which
-can use the global variables from the example script and the special
-``__image_destination__`` variable.
-``__image_destination__`` is a string representing the path to the output image
-file.
-The PyMOL visualization can be saved to this file with e.g.
-
-.. code-block:: python
-
-    ammolite.cmd.png(__image_destination__)
-
-The rendered image is saved in the directory of the example script as
-``<example_name>.png`` and is added to version control.
-The visualization script is only executed, if the rendered image does not
-exist, yet.
-The traceback of errors in the visualization script are printed, if
-``sphinx-build`` is run in verbose (``-v``) mode.
-An example of this can be seen in the
-``doc/examples/structure/contact_sites.py`` example.
 
 Tutorial
 --------

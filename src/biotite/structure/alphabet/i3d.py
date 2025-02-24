@@ -31,7 +31,7 @@ class I3DSequence(Sequence):
         May take upper or lower case letters.
         By default the sequence is empty.
 
-    See also
+    See Also
     --------
     to_3di : Create 3Di sequences from a structure.
 
@@ -39,7 +39,6 @@ class I3DSequence(Sequence):
     ----------
 
     .. footbibliography::
-
     """
 
     alphabet = LetterAlphabet("acdefghiklmnpqrstvwy")

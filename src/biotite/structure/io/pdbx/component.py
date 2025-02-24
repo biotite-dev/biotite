@@ -120,6 +120,12 @@ class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
     A component is only deserialized from the serialized data, if it
     is accessed.
     The deserialized component is then cached in the container.
+
+    Parameters
+    ----------
+    elements : dict, optional
+        The initial elements of the container.
+        By default no initial elements are added.
     """
 
     def __init__(self, elements=None):
