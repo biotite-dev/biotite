@@ -28,8 +28,7 @@ More information about biological assemblies is provided by the
 `this page <https://pdb101.rcsb.org/learn/guide-to-understanding-pdb-data/biological-assemblies>`_.
 
 In this example, we will create the complete biological assembly of the
-capsid from the *Sulfolobus turreted icosahedral virus*
-- a hetero 1080-mer!
+capsid from the lambda phage.
 
 At first we will check, which assemblies are available to us.
 """
@@ -37,13 +36,15 @@ At first we will check, which assemblies are available to us.
 # Code source: Patrick Kunzmann
 # License: BSD 3 clause
 
-from tempfile import NamedTemporaryFile
 import biotite.database.rcsb as rcsb
+import biotite.interface.pymol as pymol_interface
 import biotite.structure as struc
-import biotite.structure.io as strucio
 import biotite.structure.io.pdbx as pdbx
 
-pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("3J31", "bcif"))
+PDB_ID = "7VII"
+
+
+pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch(PDB_ID, "bcif"))
 
 assemblies = pdbx.list_assemblies(pdbx_file)
 print("ID    name")
@@ -61,19 +62,38 @@ for assembly_id, name in assemblies.items():
 # It returns the chosen assembly as :class:`AtomArray`.
 # Note that the assembly ID is a string, not an integer.
 
-biological_unit = pdbx.get_assembly(pdbx_file, assembly_id="1", model=1)
-print("Number of protein chains:", struc.get_chain_count(biological_unit))
+assembly = pdbx.get_assembly(
+    pdbx_file,
+    assembly_id="1",
+    model=1,
+    # To identify later which atoms belong to which protein type
+    extra_fields=["label_entity_id"],
+)
+
+print("Number of protein chains:", struc.get_chain_count(assembly))
+
+########################################################################
+# The assembly consists of two different protein types, so called entities.
+# Each entity may be represented by multiple chain IDs.
+
+entity_info = pdbx_file.block["entity"]
+print("ID    description")
+print()
+for entity_id, description in zip(
+    entity_info["id"].as_array(), entity_info["pdbx_description"].as_array()
+):
+    print(f"{entity_id:2}    {description}")
 
 ########################################################################
 # Now we could do some analysis on the biological unit.
-# But for this example we will simply save the entire assembly as *PDB*
-# file for later visualization.
+# But for this example we will visualize the entire assembly.
 
-# For brevity, save only CA atoms to file for visualization
-biological_unit = biological_unit[biological_unit.atom_name == "CA"]
-temp = NamedTemporaryFile(suffix=".cif")
-strucio.save_structure(temp.name, biological_unit)
-# Visualization with PyMOL...
-# sphinx_gallery_ammolite_script = "biological_assembly_pymol.py"
-
-temp.close()
+# Show capsid structure as CA spheres to increase rendering speed
+assembly = assembly[assembly.atom_name == "CA"]
+pymol_object = pymol_interface.PyMOLObject.from_structure(assembly)
+pymol_object.color("biotite_dimgreen", assembly.label_entity_id == "1")
+pymol_object.color("biotite_lightorange", assembly.label_entity_id == "2")
+pymol_object.set("sphere_scale", 2.0)
+pymol_object.show_as("spheres")
+pymol_object.zoom(buffer=25)
+pymol_interface.show((1500, 1500))

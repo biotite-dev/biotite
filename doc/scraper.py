@@ -1,14 +1,10 @@
-import copy
-import os
 import shutil
-import sys
-from os.path import dirname, isfile, join, splitext
-from sphinx.errors import ExtensionError
+from os.path import dirname, join, splitext
+from IPython.display import Image
 from sphinx_gallery.py_source_parser import extract_file_config
 from sphinx_gallery.scrapers import figure_rst
 
 STATIC_IMAGE_COMMAND = "static_image"
-PYMOL_IMAGE_COMMAND = "ammolite_script"
 
 
 def static_image_scraper(block, block_vars, gallery_conf):
@@ -18,7 +14,7 @@ def static_image_scraper(block, block_vars, gallery_conf):
     # Search for `sphinx_gallery_static_image` commands
     block_conf = extract_file_config(code)
     if STATIC_IMAGE_COMMAND not in block_conf:
-        return figure_rst([], gallery_conf["src_dir"])
+        return ""
 
     image_sources = [
         join(script_dir, image_name.strip())
@@ -43,68 +39,16 @@ def static_image_scraper(block, block_vars, gallery_conf):
 
 
 def pymol_scraper(block, block_vars, gallery_conf):
-    _, code, _ = block
-    block_conf = extract_file_config(code)
-    # Search for a `sphinx_gallery_ammolite_script` command
-    if PYMOL_IMAGE_COMMAND not in block_conf:
-        return figure_rst([], gallery_conf["src_dir"])
-
-    script_dir = dirname(block_vars["src_file"])
-    pymol_script_path = join(script_dir, block_conf[PYMOL_IMAGE_COMMAND])
-    # The rendered image will be created in the same directory as
-    # the example script
-    # -> the image will be included in version control
-    # -> Rendering with PyMOL is not necessary for building the docs
-    pymol_image_path = splitext(block_vars["src_file"])[0] + ".png"
-    if not isfile(pymol_script_path):
-        raise ExtensionError(
-            f"'{block_vars['src_file']}' has no corresponding "
-            f"'{pymol_script_path}' file"
-        )
-
-    try:
-        import ammolite  # noqa: F401
-        import pymol  # noqa: F401
-    except ImportError:
-        # If Ammolite is not installed, fall back to the image file,
-        # if already existing
-        if not isfile(pymol_image_path):
-            raise ExtensionError("PyMOL or Ammolite is not installed")
-    else:
-        # Create a shallow copy,
-        # to avoid adding new variables to example script
-        script_globals = copy.copy(block_vars["example_globals"])
-        script_globals["__image_destination__"] = pymol_image_path
-
-        with open(pymol_script_path, "r") as script:
-            # Prevent PyMOL from writing stuff (splash screen, etc.)
-            # to STDOUT or STDERR
-            # -> Save original STDOUT/STDERR and point them
-            # temporarily to DEVNULL
-            dev_null = open(os.devnull, "w")
-            orig_stdout = sys.stdout
-            orig_stderr = sys.stderr
-            sys.stdout = dev_null
-            sys.stderr = dev_null
-            try:
-                exec(script.read(), script_globals)
-            except Exception as e:
-                raise ExtensionError(
-                    f"PyMOL script raised a {type(e).__name__}: {str(e)}"
-                )
-            finally:
-                # Restore STDOUT/STDERR
-                sys.stdout = orig_stdout
-                sys.stderr = orig_stderr
-                dev_null.close()
-        if not isfile(pymol_image_path):
-            raise ExtensionError(
-                "PyMOL script did not create an image " "(at expected location)"
-            )
-
-    # Copy the images into the 'gallery' directory under a canonical
-    # sphinx-gallery name
     image_path_iterator = block_vars["image_path_iterator"]
-    image_destination = image_path_iterator.next()
-    shutil.copy(pymol_image_path, image_destination)
-    return figure_rst([image_destination], gallery_conf["src_dir"])
+    image_paths = []
+
+    for object in block_vars["example_globals"].values():
+        if isinstance(object, Image) and object.metadata["source"] == "PyMOL":
+            image_path = next(image_path_iterator)
+            with open(image_path, "wb") as image_file:
+                image_file.write(object.data)
+            image_paths.append(image_path)
+    return figure_rst(
+        image_paths,
+        gallery_conf["src_dir"],
+    )
