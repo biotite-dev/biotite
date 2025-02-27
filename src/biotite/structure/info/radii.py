@@ -183,7 +183,7 @@ def vdw_radius_protor(res_name, atom_name):
         # Use cached radii for the residue, if already calculated
         if atom_name not in _protor_radii[res_name]:
             raise KeyError(
-                f"Residue '{res_name}' does not contain an atom named " f"'{atom_name}'"
+                f"Residue '{res_name}' does not contain an atom named '{atom_name}'"
             )
         return _protor_radii[res_name].get(atom_name)
     else:

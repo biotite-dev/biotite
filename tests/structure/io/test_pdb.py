@@ -55,7 +55,7 @@ def test_array_conversion(path, model, hybrid36, include_bonds):
     if hybrid36 and (array1.res_id < 0).any():
         with pytest.raises(
             ValueError,
-            match="Only positive integers can be converted " "into hybrid-36 notation",
+            match="Only positive integers can be converted into hybrid-36 notation",
         ):
             pdb_file = pdb.PDBFile()
             pdb.set_structure(pdb_file, array1, hybrid36=hybrid36)

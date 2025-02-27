@@ -603,7 +603,7 @@ def _call_non_index_function(
                 box = atoms.box
             else:
                 raise ValueError(
-                    "If `atoms` are coordinates, " "the box must be set explicitly"
+                    "If `atoms` are coordinates, the box must be set explicitly"
                 )
     else:
         box = None

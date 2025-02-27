@@ -279,7 +279,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         if exit_code != 0:
             err_msg = self.get_stderr().replace("\n", " ")
             raise SubprocessError(
-                f"'{self._bin_path}' returned with exit code {exit_code}: " f"{err_msg}"
+                f"'{self._bin_path}' returned with exit code {exit_code}: {err_msg}"
             )
 
     def clean_up(self):

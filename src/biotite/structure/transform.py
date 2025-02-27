@@ -316,8 +316,7 @@ def orient_principal_components(atoms, order=None):
     row, col = coords.shape
     if (row < 3) or (col != 3):
         raise ValueError(
-            f"Expected at least 3 entries, {row} given,"
-            f" and 3 dimensions, {col} given."
+            f"Expected at least 3 entries, {row} given, and 3 dimensions, {col} given."
         )
     if order is None:
         order = np.array([0, 1, 2])
@@ -457,13 +456,11 @@ def align_vectors(
     # check that original and target direction are vectors of shape (3,)
     if origin_direction.shape != (3,):
         raise ValueError(
-            f"Expected origin vector to have shape (3,), "
-            f"got {origin_direction.shape}"
+            f"Expected origin vector to have shape (3,), got {origin_direction.shape}"
         )
     if target_direction.shape != (3,):
         raise ValueError(
-            f"Expected target vector to have shape (3,), "
-            f"got {target_direction.shape}"
+            f"Expected target vector to have shape (3,), got {target_direction.shape}"
         )
     if np.linalg.norm(origin_direction) == 0:
         raise ValueError("Length of the origin vector is 0")

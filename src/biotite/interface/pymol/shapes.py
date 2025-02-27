@@ -71,8 +71,7 @@ def draw_arrows(
         raise IndexError("Expected 2D array for start and end positions")
     if len(start) != len(end):
         raise IndexError(
-            f"Got {len(start)} start positions, "
-            f"but expected {len(end)} end positions"
+            f"Got {len(start)} start positions, but expected {len(end)} end positions"
         )
     expected_length = len(start)
     radius = _arrayfy(radius, expected_length, 1)

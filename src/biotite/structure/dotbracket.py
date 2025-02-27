@@ -203,8 +203,7 @@ def base_pairs_from_dot_bracket(dot_bracket_notation):
     for not_closed in opened_brackets:
         if not_closed != []:
             raise ValueError(
-                "Invalid DBL-notation, not all opening brackets have a "
-                "closing bracket"
+                "Invalid DBL-notation, not all opening brackets have a closing bracket"
             )
 
     # Sort the base pair indices in ascending order

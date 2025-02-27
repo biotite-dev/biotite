@@ -149,7 +149,7 @@ class CIFColumn:
                 mask = CIFData(mask, np.uint8)
             if len(mask) != len(data):
                 raise IndexError(
-                    f"Data has length {len(data)}, " f"but mask has length {len(mask)}"
+                    f"Data has length {len(data)}, but mask has length {len(mask)}"
                 )
         self._data = data
         self._mask = mask

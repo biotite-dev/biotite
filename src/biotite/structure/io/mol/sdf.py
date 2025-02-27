@@ -433,8 +433,7 @@ class SDRecord:
             self._metadata = Metadata(metadata)
         else:
             raise TypeError(
-                "Expected 'Metadata' or Mapping, "
-                f"but got '{type(metadata).__name__}'"
+                f"Expected 'Metadata' or Mapping, but got '{type(metadata).__name__}'"
             )
 
     @staticmethod
@@ -923,7 +922,7 @@ def _to_metadata_key(key):
         return Metadata.Key(name=key)
     else:
         raise TypeError(
-            "Expected 'Metadata.Key' or str, " f"but got '{type(key).__name__}'"
+            f"Expected 'Metadata.Key' or str, but got '{type(key).__name__}'"
         )
 
 

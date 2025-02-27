@@ -102,7 +102,7 @@ class FastaFile(TextFile, MutableMapping):
         if not isinstance(header, str):
             raise IndexError("'FastaFile' only supports header strings as keys")
         if not isinstance(seq_str, str):
-            raise TypeError("'FastaFile' only supports sequence strings " "as values")
+            raise TypeError("'FastaFile' only supports sequence strings as values")
         # Create lines for new header and sequence (with line breaks)
         new_lines = [">" + header.replace("\n", "").strip()] + wrap_string(
             seq_str, width=self._chars_per_line

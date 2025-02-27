@@ -20,10 +20,10 @@ def test_access(chars_per_line):
     path = os.path.join(data_dir("sequence"), "random.fastq")
     file = fastq.FastqFile.read(path, offset=33, chars_per_line=chars_per_line)
     assert len(file) == 20
-    assert list(file.keys()) == [f"Read:{i+1:02d}" for i in range(20)]
+    assert list(file.keys()) == [f"Read:{i + 1:02d}" for i in range(20)]
     del file["Read:05"]
     assert len(file) == 19
-    assert list(file.keys()) == [f"Read:{i+1:02d}" for i in range(20) if i + 1 != 5]
+    assert list(file.keys()) == [f"Read:{i + 1:02d}" for i in range(20) if i + 1 != 5]
     for seq_str, scores in file.values():
         assert len(seq_str) == len(scores)
         assert (scores >= 0).all()

@@ -257,7 +257,7 @@ class FieldQuery(SingleQuery):
             "exists",
         ]:
             raise TypeError(
-                f"Constructor got an unexpected keyword argument " f"'{self._operator}'"
+                f"Constructor got an unexpected keyword argument '{self._operator}'"
             )
 
         # Convert dates into ISO 8601
@@ -944,8 +944,7 @@ def _initialize_query_dict(query, return_type, group_by, content_types):
     if group_by is not None:
         if not group_by.is_compatible_return_type(return_type):
             raise ValueError(
-                f"Return type '{return_type}' is not compatible "
-                f"with the given Grouping"
+                f"Return type '{return_type}' is not compatible with the given Grouping"
             )
         request_options["group_by"] = group_by.get_content()
 

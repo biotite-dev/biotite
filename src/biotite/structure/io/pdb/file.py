@@ -894,7 +894,7 @@ class PDBFile(TextFile):
         if assembly_start_i is None:
             if assembly_id is None:
                 raise InvalidFileError(
-                    "File does not contain transformation " "expressions for assemblies"
+                    "File does not contain transformation expressions for assemblies"
                 )
             else:
                 raise KeyError(f"The assembly ID '{assembly_id}' is not found")
@@ -1106,7 +1106,7 @@ class PDBFile(TextFile):
                 length = model_length
             if model_length != length:
                 raise InvalidFileError(
-                    f"Model {model_i+1} has {model_length} atoms, "
+                    f"Model {model_i + 1} has {model_length} atoms, "
                     f"but model 1 has {length} atoms, must be equal"
                 )
         return length

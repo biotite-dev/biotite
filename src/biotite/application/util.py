@@ -63,7 +63,7 @@ def map_matrix(matrix):
     """
     if matrix is None:
         raise TypeError(
-            "A substitution matrix must be provided for custom " "sequence types"
+            "A substitution matrix must be provided for custom sequence types"
         )
     # Create a protein substitution matrix with the values taken
     # from the original matrix

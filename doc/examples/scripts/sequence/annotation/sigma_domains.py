@@ -111,7 +111,7 @@ for i, (gene_name, domain_pos_for_gene, length) in enumerate(
             ax.text(
                 x=(last + first) / 2,
                 y=i,
-                s=rf"$\sigma_{j+1}$",
+                s=rf"$\sigma_{j + 1}$",
                 ha="center",
                 va="center",
             )

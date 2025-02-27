@@ -303,7 +303,7 @@ class PyMOLObject:
     def _check_existence(self):
         if not self.exists():
             raise NonexistentObjectError(
-                f"A PyMOL object with the name {self._name} " f"does not exist anymore"
+                f"A PyMOL object with the name {self._name} does not exist anymore"
             )
 
     @validate
@@ -371,7 +371,7 @@ class PyMOLObject:
             # - PyMOLs indexing starts at 1-> 'start+1'
             # - Stop in 'intervals' is exclusive -> 'stop+1-1' -> 'stop'
             index_selection = " or ".join(
-                [f"index {start+1}-{stop}" for start, stop in intervals]
+                [f"index {start + 1}-{stop}" for start, stop in intervals]
             )
             # Constrain the selection to given object name
             return f"%{self._name} and ({index_selection})"

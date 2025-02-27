@@ -549,7 +549,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         ------
         NotImplementedError
         """
-        raise NotImplementedError("Copying is not implemented " "for trajectory files")
+        raise NotImplementedError("Copying is not implemented for trajectory files")
 
     @classmethod
     @abc.abstractmethod

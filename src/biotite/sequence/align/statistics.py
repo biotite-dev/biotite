@@ -168,7 +168,7 @@ class EValueEstimator:
             raise ValueError("A symmetric substitution matrix is required")
         if not matrix.get_alphabet1().extends(alphabet):
             raise ValueError(
-                "The substitution matrix is not compatible " "with the given alphabet"
+                "The substitution matrix is not compatible with the given alphabet"
             )
         score_matrix = matrix.score_matrix()[: len(alphabet), : len(alphabet)]
         if (

@@ -28,7 +28,7 @@ dependencies:
   - pytest >=7.0
   - pytest-codspeed >=2.0
   # Code style, keep in sync with the versions in pyproject.toml
-  - ruff =0.6.9
+  - ruff =0.9.7
   - numpydoc =1.8.0
   # Interfaced software in biotite.application (can also be installed separately)
   - autodock-vina

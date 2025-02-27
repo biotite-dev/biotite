@@ -71,7 +71,7 @@ class KerasifyParser:
             (w1,) = self._get("I")
             (b0,) = self._get("I")
             weights = (
-                np.frombuffer(self._read(f"={w0*w1}f"), dtype="f4")
+                np.frombuffer(self._read(f"={w0 * w1}f"), dtype="f4")
                 .reshape(w0, w1)
                 .copy()
             )

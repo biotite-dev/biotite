@@ -1326,7 +1326,7 @@ def get_component(
             )
     except KeyError:
         warnings.warn(
-            "Category 'chem_comp_bond' not found. " "No bonds will be parsed",
+            "Category 'chem_comp_bond' not found. No bonds will be parsed",
             UserWarning,
         )
     else:
@@ -1764,4 +1764,4 @@ def _convert_string_to_sequence(string, stype):
     elif stype in _other_type_list:
         return None
     else:
-        raise InvalidFileError("mmCIF _entity_poly.type unsupported" " type: " + stype)
+        raise InvalidFileError("mmCIF _entity_poly.type unsupported type: " + stype)

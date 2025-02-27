@@ -173,7 +173,7 @@ class SubstitutionMatrix(object):
             self._fill_with_matrix_dict(matrix_dict)
         else:
             raise TypeError(
-                "Matrix must be either a dictionary, " "an 2-D ndarray or a string"
+                "Matrix must be either a dictionary, an 2-D ndarray or a string"
             )
         # This class is immutable and has a getter function for the
         # score matrix -> make the score matrix read-only
@@ -442,7 +442,7 @@ class SubstitutionMatrix(object):
         for i, symbol in enumerate(self._alph1):
             string += f"{str(symbol):>1}"
             for j in range(len(self._alph2)):
-                string += f" {int(self._matrix[i,j]):>3d}"
+                string += f" {int(self._matrix[i, j]):>3d}"
             string += "\n"
         # Remove terminal line break
         string = string[:-1]

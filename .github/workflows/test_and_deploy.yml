@@ -46,7 +46,7 @@ jobs:
         python-version: "3.12"
     - name: Install ruff
       # Keep in sync with the corresponding versions in pyproject.toml
-      run: pip install ruff==0.6.9 numpydoc==1.8.0
+      run: pip install ruff==0.9.7 numpydoc==1.8.0
     - name: Check code formatting
       run: ruff format --diff
     - name: Lint code base

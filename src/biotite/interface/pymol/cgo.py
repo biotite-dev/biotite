@@ -304,7 +304,7 @@ def get_multiline_cgo(start, end, color, width=1.0):
 
     if len(start) != len(end):
         raise IndexError(
-            f"{len(start)} start positions are given, " f"but {len(end)} end positions"
+            f"{len(start)} start positions are given, but {len(end)} end positions"
         )
     for p in start:
         _expect_length(p, "start", 3)
