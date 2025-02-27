@@ -52,7 +52,7 @@ class ProteinBlocksSequence(Sequence):
         May take upper or lower case letters.
         By default the sequence is empty.
 
-    See also
+    See Also
     --------
     to_protein_blocks : Create *Protein Blocks* sequences from a structure.
 
@@ -60,7 +60,6 @@ class ProteinBlocksSequence(Sequence):
     ----------
 
     .. footbibliography::
-
     """
 
     alphabet = LetterAlphabet("abcdefghijklmnopz")

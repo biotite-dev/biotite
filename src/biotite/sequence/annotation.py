@@ -24,7 +24,7 @@ class Location:
 
     Objects of this class are immutable.
 
-    Attributes
+    Parameters
     ----------
     first : int
         Starting base or residue position of the feature.
@@ -35,6 +35,11 @@ class Location:
         Always :attr:`Strand.FORWARD` for peptide features.
     defect : Defect
         A possible defect of the location.
+
+    Attributes
+    ----------
+    first, last, strand, defect
+        Same as the parameters.
     """
 
     class Defect(Flag):
@@ -550,12 +555,12 @@ class AnnotatedSequence(Copyable):
 
     Parameters
     ----------
+    annotation : Annotation
+        The annotation corresponding to `sequence`.
     sequence : Sequence
         The sequence.
         Usually a :class:`NucleotideSequence` or
         :class:`ProteinSequence`.
-    annotation : Annotation
-        The annotation corresponding to `sequence`.
     sequence_start : int, optional
         By default, the first symbol of the sequence is corresponding
         to location 1 of the features in the annotation. The location
@@ -564,16 +569,17 @@ class AnnotatedSequence(Copyable):
 
     Attributes
     ----------
-    sequence : Sequence
-        The represented sequence.
     annotation : Annotation
         The annotation corresponding to `sequence`.
+    sequence : Sequence
+        The represented sequence.
     sequence_start : int
         The location of the first symbol in the sequence.
 
-    See also
+    See Also
     --------
-    Annotation, Sequence
+    Annotation : An annotation separated from a sequence.
+    Sequence : A sequence separated from an annotation.
 
     Examples
     --------
@@ -666,6 +672,7 @@ class AnnotatedSequence(Copyable):
 
         Returns
         -------
+        rev_sequence : Sequence
             The reverse complement of the annotated sequence.
         """
         rev_seqstart = sequence_start

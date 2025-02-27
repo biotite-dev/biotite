@@ -30,7 +30,6 @@ def gyration_radius(array, masses=None):
         Must have the same length as `array`. By default, the standard
         atomic mass for each element is taken.
 
-
     Returns
     -------
     masses : float or ndarray, dtype=float

@@ -27,8 +27,9 @@ dependencies:
   # Testing
   - pytest >=7.0
   - pytest-codspeed >=2.0
-  # Code style
-  - ruff =0.6.9  # Keep in sync with the ruff version in pyproject.toml
+  # Code style, keep in sync with the versions in pyproject.toml
+  - ruff =0.6.9
+  - numpydoc =1.8.0
   # Interfaced software in biotite.application (can also be installed separately)
   - autodock-vina
   - clustalo
@@ -46,7 +47,6 @@ dependencies:
   # Documentation building
   - pydata-sphinx-theme =0.15
   - matplotlib >=3.3
-  - numpydoc >=0.8
   - jupyter-sphinx >=0.5.3
   - sphinx >=7.0
   - sphinxcontrib-bibtex >=2.3

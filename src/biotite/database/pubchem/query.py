@@ -240,6 +240,11 @@ class FormulaQuery(Query):
             The maximum number of matches that this query may return.
             By default, the *PubChem* default value is used, which can
             be considered unlimited.
+
+        Returns
+        -------
+        query : FormulaQuery
+            The query.
         """
         element_counter = collections.Counter(atoms.element)
         formula = ""
@@ -348,8 +353,13 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
         ----------
         atoms : AtomArray or AtomArrayStack
             The query structure.
-        **kwargs : dict, optional
+        *args, **kwargs
             See the constructor for additional options.
+
+        Returns
+        -------
+        query : StructureQuery
+            The query object.
         """
         mol_file = MOLFile()
         mol_file.set_structure(atoms)
@@ -448,26 +458,19 @@ class SuperOrSubstructureQuery(StructureQuery, metaclass=abc.ABCMeta):
         be considered unlimited.
     match_charges : bool, optional
         If set to true, atoms must match the specified charge.
-        (Default: False)
     match_tautomers : bool, optional
         If set to true, allow match to tautomers of the given structure.
-        (Default: False)
     rings_not_embedded : bool, optional
         If set to true, rings may not be embedded in a larger system.
-        (Default: False)
     single_double_bonds_match : bool, optional
         If set to true, single or double bonds match aromatic bonds.
-        (Default: True)
     chains_match_rings : bool, optional
         If set to true, chain bonds in the query may match rings in
         hits.
-        (Default: True)
     strip_hydrogen : bool, optional
         If set to true, remove any explicit hydrogens before searching.
-        (Default: False)
     stereo : {'ignore', 'exact', 'relative', 'nonconflicting'}, optional
         How to handle stereo.
-        (Default: 'ignore')
 
     Notes
     -----
@@ -528,26 +531,19 @@ class SuperstructureQuery(SuperOrSubstructureQuery):
         be considered unlimited.
     match_charges : bool, optional
         If set to true, atoms must match the specified charge.
-        (Default: False)
     match_tautomers : bool, optional
         If set to true, allow match to tautomers of the given structure.
-        (Default: False)
     rings_not_embedded : bool, optional
         If set to true, rings may not be embedded in a larger system.
-        (Default: False)
     single_double_bonds_match : bool, optional
         If set to true, single or double bonds match aromatic bonds.
-        (Default: True)
     chains_match_rings : bool, optional
         If set to true, chain bonds in the query may match rings in
         hits.
-        (Default: True)
     strip_hydrogen : bool, optional
         If set to true, remove any explicit hydrogens before searching.
-        (Default: False)
     stereo : {'ignore', 'exact', 'relative', 'nonconflicting'}, optional
         How to handle stereo.
-        (Default: 'ignore')
 
     Notes
     -----
@@ -601,26 +597,19 @@ class SubstructureQuery(SuperOrSubstructureQuery):
         be considered unlimited.
     match_charges : bool, optional
         If set to true, atoms must match the specified charge.
-        (Default: False)
     match_tautomers : bool, optional
         If set to true, allow match to tautomers of the given structure.
-        (Default: False)
     rings_not_embedded : bool, optional
         If set to true, rings may not be embedded in a larger system.
-        (Default: False)
     single_double_bonds_match : bool, optional
         If set to true, single or double bonds match aromatic bonds.
-        (Default: True)
     chains_match_rings : bool, optional
         If set to true, chain bonds in the query may match rings in
         hits.
-        (Default: True)
     strip_hydrogen : bool, optional
         If set to true, remove any explicit hydrogens before searching.
-        (Default: False)
     stereo : {'ignore', 'exact', 'relative', 'nonconflicting'}, optional
         How to handle stereo.
-        (Default: 'ignore')
 
     Notes
     -----

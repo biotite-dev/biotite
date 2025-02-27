@@ -84,7 +84,6 @@ are arranged from top to bottom.
 
                 :class:`MincodeSelector`
 
-
     .. grid-item::
         :padding: 2
         :outline:
@@ -117,7 +116,6 @@ are arranged from top to bottom.
 
                 :func:`bucket_number()`
 
-
     .. grid-item::
         :padding: 2
         :outline:
@@ -133,7 +131,6 @@ are arranged from top to bottom.
                 **Ungapped seed extension**
 
                 :class:`align_local_ungapped()`
-
 
     .. grid-item::
         :padding: 2
@@ -180,7 +177,6 @@ are arranged from top to bottom.
                 **Significance evaluation**
 
                 :class:`EValueEstimator`
-
 """
 
 __name__ = "biotite.sequence.align"

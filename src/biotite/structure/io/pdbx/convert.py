@@ -312,7 +312,6 @@ def get_structure(
     >>> arr = get_structure(file, model=1)
     >>> print(len(arr))
     304
-
     """
     block = _get_block(pdbx_file, data_block)
 
@@ -817,7 +816,6 @@ def set_structure(
     >>> file = CIFFile()
     >>> set_structure(file, atom_array)
     >>> file.write(os.path.join(path_to_directory, "structure.cif"))
-
     """
     _check_non_empty(array)
 
@@ -1221,7 +1219,7 @@ def get_component(
         In this case, the component with the given residue name is
         read.
         By default, all rows would be read in this case.
-    allow_missing_coord: bool, optional
+    allow_missing_coord : bool, optional
         Whether to allow missing coordinate values in components.
         If ``True``, these will be represented as ``nan`` values.
         If ``False``, a ``ValueError`` is raised when missing coordinates

@@ -48,7 +48,6 @@ class GROFile(TextFile):
     >>> file = GROFile()
     >>> file.set_structure(array_stack_mod)
     >>> file.write(os.path.join(path_to_directory, "1l2y_mod.gro"))
-
     """
 
     def get_model_count(self):
@@ -89,13 +88,13 @@ class GROFile(TextFile):
             The return type depends on the `model` parameter.
         """
 
-        def get_atom_line_i(model_start_i, model_atom_counts):
+        def _get_atom_line_i(model_start_i, model_atom_counts):
             """
             Helper function to get the indices of all atoms for a model
             """
             return np.arange(model_start_i + 1, model_start_i + 1 + model_atom_counts)
 
-        def set_box_dimen(box_param):
+        def _set_box_dimen(box_param):
             """
             Helper function to create the box vectors from the values
             in the GRO file
@@ -145,7 +144,7 @@ class GROFile(TextFile):
 
             # Line indices for annotation determination is determined
             # from model 1
-            annot_i = get_atom_line_i(model_start_i[0], length)
+            annot_i = _get_atom_line_i(model_start_i[0], length)
         else:
             if model == 0:
                 raise ValueError("The model index must not be 0")
@@ -160,7 +159,7 @@ class GROFile(TextFile):
             length = model_atom_counts[model - 1]
             array = AtomArray(length)
 
-            annot_i = get_atom_line_i(model_start_i[model - 1], length)
+            annot_i = _get_atom_line_i(model_start_i[model - 1], length)
 
         # Replace empty strings for elements with guessed types
         # i is index in array, line_i is line index
@@ -183,11 +182,11 @@ class GROFile(TextFile):
             # Box is stored in last line (after coordinates)
             box_i = atom_i[-1] + 1
             box_param = [float(e) * 10 for e in self.lines[box_i].split()]
-            array.box = set_box_dimen(box_param)
+            array.box = _set_box_dimen(box_param)
 
         elif isinstance(array, AtomArrayStack):
             for m in range(len(model_start_i)):
-                atom_i = get_atom_line_i(model_start_i[m], model_atom_counts[m])
+                atom_i = _get_atom_line_i(model_start_i[m], model_atom_counts[m])
                 for i, line_i in enumerate(atom_i):
                     line = self.lines[line_i]
                     array.coord[m, i, 0] = float(line[20:28]) * 10
@@ -196,7 +195,7 @@ class GROFile(TextFile):
                 # Box is stored in last line (after coordinates)
                 box_i = atom_i[-1] + 1
                 box_param = [float(e) * 10 for e in self.lines[box_i].split()]
-                box = set_box_dimen(box_param)
+                box = _set_box_dimen(box_param)
                 # Create a box in the stack if not already existing
                 # and the box is not a dummy
                 if box is not None:

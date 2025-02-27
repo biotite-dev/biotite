@@ -122,7 +122,7 @@ class MOLFile(TextFile):
 
         Parameters
         ----------
-        array : AtomArray
+        atoms : AtomArray
             The array to be saved into this file.
             Must have an associated :class:`BondList`.
         default_bond_type : BondType, optional

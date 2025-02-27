@@ -31,10 +31,10 @@ def draw_arrows(
     ----------
     start, end : array-like, shape=(n,3)
         The start and end position of each arrow.
-    radius, head_radius: float or array-like, shape=(n,), optional
+    radius, head_radius : float or array-like, shape=(n,), optional
         The radius of the tail and head for each arrow.
         Uniform for all arrows, if a single value is given.
-    head_length: float or array-like, shape=(n,), optional
+    head_length : float or array-like, shape=(n,), optional
         The length of each arrow head.
         Uniform for all arrows, if a single value is given.
     color, head_color : array-like, shape=(3,) or shape=(n,3), optional
@@ -127,6 +127,11 @@ def draw_box(
     color : array-like, shape=(3,), optional
         The color of the box, given as RGB
         values in the range *(0, 1)*.
+    width : float, optional
+        The width of the drawn lines.
+    origin : array-like, shape=(3,), optional
+        If given the box origin is drawn at the given position instead of the
+        coordinate origin.
     name : str, optional
         The name of the newly created CGO object.
         If omitted, a unique name is generated.

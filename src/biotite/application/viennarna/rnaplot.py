@@ -124,7 +124,7 @@ class RNAplotApp(LocalApp):
 
         Parameters
         ----------
-        type : RNAplotApp.Layout
+        layout_type : RNAplotApp.Layout
             The layout type.
         """
         self._layout_type = str(layout_type)
@@ -185,6 +185,8 @@ class RNAplotApp(LocalApp):
         length : int, optional (default: None)
             The number of bases in the strand. This parameter is
             required if ``base_pairs`` is given.
+        layout_type : Layout
+            The desired layout of the plot.
         bin_path : str, optional
             Path of the *RNAplot* binary.
 

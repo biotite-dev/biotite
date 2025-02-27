@@ -39,7 +39,6 @@ def find_subsequence(sequence, query):
     >>> sub_seq = NucleotideSequence("TGA")
     >>> print(find_subsequence(main_seq, sub_seq))
     [2 6]
-
     """
     if not sequence.get_alphabet().extends(query.get_alphabet()):
         raise ValueError("The sequences alphabets are not equal")

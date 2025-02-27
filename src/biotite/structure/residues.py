@@ -126,9 +126,8 @@ def apply_residue_wise(array, data, function, axis=None):
     Returns
     -------
     processed_data : ndarray
-        Residue-wise evaluation of `data` by `function`. The size of the
-        first dimension of this array is equal to the amount of
-        residues.
+        Residue-wise evaluation of `data` by `function`. The size of the first dimension
+        of this array is equal to the amount of residues.
 
     Examples
     --------
@@ -196,14 +195,15 @@ def spread_residue_wise(array, input_data):
     array : AtomArray or AtomArrayStack
         The atom array (stack) to determine the residues from.
     input_data : ndarray
-        The data to be spread. The length of axis=0 must be equal to
-        the amount of different residue IDs in `array`.
+        The data to be spread.
+        The length of the 0-th axis must be equal to the amount of different residue IDs
+        in `array`.
 
     Returns
     -------
     output_data : ndarray
-        Residue-wise spread `input_data`. Length is the same as
-        `array_length()` of `array`.
+        Residue-wise spread `input_data`.
+        Length is the same as `array_length()` of `array`.
 
     Examples
     --------
@@ -262,11 +262,6 @@ def get_residue_masks(array, indices):
         Multiple boolean masks, one for each given index in `indices`.
         Each array masks the atoms that belong to the same residue as
         the atom at the given index.
-
-    See also
-    --------
-    get_residue_starts_for
-    get_residue_positions
 
     Examples
     --------
@@ -341,11 +336,6 @@ def get_residue_starts_for(array, indices):
         The indices that point to the residue starts for the input
         `indices`.
 
-    See also
-    --------
-    get_residue_masks
-    get_residue_positions
-
     Examples
     --------
 
@@ -385,13 +375,8 @@ def get_residue_positions(array, indices):
 
     Returns
     -------
-    start_indices : ndarray, dtype=int, shape=(k,)
+    residue_indices : ndarray, dtype=int, shape=(k,)
         The indices that point to the position of the residues.
-
-    See also
-    --------
-    get_residue_masks
-    get_residue_starts_for
 
     Examples
     --------
@@ -572,4 +557,5 @@ def residue_iter(array):
     """
     # The exclusive stop is appended to the residue starts
     starts = get_residue_starts(array, add_exclusive_stop=True)
-    return segment_iter(array, starts)
+    for residue in segment_iter(array, starts):
+        yield residue

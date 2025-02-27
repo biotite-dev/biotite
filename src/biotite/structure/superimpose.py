@@ -100,7 +100,6 @@ class AffineTransformation:
          [ -7.   6.   8.]
          [-10.   9.  11.]
          [-13.  12.  14.]]
-
         """
         mobile_coord = coord(atoms)
         original_shape = mobile_coord.shape
@@ -179,7 +178,6 @@ class AffineTransformation:
          [ -7.   6.   8.   1.]
          [-10.   9.  11.   1.]
          [-13.  12.  14.   1.]]
-
         """
         n_models = self.rotation.shape[0]
         rotation_mat = _3d_identity(n_models, 4)
@@ -225,7 +223,7 @@ def superimpose(fixed, mobile, atom_mask=None):
     fixed : AtomArray, shape(n,) or AtomArrayStack, shape(m,n) or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
         The fixed structure(s).
         Alternatively coordinates can be given.
-    mobile: AtomArray, shape(n,) or AtomArrayStack, shape(m,n) or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
+    mobile : AtomArray, shape(n,) or AtomArrayStack, shape(m,n) or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
         The structure(s) which is/are superimposed on the `fixed`
         structure.
         Each atom at index *i* in `mobile` must correspond the
@@ -234,7 +232,7 @@ def superimpose(fixed, mobile, atom_mask=None):
         :class:`AtomArrayStack` objects, they must have the same
         number of models.
         Alternatively coordinates can be given.
-    atom_mask: ndarray, dtype=bool, optional
+    atom_mask : ndarray, dtype=bool, optional
         If given, only the atoms covered by this boolean mask will be
         considered for superimposition.
         This means that the algorithm will minimize the RMSD based
@@ -256,8 +254,8 @@ def superimpose(fixed, mobile, atom_mask=None):
 
     See Also
     --------
-    superimpose_without_outliers : Superimposition with outlier removal
-    superimpose_homologs : Superimposition of homologous structures
+    superimpose_without_outliers : Superimposition with outlier removal.
+    superimpose_homologs : Superimposition of homologous structures.
 
     Notes
     -----
@@ -343,13 +341,12 @@ def superimpose_without_outliers(
     the remaining atoms (called *anchors*) again until no outlier
     remains.
 
-
     Parameters
     ----------
     fixed : AtomArray, shape(n,) or AtomArrayStack, shape(m,n) or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
         The fixed structure(s).
         Alternatively coordinates can be given.
-    mobile: AtomArray, shape(n,) or AtomArrayStack, shape(m,n) or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
+    mobile : AtomArray, shape(n,) or AtomArrayStack, shape(m,n) or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
         The structure(s) which is/are superimposed on the `fixed`
         structure.
         Each atom at index *i* in `mobile` must correspond the
@@ -392,8 +389,8 @@ def superimpose_without_outliers(
 
     See Also
     --------
-    superimpose : Superimposition without outlier removal
-    superimpose_homologs : Superimposition of homologous structures
+    superimpose : Superimposition without outlier removal.
+    superimpose_homologs : Superimposition of homologous structures.
 
     Notes
     -----
@@ -537,9 +534,9 @@ def superimpose_homologs(
 
     See Also
     --------
-    superimpose : Superimposition without outlier removal
-    superimpose_without_outliers : Internally used for outlier removal
-    superimpose_structural_homologs : Better suited for low sequence similarity
+    superimpose : Superimposition without outlier removal.
+    superimpose_without_outliers : Internally used for outlier removal.
+    superimpose_structural_homologs : Better suited for low sequence similarity.
 
     Notes
     -----

@@ -29,7 +29,7 @@ class WebApp(Application, metaclass=abc.ABCMeta):
         URL of the web app.
     obey_rules : bool, optional
         If true, the application raises an :class:`RuleViolationError`, if
-        the server rules are violated. (Default: True)
+        the server rules are violated.
     """
 
     def __init__(self, app_url, obey_rules=True):

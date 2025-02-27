@@ -215,6 +215,11 @@ class CIFColumn:
             ``MaskValue.INAPPLICABLE`` or ``MaskValue.MISSING``.
             By default, masked elements are converted to ``'.'`` or
             ``'?'`` depending on the :class:`MaskValue`.
+
+        Returns
+        -------
+        array : ndarray
+            The column data as array.
         """
         if self._mask is None:
             return self._data.array.astype(dtype, copy=False)
@@ -721,6 +726,19 @@ class CIFFile(_Component, File, MutableMapping):
     use the high-level :func:`get_structure()` or
     :func:`set_structure()` function respectively.
 
+    Parameters
+    ----------
+    blocks : dict (str -> CIFBlock), optional
+        The initial blocks of the file.
+        Maps the block names to the corresponding :class:`CIFBlock` objects.
+        By default no initial blocks are added.
+
+    Attributes
+    ----------
+    block : CIFBlock
+        The sole block of the file.
+        If the file contains multiple blocks, an exception is raised.
+
     Notes
     -----
     The content of CIF files are lazily deserialized:
@@ -730,12 +748,6 @@ class CIFFile(_Component, File, MutableMapping):
     performed when accessed.
     The deserialized :class:`CIFBlock`/:class:`CIFCategory` objects
     are cached for subsequent accesses.
-
-    Attributes
-    ----------
-    block : CIFBlock
-        The sole block of the file.
-        If the file contains multiple blocks, an exception is raised.
 
     Examples
     --------

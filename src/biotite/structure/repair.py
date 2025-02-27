@@ -48,7 +48,6 @@ def create_continuous_res_ids(atoms, restart_each_chain=True):
     >>> res_ids, _ = get_residues(atom_array)
     >>> print(res_ids)
     [ 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19]
-
     """
     res_ids_diff = np.zeros(atoms.array_length(), dtype=int)
     res_starts = get_residue_starts(atoms)
@@ -80,7 +79,7 @@ def infer_elements(atoms):
 
     See Also
     --------
-    create_atoms_names : The opposite of this function
+    create_atoms_names : The opposite of this function.
 
     Examples
     --------
@@ -89,7 +88,6 @@ def infer_elements(atoms):
     ['N' 'C' 'C' 'O' 'C' 'C' 'O' 'N' 'H' 'H']
     >>> print(infer_elements(["CA", "C", "C1", "OD1", "HD21", "1H", "FE"]))
     ['C' 'C' 'C' 'O' 'H' 'H' 'FE']
-
     """
     if isinstance(atoms, (AtomArray, AtomArrayStack)):
         atom_names = atoms.atom_name
@@ -117,7 +115,7 @@ def create_atom_names(atoms):
 
     See Also
     --------
-    infer_elements : The opposite of this function
+    infer_elements : The opposite of this function.
 
     Notes
     -----

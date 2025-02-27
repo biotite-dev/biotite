@@ -33,7 +33,7 @@ def translate(atoms, vector):
     atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The atoms of which the coordinates are transformed.
         The coordinates can be directly provided as :class:`ndarray`.
-    vector: array-like, shape=(3,) or shape=(n,3) or shape=(m,n,3)
+    vector : array-like, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The translation vector :math:`(x, y, z)`.
 
     Returns
@@ -64,7 +64,7 @@ def rotate(atoms, angles):
     atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The atoms of which the coordinates are transformed.
         The coordinates can be directly provided as :class:`ndarray`.
-    angles: array-like, length=3
+    angles : array-like, length=3
         The rotation angles in radians around *x*, *y* and *z*.
 
     Returns
@@ -75,8 +75,8 @@ def rotate(atoms, angles):
 
     See Also
     --------
-    rotate_centered
-    rotate_about_axis
+    rotate_centered : Rotate atoms about the centroid.
+    rotate_about_axis : Rotate atoms about a given axis.
 
     Examples
     --------
@@ -136,7 +136,7 @@ def rotate_centered(atoms, angles):
     atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The atoms of which the coordinates are transformed.
         The coordinates can be directly provided as :class:`ndarray`.
-    angles: array-like, length=3
+    angles : array-like, length=3
         The rotation angles in radians around axes *x*, *y* and *z*.
 
     Returns
@@ -147,8 +147,8 @@ def rotate_centered(atoms, angles):
 
     See Also
     --------
-    rotate
-    rotate_about_axis
+    rotate : Rotate atoms about the origin.
+    rotate_about_axis : Rotate atoms about a given axis.
     """
     if len(coord(atoms).shape) == 1:
         # Single value -> centered rotation does not change coordinates
@@ -193,8 +193,8 @@ def rotate_about_axis(atoms, axis, angle, support=None):
 
     See Also
     --------
-    rotate
-    rotate_centered
+    rotate : Rotate atoms about the origin.
+    rotate_centered : Rotate atoms about the centroid.
 
     Examples
     --------
@@ -292,11 +292,6 @@ def orient_principal_components(atoms, order=None):
     AtomArray or ndarray, shape=(n,3)
         The atoms with coordinates centered at the orgin and aligned with
         xyz axes.
-
-    See Also
-    --------
-    rotate_centered
-    rotate_about_axis
 
     Examples
     --------
@@ -399,11 +394,6 @@ def align_vectors(
     transformed : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         A copy of the input atoms or coordinates with the applied
         transformation.
-
-    See Also
-    --------
-    rotate
-    rotate_centered
 
     Examples
     --------

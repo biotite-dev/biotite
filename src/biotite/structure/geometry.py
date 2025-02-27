@@ -60,9 +60,9 @@ def displacement(atoms1, atoms2, box=None):
         The displacement vector(s). The shape is equal to the shape of
         the input `atoms` with the highest dimensionality.
 
-    See also
+    See Also
     --------
-    index_displacement
+    index_displacement : The same calculation, but using atom indices.
     """
     v1 = coord(atoms1)
     v2 = coord(atoms2)
@@ -191,7 +191,7 @@ def index_displacement(*args, **kwargs):
     copy is found for non-orthorhombic boxes; this is especially true
     for heavily skewed boxes.
 
-    See also
+    See Also
     --------
     displacement
     """
@@ -224,9 +224,9 @@ def distance(atoms1, atoms2, box=None):
         The shape is equal to the shape of the input `atoms` with the
         highest dimensionality minus the last axis.
 
-    See also
+    See Also
     --------
-    index_distance
+    index_distance : The same calculation, but using atom indices.
     """
     diff = displacement(atoms1, atoms2, box)
     return np.sqrt(vector_dot(diff, diff))
@@ -282,7 +282,7 @@ def index_distance(*args, **kwargs):
     copy is found for non-orthorhombic boxes; this is especially true
     for heavily skewed boxes.
 
-    See also
+    See Also
     --------
     distance
     """
@@ -312,9 +312,9 @@ def angle(atoms1, atoms2, atoms3, box=None):
         of the input `atoms` with the highest dimensionality minus the
         last axis.
 
-    See also
+    See Also
     --------
-    index_angle
+    index_angle : The same calculation, but using atom indices.
     """
     v1 = displacement(atoms1, atoms2, box)
     v2 = displacement(atoms3, atoms2, box)
@@ -371,7 +371,7 @@ def index_angle(*args, **kwargs):
     copy is found for non-orthorhombic boxes; this is especially true
     for heavily skewed boxes.
 
-    See also
+    See Also
     --------
     angle
     """
@@ -404,8 +404,8 @@ def dihedral(atoms1, atoms2, atoms3, atoms4, box=None):
 
     See Also
     --------
-    index_dihedral
-    dihedral_backbone
+    index_dihedral : The same calculation, but using atom indices.
+    dihedral_backbone : Calculate the dihedral angle along a peptide backbone.
     """
     v1 = displacement(atoms1, atoms2, box)
     v2 = displacement(atoms2, atoms3, box)
@@ -472,7 +472,7 @@ def index_dihedral(*args, **kwargs):
     copy is found for non-orthorhombic boxes; this is especially true
     for heavily skewed boxes.
 
-    See also
+    See Also
     --------
     dihedral
     dihedral_backbone
@@ -486,7 +486,7 @@ def dihedral_backbone(atom_array):
 
     Parameters
     ----------
-    atoms: AtomArray or AtomArrayStack
+    atom_array : AtomArray or AtomArrayStack
         The protein structure to measure the dihedral angles for.
         For missing backbone atoms the corresponding angles are `NaN`.
 
@@ -568,7 +568,7 @@ def centroid(atoms):
 
     Parameters
     ----------
-    atoms: ndarray or AtomArray or AtomArrayStack
+    atoms : ndarray or AtomArray or AtomArrayStack
         The structures to determine the centroid from.
         Alternatively an ndarray containing the coordinates can be
         provided.

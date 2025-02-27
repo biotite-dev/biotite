@@ -80,6 +80,16 @@ def sanitize_database_name(db_name):
     database name is not existing.
 
     Only for internal usage in ``download.py`` and ``query.py``.
+
+    Parameters
+    ----------
+    db_name : str
+        Entrez database name.
+
+    Returns
+    -------
+    name : str
+        E-utility database name.
     """
     if db_name in _db_names.keys():
         # Convert into E-utility database name

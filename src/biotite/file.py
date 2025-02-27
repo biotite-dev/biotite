@@ -44,7 +44,7 @@ class File(Copyable, metaclass=abc.ABCMeta):
 
         Returns
         -------
-        file_object : File
+        file : File
             An instance from the respective :class:`File` subclass
             representing the parsed file.
         """
@@ -57,7 +57,7 @@ class File(Copyable, metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        file_name : file-like object or str
+        file : file-like object or str
             The file to be written to.
             Alternatively a file path can be supplied.
         """
@@ -207,6 +207,18 @@ def wrap_string(text, width):
 
     This function simply wraps the given `text` after `width`
     characters, ignoring sentences, whitespaces, etc.
+
+    Parameters
+    ----------
+    text : str
+        The text to be wrapped.
+    width : int
+        The maximum number of characters per line.
+
+    Returns
+    -------
+    lines : list of str
+        The wrapped lines.
     """
     lines = []
     for i in range(0, len(text), width):

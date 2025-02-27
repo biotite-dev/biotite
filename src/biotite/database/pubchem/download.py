@@ -41,22 +41,22 @@ def fetch(
         to be downloaded.
     format : {'sdf', 'asnt' 'asnb', 'xml', 'json', 'jsonp', 'png'}
         The format of the files to be downloaded.
+    target_path : str, optional
+        The target directory of the downloaded files.
+        By default, the file content is stored in a file-like object
+        (:class:`StringIO` or :class:`BytesIO`, respectively).
     as_structural_formula : bool, optional
         If set to true, the structural formula is download instead of
         an 3D conformer.
         This means that coordinates lie in th xy-plane and represent
         the positions atoms would have an a structural formula
         representation.
-    target_path : str, optional
-        The target directory of the downloaded files.
-        By default, the file content is stored in a file-like object
-        (:class:`StringIO` or :class:`BytesIO`, respectively).
     overwrite : bool, optional
         If true, existing files will be overwritten.
         Otherwise the respective file will only be downloaded, if the
         file does not exist yet in the specified target directory or if
         the file is empty.
-    verbose: bool, optional
+    verbose : bool, optional
         If set to true, the function will output the download progress.
     throttle_threshold : float or None, optional
         A value between 0 and 1.

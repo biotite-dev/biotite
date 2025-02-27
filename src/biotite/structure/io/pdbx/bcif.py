@@ -256,6 +256,11 @@ class BinaryCIFColumn(_Component):
             ``MaskValue.INAPPLICABLE`` or ``MaskValue.MISSING``.
             By default, masked elements are converted to ``'.'`` or
             ``'?'`` depending on the :class:`MaskValue`.
+
+        Returns
+        -------
+        array : ndarray
+            The column data as array.
         """
         if dtype is None:
             dtype = self._data.array.dtype
@@ -341,12 +346,15 @@ class BinaryCIFCategory(_HierarchicalContainer):
         into a :class:`BinaryCIFColumn`).
         By default, an empty category is created.
         Each column must have the same length.
+    row_count : int, optional
+        The number of rows in the category.
 
     Attributes
     ----------
     row_count : int
         The number of rows in the category, i.e. the length of each
         column.
+        By default, the row count is determined when the first column is added.
 
     Examples
     --------
@@ -526,6 +534,19 @@ class BinaryCIFFile(File, _HierarchicalContainer):
     object, use the high-level :func:`get_structure()` or
     :func:`set_structure()` function respectively.
 
+    Parameters
+    ----------
+    blocks : dict (str -> BinaryCIFBlock), optional
+        The initial blocks of the file.
+        Maps the block names to the corresponding :class:`BinaryCIFBlock` objects.
+        By default no initial blocks are added.
+
+    Attributes
+    ----------
+    block : BinaryCIFBlock
+        The sole block of the file.
+        If the file contains multiple blocks, an exception is raised.
+
     Notes
     -----
     The content of *BinaryCIF* files are lazily deserialized:
@@ -533,12 +554,6 @@ class BinaryCIFFile(File, _HierarchicalContainer):
     is performed.
     The decoded :class:`BinaryCIFBlock`/:class:`BinaryCIFCategory`
     objects are cached for subsequent accesses.
-
-    Attributes
-    ----------
-    block : BinaryCIFBlock
-        The sole block of the file.
-        If the file contains multiple blocks, an exception is raised.
 
     Examples
     --------

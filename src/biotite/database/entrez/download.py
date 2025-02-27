@@ -54,17 +54,16 @@ def fetch(
     db_name : str:
         E-utility or common database name.
     ret_type : str
-        Retrieval type
+        Retrieval type.
     ret_mode : str, optional
-        Retrieval mode
+        Retrieval mode.
     overwrite : bool, optional
         If true, existing files will be overwritten. Otherwise the
         respective file will only be downloaded if the file does not
         exist yet in the specified target directory or if the file is
-        empty. (Default: False)
-    verbose: bool, optional
+        empty.
+    verbose : bool, optional
         If true, the function will output the download progress.
-        (Default: False)
 
     Returns
     -------
@@ -84,9 +83,9 @@ def fetch(
     When the issue occurs repeatedly, the error is probably in your
     input.
 
-    See also
+    See Also
     --------
-    fetch_single_file
+    fetch_single_file : Fetch multiple entries as a single file.
 
     Examples
     --------
@@ -188,9 +187,9 @@ def fetch_single_file(
     When the issue occurs repeatedly, the error is probably in your
     input.
 
-    See also
+    See Also
     --------
-    fetch
+    fetch : Fetch one or multiple entries as separate files.
     """
     if (
         file_name is not None

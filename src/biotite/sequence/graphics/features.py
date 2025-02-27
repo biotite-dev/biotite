@@ -71,7 +71,7 @@ def plot_feature_map(
         If true, the sequence position the base/residue of a line is
         shown on the right side of the plot.
     number_size : float, optional
-        The font size of the position numbers
+        The font size of the position numbers.
     line_width : float, optional
         The size of the continuous line as fraction of the height of
         the drawn features.
@@ -416,7 +416,7 @@ class PromoterPlotter(FeaturePlotter):
     line_width : float, optional
         The width of the curved arrow tail.
     head_width : float, optional
-        The width of the arrow head
+        The width of the arrow head.
     head_length : float, optional
         The length of the arrow.
     head_height : float, optional

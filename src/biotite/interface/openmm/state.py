@@ -69,7 +69,7 @@ def from_states(template, states):
         This structure is used as template.
         The output :class:`AtomArray` is equal to this template with the
         exception of the coordinates and the box vectors.
-    state : iterable of State
+    states : iterable of State
         The coordinates are parsed from these states.
         Must be created with ``getPositions=True``.
 

@@ -134,16 +134,15 @@ _protor_radii = {}
 
 def vdw_radius_protor(res_name, atom_name):
     """
-    Estimate the Van-der-Waals radius of an non-hydrogen atom,
+    Estimate the Van-der-Waals radius of a heavy atom,
     that includes the radius added by potential bonded hydrogen atoms.
     The respective radii are taken from the ProtOr dataset.
     :footcite:`Tsai1999`
 
     This is especially useful for macromolecular structures where no
     hydrogen atoms are resolved, e.g. crystal structures.
-    The valency of the non-hydrogen atom and the amount of normally
-    bonded hydrogen atoms is taken from the chemical compound dictionary
-    dataset.
+    The valency of the heavy atom and the amount of normally
+    bonded hydrogen atoms is taken from the *Chemical Component Dictionary*.
 
     Parameters
     ----------
@@ -155,12 +154,13 @@ def vdw_radius_protor(res_name, atom_name):
 
     Returns
     -------
-    The Van-der-Waals radius of the given atom.
-    If the radius cannot be estimated for the atom, `None` is returned.
+    radius : float
+        The Van-der-Waals radius of the given atom.
+        If the radius cannot be estimated for the atom, `None` is returned.
 
-    See also
+    See Also
     --------
-    vdw_radius_single
+    vdw_radius_single : *Van-der-Waals* radii for structures with annotated hydrogen atoms.
 
     References
     ----------
@@ -235,7 +235,7 @@ def _calculate_protor_radii(res_name):
 
 def vdw_radius_single(element):
     """
-    Get the Van-der-Waals radius of an atom from the given element.
+    Get the *Van-der-Waals* radius of an atom from the given element.
     :footcite:`Mantina2009`
 
     Parameters
@@ -245,12 +245,13 @@ def vdw_radius_single(element):
 
     Returns
     -------
-    The Van-der-Waals radius of the atom.
-    If the radius is unknown for the element, `None` is returned.
+    radius : float
+        The Van-der-Waals radius of the atom.
+        If the radius is unknown for the element, `None` is returned.
 
-    See also
+    See Also
     --------
-    vdw_radius_protor
+    vdw_radius_protor : *Van-der-Waals* radii for structures without annotated hydrogen atoms.
 
     References
     ----------

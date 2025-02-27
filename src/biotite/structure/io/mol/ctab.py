@@ -50,7 +50,7 @@ def read_structure_from_ctab(ctab_lines):
     ----------
     ctab_lines : lines of str
         The lines containing the *ctab*.
-        Must begin with the *counts* line and end with the `M END` line
+        Must begin with the *counts* line and end with the `M END` line.
 
     Returns
     -------
@@ -65,7 +65,6 @@ def read_structure_from_ctab(ctab_lines):
     `<https://discover.3ds.com/sites/default/files/2020-08/biovia_ctfileformats_2020.pdf>`_.
 
     .. footbibliography::
-
     """
     match _get_version(ctab_lines[0]):
         case "V2000":
@@ -113,7 +112,6 @@ def write_structure_to_ctab(atoms, default_bond_type=BondType.ANY, version=None)
     `<https://discover.3ds.com/sites/default/files/2020-08/biovia_ctfileformats_2020.pdf>`_.
 
     .. footbibliography::
-
     """
     if isinstance(atoms, AtomArrayStack):
         raise TypeError(

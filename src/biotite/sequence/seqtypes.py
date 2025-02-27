@@ -200,7 +200,6 @@ class NucleotideSequence(Sequence):
         TGCGAA
         >>> print(dna_seq.reverse().complement())
         AAGCGT
-
         """
         # Interpreting the sequence code of this object in the
         # complementary alphabet gives the complementary symbols
@@ -226,7 +225,7 @@ class NucleotideSequence(Sequence):
         complete : bool, optional
             If true, the complete sequence is translated. In this case
             the sequence length must be a multiple of 3.
-            Otherwise all ORFs are translated. (Default: False)
+            Otherwise all ORFs are translated.
         codon_table : CodonTable, optional
             The codon table to be used. By default the default table
             will be used
@@ -236,7 +235,6 @@ class NucleotideSequence(Sequence):
             even if the start codon codes for another amino acid.
             Otherwise the translation starts with the amino acid
             the codon codes for. Only applies, if `complete` is false.
-            (Default: False)
 
         Returns
         -------
@@ -266,7 +264,6 @@ class NucleotideSequence(Sequence):
         ...    print(seq)
         MML*
         ML*
-
         """
         if self._alphabet != NucleotideSequence.alphabet_unamb:
             raise AlphabetError("Translation requires unambiguous alphabet")
@@ -586,6 +583,11 @@ class ProteinSequence(Sequence):
         in the protein and the average isotopic mass of one water
         molecule.
 
+        Parameters
+        ----------
+        monoisotopic : bool
+            Use the mass of the most common isotope.
+
         Returns
         -------
         weight : float
@@ -700,6 +702,11 @@ class PurePositionalSequence(Sequence):
     This class is similar to :class:`PositionalSequence`, but the symbols are not
     derived from an original sequence, but are the pure position.
     Hence, there is no meaningful string representation of the sequence and its symbols.
+
+    Parameters
+    ----------
+    length : int
+        The length of the sequence.
     """
 
     def __init__(self, length):

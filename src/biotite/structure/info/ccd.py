@@ -44,7 +44,6 @@ def get_ccd():
     ----------
 
     .. footbibliography::
-
     """
     # Avoid circular import
     from biotite.structure.io.pdbx.bcif import BinaryCIFFile
@@ -123,7 +122,6 @@ def get_from_ccd(category_name, comp_id, column_name=None):
     ----------
 
     .. footbibliography::
-
     """
     try:
         start, stop = _residue_index(category_name)[comp_id]

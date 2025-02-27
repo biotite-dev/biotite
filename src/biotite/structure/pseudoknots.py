@@ -69,6 +69,11 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     Therefore, there are no pseudoknots between base pairs with the same
     pseudoknot order.
 
+    References
+    ----------
+
+    .. footbibliography::
+
     Examples
     --------
     Remove the pseudoknotted base pair for the sequence *ABCbac*, where
@@ -102,17 +107,6 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
     [[0 0 1]]
     >>> print(dot_bracket(basepairs, 6)[0])
     (([))]
-
-    See Also
-    --------
-    base_pairs
-    dot_bracket
-
-    References
-    ----------
-
-    .. footbibliography::
-
     """
     if len(base_pairs) == 0:
         # No base pairs -> empty pseudoknot order array
@@ -149,9 +143,9 @@ class _Region:
 
     Parameters
     ----------
-    base_pairs: ndarray, shape=(n,2), dtype=int
+    base_pairs : ndarray, shape=(n,2), dtype=int
         All base pairs of the structure the region is a subset for.
-    region_pairs: ndarray, dtype=int
+    region_pairs : ndarray, dtype=int
         The indices of the base pairs in ``base_pairs`` that are part of
         the region.
     scores : ndarray, dtype=int, shape=(n,) (default: None)

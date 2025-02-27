@@ -27,6 +27,22 @@ def apply_segment_wise(starts, data, function, axis=None):
         The sorted start indices of segments.
         Includes exclusive stop, i.e. the length of the corresponding
         atom array.
+    data : ndarray
+        The data, whose intervals are the parameter for `function`.
+        Must have same length as `array`.
+    function : function
+        The `function` must have either the form *f(data)* or
+        *f(data, axis)* in case `axis` is given. Every `function` call
+        must return a value with the same shape and data type.
+    axis : int, optional
+        This value is given to the `axis` parameter of `function`.
+
+    Returns
+    -------
+    processed_data : ndarray
+        Segment-wise evaluation of `data` by `function`.
+        The size of the first dimension of this array is equal to the amount of
+        residues.
     """
     # The result array
     processed_data = None
@@ -65,6 +81,16 @@ def spread_segment_wise(starts, input_data):
         The sorted start indices of segments.
         Includes exclusive stop, i.e. the length of the corresponding
         atom array.
+    input_data : ndarray
+        The data to be spread.
+        The length of the 0-th axis must be equal to the amount of different residue IDs
+        in `array`.
+
+    Returns
+    -------
+    output_data : ndarray
+        Segment-wise spread `input_data`.
+        Length is the same as `array_length()` of `array`.
     """
     output_data = np.zeros(starts[-1], dtype=input_data.dtype)
     for i in range(len(starts) - 1):
@@ -85,6 +111,17 @@ def get_segment_masks(starts, indices):
         The sorted start indices of segments.
         Includes exclusive stop, i.e. the length of the corresponding
         atom array.
+    indices : ndarray, dtype=int, shape=(k,)
+        These indices indicate the atoms to get the corresponding
+        segments for.
+        Negative indices are not allowed.
+
+    Returns
+    -------
+    residues_masks : ndarray, dtype=bool, shape=(k,n)
+        Multiple boolean masks, one for each given index in `indices`.
+        Each array masks the atoms that belong to the same segment as
+        the atom at the given index.
     """
     indices = np.asarray(indices)
     length = starts[-1]
@@ -116,6 +153,16 @@ def get_segment_starts_for(starts, indices):
         The sorted start indices of segments.
         Includes exclusive stop, i.e. the length of the corresponding
         atom array.
+    indices : ndarray, dtype=int, shape=(k,)
+        These indices point to the atoms to get the corresponding
+        segment starts for.
+        Negative indices are not allowed.
+
+    Returns
+    -------
+    start_indices : ndarray, dtype=int, shape=(k,)
+        The indices that point to the segment starts for the input
+        `indices`.
     """
     indices = np.asarray(indices)
     length = starts[-1]
@@ -145,6 +192,15 @@ def get_segment_positions(starts, indices):
         The sorted start indices of segments.
         Includes exclusive stop, i.e. the length of the corresponding
         atom array.
+    indices : ndarray, shape=(k,)
+        These indices point to the atoms to get the corresponding
+        residue positions for.
+        Negative indices are not allowed.
+
+    Returns
+    -------
+    segment_indices : ndarray, shape=(k,)
+        The indices that point to the position of the segments.
     """
     indices = np.asarray(indices)
     length = starts[-1]
@@ -169,10 +225,17 @@ def segment_iter(array, starts):
 
     Parameters
     ----------
+    array : AtomArray or AtomArrayStack
+        The structure to iterate over.
     starts : ndarray, dtype=int
         The sorted start indices of segments.
         Includes exclusive stop, i.e. the length of the corresponding
         atom array.
+
+    Yields
+    ------
+    segment : AtomArray or AtomArrayStack
+       Each residue or chain of the structure.
     """
     for i in range(len(starts) - 1):
         yield array[..., starts[i] : starts[i + 1]]

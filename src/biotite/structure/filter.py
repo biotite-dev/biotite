@@ -294,7 +294,7 @@ def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
     lies within the provided boundaries.
 
     The result will depend on the atoms' order.
-    For instance, consider a molecule::
+    For instance, consider a molecule:
 
            C3
            |
@@ -306,12 +306,12 @@ def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
 
     Parameters
     ----------
-    array: AtomArray
+    array : AtomArray
         The array to filter.
-    min_len: float
-        Minmum bond length
-    max_len: float
-        Maximum bond length
+    min_len : float
+        Minmum bond length.
+    max_len : float
+        Maximum bond length.
 
     Returns
     -------
@@ -364,7 +364,6 @@ def filter_polymer(array, min_size=2, pol_type="peptide"):
     filter : ndarray, dtype=bool
         This array is `True` for all indices in `array`, where atoms belong to
         consecutive polymer entity having at least `min_size` monomers.
-
     """
     # Import `check_res_id_continuity` here to avoid circular imports
     from biotite.structure.integrity import check_res_id_continuity
@@ -412,7 +411,6 @@ def filter_intersection(array, intersect):
     >>> array1 = array1[filter_intersection(array1, array2)]
     >>> print(array1.chain_id)
     ['B' 'C' 'D']
-
     """
     filter = np.full(array.array_length(), True, dtype=bool)
     intersect_categories = intersect.get_annotation_categories()

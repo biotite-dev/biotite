@@ -391,7 +391,7 @@ class GenBankFile(TextFile):
             The field name.
         content : list of str
             The content lines.
-        subfield_dict : dict of str -> str, optional
+        subfields : dict of str -> str, optional
             The subfields of the field.
             The dictionary maps subfield names to the content lines of
             the respective subfield.
@@ -432,7 +432,7 @@ class GenBankFile(TextFile):
             The field name.
         content : list of str
             The content lines.
-        subfield_dict : dict of str -> str, optional
+        subfields : dict of str -> str, optional
             The subfields of the field.
             The dictionary maps subfield names to the content lines of
             the respective subfield.
