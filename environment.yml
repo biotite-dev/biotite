@@ -22,6 +22,7 @@ dependencies:
   - msgpack-python >=0.5.6
   - networkx >=2.0
   - numpy >=2.0
+  - packaging >=24.0
   - requests >=2.12
   # Testing
   - pytest >=7.0
@@ -37,6 +38,11 @@ dependencies:
   - sra-tools =3
   - tantan
   - viennarna >=2.5.0
+  # Interfaced packages in biotite.interface (can also be installed separately)
+  - pymol-open-source >=2
+  - ffmpeg  # Required for video rendering in PyMOL
+  - imagemagick  # Required for video rendering in PyMOL
+  - openmm >=8
   # Documentation building
   - pydata-sphinx-theme =0.15
   - matplotlib >=3.3
@@ -53,3 +59,6 @@ dependencies:
   - pydot >=1.4
   - scikit-learn >=0.18
   - scipy >=1.8.0
+  - pip:
+    # Conda provides no recent version of RDKit (required for biotite.interface)
+    - rdkit >=2024.09.1

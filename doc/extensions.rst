@@ -49,17 +49,3 @@ Python packages that are developed independently.
         :class-img-top: extension-logo
 
         Investigation of molecular dynamics using elastic network models
-
-    .. grid-item-card:: Ammolite
-        :link: https://ammolite.biotite-python.org/
-        :img-top: https://raw.githubusercontent.com/biotite-dev/ammolite/master/doc/static/assets/ammolite_logo.svg
-        :class-img-top: extension-logo
-
-        An interface between Biotite and the *PyMOL* biomolecular visualization software
-
-    .. grid-item-card:: Molmarbles
-        :link: https://github.com/biotite-dev/molmarbles
-        :img-top: https://raw.githubusercontent.com/biotite-dev/molmarbles/master/logo.svg
-        :class-img-top: extension-logo
-
-        An interface between Biotite and the *OpenMM* molecular dynamics simulation library

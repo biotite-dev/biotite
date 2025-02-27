@@ -27,7 +27,7 @@ dependencies = [
   "requests >= 2.12",
   "msgpack >= 0.5.6",
   "networkx >= 2.0",
-  "requests >= 2.12",
+  "packaging >= 24.0",
 ]
 dynamic = ["version"]
 

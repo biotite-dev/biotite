@@ -25,6 +25,7 @@ import warnings
 from tempfile import NamedTemporaryFile
 import networkx as nx
 import numpy as np
+import biotite.interface.pymol as pymol_interface
 import biotite.structure as struc
 import biotite.structure.io as strucio
 
@@ -111,7 +112,32 @@ for chain_id, leaflet_mask in zip(("A", "B"), leaflets):
 # Save marked lipids to structure file
 temp = NamedTemporaryFile(suffix=".pdb")
 strucio.save_structure(temp.name, structure)
-# Visualization with PyMOL...
-# sphinx_gallery_ammolite_script = "leaflet_pymol.py"
-
 temp.close()
+
+
+# Visualization with PyMOL
+pymol_interface.cmd.set("sphere_scale", 1.5)
+# Remove hydrogen and water
+structure = structure[(structure.element != "H") & (structure.res_name != "TIP")]
+structure.bonds = struc.connect_via_distances(structure)
+pymol_obj = pymol_interface.PyMOLObject.from_structure(structure)
+# Configure lipid tails
+pymol_obj.color("biotite_lightgreen", structure.chain_id == "A")
+pymol_obj.color("biotite_brightorange", structure.chain_id == "B")
+pymol_obj.show("sticks", np.isin(structure.chain_id, ("A", "B")))
+# Configure lipid heads
+pymol_obj.color(
+    "biotite_darkgreen", (structure.chain_id == "A") & (structure.atom_name == "P")
+)
+pymol_obj.color(
+    "biotite_dimorange", (structure.chain_id == "B") & (structure.atom_name == "P")
+)
+pymol_obj.show(
+    "spheres", np.isin(structure.chain_id, ("A", "B")) & (structure.atom_name == "P")
+)
+# Adjust camera
+pymol_obj.orient()
+pymol_interface.cmd.turn("x", 90)
+pymol_obj.zoom(buffer=-10)
+# Display
+pymol_interface.show((1500, 1000))
