@@ -107,7 +107,7 @@ rmsd = struc.rmsd(ref_ligand, docked_ligand)
 correlation, p_value = spearmanr(energies, rmsd)
 
 figure, ax = plt.subplots(figsize=(8.0, 6.0))
-ax.set_title(f"$r_s$ = {correlation:.2f} ($p$ = {p_value*100:.1f}%)")
+ax.set_title(f"$r_s$ = {correlation:.2f} ($p$ = {p_value * 100:.1f}%)")
 ax.scatter(energies, rmsd, marker="+", color="black")
 ax.set_xlabel("Energy (kcal/mol)")
 ax.set_ylabel("RMSD (Å)")

@@ -172,7 +172,7 @@ class ClustalOmegaApp(MSAApp):
         """
         if self._mbed:
             raise ValueError(
-                "Getting the distance matrix requires " "'full_matrix_calculation()'"
+                "Getting the distance matrix requires 'full_matrix_calculation()'"
             )
         return self._dist_matrix
 

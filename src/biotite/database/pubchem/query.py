@@ -332,7 +332,7 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
                     )
         if not query_key_found:
             raise TypeError(
-                "Expected exactly one of 'smiles', 'smarts', 'inchi', 'sdf' " "or 'cid'"
+                "Expected exactly one of 'smiles', 'smarts', 'inchi', 'sdf' or 'cid'"
             )
         if "number" in kwargs:
             self._number = kwargs["number"]

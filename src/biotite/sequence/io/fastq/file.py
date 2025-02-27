@@ -302,10 +302,10 @@ class FastqFile(TextFile, MutableMapping):
                 else:  # score_len > seq_len
                     raise InvalidFileError(
                         f"The amount of scores is not equal to the sequence "
-                        f"length for the sequence in line {seq_start_i+1} "
+                        f"length for the sequence in line {seq_start_i + 1} "
                     )
             else:
-                raise InvalidFileError(f"Line {i+1} in FASTQ file is invalid")
+                raise InvalidFileError(f"Line {i + 1} in FASTQ file is invalid")
         # At the end of the file, the last sequence or score block
         # must have properly ended
         if in_sequence or in_scores:
@@ -392,7 +392,7 @@ class FastqFile(TextFile, MutableMapping):
                     yield identifier, ("".join(seq_str_list), scores)
                 else:  # score_len > seq_len
                     raise InvalidFileError(
-                        "The amount of scores is not equal to the sequence " "length"
+                        "The amount of scores is not equal to the sequence length"
                     )
 
             else:

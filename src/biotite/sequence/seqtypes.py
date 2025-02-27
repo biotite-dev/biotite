@@ -601,7 +601,7 @@ class ProteinSequence(Sequence):
 
         if np.isnan(weight):
             raise ValueError(
-                "Sequence contains ambiguous amino acids, " "cannot calculate weight"
+                "Sequence contains ambiguous amino acids, cannot calculate weight"
             )
         return weight
 

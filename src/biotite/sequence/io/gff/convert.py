@@ -84,7 +84,7 @@ def set_annotation(gff_file, annotation, seqid=None, source=None, is_stranded=Tr
     for feature in sorted(annotation):
         if len(feature.locs) > 1 and "ID" not in feature.qual:
             raise ValueError(
-                "The 'Id' qualifier is required " "for features with multiple locations"
+                "The 'Id' qualifier is required for features with multiple locations"
             )
         ## seqid ##
         if seqid is not None and " " in seqid:

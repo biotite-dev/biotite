@@ -97,8 +97,8 @@ class Location:
     def __repr__(self):
         """Represent Location as a string for debugging."""
         return (
-            f'Location({self._first}, {self._last}, strand={"Location." + str(self._strand)}, '
-            f'defect={"Location." + str(self._defect)})'
+            f"Location({self._first}, {self._last}, strand={'Location.' + str(self._strand)}, "
+            f"defect={'Location.' + str(self._defect)})"
         )
 
     @property
@@ -361,7 +361,7 @@ class Annotation(Copyable):
     def __repr__(self):
         """Represent Annotation as a string for debugging."""
         return (
-            f'Annotation([{", ".join([feat.__repr__() for feat in self._features])}])'
+            f"Annotation([{', '.join([feat.__repr__() for feat in self._features])}])"
         )
 
     def __copy_create__(self):
@@ -389,8 +389,7 @@ class Annotation(Copyable):
         """
         if not isinstance(feature, Feature):
             raise TypeError(
-                f"Only 'Feature' objects are supported, "
-                f"not {type(feature).__name__}"
+                f"Only 'Feature' objects are supported, not {type(feature).__name__}"
             )
         self._features.add(feature)
 
@@ -503,7 +502,7 @@ class Annotation(Copyable):
     def __delitem__(self, item):
         if not isinstance(item, Feature):
             raise TypeError(
-                f"Only 'Feature' objects are supported, " f"not {type(item).__name__}"
+                f"Only 'Feature' objects are supported, not {type(item).__name__}"
             )
         self.del_feature(item)
 

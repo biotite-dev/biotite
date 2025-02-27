@@ -110,7 +110,7 @@ def fetch(
     for i, id in enumerate(uids):
         # Verbose output
         if verbose:
-            print(f"Fetching file {i+1:d} / {len(uids):d} ({id})...", end="\r")
+            print(f"Fetching file {i + 1:d} / {len(uids):d} ({id})...", end="\r")
         # Fetch file from database
         if target_path is not None:
             file = join(target_path, id + "." + suffix)

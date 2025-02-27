@@ -525,9 +525,9 @@ class PDBQTFile(TextFile):
                 f"{atoms.chain_id[i]:1}"
                 f"{atoms.res_id[i]:>4d}"
                 f"{atoms.ins_code[i]:1}   "
-                f"{atoms.coord[i,0]:>8.3f}"
-                f"{atoms.coord[i,1]:>8.3f}"
-                f"{atoms.coord[i,2]:>8.3f}"
+                f"{atoms.coord[i, 0]:>8.3f}"
+                f"{atoms.coord[i, 1]:>8.3f}"
+                f"{atoms.coord[i, 2]:>8.3f}"
                 f"{occupancy[i]:>6.2f}"
                 f"{b_factor[i]:>6.2f}    "
                 f"{charges[i]:>6.3f} "
@@ -604,7 +604,7 @@ class PDBQTFile(TextFile):
                 length = model_length
             if model_length != length:
                 raise InvalidFileError(
-                    f"Model {model_i+1} has {model_length} atoms, "
+                    f"Model {model_i + 1} has {model_length} atoms, "
                     f"but model 1 has {length} atoms, must be equal"
                 )
         return length

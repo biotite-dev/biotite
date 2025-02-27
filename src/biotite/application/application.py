@@ -157,7 +157,7 @@ class Application(metaclass=abc.ABCMeta):
             if timeout is not None and time.time() - self._start_time > timeout:
                 self.cancel()
                 raise TimeoutError(
-                    f"The application expired its timeout " f"({timeout:.1f} s)"
+                    f"The application expired its timeout ({timeout:.1f} s)"
                 )
             else:
                 time.sleep(self.wait_interval())

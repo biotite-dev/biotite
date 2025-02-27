@@ -132,7 +132,7 @@ def get_segment_masks(starts, indices):
     if (indices >= length).any():
         index = np.min(np.where(indices >= length)[0])
         raise ValueError(
-            f"Index {index} is out of range for " f"an atom array with length {length}"
+            f"Index {index} is out of range for an atom array with length {length}"
         )
 
     insertion_points = np.searchsorted(starts, indices, side="right") - 1
@@ -174,7 +174,7 @@ def get_segment_starts_for(starts, indices):
     if (indices >= length).any():
         index = np.min(np.where(indices >= length)[0])
         raise ValueError(
-            f"Index {index} is out of range for " f"an atom array with length {length}"
+            f"Index {index} is out of range for an atom array with length {length}"
         )
 
     insertion_points = np.searchsorted(starts, indices, side="right") - 1
@@ -212,7 +212,7 @@ def get_segment_positions(starts, indices):
     if (indices >= length).any():
         index = np.min(np.where(indices >= length)[0])
         raise ValueError(
-            f"Index {index} is out of range for " f"an atom array with length {length}"
+            f"Index {index} is out of range for an atom array with length {length}"
         )
 
     return np.searchsorted(starts, indices, side="right") - 1

@@ -303,8 +303,7 @@ class GFFFile(TextFile):
     def __getitem__(self, index):
         if (index >= 0 and index >= len(self)) or (index < 0 and -index > len(self)):
             raise IndexError(
-                f"Index {index} is out of range for GFFFile with "
-                f"{len(self)} entries"
+                f"Index {index} is out of range for GFFFile with {len(self)} entries"
             )
 
         line_index = self._entries[index]
