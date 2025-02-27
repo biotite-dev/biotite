@@ -37,7 +37,7 @@ test = [
   "pytest-codspeed",
 ]
 lint = [
-  "ruff == 0.6.9",
+  "ruff == 0.9.7",
   "numpydoc == 1.8.0",
 ]
 
