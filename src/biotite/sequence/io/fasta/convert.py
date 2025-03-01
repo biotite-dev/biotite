@@ -275,8 +275,7 @@ def _process_nucleotide_sequence(x):
 def _convert_to_string(sequence, as_rna):
     if not isinstance(sequence.get_alphabet(), LetterAlphabet):
         raise ValueError(
-            "Only sequences using single letter alphabets "
-            "can be stored in a FASTA file"
+            "Only sequences using single letter alphabets can be stored in a FASTA file"
         )
     if isinstance(sequence, NucleotideSequence) and as_rna:
         return str(sequence).replace("T", "U")

@@ -325,7 +325,7 @@ def test_valence_state_not_parametrized():
     with pytest.warns(
         UserWarning,
         match=(
-            "Parameters for specific valence states of some atoms " "are not available"
+            "Parameters for specific valence states of some atoms are not available"
         ),
     ):
         thioformaldehyde = array([carbon, sulfur, hydrogen, hydrogen])

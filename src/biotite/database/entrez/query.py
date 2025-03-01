@@ -173,7 +173,8 @@ class SimpleQuery(Query):
         "SUBS",
         "WORD",
         "TI",
-        "TITL" "VOL",
+        "TITL",
+        "VOL",
     ]
 
     def __init__(self, term, field=None):

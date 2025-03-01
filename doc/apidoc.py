@@ -119,7 +119,7 @@ def _create_package_page(doc_path, package_name, classes, functions, subpackages
         string = dedent(f"""
 
             {category}
-            {"-"*len(category)}
+            {"-" * len(category)}
 
             .. autosummary::
                 :nosignatures:

@@ -176,7 +176,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         array = np.asarray(array)
         if len(array) != self._array_length:
             raise IndexError(
-                f"Expected array length {self._array_length}, " f"but got {len(array)}"
+                f"Expected array length {self._array_length}, but got {len(array)}"
             )
         if category in self._annot:
             # If the annotation already exists, find the compatible dtype
@@ -328,17 +328,16 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             if isinstance(self, AtomArray):
                 if value.ndim != 2:
                     raise ValueError(
-                        "A 2-dimensional ndarray is expected " "for an AtomArray"
+                        "A 2-dimensional ndarray is expected for an AtomArray"
                     )
             elif isinstance(self, AtomArrayStack):
                 if value.ndim != 3:
                     raise ValueError(
-                        "A 3-dimensional ndarray is expected " "for an AtomArrayStack"
+                        "A 3-dimensional ndarray is expected for an AtomArrayStack"
                     )
             if value.shape[-2] != self._array_length:
                 raise ValueError(
-                    f"Expected array length {self._array_length}, "
-                    f"but got {len(value)}"
+                    f"Expected array length {self._array_length}, but got {len(value)}"
                 )
             if value.shape[-1] != 3:
                 raise TypeError("Expected 3 coordinates for each atom")
@@ -363,13 +362,12 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 if isinstance(self, AtomArray):
                     if value.ndim != 2:
                         raise ValueError(
-                            "A 2-dimensional ndarray is expected " "for an AtomArray"
+                            "A 2-dimensional ndarray is expected for an AtomArray"
                         )
                 else:  # AtomArrayStack
                     if value.ndim != 3:
                         raise ValueError(
-                            "A 3-dimensional ndarray is expected "
-                            "for an AtomArrayStack"
+                            "A 3-dimensional ndarray is expected for an AtomArrayStack"
                         )
                 if value.shape[-2:] != (3, 3):
                     raise TypeError("Box must be a 3x3 matrix (three vectors)")
@@ -1456,8 +1454,7 @@ def repeat(atoms, coord):
     if isinstance(atoms, AtomArray):
         if coord.ndim != 3:
             raise ValueError(
-                f"Expected 3 dimensions for the coordinate array, "
-                f"but got {coord.ndim}"
+                f"Expected 3 dimensions for the coordinate array, but got {coord.ndim}"
             )
         repeated = AtomArray(new_length)
         repeated.coord = coord.reshape((new_length, 3))
@@ -1465,16 +1462,14 @@ def repeat(atoms, coord):
     elif isinstance(atoms, AtomArrayStack):
         if coord.ndim != 4:
             raise ValueError(
-                f"Expected 4 dimensions for the coordinate array, "
-                f"but got {coord.ndim}"
+                f"Expected 4 dimensions for the coordinate array, but got {coord.ndim}"
             )
         repeated = AtomArrayStack(atoms.stack_depth(), new_length)
         repeated.coord = coord.reshape((atoms.stack_depth(), new_length, 3))
 
     else:
         raise TypeError(
-            f"Expected 'AtomArray' or 'AtomArrayStack', "
-            f"but got {type(atoms).__name__}"
+            f"Expected 'AtomArray' or 'AtomArrayStack', but got {type(atoms).__name__}"
         )
 
     for category in atoms.get_annotation_categories():

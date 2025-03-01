@@ -68,7 +68,7 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
         # Check matrix symmetry
         if matrix is not None and not matrix.is_symmetric():
             raise ValueError(
-                "A symmetric matrix is required for " "multiple sequence alignments"
+                "A symmetric matrix is required for multiple sequence alignments"
             )
 
         # Check whether the program supports the alignment for the given

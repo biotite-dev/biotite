@@ -212,7 +212,7 @@ def test_match_table(table_class, use_similarity_rule):
     chosen to yield only the same k-mer as similar k-mer.
     """
     alphabet = seq.LetterAlphabet(string.ascii_lowercase + "_")
-    phrase1 = "how_much_wood_would_a_woodchuck_chuck_if_a_woodchuck_could_" "chuck_wood"
+    phrase1 = "how_much_wood_would_a_woodchuck_chuck_if_a_woodchuck_could_chuck_wood"
     phrase2 = "woodchuck"
     sequence1 = seq.GeneralSequence(alphabet, phrase1)
     sequence2 = seq.GeneralSequence(alphabet, phrase2)

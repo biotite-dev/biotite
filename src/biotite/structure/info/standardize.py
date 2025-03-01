@@ -125,8 +125,7 @@ def standardize_order(atoms):
         if chem_comp_atom is None:
             # If the residue is not in the CCD, keep the current order
             warnings.warn(
-                f"Residue '{res_name}' is not in the CCD, "
-                f"keeping current atom order"
+                f"Residue '{res_name}' is not in the CCD, keeping current atom order"
             )
             reordered_indices[start:stop] = np.arange(start, stop)
             continue

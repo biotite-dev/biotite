@@ -91,7 +91,7 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
     for i, id in enumerate(pdb_ids):
         # Verbose output
         if verbose:
-            print(f"Fetching file {i+1:d} / {len(pdb_ids):d} ({id})...", end="\r")
+            print(f"Fetching file {i + 1:d} / {len(pdb_ids):d} ({id})...", end="\r")
 
         # Fetch file from database
         if target_path is not None:

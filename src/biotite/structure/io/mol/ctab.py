@@ -115,7 +115,7 @@ def write_structure_to_ctab(atoms, default_bond_type=BondType.ANY, version=None)
     """
     if isinstance(atoms, AtomArrayStack):
         raise TypeError(
-            "An 'AtomArrayStack' was given, " "but only a single model can be written"
+            "An 'AtomArrayStack' was given, but only a single model can be written"
         )
     if atoms.bonds is None:
         raise BadStructureError("Input AtomArray has no associated BondList")
@@ -133,8 +133,7 @@ def write_structure_to_ctab(atoms, default_bond_type=BondType.ANY, version=None)
                 atoms.array_length(), atoms.bonds.get_bond_count()
             ):
                 raise ValueError(
-                    "The given number of atoms or bonds is too large "
-                    "for V2000 format"
+                    "The given number of atoms or bonds is too large for V2000 format"
                 )
             return _write_structure_to_ctab_v2000(atoms, default_bond_type)
         case "V3000":
@@ -166,7 +165,7 @@ def _read_structure_from_ctab_v2000(ctab_lines):
             charge = CHARGE_MAPPING.get(int(line[36:39]))
             if charge is None:
                 warnings.warn(
-                    f"Cannot handle MDL charge type {int(line[36 : 39])}, "
+                    f"Cannot handle MDL charge type {int(line[36:39])}, "
                     f"0 is used instead"
                 )
                 charge = 0
@@ -186,7 +185,7 @@ def _read_structure_from_ctab_v2000(ctab_lines):
         bond_type = BOND_TYPE_MAPPING.get(int(line[6:9]))
         if bond_type is None:
             warnings.warn(
-                f"Cannot handle MDL bond type {int(line[6 : 9])}, "
+                f"Cannot handle MDL bond type {int(line[6:9])}, "
                 f"BondType.ANY is used instead"
             )
             bond_type = BondType.ANY
@@ -239,8 +238,7 @@ def _read_structure_from_ctab_v3000(ctab_lines):
         bond_type = BOND_TYPE_MAPPING.get(v30_type)
         if bond_type is None:
             warnings.warn(
-                f"Cannot handle MDL bond type {v30_type}, "
-                f"BondType.ANY is used instead"
+                f"Cannot handle MDL bond type {v30_type}, BondType.ANY is used instead"
             )
             bond_type = BondType.ANY
         bond_array[i, 0] = v30_atom_indices[v30_atom_index_1]
@@ -300,9 +298,9 @@ def _write_structure_to_ctab_v2000(atoms, default_bond_type):
     )
 
     atom_lines = [
-        f"{atoms.coord[i,0]:>10.4f}"
-        f"{atoms.coord[i,1]:>10.4f}"
-        f"{atoms.coord[i,2]:>10.4f}"
+        f"{atoms.coord[i, 0]:>10.4f}"
+        f"{atoms.coord[i, 1]:>10.4f}"
+        f"{atoms.coord[i, 2]:>10.4f}"
         f" {atoms.element[i].capitalize():3}"
         f"{0:>2}"  # Mass difference -> unused
         f"{CHARGE_MAPPING_REV.get(charge[i], 0):>3d}"
@@ -313,7 +311,7 @@ def _write_structure_to_ctab_v2000(atoms, default_bond_type):
 
     default_bond_value = BOND_TYPE_MAPPING_REV[default_bond_type]
     bond_lines = [
-        f"{i+1:>3d}{j+1:>3d}"
+        f"{i + 1:>3d}{j + 1:>3d}"
         f"{BOND_TYPE_MAPPING_REV.get(bond_type, default_bond_value):>3d}"
         + f"{0:>3d}"
         * 4
@@ -329,7 +327,7 @@ def _write_structure_to_ctab_v2000(atoms, default_bond_type):
     ):
         charge_lines.append(
             f"M  CHG{len(batch):>3d}"
-            + "".join(f" {atom_i+1:>3d} {c:>3d}" for atom_i, c in batch)
+            + "".join(f" {atom_i + 1:>3d} {c:>3d}" for atom_i, c in batch)
         )
 
     return [counts_line] + atom_lines + bond_lines + charge_lines + ["M  END"]
@@ -346,9 +344,9 @@ def _write_structure_to_ctab_v3000(atoms, default_bond_type):
     atom_lines = [
         f"{i + 1}"
         f" {_quote(atoms.element[i].capitalize())}"
-        f" {atoms.coord[i,0]:.4f}"
-        f" {atoms.coord[i,1]:.4f}"
-        f" {atoms.coord[i,2]:.4f}"
+        f" {atoms.coord[i, 0]:.4f}"
+        f" {atoms.coord[i, 1]:.4f}"
+        f" {atoms.coord[i, 2]:.4f}"
         # 'aamap' is unused
         f" 0"
         f" {_to_property(charges[i])}"

@@ -136,7 +136,7 @@ def test_alignment_conversion():
         "ADTRCGTARDCGTR-DRTCGRAGD\n"
         "ADTRCGT---CGTRADRTCGRAGD\n"
         "ADTRCGTARDCGTRADR--GRAGD"
-    )
+    )  # fmt: skip
 
     file2 = fasta.FastaFile()
     fasta.set_alignment(file2, alignment, seq_names=["seq1", "seq2", "seq3"])

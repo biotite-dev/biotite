@@ -114,7 +114,7 @@ def fetch(
             raise TypeError("CIDs must be given as integers, not as string")
         # Verbose output
         if verbose:
-            print(f"Fetching file {i+1:d} / {len(cids):d} ({cid})...", end="\r")
+            print(f"Fetching file {i + 1:d} / {len(cids):d} ({cid})...", end="\r")
 
         # Fetch file from database
         if target_path is not None:
