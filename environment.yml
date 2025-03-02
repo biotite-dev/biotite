@@ -31,6 +31,8 @@ dependencies:
   # Interfaced software in biotite.application (can also be installed separately)
   - autodock-vina
   - clustalo
+  - dssp =4
+  - libcifpp  # Makes sure that the used version of libcifpp contains this fix: https://github.com/bioconda/bioconda-recipes/pull/57869
   - mafft
   - muscle =3
   - sra-tools =3
