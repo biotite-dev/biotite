@@ -115,6 +115,8 @@ _other_type_list = [
     "polysaccharide(L)",
 ]
 
+FIND_MATCHES_SWITCH_THRES = 10000
+
 
 def _filter(category, index):
     """
@@ -644,7 +646,7 @@ def _parse_inter_residue_bonds(atom_site, struct_conn):
     )
 
 
-def _find_matches(query_arrays, reference_arrays):
+def _find_matches_by_dense_array(query_arrays, reference_arrays):
     """
     For each index in the `query_arrays` find the indices in the
     `reference_arrays` where all query values match the reference counterpart.
@@ -674,6 +676,63 @@ def _find_matches(query_arrays, reference_arrays):
     # -1 indicates that no match was found in the reference
     match_indices = np.full(len(query_arrays[0]), -1, dtype=int)
     match_indices[query_matches] = reference_matches
+    return match_indices
+
+
+def _find_matches_by_dict(query_arrays, reference_arrays):
+    """
+    For each index in the `query_arrays` find the indices in the
+    `reference_arrays` where all query values match the reference counterpart.
+    If no match is found for a query, the corresponding index is -1.
+    """
+    # Convert reference arrays to a dictionary for O(1) lookups
+    reference_dict = {}
+    ambiguous_keys = set()
+    for ref_idx, ref_row in enumerate(zip(*reference_arrays)):
+        ref_key = tuple(ref_row)
+        if ref_key in reference_dict:
+            ambiguous_keys.add(ref_key)
+            continue
+        reference_dict[ref_key] = ref_idx
+
+    match_indices = []
+    for query_idx, query_row in enumerate(zip(*query_arrays)):
+        query_key = tuple(query_row)
+        occurrence = reference_dict.get(query_key)
+
+        if occurrence is None:
+            # -1 indicates that no match was found in the reference
+            match_indices.append(-1)
+        elif query_key in ambiguous_keys:
+            # The query cannot be uniquely matched to an atom in the reference
+            raise InvalidFileError(
+                f"The covalent bond in the 'struct_conn' category at index "
+                f"{query_idx} cannot be unambiguously assigned to atoms in "
+                f"the 'atom_site' category"
+            )
+        else:
+            match_indices.append(occurrence)
+
+    return np.array(match_indices)
+
+
+def _find_matches(query_arrays, reference_arrays):
+    """
+    For each index in the `query_arrays` find the indices in the
+    `reference_arrays` where all query values match the reference counterpart.
+    If no match is found for a query, the corresponding index is -1.
+    """
+    # it was observed that when the size exceeds 2^13 (8192)
+    # the dict strategy becomes significantly faster than the dense array
+    # and does not cause excessive memory usage.
+    # https://github.com/biotite-dev/biotite/pull/765#issuecomment-2696591338
+    if (
+        query_arrays[0].shape[0] * reference_arrays[0].shape[0]
+        <= FIND_MATCHES_SWITCH_THRES
+    ):
+        match_indices = _find_matches_by_dense_array(query_arrays, reference_arrays)
+    else:
+        match_indices = _find_matches_by_dict(query_arrays, reference_arrays)
     return match_indices
 
 
