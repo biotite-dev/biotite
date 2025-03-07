@@ -4,11 +4,15 @@
 
 __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
-__all__ = ["colors", "set_font_size_in_coord", "AdaptiveFancyArrow"]
+__all__ = ["colors", "plot_scaled_text", "set_font_size_in_coord", "AdaptiveFancyArrow"]
 
+import warnings
 from collections import OrderedDict
 import numpy as np
 from numpy.linalg import norm
+
+_FONT_PROPERTY_KEYS = ["family", "style", "variant", "weight", "stretch", "size"]
+
 
 # Biotite themed colors
 colors = OrderedDict(
@@ -27,6 +31,105 @@ colors = OrderedDict(
 )
 
 
+def plot_scaled_text(
+    axes, text, x, y, width=None, height=None, mode="unlocked", **kwargs
+):
+    """
+    Create a :class:`matplotlib.textpath.TextPath`, whose text size is given in
+    coordinates instead of font size.
+
+    Parameters
+    ----------
+    axes : Axes
+        The axes to draw the text on.
+    text : str
+        The text to be drawn.
+    x, y : float
+        The lower left position of the text.
+    width, height : float, optional
+        The width/height `text` should have in its reference coordinate system.
+        At least one value must be supplied.
+    mode : {'proportional', 'unlocked', 'maximum', 'minimum'}, optional
+        Defines how the text size is scaled.
+        The scaling mode:
+
+            - *proportional* - The width and height are scaled by the
+              same extent.
+              Either `width` or `height` must be set for this mode.
+            - *unlocked* - The width and the height are scaled by
+              different extents, changing the aspect ratio of the text.
+              Both `width` and `height` must be set for this mode.
+            - *maximum* - The width and the height are scaled by
+              the same extent, so that they are at maximum as large
+              as the supplied `width`/`height`.
+              Both `width` and `height` must be set for this mode.
+            - *minimum* - The width and the height are scaled by
+              the same extent, so that they are at minimum as large
+              as the supplied `width`/`height`.
+              Both `width` and `height` must be set for this mode.
+
+    **kwargs
+        Additional parameters for the :class:`matplotlib.font_manager.FontProperties`
+        of the text or the created :class:`matplotlib.patches.PathPatch`.
+
+    Returns
+    -------
+    patch : matplotlib.patches.PathPatch
+        The patch that represents the text.
+    """
+    from matplotlib.patches import PathPatch
+    from matplotlib.textpath import TextPath
+    from matplotlib.transforms import Affine2D
+
+    # The larger the size, the more there is an offset at the x-axis
+    # -> Keep font size small to reduce this error to a minimum
+    # The size is transformed to the desired size afterwards anyway
+    font_property_kwargs = {
+        key: kwargs.pop(key) for key in _FONT_PROPERTY_KEYS if key in kwargs
+    }
+    path = TextPath((x, y), text, size=1e-3, prop=font_property_kwargs)
+    bbox = path.get_extents()
+
+    if mode == "proportional":
+        if width is None:
+            # Proportional scaling based on height
+            scale_y = height / bbox.height
+            scale_x = scale_y
+        elif height is None:
+            # Proportional scaling based on width
+            scale_x = width / bbox.width
+            scale_y = scale_x
+        else:
+            raise ValueError(
+                "width or height are mutually exclusive in 'proportional' mode"
+            )
+    elif mode == "unlocked":
+        scale_x = width / bbox.width
+        scale_y = height / bbox.height
+    elif mode == "minimum":
+        scale_x = width / bbox.width
+        scale_y = height / bbox.height
+        scale = max(scale_x, scale_y)
+        scale_x, scale_y = scale, scale
+    elif mode == "maximum":
+        scale_x = width / bbox.width
+        scale_y = height / bbox.height
+        scale = min(scale_x, scale_y)
+        scale_x, scale_y = scale, scale
+
+    path = (
+        Affine2D()
+        .translate(-bbox.x0, -bbox.y0)
+        .scale(scale_x, scale_y)
+        .translate(bbox.x0, bbox.y0)
+        .transform_path(path)
+    )
+    patch = PathPatch(path, **kwargs)
+    axes.add_patch(patch)
+
+    return patch
+
+
 def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
     """
     Specifiy the font size of an existing `Text` object in coordinates
@@ -37,6 +140,8 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
     plot's width/height.
     The scaling can be proportional or non-proportional, depending
     the `mode`.
+
+    DEPRECATED: Use :func:`plot_scaled_text()` instead.
 
     Parameters
     ----------
@@ -124,6 +229,11 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
 
             affine = Affine2D().scale(scale_x, scale_y) + affine
             renderer.draw_path(gc, tpath, affine, rgbFace)
+
+    warnings.warn(
+        "Deprecated, use 'biotite.graphics.text.plot_scaled_text()' instead.",
+        DeprecationWarning,
+    )
 
     if mode in ["unlocked", "minimum", "maximum"]:
         if width is None or height is None:
