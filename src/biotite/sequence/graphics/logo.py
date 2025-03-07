@@ -9,7 +9,7 @@ __all__ = ["plot_sequence_logo"]
 import numpy as np
 from biotite.sequence.alphabet import LetterAlphabet
 from biotite.sequence.graphics.colorschemes import get_color_scheme
-from biotite.visualize import set_font_size_in_coord
+from biotite.visualize import plot_scaled_text
 
 
 def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
@@ -38,7 +38,8 @@ def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
         The list length must be at least as long as the
         length of the alphabet used by the `profile`.
     **kwargs
-        Additional `text parameters <https://matplotlib.org/api/text_api.html#matplotlib.text.Text>`_.
+        Additional parameters for the :class:`matplotlib.font_manager.FontProperties`
+        of the text or the created :class:`matplotlib.patches.PathPatch`.
 
     References
     ----------
@@ -69,23 +70,20 @@ def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
         index_order = np.argsort(symbols_heights)
         start_height = 0
         for j in index_order[i]:
-            # Stack the symbols at position on top of the preceeding one
+            # Stack the symbols at position on top of the preceding one
             height = symbols_heights[i, j]
             if height > 0:
                 symbol = alphabet.decode(j)
-                text = axes.text(
+                plot_scaled_text(
+                    axes,
+                    symbol,
                     i + 0.5,
                     start_height,
-                    symbol,
-                    ha="left",
-                    va="bottom",
+                    width=1,
+                    height=height,
                     color=colors[j],
-                    # Best results are obtained with this font size
-                    size=1,
                     **kwargs,
                 )
-                text.set_clip_on(True)
-                set_font_size_in_coord(text, width=1, height=height)
                 start_height += height
 
     axes.set_xlim(0.5, len(profile.symbols) + 0.5)
