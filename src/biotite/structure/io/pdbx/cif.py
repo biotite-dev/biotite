@@ -896,6 +896,7 @@ class CIFFile(_Component, File, MutableMapping):
                 block = CIFBlock.deserialize(block)
             except Exception:
                 raise DeserializationError(f"Failed to deserialize block '{key}'")
+            block.name = key
             # Update with deserialized object
             self._blocks[key] = block
         return block
