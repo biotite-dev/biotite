@@ -100,6 +100,12 @@ COMP_BOND_TYPE_TO_ORDER = {
     bond_type: order for order, bond_type in COMP_BOND_ORDER_TO_TYPE.items()
 }
 CANONICAL_RESIDUE_LIST = canonical_aa_list + canonical_nucleotide_list
+# it was observed that when the number or rows in `atom_site` and `struct_conn`
+# exceed a certain threshold,
+# a dictionary approach is less computation and memory intensive than the dense
+# vectorized approach.
+# https://github.com/biotite-dev/biotite/pull/765#issuecomment-2696591338
+FIND_MATCHES_SWITCH_THRESHOLD = 10000
 
 _proteinseq_type_list = ["polypeptide(D)", "polypeptide(L)"]
 _nucleotideseq_type_list = [
@@ -114,8 +120,6 @@ _other_type_list = [
     "polysaccharide(D)",
     "polysaccharide(L)",
 ]
-
-FIND_MATCHES_SWITCH_THRES = 10000
 
 
 def _filter(category, index):
@@ -646,12 +650,23 @@ def _parse_inter_residue_bonds(atom_site, struct_conn):
     )
 
 
-def _find_matches_by_dense_array(query_arrays, reference_arrays):
+def _find_matches(query_arrays, reference_arrays):
     """
     For each index in the `query_arrays` find the indices in the
     `reference_arrays` where all query values match the reference counterpart.
     If no match is found for a query, the corresponding index is -1.
     """
+    if (
+        query_arrays[0].shape[0] * reference_arrays[0].shape[0]
+        <= FIND_MATCHES_SWITCH_THRESHOLD
+    ):
+        match_indices = _find_matches_by_dense_array(query_arrays, reference_arrays)
+    else:
+        match_indices = _find_matches_by_dict(query_arrays, reference_arrays)
+    return match_indices
+
+
+def _find_matches_by_dense_array(query_arrays, reference_arrays):
     match_masks_for_all_columns = np.stack(
         [
             query[:, np.newaxis] == reference[np.newaxis, :]
@@ -680,11 +695,6 @@ def _find_matches_by_dense_array(query_arrays, reference_arrays):
 
 
 def _find_matches_by_dict(query_arrays, reference_arrays):
-    """
-    For each index in the `query_arrays` find the indices in the
-    `reference_arrays` where all query values match the reference counterpart.
-    If no match is found for a query, the corresponding index is -1.
-    """
     # Convert reference arrays to a dictionary for O(1) lookups
     reference_dict = {}
     ambiguous_keys = set()
@@ -714,26 +724,6 @@ def _find_matches_by_dict(query_arrays, reference_arrays):
             match_indices.append(occurrence)
 
     return np.array(match_indices)
-
-
-def _find_matches(query_arrays, reference_arrays):
-    """
-    For each index in the `query_arrays` find the indices in the
-    `reference_arrays` where all query values match the reference counterpart.
-    If no match is found for a query, the corresponding index is -1.
-    """
-    # it was observed that when the size exceeds 2^13 (8192)
-    # the dict strategy becomes significantly faster than the dense array
-    # and does not cause excessive memory usage.
-    # https://github.com/biotite-dev/biotite/pull/765#issuecomment-2696591338
-    if (
-        query_arrays[0].shape[0] * reference_arrays[0].shape[0]
-        <= FIND_MATCHES_SWITCH_THRES
-    ):
-        match_indices = _find_matches_by_dense_array(query_arrays, reference_arrays)
-    else:
-        match_indices = _find_matches_by_dict(query_arrays, reference_arrays)
-    return match_indices
 
 
 def _get_struct_conn_col_name(col_name, partner):
