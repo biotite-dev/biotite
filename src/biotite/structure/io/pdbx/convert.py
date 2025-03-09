@@ -3,7 +3,7 @@
 # information.
 
 __name__ = "biotite.structure.io.pdbx"
-__author__ = "Fabrice Allain, Patrick Kunzmann"
+__author__ = "Fabrice Allain, Patrick Kunzmann, Cheyenne Ziegler"
 __all__ = [
     "get_sequence",
     "get_model_count",
