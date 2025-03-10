@@ -418,7 +418,8 @@
             "get_component",
             "set_component",
             "list_assemblies",
-            "get_assembly"
+            "get_assembly",
+            "get_sse"
         ],
         "CIF format" : [
             "CIFFile",

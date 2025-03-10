@@ -163,8 +163,8 @@ def get_sequence(pdbx_file, data_block=None):
     -------
     sequence_dict : Dictionary of Sequences
         Dictionary keys are derived from ``entity_poly.pdbx_strand_id``
-        (often equivalent to chain_id and atom_site.auth_asym_id
-        in most cases). Dictionary values are sequences.
+        (equivalent to ``atom_site.auth_asym_id``).
+        Dictionary values are sequences.
 
     Notes
     -----
@@ -220,9 +220,7 @@ def get_model_count(pdbx_file, data_block=None):
         The number of models.
     """
     block = _get_block(pdbx_file, data_block)
-    return len(
-        _get_model_starts(block["atom_site"]["pdbx_PDB_model_num"].as_array(np.int32))
-    )
+    return len(np.unique((block["atom_site"]["pdbx_PDB_model_num"].as_array(np.int32))))
 
 
 def get_structure(
@@ -323,13 +321,12 @@ def get_structure(
         raise InvalidFileError("Missing 'atom_site' category in file")
 
     models = atom_site["pdbx_PDB_model_num"].as_array(np.int32)
-    model_starts = _get_model_starts(models)
-    model_count = len(model_starts)
+    model_count = len(np.unique(models))
     atom_count = len(models)
 
     if model is None:
         # For a stack, the annotations are derived from the first model
-        model_atom_site = _filter_model(atom_site, model_starts, 1)
+        model_atom_site = _filter_model(atom_site, 1)
         # Any field of the category would work here to get the length
         model_length = model_atom_site.row_count
         atoms = AtomArrayStack(model_count, model_length)
@@ -375,7 +372,7 @@ def get_structure(
                 f"the given model {model} does not exist"
             )
 
-        model_atom_site = _filter_model(atom_site, model_starts, model)
+        model_atom_site = _filter_model(atom_site, model)
         # Any field of the category would work here to get the length
         model_length = model_atom_site.row_count
         atoms = AtomArray(model_length)
@@ -716,21 +713,26 @@ def _filter_altloc(array, atom_site, altloc):
         raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
 
-def _get_model_starts(model_array):
-    """
-    Get the start index for each model in the arrays of the
-    ``atom_site`` category.
-    """
-    _, indices = np.unique(model_array, return_index=True)
-    indices.sort()
-    return indices
-
-
-def _filter_model(atom_site, model_starts, model):
+def _filter_model(atom_site, model):
     """
     Reduce the ``atom_site`` category to the values for the given
     model.
+
+    Parameters
+    ----------
+    atom_site : CIFCategory or BinaryCIFCategory
+        ``atom_site`` category containing all models.
+    model : int
+        The model to be selected.
+
+    Returns
+    -------
+    atom_site : CIFCategory or BinaryCIFCategory
+        The ``atom_site`` category containing only the selected model.
     """
+    models = atom_site["pdbx_PDB_model_num"].as_array(np.int32)
+    _, model_starts = np.unique(models, return_index=True)
+    model_starts.sort()
     # Append exclusive stop
     model_starts = np.append(model_starts, [atom_site.row_count])
     # Indexing starts at 0, but model number starts at 1
@@ -1468,6 +1470,7 @@ def list_assemblies(pdbx_file, data_block=None):
 
     Examples
     --------
+
     >>> import os.path
     >>> file = CIFFile.read(os.path.join(path_to_structures, "1f2n.cif"))
     >>> assembly_ids = list_assemblies(file)
@@ -1768,7 +1771,7 @@ def _convert_string_to_sequence(string, stype):
         raise InvalidFileError("mmCIF _entity_poly.type unsupported type: " + stype)
 
 
-def get_sse(pdbx_file, data_block=None):
+def get_sse(pdbx_file, data_block=None, match_model=None):
     """
     Get the secondary structure from a PDBx file.
 
@@ -1776,51 +1779,107 @@ def get_sse(pdbx_file, data_block=None):
     ----------
     pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
         The file object.
+        The following categories are required:
+
+        - ``entity_poly``
+        - ``struct_conf`` (if alpha-helices are present)
+        - ``struct_sheet_range`` (if beta-strands are present)
+        - ``atom_site`` (if `match_model` is set)
+
+    data_block : str, optional
+        The name of the data block.
+        Default is the first (and most times only) data block of the
+        file.
+        If the data block object is passed directly to `pdbx_file`,
+        this parameter is ignored.
+    match_model : None, optional
+        If a model number is given, only secondary structure elements for residues are
+        kept, that are resolved in the given model.
+        This means secondary structure elements for residues that would not appear
+        in a corresponding :class:`AtomArray` from :func:`get_structure()` are removed.
+        By default, all residues in the sequence are kept.
 
     Returns
     -------
-    sec_struct_dic: keys are the different chains from the pdbx file
-    and values are a letter representing the secondary structure
-    'a' means alpha-helix, 'b' means beta-strand/sheet, 'c' means coil.
-    '' indicates that a residue is not an amino acid or it comprises
-    no CA atom for each atom in the atom array
+    sse_dict : dict of str -> ndarray, dtype=str
+        The dictionary maps the chain ID (derived from ``auth_asym_id``) to the
+        secondary structure of the respective chain.
 
+        - ``"a"``: alpha-helix
+        - ``"b"``: beta-strand
+        - ``"c"``: coil or not an amino acid
+
+        Each secondary structure element corresponds to the ``label_seq_id`` of the
+        ``atom_site`` category.
+        This means that the 0-th position of the array corresponds to the residue
+        in ``atom_site`` with ``label_seq_id`` ``1``.
+
+    Examples
+    --------
+
+    >>> import os.path
+    >>> file = CIFFile.read(os.path.join(path_to_structures, "1aki.cif"))
+    >>> sse = get_sse(file, match_model=1)
+    >>> print(sse)
+    {'A': array(['c', 'c', 'c', 'c', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a',
+                 'a', 'c', 'c', 'c', 'c', 'c', 'a', 'a', 'a', 'c', 'c', 'a', 'a',
+                 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'c', 'c',
+                 'c', 'c', 'c', 'b', 'b', 'b', 'c', 'c', 'c', 'c', 'c', 'b', 'b',
+                 'b', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c',
+                 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c',
+                 'c', 'a', 'a', 'a', 'a', 'a', 'c', 'c', 'c', 'c', 'a', 'a', 'a',
+                 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'c', 'a',
+                 'a', 'a', 'a', 'c', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'c', 'c',
+                 'c', 'c', 'a', 'a', 'a', 'a', 'c', 'c', 'c', 'c', 'c', 'c'],
+                 dtype='<U1')}
+
+    If only secondary structure elements for resolved residues are requested, the length
+    of the returned array matches the number of peptide residues in the structure.
+
+    >>> file = CIFFile.read(os.path.join(path_to_structures, "3o5r.cif"))
+    >>> print(len(get_sse(file, match_model=1)["A"]))
+    128
+    >>> atoms = get_structure(file, model=1)
+    >>> atoms = atoms[filter_amino_acids(atoms) & (atoms.chain_id == "A")]
+    >>> print(get_residue_count(atoms))
+    128
     """
-    sec_struct_dic = {}
     block = _get_block(pdbx_file, data_block)
-    cif_feats = list(block.keys())
 
     # Init all chains with "c" for coil
-    for idx, chain in enumerate(
-        block["struct_ref_seq"]["pdbx_strand_id"].as_array(str)
-    ):
-        ref_id = block["struct_ref_seq"]["ref_id"].as_array(int)[idx]
-        chain_idxs = np.where(
-            block["entity_poly_seq"]["entity_id"].as_array(int) == ref_id
-        )[0]
-        sec_struct_dic[chain] = np.repeat("c", len(chain_idxs))
+    sse_dict = {
+        chain_id: np.repeat("c", len(sequence))
+        for chain_id, sequence in get_sequence(block).items()
+    }
 
-    # Get alpha helices
-    if "struct_conf" in cif_feats:
-        alpha = block["struct_conf"]
-        pdb_chain = alpha["beg_label_asym_id"].as_array(str)
-        start_pos = alpha["beg_label_seq_id"].as_array(int)
-        end_pos = alpha["end_label_seq_id"].as_array(int)
+    # Populate SSE arrays with helices and strands
+    for sse_symbol, category_name in [
+        ("a", "struct_conf"),
+        ("b", "struct_sheet_range"),
+    ]:
+        if category_name in block:
+            category = block[category_name]
+            chains = category["beg_auth_asym_id"].as_array(str)
+            start_positions = category["beg_label_seq_id"].as_array(int)
+            end_positions = category["end_label_seq_id"].as_array(int)
 
-        # set alpha helix positions
-        for idx in range(len(pdb_chain)):
-            # Translate the 1-based positions from PDBx into 0-based array indices
-            sec_struct_dic[pdb_chain[idx]][start_pos[idx] - 1 : (end_pos[idx])] = "a"
+            # set alpha helix positions
+            for chain, start, end in zip(chains, start_positions, end_positions):
+                # Translate the 1-based positions from PDBx into 0-based array indices
+                sse_dict[chain][start - 1 : end] = sse_symbol
 
-    # Get beta sheets
-    if "struct_sheet" in cif_feats:
-        beta = block["struct_sheet_range"]
-        pdb_chain = beta["beg_label_asym_id"].as_array(str)
-        start_pos = beta["beg_label_seq_id"].as_array(int)
-        end_pos = beta["end_label_seq_id"].as_array(int)
+    if match_model is not None:
+        model_atom_site = _filter_model(block["atom_site"], match_model)
+        chain_ids = model_atom_site["auth_asym_id"].as_array(str)
+        res_ids = model_atom_site["label_seq_id"].as_array(int, masked_value=-1)
+        # Filter out masked residues, i.e. residues not part of a chain
+        mask = res_ids != -1
+        chain_ids = chain_ids[mask]
+        res_ids = res_ids[mask]
+        for chain_id, sse in sse_dict.items():
+            res_ids_in_chain = res_ids[chain_ids == chain_id]
+            # Transform from 1-based residue ID to 0-based index
+            indices = np.unique(res_ids_in_chain) - 1
+            sse_dict[chain_id] = sse[indices]
 
-        # set alpha helix positions
-        for idx in range(len(pdb_chain)):
-            sec_struct_dic[pdb_chain[idx]][start_pos[idx] : (end_pos[idx] + 1)] = "b"
-
-    return sec_struct_dic
+    return sse_dict
