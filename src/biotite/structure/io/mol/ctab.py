@@ -19,6 +19,7 @@ from biotite.file import InvalidFileError
 from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.bonds import BondList, BondType
 from biotite.structure.error import BadStructureError
+from biotite.structure.io.util import number_of_integer_digits
 
 BOND_TYPE_MAPPING = {
     1: BondType.SINGLE,
@@ -297,6 +298,13 @@ def _write_structure_to_ctab_v2000(atoms, default_bond_type):
         "  0     0  0  0  0  0  0  1 V2000"
     )
 
+    for i, coord_name in enumerate(["x", "y", "z"]):
+        n_coord_digits = number_of_integer_digits(atoms.coord[:, i])
+        if n_coord_digits > 5:
+            raise BadStructureError(
+                f"5 pre-decimal columns for {coord_name}-coordinates are "
+                f"available, but array would require {n_coord_digits}"
+            )
     atom_lines = [
         f"{atoms.coord[i, 0]:>10.4f}"
         f"{atoms.coord[i, 1]:>10.4f}"
@@ -341,6 +349,13 @@ def _write_structure_to_ctab_v3000(atoms, default_bond_type):
 
     counts_line = f"COUNTS {atoms.array_length()} {atoms.bonds.get_bond_count()} 0 0 0"
 
+    for i, coord_name in enumerate(["x", "y", "z"]):
+        n_coord_digits = number_of_integer_digits(atoms.coord[:, i])
+        if n_coord_digits > 5:
+            raise BadStructureError(
+                f"5 pre-decimal columns for {coord_name}-coordinates are "
+                f"available, but array would require {n_coord_digits}"
+            )
     atom_lines = [
         f"{i + 1}"
         f" {_quote(atoms.element[i].capitalize())}"
