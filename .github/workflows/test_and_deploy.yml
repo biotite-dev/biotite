@@ -209,10 +209,6 @@ jobs:
           miniforge-version: latest
       - name: Install distribution
         run: pip install ./dist/*.whl
-      - name: "TEMP: Skip DSSP tests"
-        # TEMP: Omit DSSP tests for now until conda-forge DSSP is functional
-        # (https://github.com/conda-forge/dssp-feedstock/pull/4)
-        run: mamba uninstall dssp
       - name: Run tests
         # Running NCBI BLAST and SRA takes too long
         # The tests on the NCBI Entrez database are not reliable enough
