@@ -9,7 +9,7 @@ channels:
   - bioconda
 
 dependencies:
-  - python =3.11
+  - python =3.12
   # Package building
   - cython >=3.0
   - pip >=10.0
