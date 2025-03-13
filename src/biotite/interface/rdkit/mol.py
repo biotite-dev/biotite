@@ -304,20 +304,22 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     >>> UFFOptimizeMolecule(mol)
     0
     >>> alanine_atom_array = from_mol(mol, conformer_id)
+    >>> # RDKit does not assign atom names -> for convenience, do this in Biotite
+    >>> alanine_atom_array.atom_name = create_atom_names(alanine_atom_array)
     >>> print(alanine_atom_array)
-                0             C        -1.067    1.111   -0.079
-                0             C        -0.366   -0.241   -0.217
-                0             C         1.128   -0.082   -0.117
-                0             O         1.654    0.353    0.943
-                0             O         1.932   -0.413   -1.203
-                0             N        -0.865   -1.173    0.796
-                0             H        -0.715    1.807   -0.871
-                0             H        -2.165    0.980   -0.191
-                0             H        -0.862    1.562    0.916
-                0             H        -0.613   -0.650   -1.221
-                0             H         2.938   -0.311   -1.154
-                0             H        -0.590   -0.837    1.749
-                0             H        -0.408   -2.103    0.649
+                0      C1     C        -1.076    1.102   -0.094
+                0      C2     C        -0.363   -0.246   -0.218
+                0      C3     C         1.129   -0.073   -0.109
+                0      O1     O         1.644    0.373    0.952
+                0      O2     O         1.943   -0.405   -1.187
+                0      N1     N        -0.861   -1.175    0.798
+                0      H1     H        -0.724    1.795   -0.888
+                0      H2     H        -2.171    0.960   -0.212
+                0      H3     H        -0.881    1.561    0.899
+                0      H4     H        -0.600   -0.664   -1.221
+                0      H5     H         2.949   -0.295   -1.132
+                0      H6     H        -0.595   -0.830    1.750
+                0      H7     H        -0.395   -2.102    0.660
     """
     if add_hydrogen is None:
         add_hydrogen = not _has_explicit_hydrogen(mol)
