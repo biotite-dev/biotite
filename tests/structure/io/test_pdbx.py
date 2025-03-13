@@ -579,6 +579,58 @@ def test_get_sequence(format):
     assert type(sequences_2["A"]) is seq.NucleotideSequence
 
 
+def test_get_sse():
+    """
+    Check if the secondary structure elements are returned for a short structure
+    where the reference secondary structure elements are taken from Mol*
+    (https://www.rcsb.org/3d-view/1AKI).
+    """
+    TOTAL_LENGTH = 129
+    # Ranges are given in terms of residue IDs, and the end is inclusive
+    HELIX_RANGES = [
+        (5, 14),
+        (20, 22),
+        (25, 36),
+        (80, 84),
+        (89, 101),
+        (104, 107),
+        (109, 114),
+        (120, 123),
+    ]
+    SHEET_RANGES = [
+        (43, 45),
+        (51, 53),
+    ]
+
+    ref_sse = np.full(TOTAL_LENGTH, "c", dtype="U1")
+    for helix_range in HELIX_RANGES:
+        # Conver to zero-based indexing
+        ref_sse[helix_range[0] - 1 : helix_range[1]] = "a"
+    for sheet_range in SHEET_RANGES:
+        ref_sse[sheet_range[0] - 1 : sheet_range[1]] = "b"
+
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1aki.bcif"))
+    test_sse = pdbx.get_sse(pdbx_file)["A"]
+
+    assert test_sse.tolist() == ref_sse.tolist()
+
+
+@pytest.mark.parametrize("path", glob.glob(join(data_dir("structure"), "*.bcif")))
+def test_get_sse_length(path):
+    """
+    If `match_model` is set in :func:`get_sse()`, the length of the returned array
+    must match the number of residues in the structure.
+    """
+    pdbx_file = pdbx.BinaryCIFFile.read(path)
+    atoms = pdbx.get_structure(pdbx_file, model=1)
+    atoms = atoms[struc.filter_amino_acids(atoms)]
+    sse = pdbx.get_sse(pdbx_file, match_model=1)
+
+    for chain_id in np.unique(atoms.chain_id):
+        chain = atoms[atoms.chain_id == chain_id]
+        assert len(sse[chain_id]) == struc.get_residue_count(chain)
+
+
 def test_bcif_encoding():
     """
     Check if encoding and subsequent decoding data in a BinaryCIF file

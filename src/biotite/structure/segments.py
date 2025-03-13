@@ -92,12 +92,8 @@ def spread_segment_wise(starts, input_data):
         Segment-wise spread `input_data`.
         Length is the same as `array_length()` of `array`.
     """
-    output_data = np.zeros(starts[-1], dtype=input_data.dtype)
-    for i in range(len(starts) - 1):
-        start = starts[i]
-        stop = starts[i + 1]
-        output_data[start:stop] = input_data[i]
-    return output_data
+    seg_lens = starts[1:] - starts[:-1]
+    return np.repeat(input_data, seg_lens, axis=0)
 
 
 def get_segment_masks(starts, indices):

@@ -6,12 +6,14 @@ __name__ = "biotite.interface.rdkit"
 __author__ = "Patrick Kunzmann, Simon Mathis"
 __all__ = ["to_mol", "from_mol"]
 
+import copy
 import numbers
 import warnings
 from collections import defaultdict
 import numpy as np
 import rdkit.Chem.AllChem as Chem
 from rdkit.Chem import SanitizeFlags
+from rdkit.rdBase import BlockLogs
 from biotite.interface.version import requires_version
 from biotite.interface.warning import LossyConversionWarning
 from biotite.structure.atoms import AtomArray, AtomArrayStack
@@ -320,7 +322,10 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     if add_hydrogen is None:
         add_hydrogen = not _has_explicit_hydrogen(mol)
     if add_hydrogen:
-        Chem.SanitizeMol(mol, SanitizeFlags.SANITIZE_ADJUSTHS)
+        mol = copy.deepcopy(mol)
+        with BlockLogs():
+            # Avoid modifying the input molecule
+            Chem.SanitizeMol(mol, SanitizeFlags.SANITIZE_ADJUSTHS)
         mol = Chem.AddHs(mol, addCoords=False, addResidueInfo=False)
 
     rdkit_atoms = mol.GetAtoms()
@@ -427,7 +432,8 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         # Copy as 'Kekulize()' modifies the molecule in-place
         mol = Chem.Mol(mol)
         try:
-            Chem.Kekulize(mol)
+            with BlockLogs():
+                Chem.Kekulize(mol)
         except Chem.KekulizeException:
             warnings.warn(
                 "Kekulization failed, "
