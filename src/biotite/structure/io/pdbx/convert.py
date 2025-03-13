@@ -104,8 +104,8 @@ CANONICAL_RESIDUE_LIST = canonical_aa_list + canonical_nucleotide_list
 # exceed a certain threshold,
 # a dictionary approach is less computation and memory intensive than the dense
 # vectorized approach.
-# https://github.com/biotite-dev/biotite/pull/765#issuecomment-2696591338
-FIND_MATCHES_SWITCH_THRESHOLD = 10000
+# https://github.com/biotite-dev/biotite/pull/765#issuecomment-2708867357
+FIND_MATCHES_SWITCH_THRESHOLD = 4000000
 
 _proteinseq_type_list = ["polypeptide(D)", "polypeptide(L)"]
 _nucleotideseq_type_list = [
