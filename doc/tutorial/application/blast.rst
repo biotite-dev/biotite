@@ -10,8 +10,7 @@ the :mod:`biotite.application.blast` subpackage provides an interface to
 Let's dive directly into the code, we try to find homologous sequences to the
 miniprotein *TC5b*.
 
-..
-    Do not run the following Jupyter cells, as BLAST runs may take a long time
+.. Do not run the following Jupyter cells, as BLAST runs may take a long time
 
 .. jupyter-input::
 

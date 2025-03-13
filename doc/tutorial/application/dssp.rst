@@ -10,7 +10,9 @@ assign secondary structure elements based on the P-SEA algorithm, DSSP can also
 be used via the :mod:`biotite.application.dssp` subpackage.
 Let us demonstrate this on the example of the good old miniprotein *TC5b*.
 
-.. jupyter-execute::
+.. Do not run the following Jupyter cells, as DSSP is currently not in build environment
+
+.. jupyter-input::
 
     from tempfile import gettempdir
     import biotite.database.rcsb as rcsb
@@ -24,6 +26,10 @@ Let us demonstrate this on the example of the good old miniprotein *TC5b*.
     app.join()
     sse = app.get_sse()
     print("".join(sse))
+
+.. jupyter-output::
+
+    CHHHHHHHTTGGGGTCCCCC
 
 Similar to the MSA examples, :class:`DsspApp` has the convenience
 method :func:`DsspApp.annotate_sse()` as shortcut.
