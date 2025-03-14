@@ -18,7 +18,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Rectangle
 import biotite
-import biotite.application.dssp as dssp
 import biotite.database.entrez as entrez
 import biotite.database.rcsb as rcsb
 import biotite.sequence as seq
@@ -128,7 +127,7 @@ graphics.plot_feature_map(
 )
 fig.tight_layout()
 
-########################################################################
+########################################################################################
 # Now let us do some serious application.
 # We want to visualize the secondary structure of one monomer of the
 # homodimeric transketolase (PDB: 1QGD).
@@ -157,22 +156,8 @@ graphics.plot_feature_map(
 )
 fig.tight_layout()
 
-########################################################################
-# Next we calculate the secondary structure using the DSSP software
-# from structure.
-
-# Converter for the DSSP secondary structure elements
-# to the classical ones
-dssp_to_abc = {
-    "I": "c",
-    "S": "c",
-    "H": "a",
-    "E": "b",
-    "G": "c",
-    "B": "b",
-    "T": "c",
-    "C": "c",
-}
+########################################################################################
+# Next we extract the secondary structure from annotations in the structure file.
 
 
 def visualize_secondary_structure(sse, first_id):
@@ -230,21 +215,20 @@ def visualize_secondary_structure(sse, first_id):
 # Fetch and load structure
 file_name = rcsb.fetch("1QGD", "bcif", gettempdir())
 pdbx_file = pdbx.BinaryCIFFile.read(file_name)
+
+sse = pdbx.get_sse(pdbx_file)["A"]
+visualize_secondary_structure(sse, 1)
+# sphinx_gallery_thumbnail_number = 3
+
+########################################################################################
+# Last but not least we calculate the secondary structure using
+# *Biotite*'s built-in method, based on the P-SEA algorithm.
+
 array = pdbx.get_structure(pdbx_file, model=1)
 # Transketolase homodimer
 tk_dimer = array[struc.filter_amino_acids(array)]
 # Transketolase monomer
 tk_mono = tk_dimer[tk_dimer.chain_id == "A"]
-
-sse = dssp.DsspApp.annotate_sse(tk_mono)
-sse = np.array([dssp_to_abc[e] for e in sse], dtype="U1")
-visualize_secondary_structure(sse, tk_mono.res_id[0])
-# sphinx_gallery_thumbnail_number = 3
-
-########################################################################
-# Last but not least we calculate the secondary structure using
-# *Biotite*'s built-in method, based on the P-SEA algorithm.
-
 sse = struc.annotate_sse(tk_mono)
 visualize_secondary_structure(sse, tk_mono.res_id[0])
 
