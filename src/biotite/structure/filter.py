@@ -296,6 +296,8 @@ def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
     The result will depend on the atoms' order.
     For instance, consider a molecule:
 
+    .. code-block:: none
+
            C3
            |
         C1-C2-C4

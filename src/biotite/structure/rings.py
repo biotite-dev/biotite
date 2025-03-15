@@ -147,11 +147,11 @@ def find_stacking_interactions(
     Hence, this function aggregates all stacking interactions to simplify the
     conditions for pi-stacking.
 
-    The conditions for pi-stacking are :footcite:`Wojcikowski2015`:
+    The conditions for pi-stacking are :footcite:`Wojcikowski2015` :
 
         - The ring centroids must be within cutoff distance (default: 6.5 Å).
           While :footcite:`Wojcikowski2015` uses a cutoff of 5.0 Å, 6.5 Å was
-          adopted from :footcite:`Bouysset2021`to better identify perpendicular
+          adopted from :footcite:`Bouysset2021` to better identify perpendicular
           stacking interactions.
         - The planes must be parallel or perpendicular to each other within a default
           tolerance of 30°.

@@ -45,6 +45,7 @@ dependencies:
   # Documentation building
   - pydata-sphinx-theme =0.15
   - matplotlib >=3.3
+  - ipython <8.29  # jupyter-sphinx is not compatible with the newest IPython versions
   - jupyter-sphinx >=0.5.3
   - sphinx >=7.0
   - sphinxcontrib-bibtex >=2.3

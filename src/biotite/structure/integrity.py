@@ -96,10 +96,8 @@ def check_linear_continuity(array, min_len=1.2, max_len=1.8):
 
     See Also
     --------
-    biotite.structure.filter.filter_linear_bond_continuity :
-        A function to filter for atoms preserving the continuity (used here).
-    biotite.structure.bonds.BondList :
-        A class that doesn't depend on the atoms' order to identify bonds.
+    filter_linear_bond_continuity : A function to filter for atoms preserving the continuity (used here).
+    BondList : A class that doesn't depend on the atoms' order to identify bonds.
     """
     con_mask = filter_linear_bond_continuity(array, min_len, max_len)
     # The continuity mask `con_mask` points to atoms for which the next atom is continuous.
