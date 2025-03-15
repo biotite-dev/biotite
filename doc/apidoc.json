@@ -340,7 +340,6 @@
             "get_chain_masks",
             "get_chain_starts_for",
             "get_chain_positions",
-            "chain_iter",
             "get_chains",
             "get_chain_count",
             "chain_iter"

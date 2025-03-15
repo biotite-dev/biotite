@@ -154,7 +154,7 @@ def from_topology(topology):
         The created :class:`AtomArray`.
         As the :class:`openmm.app.topology.Topology` does not contain atom
         coordinates, the values of the :class:`AtomArray` ``coord``
-        are set to `*NaN*.
+        are set to *NaN*.
 
     Notes
     -----
