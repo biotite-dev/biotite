@@ -1,6 +1,6 @@
 [project]
 name = "fastpdb"
-version = "1.3.1"
+version = "1.3.2"
 description = "A high performance drop-in replacement for Biotite's PDBFile."
 readme = "README.rst"
 requires-python = ">=3.7"
