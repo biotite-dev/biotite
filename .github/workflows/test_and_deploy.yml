@@ -20,8 +20,8 @@ jobs:
     strategy:
       matrix:
         # Support both Mac x86_64 and arm64
-        os: [ubuntu-latest, windows-latest, macos-12, macos-latest]
-        py-version: ["3.10", "3.11", "3.12"]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        py-version: ["3.10", "3.11", "3.12", "3.13"]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -59,7 +59,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
         with:
-          python-version: "3.12"
+          python-version: "3.13"
       - name: Install dependencies
         run: pip install "maturin==$MATURIN_VERSION" pytest
       - name: Build source distribution
@@ -80,7 +80,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
         with:
-          python-version: "3.12"
+          python-version: "3.13"
       - name: Install dependencies
         run: pip install .[test]
       - name: Run benchmarks
@@ -95,7 +95,8 @@ jobs:
     needs: [wheels, sdist, benchmarks]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
         with:
           pattern: artifact-*
           merge-multiple: true
