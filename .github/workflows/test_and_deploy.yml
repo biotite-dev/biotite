@@ -42,10 +42,10 @@ jobs:
         run: pip install .//dist//*.whl
       - name: Test wheel
         run: pytest --assert=plain tests
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: artifact-wheel-${{ matrix.os }}-${{ matrix.py-version }}
           path: .//dist//*.whl
-
 
   sdist:
     name: Build & test source distribution
@@ -66,8 +66,9 @@ jobs:
         run: pip install .//dist//*.tar.gz
       - name: Test source distribution
         run: pytest --assert=plain tests
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: artifact-tar-${{ matrix.os }}-${{ matrix.py-version }}
           path: dist//*.tar.gz
 
   benchmarks:
@@ -92,19 +93,20 @@ jobs:
     needs: [wheels, sdist, benchmarks]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v3
-      with:
-        name: artifact
-        path: dist
-    - name: List distributions to be uploaded
-      run: ls dist
-    - name: Upload to GitHub Releases
-      uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
-      if: github.event_name == 'release' && github.event.action == 'published'
-      with:
-        files: dist//*
-    - name: Upload to PyPI
-      uses: pypa/gh-action-pypi-publish@c7f29f7adef1a245bd91520e94867e5c6eedddcc
-      if: github.event_name == 'release' && github.event.action == 'published'
-      with:
-        password: ${{ secrets.PYPI_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: artifact-*
+          merge-multiple: true
+          path: dist
+      - name: List distributions to be uploaded
+        run: ls dist
+      - name: Upload to GitHub Releases
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+        if: github.event_name == 'release' && github.event.action == 'published'
+        with:
+          files: dist//*
+      - name: Upload to PyPI
+        uses: pypa/gh-action-pypi-publish@c7f29f7adef1a245bd91520e94867e5c6eedddcc
+        if: github.event_name == 'release' && github.event.action == 'published'
+        with:
+          password: ${{ secrets.PYPI_TOKEN }}
