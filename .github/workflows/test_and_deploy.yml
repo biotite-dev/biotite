@@ -9,8 +9,10 @@ on:
   pull_request:
   release:
     types:
-    - published
+      - published
 
+env:
+  MATURIN_VERSION: "1.8"
 
 jobs:
   wheels:
@@ -32,10 +34,10 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: stable
-            override: true
+          toolchain: stable
+          override: true
       - name: Install dependencies
-        run: pip install "maturin==1.4" "oldest-supported-numpy" pytest
+        run: pip install "maturin==$MATURIN_VERSION" "oldest-supported-numpy" pytest
       - name: Build wheel
         run: maturin build --release -i python -o dist
       - name: Install wheel
@@ -59,7 +61,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: pip install "maturin==1.4" pytest
+        run: pip install "maturin==$MATURIN_VERSION" pytest
       - name: Build source distribution
         run: maturin sdist -o dist
       - name: Install source distribution
