@@ -53,7 +53,7 @@ from biotite.structure.residues import (
     get_residue_positions,
     get_residue_starts_for,
 )
-from biotite.structure.util import matrix_rotate
+from biotite.structure.transform import AffineTransformation
 
 # Bond types in `struct_conn` category that refer to covalent bonds
 PDBX_BOND_TYPE_ID_TO_TYPE = {
@@ -1737,11 +1737,7 @@ def _apply_transformations(structure, transformation_dict, operations):
         # Execute for each transformation step
         # in the operation expression
         for op_step in operation:
-            rotation_matrix, translation_vector = transformation_dict[op_step]
-            # Rotate
-            coord = matrix_rotate(coord, rotation_matrix)
-            # Translate
-            coord += translation_vector
+            coord = transformation_dict[op_step].apply(coord)
         assembly_coord[i] = coord
 
     assembly = repeat(structure, assembly_coord)
@@ -1753,8 +1749,7 @@ def _apply_transformations(structure, transformation_dict, operations):
 
 def _get_transformations(struct_oper):
     """
-    Get transformation operation in terms of rotation matrix and
-    translation for each operation ID in ``pdbx_struct_oper_list``.
+    Get affine transformation for each operation ID in ``pdbx_struct_oper_list``.
     """
     transformation_dict = {}
     for index, id in enumerate(struct_oper["id"].as_array(str)):
@@ -1770,7 +1765,9 @@ def _get_transformations(struct_oper):
         translation_vector = np.array(
             [struct_oper[f"vector[{i}]"].as_array(float)[index] for i in (1, 2, 3)]
         )
-        transformation_dict[id] = (rotation_matrix, translation_vector)
+        transformation_dict[id] = AffineTransformation(
+            np.zeros(3), rotation_matrix, translation_vector
+        )
     return transformation_dict
 
 
