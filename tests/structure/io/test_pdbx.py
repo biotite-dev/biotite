@@ -7,6 +7,7 @@ import itertools
 import warnings
 from io import BytesIO
 from os.path import join, splitext
+from pathlib import Path
 import msgpack
 import numpy as np
 import pytest
@@ -14,6 +15,7 @@ from pytest import approx
 import biotite
 import biotite.sequence as seq
 import biotite.structure as struc
+import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
 from biotite.structure.io.pdbx.bcif import _encode_numpy as encode_numpy
 from biotite.structure.io.pdbx.compress import _get_decimal_places as get_decimal_places
@@ -511,6 +513,78 @@ def test_assembly_sym_id(pdb_id, assembly_id, symmetric_unit_count):
     # as each operation is applied to all atoms in the asymmetric unit
     asym_lengths = np.diff(np.append(unique_indices, assembly.array_length()))
     assert (asym_lengths == asym_lengths[0]).all()
+
+
+@pytest.mark.parametrize("model", [None, 1])
+def test_unit_cell_trivial(model):
+    """
+    The 'P 1' space group has no symmetries.
+    Hence the unit cell from this space group should be the same as the asymmetric unit.
+    """
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    # Give the structure the 'P 1' space group
+    pdbx_file.block["symmetry"] = pdbx.BinaryCIFCategory(
+        {"space_group_name_H-M": "P 1"}
+    )
+    # Give the structure arbitrary unit cell dimensions,
+    # it needs only be large enough to contain the asymmetric unit
+    pdbx_file.block["cell"] = pdbx.BinaryCIFCategory(
+        {
+            "length_a": 10, "length_b": 10, "length_c": 10,
+            "angle_alpha": 90, "angle_beta": 90, "angle_gamma": 90,
+        }
+    )  # fmt: skip
+
+    asymmetric_unit = pdbx.get_structure(pdbx_file, model=model)
+    unit_cell = pdbx.get_unit_cell(pdbx_file, model=model)
+
+    for category in asymmetric_unit.get_annotation_categories():
+        assert (
+            unit_cell.get_annotation(category).tolist()
+            == asymmetric_unit.get_annotation(category).tolist()
+        )
+    assert unit_cell.coord.flatten().tolist() == approx(
+        asymmetric_unit.coord.flatten().tolist()
+    )
+
+
+@pytest.mark.parametrize(
+    "pdb_path", Path(data_dir("structure")).glob("*.pdb"), ids=lambda p: p.stem
+)
+def test_unit_cell_pdb_consistency(pdb_path):
+    """
+    Check the structure parsed via :func:`pdbx.get_unit_cell()` against
+    :func:`pdb.get_unit_cell()`, which uses a different implementation
+    (transformations from the PDB file directly).
+    """
+    pdb_file = pdb.PDBFile.read(pdb_path)
+    if pdb_file.get_remark(290) is None:
+        # File does not contain a crystal structure -> skip
+        return
+    ref_unit_cell = pdb_file.get_unit_cell(model=1)
+
+    pdbx_file = pdbx.BinaryCIFFile.read(pdb_path.with_suffix(".bcif"))
+    test_unit_cell = pdbx.get_unit_cell(pdbx_file, model=1)
+
+    for category in ref_unit_cell.get_annotation_categories():
+        assert (
+            test_unit_cell.get_annotation(category).tolist()
+            == ref_unit_cell.get_annotation(category).tolist()
+        )
+    # The copies are not necessarily in the same order
+    # -> Compare each asymmetric unit in the unit cell separately and expect to have
+    #    one match
+    sym_id_masks = [
+        test_unit_cell.sym_id == sym_id for sym_id in np.unique(test_unit_cell.sym_id)
+    ]
+    distance_matrix = np.full((len(sym_id_masks), len(sym_id_masks)), np.nan)
+    for i, mask_i in enumerate(sym_id_masks):
+        for j, mask_j in enumerate(sym_id_masks):
+            distance_matrix[i, j] = np.mean(
+                struc.distance(test_unit_cell[mask_i], ref_unit_cell[mask_j])
+            )
+    # Expect one match for each asymmetric unit
+    assert np.all(np.any(distance_matrix < 1e-3, axis=0))
 
 
 @pytest.mark.parametrize(
