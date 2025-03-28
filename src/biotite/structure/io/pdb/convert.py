@@ -15,8 +15,10 @@ __all__ = [
     "set_structure",
     "list_assemblies",
     "get_assembly",
-    "get_symmetry_mates",
+    "get_unit_cell",
 ]
+
+import warnings
 
 
 def get_model_count(pdb_file):
@@ -232,7 +234,7 @@ def get_assembly(
     )
 
 
-def get_symmetry_mates(
+def get_unit_cell(
     pdb_file, model=None, altloc="first", extra_fields=[], include_bonds=False
 ):
     """
@@ -301,6 +303,86 @@ def get_symmetry_mates(
 
     >>> import os.path
     >>> file = PDBFile.read(os.path.join(path_to_structures, "1aki.pdb"))
+    >>> atoms_in_unit_cell = get_unit_cell(file, model=1)
+    """
+    return pdb_file.get_unit_cell(model, altloc, extra_fields, include_bonds)
+
+
+def get_symmetry_mates(
+    pdb_file, model=None, altloc="first", extra_fields=[], include_bonds=False
+):
+    """
+    Build a structure model containing all symmetric copies
+    of the structure within a single unit cell, given by the space
+    group.
+
+    This function receives the data from ``REMARK 290`` records in
+    the file.
+    Consequently, this remark must be present in the file, which is
+    usually only true for crystal structures.
+
+    DEPRECATED: Use :func:`get_unit_cell()` instead.
+
+    Parameters
+    ----------
+    pdb_file : PDBFile
+        The file object.
+    model : int, optional
+        If this parameter is given, the function will return an
+        :class:`AtomArray` from the atoms corresponding to the given
+        model number (starting at 1).
+        Negative values are used to index models starting from the
+        last model instead of the first model.
+        If this parameter is omitted, an :class:`AtomArrayStack`
+        containing all models will be returned, even if the
+        structure contains only one model.
+    altloc : {'first', 'occupancy', 'all'}
+        This parameter defines how *altloc* IDs are handled:
+            - ``'first'`` - Use atoms that have the first
+                *altloc* ID appearing in a residue.
+            - ``'occupancy'`` - Use atoms that have the *altloc* ID
+                with the highest occupancy for a residue.
+            - ``'all'`` - Use all atoms.
+                Note that this leads to duplicate atoms.
+                When this option is chosen, the ``altloc_id``
+                annotation array is added to the returned structure.
+    extra_fields : list of str, optional
+        The strings in the list are optional annotation categories
+        that should be stored in the output array or stack.
+        These are valid values:
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and
+        ``'charge'``.
+    include_bonds : bool, optional
+        If set to true, a :class:`BondList` will be created for the
+        resulting :class:`AtomArray` containing the bond information
+        from the file.
+        Bonds, whose order could not be determined from the
+        *Chemical Component Dictionary*
+        (e.g. especially inter-residue bonds),
+        have :attr:`BondType.ANY`, since the PDB format itself does
+        not support bond orders.
+
+    Returns
+    -------
+    symmetry_mates : AtomArray or AtomArrayStack
+        All atoms within a single unit cell.
+        The return type depends on the `model` parameter.
+
+    Notes
+    -----
+    To expand the structure beyond a single unit cell, use
+    :func:`repeat_box()` with the return value as its
+    input.
+
+    Examples
+    --------
+
+    >>> import os.path
+    >>> file = PDBFile.read(os.path.join(path_to_structures, "1aki.pdb"))
     >>> atoms_in_unit_cell = get_symmetry_mates(file, model=1)
     """
-    return pdb_file.get_symmetry_mates(model, altloc, extra_fields, include_bonds)
+    warnings.warn(
+        "'get_symmetry_mates()' is deprecated, use 'get_unit_cell()' instead",
+        DeprecationWarning,
+    )
+    return pdb_file.get_unit_cell(model, altloc, extra_fields, include_bonds)
