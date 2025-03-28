@@ -64,10 +64,8 @@ class AffineTransformation:
         Returns
         -------
         transformed : AtomArray or AtomArrayStack or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
-            A copy of the `atoms` structure,
-            with transformations applied.
-            Only coordinates are returned, if coordinates were given in
-            `atoms`.
+            A copy of the `atoms` structure, with transformations applied.
+            Only coordinates are returned, if coordinates were given in `atoms`.
 
         Examples
         --------
@@ -99,7 +97,10 @@ class AffineTransformation:
         mobile_coord = coord(atoms)
         original_shape = mobile_coord.shape
         mobile_coord = _reshape_to_3d(mobile_coord)
-        if mobile_coord.shape[0] != self.rotation.shape[0]:
+        if (
+            self.rotation.shape[0] != 1
+            and mobile_coord.shape[0] != self.rotation.shape[0]
+        ):
             raise IndexError(
                 f"Number of transformations is {self.rotation.shape[0]}, "
                 f"but number of structure models is {mobile_coord.shape[0]}"
