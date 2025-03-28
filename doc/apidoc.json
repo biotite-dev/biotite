@@ -281,6 +281,7 @@
             "rdf"
         ],
         "Transformations" : [
+            "AffineTransformation",
             "translate",
             "rotate",
             "rotate_centered",
@@ -292,8 +293,7 @@
             "superimpose",
             "superimpose_without_outliers",
             "superimpose_homologs",
-            "superimpose_structural_homologs",
-            "AffineTransformation"
+            "superimpose_structural_homologs"
         ],
         "Filters" : [
             "filter_canonical_nucleotides",
