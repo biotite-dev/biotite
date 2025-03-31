@@ -92,7 +92,9 @@ jobs:
     name: Upload to GitHub Releases & PyPI
     permissions:
       contents: write
-    needs: [wheels, sdist, benchmarks]
+    needs:
+      - wheels
+      - sdist
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts
