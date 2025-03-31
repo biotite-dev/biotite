@@ -638,7 +638,7 @@ def base_stacking(atom_array, min_atoms_per_base=3):
     ----------
     atom_array : AtomArray
         The :class:`AtomArray` to find stacked bases in.
-    min_atoms_per_base : integer, optional (default: 3)
+    min_atoms_per_base : integer, optional
         The number of atoms a nucleotides' base must have to be
         considered a candidate for a stacking interaction.
 
@@ -783,10 +783,10 @@ def base_pairs(atom_array, min_atoms_per_base=3, unique=True):
     ----------
     atom_array : AtomArray
         The :class:`AtomArray` to find base pairs in.
-    min_atoms_per_base : integer, optional (default: 3)
+    min_atoms_per_base : integer, optional
         The number of atoms a nucleotides' base must have to be
         considered a candidate for a base pair.
-    unique : bool, optional (default: True)
+    unique : bool, optional
         If ``True``, each base is assumed to be only paired with one
         other base. If multiple pairings are plausible, the pairing with
         the most hydrogen bonds is selected.
@@ -1203,26 +1203,25 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
     If a different nucleotide is given, it is mapped to the best
     fitting base using the algorithm described below.
 
-    (i) The number of matching atom names with the reference bases is
-        counted. If the number of matching atoms with all reference
-        bases is less than the specified `min_atoms_per_base`
-        (default 3) the nucleotide cannot be mapped and ``None`` is
+    (i) The number of matching atom names with the reference bases is counted.
+        If the number of matching atoms with all reference bases is less than the
+        specified `min_atoms_per_base` the nucleotide cannot be mapped and ``None`` is
         returned.
 
-    (ii) The bases with maximum number of matching atoms are selected
-         and superimposed with each reference. The base with lowest RMSD
-         is chosen. If the RMSD is more than the specified
-         `rmsd_cutoff` (default 0.28) the nucleotide cannot be mapped
-         and ``None`` is returned.
+    (ii) The bases with maximum number of matching atoms are selected and superimposed
+         with each reference.
+         The base with lowest RMSD is chosen.
+         If the RMSD is more than the specified `rmsd_cutoff`, the nucleotide cannot be
+         mapped and ``None`` is returned.
 
     Parameters
     ----------
     residue : AtomArray
         The nucleotide to be mapped.
-    min_atoms_per_base : int, optional (default: 3)
+    min_atoms_per_base : int, optional
         The number of atoms the residue must have in common with the
         reference.
-    rmsd_cutoff : float, optional (default: 0.28)
+    rmsd_cutoff : float, optional
         The maximum RSMD that is allowed for a mapping to occur.
 
     Returns

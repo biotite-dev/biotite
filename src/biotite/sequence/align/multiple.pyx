@@ -92,10 +92,9 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
         penalty is used. The first integer in the tuple is the gap
         opening penalty, the second integer is the gap extension
         penalty.
-        The values need to be negative. (Default: *-10*)
+        The values need to be negative.
     terminal_penalty : bool, optional
         If true, gap penalties are applied to terminal gaps.
-        (Default: True)
     distances : ndarray, shape=(n,n)
         Pairwise distances of the sequences.
         The matrix must be symmetric and all entries must be larger

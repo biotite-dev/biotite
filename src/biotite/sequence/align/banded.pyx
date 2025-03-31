@@ -76,7 +76,7 @@ def align_banded(seq1, seq2, matrix, band, gap_penalty=-10, local=False,
         If a tuple is provided, an affine gap penalty is used.
         The first integer in the tuple is the gap opening penalty,
         the second integer is the gap extension penalty.
-        The values need to be negative. (Default: *-10*)
+        The values need to be negative.
     local : bool, optional
         If set to true, a local alignment is performed.
         Otherwise (default) a semi-global alignment is performed.

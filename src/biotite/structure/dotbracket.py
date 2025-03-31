@@ -33,10 +33,10 @@ def dot_bracket_from_structure(
     ----------
     nucleic_acid_strand : AtomArray
         The nucleic acid strand to be represented in DBL-notation.
-    scores : ndarray, dtype=int, shape=(n,) (default: None)
+    scores : ndarray, dtype=int, shape=(n,)
         The score for each base pair, which is passed on to
         :func:`pseudoknots()`.
-    max_pseudoknot_order : int (default: None)
+    max_pseudoknot_order : int
         The maximum pseudoknot order to be found. If a base pair would
         be of a higher order, it is represented as unpaired. If ``None``
         is given, all base pairs are evaluated.
@@ -82,9 +82,9 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
         strand.
     length : int
         The number of bases in the strand.
-    scores : ndarray, dtype=int, shape=(n,) (default: None)
+    scores : ndarray, dtype=int, shape=(n,)
         The score for each base pair, which is passed on to :func:`pseudoknots()`.
-    max_pseudoknot_order : int (default: None)
+    max_pseudoknot_order : int
         The maximum pseudoknot order to be found. If a base pair would
         be of a higher order, it is represented as unpaired. If ``None``
         is given, all pseudoknot orders are evaluated.

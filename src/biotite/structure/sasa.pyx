@@ -35,39 +35,38 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
          point_number=1000, point_distr="Fibonacci", vdw_radii="ProtOr")
 
     Calculate the Solvent Accessible Surface Area (SASA) of a protein.
-    
+
     This function uses the Shrake-Rupley ("rolling probe")
     algorithm :footcite:`Shrake1973`:
     Every atom is occupied by a evenly distributed point mesh. The
     points that can be reached by the "rolling probe", are surface
     accessible.
-    
+
     Parameters
     ----------
     array : AtomArray
         The protein model to calculate the SASA for.
     probe_radius : float, optional
-        The VdW-radius of the solvent molecules (default: 1.4).
+        The VdW-radius of the solvent molecules.
     atom_filter : ndarray, dtype=bool, optional
         If this parameter is given, SASA is only calculated for the
         filtered atoms.
     ignore_ions : bool, optional
-        If true, all monoatomic ions are removed before SASA calculation
-        (default: True).
+        If true, all monoatomic ions are removed before SASA calculation.
     point_number : int, optional
         The number of points in the mesh occupying each atom for SASA
-        calculation (default: 100). The SASA calculation time is
-        proportional to the amount of sphere points.
+        calculation.
+        The SASA calculation time is proportional to the amount of sphere points.
     point_distr : str or function, optional
         If a function is given, the function is used to calculate the
         point distribution for the mesh (the function must take `float`
         *n* as parameter and return a *(n x 3)* :class:`ndarray`).
         Alternatively a string can be given to choose a built-in
         distribution:
-            
+
             - **Fibonacci** - Distribute points using a golden section
               spiral.
-            
+
         By default *Fibonacci* is used.
     vdw_radii : str or ndarray, dtype=float, optional
         Indicates the set of VdW radii to be used. If an `array`-length
@@ -76,7 +75,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
         SASA calculation (e.g. solvent atoms) can have arbitrary values
         (e.g. `NaN`). If instead a string is given, one of the
         built-in sets is used:
-        
+
             - **ProtOr** - A set, which does not require hydrogen atoms
               in the model. Suitable for crystal structures.
               :footcite:`Tsai1999`
@@ -85,25 +84,25 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
               in the model (e.g. NMR elucidated structures).
               Values for main group elements are taken from :footcite:`Mantina2009`,
               and for relevant transition metals from the :footcite:`RDKit`.
-              
+
         By default *ProtOr* is used.
-              
-    
+
+
     Returns
     -------
     sasa : ndarray, dtype=bool, shape=(n,)
-        Atom-wise SASA. `NaN` for atoms where SASA has not been 
+        Atom-wise SASA. `NaN` for atoms where SASA has not been
         calculated
         (solvent atoms, hydrogen atoms (ProtOr), atoms not in `filter`).
-        
+
     References
     ----------
-    
+
     .. footbibliography::
-    
+
     """
     cdef int i=0, j=0, k=0, adj_atom_i=0, rel_atom_i=0
-    
+
     cdef np.ndarray sasa_filter
     cdef np.ndarray occl_filter
     if atom_filter is not None:
@@ -122,7 +121,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
         filter = ~filter_monoatomic_ions(array)
         sasa_filter = sasa_filter & filter
         occl_filter = occl_filter & filter
-    
+
     cdef np.ndarray sphere_points
     if callable(point_distr):
         sphere_points = point_distr(point_number)
@@ -131,7 +130,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     else:
         raise ValueError(f"'{point_distr}' is not a valid point distribution")
     sphere_points = sphere_points.astype(np.float32)
-    
+
     cdef np.ndarray radii
     if isinstance(vdw_radii, np.ndarray):
         radii = vdw_radii.astype(np.float32)
@@ -159,17 +158,17 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
         raise KeyError(f"'{vdw_radii}' is not a valid radii set")
     # Increase atom radii by probe size ("rolling probe")
     radii += probe_radius
-    
+
     # Memoryview for filter
     # Problem with creating boolean memoryviews
     # -> Type uint8 is used
     cdef np_bool[:] sasa_filter_view = np.frombuffer(sasa_filter,
                                                      dtype=np.uint8)
-    
+
     cdef np.ndarray occl_r = radii[occl_filter]
     # Atom array containing occluding atoms
     occl_array = array[occl_filter]
-    
+
     # Memoryviews for coordinates of entire (main) array
     # and for coordinates of occluding atom array
     cdef float32[:,:] main_coord = array.coord.astype(np.float32,
@@ -191,10 +190,10 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     cdef float32[:] occl_radii_sq = occl_r * occl_r
     # Memoryview for atomwise SASA
     cdef float32[:] sasa = np.full(len(array), np.nan, dtype=np.float32)
-    
+
     # Area of a sphere point on a unit sphere
     cdef float32 area_per_point = 4.0 * np.pi / point_number
-    
+
     # Define further statically typed variables
     # that are needed for SASA calculation
     cdef int n_accesible = 0
@@ -213,8 +212,8 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     cdef float32 occl_y = 0
     cdef float32 occl_z = 0
     cdef float32[:,:] relevant_occl_coord = None
-    
-    # Cell size is as large as the maximum distance, 
+
+    # Cell size is as large as the maximum distance,
     # where two atom can intersect.
     # Therefore intersecting atoms are always in the same or adjacent cell.
     cell_list = CellList(occl_array, np.max(radii[occl_filter])*2)
@@ -227,7 +226,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     cell_indices = cell_list.get_atoms_in_cells(array.coord)
     cell_indices_view = cell_indices
     max_adj_list_length = cell_indices.shape[0]
-        
+
     # Later on, this array stores coordinates for actual
     # occluding atoms for a certain atom to calculate the
     # SASA for
@@ -237,7 +236,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     # adjacent atoms
     relevant_occl_coord = np.zeros((max_adj_list_length, 4),
                                    dtype=np.float32)
-    
+
     # Actual SASA calculation
     for i in range(array_length):
         # First level: The atoms to calculate SASA for

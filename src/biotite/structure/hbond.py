@@ -59,8 +59,7 @@ def hbond(
         The angle cutoff in degree between Donor-H..Acceptor to be
         considered a hydrogen bond.
     donor_elements, acceptor_elements : tuple of str
-        Elements to be considered as possible donors or acceptors
-        (Default: O, N, S).
+        Elements to be considered as possible donors or acceptors.
     periodic : bool, optional
         If true, hydrogen bonds can also be detected in periodic
         boundary conditions.
