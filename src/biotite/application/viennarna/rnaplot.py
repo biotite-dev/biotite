@@ -28,7 +28,7 @@ class RNAplotApp(LocalApp):
 
     Parameters
     ----------
-    dot_bracket : str, optiona
+    dot_bracket : str, optional
         The structure in dot bracket notation.
     base_pairs : ndarray, shape=(n,2), optional
         Each row corresponds to the positions of the bases in the
