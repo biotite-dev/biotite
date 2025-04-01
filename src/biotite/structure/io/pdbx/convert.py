@@ -399,7 +399,19 @@ def get_structure(
 
     # The below part is the same for both, AtomArray and AtomArrayStack
     _fill_annotations(atoms, model_atom_site, extra_fields, use_author_fields)
+
+    atoms = _filter_altloc(atoms, model_atom_site, altloc)
+
     if include_bonds:
+
+        if altloc == "all":
+            raise ValueError(
+                "Bond computation is not supported with `altloc='all'. "
+                "After custom altloc filtering, consider using "
+                "`biotite.structure.bonds.connect_via_residue_names` "
+                "to add intra-residue and canonical inter-residue bonds. "
+            )
+
         if "chem_comp_bond" in block:
             try:
                 custom_bond_dict = _parse_intra_residue_bonds(block["chem_comp_bond"])
@@ -415,10 +427,9 @@ def get_structure(
             bonds = connect_via_residue_names(atoms)
         if "struct_conn" in block:
             bonds = bonds.merge(
-                _parse_inter_residue_bonds(model_atom_site, block["struct_conn"])
+                _parse_inter_residue_bonds(model_atom_site, block["struct_conn"], atom_count=atoms.array_length())
             )
         atoms.bonds = bonds
-    atoms = _filter_altloc(atoms, model_atom_site, altloc)
 
     return atoms
 
@@ -578,11 +589,12 @@ def _parse_intra_residue_bonds(chem_comp_bond):
     return custom_bond_dict
 
 
-def _parse_inter_residue_bonds(atom_site, struct_conn):
+def _parse_inter_residue_bonds(atom_site, struct_conn, atom_count=None):
     """
     Create inter-residue bonds by parsing the ``struct_conn`` category.
     The atom indices of each bond are found by matching the bond labels
     to the ``atom_site`` category.
+    If atom_count is None, it will be inferred from the ``atom_site`` category.
     """
     # Identity symmetry operation
     IDENTITY = "1_555"
@@ -651,7 +663,7 @@ def _parse_inter_residue_bonds(atom_site, struct_conn):
     bond_types = [PDBX_BOND_TYPE_ID_TO_TYPE[type_id] for type_id in bond_type_id]
 
     return BondList(
-        atom_site.row_count,
+        atom_count if atom_count is not None else atom_site.row_count,
         np.stack([atoms_indices_1, atoms_indices_2, bond_types], axis=-1),
     )
 
