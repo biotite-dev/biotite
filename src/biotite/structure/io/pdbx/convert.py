@@ -403,7 +403,6 @@ def get_structure(
     atoms = _filter_altloc(atoms, model_atom_site, altloc)
 
     if include_bonds:
-
         if altloc == "all":
             raise ValueError(
                 "Bond computation is not supported with `altloc='all'. "
@@ -427,7 +426,11 @@ def get_structure(
             bonds = connect_via_residue_names(atoms)
         if "struct_conn" in block:
             bonds = bonds.merge(
-                _parse_inter_residue_bonds(model_atom_site, block["struct_conn"], atom_count=atoms.array_length())
+                _parse_inter_residue_bonds(
+                    model_atom_site,
+                    block["struct_conn"],
+                    atom_count=atoms.array_length(),
+                )
             )
         atoms.bonds = bonds
 
