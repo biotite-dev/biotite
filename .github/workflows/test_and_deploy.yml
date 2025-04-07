@@ -106,12 +106,12 @@ jobs:
       - name: List distributions to be uploaded
         run: ls dist
       - name: Upload to GitHub Releases
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+        uses: softprops/action-gh-release@v2.0.5
         if: github.event_name == 'release' && github.event.action == 'published'
         with:
           files: dist//*
       - name: Upload to PyPI
-        uses: pypa/gh-action-pypi-publish@c7f29f7adef1a245bd91520e94867e5c6eedddcc
+        uses: pypa/gh-action-pypi-publish@release/v1
         if: github.event_name == 'release' && github.event.action == 'published'
         with:
           password: ${{ secrets.PYPI_TOKEN }}
