@@ -516,7 +516,8 @@ def test_assembly_sym_id(pdb_id, assembly_id, symmetric_unit_count):
 
 
 @pytest.mark.parametrize("model", [None, 1])
-def test_unit_cell_trivial(model):
+@pytest.mark.parametrize("center", [False, True])
+def test_unit_cell_trivial(model, center):
     """
     The 'P 1' space group has no symmetries.
     Hence the unit cell from this space group should be the same as the asymmetric unit.
@@ -530,13 +531,20 @@ def test_unit_cell_trivial(model):
     # it needs only be large enough to contain the asymmetric unit
     pdbx_file.block["cell"] = pdbx.BinaryCIFCategory(
         {
-            "length_a": 10, "length_b": 10, "length_c": 10,
+            "length_a": 10, "length_b": 20, "length_c": 30,
             "angle_alpha": 90, "angle_beta": 90, "angle_gamma": 90,
         }
     )  # fmt: skip
+    if center:
+        # Ensure that the asymmetric unit is already inside the unit cell,
+        # as the centroid may sometimes be slightly outside
+        for col_name in ["Cartn_x", "Cartn_y", "Cartn_z"]:
+            pdbx_file.block["atom_site"][col_name] = (
+                pdbx_file.block["atom_site"][col_name].as_array(np.float32) + 1.0
+            )
 
-    asymmetric_unit = pdbx.get_structure(pdbx_file, model=model)
-    unit_cell = pdbx.get_unit_cell(pdbx_file, model=model)
+    asymmetric_unit = pdbx.get_structure(pdbx_file, model)
+    unit_cell = pdbx.get_unit_cell(pdbx_file, center, model)
 
     for category in asymmetric_unit.get_annotation_categories():
         assert (
@@ -564,7 +572,9 @@ def test_unit_cell_pdb_consistency(pdb_path):
     ref_unit_cell = pdb_file.get_unit_cell(model=1)
 
     pdbx_file = pdbx.BinaryCIFFile.read(pdb_path.with_suffix(".bcif"))
-    test_unit_cell = pdbx.get_unit_cell(pdbx_file, model=1)
+    # The reference transformations do not center the copies,
+    # so we do not do this here either
+    test_unit_cell = pdbx.get_unit_cell(pdbx_file, model=1, center=False)
 
     for category in ref_unit_cell.get_annotation_categories():
         assert (

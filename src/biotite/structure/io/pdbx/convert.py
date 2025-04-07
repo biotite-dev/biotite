@@ -40,6 +40,7 @@ from biotite.structure.filter import (
     filter_first_altloc,
     filter_highest_occupancy_altloc,
 )
+from biotite.structure.geometry import centroid
 from biotite.structure.io.pdbx.bcif import (
     BinaryCIFBlock,
     BinaryCIFColumn,
@@ -1826,6 +1827,7 @@ def _convert_string_to_sequence(string, stype):
 
 def get_unit_cell(
     pdbx_file,
+    center=True,
     model=None,
     data_block=None,
     altloc="first",
@@ -1845,6 +1847,11 @@ def get_unit_cell(
     ----------
     pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
         The file object.
+    center : bool, optional
+        If set to true, each symmetric copy will be moved inside the unit cell
+        dimensions, if its centroid is outside.
+        By default, the copies are are created using the raw space group
+        transformations, which may put them one unit cell length further away.
     model : int, optional
         If this parameter is given, the function will return an
         :class:`AtomArray` from the atoms corresponding to the given
@@ -1924,7 +1931,7 @@ def get_unit_cell(
         raise InvalidFileError("File has no 'symmetry.space_group_name_H-M' field")
     transforms = space_group_transforms(space_group)
 
-    structure = get_structure(
+    asym = get_structure(
         pdbx_file,
         model,
         data_block,
@@ -1933,17 +1940,21 @@ def get_unit_cell(
         use_author_fields,
         include_bonds,
     )
-    fractional_asym_coord = coord_to_fraction(structure.coord, structure.box)
-    unit_cell_coord = np.stack(
-        [
-            fraction_to_coord(transform.apply(fractional_asym_coord), structure.box)
-            for transform in transforms
-        ],
-        axis=0,
-    )
-    unit_cell = repeat(structure, unit_cell_coord)
+
+    fractional_asym_coord = coord_to_fraction(asym.coord, asym.box)
+    unit_cell_copies = []
+    for transform in transforms:
+        fractional_coord = transform.apply(fractional_asym_coord)
+        if center:
+            # If the centroid is outside the box, move the copy inside the box
+            orig_centroid = centroid(fractional_coord)
+            new_centroid = orig_centroid % 1
+            fractional_coord += (new_centroid - orig_centroid)[..., np.newaxis, :]
+        unit_cell_copies.append(fraction_to_coord(fractional_coord, asym.box))
+
+    unit_cell = repeat(asym, np.stack(unit_cell_copies, axis=0))
     unit_cell.set_annotation(
-        "sym_id", np.repeat(np.arange(len(transforms)), structure.array_length())
+        "sym_id", np.repeat(np.arange(len(transforms)), asym.array_length())
     )
     return unit_cell
 
