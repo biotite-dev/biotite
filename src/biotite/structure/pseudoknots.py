@@ -148,7 +148,7 @@ class _Region:
     region_pairs : ndarray, dtype=int
         The indices of the base pairs in ``base_pairs`` that are part of
         the region.
-    scores : ndarray, dtype=int, shape=(n,) (default: None)
+    scores : ndarray, dtype=int, shape=(n,)
         The score for each base pair.
     """
 
@@ -202,7 +202,7 @@ def _find_regions(base_pairs, scores):
     base_pairs : ndarray, dtype=int, shape=(n, 2)
         Each row is equivalent to one base pair and contains the first
         indices of the residues corresponding to each base.
-    scores : ndarray, dtype=int, shape=(n,) (default: None)
+    scores : ndarray, dtype=int, shape=(n,)
         The score for each base pair.
 
     Returns
@@ -352,7 +352,7 @@ def _get_first_occurrence_for(iterable, wanted_object):
             return i
 
 
-def _get_region_array_for(regions, content=[], dtype=[]):
+def _get_region_array_for(regions, content=(), dtype=()):
     """
     Get a :class:`ndarray` of region objects. Each object occurs twice,
     representing its start and end point. The regions positions in the
@@ -365,12 +365,12 @@ def _get_region_array_for(regions, content=[], dtype=[]):
     ----------
     regions : set {_region, ...}
         The regions to be considered
-    content : list [function, ...] (default: [])
+    content : list [function, ...]
         The functions to be considered for custom outputs. For a given
         region they must return a tuple of which the first value is
         placed at the start position and the second value at the end
         position of the region relative to the other regions.
-    dtype : list [str, ...] (default: [])
+    dtype : list [str, ...]
         The data type of the output of the custom functions.
 
     Returns
@@ -554,7 +554,7 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
         The maximum pseudoknot order to be found. If a base pair would
         be of a higher order, its order is specified as -1. If ``None``
         is given, all base pairs are evaluated.
-    order : int (default: 0)
+    order : int
         The order that is currently evaluated.
 
     Returns

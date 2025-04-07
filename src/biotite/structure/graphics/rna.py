@@ -57,59 +57,62 @@ def plot_nucleotide_secondary_structure(
         sequence. The positions are counted from zero.
     length : int
         The number of bases in the sequence.
-    layout_type : RNAplotApp.Layout, optional (default: RNAplotApp.Layout.NAVIEW)
+    layout_type : RNAplotApp.Layout, optional
         The layout type according to the *RNAplot* documentation.
-    draw_pseudoknots : bool, optional (default: True)
+    draw_pseudoknots : bool, optional
         Whether pseudoknotted bonds should be drawn.
-    pseudoknot_order : iterable, optional (default: None)
+    pseudoknot_order : iterable, optional
         The pseudoknot order of each pair in the input `base_pairs`.
         If no pseudoknot order is given, a solution determined by
         :func:`biotite.structure.pseudoknots` is picked at random.
-    angle : int or float, optional (default: 0)
+    angle : int or float, optional
         The angle the plot should be rotated.
-    bond_linewidth : float or int or iterable, optional (default: 1)
+    bond_linewidth : float or int or iterable, optional
         The linewidth of each bond. Provide a single value to set the
         linewidth for all bonds or an iterable to set the linewidth for
         each individual bond.
-    bond_linestyle : str or iterable, optional (default: None)
+    bond_linestyle : str or iterable, optional
         The *Matplotlib* compatible linestyle of each bond. Provide a
         single value to set the linewidth for all bonds or an iterable
         to set the linewidth for each individual bond. By default, solid
         lines are used for non-pseudoknotted bonds and dashed lines are
         used for pseudoknotted bonds.
-    bond_color : str or ndarray, shape(n,) or shape(n,3) or shape(n,4), optional (default: 'black')
+    bond_color : str or ndarray, shape(n,) or shape(n,3) or shape(n,4), optional
         The *Matplotlib* compatible color of each bond. Provide a single
         string to set the color for all bonds or an array to set the
         color for each individual bond.
-    backbone_linewidth : float, optional (default: 1)
+    backbone_linewidth : float, optional
         The linewidth of the backbone.
-    backbone_linestyle : str, optional (default: 'solid')
+    backbone_linestyle : str, optional
         The *Matplotlib* compatible linestyle of the backbone.
-    backbone_color : str or ndarray, shape=(3,) or shape=(4,), dtype=float, optional (default: 'grey')
+    backbone_color : str or ndarray, shape=(3,) or shape=(4,), dtype=float, optional
         The *Matplotlib* compatible color of the backbone.
-    base_text : dict or iterable, optional (default: {'size': 'small'})
+    base_text : dict or iterable, optional
         The keyword parameters for the *Matplotlib* ``Text`` objects
         denoting the type of each base. Provide a single value to set
         the parameters for all labels or an iterable to set the
         parameters for each individual label.
-    base_box : dict or iterable, optional (default: {'pad'=0, 'color'='white'})
+        The default is ``{'size': 'small'}``.
+    base_box : dict or iterable, optional)
         The *Matplotlib* compatible properties of the ``FancyBboxPatch``
         surrounding the base labels. Provide a single dictionary to
         set the properties of all base lables or an iterable to set the
         properties for each individual label.
-    annotation_positions : iterable, optional (default: None)
+        The default is ``{'pad'=0, 'color'='white'}``.
+    annotation_positions : iterable, optional
         The positions of the bases to be numbered. By default every
         second base is annotated. Please note that while the positions
         in the sequence are counted from zero, they are displayed on the
         graph counted from one.
-    annotation_offset : int or float, optional (default: 8.5)
+    annotation_offset : int or float, optional
         The offset of the annotations from the base labels.
-    annotation_text : dict or iterable, optional (default: {'size': 'small'})
+    annotation_text : dict or iterable, optional
         The keyword parameters for the *Matplotlib* ``Text`` objects
         annotating the sequence. Provide a single value to set the
         parameters for all annotations or an iterable to set the
         parameters for each individual annotation.
-    border : float, optional (default: 0.03)
+        The default is ``{'size': 'small'}``.
+    border : float, optional
         The percentage of the coordinate range to be left as whitespace
         to create a border around the plot.
     bin_path : str, optional

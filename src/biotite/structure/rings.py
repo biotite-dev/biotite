@@ -149,7 +149,7 @@ def find_stacking_interactions(
 
     The conditions for pi-stacking are :footcite:`Wojcikowski2015` :
 
-        - The ring centroids must be within cutoff distance (default: 6.5 Å).
+        - The ring centroids must be within cutoff `centroid_cutoff` distance.
           While :footcite:`Wojcikowski2015` uses a cutoff of 5.0 Å, 6.5 Å was
           adopted from :footcite:`Bouysset2021` to better identify perpendicular
           stacking interactions.

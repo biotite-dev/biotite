@@ -28,15 +28,15 @@ class RNAplotApp(LocalApp):
 
     Parameters
     ----------
-    dot_bracket : str, optional (default: None)
+    dot_bracket : str, optional
         The structure in dot bracket notation.
-    base_pairs : ndarray, shape=(n,2), optional (default: None)
+    base_pairs : ndarray, shape=(n,2), optional
         Each row corresponds to the positions of the bases in the
         strand. This parameter is mutually exclusive to ``dot_bracket``.
-    length : int, optional (default: None)
+    length : int, optional
         The number of bases in the strand. This parameter is required if
         ``base_pairs`` is given.
-    layout_type : RNAplotApp.Layout, optional (default: RNAplotApp.Layout.NAVIEW)
+    layout_type : RNAplotApp.Layout, optional
         The layout type according to the *RNAplot* documentation.
     bin_path : str, optional
         Path of the *RNAplot* binary.
@@ -176,13 +176,13 @@ class RNAplotApp(LocalApp):
 
         Parameters
         ----------
-        dot_bracket : str, optional (default: None)
+        dot_bracket : str, optional
             The structure in dot bracket notation.
-        base_pairs : ndarray, shape=(n,2), optional (default: None)
+        base_pairs : ndarray, shape=(n,2), optional
             Each row corresponds to the positions of the bases in the
             strand. This parameter is mutually exclusive to
             ``dot_bracket``.
-        length : int, optional (default: None)
+        length : int, optional
             The number of bases in the strand. This parameter is
             required if ``base_pairs`` is given.
         layout_type : Layout

@@ -55,7 +55,6 @@ cdef class CellList:
     periodic : bool, optional
         If true, the cell list considers periodic copies of atoms.
         The periodicity is based on the `box` attribute of `atom_array`.
-        (Default: False)
     box : ndarray, dtype=float, shape=(3,3), optional
         If provided, the periodicity is based on this parameter instead
         of the :attr:`box` attribute of `atom_array`.

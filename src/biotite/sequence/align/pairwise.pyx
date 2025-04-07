@@ -138,19 +138,17 @@ def align_optimal(seq1, seq2, matrix, gap_penalty=-10,
         If a tuple is provided, an affine gap penalty is used.
         The first integer in the tuple is the gap opening penalty,
         the second integer is the gap extension penalty.
-        The values need to be negative. (Default: *-10*)
+        The values need to be negative.
     terminal_penalty : bool, optional
         If true, gap penalties are applied to terminal gaps.
         If `local` is true, this parameter has no effect.
-        (Default: True)
     local : bool, optional
         If false, a global alignment is performed, otherwise a local
-        alignment is performed. (Default: False)
+        alignment is performed.
     max_number : int, optional
         The maximum number of alignments returned.
         When the number of branches exceeds this value in the traceback
         step, no further branches are created.
-        (Default: 1000)
 
     Returns
     -------
