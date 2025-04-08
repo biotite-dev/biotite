@@ -916,6 +916,27 @@ def test_compress_file(path):
     assert _file_size(compressed_file) <= _file_size(orig_file)
 
 
+@pytest.mark.parametrize("value", [1e10, 1e-10])
+def test_extreme_float_compression(value):
+    """
+    Check if :func:`compress()` correctly falls back to direct byte encoding of floats
+    in extreme cases where fixed point encoding would lead to integer
+    underflow/overflow.
+    """
+    # Not only very small/large values, but a large difference between the values are
+    # required, to make fixed point encoding fail
+    ref_array = np.array([value, 1.0])
+
+    compressed_data = pdbx.compress(pdbx.BinaryCIFData(ref_array), atol=0)
+    serialized_compressed_data = compressed_data.serialize()
+    data = pdbx.BinaryCIFData.deserialize(serialized_compressed_data)
+
+    # Check that no fixed point encoding was used
+    assert len(data.encoding) == 1
+    assert type(data.encoding[0]) is pdbx.ByteArrayEncoding
+    assert np.all(data.array == ref_array)
+
+
 @pytest.mark.parametrize(
     "number, ref_decimals",
     [

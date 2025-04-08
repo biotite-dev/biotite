@@ -139,13 +139,21 @@ def _compress_data(bcif_data, rtol, atol):
         to_integer_encoding = FixedPointEncoding(
             10 ** _get_decimal_places(array, rtol, atol)
         )
-        integer_array = to_integer_encoding.encode(array)
-        best_encoding, size_compressed = _find_best_integer_compression(integer_array)
-        if size_compressed < _data_size_in_file(bcif.BinaryCIFData(array)):
-            return bcif.BinaryCIFData(array, [to_integer_encoding] + best_encoding)
-        else:
-            # The float array is smaller -> encode it directly as bytes
+        try:
+            integer_array = to_integer_encoding.encode(array)
+        except ValueError:
+            # With the given tolerances integer underflow/overflow would occur
+            # -> do not use integer encoding
             return bcif.BinaryCIFData(array, [ByteArrayEncoding()])
+        else:
+            best_encoding, size_compressed = _find_best_integer_compression(
+                integer_array
+            )
+            if size_compressed < _data_size_in_file(bcif.BinaryCIFData(array)):
+                return bcif.BinaryCIFData(array, [to_integer_encoding] + best_encoding)
+            else:
+                # The float array is smaller -> encode it directly as bytes
+                return bcif.BinaryCIFData(array, [ByteArrayEncoding()])
 
     elif np.issubdtype(array.dtype, np.integer):
         array = _to_smallest_integer_type(array)
@@ -303,11 +311,15 @@ def _get_decimal_places(array, rtol, atol):
     decimals : int
         The number of decimal places.
     """
+    if rtol <= 0 and atol <= 0:
+        raise ValueError("At least one of 'rtol' and 'atol' must be greater than 0")
     # Decimals of NaN or infinite values do not make sense
     # and 0 would give NaN when rounding on decimals
     array = array[np.isfinite(array) & (array != 0)]
     for decimals in itertools.count(start=min(0, -_order_magnitude(array))):
         error = np.abs(np.round(array, decimals) - array)
+        if decimals == 100:
+            raise
         if np.all((error < rtol * np.abs(array)) | (error < atol)):
             return decimals
 
