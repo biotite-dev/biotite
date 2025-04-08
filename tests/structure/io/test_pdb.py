@@ -478,9 +478,9 @@ def test_bond_parsing():
 
 
 @pytest.mark.parametrize("model", [1, None])
-def test_get_symmetry_mates(model):
+def test_get_unit_cell(model):
     """
-    Test generated symmetry mates on a known example with a simple
+    Test :meth:`PDBFile.get_unit_cell()` on a known example with a simple
     space group and a single chain.
     """
     INVERSION_AXES = [(0, 0, 0), (0, 0, 1), (0, 1, 0), (1, 0, 0)]
@@ -496,14 +496,14 @@ def test_get_symmetry_mates(model):
         box = original_structure.box
     cell_sizes = np.diagonal(box)
 
-    symmetry_mates = pdb_file.get_symmetry_mates(model=model)
+    unit_cell = pdb_file.get_unit_cell(model=model)
 
     # Space group has 4 copies in a unit cell
-    assert symmetry_mates.array_length() == original_structure.array_length() * 4
+    assert unit_cell.array_length() == original_structure.array_length() * 4
     if model is None:
-        assert symmetry_mates.stack_depth() == original_structure.stack_depth()
+        assert unit_cell.stack_depth() == original_structure.stack_depth()
     for chain, inv_axes, trans_axes in zip(
-        struc.chain_iter(symmetry_mates), INVERSION_AXES, TRANSLATION_AXES
+        struc.chain_iter(unit_cell), INVERSION_AXES, TRANSLATION_AXES
     ):
         # Superimpose symmetry mates
         # by applying the appropriate transformations

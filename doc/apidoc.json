@@ -245,6 +245,7 @@
             "from_template"
         ],
         "Boxes and unit cells" : [
+            "space_group_transforms",
             "vectors_from_unitcell",
             "unitcell_from_vectors",
             "box_volume",
@@ -280,6 +281,7 @@
             "rdf"
         ],
         "Transformations" : [
+            "AffineTransformation",
             "translate",
             "rotate",
             "rotate_centered",
@@ -291,8 +293,7 @@
             "superimpose",
             "superimpose_without_outliers",
             "superimpose_homologs",
-            "superimpose_structural_homologs",
-            "AffineTransformation"
+            "superimpose_structural_homologs"
         ],
         "Filters" : [
             "filter_canonical_nucleotides",
@@ -418,6 +419,7 @@
             "set_component",
             "list_assemblies",
             "get_assembly",
+            "get_unit_cell",
             "get_sse"
         ],
         "CIF format" : [

@@ -10,6 +10,7 @@ that can be applied on structures.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann", "Claude J. Rogers"
 __all__ = [
+    "AffineTransformation",
     "translate",
     "rotate",
     "rotate_centered",
@@ -20,8 +21,213 @@ __all__ = [
 
 import numpy as np
 from biotite.structure.atoms import Atom, AtomArray, AtomArrayStack, coord
-from biotite.structure.geometry import centroid
 from biotite.structure.util import matrix_rotate, norm_vector, vector_dot
+
+
+class AffineTransformation:
+    """
+    An affine transformation, consisting of translations and a rotation.
+
+    Parameters
+    ----------
+    center_translation : ndarray, shape=(3,) or shape=(m,3), dtype=float
+        The translation vector for moving the centroid into the
+        origin.
+    rotation : ndarray, shape=(3,3) or shape=(m,3,3), dtype=float
+        The rotation matrix.
+    target_translation : ndarray, shape=(m,3), dtype=float
+        The translation vector for moving the structure onto the
+        fixed one.
+
+    Attributes
+    ----------
+    center_translation, rotation, target_translation : ndarray
+        Same as the parameters.
+        The dimensions are always expanded to *(m,3)* or *(m,3,3)*,
+        respectively.
+    """
+
+    def __init__(self, center_translation, rotation, target_translation):
+        self.center_translation = _expand_dims(center_translation, 2)
+        self.rotation = _expand_dims(rotation, 3)
+        self.target_translation = _expand_dims(target_translation, 2)
+
+    def apply(self, atoms):
+        """
+        Apply this transformation on the given structure.
+
+        Parameters
+        ----------
+        atoms : AtomArray or AtomArrayStack or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
+            The structure to apply the transformation on.
+
+        Returns
+        -------
+        transformed : AtomArray or AtomArrayStack or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
+            A copy of the `atoms` structure, with transformations applied.
+            Only coordinates are returned, if coordinates were given in `atoms`.
+
+        Examples
+        --------
+
+        >>> coord = np.arange(15).reshape(5,3)
+        >>> print(coord)
+        [[ 0  1  2]
+         [ 3  4  5]
+         [ 6  7  8]
+         [ 9 10 11]
+         [12 13 14]]
+        >>> # Rotates 90 degrees around the z-axis
+        >>> transform = AffineTransformation(
+        ...     center_translation=np.array([0,0,0]),
+        ...     rotation=np.array([
+        ...         [0, -1,  0],
+        ...         [1,  0,  0],
+        ...         [0,  0,  1]
+        ...     ]),
+        ...     target_translation=np.array([0,0,0])
+        ... )
+        >>> print(transform.apply(coord))
+        [[ -1.   0.   2.]
+         [ -4.   3.   5.]
+         [ -7.   6.   8.]
+         [-10.   9.  11.]
+         [-13.  12.  14.]]
+        """
+        mobile_coord = coord(atoms)
+        original_shape = mobile_coord.shape
+        mobile_coord = _reshape_to_3d(mobile_coord)
+        if (
+            self.rotation.shape[0] != 1
+            and mobile_coord.shape[0] != self.rotation.shape[0]
+        ):
+            raise IndexError(
+                f"Number of transformations is {self.rotation.shape[0]}, "
+                f"but number of structure models is {mobile_coord.shape[0]}"
+            )
+
+        superimposed_coord = mobile_coord.copy()
+        superimposed_coord += self.center_translation[:, np.newaxis, :]
+        superimposed_coord = _multi_matmul(self.rotation, superimposed_coord)
+        superimposed_coord += self.target_translation[:, np.newaxis, :]
+
+        superimposed_coord = superimposed_coord.reshape(original_shape)
+        if isinstance(atoms, np.ndarray):
+            return superimposed_coord
+        else:
+            superimposed = atoms.copy()
+            superimposed.coord = superimposed_coord
+            return superimposed
+
+    def as_matrix(self):
+        """
+        Get the translations and rotation as a combined 4x4
+        transformation matrix.
+
+        Multiplying this matrix with coordinates in the form
+        *(x, y, z, 1)* will apply the same transformation as
+        :meth:`apply()` to coordinates in the form *(x, y, z)*.
+
+        Returns
+        -------
+        transformation_matrix : ndarray, shape=(m,4,4), dtype=float
+            The transformation matrix.
+            *m* is the number of models in the transformation.
+
+        Examples
+        --------
+
+        >>> coord = np.arange(15).reshape(5,3)
+        >>> print(coord)
+        [[ 0  1  2]
+         [ 3  4  5]
+         [ 6  7  8]
+         [ 9 10 11]
+         [12 13 14]]
+        >>> # Rotates 90 degrees around the z-axis
+        >>> transform = AffineTransformation(
+        ...     center_translation=np.array([0,0,0]),
+        ...     rotation=np.array([
+        ...         [0, -1,  0],
+        ...         [1,  0,  0],
+        ...         [0,  0,  1]
+        ...     ]),
+        ...     target_translation=np.array([0,0,0])
+        ... )
+        >>> print(transform.apply(coord))
+        [[ -1.   0.   2.]
+         [ -4.   3.   5.]
+         [ -7.   6.   8.]
+         [-10.   9.  11.]
+         [-13.  12.  14.]]
+        >>> # Use a 4x4 matrix for transformation as alternative
+        >>> coord_4 = np.concatenate([coord, np.ones((len(coord), 1))], axis=-1)
+        >>> print(coord_4)
+        [[ 0.  1.  2.  1.]
+         [ 3.  4.  5.  1.]
+         [ 6.  7.  8.  1.]
+         [ 9. 10. 11.  1.]
+         [12. 13. 14.  1.]]
+        >>> print((transform.as_matrix()[0] @ coord_4.T).T)
+        [[ -1.   0.   2.   1.]
+         [ -4.   3.   5.   1.]
+         [ -7.   6.   8.   1.]
+         [-10.   9.  11.   1.]
+         [-13.  12.  14.   1.]]
+        """
+        n_models = self.rotation.shape[0]
+        rotation_mat = _3d_identity(n_models, 4)
+        rotation_mat[:, :3, :3] = self.rotation
+        center_translation_mat = _3d_identity(n_models, 4)
+        center_translation_mat[:, :3, 3] = self.center_translation
+        target_translation_mat = _3d_identity(n_models, 4)
+        target_translation_mat[:, :3, 3] = self.target_translation
+        return target_translation_mat @ rotation_mat @ center_translation_mat
+
+    def __eq__(self, other):
+        if not isinstance(other, AffineTransformation):
+            return False
+        if not np.array_equal(self.center_translation, other.center_translation):
+            return False
+        if not np.array_equal(self.rotation, other.rotation):
+            return False
+        if not np.array_equal(self.target_translation, other.target_translation):
+            return False
+        return True
+
+
+def _expand_dims(array, n_dims):
+    """
+    Expand the dimensions of an `ndarray` to a certain number of
+    dimensions.
+    """
+    while array.ndim < n_dims:
+        array = array[np.newaxis, ...]
+    return array
+
+
+def _3d_identity(m, n):
+    """
+    Create an array of *m* identity matrices of shape *(n, n)*
+    """
+    matrices = np.zeros((m, n, n), dtype=float)
+    indices = np.arange(n)
+    matrices[:, indices, indices] = 1
+    return matrices
+
+
+def _reshape_to_3d(coord):
+    """
+    Reshape the coordinate array to 3D, if it is 2D.
+    """
+    if coord.ndim < 2:
+        raise ValueError("Coordinates must be at least two-dimensional")
+    if coord.ndim == 2:
+        return coord[np.newaxis, ...]
+    elif coord.ndim == 3:
+        return coord
+    else:
+        raise ValueError("Coordinates must be at most three-dimensional")
 
 
 def translate(atoms, vector):
@@ -150,6 +356,9 @@ def rotate_centered(atoms, angles):
     rotate : Rotate atoms about the origin.
     rotate_about_axis : Rotate atoms about a given axis.
     """
+    # Avoid circular import
+    from biotite.structure.geometry import centroid
+
     if len(coord(atoms).shape) == 1:
         # Single value -> centered rotation does not change coordinates
         return atoms.copy()
@@ -515,3 +724,13 @@ def _put_back(input_atoms, transformed):
         return moved_atoms
     else:
         return transformed
+
+
+def _multi_matmul(matrices, vectors):
+    """
+    Calculate the matrix multiplication of m matrices
+    with m x n vectors.
+    """
+    return np.transpose(
+        np.matmul(matrices, np.transpose(vectors, axes=(0, 2, 1))), axes=(0, 2, 1)
+    )

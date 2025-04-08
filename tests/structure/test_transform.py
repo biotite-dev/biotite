@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
+from biotite.structure.transform import _multi_matmul as multi_matmul
 from tests.util import data_dir
 
 
@@ -34,6 +35,38 @@ def input_atoms(request):
         return atoms.coord
     else:
         return atoms
+
+
+def test_transform_as_matrix():
+    """
+    Check if the 4x4 matrix obtained from
+    :meth:`AffineTransformation.as_matrix()` transforms coordinates in
+    the same way as :meth:`AffineTransformation.apply()`.
+    """
+    N_MODELS = 10
+    N_COORD = 100
+
+    np.random.seed(0)
+    orig_coord = np.random.rand(N_MODELS, N_COORD, 3)
+    transform = struc.AffineTransformation(
+        center_translation=np.random.rand(N_MODELS, 3),
+        # This is not really a rotation matrix,
+        # but the same maths apply
+        rotation=np.random.rand(N_MODELS, 3, 3),
+        target_translation=np.random.rand(N_MODELS, 3),
+    )
+
+    ref_coord = transform.apply(orig_coord)
+
+    orig_coord_4 = np.concatenate(
+        [orig_coord, np.ones((N_MODELS, N_COORD, 1))], axis=-1
+    )
+    test_coord_4 = multi_matmul(transform.as_matrix(), orig_coord_4)
+    test_coord = test_coord_4[..., :3]
+
+    assert test_coord.flatten().tolist() == pytest.approx(
+        ref_coord.flatten().tolist(), abs=1e-6
+    )
 
 
 @pytest.mark.parametrize("ndim", [1, 2, 3])

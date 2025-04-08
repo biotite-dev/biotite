@@ -13,6 +13,7 @@ __all__ = [
     "set_component",
     "list_assemblies",
     "get_assembly",
+    "get_unit_cell",
     "get_sse",
 ]
 
@@ -23,7 +24,13 @@ from biotite.file import InvalidFileError
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
 from biotite.structure.bonds import BondList, BondType, connect_via_residue_names
-from biotite.structure.box import unitcell_from_vectors, vectors_from_unitcell
+from biotite.structure.box import (
+    coord_to_fraction,
+    fraction_to_coord,
+    space_group_transforms,
+    unitcell_from_vectors,
+    vectors_from_unitcell,
+)
 from biotite.structure.error import BadStructureError
 from biotite.structure.filter import _canonical_aa_list as canonical_aa_list
 from biotite.structure.filter import (
@@ -33,6 +40,7 @@ from biotite.structure.filter import (
     filter_first_altloc,
     filter_highest_occupancy_altloc,
 )
+from biotite.structure.geometry import centroid
 from biotite.structure.io.pdbx.bcif import (
     BinaryCIFBlock,
     BinaryCIFColumn,
@@ -46,7 +54,7 @@ from biotite.structure.residues import (
     get_residue_positions,
     get_residue_starts_for,
 )
-from biotite.structure.util import matrix_rotate
+from biotite.structure.transform import AffineTransformation
 
 # Bond types in `struct_conn` category that refer to covalent bonds
 PDBX_BOND_TYPE_ID_TO_TYPE = {
@@ -1730,11 +1738,7 @@ def _apply_transformations(structure, transformation_dict, operations):
         # Execute for each transformation step
         # in the operation expression
         for op_step in operation:
-            rotation_matrix, translation_vector = transformation_dict[op_step]
-            # Rotate
-            coord = matrix_rotate(coord, rotation_matrix)
-            # Translate
-            coord += translation_vector
+            coord = transformation_dict[op_step].apply(coord)
         assembly_coord[i] = coord
 
     assembly = repeat(structure, assembly_coord)
@@ -1746,8 +1750,7 @@ def _apply_transformations(structure, transformation_dict, operations):
 
 def _get_transformations(struct_oper):
     """
-    Get transformation operation in terms of rotation matrix and
-    translation for each operation ID in ``pdbx_struct_oper_list``.
+    Get affine transformation for each operation ID in ``pdbx_struct_oper_list``.
     """
     transformation_dict = {}
     for index, id in enumerate(struct_oper["id"].as_array(str)):
@@ -1763,7 +1766,9 @@ def _get_transformations(struct_oper):
         translation_vector = np.array(
             [struct_oper[f"vector[{i}]"].as_array(float)[index] for i in (1, 2, 3)]
         )
-        transformation_dict[id] = (rotation_matrix, translation_vector)
+        transformation_dict[id] = AffineTransformation(
+            np.zeros(3), rotation_matrix, translation_vector
+        )
     return transformation_dict
 
 
@@ -1818,6 +1823,140 @@ def _convert_string_to_sequence(string, stype):
         return None
     else:
         raise InvalidFileError("mmCIF _entity_poly.type unsupported type: " + stype)
+
+
+def get_unit_cell(
+    pdbx_file,
+    center=True,
+    model=None,
+    data_block=None,
+    altloc="first",
+    extra_fields=None,
+    use_author_fields=True,
+    include_bonds=False,
+):
+    """
+    Build a structure model containing all symmetric copies of the structure within a
+    single unit cell.
+
+    This function receives the data from the ``symmetry`` and ``atom_site`` categories
+    in the file.
+    Consequently, these categories must be present in the file.
+
+    Parameters
+    ----------
+    pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
+        The file object.
+    center : bool, optional
+        If set to true, each symmetric copy will be moved inside the unit cell
+        dimensions, if its centroid is outside.
+        By default, the copies are are created using the raw space group
+        transformations, which may put them one unit cell length further away.
+    model : int, optional
+        If this parameter is given, the function will return an
+        :class:`AtomArray` from the atoms corresponding to the given
+        model number (starting at 1).
+        Negative values are used to index models starting from the last
+        model insted of the first model.
+        If this parameter is omitted, an :class:`AtomArrayStack`
+        containing all models will be returned, even if the structure
+        contains only one model.
+    data_block : str, optional
+        The name of the data block.
+        Default is the first (and most times only) data block of the
+        file.
+        If the data block object is passed directly to `pdbx_file`,
+        this parameter is ignored.
+    altloc : {'first', 'occupancy', 'all'}
+        This parameter defines how *altloc* IDs are handled:
+            - ``'first'`` - Use atoms that have the first *altloc* ID
+              appearing in a residue.
+            - ``'occupancy'`` - Use atoms that have the *altloc* ID
+              with the highest occupancy for a residue.
+            - ``'all'`` - Use all atoms.
+              Note that this leads to duplicate atoms.
+              When this option is chosen, the ``altloc_id`` annotation
+              array is added to the returned structure.
+    extra_fields : list of str, optional
+        The strings in the list are entry names, that are
+        additionally added as annotation arrays.
+        The annotation category name will be the same as the PDBx
+        subcategory name.
+        The array type is always `str`.
+        An exception are the special field identifiers:
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
+        These will convert the fitting subcategory into an
+        annotation array with reasonable type.
+    use_author_fields : bool, optional
+        Some fields can be read from two alternative sources,
+        for example both, ``label_seq_id`` and ``auth_seq_id`` describe
+        the ID of the residue.
+        While, the ``label_xxx`` fields can be used as official pointers
+        to other categories in the file, the ``auth_xxx``
+        fields are set by the author(s) of the structure and are
+        consistent with the corresponding values in PDB files.
+        If `use_author_fields` is true, the annotation arrays will be
+        read from the ``auth_xxx`` fields (if applicable),
+        otherwise from the the ``label_xxx`` fields.
+    include_bonds : bool, optional
+        If set to true, a :class:`BondList` will be created for the
+        resulting :class:`AtomArray` containing the bond information
+        from the file.
+        Bonds, whose order could not be determined from the
+        *Chemical Component Dictionary*
+        (e.g. especially inter-residue bonds),
+        have :attr:`BondType.ANY`, since the PDB format itself does
+        not support bond orders.
+
+    Returns
+    -------
+    unit_cell : AtomArray or AtomArrayStack
+        The structure representing the unit cell.
+        The return type depends on the `model` parameter.
+        Contains the `sym_id` annotation, which enumerates the copies of the asymmetric
+        unit in the unit cell.
+
+    Examples
+    --------
+
+    >>> import os.path
+    >>> file = CIFFile.read(os.path.join(path_to_structures, "1f2n.cif"))
+    >>> unit_cell = get_unit_cell(file, model=1)
+    """
+    block = _get_block(pdbx_file, data_block)
+
+    try:
+        space_group = block["symmetry"]["space_group_name_H-M"].as_item()
+    except KeyError:
+        raise InvalidFileError("File has no 'symmetry.space_group_name_H-M' field")
+    transforms = space_group_transforms(space_group)
+
+    asym = get_structure(
+        pdbx_file,
+        model,
+        data_block,
+        altloc,
+        extra_fields,
+        use_author_fields,
+        include_bonds,
+    )
+
+    fractional_asym_coord = coord_to_fraction(asym.coord, asym.box)
+    unit_cell_copies = []
+    for transform in transforms:
+        fractional_coord = transform.apply(fractional_asym_coord)
+        if center:
+            # If the centroid is outside the box, move the copy inside the box
+            orig_centroid = centroid(fractional_coord)
+            new_centroid = orig_centroid % 1
+            fractional_coord += (new_centroid - orig_centroid)[..., np.newaxis, :]
+        unit_cell_copies.append(fraction_to_coord(fractional_coord, asym.box))
+
+    unit_cell = repeat(asym, np.stack(unit_cell_copies, axis=0))
+    unit_cell.set_annotation(
+        "sym_id", np.repeat(np.arange(len(transforms)), asym.array_length())
+    )
+    return unit_cell
 
 
 def get_sse(pdbx_file, data_block=None, match_model=None):

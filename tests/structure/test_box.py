@@ -30,6 +30,115 @@ SAMPLE_COORD = [
 ]  # fmt: skip
 
 
+@pytest.mark.parametrize(
+    "name, number",
+    [("P 1", 1), ("P 21 21 21", 19), ("I 41/a 2/c 2/d", 142), ("I a -3 d", 230)],
+)
+def test_space_group_correct_index(name, number):
+    """
+    Check if a space group name and number that represent the same space group also lead
+    to the same index in ``spacegroups.json``.
+    This is tested by checking if the transformations for the two space groups are
+    identical.
+    """
+    transform_from_name = struc.space_group_transforms(name)
+    transform_from_number = struc.space_group_transforms(number)
+    assert transform_from_name == transform_from_number
+
+
+@pytest.mark.parametrize(
+    "space_group, rotations, translations",
+    # Omit the trivial identity transformation, as they appear in every space group
+    [
+        (
+            "P 1",
+            [],
+            [],
+        ),
+        (
+            "P -1",
+            [
+                [
+                    [-1, 0, 0],
+                    [0, -1, 0],
+                    [0, 0, -1],
+                ],
+            ],
+            [
+                [0, 0, 0],
+            ],
+        ),
+        (
+            "P 1 21 1",
+            [
+                [
+                    [-1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, -1],
+                ],
+            ],
+            [
+                [0, 1 / 2, 0],
+            ],
+        ),
+        (
+            "P 4",
+            [
+                [
+                    [-1, 0, 0],
+                    [0, -1, 0],
+                    [0, 0, 1],
+                ],
+                [
+                    [0, -1, 0],
+                    [1, 0, 0],
+                    [0, 0, 1],
+                ],
+                [
+                    [0, 1, 0],
+                    [-1, 0, 0],
+                    [0, 0, 1],
+                ],
+            ],
+            [
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0],
+            ],
+        ),
+    ],
+    ids=[
+        "P 1",
+        "P -1",
+        "P 1 21 1",
+        "P 4",
+    ],
+)
+def test_space_group_transforms(space_group, rotations, translations):
+    """
+    Check the transformations obtained by :func:`space_group_transforms()`
+    against manually checked example space groups.
+    """
+    trivial_transform = (tuple(np.eye(3).flatten().tolist()), (0, 0, 0))
+    ref_transforms = [trivial_transform] + [
+        (tuple(itertools.chain(*rotation)), tuple(translation))
+        for rotation, translation in zip(rotations, translations, strict=True)
+    ]
+    ref_transforms = set(ref_transforms)
+
+    test_transforms = set(
+        [
+            (
+                tuple(transform.rotation[0].flatten().tolist()),
+                tuple(transform.target_translation[0].tolist()),
+            )
+            for transform in struc.space_group_transforms(space_group)
+        ]
+    )
+
+    assert ref_transforms == test_transforms
+
+
 @pytest.mark.parametrize("ref_cell", SAMPLE_CELLS)
 def test_box_vector_conversion(ref_cell):
     """
