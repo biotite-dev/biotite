@@ -75,7 +75,7 @@ Biotite documentation
 
 
 
-        .. grid:: 3
+        .. grid:: 2 3 2 3
 
             .. grid-item::
 
