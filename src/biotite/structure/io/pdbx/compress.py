@@ -3,6 +3,7 @@ __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 
 import itertools
+import warnings
 import msgpack
 import numpy as np
 import biotite.structure.io.pdbx.bcif as bcif
@@ -17,7 +18,7 @@ from biotite.structure.io.pdbx.encoding import (
 )
 
 
-def compress(data, float_tolerance=1e-6):
+def compress(data, float_tolerance=None, rtol=1e-6, atol=1e-4):
     """
     Try to reduce the size of a *BinaryCIF* file (or block, category, etc.) by testing
     different data encodings for each data array and selecting the one, which results in
@@ -29,6 +30,12 @@ def compress(data, float_tolerance=1e-6):
         The data to compress.
     float_tolerance : float, optional
         The relative error that is accepted when compressing floating point numbers.
+        DEPRECATED: Use `rtol` instead.
+    rtol, atol : float, optional
+        The compression factor of floating point numbers is chosen such that
+        either the relative (`rtol`) or absolute (`atol`) tolerance is fulfilled
+        for each value, i.e. the difference between the compressed and uncompressed
+        value is smaller than the tolerance.
 
     Returns
     -------
@@ -58,55 +65,61 @@ def compress(data, float_tolerance=1e-6):
     >>> print(f"{len(compressed_file.read()) // 1000} KB")
     111 KB
     """
+    if float_tolerance is not None:
+        warnings.warn(
+            "The 'float_tolerance' parameter is deprecated, use 'rtol' instead",
+            DeprecationWarning,
+        )
+
     match type(data):
         case bcif.BinaryCIFFile:
-            return _compress_file(data, float_tolerance)
+            return _compress_file(data, rtol, atol)
         case bcif.BinaryCIFBlock:
-            return _compress_block(data, float_tolerance)
+            return _compress_block(data, rtol, atol)
         case bcif.BinaryCIFCategory:
-            return _compress_category(data, float_tolerance)
+            return _compress_category(data, rtol, atol)
         case bcif.BinaryCIFColumn:
-            return _compress_column(data, float_tolerance)
+            return _compress_column(data, rtol, atol)
         case bcif.BinaryCIFData:
-            return _compress_data(data, float_tolerance)
+            return _compress_data(data, rtol, atol)
         case _:
             raise TypeError(f"Unsupported type {type(data).__name__}")
 
 
-def _compress_file(bcif_file, float_tolerance):
+def _compress_file(bcif_file, rtol, atol):
     compressed_file = bcif.BinaryCIFFile()
     for block_name, bcif_block in bcif_file.items():
-        compressed_block = _compress_block(bcif_block, float_tolerance)
+        compressed_block = _compress_block(bcif_block, rtol, atol)
         compressed_file[block_name] = compressed_block
     return compressed_file
 
 
-def _compress_block(bcif_block, float_tolerance):
+def _compress_block(bcif_block, rtol, atol):
     compressed_block = bcif.BinaryCIFBlock()
     for category_name, bcif_category in bcif_block.items():
-        compressed_category = _compress_category(bcif_category, float_tolerance)
+        compressed_category = _compress_category(bcif_category, rtol, atol)
         compressed_block[category_name] = compressed_category
     return compressed_block
 
 
-def _compress_category(bcif_category, float_tolerance):
+def _compress_category(bcif_category, rtol, atol):
     compressed_category = bcif.BinaryCIFCategory()
     for column_name, bcif_column in bcif_category.items():
-        compressed_column = _compress_column(bcif_column, float_tolerance)
+        compressed_column = _compress_column(bcif_column, rtol, atol)
         compressed_category[column_name] = compressed_column
     return compressed_category
 
 
-def _compress_column(bcif_column, float_tolerance):
-    data = _compress_data(bcif_column.data, float_tolerance)
+def _compress_column(bcif_column, rtol, atol):
+    data = _compress_data(bcif_column.data, rtol, atol)
     if bcif_column.mask is not None:
-        mask = _compress_data(bcif_column.mask, float_tolerance)
+        mask = _compress_data(bcif_column.mask, rtol, atol)
     else:
         mask = None
     return bcif.BinaryCIFColumn(data, mask)
 
 
-def _compress_data(bcif_data, float_tolerance):
+def _compress_data(bcif_data, rtol, atol):
     array = bcif_data.array
     if len(array) == 1:
         # No need to compress a single value -> Use default uncompressed encoding
@@ -124,7 +137,7 @@ def _compress_data(bcif_data, float_tolerance):
 
     elif np.issubdtype(array.dtype, np.floating):
         to_integer_encoding = FixedPointEncoding(
-            10 ** _get_decimal_places(array, float_tolerance)
+            10 ** _get_decimal_places(array, rtol, atol)
         )
         integer_array = to_integer_encoding.encode(array)
         best_encoding, size_compressed = _find_best_integer_compression(integer_array)
@@ -273,7 +286,7 @@ def _data_size_in_file(data):
     return len(bytes_in_file)
 
 
-def _get_decimal_places(array, tol):
+def _get_decimal_places(array, rtol, atol):
     """
     Get the number of decimal places in a floating point array.
 
@@ -281,9 +294,9 @@ def _get_decimal_places(array, tol):
     ----------
     array : numpy.ndarray
         The array to analyze.
-    tol : float, optional
-        The relative tolerance allowed when the values are cut off after the returned
-        number of decimal places.
+    rtol, atol : float, optional
+        The relative and absolute tolerance allowed when the values are cut off after
+        the returned number of decimal places.
 
     Returns
     -------
@@ -293,9 +306,9 @@ def _get_decimal_places(array, tol):
     # Decimals of NaN or infinite values do not make sense
     # and 0 would give NaN when rounding on decimals
     array = array[np.isfinite(array) & (array != 0)]
-    for decimals in itertools.count(start=-_order_magnitude(array)):
+    for decimals in itertools.count(start=min(0, -_order_magnitude(array))):
         error = np.abs(np.round(array, decimals) - array)
-        if np.all(error < tol * np.abs(array)):
+        if np.all((error < rtol * np.abs(array)) | (error < atol)):
             return decimals
 
 

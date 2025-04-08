@@ -920,11 +920,14 @@ def test_compress_file(path):
     "number, ref_decimals",
     [
         (1.0, 0),
-        (1.2345, 4),
-        (0.00012345, 8),
+        (1.23, 2),
+        (0.001, 3),
+        (0.0012345, 4),
         (12300, -2),
-        (123.456, 3),
-        (123.0000000001, 0),
+        (123.45, 2),
+        (123.45678, 4),
+        (123.00001, 0),
+        (0.00001, 0),
         (0.0, 0),
     ],
 )
@@ -933,7 +936,7 @@ def test_decimal_places(number, ref_decimals):
     Check if :func`:_get_decimal_places()` returns the correct number of decimal places
     for known examples.
     """
-    test_decimals = get_decimal_places(np.array([number]), 1e-6)
+    test_decimals = get_decimal_places(np.array([number]), 1e-6, 1e-4)
     assert test_decimals == ref_decimals
 
 
