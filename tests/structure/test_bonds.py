@@ -553,3 +553,29 @@ def test_find_rotatable_bonds(res_name, expected_bonds):
     assert test_bond_set == ref_bond_set
     # All rotatable bonds must be single bonds
     assert np.all(rotatable_bonds.as_array()[:, 2] == struc.BondType.SINGLE)
+
+
+@pytest.mark.parametrize(
+    "cif_path, expected_bond_idces",
+    [
+        (
+            join(data_dir("structure"), "3o5r.cif"),
+            [252, 257],  # Carbonyl carbon and subsequent backbone nitrogen
+        )
+    ],
+)
+def test_canonical_bonds_with_altloc_occupancy(cif_path, expected_bond_idces):
+    """
+    Test whether canonical inter-residue bonds are correctly computed when
+    `altloc="occupancy"` and the higher-occupancy atom occurs second in the CIF file.
+    """
+
+    cif_file = pdbx.CIFFile.read(cif_path)
+    atom_array = pdbx.get_structure(
+        cif_file.block, altloc="occupancy", include_bonds=True
+    )
+
+    atom1, atom2 = expected_bond_idces
+
+    # Assert that the canonical inter-residue bond exists
+    assert atom2 in atom_array.bonds.get_bonds(atom1)[0]
