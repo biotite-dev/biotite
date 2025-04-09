@@ -1000,15 +1000,39 @@ def test_compress_file(path):
     assert _file_size(compressed_file) <= _file_size(orig_file)
 
 
+@pytest.mark.parametrize("value", [1e10, 1e-10])
+def test_extreme_float_compression(value):
+    """
+    Check if :func:`compress()` correctly falls back to direct byte encoding of floats
+    in extreme cases where fixed point encoding would lead to integer
+    underflow/overflow.
+    """
+    # Not only very small/large values, but a large difference between the values are
+    # required, to make fixed point encoding fail
+    ref_array = np.array([value, 1.0])
+
+    compressed_data = pdbx.compress(pdbx.BinaryCIFData(ref_array), atol=0)
+    serialized_compressed_data = compressed_data.serialize()
+    data = pdbx.BinaryCIFData.deserialize(serialized_compressed_data)
+
+    # Check that no fixed point encoding was used
+    assert len(data.encoding) == 1
+    assert type(data.encoding[0]) is pdbx.ByteArrayEncoding
+    assert np.all(data.array == ref_array)
+
+
 @pytest.mark.parametrize(
     "number, ref_decimals",
     [
         (1.0, 0),
-        (1.2345, 4),
-        (0.00012345, 8),
+        (1.23, 2),
+        (0.001, 3),
+        (0.0012345, 4),
         (12300, -2),
-        (123.456, 3),
-        (123.0000000001, 0),
+        (123.45, 2),
+        (123.45678, 4),
+        (123.00001, 0),
+        (0.00001, 0),
         (0.0, 0),
     ],
 )
@@ -1017,7 +1041,7 @@ def test_decimal_places(number, ref_decimals):
     Check if :func`:_get_decimal_places()` returns the correct number of decimal places
     for known examples.
     """
-    test_decimals = get_decimal_places(np.array([number]), 1e-6)
+    test_decimals = get_decimal_places(np.array([number]), 1e-6, 1e-4)
     assert test_decimals == ref_decimals
 
 

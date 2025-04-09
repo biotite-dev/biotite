@@ -325,7 +325,16 @@ class FixedPointEncoding(Encoding):
                 )
 
         # Round to avoid wrong values due to floating point inaccuracies
-        return np.round(data * self.factor).astype(np.int32)
+        scaled_data = np.round(data * self.factor)
+        # Check if an integer underflow/overflow would occur during conversion
+        if (
+            np.max(scaled_data) > np.iinfo(np.int32).max or
+            np.min(scaled_data) < np.iinfo(np.int32).min
+        ):  # fmt: skip
+            raise ValueError(
+                "With the given factor some values get too large for integer encoding"
+            )
+        return scaled_data.astype(np.int32)
 
     def decode(self, data):
         return (data / self.factor).astype(
