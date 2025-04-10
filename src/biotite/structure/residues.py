@@ -77,10 +77,18 @@ def get_residue_starts(array, add_exclusive_stop=False):
     res_id_changes = array.res_id[1:] != array.res_id[:-1]
     ins_code_changes = array.ins_code[1:] != array.ins_code[:-1]
     res_name_changes = array.res_name[1:] != array.res_name[:-1]
+    if "sym_id" in array.get_annotation_categories():
+        sym_id_changes = array.sym_id[1:] != array.sym_id[:-1]
+    else:
+        sym_id_changes = np.full(array.array_length() - 1, False, dtype=bool)
 
     # If any of these annotation arrays change, a new residue starts
     residue_change_mask = (
-        chain_id_changes | res_id_changes | ins_code_changes | res_name_changes
+        chain_id_changes
+        | res_id_changes
+        | ins_code_changes
+        | res_name_changes
+        | sym_id_changes
     )
 
     # Convert mask to indices
