@@ -218,6 +218,31 @@ def test_metal_coordination_bonds():
     assert np.all(conn_type_id == "metalc")
 
 
+def test_connect_via_residue_names_with_alt_atom_ids():
+    """
+    Ensure that the residue names are correctly parsed, even when alternative
+    atom IDs are present.
+    """
+    pdbx_file_with_no_alt_ids = pdbx.CIFFile.read(
+        join(data_dir("structure"), "6q9t.cif")
+    )
+    atoms = pdbx.get_structure(pdbx_file_with_no_alt_ids, model=1, include_bonds=True)
+
+    # ZY9 modified to have alternative atom IDs
+    pdbx_file_with_alt_ids = pdbx.CIFFile.read(
+        join(data_dir("structure"), "6q9t_with_alt_ids.cif")
+    )
+    atoms_with_alt_ids = pdbx.get_structure(
+        pdbx_file_with_alt_ids, model=1, include_bonds=True
+    )
+
+    # Ensure bonds are the same
+    assert (atoms_with_alt_ids.bonds.as_array() == atoms.bonds.as_array()).all()
+
+    # Ensure atom names are the same (we mapped the alternative atom IDs to the standard atom IDs)
+    assert (atoms.atom_name == atoms_with_alt_ids.atom_name).all()
+
+
 def test_bond_sparsity():
     """
     Ensure that only as much intra-residue bonds are written as necessary,
