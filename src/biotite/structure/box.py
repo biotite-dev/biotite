@@ -272,6 +272,8 @@ def repeat_box(atoms, amount=1):
         The repeated atoms.
         Includes the original atoms (central box) in the beginning of
         the atom array (stack).
+        If the input contains the ``sym_id`` annotation, the IDs are continued in the
+        repeated atoms, i.e. they do not start at 0 again.
     indices : ndarray, dtype=int, shape=(n,3)
         Indices to the atoms in the original atom array (stack).
         Equal to
@@ -346,6 +348,15 @@ def repeat_box(atoms, amount=1):
     >>> print(indices)
     [0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
      1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1]
+
+    The ``sym_id`` is continued in the repeated atoms.
+
+    >>> array.set_annotation("sym_id", np.array([0, 0]))
+    >>> repeated, indices = repeat_box(array)
+    >>> print(repeated.sym_id)
+    [ 0  0  1  1  2  2  3  3  4  4  5  5  6  6  7  7  8  8  9  9 10 10 11 11
+     12 12 13 13 14 14 15 15 16 16 17 17 18 18 19 19 20 20 21 21 22 22 23 23
+     24 24 25 25 26 26]
     """
     if atoms.box is None:
         raise BadStructureError("Structure has no box")
@@ -359,7 +370,16 @@ def repeat_box(atoms, amount=1):
             atoms.stack_depth(), -1, atoms.array_length(), 3
         )
         repeat_coord = np.swapaxes(repeat_coord, 0, 1)
-    return repeat(atoms, repeat_coord), indices
+
+    repeated_atoms = repeat(atoms, repeat_coord)
+    if "sym_id" in atoms.get_annotation_categories():
+        max_sym_id = np.max(atoms.sym_id)
+        # for the first repeat, (max_sym_id + 1) is added,
+        # for the second repeat 2*(max_sym_id + 1) etc.
+        repeated_atoms.sym_id += (max_sym_id + 1) * (
+            np.arange(repeated_atoms.array_length()) // atoms.array_length()
+        )
+    return repeated_atoms, indices
 
 
 def repeat_box_coord(coord, box, amount=1):

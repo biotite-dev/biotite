@@ -67,11 +67,15 @@ def get_chain_starts(array, add_exclusive_stop=False):
     res_id_decrement = diff < 0
     # This mask is 'true' at indices where the value changes
     chain_id_changes = array.chain_id[1:] != array.chain_id[:-1]
+    if "sym_id" in array.get_annotation_categories():
+        sym_id_changes = array.sym_id[1:] != array.sym_id[:-1]
+    else:
+        sym_id_changes = np.full(array.array_length() - 1, False, dtype=bool)
 
     # Convert mask to indices
     # Add 1, to shift the indices from the end of a chain
     # to the start of a new chain
-    chain_starts = np.where(res_id_decrement | chain_id_changes)[0] + 1
+    chain_starts = np.where(res_id_decrement | chain_id_changes | sym_id_changes)[0] + 1
 
     # The first chain is not included yet -> Insert '[0]'
     if add_exclusive_stop:
