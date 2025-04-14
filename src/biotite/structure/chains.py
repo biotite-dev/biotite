@@ -33,7 +33,7 @@ from biotite.structure.segments import (
 )
 
 
-def get_chain_starts(array, add_exclusive_stop=False):
+def get_chain_starts(array, add_exclusive_stop=False, extra_categories=()):
     """
     Get the indices in an atom array, which indicates the beginning of
     a new chain.
@@ -49,6 +49,9 @@ def get_chain_starts(array, add_exclusive_stop=False):
         If true, the exclusive stop of the input atom array, i.e.
         ``array.array_length()``, is added to the returned array of
         start indices as last element.
+    extra_categories : tuple of str, optional
+        Additional annotation categories that induce the start of a new chain,
+        when their value change from one atom to the next.
 
     Returns
     -------
@@ -60,7 +63,7 @@ def get_chain_starts(array, add_exclusive_stop=False):
     This method is internally used by all other chain-related
     functions.
     """
-    categories = ["chain_id"]
+    categories = ["chain_id"] + list(extra_categories)
     if "sym_id" in array.get_annotation_categories():
         categories.append("sym_id")
     return get_segment_starts(
