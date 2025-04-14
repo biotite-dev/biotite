@@ -5,6 +5,7 @@
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = [
+    "get_segment_starts",
     "apply_segment_wise",
     "spread_segment_wise",
     "get_segment_masks",
@@ -14,6 +15,60 @@ __all__ = [
 ]
 
 import numpy as np
+
+
+def get_segment_starts(
+    array, add_exclusive_stop, continuous_categories=(), equal_categories=()
+):
+    """
+    Generalized version of :func:`get_residue_starts()` for residues and chains.
+
+    The starts are determined from value changes in the given annotations.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The atom array (stack) to get the segment starts from.
+    add_exclusive_stop : bool, optional
+        If true, the exclusive stop of the input atom array,
+        i.e. ``array.array_length()``, is added to the returned array of start indices
+        as last element.
+    continuous_categories : tuple of str, optional
+        Annotation categories that are expected to be continuously increasing within a
+        segment.
+        This means if the value of such an annotation decreases from one atom to
+        another, a new segment is started.
+    equal_categories : tuple of str, optional
+        Annotation categories that are expected to be equal within a segment.
+        This means if the value of such an annotation changes from one atom to
+        another, a new segment is started.
+
+    Returns
+    -------
+    starts : ndarray, dtype=int
+        The start indices of segments in `array`.
+    """
+    if array.array_length() == 0:
+        return np.array([], dtype=int)
+
+    segment_start_mask = np.zeros(array.array_length() - 1, dtype=bool)
+    for annot_name in continuous_categories:
+        annotation = array.get_annotation(annot_name)
+        segment_start_mask |= np.diff(annotation) < 0
+    for annot_name in equal_categories:
+        annotation = array.get_annotation(annot_name)
+        segment_start_mask |= annotation[1:] != annotation[:-1]
+
+    # Convert mask to indices
+    # Add 1, to shift the indices from the end of a segment
+    # to the start of a new segment
+    chain_starts = np.where(segment_start_mask)[0] + 1
+
+    # The first chain is not included yet -> Insert '[0]'
+    if add_exclusive_stop:
+        return np.concatenate(([0], chain_starts, [array.array_length()]))
+    else:
+        return np.concatenate(([0], chain_starts))
 
 
 def apply_segment_wise(starts, data, function, axis=None):

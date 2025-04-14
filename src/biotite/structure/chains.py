@@ -22,11 +22,11 @@ __all__ = [
     "chain_iter",
 ]
 
-import numpy as np
 from biotite.structure.segments import (
     apply_segment_wise,
     get_segment_masks,
     get_segment_positions,
+    get_segment_starts,
     get_segment_starts_for,
     segment_iter,
     spread_segment_wise,
@@ -38,7 +38,7 @@ def get_chain_starts(array, add_exclusive_stop=False):
     Get the indices in an atom array, which indicates the beginning of
     a new chain.
 
-    A new chain starts, when the chain ID changes or when the residue ID
+    A new chain starts, when the chain or sym ID changes or when the residue ID
     decreases.
 
     Parameters
@@ -60,28 +60,15 @@ def get_chain_starts(array, add_exclusive_stop=False):
     This method is internally used by all other chain-related
     functions.
     """
-    if array.array_length() == 0:
-        return np.array([], dtype=int)
-
-    diff = np.diff(array.res_id)
-    res_id_decrement = diff < 0
-    # This mask is 'true' at indices where the value changes
-    chain_id_changes = array.chain_id[1:] != array.chain_id[:-1]
+    categories = ["chain_id"]
     if "sym_id" in array.get_annotation_categories():
-        sym_id_changes = array.sym_id[1:] != array.sym_id[:-1]
-    else:
-        sym_id_changes = np.full(array.array_length() - 1, False, dtype=bool)
-
-    # Convert mask to indices
-    # Add 1, to shift the indices from the end of a chain
-    # to the start of a new chain
-    chain_starts = np.where(res_id_decrement | chain_id_changes | sym_id_changes)[0] + 1
-
-    # The first chain is not included yet -> Insert '[0]'
-    if add_exclusive_stop:
-        return np.concatenate(([0], chain_starts, [array.array_length()]))
-    else:
-        return np.concatenate(([0], chain_starts))
+        categories.append("sym_id")
+    return get_segment_starts(
+        array,
+        add_exclusive_stop,
+        continuous_categories=("res_id",),
+        equal_categories=categories,
+    )
 
 
 def apply_chain_wise(array, data, function, axis=None):
