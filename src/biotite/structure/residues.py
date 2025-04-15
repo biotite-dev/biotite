@@ -21,23 +21,23 @@ __all__ = [
     "residue_iter",
 ]
 
-import numpy as np
 from biotite.structure.segments import (
     apply_segment_wise,
     get_segment_masks,
     get_segment_positions,
+    get_segment_starts,
     get_segment_starts_for,
     segment_iter,
     spread_segment_wise,
 )
 
 
-def get_residue_starts(array, add_exclusive_stop=False):
+def get_residue_starts(array, add_exclusive_stop=False, extra_categories=()):
     """
     Get indices for an atom array, each indicating the beginning of
     a residue.
 
-    A new residue starts, either when the chain ID, residue ID,
+    A new residue starts, either when the chain ID, sym ID, residue ID,
     insertion code or residue name changes from one to the next atom.
 
     Parameters
@@ -48,6 +48,9 @@ def get_residue_starts(array, add_exclusive_stop=False):
         If true, the exclusive stop of the input atom array, i.e.
         ``array.array_length()``, is added to the returned array of
         start indices as last element.
+    extra_categories : tuple of str, optional
+        Additional annotation categories that induce the start of a new residue,
+        when their value change from one atom to the next.
 
     Returns
     -------
@@ -69,30 +72,10 @@ def get_residue_starts(array, add_exclusive_stop=False):
     [  0  16  35  56  75  92 116 135 157 169 176 183 197 208 219 226 250 264
      278 292 304]
     """
-    if array.array_length() == 0:
-        return np.array([], dtype=int)
-
-    # These mask are 'true' at indices where the value changes
-    chain_id_changes = array.chain_id[1:] != array.chain_id[:-1]
-    res_id_changes = array.res_id[1:] != array.res_id[:-1]
-    ins_code_changes = array.ins_code[1:] != array.ins_code[:-1]
-    res_name_changes = array.res_name[1:] != array.res_name[:-1]
-
-    # If any of these annotation arrays change, a new residue starts
-    residue_change_mask = (
-        chain_id_changes | res_id_changes | ins_code_changes | res_name_changes
-    )
-
-    # Convert mask to indices
-    # Add 1, to shift the indices from the end of a residue
-    # to the start of a new residue
-    residue_starts = np.where(residue_change_mask)[0] + 1
-
-    # The first residue is not included yet -> Insert '[0]'
-    if add_exclusive_stop:
-        return np.concatenate(([0], residue_starts, [array.array_length()]))
-    else:
-        return np.concatenate(([0], residue_starts))
+    categories = ["chain_id", "res_id", "ins_code", "res_name"] + list(extra_categories)
+    if "sym_id" in array.get_annotation_categories():
+        categories.append("sym_id")
+    return get_segment_starts(array, add_exclusive_stop, equal_categories=categories)
 
 
 def apply_residue_wise(array, data, function, axis=None):
