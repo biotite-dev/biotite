@@ -26,6 +26,29 @@ class VersionError(Exception):
     pass
 
 
+def require_package(package):
+    """
+    Check if the given package is installed and raise an exception if not.
+
+    Parameters
+    ----------
+    package : str
+        The name of the package to be checked.
+
+    Raises
+    ------
+    ImportError
+        If the package is not installed.
+
+    Notes
+    -----
+    It is useful to call this function in the ``__init__.py`` of each ``interface``
+    subpackage, to obtain clear error messages about missing dependencies.
+    """
+    if importlib.util.find_spec(package) is None:
+        raise ImportError(f"'{package}' is not installed")
+
+
 def requires_version(package, version_specifier):
     """
     Declare a function variant that is compatible with a specific version range of the

@@ -64,6 +64,8 @@ ignore = [
 "doc/conf.py" = ["E402"]
 # Due to `from .module import *` imports in `__init__.py` modules
 "__init__.py" = ["F403", "TID252"]
+# Due to package existence check before other modules are imported
+"src/biotite/interface/**/__init__.py" = ["E402"]
 # Due to pymol scripts that are evaluated in other example scripts
 "doc/examples/**/*_pymol.py" = ["F821"]
 # Due to 'Table' class used as parametrized argument in test functions

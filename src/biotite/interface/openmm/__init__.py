@@ -12,5 +12,9 @@ structure-related objects from *OpenMM*.
 __name__ = "biotite.interface.openmm"
 __author__ = "Patrick Kunzmann"
 
+from biotite.interface.version import require_package
+
+require_package("openmm")
+
 from .state import *
 from .system import *

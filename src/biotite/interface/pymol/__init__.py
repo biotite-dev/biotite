@@ -162,6 +162,9 @@ or ``pymol_interface.cmd`` at the required places in your code.
 __name__ = "biotite.interface.pymol"
 __author__ = "Patrick Kunzmann"
 
+from biotite.interface.version import require_package
+
+require_package("pymol")
 
 from .cgo import *
 from .convert import *
