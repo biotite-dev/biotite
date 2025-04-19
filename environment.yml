@@ -4,7 +4,6 @@
 name: biotite-dev
 
 channels:
-  - anaconda
   - conda-forge
   - bioconda
 
