@@ -133,8 +133,7 @@ _other_type_list = [
 
 def _filter(category, index):
     """
-    Reduce the ``atom_site`` category to the values for the given
-    model.
+    Reduce the given category to the values selected by the given index,
     """
     Category = type(category)
     Column = Category.subcomponent_class()
@@ -400,15 +399,13 @@ def get_structure(
     # The below part is the same for both, AtomArray and AtomArrayStack
     _fill_annotations(atoms, model_atom_site, extra_fields, use_author_fields)
 
-    atoms = _filter_altloc(atoms, model_atom_site, altloc)
+    atoms, altloc_filtered_atom_site = _filter_altloc(atoms, model_atom_site, altloc)
 
     if include_bonds:
         if altloc == "all":
             raise ValueError(
-                "Bond computation is not supported with `altloc='all'. "
-                "After custom altloc filtering, consider using "
-                "`biotite.structure.bonds.connect_via_residue_names` "
-                "to add intra-residue and canonical inter-residue bonds. "
+                "Bond computation is not supported with `altloc='all', consider using "
+                "'connect_via_residue_names()' afterwards"
             )
 
         if "chem_comp_bond" in block:
@@ -427,7 +424,7 @@ def get_structure(
         if "struct_conn" in block:
             bonds = bonds.merge(
                 _parse_inter_residue_bonds(
-                    model_atom_site,
+                    altloc_filtered_atom_site,
                     block["struct_conn"],
                     atom_count=atoms.array_length(),
                 )
@@ -762,25 +759,29 @@ def _get_struct_conn_col_name(col_name, partner):
 
 
 def _filter_altloc(array, atom_site, altloc):
+    """
+    Filter the given :class:`AtomArray` and ``atom_site`` category to the rows
+    specified by the given *altloc* identifier.
+    """
     altloc_ids = atom_site.get("label_alt_id")
     occupancy = atom_site.get("occupancy")
 
     # Filter altloc IDs and return
-    if altloc_ids is None:
-        return array
+    if altloc_ids is None or (altloc_ids.mask.array != MaskValue.PRESENT).all():
+        # No altlocs in atom_site category
+        return array, atom_site
     elif altloc == "occupancy" and occupancy is not None:
-        return array[
-            ...,
-            filter_highest_occupancy_altloc(
-                array, altloc_ids.as_array(str), occupancy.as_array(float)
-            ),
-        ]
+        mask = filter_highest_occupancy_altloc(
+            array, altloc_ids.as_array(str), occupancy.as_array(float)
+        )
+        return array[..., mask], _filter(atom_site, mask)
     # 'first' is also fallback if file has no occupancy information
     elif altloc == "first":
-        return array[..., filter_first_altloc(array, altloc_ids.as_array(str))]
+        mask = filter_first_altloc(array, altloc_ids.as_array(str))
+        return array[..., mask], _filter(atom_site, mask)
     elif altloc == "all":
         array.set_annotation("altloc_id", altloc_ids.as_array(str))
-        return array
+        return array, atom_site
     else:
         raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
