@@ -1,6 +1,6 @@
 [project]
 name = "biotite"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 description = "A comprehensive library for computational molecular biology"
 readme = "README.rst"
 authors = [{name = "The Biotite contributors"}]
