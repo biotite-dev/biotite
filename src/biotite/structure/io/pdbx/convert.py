@@ -133,8 +133,7 @@ _other_type_list = [
 
 def _filter(category, index):
     """
-    Reduce the ``atom_site`` category to the values for the given
-    model.
+    Reduce the given category to the values selected by the given index,
     """
     Category = type(category)
     Column = Category.subcomponent_class()
@@ -399,7 +398,16 @@ def get_structure(
 
     # The below part is the same for both, AtomArray and AtomArrayStack
     _fill_annotations(atoms, model_atom_site, extra_fields, use_author_fields)
+
+    atoms, altloc_filtered_atom_site = _filter_altloc(atoms, model_atom_site, altloc)
+
     if include_bonds:
+        if altloc == "all":
+            raise ValueError(
+                "Bond computation is not supported with `altloc='all', consider using "
+                "'connect_via_residue_names()' afterwards"
+            )
+
         if "chem_comp_bond" in block:
             try:
                 custom_bond_dict = _parse_intra_residue_bonds(block["chem_comp_bond"])
@@ -415,10 +423,13 @@ def get_structure(
             bonds = connect_via_residue_names(atoms)
         if "struct_conn" in block:
             bonds = bonds.merge(
-                _parse_inter_residue_bonds(model_atom_site, block["struct_conn"])
+                _parse_inter_residue_bonds(
+                    altloc_filtered_atom_site,
+                    block["struct_conn"],
+                    atom_count=atoms.array_length(),
+                )
             )
         atoms.bonds = bonds
-    atoms = _filter_altloc(atoms, model_atom_site, altloc)
 
     return atoms
 
@@ -578,11 +589,12 @@ def _parse_intra_residue_bonds(chem_comp_bond):
     return custom_bond_dict
 
 
-def _parse_inter_residue_bonds(atom_site, struct_conn):
+def _parse_inter_residue_bonds(atom_site, struct_conn, atom_count=None):
     """
     Create inter-residue bonds by parsing the ``struct_conn`` category.
     The atom indices of each bond are found by matching the bond labels
     to the ``atom_site`` category.
+    If atom_count is None, it will be inferred from the ``atom_site`` category.
     """
     # Identity symmetry operation
     IDENTITY = "1_555"
@@ -651,7 +663,7 @@ def _parse_inter_residue_bonds(atom_site, struct_conn):
     bond_types = [PDBX_BOND_TYPE_ID_TO_TYPE[type_id] for type_id in bond_type_id]
 
     return BondList(
-        atom_site.row_count,
+        atom_count if atom_count is not None else atom_site.row_count,
         np.stack([atoms_indices_1, atoms_indices_2, bond_types], axis=-1),
     )
 
@@ -747,25 +759,29 @@ def _get_struct_conn_col_name(col_name, partner):
 
 
 def _filter_altloc(array, atom_site, altloc):
+    """
+    Filter the given :class:`AtomArray` and ``atom_site`` category to the rows
+    specified by the given *altloc* identifier.
+    """
     altloc_ids = atom_site.get("label_alt_id")
     occupancy = atom_site.get("occupancy")
 
     # Filter altloc IDs and return
-    if altloc_ids is None:
-        return array
+    if altloc_ids is None or (altloc_ids.mask.array != MaskValue.PRESENT).all():
+        # No altlocs in atom_site category
+        return array, atom_site
     elif altloc == "occupancy" and occupancy is not None:
-        return array[
-            ...,
-            filter_highest_occupancy_altloc(
-                array, altloc_ids.as_array(str), occupancy.as_array(float)
-            ),
-        ]
+        mask = filter_highest_occupancy_altloc(
+            array, altloc_ids.as_array(str), occupancy.as_array(float)
+        )
+        return array[..., mask], _filter(atom_site, mask)
     # 'first' is also fallback if file has no occupancy information
     elif altloc == "first":
-        return array[..., filter_first_altloc(array, altloc_ids.as_array(str))]
+        mask = filter_first_altloc(array, altloc_ids.as_array(str))
+        return array[..., mask], _filter(atom_site, mask)
     elif altloc == "all":
         array.set_annotation("altloc_id", altloc_ids.as_array(str))
-        return array
+        return array, atom_site
     else:
         raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
