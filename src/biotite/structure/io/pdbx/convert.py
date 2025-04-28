@@ -20,7 +20,6 @@ __all__ = [
 import itertools
 import warnings
 import numpy as np
-from collections import defaultdict
 from biotite.file import InvalidFileError
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
@@ -56,6 +55,7 @@ from biotite.structure.residues import (
     get_residue_starts_for,
 )
 from biotite.structure.transform import AffineTransformation
+from collections import defaultdict
 
 # Bond types in `struct_conn` category that refer to covalent bonds
 PDBX_BOND_TYPE_ID_TO_TYPE = {
