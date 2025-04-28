@@ -493,6 +493,8 @@ def test_assembly_chain_count(format, pdb_id, model):
         ("1f2n", "4", 6),
         # Multiple combined operations
         ("1f2n", "6", 60),
+        # Multiple entries in pdbx_struct_assembly_gen for the same assembly_id
+        ("4zxb", "1", 2),
     ],
 )
 def test_assembly_sym_id(pdb_id, assembly_id, symmetric_unit_count):
