@@ -149,6 +149,35 @@ def test_conversion(monkeypatch, tmpdir, format, path, model, find_matches_by_di
 
 
 @pytest.mark.parametrize(
+    "pdb_id",
+    [
+        "1aki",  # has no altloc IDs
+        "3o5r",  # has altloc IDs
+    ],
+)
+def test_filter_altloc(pdb_id):
+    """
+    Check if the different ``altloc`` options give the expected results.
+    """
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{pdb_id}.bcif"))
+    atoms = {}
+    for altloc in ["first", "occupancy", "all"]:
+        atoms[altloc] = pdbx.get_structure(pdbx_file, model=1, altloc=altloc)
+
+    # The 'altloc_id' annotation should only be present in the 'altloc=all' case
+    assert "altloc_id" in atoms["all"].get_annotation_categories()
+    assert "altloc_id" not in atoms["first"].get_annotation_categories()
+    assert "altloc_id" not in atoms["occupancy"].get_annotation_categories()
+    # Independent of which altloc atom is selected, only one atom must be selected...
+    assert atoms["occupancy"].array_length() == atoms["first"].array_length()
+    # ...with the exception of the 'altloc=all' case in which more atoms are selected
+    if np.any(atoms["all"].altloc_id != "."):
+        assert atoms["all"].array_length() > atoms["first"].array_length()
+    else:
+        assert atoms["all"].array_length() == atoms["first"].array_length()
+
+
+@pytest.mark.parametrize(
     "format, path",
     itertools.product(
         ["cif", "bcif"],
