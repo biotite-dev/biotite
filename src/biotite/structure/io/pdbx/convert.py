@@ -20,6 +20,7 @@ __all__ = [
 import itertools
 import warnings
 import numpy as np
+from collections import defaultdict
 from biotite.file import InvalidFileError
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
@@ -1711,6 +1712,7 @@ def get_assembly(
 
     ### Get transformations and apply them to the affected asym IDs
     assembly = None
+    grouped_ops = defaultdict(list)
     for id, op_expr, asym_id_expr in zip(
         assembly_gen_category["assembly_id"].as_array(str),
         assembly_gen_category["oper_expression"].as_array(str),
@@ -1719,19 +1721,18 @@ def get_assembly(
         # Find the operation expressions for given assembly ID
         # We already asserted that the ID is actually present
         if id == assembly_id:
-            operations = _parse_operation_expression(op_expr)
-            asym_ids = asym_id_expr.split(",")
-            # Filter affected asym IDs
-            sub_structure = structure[..., np.isin(structure.label_asym_id, asym_ids)]
-            sub_assembly = _apply_transformations(
-                sub_structure, transformations, operations
-            )
-            # Merge the chains with asym IDs for this operation
-            # with chains from other operations
-            if assembly is None:
-                assembly = sub_assembly
-            else:
-                assembly += sub_assembly
+            grouped_ops[asym_id_expr].extend(_parse_operation_expression(op_expr))
+
+    for asym_expr, op_list in grouped_ops.items():
+        asym_ids = asym_expr.split(",")
+        sub_struct = structure[..., np.isin(structure.label_asym_id, asym_ids)]
+        sub_assembly = _apply_transformations(sub_struct, transformations, op_list)
+        # Merge the chains with asym IDs for this operation
+        # with chains from other operations
+        if assembly is None:
+            assembly = sub_assembly
+        else:
+            assembly += sub_assembly
 
     # Remove 'label_asym_id', if it was not included in the original
     # user-supplied 'extra_fields'
