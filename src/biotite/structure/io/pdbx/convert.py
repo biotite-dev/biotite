@@ -1712,7 +1712,7 @@ def get_assembly(
 
     ### Get transformations and apply them to the affected asym IDs
     assembly = None
-    grouped_ops = defaultdict(list)
+    chain_ops = defaultdict(list)
     for id, op_expr, asym_id_expr in zip(
         assembly_gen_category["assembly_id"].as_array(str),
         assembly_gen_category["oper_expression"].as_array(str),
@@ -1721,11 +1721,11 @@ def get_assembly(
         # Find the operation expressions for given assembly ID
         # We already asserted that the ID is actually present
         if id == assembly_id:
-            grouped_ops[asym_id_expr].extend(_parse_operation_expression(op_expr))
+            for chain_id in asym_id_expr.split(","):
+                chain_ops[chain_id].extend(_parse_operation_expression(op_expr))
 
-    for asym_expr, op_list in grouped_ops.items():
-        asym_ids = asym_expr.split(",")
-        sub_struct = structure[..., np.isin(structure.label_asym_id, asym_ids)]
+    for asym_id, op_list in chain_ops.items():
+        sub_struct = structure[..., structure.label_asym_id == asym_id]
         sub_assembly = _apply_transformations(sub_struct, transformations, op_list)
         # Merge the chains with asym IDs for this operation
         # with chains from other operations
