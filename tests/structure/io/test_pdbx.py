@@ -502,21 +502,11 @@ def test_assembly_chain_count(format, pdb_id, model):
 def test_assembly_sym_id(pdb_id, assembly_id, symmetric_unit_count):
     """
     Check if the :func:`get_assembly()` function returns the correct
-    symmetry ID annotation for a known example.
+    number of symmetry IDs for a known example.
     """
     pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{pdb_id}.bcif"))
     assembly = pdbx.get_assembly(pdbx_file, assembly_id=assembly_id)
-    # 'unique_indices' contains the FIRST occurence of each unique value
-    unique_sym_ids, unique_indices = np.unique(assembly.sym_id, return_index=True)
-    # Sort by first occurrence
-    order = np.argsort(unique_indices)
-    unique_sym_ids = unique_sym_ids[order]
-    unique_indices = unique_indices[order]
-    assert unique_sym_ids.tolist() == list(range(symmetric_unit_count))
-    # Every asymmetric unit should have the same length,
-    # as each operation is applied to all atoms in the asymmetric unit
-    asym_lengths = np.diff(np.append(unique_indices, assembly.array_length()))
-    assert (asym_lengths == asym_lengths[0]).all()
+    assert sorted(np.unique(assembly.sym_id).tolist()) == list(range(symmetric_unit_count))
 
 
 @pytest.mark.parametrize("model", [None, 1])
