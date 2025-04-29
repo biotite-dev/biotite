@@ -506,7 +506,9 @@ def test_assembly_sym_id(pdb_id, assembly_id, symmetric_unit_count):
     """
     pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{pdb_id}.bcif"))
     assembly = pdbx.get_assembly(pdbx_file, assembly_id=assembly_id)
-    assert sorted(np.unique(assembly.sym_id).tolist()) == list(range(symmetric_unit_count))
+    assert sorted(np.unique(assembly.sym_id).tolist()) == list(
+        range(symmetric_unit_count)
+    )
 
 
 @pytest.mark.parametrize("model", [None, 1])
