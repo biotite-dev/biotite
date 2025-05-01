@@ -23,7 +23,7 @@ from collections import defaultdict
 import numpy as np
 from biotite.file import InvalidFileError
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
-from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
+from biotite.structure.atoms import AtomArray, AtomArrayStack, concatenate, repeat
 from biotite.structure.bonds import BondList, BondType, connect_via_residue_names
 from biotite.structure.box import (
     coord_to_fraction,
@@ -1727,12 +1727,17 @@ def get_assembly(
     for asym_id, op_list in chain_ops.items():
         sub_struct = structure[..., structure.label_asym_id == asym_id]
         sub_assembly = _apply_transformations(sub_struct, transformations, op_list)
-        # Merge the chains with asym IDs for this operation
-        # with chains from other operations
+        # Merge the chain's sub_assembly into the rest of the assembly
         if assembly is None:
             assembly = sub_assembly
         else:
             assembly += sub_assembly
+
+    # Sort the assembly by sym_id
+    max_sym_id = assembly.sym_id.max()
+    assembly = concatenate(
+        [assembly[assembly.sym_id == sym_id] for sym_id in range(max_sym_id + 1)]
+    )
 
     # Remove 'label_asym_id', if it was not included in the original
     # user-supplied 'extra_fields'
