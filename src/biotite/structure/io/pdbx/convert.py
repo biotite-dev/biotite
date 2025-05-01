@@ -23,7 +23,13 @@ from collections import defaultdict
 import numpy as np
 from biotite.file import InvalidFileError
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
-from biotite.structure.atoms import AtomArray, AtomArrayStack, concatenate, repeat
+from biotite.structure.atoms import (
+    AtomArray,
+    AtomArrayStack,
+    concatenate,
+    repeat,
+    stack,
+)
 from biotite.structure.bonds import BondList, BondType, connect_via_residue_names
 from biotite.structure.box import (
     coord_to_fraction,
@@ -1733,10 +1739,14 @@ def get_assembly(
         else:
             assembly += sub_assembly
 
-    # Sort the assembly by sym_id
     max_sym_id = assembly.sym_id.max()
-    assembly = concatenate(
-        [assembly[assembly.sym_id == sym_id] for sym_id in range(max_sym_id + 1)]
+    assembly = stack(
+        [
+            concatenate(
+                [array[array.sym_id == sym_id] for sym_id in range(max_sym_id + 1)]
+            )
+            for array in assembly
+        ]
     )
 
     # Remove 'label_asym_id', if it was not included in the original
