@@ -1739,15 +1739,23 @@ def get_assembly(
         else:
             assembly += sub_assembly
 
+    # Sort AtomArray or AtomArrayStack by 'sym_id'
     max_sym_id = assembly.sym_id.max()
-    assembly = stack(
-        [
-            concatenate(
-                [array[array.sym_id == sym_id] for sym_id in range(max_sym_id + 1)]
-            )
-            for array in assembly
-        ]
-    )
+    if isinstance(assembly, AtomArray):
+        # Handle single array case
+        assembly = concatenate(
+            [assembly[assembly.sym_id == sym_id] for sym_id in range(max_sym_id + 1)]
+        )
+    else:
+        # Handle array stack case
+        assembly = stack(
+            [
+                concatenate(
+                    [array[array.sym_id == sym_id] for sym_id in range(max_sym_id + 1)]
+                )
+                for array in assembly
+            ]
+        )
 
     # Remove 'label_asym_id', if it was not included in the original
     # user-supplied 'extra_fields'
