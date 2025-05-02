@@ -1717,7 +1717,6 @@ def get_assembly(
     )
 
     ### Get transformations and apply them to the affected asym IDs
-    assembly = None
     chain_ops = defaultdict(list)
     for id, op_expr, asym_id_expr in zip(
         assembly_gen_category["assembly_id"].as_array(str),
@@ -1730,14 +1729,13 @@ def get_assembly(
             for chain_id in asym_id_expr.split(","):
                 chain_ops[chain_id].extend(_parse_operation_expression(op_expr))
 
+    sub_assemblies = []
     for asym_id, op_list in chain_ops.items():
         sub_struct = structure[..., structure.label_asym_id == asym_id]
         sub_assembly = _apply_transformations(sub_struct, transformations, op_list)
         # Merge the chain's sub_assembly into the rest of the assembly
-        if assembly is None:
-            assembly = sub_assembly
-        else:
-            assembly += sub_assembly
+        sub_assemblies.append(sub_assembly)
+    assembly = concatenate(sub_assemblies)
 
     # Sort AtomArray or AtomArrayStack by 'sym_id'
     max_sym_id = assembly.sym_id.max()
