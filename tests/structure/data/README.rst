@@ -5,6 +5,8 @@ Test structures
 1DIX: Structure contains insertion code
 1F2N: Structure contains biological assembly
 5ZNG: Structure contains biological assembly with multiple entries in _pdbx_struct_assembly_gen
+4ZXB: Multiple entries in _pdbx_struct_assembly_gen for the same assembly_id
+1NCB: Multiple entries in _pdbx_struct_assembly_gen for the same assembly_id and chains
 1GYA: Large multi-model structure
 2AXD: Multi-model structure with different number of atoms per model
 1IGY: Multi-chain structure
