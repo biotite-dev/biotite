@@ -28,7 +28,6 @@ from biotite.structure.atoms import (
     AtomArrayStack,
     concatenate,
     repeat,
-    stack,
 )
 from biotite.structure.bonds import BondList, BondType, connect_via_residue_names
 from biotite.structure.box import (
@@ -1739,21 +1738,9 @@ def get_assembly(
 
     # Sort AtomArray or AtomArrayStack by 'sym_id'
     max_sym_id = assembly.sym_id.max()
-    if isinstance(assembly, AtomArray):
-        # Handle single array case
-        assembly = concatenate(
-            [assembly[assembly.sym_id == sym_id] for sym_id in range(max_sym_id + 1)]
-        )
-    else:
-        # Handle array stack case
-        assembly = stack(
-            [
-                concatenate(
-                    [array[array.sym_id == sym_id] for sym_id in range(max_sym_id + 1)]
-                )
-                for array in assembly
-            ]
-        )
+    assembly = concatenate(
+        [assembly[..., assembly.sym_id == sym_id] for sym_id in range(max_sym_id + 1)]
+    )
 
     # Remove 'label_asym_id', if it was not included in the original
     # user-supplied 'extra_fields'
