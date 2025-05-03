@@ -772,8 +772,10 @@ def _filter_altloc(array, atom_site, altloc):
     altloc_ids = atom_site.get("label_alt_id")
     occupancy = atom_site.get("occupancy")
 
-    # Filter altloc IDs and return
-    if altloc_ids is None or (altloc_ids.mask.array != MaskValue.PRESENT).all():
+    if altloc == "all":
+        array.set_annotation("altloc_id", altloc_ids.as_array(str))
+        return array, atom_site
+    elif altloc_ids is None or (altloc_ids.mask.array != MaskValue.PRESENT).all():
         # No altlocs in atom_site category
         return array, atom_site
     elif altloc == "occupancy" and occupancy is not None:
@@ -785,9 +787,6 @@ def _filter_altloc(array, atom_site, altloc):
     elif altloc == "first":
         mask = filter_first_altloc(array, altloc_ids.as_array(str))
         return array[..., mask], _filter(atom_site, mask)
-    elif altloc == "all":
-        array.set_annotation("altloc_id", altloc_ids.as_array(str))
-        return array, atom_site
     else:
         raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
