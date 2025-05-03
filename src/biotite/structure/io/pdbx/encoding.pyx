@@ -230,6 +230,12 @@ class Encoding(_Component, metaclass=ABCMeta):
         # since the file content may be invalid/malicious.
         raise NotImplementedError()
 
+    def __str__(self):
+        # Restore original behavior, as `__str__()` implementation of `_Component`
+        # may require serialization, which is not possible for some encodings prior
+        # to the first encoding pass
+        return object.__str__(self)
+
 
 @dataclass
 class ByteArrayEncoding(Encoding):
