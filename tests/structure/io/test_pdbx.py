@@ -994,6 +994,10 @@ def test_compress_file(path):
     the same as from the uncompressed file, while the file size it at least as small
     as the file compressed by the RCSB PDB.
     """
+    # Use a relatively high precision to increase strictness of of the equality check
+    ATOL = 1e-5
+    RTOL = 1e-10
+
     orig_file = pdbx.BinaryCIFFile.read(path)
 
     # Create an equivalent file without the original encoding
@@ -1003,7 +1007,9 @@ def test_compress_file(path):
         block[category_name] = _clear_encoding(category)
     uncompressed_file["block"] = block
 
-    compressed_file = pdbx.compress(uncompressed_file)
+    compressed_file = pdbx.compress(uncompressed_file, rtol=RTOL, atol=ATOL)
+    # Remove any cached data columns by re-serializing and deserializing
+    compressed_file = pdbx.BinaryCIFFile.deserialize(compressed_file.serialize())
 
     # Check if the data is unaltered after compression
     # Direct equality check is not possible, as the encoding may be different
@@ -1017,7 +1023,17 @@ def test_compress_file(path):
                     if ref_data is None:
                         assert test_data is None
                     else:
-                        assert test_data.array.tolist() == ref_data.array.tolist()
+                        if np.issubdtype(ref_data.array.dtype, np.floating):
+                            # The reference may have used direct ByteArrayEncoding,
+                            # which is not able to exactly represent the correct data
+                            # due to numerical inaccuracies
+                            # -> Expect very small differences
+                            # Furthermore, the compression may have different precision
+                            assert np.allclose(
+                                test_data.array, ref_data.array, rtol=RTOL, atol=ATOL
+                            )
+                        else:
+                            assert test_data.array.tolist() == ref_data.array.tolist()
                 except AssertionError:
                     raise AssertionError(f"{category_name}.{column_name} {attr_name}")
 
