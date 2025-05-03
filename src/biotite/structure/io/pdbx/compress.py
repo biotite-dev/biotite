@@ -89,7 +89,10 @@ def compress(data, float_tolerance=None, rtol=1e-6, atol=1e-4):
 def _compress_file(bcif_file, rtol, atol):
     compressed_file = bcif.BinaryCIFFile()
     for block_name, bcif_block in bcif_file.items():
-        compressed_block = _compress_block(bcif_block, rtol, atol)
+        try:
+            compressed_block = _compress_block(bcif_block, rtol, atol)
+        except Exception:
+            raise ValueError(f"Failed to compress block '{block_name}'")
         compressed_file[block_name] = compressed_block
     return compressed_file
 
@@ -97,7 +100,10 @@ def _compress_file(bcif_file, rtol, atol):
 def _compress_block(bcif_block, rtol, atol):
     compressed_block = bcif.BinaryCIFBlock()
     for category_name, bcif_category in bcif_block.items():
-        compressed_category = _compress_category(bcif_category, rtol, atol)
+        try:
+            compressed_category = _compress_category(bcif_category, rtol, atol)
+        except Exception:
+            raise ValueError(f"Failed to compress category '{category_name}'")
         compressed_block[category_name] = compressed_category
     return compressed_block
 
@@ -105,7 +111,10 @@ def _compress_block(bcif_block, rtol, atol):
 def _compress_category(bcif_category, rtol, atol):
     compressed_category = bcif.BinaryCIFCategory()
     for column_name, bcif_column in bcif_category.items():
-        compressed_column = _compress_column(bcif_column, rtol, atol)
+        try:
+            compressed_column = _compress_column(bcif_column, rtol, atol)
+        except Exception:
+            raise ValueError(f"Failed to compress column '{column_name}'")
         compressed_category[column_name] = compressed_column
     return compressed_category
 
@@ -136,6 +145,10 @@ def _compress_data(bcif_data, rtol, atol):
         return bcif.BinaryCIFData(array, [encoding])
 
     elif np.issubdtype(array.dtype, np.floating):
+        if not np.isfinite(array).all():
+            # NaN/inf values cannot be represented by integers
+            # -> do not use integer encoding
+            return bcif.BinaryCIFData(array, [ByteArrayEncoding()])
         to_integer_encoding = FixedPointEncoding(
             10 ** _get_decimal_places(array, rtol, atol)
         )
@@ -313,9 +326,8 @@ def _get_decimal_places(array, rtol, atol):
     """
     if rtol <= 0 and atol <= 0:
         raise ValueError("At least one of 'rtol' and 'atol' must be greater than 0")
-    # Decimals of NaN or infinite values do not make sense
-    # and 0 would give NaN when rounding on decimals
-    array = array[np.isfinite(array) & (array != 0)]
+    # 0 would give NaN when rounding on decimals
+    array = array[array != 0]
     for decimals in itertools.count(start=min(0, -_order_magnitude(array))):
         error = np.abs(np.round(array, decimals) - array)
         if decimals == 100:

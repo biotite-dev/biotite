@@ -1025,12 +1025,12 @@ def test_compress_file(path):
     assert _file_size(compressed_file) <= _file_size(orig_file)
 
 
-@pytest.mark.parametrize("value", [1e10, 1e-10])
+@pytest.mark.parametrize("value", [1e10, 1e-10, np.nan, np.inf, -np.inf])
 def test_extreme_float_compression(value):
     """
     Check if :func:`compress()` correctly falls back to direct byte encoding of floats
     in extreme cases where fixed point encoding would lead to integer
-    underflow/overflow.
+    underflow/overflow or the value could not be represented by an integer.
     """
     # Not only very small/large values, but a large difference between the values are
     # required, to make fixed point encoding fail
@@ -1043,7 +1043,7 @@ def test_extreme_float_compression(value):
     # Check that no fixed point encoding was used
     assert len(data.encoding) == 1
     assert type(data.encoding[0]) is pdbx.ByteArrayEncoding
-    assert np.all(data.array == ref_array)
+    assert data.array.tolist() == pytest.approx(ref_array.tolist(), nan_ok=True)
 
 
 @pytest.mark.parametrize(
