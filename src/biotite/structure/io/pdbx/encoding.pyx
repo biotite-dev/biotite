@@ -230,6 +230,12 @@ class Encoding(_Component, metaclass=ABCMeta):
         # since the file content may be invalid/malicious.
         raise NotImplementedError()
 
+    def __str__(self):
+        # Restore original behavior, as `__str__()` implementation of `_Component`
+        # may require serialization, which is not possible for some encodings prior
+        # to the first encoding pass
+        return object.__str__(self)
+
 
 @dataclass
 class ByteArrayEncoding(Encoding):
@@ -326,15 +332,7 @@ class FixedPointEncoding(Encoding):
 
         # Round to avoid wrong values due to floating point inaccuracies
         scaled_data = np.round(data * self.factor)
-        # Check if an integer underflow/overflow would occur during conversion
-        if (
-            np.max(scaled_data) > np.iinfo(np.int32).max or
-            np.min(scaled_data) < np.iinfo(np.int32).min
-        ):  # fmt: skip
-            raise ValueError(
-                "With the given factor some values get too large for integer encoding"
-            )
-        return scaled_data.astype(np.int32)
+        return _safe_cast(scaled_data, np.int32, allow_decimal_loss=True)
 
     def decode(self, data):
         return (data / self.factor).astype(
@@ -401,7 +399,7 @@ class IntervalQuantizationEncoding(Encoding):
             self.min, self.max, self.num_steps, dtype=data.dtype
         )
         indices = np.searchsorted(steps, data, side="left")
-        return indices.astype(np.int32, copy=False)
+        return _safe_cast(indices, np.int32)
 
     def decode(self, data):
         output = data * (self.max - self.min) / (self.num_steps - 1)
@@ -579,8 +577,14 @@ class DeltaEncoding(Encoding):
         if self.origin is None:
             self.origin = data[0]
 
+        # Differences (including `np.diff`) return an array with the same dtype as the
+        # input array
+        # As the input dtype may be unsigned, the output dtype could underflow,
+        # if the difference is negative
+        # -> cast to int64 to avoid this
+        data = data.astype(np.int64, copy=False)
         data = data - self.origin
-        return np.diff(data, prepend=0).astype(np.int32, copy=False)
+        return _safe_cast(np.diff(data, prepend=0), np.int32)
 
     def decode(self, data):
         output = np.cumsum(data, dtype=self.src_type.to_dtype())
@@ -644,7 +648,7 @@ class IntegerPackingEncoding(Encoding):
             # Only positive values -> use unsigned integers
             self.is_unsigned = data.min().item() >= 0
 
-        data = data.astype(np.int32, copy=False)
+        data = _safe_cast(data, np.int32)
         return self._encode(
             data, np.empty(0, dtype=self._determine_packed_dtype())
         )
@@ -879,7 +883,7 @@ class StringArrayEncoding(Encoding):
         else:
             check_present = True
 
-        string_order = np.argsort(self.strings).astype(np.int32)
+        string_order = _safe_cast(np.argsort(self.strings), np.int32)
         sorted_strings = self.strings[string_order]
         sorted_indices = np.searchsorted(sorted_strings, data)
         indices = string_order[sorted_indices]
@@ -1019,22 +1023,25 @@ def _snake_to_camel_case(attribute_name):
     return attribute_name[0].lower() + attribute_name[1:]
 
 
-def _safe_cast(array, dtype):
-    dtype = np.dtype(dtype)
-    if dtype == array.dtype:
+def _safe_cast(array, dtype, allow_decimal_loss=False):
+    source_dtype = array.dtype
+    target_dtype = np.dtype(dtype)
+
+    if target_dtype == source_dtype:
         return array
-    if np.issubdtype(dtype, np.integer):
-        if not np.issubdtype(array.dtype, np.integer):
-            raise ValueError("Cannot cast floating point to integer")
-        dtype_info = np.iinfo(dtype)
-        if np.any(array < dtype_info.min) or np.any(array > dtype_info.max):
-            raise ValueError("Integer values do not fit into the given dtype")
-    return array.astype(dtype)
 
+    if np.issubdtype(target_dtype, np.integer):
+        if np.issubdtype(source_dtype, np.floating):
+            if not allow_decimal_loss:
+                raise ValueError("Cannot cast floating point to integer")
+            if not np.isfinite(array).all():
+                raise ValueError("Data contains non-finite values")
+        elif not np.issubdtype(source_dtype, np.integer):
+            # Neither float, nor integer -> cannot cast
+            raise ValueError(f"Cannot cast '{source_dtype}' to integer")
+        dtype_info = np.iinfo(target_dtype)
+        # Check if an integer underflow/overflow would occur during conversion
+        if np.max(array) > dtype_info.max or np.min(array) < dtype_info.min:
+            raise ValueError("Values do not fit into the given dtype")
 
-def _get_n_decimals(value, tolerance):
-    MAX_DECIMALS = 10
-    for n in range(MAX_DECIMALS):
-        if abs(value - round(value, n)) < tolerance:
-            return n
-    return MAX_DECIMALS
+    return array.astype(target_dtype)
