@@ -4,6 +4,7 @@
 
 import itertools
 import tempfile
+from datetime import date
 from os.path import join
 import numpy as np
 import pytest
@@ -16,6 +17,8 @@ from biotite.database import RequestError
 from tests.util import cannot_connect_to, data_dir
 
 RCSB_URL = "https://www.rcsb.org/"
+# To keep RCSB search results constant over time only search for entries below this date
+CUTOFF_DATE = date(2025, 4, 30)
 # Search term that should only find the entry 1L2Y
 TC5B_TERM = "Miniprotein Construct TC5b"
 
@@ -135,6 +138,10 @@ def test_search_basic():
 @pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 def test_search_field(field, molecular_definition, params, ref_ids):
     query = rcsb.FieldQuery(field, molecular_definition, **params)
+    query &= rcsb.FieldQuery(
+        "rcsb_accession_info.initial_release_date",
+        less_or_equal=CUTOFF_DATE.isoformat(),
+    )
     test_ids = rcsb.search(query)
     test_count = rcsb.count(query)
 
@@ -347,10 +354,16 @@ def test_search_grouping(grouping, resolution_threshold, return_type, ref_groups
     """
     Check whether the same result as in a known example is achieved.
     """
-    query = rcsb.FieldQuery(
-        "exptl.method", exact_match="X-RAY DIFFRACTION"
-    ) & rcsb.FieldQuery(
-        "rcsb_entry_info.resolution_combined", range_closed=(0.0, resolution_threshold)
+    query = (
+        rcsb.FieldQuery("exptl.method", exact_match="X-RAY DIFFRACTION")
+        & rcsb.FieldQuery(
+            "rcsb_entry_info.resolution_combined",
+            range_closed=(0.0, resolution_threshold),
+        )
+        & rcsb.FieldQuery(
+            "rcsb_accession_info.initial_release_date",
+            less_or_equal=CUTOFF_DATE.isoformat(),
+        )
     )
 
     test_groups = list(
