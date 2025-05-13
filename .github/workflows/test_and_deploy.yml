@@ -276,10 +276,19 @@ jobs:
       with:
         environment-file: environment.yml
         miniforge-version: latest
+    - name: Restore cached partially build docs from a failed previous build
+      id: cache-docs-restore
+      uses: actions/cache/restore@v4
+      with:
+        key: docs-${{ github.sha }}
+        path: |
+          doc/examples/backreferences
+          doc/examples/gallery
+          build/doc
     - name: Install distribution
       run: pip install dist/*.whl
     - name: Build base documentation
-      run: sphinx-build -a -D plot_gallery=0 doc build//doc
+      run: sphinx-build -a -D plot_gallery=0 doc build/doc
     - name: Build tutorial and gallery
       if: >
         (
@@ -287,16 +296,26 @@ jobs:
           github.event.action == 'published'
         )
         || github.event_name == 'workflow_dispatch'
-      run: sphinx-build -a doc build//doc
+      run: sphinx-build -a doc build/doc
+    - name: Cache partially built docs from failed build
+      id: cache-docs-save
+      if: failure()
+      uses: actions/cache/save@v4
+      with:
+        key: ${{ steps.cache-docs-restore.outputs.cache-primary-key }}
+        path: |
+          doc/examples/backreferences
+          doc/examples/gallery
+          build/doc
     - name: Zip documentation
       run: |
           cd build
-          zip -r ..//dist//doc.zip doc
+          zip -r ../dist/doc.zip doc
           cd ..
     - uses: actions/upload-artifact@v4
       with:
         name: documentation
-        path: dist//doc.zip
+        path: dist/doc.zip
 
 
   benchmark:
