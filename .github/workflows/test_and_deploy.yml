@@ -285,6 +285,7 @@ jobs:
           doc/examples/backreferences
           doc/examples/gallery
           build/doc
+          build/jupyter_execute
     - name: Install distribution
       run: pip install dist/*.whl
     - name: Build base documentation
@@ -307,6 +308,7 @@ jobs:
           doc/examples/backreferences
           doc/examples/gallery
           build/doc
+          build/jupyter_execute
     - name: Zip documentation
       run: |
           cd build
