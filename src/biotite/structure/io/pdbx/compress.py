@@ -56,14 +56,14 @@ def compress(data, float_tolerance=None, rtol=1e-6, atol=1e-4):
     >>> pdbx_file.write(uncompressed_file)
     >>> _ = uncompressed_file.seek(0)
     >>> print(f"{len(uncompressed_file.read()) // 1000} KB")
-    927 KB
+    937 KB
     >>> # Write compressed file
     >>> pdbx_file = compress(pdbx_file)
     >>> compressed_file = BytesIO()
     >>> pdbx_file.write(compressed_file)
     >>> _ = compressed_file.seek(0)
     >>> print(f"{len(compressed_file.read()) // 1000} KB")
-    111 KB
+    114 KB
     """
     if float_tolerance is not None:
         warnings.warn(

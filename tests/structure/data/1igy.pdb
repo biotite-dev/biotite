@@ -23,6 +23,7 @@ KEYWDS    INTACT IMMUNOGLOBULIN, V REGION, C REGION, HINGE REGION,
 KEYWDS   2 IMMUNOGLOBULIN                                                       
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    L.J.HARRIS,A.MCPHERSON                                                
+REVDAT   6   23-OCT-24 1IGY    1       REMARK                                   
 REVDAT   5   09-AUG-23 1IGY    1       REMARK HETSYN                            
 REVDAT   4   29-JUL-20 1IGY    1       CAVEAT COMPND REMARK SEQADV              
 REVDAT   4 2                   1       HETNAM LINK   SITE   ATOM                

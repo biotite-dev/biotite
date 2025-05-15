@@ -1,11 +1,11 @@
 import argparse
-import logging
+import shutil
 import subprocess
-import sys
-from os.path import join
+from pathlib import Path
 import biotite
 import biotite.database.rcsb as rcsb
 import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 from biotite.database import RequestError
 
 
@@ -17,27 +17,28 @@ def create(pdb_id, directory, include_gro):
         except RequestError:
             # PDB entry is not provided in this format
             pass
-    try:
-        array = strucio.load_structure(join(directory, pdb_id + ".pdb"))
-    except biotite.InvalidFileError:
-        # Structure probably contains multiple models with different
-        # number of atoms
-        # -> Cannot load AtomArrayStack
-        # -> Skip writing GRO file
-        return
     # Create *.gro files using GROMACS
-    # Clean PDB file -> remove inscodes and altlocs
     if include_gro:
+        try:
+            pdbx_file = pdbx.BinaryCIFFile.read(directory / pdb_id + ".bcif")
+            atoms = pdbx.get_structure(pdbx_file)
+        except biotite.InvalidFileError:
+            # Structure probably contains multiple models with different
+            # number of atoms
+            # -> Cannot load AtomArrayStack
+            # -> Skip writing GRO file
+            return
+        # Clean PDB file -> remove inscodes and altlocs
         cleaned_file_name = biotite.temp_file("pdb")
-        strucio.save_structure(cleaned_file_name, array)
+        strucio.save_structure(cleaned_file_name, atoms)
         # Run GROMACS for file conversion
         subprocess.run(
             [
-                "editconf",
+                "gmxeditconf",
                 "-f",
                 cleaned_file_name,
                 "-o",
-                join(directory, pdb_id + ".gro"),
+                str(directory / pdb_id + ".gro"),
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -73,23 +74,16 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.file is not None:
-        with open(args.file, "r") as file:
-            pdb_ids = [
-                pdb_id.strip().lower()
-                for pdb_id in file.read().split("\n")
-                if len(pdb_id.strip()) != 0
-            ]
-    elif args.id is not None:
-        pdb_ids = [args.id.lower()]
-    else:
-        logging.error("Must specifiy PDB ID(s)")
-        sys.exit()
+if __name__ == "__main__":
+    data_dir = Path(__file__).parent
+    include_gro = shutil.which("gmx") is not None
+    with open(data_dir / "ids.txt", "r") as file:
+        pdb_ids = [
+            pdb_id.strip().lower()
+            for pdb_id in file.read().split("\n")
+            if len(pdb_id.strip()) != 0
+        ]
 
     for i, pdb_id in enumerate(pdb_ids):
         print(f"{i:2d}/{len(pdb_ids):2d}: {pdb_id}", end="\r")
-        try:
-            create(pdb_id, args.directory, args.include_gro)
-        except:
-            print()
-            raise
+        create(pdb_id, data_dir, args.include_gro)

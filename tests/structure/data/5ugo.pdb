@@ -40,6 +40,7 @@ SOURCE  19 EXPRESSION_SYSTEM_TAXID: 83333
 KEYWDS    TRANSFERASE, LYASE, DNA DOMAIN, TRANSFERASE-DNA COMPLEX               
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    B.D.FREUDENTHAL,S.H.WILSON,W.A.BEARD                                  
+REVDAT   6   06-MAR-24 5UGO    1       LINK                                     
 REVDAT   5   18-DEC-19 5UGO    1       REMARK                                   
 REVDAT   4   04-OCT-17 5UGO    1       JRNL                                     
 REVDAT   3   16-AUG-17 5UGO    1       JRNL                                     
@@ -465,8 +466,8 @@ LINK         OP1  DC P  11                CA    CA A 403     1555   1555  2.45
 LINK         OD1 ASP A 190                CA    CA A 402     1555   1555  2.29  
 LINK         OD1 ASP A 190                CA    CA A 403     1555   1555  2.79  
 LINK         OD2 ASP A 190                CA    CA A 403     1555   1555  2.25  
-LINK         OD1 ASP A 192                CA    CA A 403     1555   1555  2.28  
 LINK         OD2 ASP A 192                CA    CA A 402     1555   1555  2.23  
+LINK         OD1 ASP A 192                CA    CA A 403     1555   1555  2.28  
 LINK         OD2 ASP A 256                CA    CA A 403     1555   1555  2.27  
 LINK         O2  2PN A 401                CA    CA A 402     1555   1555  2.39  
 LINK         O5  2PN A 401                CA    CA A 402     1555   1555  3.00  
