@@ -511,7 +511,7 @@ class BinaryCIFBlock(_HierarchicalContainer):
 
     def __delitem__(self, key):
         try:
-            return super().__setitem__("_" + key)
+            return super().__delitem__("_" + key)
         except KeyError:
             raise KeyError(key)
 
