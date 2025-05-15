@@ -361,7 +361,7 @@ def repeat_box(atoms, amount=1):
     if atoms.box is None:
         raise BadStructureError("Structure has no box")
 
-    repeat_coord, indices = repeat_box_coord(atoms.coord, atoms.box)
+    repeat_coord, indices = repeat_box_coord(atoms.coord, atoms.box, amount)
     # Unroll repeated coordinates for input to 'repeat()'
     if repeat_coord.ndim == 2:
         repeat_coord = repeat_coord.reshape(-1, atoms.array_length(), 3)
