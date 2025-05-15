@@ -388,7 +388,9 @@ class PyMOLObject:
         elif isinstance(selection, str):
             return f"%{self._name} and ({selection})"
         else:
-            sel = self.where(np.asarray(selection))
+            if not isinstance(selection, slice):
+                selection = np.asarray(selection)
+            sel = self.where(selection)
             if sel == "none" and not_none:
                 raise ValueError("Selection contains no atoms")
             return sel
