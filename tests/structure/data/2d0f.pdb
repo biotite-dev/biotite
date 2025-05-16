@@ -18,6 +18,7 @@ SOURCE   6 EXPRESSION_SYSTEM_TAXID: 562
 KEYWDS    ALPHA-AMYLASE, HYDROLASE                                              
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    A.ABE,H.YOSHIDA,T.TONOZUKA,Y.SAKANO,S.KAMITORI                        
+REVDAT   6   29-MAY-24 2D0F    1       REMARK                                   
 REVDAT   5   10-NOV-21 2D0F    1       SEQADV HETSYN                            
 REVDAT   4   29-JUL-20 2D0F    1       COMPND REMARK HETNAM LINK                
 REVDAT   4 2                   1       SITE   ATOM                              

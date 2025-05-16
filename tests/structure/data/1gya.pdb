@@ -30,6 +30,7 @@ KEYWDS   2 DOMAIN, T LYMPHOCYTE ADHESION GLYCOPROTEIN, ADHESION GLYCOPROTEIN
 EXPDTA    SOLUTION NMR                                                          
 NUMMDL    18                                                                    
 AUTHOR    D.F.WYSS,J.S.CHOI,G.WAGNER                                            
+REVDAT   5   09-OCT-24 1GYA    1       HETSYN                                   
 REVDAT   4   29-JUL-20 1GYA    1       CAVEAT COMPND REMARK HETNAM              
 REVDAT   4 2                   1       LINK   SITE   ATOM                       
 REVDAT   3   13-JUL-11 1GYA    1       VERSN                                    
@@ -359,6 +360,11 @@ HET    MAN  B   9      22
 HETNAM     NAG 2-ACETAMIDO-2-DEOXY-BETA-D-GLUCOPYRANOSE                         
 HETNAM     BMA BETA-D-MANNOPYRANOSE                                             
 HETNAM     MAN ALPHA-D-MANNOPYRANOSE                                            
+HETSYN     NAG N-ACETYL-BETA-D-GLUCOSAMINE; 2-ACETAMIDO-2-DEOXY-BETA-           
+HETSYN   2 NAG  D-GLUCOSE; 2-ACETAMIDO-2-DEOXY-D-GLUCOSE; 2-ACETAMIDO-          
+HETSYN   3 NAG  2-DEOXY-GLUCOSE; N-ACETYL-D-GLUCOSAMINE                         
+HETSYN     BMA BETA-D-MANNOSE; D-MANNOSE; MANNOSE                               
+HETSYN     MAN ALPHA-D-MANNOSE; D-MANNOSE; MANNOSE                              
 FORMUL   2  NAG    2(C8 H15 N O6)                                               
 FORMUL   2  BMA    C6 H12 O6                                                    
 FORMUL   2  MAN    6(C6 H12 O6)                                                 

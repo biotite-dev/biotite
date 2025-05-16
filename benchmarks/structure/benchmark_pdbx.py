@@ -99,8 +99,11 @@ def benchmark_set_structure(atoms, tmp_path, format, include_bonds):
     else:
         File = pdbx.BinaryCIFFile
 
+    if not include_bonds:
+        atoms.bonds = None
+
     pdbx_file = File()
-    pdbx.set_structure(pdbx_file, atoms, include_bonds=include_bonds)
+    pdbx.set_structure(pdbx_file, atoms)
     pdbx_file.write(tmp_path / f"{PDB_ID}.{format}")
 
 

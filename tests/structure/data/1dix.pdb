@@ -14,6 +14,7 @@ SOURCE   6 EXPRESSION_SYSTEM_TAXID: 4932
 KEYWDS    ALPHA PLUS BETA, HYDROLASE                                            
 EXPDTA    X-RAY DIFFRACTION                                                     
 AUTHOR    N.TANAKA,K.T.NAKAMURA                                                 
+REVDAT   4   20-NOV-24 1DIX    1       SEQADV                                   
 REVDAT   3   04-OCT-17 1DIX    1       REMARK                                   
 REVDAT   2   24-FEB-09 1DIX    1       VERSN                                    
 REVDAT   1   06-SEP-00 1DIX    0                                                
@@ -37,7 +38,8 @@ REMARK   2 RESOLUTION.    1.65 ANGSTROMS.
 REMARK   3                                                                      
 REMARK   3 REFINEMENT.                                                          
 REMARK   3   PROGRAM     : REFMAC                                               
-REMARK   3   AUTHORS     : MURSHUDOV,VAGIN,DODSON                               
+REMARK   3   AUTHORS     : MURSHUDOV,SKUBAK,LEBEDEV,PANNU,STEINER,              
+REMARK   3               : NICHOLLS,WINN,LONG,VAGIN                             
 REMARK   3                                                                      
 REMARK   3  DATA USED IN REFINEMENT.                                            
 REMARK   3   RESOLUTION RANGE HIGH (ANGSTROMS) : 1.65                           
@@ -2129,5 +2131,5 @@ CONECT 1286 1541
 CONECT 1413 1485                                                                
 CONECT 1485 1413                                                                
 CONECT 1541 1286                                                                
-MASTER      292    0    0    9   10    0    0    6 1748    1   10   16          
+MASTER      293    0    0    9   10    0    0    6 1748    1   10   16          
 END                                                                             

@@ -92,7 +92,9 @@ def test_split_one_line(cif_line, expected_fields):
 
 @pytest.mark.parametrize("find_matches_by_dict", [False, True])
 @pytest.mark.parametrize("model", [None, 1, -1])
-@pytest.mark.parametrize("path", glob.glob(join(data_dir("structure"), "*.cif")))
+@pytest.mark.parametrize(
+    "path", Path(data_dir("structure")).glob("*.cif"), ids=lambda p: p.stem
+)
 @pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_conversion(monkeypatch, tmpdir, format, path, model, find_matches_by_dict):
     """
@@ -177,46 +179,26 @@ def test_filter_altloc(pdb_id):
         assert atoms["all"].array_length() == atoms["first"].array_length()
 
 
-@pytest.mark.parametrize(
-    "format, path",
-    itertools.product(
-        ["cif", "bcif"],
-        glob.glob(join(data_dir("structure"), "*.cif")),
-    ),
-)
-def test_bond_conversion(tmpdir, format, path):
+@pytest.mark.parametrize("format", ["cif", "bcif"])
+def test_bonds_from_ccd(format):
     """
-    Test serializing and deserializing bonds from a file
-    restores the bonds.
+    Check if bonds can also be correctly restored from a CIF file that does not contain
+    explicit bond information (i.e. the `chem_comp_bond` and `struct_conn` categories)
+    using the CCD.
 
-    This test is similar to :func:`test_conversion`, but intra bonds
-    are written to ``chem_comp_bond`` and read from there, instead of
-    relying on the CCD.
+    Importantly a structure is chosen that does not contain non-standard inter-residue
+    bonds, such as disulfide bridges or glycosylations, as those bonds would require
+    explicit bond information.
     """
-    base_path = splitext(path)[0]
-    if format == "cif":
-        data_path = base_path + ".cif"
-        File = pdbx.CIFFile
-    else:
-        data_path = base_path + ".bcif"
-        File = pdbx.BinaryCIFFile
+    path = join(data_dir("structure"), f"1l2y.{format}")
+    File = pdbx.CIFFile if format == "cif" else pdbx.BinaryCIFFile
 
-    pdbx_file = File.read(data_path)
+    pdbx_file = File.read(path)
     atoms = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
     ref_bonds = atoms.bonds
 
-    pdbx_file = File()
-    # The important difference to `test_conversion()` is `include_bonds`
-    pdbx.set_structure(pdbx_file, atoms, include_bonds=True)
-    file_path = join(tmpdir, f"test.{format}")
-    pdbx_file.write(file_path)
-
-    pdbx_file = File.read(file_path)
-    # Ensure that the CCD fallback is not used,
-    # i.e. the bonds can be properly read from ``chem_comp_bond``
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        test_bonds = pdbx.get_structure(pdbx_file, model=1, include_bonds=True).bonds
+    del pdbx_file.block["chem_comp_bond"]
+    test_bonds = pdbx.get_structure(pdbx_file, model=1, include_bonds=True).bonds
 
     assert test_bonds == ref_bonds
 
@@ -251,7 +233,7 @@ def test_bond_sparsity():
     """
     Ensure that only as much intra-residue bonds are written as necessary,
     i.e. the created ``chem_comp_bond`` category has at maximum category many rows as
-    the reference NextGen CIF file.
+    the reference PDBx file.
 
     Less bonds are allowed, as not all atoms that a residue has in the CCD are actually
     present in the structure.
@@ -259,13 +241,13 @@ def test_bond_sparsity():
     This tests a previous bug, where duplicate intra-residue bonds were written
     (https://github.com/biotite-dev/biotite/issues/652).
     """
-    path = join(data_dir("structure"), "nextgen", "pdb_00001l2y_xyz-enrich.cif")
-    ref_pdbx_file = pdbx.CIFFile.read(path)
+    path = join(data_dir("structure"), "1l2y.bcif")
+    ref_pdbx_file = pdbx.BinaryCIFFile.read(path)
     ref_bond_number = ref_pdbx_file.block["chem_comp_bond"].row_count
 
     atoms = pdbx.get_structure(ref_pdbx_file, model=1, include_bonds=True)
-    test_pdbx_file = pdbx.CIFFile()
-    pdbx.set_structure(test_pdbx_file, atoms, include_bonds=True)
+    test_pdbx_file = pdbx.BinaryCIFFile()
+    pdbx.set_structure(test_pdbx_file, atoms)
     test_bond_number = test_pdbx_file.block["chem_comp_bond"].row_count
 
     assert test_bond_number <= ref_bond_number
@@ -320,31 +302,6 @@ def test_dynamic_dtype():
     assert (atoms.chain_id == CHAIN_ID).all()
 
 
-def test_intra_bond_residue_parsing():
-    """
-    Check if intra-residue bonds can be parsed from a NextGen CIF file
-    and expect the same bonds as the CCD-based ones from an *original*
-    CIF file.
-    """
-    cif_path = join(data_dir("structure"), "1l2y.cif")
-    cif_file = pdbx.CIFFile.read(cif_path)
-    ref_bonds = pdbx.get_structure(cif_file, model=1, include_bonds=True).bonds
-
-    nextgen_cif_path = join(
-        data_dir("structure"), "nextgen", "pdb_00001l2y_xyz-enrich.cif"
-    )
-    nextgen_cif_file = pdbx.CIFFile.read(nextgen_cif_path)
-    # Ensure that the CCD fallback is not used,
-    # i.e. the bonds can be properly read from ``chem_comp_bond``
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        test_bonds = pdbx.get_structure(
-            nextgen_cif_file, model=1, include_bonds=True
-        ).bonds
-
-    assert test_bonds == ref_bonds
-
-
 @pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_any_bonds(tmpdir, format):
     """
@@ -372,7 +329,7 @@ def test_any_bonds(tmpdir, format):
     atoms.bonds = ref_bonds
 
     pdbx_file = File()
-    pdbx.set_structure(pdbx_file, atoms, include_bonds=True)
+    pdbx.set_structure(pdbx_file, atoms)
     file_path = join(tmpdir, f"test.{format}")
     pdbx_file.write(file_path)
 
@@ -431,7 +388,7 @@ def test_setting_empty_structure():
     atoms.coord[:, :] = 0.0
     empty_bonds = struc.BondList(atoms.array_length())
     atoms.bonds = empty_bonds
-    pdbx.set_structure(pdbx.CIFFile(), atoms, include_bonds=True)
+    pdbx.set_structure(pdbx.CIFFile(), atoms)
 
 
 @pytest.mark.parametrize("format", ["cif", "bcif"])

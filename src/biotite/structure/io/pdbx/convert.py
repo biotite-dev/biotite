@@ -873,11 +873,7 @@ def set_structure(
         this parameter is ignored.
         If the file is empty, a new data block will be created.
     include_bonds : bool, optional
-        If set to true and `array` has associated ``bonds`` , the
-        intra-residue bonds will be written into the ``chem_comp_bond``
-        category.
-        Inter-residue bonds will be written into the ``struct_conn``
-        independent of this parameter.
+        DEPRECATED: Has no effect anymore.
     extra_fields : list of str, optional
         List of additional fields from the ``atom_site`` category
         that should be written into the file.
@@ -898,6 +894,13 @@ def set_structure(
     >>> set_structure(file, atom_array)
     >>> file.write(os.path.join(path_to_directory, "structure.cif"))
     """
+    if include_bonds:
+        warnings.warn(
+            "`include_bonds` parameter is deprecated, "
+            "intra-residue are always written, if available",
+            DeprecationWarning,
+        )
+
     _check_non_empty(array)
 
     block = _get_or_create_block(pdbx_file, data_block)
@@ -975,10 +978,9 @@ def set_structure(
         struct_conn = _set_inter_residue_bonds(array, atom_site)
         if struct_conn is not None:
             block["struct_conn"] = struct_conn
-        if include_bonds:
-            chem_comp_bond = _set_intra_residue_bonds(array, atom_site)
-            if chem_comp_bond is not None:
-                block["chem_comp_bond"] = chem_comp_bond
+        chem_comp_bond = _set_intra_residue_bonds(array, atom_site)
+        if chem_comp_bond is not None:
+            block["chem_comp_bond"] = chem_comp_bond
 
     # In case of a single model handle each coordinate
     # simply like a flattened array
@@ -1652,11 +1654,11 @@ def get_assembly(
         If set to true, a :class:`BondList` will be created for the
         resulting :class:`AtomArray` containing the bond information
         from the file.
-        Bonds, whose order could not be determined from the
-        *Chemical Component Dictionary*
-        (e.g. especially inter-residue bonds),
-        have :attr:`BondType.ANY`, since the PDB format itself does
-        not support bond orders.
+        Inter-residue bonds, will be read from the ``struct_conn``
+        category.
+        Intra-residue bonds will be read from the ``chem_comp_bond``, if
+        available, otherwise they will be derived from the Chemical
+        Component Dictionary.
 
     Returns
     -------
@@ -1926,11 +1928,11 @@ def get_unit_cell(
         If set to true, a :class:`BondList` will be created for the
         resulting :class:`AtomArray` containing the bond information
         from the file.
-        Bonds, whose order could not be determined from the
-        *Chemical Component Dictionary*
-        (e.g. especially inter-residue bonds),
-        have :attr:`BondType.ANY`, since the PDB format itself does
-        not support bond orders.
+        Inter-residue bonds, will be read from the ``struct_conn``
+        category.
+        Intra-residue bonds will be read from the ``chem_comp_bond``, if
+        available, otherwise they will be derived from the Chemical
+        Component Dictionary.
 
     Returns
     -------

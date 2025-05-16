@@ -3,7 +3,7 @@ data_7GSA
 _entry.id   7GSA 
 # 
 _audit_conform.dict_name       mmcif_pdbx.dic 
-_audit_conform.dict_version    5.384 
+_audit_conform.dict_version    5.391 
 _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx.dic 
 # 
 loop_
@@ -14,11 +14,14 @@ _database_2.pdbx_DOI
 PDB   7GSA         pdb_00007gsa 10.2210/pdb7gsa/pdb 
 WWPDB D_1001406575 ?            ?                   
 # 
-_pdbx_audit_revision_history.ordinal             1 
-_pdbx_audit_revision_history.data_content_type   'Structure model' 
-_pdbx_audit_revision_history.major_revision      1 
-_pdbx_audit_revision_history.minor_revision      0 
-_pdbx_audit_revision_history.revision_date       2024-01-24 
+loop_
+_pdbx_audit_revision_history.ordinal 
+_pdbx_audit_revision_history.data_content_type 
+_pdbx_audit_revision_history.major_revision 
+_pdbx_audit_revision_history.minor_revision 
+_pdbx_audit_revision_history.revision_date 
+1 'Structure model' 1 0 2024-01-24 
+2 'Structure model' 1 1 2024-04-24 
 # 
 _pdbx_audit_revision_details.ordinal             1 
 _pdbx_audit_revision_details.revision_ordinal    1 
@@ -27,6 +30,35 @@ _pdbx_audit_revision_details.provider            repository
 _pdbx_audit_revision_details.type                'Initial release' 
 _pdbx_audit_revision_details.description         ? 
 _pdbx_audit_revision_details.details             ? 
+# 
+_pdbx_audit_revision_group.ordinal             1 
+_pdbx_audit_revision_group.revision_ordinal    2 
+_pdbx_audit_revision_group.data_content_type   'Structure model' 
+_pdbx_audit_revision_group.group               'Database references' 
+# 
+loop_
+_pdbx_audit_revision_category.ordinal 
+_pdbx_audit_revision_category.revision_ordinal 
+_pdbx_audit_revision_category.data_content_type 
+_pdbx_audit_revision_category.category 
+1 2 'Structure model' citation        
+2 2 'Structure model' citation_author 
+# 
+loop_
+_pdbx_audit_revision_item.ordinal 
+_pdbx_audit_revision_item.revision_ordinal 
+_pdbx_audit_revision_item.data_content_type 
+_pdbx_audit_revision_item.item 
+1  2 'Structure model' '_citation.country'                 
+2  2 'Structure model' '_citation.journal_abbrev'          
+3  2 'Structure model' '_citation.journal_id_CSD'          
+4  2 'Structure model' '_citation.journal_id_ISSN'         
+5  2 'Structure model' '_citation.pdbx_database_id_DOI'    
+6  2 'Structure model' '_citation.pdbx_database_id_PubMed' 
+7  2 'Structure model' '_citation.title'                   
+8  2 'Structure model' '_citation.year'                    
+9  2 'Structure model' '_citation_author.identifier_ORCID' 
+10 2 'Structure model' '_citation_author.name'             
 # 
 _pdbx_database_status.entry_id                        7GSA 
 _pdbx_database_status.status_code                     REL 
@@ -57,28 +89,30 @@ _audit_author.pdbx_ordinal
 'Keedy, D.A.' 3 
 # 
 _citation.id                        primary 
-_citation.title                     'PanDDA Analysis group deposition' 
-_citation.journal_abbrev            'To Be Published' 
+_citation.title                     
+;An expanded view of ligandability in the allosteric enzyme PTP1B from computational reanalysis of large-scale crystallographic data.
+;
+_citation.journal_abbrev            Biorxiv 
 _citation.journal_volume            ? 
 _citation.page_first                ? 
 _citation.page_last                 ? 
-_citation.year                      ? 
+_citation.year                      2024 
 _citation.journal_id_ASTM           ? 
-_citation.country                   ? 
-_citation.journal_id_ISSN           ? 
-_citation.journal_id_CSD            0353 
+_citation.country                   US 
+_citation.journal_id_ISSN           2692-8205 
+_citation.journal_id_CSD            ? 
 _citation.book_publisher            ? 
-_citation.pdbx_database_id_PubMed   ? 
-_citation.pdbx_database_id_DOI      ? 
+_citation.pdbx_database_id_PubMed   38260327 
+_citation.pdbx_database_id_DOI      10.1101/2024.01.05.574428 
 # 
 loop_
 _citation_author.citation_id 
 _citation_author.name 
 _citation_author.identifier_ORCID 
 _citation_author.ordinal 
-primary 'Mehlman, T.' ? 1 
-primary 'Ginn, H.M.'  ? 2 
-primary 'Keedy, D.A.' ? 3 
+primary 'Mehlman, T.S.' 0000-0002-8896-1628 1 
+primary 'Ginn, H.M.'    0000-0002-7894-4939 2 
+primary 'Keedy, D.A.'   0000-0002-9184-7586 3 
 # 
 loop_
 _entity.id 
