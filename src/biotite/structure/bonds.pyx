@@ -1437,9 +1437,8 @@ _DEFAULT_DISTANCE_RANGE = {
 def connect_via_distances(atoms, dict distance_range=None, bint inter_residue=True,
                           default_bond_type=BondType.ANY, bint periodic=False):
     """
-    connect_via_distances(atoms, distance_range=None, atom_mask=None,
-                          inter_residue=True, default_bond_type=BondType.ANY,
-                          periodic=False)
+    connect_via_distances(atoms, distance_range=None, inter_residue=True,
+                          default_bond_type=BondType.ANY, periodic=False)
 
     Create a :class:`BondList` for a given atom array, based on
     pairwise atom distances.
@@ -1589,7 +1588,7 @@ def connect_via_distances(atoms, dict distance_range=None, bint inter_residue=Tr
 def connect_via_residue_names(atoms, bint inter_residue=True,
                               dict custom_bond_dict=None):
     """
-    connect_via_residue_names(atoms, atom_mask=None, inter_residue=True)
+    connect_via_residue_names(atoms, inter_residue=True, custom_bond_dict=None)
 
     Create a :class:`BondList` for a given atom array (stack), based on
     the deposited bonds for each residue in the RCSB ``components.cif``
