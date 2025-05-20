@@ -511,7 +511,7 @@ class BinaryCIFBlock(_HierarchicalContainer):
 
     def __delitem__(self, key):
         try:
-            return super().__setitem__("_" + key)
+            return super().__delitem__("_" + key)
         except KeyError:
             raise KeyError(key)
 
@@ -581,9 +581,12 @@ class BinaryCIFFile(File, _HierarchicalContainer):
 
     @property
     def block(self):
-        if len(self) != 1:
+        if len(self) == 0:
+            raise ValueError("There are no blocks in the file")
+        elif len(self) > 1:
             raise ValueError("There are multiple blocks in the file")
-        return self[next(iter(self))]
+        else:
+            return self[next(iter(self))]
 
     @staticmethod
     def subcomponent_class():

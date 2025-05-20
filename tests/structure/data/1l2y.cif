@@ -3,7 +3,7 @@ data_1L2Y
 _entry.id   1L2Y 
 # 
 _audit_conform.dict_name       mmcif_pdbx.dic 
-_audit_conform.dict_version    5.371 
+_audit_conform.dict_version    5.392 
 _audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx.dic 
 # 
 loop_
@@ -14,15 +14,72 @@ _database_2.pdbx_DOI
 PDB   1L2Y         pdb_00001l2y 10.2210/pdb1l2y/pdb 
 RCSB  RCSB015598   ?            ?                   
 WWPDB D_1000015598 ?            ?                   
-BMRB  5292         ?            ?                   
+BMRB  5292         ?            10.13018/BMR5292    
 # 
 loop_
-_pdbx_database_related.db_name 
-_pdbx_database_related.db_id 
-_pdbx_database_related.details 
-_pdbx_database_related.content_type 
-BMRB 5292 'BMRB 5292 IS Chemical shifts for TC5b in buffer and buffer containing 30 vol-% TFE.' unspecified 
-PDB  1jrj '1JRJ IS AN Analagous C-terminal structure.'                                          unspecified 
+_pdbx_audit_revision_history.ordinal 
+_pdbx_audit_revision_history.data_content_type 
+_pdbx_audit_revision_history.major_revision 
+_pdbx_audit_revision_history.minor_revision 
+_pdbx_audit_revision_history.revision_date 
+1 'Structure model' 1 0 2002-05-29 
+2 'Structure model' 1 1 2008-04-28 
+3 'Structure model' 1 2 2011-07-13 
+4 'Structure model' 1 3 2020-02-05 
+5 'Structure model' 1 4 2023-06-14 
+6 'Structure model' 1 5 2024-05-08 
+# 
+_pdbx_audit_revision_details.ordinal             1 
+_pdbx_audit_revision_details.revision_ordinal    1 
+_pdbx_audit_revision_details.data_content_type   'Structure model' 
+_pdbx_audit_revision_details.provider            repository 
+_pdbx_audit_revision_details.type                'Initial release' 
+_pdbx_audit_revision_details.description         ? 
+_pdbx_audit_revision_details.details             ? 
+# 
+loop_
+_pdbx_audit_revision_group.ordinal 
+_pdbx_audit_revision_group.revision_ordinal 
+_pdbx_audit_revision_group.data_content_type 
+_pdbx_audit_revision_group.group 
+1  2 'Structure model' 'Version format compliance' 
+2  3 'Structure model' 'Version format compliance' 
+3  4 'Structure model' 'Data collection'           
+4  4 'Structure model' 'Database references'       
+5  4 'Structure model' 'Derived calculations'      
+6  4 'Structure model' Other                       
+7  5 'Structure model' 'Database references'       
+8  5 'Structure model' Other                       
+9  6 'Structure model' 'Data collection'           
+10 6 'Structure model' 'Database references'       
+# 
+loop_
+_pdbx_audit_revision_category.ordinal 
+_pdbx_audit_revision_category.revision_ordinal 
+_pdbx_audit_revision_category.data_content_type 
+_pdbx_audit_revision_category.category 
+1  4 'Structure model' database_2            
+2  4 'Structure model' pdbx_database_status  
+3  4 'Structure model' pdbx_nmr_software     
+4  4 'Structure model' pdbx_struct_assembly  
+5  4 'Structure model' pdbx_struct_oper_list 
+6  5 'Structure model' database_2            
+7  5 'Structure model' pdbx_database_status  
+8  6 'Structure model' chem_comp_atom        
+9  6 'Structure model' chem_comp_bond        
+10 6 'Structure model' database_2            
+# 
+loop_
+_pdbx_audit_revision_item.ordinal 
+_pdbx_audit_revision_item.revision_ordinal 
+_pdbx_audit_revision_item.data_content_type 
+_pdbx_audit_revision_item.item 
+1 4 'Structure model' '_pdbx_database_status.status_code_cs'       
+2 4 'Structure model' '_pdbx_nmr_software.name'                    
+3 5 'Structure model' '_database_2.pdbx_DOI'                       
+4 5 'Structure model' '_database_2.pdbx_database_accession'        
+5 5 'Structure model' '_pdbx_database_status.status_code_nmr_data' 
+6 6 'Structure model' '_database_2.pdbx_DOI'                       
 # 
 _pdbx_database_status.status_code                     REL 
 _pdbx_database_status.entry_id                        1L2Y 
@@ -36,6 +93,14 @@ _pdbx_database_status.status_code_sf                  ?
 _pdbx_database_status.status_code_cs                  REL 
 _pdbx_database_status.methods_development_category    ? 
 _pdbx_database_status.status_code_nmr_data            REL 
+# 
+loop_
+_pdbx_database_related.db_name 
+_pdbx_database_related.db_id 
+_pdbx_database_related.details 
+_pdbx_database_related.content_type 
+BMRB 5292 'BMRB 5292 IS Chemical shifts for TC5b in buffer and buffer containing 30 vol-% TFE.' unspecified 
+PDB  1jrj '1JRJ IS AN Analagous C-terminal structure.'                                          unspecified 
 # 
 loop_
 _audit_author.name 
@@ -125,31 +190,6 @@ _pdbx_entity_src_syn.ncbi_taxonomy_id       ?
 _pdbx_entity_src_syn.details                
 'THE PROTEIN was synthesized using standard FMOC solid-phase synthesis methods on an Applied Biosystems 433A peptide synthesizer.' 
 # 
-_struct_ref.id                         1 
-_struct_ref.entity_id                  1 
-_struct_ref.db_name                    PDB 
-_struct_ref.db_code                    1L2Y 
-_struct_ref.pdbx_db_accession          1L2Y 
-_struct_ref.pdbx_db_isoform            ? 
-_struct_ref.pdbx_seq_one_letter_code   ? 
-_struct_ref.pdbx_align_begin           ? 
-# 
-_struct_ref_seq.align_id                      1 
-_struct_ref_seq.ref_id                        1 
-_struct_ref_seq.pdbx_PDB_id_code              1L2Y 
-_struct_ref_seq.pdbx_strand_id                A 
-_struct_ref_seq.seq_align_beg                 1 
-_struct_ref_seq.pdbx_seq_align_beg_ins_code   ? 
-_struct_ref_seq.seq_align_end                 20 
-_struct_ref_seq.pdbx_seq_align_end_ins_code   ? 
-_struct_ref_seq.pdbx_db_accession             1L2Y 
-_struct_ref_seq.db_align_beg                  1 
-_struct_ref_seq.pdbx_db_align_beg_ins_code    ? 
-_struct_ref_seq.db_align_end                  20 
-_struct_ref_seq.pdbx_db_align_end_ins_code    ? 
-_struct_ref_seq.pdbx_auth_seq_align_beg       1 
-_struct_ref_seq.pdbx_auth_seq_align_end       20 
-# 
 loop_
 _chem_comp.id 
 _chem_comp.type 
@@ -171,65 +211,39 @@ SER 'L-peptide linking' y SERINE          ? 'C3 H7 N O3'     105.093
 TRP 'L-peptide linking' y TRYPTOPHAN      ? 'C11 H12 N2 O2'  204.225 
 TYR 'L-peptide linking' y TYROSINE        ? 'C9 H11 N O3'    181.189 
 # 
-_pdbx_nmr_exptl.experiment_id   1 
-_pdbx_nmr_exptl.solution_id     1 
-_pdbx_nmr_exptl.conditions_id   1 
-_pdbx_nmr_exptl.type            '2D NOESY' 
-# 
-_pdbx_nmr_exptl_sample_conditions.conditions_id       1 
-_pdbx_nmr_exptl_sample_conditions.temperature         282 
-_pdbx_nmr_exptl_sample_conditions.pressure            ambient 
-_pdbx_nmr_exptl_sample_conditions.pH                  7 
-_pdbx_nmr_exptl_sample_conditions.ionic_strength      ? 
-_pdbx_nmr_exptl_sample_conditions.pressure_units      ? 
-_pdbx_nmr_exptl_sample_conditions.temperature_units   K 
-# 
-_pdbx_nmr_sample_details.solution_id      1 
-_pdbx_nmr_sample_details.contents         '1.0-1.8 mM TC5b' 
-_pdbx_nmr_sample_details.solvent_system   '90% H2O/10% D2O' 
-# 
-_pdbx_nmr_spectrometer.spectrometer_id   1 
-_pdbx_nmr_spectrometer.type              ? 
-_pdbx_nmr_spectrometer.manufacturer      Bruker 
-_pdbx_nmr_spectrometer.model             DRX 
-_pdbx_nmr_spectrometer.field_strength    500 
-# 
-_pdbx_nmr_refine.entry_id           1L2Y 
-_pdbx_nmr_refine.method             'Simulated annealing from random structures followed by steepest descent minimization' 
-_pdbx_nmr_refine.details            
-'169 NOE distance constraints were employed.  CNS was employed for S.A., followed by minimization using the SANDER module of AMBER.' 
-_pdbx_nmr_refine.software_ordinal   1 
-# 
-_pdbx_nmr_details.entry_id   1L2Y 
-_pdbx_nmr_details.text       'This structure was determined using standard 2D homonuclear techniques.' 
-# 
-_pdbx_nmr_ensemble.entry_id                                      1L2Y 
-_pdbx_nmr_ensemble.conformers_calculated_total_number            50 
-_pdbx_nmr_ensemble.conformers_submitted_total_number             38 
-_pdbx_nmr_ensemble.conformer_selection_criteria                  
-'structures with acceptable covalent geometry, structures with the least restraint violations' 
-_pdbx_nmr_ensemble.average_constraints_per_residue               ? 
-_pdbx_nmr_ensemble.average_constraint_violations_per_residue     ? 
-_pdbx_nmr_ensemble.maximum_distance_constraint_violation         ? 
-_pdbx_nmr_ensemble.average_distance_constraint_violation         ? 
-_pdbx_nmr_ensemble.maximum_upper_distance_constraint_violation   ? 
-_pdbx_nmr_ensemble.maximum_lower_distance_constraint_violation   ? 
-_pdbx_nmr_ensemble.distance_constraint_violation_method          ? 
-_pdbx_nmr_ensemble.maximum_torsion_angle_constraint_violation    ? 
-_pdbx_nmr_ensemble.average_torsion_angle_constraint_violation    ? 
-_pdbx_nmr_ensemble.torsion_angle_constraint_violation_method     ? 
-# 
 loop_
-_pdbx_nmr_software.name 
-_pdbx_nmr_software.version 
-_pdbx_nmr_software.classification 
-_pdbx_nmr_software.authors 
-_pdbx_nmr_software.ordinal 
-XwinNMR 2.6 collection           Bruker  1 
-Felix   95  processing           MSI     2 
-CNS     1.0 'structure solution' Brunger 3 
-Amber   6.0 'structure solution' Kollman 4 
-Amber   6.0 refinement           Kollman 5 
+_pdbx_poly_seq_scheme.asym_id 
+_pdbx_poly_seq_scheme.entity_id 
+_pdbx_poly_seq_scheme.seq_id 
+_pdbx_poly_seq_scheme.mon_id 
+_pdbx_poly_seq_scheme.ndb_seq_num 
+_pdbx_poly_seq_scheme.pdb_seq_num 
+_pdbx_poly_seq_scheme.auth_seq_num 
+_pdbx_poly_seq_scheme.pdb_mon_id 
+_pdbx_poly_seq_scheme.auth_mon_id 
+_pdbx_poly_seq_scheme.pdb_strand_id 
+_pdbx_poly_seq_scheme.pdb_ins_code 
+_pdbx_poly_seq_scheme.hetero 
+A 1 1  ASN 1  1  1  ASN ASN A . n 
+A 1 2  LEU 2  2  2  LEU LEU A . n 
+A 1 3  TYR 3  3  3  TYR TYR A . n 
+A 1 4  ILE 4  4  4  ILE ILE A . n 
+A 1 5  GLN 5  5  5  GLN GLN A . n 
+A 1 6  TRP 6  6  6  TRP TRP A . n 
+A 1 7  LEU 7  7  7  LEU LEU A . n 
+A 1 8  LYS 8  8  8  LYS LYS A . n 
+A 1 9  ASP 9  9  9  ASP ASP A . n 
+A 1 10 GLY 10 10 10 GLY GLY A . n 
+A 1 11 GLY 11 11 11 GLY GLY A . n 
+A 1 12 PRO 12 12 12 PRO PRO A . n 
+A 1 13 SER 13 13 13 SER SER A . n 
+A 1 14 SER 14 14 14 SER SER A . n 
+A 1 15 GLY 15 15 15 GLY GLY A . n 
+A 1 16 ARG 16 16 16 ARG ARG A . n 
+A 1 17 PRO 17 17 17 PRO PRO A . n 
+A 1 18 PRO 18 18 18 PRO PRO A . n 
+A 1 19 PRO 19 19 19 PRO PRO A . n 
+A 1 20 SER 20 20 20 SER SER A . n 
 # 
 _exptl.entry_id          1L2Y 
 _exptl.method            'SOLUTION NMR' 
@@ -257,6 +271,20 @@ _diffrn_radiation_wavelength.id           1
 _diffrn_radiation_wavelength.wavelength   . 
 _diffrn_radiation_wavelength.wt           1.0 
 # 
+_database_PDB_matrix.entry_id          1L2Y 
+_database_PDB_matrix.origx[1][1]       1.000000 
+_database_PDB_matrix.origx[1][2]       0.000000 
+_database_PDB_matrix.origx[1][3]       0.000000 
+_database_PDB_matrix.origx[2][1]       0.000000 
+_database_PDB_matrix.origx[2][2]       1.000000 
+_database_PDB_matrix.origx[2][3]       0.000000 
+_database_PDB_matrix.origx[3][1]       0.000000 
+_database_PDB_matrix.origx[3][2]       0.000000 
+_database_PDB_matrix.origx[3][3]       1.000000 
+_database_PDB_matrix.origx_vector[1]   0.00000 
+_database_PDB_matrix.origx_vector[2]   0.00000 
+_database_PDB_matrix.origx_vector[3]   0.00000 
+# 
 _struct.entry_id                  1L2Y 
 _struct.title                     'NMR Structure of Trp-Cage Miniprotein Construct TC5b' 
 _struct.pdbx_model_details        ? 
@@ -272,6 +300,58 @@ _struct_asym.pdbx_blank_PDB_chainid_flag   N
 _struct_asym.pdbx_modified                 N 
 _struct_asym.entity_id                     1 
 _struct_asym.details                       ? 
+# 
+_struct_ref.id                         1 
+_struct_ref.entity_id                  1 
+_struct_ref.db_name                    PDB 
+_struct_ref.db_code                    1L2Y 
+_struct_ref.pdbx_db_accession          1L2Y 
+_struct_ref.pdbx_db_isoform            ? 
+_struct_ref.pdbx_seq_one_letter_code   ? 
+_struct_ref.pdbx_align_begin           ? 
+# 
+_struct_ref_seq.align_id                      1 
+_struct_ref_seq.ref_id                        1 
+_struct_ref_seq.pdbx_PDB_id_code              1L2Y 
+_struct_ref_seq.pdbx_strand_id                A 
+_struct_ref_seq.seq_align_beg                 1 
+_struct_ref_seq.pdbx_seq_align_beg_ins_code   ? 
+_struct_ref_seq.seq_align_end                 20 
+_struct_ref_seq.pdbx_seq_align_end_ins_code   ? 
+_struct_ref_seq.pdbx_db_accession             1L2Y 
+_struct_ref_seq.db_align_beg                  1 
+_struct_ref_seq.pdbx_db_align_beg_ins_code    ? 
+_struct_ref_seq.db_align_end                  20 
+_struct_ref_seq.pdbx_db_align_end_ins_code    ? 
+_struct_ref_seq.pdbx_auth_seq_align_beg       1 
+_struct_ref_seq.pdbx_auth_seq_align_end       20 
+# 
+_pdbx_struct_assembly.id                   1 
+_pdbx_struct_assembly.details              author_defined_assembly 
+_pdbx_struct_assembly.method_details       ? 
+_pdbx_struct_assembly.oligomeric_details   monomeric 
+_pdbx_struct_assembly.oligomeric_count     1 
+# 
+_pdbx_struct_assembly_gen.assembly_id       1 
+_pdbx_struct_assembly_gen.oper_expression   1 
+_pdbx_struct_assembly_gen.asym_id_list      A 
+# 
+_pdbx_struct_oper_list.id                   1 
+_pdbx_struct_oper_list.type                 'identity operation' 
+_pdbx_struct_oper_list.name                 1_555 
+_pdbx_struct_oper_list.symmetry_operation   ? 
+_pdbx_struct_oper_list.matrix[1][1]         1.0000000000 
+_pdbx_struct_oper_list.matrix[1][2]         0.0000000000 
+_pdbx_struct_oper_list.matrix[1][3]         0.0000000000 
+_pdbx_struct_oper_list.vector[1]            0.0000000000 
+_pdbx_struct_oper_list.matrix[2][1]         0.0000000000 
+_pdbx_struct_oper_list.matrix[2][2]         1.0000000000 
+_pdbx_struct_oper_list.matrix[2][3]         0.0000000000 
+_pdbx_struct_oper_list.vector[2]            0.0000000000 
+_pdbx_struct_oper_list.matrix[3][1]         0.0000000000 
+_pdbx_struct_oper_list.matrix[3][2]         0.0000000000 
+_pdbx_struct_oper_list.matrix[3][3]         1.0000000000 
+_pdbx_struct_oper_list.vector[3]            0.0000000000 
 # 
 loop_
 _struct_conf.conf_type_id 
@@ -301,19 +381,651 @@ _struct_conf_type.id          HELX_P
 _struct_conf_type.criteria    ? 
 _struct_conf_type.reference   ? 
 # 
-_database_PDB_matrix.entry_id          1L2Y 
-_database_PDB_matrix.origx[1][1]       1.000000 
-_database_PDB_matrix.origx[1][2]       0.000000 
-_database_PDB_matrix.origx[1][3]       0.000000 
-_database_PDB_matrix.origx[2][1]       0.000000 
-_database_PDB_matrix.origx[2][2]       1.000000 
-_database_PDB_matrix.origx[2][3]       0.000000 
-_database_PDB_matrix.origx[3][1]       0.000000 
-_database_PDB_matrix.origx[3][2]       0.000000 
-_database_PDB_matrix.origx[3][3]       1.000000 
-_database_PDB_matrix.origx_vector[1]   0.00000 
-_database_PDB_matrix.origx_vector[2]   0.00000 
-_database_PDB_matrix.origx_vector[3]   0.00000 
+loop_
+_pdbx_validate_close_contact.id 
+_pdbx_validate_close_contact.PDB_model_num 
+_pdbx_validate_close_contact.auth_atom_id_1 
+_pdbx_validate_close_contact.auth_asym_id_1 
+_pdbx_validate_close_contact.auth_comp_id_1 
+_pdbx_validate_close_contact.auth_seq_id_1 
+_pdbx_validate_close_contact.PDB_ins_code_1 
+_pdbx_validate_close_contact.label_alt_id_1 
+_pdbx_validate_close_contact.auth_atom_id_2 
+_pdbx_validate_close_contact.auth_asym_id_2 
+_pdbx_validate_close_contact.auth_comp_id_2 
+_pdbx_validate_close_contact.auth_seq_id_2 
+_pdbx_validate_close_contact.PDB_ins_code_2 
+_pdbx_validate_close_contact.label_alt_id_2 
+_pdbx_validate_close_contact.dist 
+1  1  O   A ASP 9  ? ? HG A SER 14 ? ? 1.55 
+2  2  O   A ASP 9  ? ? HG A SER 14 ? ? 1.57 
+3  3  O   A ASP 9  ? ? HG A SER 14 ? ? 1.50 
+4  5  O   A GLY 11 ? ? HG A SER 14 ? ? 1.56 
+5  6  O   A GLY 11 ? ? HG A SER 14 ? ? 1.55 
+6  7  O   A GLY 11 ? ? HG A SER 14 ? ? 1.51 
+7  8  O   A GLY 11 ? ? HG A SER 14 ? ? 1.58 
+8  10 O   A GLY 11 ? ? HG A SER 14 ? ? 1.56 
+9  11 OD1 A ASP 9  ? ? HG A SER 14 ? ? 1.33 
+10 13 O   A ASP 9  ? ? HG A SER 14 ? ? 1.56 
+11 15 O   A GLY 11 ? ? HG A SER 14 ? ? 1.57 
+12 15 O   A GLY 10 ? ? HG A SER 13 ? ? 1.60 
+13 16 O   A GLY 11 ? ? HG A SER 14 ? ? 1.55 
+14 19 OD1 A ASP 9  ? ? HG A SER 14 ? ? 1.36 
+15 21 O   A ASP 9  ? ? HG A SER 14 ? ? 1.52 
+16 23 OD1 A ASP 9  ? ? HG A SER 14 ? ? 1.39 
+17 24 O   A ASP 9  ? ? HG A SER 14 ? ? 1.53 
+18 24 O   A GLY 10 ? ? HG A SER 13 ? ? 1.55 
+19 25 OD2 A ASP 9  ? ? HG A SER 14 ? ? 1.31 
+20 26 OD1 A ASP 9  ? ? HG A SER 14 ? ? 1.36 
+21 27 O   A ASP 9  ? ? HG A SER 14 ? ? 1.53 
+22 28 O   A ASP 9  ? ? HG A SER 14 ? ? 1.58 
+23 29 O   A GLY 11 ? ? HG A SER 14 ? ? 1.52 
+24 31 O   A GLY 10 ? ? HG A SER 13 ? ? 1.58 
+25 32 O   A GLY 11 ? ? HG A SER 14 ? ? 1.54 
+26 37 O   A GLY 11 ? ? HG A SER 14 ? ? 1.53 
+27 38 O   A GLY 11 ? ? HG A SER 14 ? ? 1.55 
+# 
+loop_
+_pdbx_validate_rmsd_angle.id 
+_pdbx_validate_rmsd_angle.PDB_model_num 
+_pdbx_validate_rmsd_angle.auth_atom_id_1 
+_pdbx_validate_rmsd_angle.auth_asym_id_1 
+_pdbx_validate_rmsd_angle.auth_comp_id_1 
+_pdbx_validate_rmsd_angle.auth_seq_id_1 
+_pdbx_validate_rmsd_angle.PDB_ins_code_1 
+_pdbx_validate_rmsd_angle.label_alt_id_1 
+_pdbx_validate_rmsd_angle.auth_atom_id_2 
+_pdbx_validate_rmsd_angle.auth_asym_id_2 
+_pdbx_validate_rmsd_angle.auth_comp_id_2 
+_pdbx_validate_rmsd_angle.auth_seq_id_2 
+_pdbx_validate_rmsd_angle.PDB_ins_code_2 
+_pdbx_validate_rmsd_angle.label_alt_id_2 
+_pdbx_validate_rmsd_angle.auth_atom_id_3 
+_pdbx_validate_rmsd_angle.auth_asym_id_3 
+_pdbx_validate_rmsd_angle.auth_comp_id_3 
+_pdbx_validate_rmsd_angle.auth_seq_id_3 
+_pdbx_validate_rmsd_angle.PDB_ins_code_3 
+_pdbx_validate_rmsd_angle.label_alt_id_3 
+_pdbx_validate_rmsd_angle.angle_value 
+_pdbx_validate_rmsd_angle.angle_target_value 
+_pdbx_validate_rmsd_angle.angle_deviation 
+_pdbx_validate_rmsd_angle.angle_standard_deviation 
+_pdbx_validate_rmsd_angle.linker_flag 
+1 2  NE A ARG 16 ? ? CZ A ARG 16 ? ? NH1 A ARG 16 ? ? 123.86 120.30 3.56 0.50 N 
+2 13 NE A ARG 16 ? ? CZ A ARG 16 ? ? NH1 A ARG 16 ? ? 124.98 120.30 4.68 0.50 N 
+# 
+loop_
+_pdbx_validate_torsion.id 
+_pdbx_validate_torsion.PDB_model_num 
+_pdbx_validate_torsion.auth_comp_id 
+_pdbx_validate_torsion.auth_asym_id 
+_pdbx_validate_torsion.auth_seq_id 
+_pdbx_validate_torsion.PDB_ins_code 
+_pdbx_validate_torsion.label_alt_id 
+_pdbx_validate_torsion.phi 
+_pdbx_validate_torsion.psi 
+1  5  LEU A 2  ? ? 72.95  -34.83 
+2  6  LEU A 2  ? ? 63.45  -33.93 
+3  9  LEU A 2  ? ? 57.13  -18.34 
+4  13 LEU A 2  ? ? 66.32  -33.72 
+5  18 LEU A 2  ? ? 60.50  -3.11  
+6  19 LEU A 2  ? ? 58.98  -1.16  
+7  20 LEU A 2  ? ? 68.39  -32.96 
+8  23 LEU A 2  ? ? 63.92  -47.12 
+9  28 LEU A 2  ? ? 61.26  -2.46  
+10 29 LEU A 2  ? ? 66.43  -42.02 
+11 34 PRO A 12 ? ? -66.86 11.15  
+# 
+_pdbx_nmr_ensemble.entry_id                                      1L2Y 
+_pdbx_nmr_ensemble.conformers_calculated_total_number            50 
+_pdbx_nmr_ensemble.conformers_submitted_total_number             38 
+_pdbx_nmr_ensemble.conformer_selection_criteria                  
+'structures with acceptable covalent geometry, structures with the least restraint violations' 
+_pdbx_nmr_ensemble.average_constraints_per_residue               ? 
+_pdbx_nmr_ensemble.average_constraint_violations_per_residue     ? 
+_pdbx_nmr_ensemble.maximum_distance_constraint_violation         ? 
+_pdbx_nmr_ensemble.average_distance_constraint_violation         ? 
+_pdbx_nmr_ensemble.maximum_upper_distance_constraint_violation   ? 
+_pdbx_nmr_ensemble.maximum_lower_distance_constraint_violation   ? 
+_pdbx_nmr_ensemble.distance_constraint_violation_method          ? 
+_pdbx_nmr_ensemble.maximum_torsion_angle_constraint_violation    ? 
+_pdbx_nmr_ensemble.average_torsion_angle_constraint_violation    ? 
+_pdbx_nmr_ensemble.torsion_angle_constraint_violation_method     ? 
+# 
+_pdbx_nmr_sample_details.solution_id      1 
+_pdbx_nmr_sample_details.contents         '1.0-1.8 mM TC5b' 
+_pdbx_nmr_sample_details.solvent_system   '90% H2O/10% D2O' 
+# 
+_pdbx_nmr_exptl_sample_conditions.conditions_id       1 
+_pdbx_nmr_exptl_sample_conditions.temperature         282 
+_pdbx_nmr_exptl_sample_conditions.pressure            ambient 
+_pdbx_nmr_exptl_sample_conditions.pH                  7 
+_pdbx_nmr_exptl_sample_conditions.ionic_strength      ? 
+_pdbx_nmr_exptl_sample_conditions.pressure_units      ? 
+_pdbx_nmr_exptl_sample_conditions.temperature_units   K 
+# 
+_pdbx_nmr_exptl.experiment_id   1 
+_pdbx_nmr_exptl.solution_id     1 
+_pdbx_nmr_exptl.conditions_id   1 
+_pdbx_nmr_exptl.type            '2D NOESY' 
+# 
+_pdbx_nmr_details.entry_id   1L2Y 
+_pdbx_nmr_details.text       'This structure was determined using standard 2D homonuclear techniques.' 
+# 
+_pdbx_nmr_refine.entry_id           1L2Y 
+_pdbx_nmr_refine.method             'Simulated annealing from random structures followed by steepest descent minimization' 
+_pdbx_nmr_refine.details            
+'169 NOE distance constraints were employed.  CNS was employed for S.A., followed by minimization using the SANDER module of AMBER.' 
+_pdbx_nmr_refine.software_ordinal   1 
+# 
+loop_
+_pdbx_nmr_software.name 
+_pdbx_nmr_software.version 
+_pdbx_nmr_software.classification 
+_pdbx_nmr_software.authors 
+_pdbx_nmr_software.ordinal 
+XwinNMR 2.6 collection           Bruker  1 
+Felix   95  processing           MSI     2 
+CNS     1.0 'structure solution' Brunger 3 
+Amber   6.0 'structure solution' Kollman 4 
+Amber   6.0 refinement           Kollman 5 
+# 
+loop_
+_chem_comp_atom.comp_id 
+_chem_comp_atom.atom_id 
+_chem_comp_atom.type_symbol 
+_chem_comp_atom.pdbx_aromatic_flag 
+_chem_comp_atom.pdbx_stereo_config 
+_chem_comp_atom.pdbx_ordinal 
+ARG N    N N N 1   
+ARG CA   C N S 2   
+ARG C    C N N 3   
+ARG O    O N N 4   
+ARG CB   C N N 5   
+ARG CG   C N N 6   
+ARG CD   C N N 7   
+ARG NE   N N N 8   
+ARG CZ   C N N 9   
+ARG NH1  N N N 10  
+ARG NH2  N N N 11  
+ARG OXT  O N N 12  
+ARG H    H N N 13  
+ARG H2   H N N 14  
+ARG HA   H N N 15  
+ARG HB2  H N N 16  
+ARG HB3  H N N 17  
+ARG HG2  H N N 18  
+ARG HG3  H N N 19  
+ARG HD2  H N N 20  
+ARG HD3  H N N 21  
+ARG HE   H N N 22  
+ARG HH11 H N N 23  
+ARG HH12 H N N 24  
+ARG HH21 H N N 25  
+ARG HH22 H N N 26  
+ARG HXT  H N N 27  
+ASN N    N N N 28  
+ASN CA   C N S 29  
+ASN C    C N N 30  
+ASN O    O N N 31  
+ASN CB   C N N 32  
+ASN CG   C N N 33  
+ASN OD1  O N N 34  
+ASN ND2  N N N 35  
+ASN OXT  O N N 36  
+ASN H    H N N 37  
+ASN H2   H N N 38  
+ASN HA   H N N 39  
+ASN HB2  H N N 40  
+ASN HB3  H N N 41  
+ASN HD21 H N N 42  
+ASN HD22 H N N 43  
+ASN HXT  H N N 44  
+ASP N    N N N 45  
+ASP CA   C N S 46  
+ASP C    C N N 47  
+ASP O    O N N 48  
+ASP CB   C N N 49  
+ASP CG   C N N 50  
+ASP OD1  O N N 51  
+ASP OD2  O N N 52  
+ASP OXT  O N N 53  
+ASP H    H N N 54  
+ASP H2   H N N 55  
+ASP HA   H N N 56  
+ASP HB2  H N N 57  
+ASP HB3  H N N 58  
+ASP HD2  H N N 59  
+ASP HXT  H N N 60  
+GLN N    N N N 61  
+GLN CA   C N S 62  
+GLN C    C N N 63  
+GLN O    O N N 64  
+GLN CB   C N N 65  
+GLN CG   C N N 66  
+GLN CD   C N N 67  
+GLN OE1  O N N 68  
+GLN NE2  N N N 69  
+GLN OXT  O N N 70  
+GLN H    H N N 71  
+GLN H2   H N N 72  
+GLN HA   H N N 73  
+GLN HB2  H N N 74  
+GLN HB3  H N N 75  
+GLN HG2  H N N 76  
+GLN HG3  H N N 77  
+GLN HE21 H N N 78  
+GLN HE22 H N N 79  
+GLN HXT  H N N 80  
+GLY N    N N N 81  
+GLY CA   C N N 82  
+GLY C    C N N 83  
+GLY O    O N N 84  
+GLY OXT  O N N 85  
+GLY H    H N N 86  
+GLY H2   H N N 87  
+GLY HA2  H N N 88  
+GLY HA3  H N N 89  
+GLY HXT  H N N 90  
+ILE N    N N N 91  
+ILE CA   C N S 92  
+ILE C    C N N 93  
+ILE O    O N N 94  
+ILE CB   C N S 95  
+ILE CG1  C N N 96  
+ILE CG2  C N N 97  
+ILE CD1  C N N 98  
+ILE OXT  O N N 99  
+ILE H    H N N 100 
+ILE H2   H N N 101 
+ILE HA   H N N 102 
+ILE HB   H N N 103 
+ILE HG12 H N N 104 
+ILE HG13 H N N 105 
+ILE HG21 H N N 106 
+ILE HG22 H N N 107 
+ILE HG23 H N N 108 
+ILE HD11 H N N 109 
+ILE HD12 H N N 110 
+ILE HD13 H N N 111 
+ILE HXT  H N N 112 
+LEU N    N N N 113 
+LEU CA   C N S 114 
+LEU C    C N N 115 
+LEU O    O N N 116 
+LEU CB   C N N 117 
+LEU CG   C N N 118 
+LEU CD1  C N N 119 
+LEU CD2  C N N 120 
+LEU OXT  O N N 121 
+LEU H    H N N 122 
+LEU H2   H N N 123 
+LEU HA   H N N 124 
+LEU HB2  H N N 125 
+LEU HB3  H N N 126 
+LEU HG   H N N 127 
+LEU HD11 H N N 128 
+LEU HD12 H N N 129 
+LEU HD13 H N N 130 
+LEU HD21 H N N 131 
+LEU HD22 H N N 132 
+LEU HD23 H N N 133 
+LEU HXT  H N N 134 
+LYS N    N N N 135 
+LYS CA   C N S 136 
+LYS C    C N N 137 
+LYS O    O N N 138 
+LYS CB   C N N 139 
+LYS CG   C N N 140 
+LYS CD   C N N 141 
+LYS CE   C N N 142 
+LYS NZ   N N N 143 
+LYS OXT  O N N 144 
+LYS H    H N N 145 
+LYS H2   H N N 146 
+LYS HA   H N N 147 
+LYS HB2  H N N 148 
+LYS HB3  H N N 149 
+LYS HG2  H N N 150 
+LYS HG3  H N N 151 
+LYS HD2  H N N 152 
+LYS HD3  H N N 153 
+LYS HE2  H N N 154 
+LYS HE3  H N N 155 
+LYS HZ1  H N N 156 
+LYS HZ2  H N N 157 
+LYS HZ3  H N N 158 
+LYS HXT  H N N 159 
+PRO N    N N N 160 
+PRO CA   C N S 161 
+PRO C    C N N 162 
+PRO O    O N N 163 
+PRO CB   C N N 164 
+PRO CG   C N N 165 
+PRO CD   C N N 166 
+PRO OXT  O N N 167 
+PRO H    H N N 168 
+PRO HA   H N N 169 
+PRO HB2  H N N 170 
+PRO HB3  H N N 171 
+PRO HG2  H N N 172 
+PRO HG3  H N N 173 
+PRO HD2  H N N 174 
+PRO HD3  H N N 175 
+PRO HXT  H N N 176 
+SER N    N N N 177 
+SER CA   C N S 178 
+SER C    C N N 179 
+SER O    O N N 180 
+SER CB   C N N 181 
+SER OG   O N N 182 
+SER OXT  O N N 183 
+SER H    H N N 184 
+SER H2   H N N 185 
+SER HA   H N N 186 
+SER HB2  H N N 187 
+SER HB3  H N N 188 
+SER HG   H N N 189 
+SER HXT  H N N 190 
+TRP N    N N N 191 
+TRP CA   C N S 192 
+TRP C    C N N 193 
+TRP O    O N N 194 
+TRP CB   C N N 195 
+TRP CG   C Y N 196 
+TRP CD1  C Y N 197 
+TRP CD2  C Y N 198 
+TRP NE1  N Y N 199 
+TRP CE2  C Y N 200 
+TRP CE3  C Y N 201 
+TRP CZ2  C Y N 202 
+TRP CZ3  C Y N 203 
+TRP CH2  C Y N 204 
+TRP OXT  O N N 205 
+TRP H    H N N 206 
+TRP H2   H N N 207 
+TRP HA   H N N 208 
+TRP HB2  H N N 209 
+TRP HB3  H N N 210 
+TRP HD1  H N N 211 
+TRP HE1  H N N 212 
+TRP HE3  H N N 213 
+TRP HZ2  H N N 214 
+TRP HZ3  H N N 215 
+TRP HH2  H N N 216 
+TRP HXT  H N N 217 
+TYR N    N N N 218 
+TYR CA   C N S 219 
+TYR C    C N N 220 
+TYR O    O N N 221 
+TYR CB   C N N 222 
+TYR CG   C Y N 223 
+TYR CD1  C Y N 224 
+TYR CD2  C Y N 225 
+TYR CE1  C Y N 226 
+TYR CE2  C Y N 227 
+TYR CZ   C Y N 228 
+TYR OH   O N N 229 
+TYR OXT  O N N 230 
+TYR H    H N N 231 
+TYR H2   H N N 232 
+TYR HA   H N N 233 
+TYR HB2  H N N 234 
+TYR HB3  H N N 235 
+TYR HD1  H N N 236 
+TYR HD2  H N N 237 
+TYR HE1  H N N 238 
+TYR HE2  H N N 239 
+TYR HH   H N N 240 
+TYR HXT  H N N 241 
+# 
+loop_
+_chem_comp_bond.comp_id 
+_chem_comp_bond.atom_id_1 
+_chem_comp_bond.atom_id_2 
+_chem_comp_bond.value_order 
+_chem_comp_bond.pdbx_aromatic_flag 
+_chem_comp_bond.pdbx_stereo_config 
+_chem_comp_bond.pdbx_ordinal 
+ARG N   CA   sing N N 1   
+ARG N   H    sing N N 2   
+ARG N   H2   sing N N 3   
+ARG CA  C    sing N N 4   
+ARG CA  CB   sing N N 5   
+ARG CA  HA   sing N N 6   
+ARG C   O    doub N N 7   
+ARG C   OXT  sing N N 8   
+ARG CB  CG   sing N N 9   
+ARG CB  HB2  sing N N 10  
+ARG CB  HB3  sing N N 11  
+ARG CG  CD   sing N N 12  
+ARG CG  HG2  sing N N 13  
+ARG CG  HG3  sing N N 14  
+ARG CD  NE   sing N N 15  
+ARG CD  HD2  sing N N 16  
+ARG CD  HD3  sing N N 17  
+ARG NE  CZ   sing N N 18  
+ARG NE  HE   sing N N 19  
+ARG CZ  NH1  sing N N 20  
+ARG CZ  NH2  doub N N 21  
+ARG NH1 HH11 sing N N 22  
+ARG NH1 HH12 sing N N 23  
+ARG NH2 HH21 sing N N 24  
+ARG NH2 HH22 sing N N 25  
+ARG OXT HXT  sing N N 26  
+ASN N   CA   sing N N 27  
+ASN N   H    sing N N 28  
+ASN N   H2   sing N N 29  
+ASN CA  C    sing N N 30  
+ASN CA  CB   sing N N 31  
+ASN CA  HA   sing N N 32  
+ASN C   O    doub N N 33  
+ASN C   OXT  sing N N 34  
+ASN CB  CG   sing N N 35  
+ASN CB  HB2  sing N N 36  
+ASN CB  HB3  sing N N 37  
+ASN CG  OD1  doub N N 38  
+ASN CG  ND2  sing N N 39  
+ASN ND2 HD21 sing N N 40  
+ASN ND2 HD22 sing N N 41  
+ASN OXT HXT  sing N N 42  
+ASP N   CA   sing N N 43  
+ASP N   H    sing N N 44  
+ASP N   H2   sing N N 45  
+ASP CA  C    sing N N 46  
+ASP CA  CB   sing N N 47  
+ASP CA  HA   sing N N 48  
+ASP C   O    doub N N 49  
+ASP C   OXT  sing N N 50  
+ASP CB  CG   sing N N 51  
+ASP CB  HB2  sing N N 52  
+ASP CB  HB3  sing N N 53  
+ASP CG  OD1  doub N N 54  
+ASP CG  OD2  sing N N 55  
+ASP OD2 HD2  sing N N 56  
+ASP OXT HXT  sing N N 57  
+GLN N   CA   sing N N 58  
+GLN N   H    sing N N 59  
+GLN N   H2   sing N N 60  
+GLN CA  C    sing N N 61  
+GLN CA  CB   sing N N 62  
+GLN CA  HA   sing N N 63  
+GLN C   O    doub N N 64  
+GLN C   OXT  sing N N 65  
+GLN CB  CG   sing N N 66  
+GLN CB  HB2  sing N N 67  
+GLN CB  HB3  sing N N 68  
+GLN CG  CD   sing N N 69  
+GLN CG  HG2  sing N N 70  
+GLN CG  HG3  sing N N 71  
+GLN CD  OE1  doub N N 72  
+GLN CD  NE2  sing N N 73  
+GLN NE2 HE21 sing N N 74  
+GLN NE2 HE22 sing N N 75  
+GLN OXT HXT  sing N N 76  
+GLY N   CA   sing N N 77  
+GLY N   H    sing N N 78  
+GLY N   H2   sing N N 79  
+GLY CA  C    sing N N 80  
+GLY CA  HA2  sing N N 81  
+GLY CA  HA3  sing N N 82  
+GLY C   O    doub N N 83  
+GLY C   OXT  sing N N 84  
+GLY OXT HXT  sing N N 85  
+ILE N   CA   sing N N 86  
+ILE N   H    sing N N 87  
+ILE N   H2   sing N N 88  
+ILE CA  C    sing N N 89  
+ILE CA  CB   sing N N 90  
+ILE CA  HA   sing N N 91  
+ILE C   O    doub N N 92  
+ILE C   OXT  sing N N 93  
+ILE CB  CG1  sing N N 94  
+ILE CB  CG2  sing N N 95  
+ILE CB  HB   sing N N 96  
+ILE CG1 CD1  sing N N 97  
+ILE CG1 HG12 sing N N 98  
+ILE CG1 HG13 sing N N 99  
+ILE CG2 HG21 sing N N 100 
+ILE CG2 HG22 sing N N 101 
+ILE CG2 HG23 sing N N 102 
+ILE CD1 HD11 sing N N 103 
+ILE CD1 HD12 sing N N 104 
+ILE CD1 HD13 sing N N 105 
+ILE OXT HXT  sing N N 106 
+LEU N   CA   sing N N 107 
+LEU N   H    sing N N 108 
+LEU N   H2   sing N N 109 
+LEU CA  C    sing N N 110 
+LEU CA  CB   sing N N 111 
+LEU CA  HA   sing N N 112 
+LEU C   O    doub N N 113 
+LEU C   OXT  sing N N 114 
+LEU CB  CG   sing N N 115 
+LEU CB  HB2  sing N N 116 
+LEU CB  HB3  sing N N 117 
+LEU CG  CD1  sing N N 118 
+LEU CG  CD2  sing N N 119 
+LEU CG  HG   sing N N 120 
+LEU CD1 HD11 sing N N 121 
+LEU CD1 HD12 sing N N 122 
+LEU CD1 HD13 sing N N 123 
+LEU CD2 HD21 sing N N 124 
+LEU CD2 HD22 sing N N 125 
+LEU CD2 HD23 sing N N 126 
+LEU OXT HXT  sing N N 127 
+LYS N   CA   sing N N 128 
+LYS N   H    sing N N 129 
+LYS N   H2   sing N N 130 
+LYS CA  C    sing N N 131 
+LYS CA  CB   sing N N 132 
+LYS CA  HA   sing N N 133 
+LYS C   O    doub N N 134 
+LYS C   OXT  sing N N 135 
+LYS CB  CG   sing N N 136 
+LYS CB  HB2  sing N N 137 
+LYS CB  HB3  sing N N 138 
+LYS CG  CD   sing N N 139 
+LYS CG  HG2  sing N N 140 
+LYS CG  HG3  sing N N 141 
+LYS CD  CE   sing N N 142 
+LYS CD  HD2  sing N N 143 
+LYS CD  HD3  sing N N 144 
+LYS CE  NZ   sing N N 145 
+LYS CE  HE2  sing N N 146 
+LYS CE  HE3  sing N N 147 
+LYS NZ  HZ1  sing N N 148 
+LYS NZ  HZ2  sing N N 149 
+LYS NZ  HZ3  sing N N 150 
+LYS OXT HXT  sing N N 151 
+PRO N   CA   sing N N 152 
+PRO N   CD   sing N N 153 
+PRO N   H    sing N N 154 
+PRO CA  C    sing N N 155 
+PRO CA  CB   sing N N 156 
+PRO CA  HA   sing N N 157 
+PRO C   O    doub N N 158 
+PRO C   OXT  sing N N 159 
+PRO CB  CG   sing N N 160 
+PRO CB  HB2  sing N N 161 
+PRO CB  HB3  sing N N 162 
+PRO CG  CD   sing N N 163 
+PRO CG  HG2  sing N N 164 
+PRO CG  HG3  sing N N 165 
+PRO CD  HD2  sing N N 166 
+PRO CD  HD3  sing N N 167 
+PRO OXT HXT  sing N N 168 
+SER N   CA   sing N N 169 
+SER N   H    sing N N 170 
+SER N   H2   sing N N 171 
+SER CA  C    sing N N 172 
+SER CA  CB   sing N N 173 
+SER CA  HA   sing N N 174 
+SER C   O    doub N N 175 
+SER C   OXT  sing N N 176 
+SER CB  OG   sing N N 177 
+SER CB  HB2  sing N N 178 
+SER CB  HB3  sing N N 179 
+SER OG  HG   sing N N 180 
+SER OXT HXT  sing N N 181 
+TRP N   CA   sing N N 182 
+TRP N   H    sing N N 183 
+TRP N   H2   sing N N 184 
+TRP CA  C    sing N N 185 
+TRP CA  CB   sing N N 186 
+TRP CA  HA   sing N N 187 
+TRP C   O    doub N N 188 
+TRP C   OXT  sing N N 189 
+TRP CB  CG   sing N N 190 
+TRP CB  HB2  sing N N 191 
+TRP CB  HB3  sing N N 192 
+TRP CG  CD1  doub Y N 193 
+TRP CG  CD2  sing Y N 194 
+TRP CD1 NE1  sing Y N 195 
+TRP CD1 HD1  sing N N 196 
+TRP CD2 CE2  doub Y N 197 
+TRP CD2 CE3  sing Y N 198 
+TRP NE1 CE2  sing Y N 199 
+TRP NE1 HE1  sing N N 200 
+TRP CE2 CZ2  sing Y N 201 
+TRP CE3 CZ3  doub Y N 202 
+TRP CE3 HE3  sing N N 203 
+TRP CZ2 CH2  doub Y N 204 
+TRP CZ2 HZ2  sing N N 205 
+TRP CZ3 CH2  sing Y N 206 
+TRP CZ3 HZ3  sing N N 207 
+TRP CH2 HH2  sing N N 208 
+TRP OXT HXT  sing N N 209 
+TYR N   CA   sing N N 210 
+TYR N   H    sing N N 211 
+TYR N   H2   sing N N 212 
+TYR CA  C    sing N N 213 
+TYR CA  CB   sing N N 214 
+TYR CA  HA   sing N N 215 
+TYR C   O    doub N N 216 
+TYR C   OXT  sing N N 217 
+TYR CB  CG   sing N N 218 
+TYR CB  HB2  sing N N 219 
+TYR CB  HB3  sing N N 220 
+TYR CG  CD1  doub Y N 221 
+TYR CG  CD2  sing Y N 222 
+TYR CD1 CE1  sing Y N 223 
+TYR CD1 HD1  sing N N 224 
+TYR CD2 CE2  doub Y N 225 
+TYR CD2 HD2  sing N N 226 
+TYR CE1 CZ   doub Y N 227 
+TYR CE1 HE1  sing N N 228 
+TYR CE2 CZ   sing Y N 229 
+TYR CE2 HE2  sing N N 230 
+TYR CZ  OH   sing N N 231 
+TYR OH  HH   sing N N 232 
+TYR OXT HXT  sing N N 233 
+# 
+_pdbx_nmr_spectrometer.spectrometer_id   1 
+_pdbx_nmr_spectrometer.type              ? 
+_pdbx_nmr_spectrometer.manufacturer      Bruker 
+_pdbx_nmr_spectrometer.model             DRX 
+_pdbx_nmr_spectrometer.field_strength    500 
 # 
 _atom_sites.entry_id                    1L2Y 
 _atom_sites.fract_transf_matrix[1][1]   1.000000 
@@ -11910,218 +12622,4 @@ ATOM 11549 H HA   . SER A 1 20 ? -0.962  9.316   1.705  1.00 0.00 ? 20 SER A HA 
 ATOM 11550 H HB2  . SER A 1 20 ? 0.282   10.819  3.316  1.00 0.00 ? 20 SER A HB2  38 
 ATOM 11551 H HB3  . SER A 1 20 ? 0.461   9.076   3.584  1.00 0.00 ? 20 SER A HB3  38 
 ATOM 11552 H HG   . SER A 1 20 ? 2.347   9.513   2.048  1.00 0.00 ? 20 SER A HG   38 
-# 
-loop_
-_pdbx_poly_seq_scheme.asym_id 
-_pdbx_poly_seq_scheme.entity_id 
-_pdbx_poly_seq_scheme.seq_id 
-_pdbx_poly_seq_scheme.mon_id 
-_pdbx_poly_seq_scheme.ndb_seq_num 
-_pdbx_poly_seq_scheme.pdb_seq_num 
-_pdbx_poly_seq_scheme.auth_seq_num 
-_pdbx_poly_seq_scheme.pdb_mon_id 
-_pdbx_poly_seq_scheme.auth_mon_id 
-_pdbx_poly_seq_scheme.pdb_strand_id 
-_pdbx_poly_seq_scheme.pdb_ins_code 
-_pdbx_poly_seq_scheme.hetero 
-A 1 1  ASN 1  1  1  ASN ASN A . n 
-A 1 2  LEU 2  2  2  LEU LEU A . n 
-A 1 3  TYR 3  3  3  TYR TYR A . n 
-A 1 4  ILE 4  4  4  ILE ILE A . n 
-A 1 5  GLN 5  5  5  GLN GLN A . n 
-A 1 6  TRP 6  6  6  TRP TRP A . n 
-A 1 7  LEU 7  7  7  LEU LEU A . n 
-A 1 8  LYS 8  8  8  LYS LYS A . n 
-A 1 9  ASP 9  9  9  ASP ASP A . n 
-A 1 10 GLY 10 10 10 GLY GLY A . n 
-A 1 11 GLY 11 11 11 GLY GLY A . n 
-A 1 12 PRO 12 12 12 PRO PRO A . n 
-A 1 13 SER 13 13 13 SER SER A . n 
-A 1 14 SER 14 14 14 SER SER A . n 
-A 1 15 GLY 15 15 15 GLY GLY A . n 
-A 1 16 ARG 16 16 16 ARG ARG A . n 
-A 1 17 PRO 17 17 17 PRO PRO A . n 
-A 1 18 PRO 18 18 18 PRO PRO A . n 
-A 1 19 PRO 19 19 19 PRO PRO A . n 
-A 1 20 SER 20 20 20 SER SER A . n 
-# 
-_pdbx_struct_assembly.id                   1 
-_pdbx_struct_assembly.details              author_defined_assembly 
-_pdbx_struct_assembly.method_details       ? 
-_pdbx_struct_assembly.oligomeric_details   monomeric 
-_pdbx_struct_assembly.oligomeric_count     1 
-# 
-_pdbx_struct_assembly_gen.assembly_id       1 
-_pdbx_struct_assembly_gen.oper_expression   1 
-_pdbx_struct_assembly_gen.asym_id_list      A 
-# 
-_pdbx_struct_oper_list.id                   1 
-_pdbx_struct_oper_list.type                 'identity operation' 
-_pdbx_struct_oper_list.name                 1_555 
-_pdbx_struct_oper_list.symmetry_operation   ? 
-_pdbx_struct_oper_list.matrix[1][1]         1.0000000000 
-_pdbx_struct_oper_list.matrix[1][2]         0.0000000000 
-_pdbx_struct_oper_list.matrix[1][3]         0.0000000000 
-_pdbx_struct_oper_list.vector[1]            0.0000000000 
-_pdbx_struct_oper_list.matrix[2][1]         0.0000000000 
-_pdbx_struct_oper_list.matrix[2][2]         1.0000000000 
-_pdbx_struct_oper_list.matrix[2][3]         0.0000000000 
-_pdbx_struct_oper_list.vector[2]            0.0000000000 
-_pdbx_struct_oper_list.matrix[3][1]         0.0000000000 
-_pdbx_struct_oper_list.matrix[3][2]         0.0000000000 
-_pdbx_struct_oper_list.matrix[3][3]         1.0000000000 
-_pdbx_struct_oper_list.vector[3]            0.0000000000 
-# 
-loop_
-_pdbx_audit_revision_history.ordinal 
-_pdbx_audit_revision_history.data_content_type 
-_pdbx_audit_revision_history.major_revision 
-_pdbx_audit_revision_history.minor_revision 
-_pdbx_audit_revision_history.revision_date 
-1 'Structure model' 1 0 2002-05-29 
-2 'Structure model' 1 1 2008-04-28 
-3 'Structure model' 1 2 2011-07-13 
-4 'Structure model' 1 3 2020-02-05 
-5 'Structure model' 1 4 2023-06-14 
-# 
-_pdbx_audit_revision_details.ordinal             1 
-_pdbx_audit_revision_details.revision_ordinal    1 
-_pdbx_audit_revision_details.data_content_type   'Structure model' 
-_pdbx_audit_revision_details.provider            repository 
-_pdbx_audit_revision_details.type                'Initial release' 
-_pdbx_audit_revision_details.description         ? 
-_pdbx_audit_revision_details.details             ? 
-# 
-loop_
-_pdbx_audit_revision_group.ordinal 
-_pdbx_audit_revision_group.revision_ordinal 
-_pdbx_audit_revision_group.data_content_type 
-_pdbx_audit_revision_group.group 
-1 2 'Structure model' 'Version format compliance' 
-2 3 'Structure model' 'Version format compliance' 
-3 4 'Structure model' 'Data collection'           
-4 4 'Structure model' 'Database references'       
-5 4 'Structure model' 'Derived calculations'      
-6 4 'Structure model' Other                       
-7 5 'Structure model' 'Database references'       
-8 5 'Structure model' Other                       
-# 
-loop_
-_pdbx_audit_revision_category.ordinal 
-_pdbx_audit_revision_category.revision_ordinal 
-_pdbx_audit_revision_category.data_content_type 
-_pdbx_audit_revision_category.category 
-1 4 'Structure model' database_2            
-2 4 'Structure model' pdbx_database_status  
-3 4 'Structure model' pdbx_nmr_software     
-4 4 'Structure model' pdbx_struct_assembly  
-5 4 'Structure model' pdbx_struct_oper_list 
-6 5 'Structure model' database_2            
-7 5 'Structure model' pdbx_database_status  
-# 
-loop_
-_pdbx_audit_revision_item.ordinal 
-_pdbx_audit_revision_item.revision_ordinal 
-_pdbx_audit_revision_item.data_content_type 
-_pdbx_audit_revision_item.item 
-1 4 'Structure model' '_pdbx_database_status.status_code_cs'       
-2 4 'Structure model' '_pdbx_nmr_software.name'                    
-3 5 'Structure model' '_database_2.pdbx_DOI'                       
-4 5 'Structure model' '_database_2.pdbx_database_accession'        
-5 5 'Structure model' '_pdbx_database_status.status_code_nmr_data' 
-# 
-loop_
-_pdbx_validate_close_contact.id 
-_pdbx_validate_close_contact.PDB_model_num 
-_pdbx_validate_close_contact.auth_atom_id_1 
-_pdbx_validate_close_contact.auth_asym_id_1 
-_pdbx_validate_close_contact.auth_comp_id_1 
-_pdbx_validate_close_contact.auth_seq_id_1 
-_pdbx_validate_close_contact.PDB_ins_code_1 
-_pdbx_validate_close_contact.label_alt_id_1 
-_pdbx_validate_close_contact.auth_atom_id_2 
-_pdbx_validate_close_contact.auth_asym_id_2 
-_pdbx_validate_close_contact.auth_comp_id_2 
-_pdbx_validate_close_contact.auth_seq_id_2 
-_pdbx_validate_close_contact.PDB_ins_code_2 
-_pdbx_validate_close_contact.label_alt_id_2 
-_pdbx_validate_close_contact.dist 
-1  1  O   A ASP 9  ? ? HG A SER 14 ? ? 1.55 
-2  2  O   A ASP 9  ? ? HG A SER 14 ? ? 1.57 
-3  3  O   A ASP 9  ? ? HG A SER 14 ? ? 1.50 
-4  5  O   A GLY 11 ? ? HG A SER 14 ? ? 1.56 
-5  6  O   A GLY 11 ? ? HG A SER 14 ? ? 1.55 
-6  7  O   A GLY 11 ? ? HG A SER 14 ? ? 1.51 
-7  8  O   A GLY 11 ? ? HG A SER 14 ? ? 1.58 
-8  10 O   A GLY 11 ? ? HG A SER 14 ? ? 1.56 
-9  11 OD1 A ASP 9  ? ? HG A SER 14 ? ? 1.33 
-10 13 O   A ASP 9  ? ? HG A SER 14 ? ? 1.56 
-11 15 O   A GLY 11 ? ? HG A SER 14 ? ? 1.57 
-12 15 O   A GLY 10 ? ? HG A SER 13 ? ? 1.60 
-13 16 O   A GLY 11 ? ? HG A SER 14 ? ? 1.55 
-14 19 OD1 A ASP 9  ? ? HG A SER 14 ? ? 1.36 
-15 21 O   A ASP 9  ? ? HG A SER 14 ? ? 1.52 
-16 23 OD1 A ASP 9  ? ? HG A SER 14 ? ? 1.39 
-17 24 O   A ASP 9  ? ? HG A SER 14 ? ? 1.53 
-18 24 O   A GLY 10 ? ? HG A SER 13 ? ? 1.55 
-19 25 OD2 A ASP 9  ? ? HG A SER 14 ? ? 1.31 
-20 26 OD1 A ASP 9  ? ? HG A SER 14 ? ? 1.36 
-21 27 O   A ASP 9  ? ? HG A SER 14 ? ? 1.53 
-22 28 O   A ASP 9  ? ? HG A SER 14 ? ? 1.58 
-23 29 O   A GLY 11 ? ? HG A SER 14 ? ? 1.52 
-24 31 O   A GLY 10 ? ? HG A SER 13 ? ? 1.58 
-25 32 O   A GLY 11 ? ? HG A SER 14 ? ? 1.54 
-26 37 O   A GLY 11 ? ? HG A SER 14 ? ? 1.53 
-27 38 O   A GLY 11 ? ? HG A SER 14 ? ? 1.55 
-# 
-loop_
-_pdbx_validate_rmsd_angle.id 
-_pdbx_validate_rmsd_angle.PDB_model_num 
-_pdbx_validate_rmsd_angle.auth_atom_id_1 
-_pdbx_validate_rmsd_angle.auth_asym_id_1 
-_pdbx_validate_rmsd_angle.auth_comp_id_1 
-_pdbx_validate_rmsd_angle.auth_seq_id_1 
-_pdbx_validate_rmsd_angle.PDB_ins_code_1 
-_pdbx_validate_rmsd_angle.label_alt_id_1 
-_pdbx_validate_rmsd_angle.auth_atom_id_2 
-_pdbx_validate_rmsd_angle.auth_asym_id_2 
-_pdbx_validate_rmsd_angle.auth_comp_id_2 
-_pdbx_validate_rmsd_angle.auth_seq_id_2 
-_pdbx_validate_rmsd_angle.PDB_ins_code_2 
-_pdbx_validate_rmsd_angle.label_alt_id_2 
-_pdbx_validate_rmsd_angle.auth_atom_id_3 
-_pdbx_validate_rmsd_angle.auth_asym_id_3 
-_pdbx_validate_rmsd_angle.auth_comp_id_3 
-_pdbx_validate_rmsd_angle.auth_seq_id_3 
-_pdbx_validate_rmsd_angle.PDB_ins_code_3 
-_pdbx_validate_rmsd_angle.label_alt_id_3 
-_pdbx_validate_rmsd_angle.angle_value 
-_pdbx_validate_rmsd_angle.angle_target_value 
-_pdbx_validate_rmsd_angle.angle_deviation 
-_pdbx_validate_rmsd_angle.angle_standard_deviation 
-_pdbx_validate_rmsd_angle.linker_flag 
-1 2  NE A ARG 16 ? ? CZ A ARG 16 ? ? NH1 A ARG 16 ? ? 123.86 120.30 3.56 0.50 N 
-2 13 NE A ARG 16 ? ? CZ A ARG 16 ? ? NH1 A ARG 16 ? ? 124.98 120.30 4.68 0.50 N 
-# 
-loop_
-_pdbx_validate_torsion.id 
-_pdbx_validate_torsion.PDB_model_num 
-_pdbx_validate_torsion.auth_comp_id 
-_pdbx_validate_torsion.auth_asym_id 
-_pdbx_validate_torsion.auth_seq_id 
-_pdbx_validate_torsion.PDB_ins_code 
-_pdbx_validate_torsion.label_alt_id 
-_pdbx_validate_torsion.phi 
-_pdbx_validate_torsion.psi 
-1  5  LEU A 2  ? ? 72.95  -34.83 
-2  6  LEU A 2  ? ? 63.45  -33.93 
-3  9  LEU A 2  ? ? 57.13  -18.34 
-4  13 LEU A 2  ? ? 66.32  -33.72 
-5  18 LEU A 2  ? ? 60.50  -3.11  
-6  19 LEU A 2  ? ? 58.98  -1.16  
-7  20 LEU A 2  ? ? 68.39  -32.96 
-8  23 LEU A 2  ? ? 63.92  -47.12 
-9  28 LEU A 2  ? ? 61.26  -2.46  
-10 29 LEU A 2  ? ? 66.43  -42.02 
-11 34 PRO A 12 ? ? -66.86 11.15  
 # 
