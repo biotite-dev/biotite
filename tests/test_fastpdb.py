@@ -195,3 +195,13 @@ def test_inferred_elements(tmp_path):
     atoms_guessed_elements = guessed_pdb_file.get_structure()
 
     assert atoms_guessed_elements.element.tolist() == atoms.element.tolist()
+
+
+def test_non_80_char_columns():
+    with open(DATA_PATH / "1l2y.pdb") as f:
+        lines = list(map(lambda s: s.rstrip(), f.readlines()))
+
+    pdb_file = fastpdb.PDBFile.read(StringIO(str.join("\n", lines)))
+    atoms = pdb_file.get_structure()
+
+    assert atoms is not None
