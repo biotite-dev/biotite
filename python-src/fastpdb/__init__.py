@@ -1,7 +1,7 @@
 __name__ = "fastpdb"
 __author__ = "Patrick Kunzmann"
 __all__ = ["PDBFile"]
-__version__ = "1.3.2"
+__version__ = "1.3.3"
 
 import os
 import warnings
