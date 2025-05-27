@@ -30,7 +30,7 @@ class PDBFile(BiotitePDBFile):
         else:
             if not is_text(file):
                 raise TypeError("A file opened in 'text' mode is required")
-            pdb_file._pdb_file = RustPDBFile(file.read().splitlines())
+            pdb_file._pdb_file = RustPDBFile([s.ljust(80) for s in file.read().splitlines()])
 
         # Synchronize with PDB file representation in Rust
         pdb_file.lines = pdb_file._pdb_file.lines
