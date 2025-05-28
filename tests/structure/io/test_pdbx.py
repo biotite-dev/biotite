@@ -155,6 +155,7 @@ def test_conversion(monkeypatch, tmpdir, format, path, model, find_matches_by_di
     [
         "1aki",  # has no altloc IDs
         "3o5r",  # has altloc IDs
+        "4i39",
     ],
 )
 def test_filter_altloc(pdb_id):
