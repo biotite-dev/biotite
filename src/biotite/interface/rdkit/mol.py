@@ -59,7 +59,7 @@ _STANDARD_ANNOTATIONS = frozenset(
         "charge",
         "b_factor",
         "occupancy",
-        "label_alt_id",
+        "altloc_id",
     }
 )
 
@@ -202,8 +202,8 @@ def to_mol(
             rdkit_atom_res_info.SetOccupancy(atoms.occupancy[i].item())
         if "b_factor" in has_annot:
             rdkit_atom_res_info.SetTempFactor(atoms.b_factor[i].item())
-        if "label_alt_id" in has_annot:
-            rdkit_atom_res_info.SetAltLoc(atoms.label_alt_id[i].item())
+        if "altloc_id" in has_annot:
+            rdkit_atom_res_info.SetAltLoc(atoms.altloc_id[i].item())
         rdkit_atom.SetPDBResidueInfo(rdkit_atom_res_info)
 
         # add extra annotations
@@ -361,7 +361,7 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     atoms.add_annotation("charge", int)
     atoms.add_annotation("b_factor", float)
     atoms.add_annotation("occupancy", float)
-    atoms.add_annotation("label_alt_id", str)
+    atoms.add_annotation("altloc_id", str)
 
     for rdkit_atom in rdkit_atoms:
         _atom_idx = rdkit_atom.GetIdx()
@@ -406,7 +406,7 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
         atoms.res_id[_atom_idx] = residue_info.GetResidueNumber()
         atoms.ins_code[_atom_idx] = residue_info.GetInsertionCode()
         atoms.res_name[_atom_idx] = residue_info.GetResidueName()
-        atoms.label_alt_id[_atom_idx] = residue_info.GetAltLoc()
+        atoms.altloc_id[_atom_idx] = residue_info.GetAltLoc()
         atoms.hetero[_atom_idx] = residue_info.GetIsHeteroAtom()
         atoms.b_factor[_atom_idx] = residue_info.GetTempFactor()
         atoms.occupancy[_atom_idx] = residue_info.GetOccupancy()
