@@ -517,20 +517,82 @@ class BondList(Copyable):
         0 1 SINGLE
         1 2 DOUBLE
         """
-        bond_types = self._bonds[:,2]
         for aromatic_type, non_aromatic_type in [
             (BondType.AROMATIC_SINGLE, BondType.SINGLE),
             (BondType.AROMATIC_DOUBLE, BondType.DOUBLE),
             (BondType.AROMATIC_TRIPLE, BondType.TRIPLE),
             (BondType.AROMATIC, BondType.ANY),
         ]:
-            bond_types[bond_types == aromatic_type] = non_aromatic_type
+            mask = self._bonds[:, 2] == aromatic_type
+            self._bonds[mask, 2] = non_aromatic_type
+
+    def remove_kekulization(self):
+        """
+        Remove the bond order information from aromatic bonds, i.e. convert all
+        aromatic bonds to :attr:`BondType.ANY`.
+
+        Examples
+        --------
+
+        >>> bond_list = BondList(3)
+        >>> bond_list.add_bond(0, 1, BondType.AROMATIC_SINGLE)
+        >>> bond_list.add_bond(1, 2, BondType.AROMATIC_DOUBLE)
+        >>> bond_list.remove_kekulization()
+        >>> for i, j, bond_type in bond_list.as_array():
+        ...     print(i, j, BondType(bond_type).name)
+        0 1 AROMATIC
+        1 2 AROMATIC
+        """
+        kekulized_mask = np.isin(
+            self._bonds[:, 2],
+            (
+                BondType.AROMATIC_SINGLE,
+                BondType.AROMATIC_DOUBLE,
+                BondType.AROMATIC_TRIPLE,
+            ),
+        )
+        self._bonds[kekulized_mask, 2] = BondType.AROMATIC
 
     def remove_bond_order(self):
         """
         Convert all bonds to :attr:`BondType.ANY`.
         """
         self._bonds[:,2] = BondType.ANY
+
+    def convert_bond_type(self, original_bond_type, new_bond_type):
+        """
+        convert_bond_type(original_bond_type, new_bond_type)
+
+        Convert all occurences of a given bond type into another bond type.
+
+        Parameters
+        ----------
+        original_bond_type : BondType or int
+            The bond type to convert.
+        new_bond_type : BondType or int
+            The new bond type.
+
+        Examples
+        --------
+
+        >>> bond_list = BondList(4)
+        >>> bond_list.add_bond(0, 1, BondType.DOUBLE)
+        >>> bond_list.add_bond(1, 2, BondType.COORDINATION)
+        >>> bond_list.add_bond(2, 3, BondType.COORDINATION)
+        >>> for i, j, bond_type in bond_list.as_array():
+        ...     print(i, j, BondType(bond_type).name)
+        0 1 DOUBLE
+        1 2 COORDINATION
+        2 3 COORDINATION
+        >>> bond_list.convert_bond_type(BondType.COORDINATION, BondType.SINGLE)
+        >>> for i, j, bond_type in bond_list.as_array():
+        ...     print(i, j, BondType(bond_type).name)
+        0 1 DOUBLE
+        1 2 SINGLE
+        2 3 SINGLE
+        """
+        mask = self._bonds[:, 2] == original_bond_type
+        self._bonds[mask, 2] = new_bond_type
 
     def get_atom_count(self):
         """
