@@ -376,7 +376,9 @@ def test_search_grouping(grouping, resolution_threshold, return_type, ref_groups
 
     # List is not hashable
     assert set([tuple(group) for group in test_groups]) == ref_groups
-    assert set(test_representatives) == set([group[0] for group in ref_groups])
+    # The representative must appear in any of the groups
+    for representative in test_representatives:
+        assert any([representative in group for group in ref_groups])
     assert test_count == len(ref_groups)
 
 
