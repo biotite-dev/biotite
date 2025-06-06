@@ -47,9 +47,9 @@ def test_to_3di(path):
         pytest.skip("Miscellaneous issues")
 
     pdbx_file = pdbx.BinaryCIFFile.read(path)
-    if np.any(
-        pdbx_file.block["atom_site"]["label_alt_id"].mask.array
-        == pdbx.MaskValue.PRESENT
+    altloc_ids = pdbx_file.block["atom_site"]["label_alt_id"]
+    if altloc_ids.mask is None or np.any(
+        altloc_ids.mask.array == pdbx.MaskValue.PRESENT
     ):
         # There is some inconsistency in how foldseek and Biotite handle altloc IDs
         # -> skip these cases for the sake of simplicity

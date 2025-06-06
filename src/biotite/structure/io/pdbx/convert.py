@@ -775,7 +775,10 @@ def _filter_altloc(array, atom_site, altloc):
     if altloc == "all":
         array.set_annotation("altloc_id", altloc_ids.as_array(str))
         return array, atom_site
-    elif altloc_ids is None or (altloc_ids.mask.array != MaskValue.PRESENT).all():
+    elif altloc_ids is None or (
+        altloc_ids.mask is not None
+        and (altloc_ids.mask.array != MaskValue.PRESENT).all()
+    ):
         # No altlocs in atom_site category
         return array, atom_site
     elif altloc == "occupancy" and occupancy is not None:

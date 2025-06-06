@@ -22,6 +22,7 @@ Test structures
 4P5J: Structure contains a non-canonical nucleotide
 1CRR: Multi-model structure with the first model ID not being 1
 7GSA: Contains 5-character residue name 'A1AA6'
+4I39: Contains altlocs for every atom
 
 Creation
 --------
