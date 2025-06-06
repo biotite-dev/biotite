@@ -936,7 +936,11 @@ class PDBFile(TextFile):
             if transform_start is None:
                 raise InvalidFileError("No 'BIOMT' records found for chosen assembly")
             rotations, translations = _parse_transformations(
-                assembly_lines[transform_start:stop]
+                [
+                    line
+                    for line in assembly_lines[transform_start:stop]
+                    if len(line.strip()) > 0
+                ]
             )
             # Filter affected chains
             sub_structure = structure[
