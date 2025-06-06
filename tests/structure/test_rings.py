@@ -188,3 +188,43 @@ def test_no_adjacent_stacking_interactions():
     interactions = struc.find_stacking_interactions(molecule)
 
     assert len(interactions) == 0
+
+
+def test_find_pi_cation_interactions():
+    """
+    Test π-cation interaction detection between aromatic residues and charged ligands.
+    Uses PDB 3wip known to have pi-cation interactions between tryptophan/tyrosine
+    residues and acetylcholine (ACH) ligand.
+    """
+    pdbx_file = pdbx.CIFFile.read(Path(data_dir("structure")) / "3wip.cif")
+    atoms = pdbx.get_structure(
+        pdbx_file, model=1, include_bonds=True, extra_fields=["charge"]
+    )
+
+    interactions = struc.find_pi_cation_interactions(atoms)
+
+    assert len(interactions) > 0, "No pi-cation interactions found"
+
+    # Assert interactions are between aromatic residues (TRP/TYR) and ACH ligand
+    valid_aromatic_residues = {"TRP", "TYR"}
+    for ring_atom_indices, cation_index in interactions:
+        # Check ring atoms are from aromatic residues
+        ring_residue = atoms.res_name[ring_atom_indices[0]]
+        res_id = atoms.res_id[ring_atom_indices[0]]
+        print(ring_residue)
+        print(res_id)
+        assert ring_residue in valid_aromatic_residues, (
+            f"Found ring interaction with unexpected residue: {ring_residue}"
+        )
+
+        # Check cation is from ACH ligand
+        cation_residue = atoms.res_name[cation_index]
+        assert cation_residue == "ACH", (
+            f"Found cation interaction with unexpected ligand: {cation_residue}"
+        )
+
+        # Verify the cation atom has positive charge
+        cation_charge = atoms.charge[cation_index]
+        assert cation_charge > 0, (
+            f"Cation atom {atoms.atom_name[cation_index]} has non-positive charge: {cation_charge}"
+        )

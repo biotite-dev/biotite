@@ -23,6 +23,7 @@ Test structures
 1CRR: Multi-model structure with the first model ID not being 1
 7GSA: Contains 5-character residue name 'A1AA6'
 4I39: Contains altlocs for every atom
+3WIP: Structure contains a pi-cation interaction between the protein and ligand
 
 Creation
 --------
