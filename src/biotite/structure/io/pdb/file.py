@@ -1193,7 +1193,7 @@ class PDBFile(TextFile):
         conect_lines = [line for line in self.lines if line.startswith("CONECT")]
 
         # Mapping from atom ids to indices in an AtomArray
-        atom_id_to_index = np.zeros(atom_ids[-1] + 1, dtype=int)
+        atom_id_to_index = np.full(atom_ids[-1] + 1, -1, dtype=int)
         try:
             for i, id in enumerate(atom_ids):
                 atom_id_to_index[id] = i
@@ -1202,15 +1202,21 @@ class PDBFile(TextFile):
 
         bonds = []
         for line in conect_lines:
-            center_id = atom_id_to_index[decode_hybrid36(line[6:11])]
+            center_index = atom_id_to_index[decode_hybrid36(line[6:11])]
+            if center_index == -1:
+                # Atom ID is not in the AtomArray (probably removed altloc)
+                continue
             for i in range(11, 31, 5):
                 id_string = line[i : i + 5]
                 try:
-                    id = atom_id_to_index[decode_hybrid36(id_string)]
+                    contact_index = atom_id_to_index[decode_hybrid36(id_string)]
+                    if contact_index == -1:
+                        # Atom ID is not in the AtomArray (probably removed altloc)
+                        continue
                 except ValueError:
                     # String is empty -> no further IDs
                     break
-                bonds.append((center_id, id))
+                bonds.append((center_index, contact_index))
 
         # The length of the 'atom_ids' array
         # is equal to the length of the AtomArray
