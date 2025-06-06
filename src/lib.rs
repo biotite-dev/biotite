@@ -344,16 +344,27 @@ impl PDBFile {
         for line in self.lines.iter() {
             if line.starts_with("CONECT") {
                 // Extract ID of center atom
-                let center_index = *atom_id_to_index.get(&parse_number(&line[6..11])?).unwrap();
-                // Iterate over atom IDs bonded to center atom
-                for i in (11..31).step_by(5) {
-                    match &parse_number(&line[i..i+5]) {
-                        Ok(bonded_id) => bonds.push(
-                            (center_index, *atom_id_to_index.get(bonded_id).unwrap())
-                        ),
-                        // String is empty -> no further IDs
-                        Err(_) => break
-                    };
+                let center_index = atom_id_to_index.get(&parse_number(&line[6..11])?);
+                match center_index {
+                    None => continue,  // Atom ID is not in the AtomArray (probably removed altloc)
+                    Some(center_index) => {
+                        // Iterate over atom IDs bonded to center atom
+                        for i in (11..31).step_by(5) {
+                            match &parse_number(&line[i..i+5]) {
+                                Ok(bonded_id) => {
+                                    let bonded_index = atom_id_to_index.get(bonded_id);
+                                    match bonded_index {
+                                        None => continue,  // Atom ID is not in the AtomArray
+                                        Some(bonded_index) => {
+                                            bonds.push((*center_index, *bonded_index))
+                                        }
+                                    }
+                                },
+                                // String is empty -> no further IDs
+                                Err(_) => break
+                            };
+                        }
+                    }
                 }
             }
         }
