@@ -309,21 +309,17 @@ def find_pi_cation_interactions(
 
     Notes
     -----
-    This function requires the ``charge`` annotation to identify cations.
-    The charge annotation can be added when loading structures with
-    ``extra_fields=["charge"]``.
-
     The conditions for pi-cation interactions are:
-
         - The distance between ring centroid and cation must be within
-          `distance_cutoff`. Open Drug Discovery Toolkit (ODDT) uses 5.0 Å,
-          whereas Protein-Ligand Interaction Fingerprints (ProLIF) uses 4.5 Å.
+          `distance_cutoff`. :footcite:`Wojcikowski2015` uses 5.0 Å,
+          whereas :footcite:`Bouysset2021` uses 4.5 Å.
         - The angle between the ring plane normal and the centroid-cation
           vector must be within `angle_tol` of 0° (perpendicular to plane).
 
     Examples
     --------
-    >>> structure = load_structure("protein_ligand.cif", include_bonds=True, extra_fields=["charge"])
+    >>> from os.path import join
+    >>> structure = load_structure(join(path_to_structures, "3wip.cif"), include_bonds=True, extra_fields=["charge"])
     >>> interactions = find_pi_cation_interactions(structure)
     >>> for ring_indices, cation_index in interactions:
     ...     print(
@@ -339,7 +335,7 @@ def find_pi_cation_interactions(
 
     if atoms.charge is None:
         raise BadStructureError(
-            "Structure must have a 'charge' annotation to identify cations. "
+            "Structure must have a 'charge' annotation to identify cations."
         )
 
     rings = find_aromatic_rings(atoms)
