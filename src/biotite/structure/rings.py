@@ -8,7 +8,12 @@ This module provides functions related to aromatic rings.
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["find_aromatic_rings", "find_stacking_interactions", "PiStacking"]
+__all__ = [
+    "find_aromatic_rings",
+    "find_stacking_interactions",
+    "find_pi_cation_interactions",
+    "PiStacking",
+]
 
 
 from enum import IntEnum
@@ -266,6 +271,117 @@ def find_stacking_interactions(
         )
         for i, (ring_i, ring_j) in enumerate(indices)
     ]
+
+
+def find_pi_cation_interactions(
+    atoms,
+    distance_cutoff=5.0,
+    angle_tol=np.deg2rad(30.0),
+):
+    """
+    Find pi-cation interactions between aromatic rings and cations.
+
+    Parameters
+    ----------
+    atoms : AtomArray
+        The atoms to be searched for pi-cation interactions.
+        Requires an associated :class:`BondList` and ``charge`` annotation.
+    distance_cutoff : float, optional
+        The cutoff distance between ring centroid and cation.
+    angle_tol : float, optional
+        The tolerance for the angle between the ring plane normal
+        and the centroid-cation vector. Perfect pi-cation interaction
+        has 0° angle (perpendicular to ring plane).
+        Given in radians.
+
+    Returns
+    -------
+    interactions : list of tuple(ndarray, int)
+        The pi-cation interactions between aromatic rings and cations.
+        Each element in the list represents one pi-cation interaction.
+        The first element of each tuple represents atom indices of the
+        aromatic ring, the second element is the atom index of the cation.
+
+    See Also
+    --------
+    find_aromatic_rings : Used for finding the aromatic rings in this function.
+    find_stacking_interactions : Find pi-stacking interactions between rings.
+
+    Notes
+    -----
+    The conditions for pi-cation interactions are:
+        - The distance between ring centroid and cation must be within
+          `distance_cutoff`. :footcite:`Wojcikowski2015` uses 5.0 Å,
+          whereas :footcite:`Bouysset2021` uses 4.5 Å.
+        - The angle between the ring plane normal and the centroid-cation
+          vector must be within `angle_tol` of 0° (perpendicular to plane).
+
+    Examples
+    --------
+    >>> from os.path import join
+    >>> structure = load_structure(join(path_to_structures, "3wip.cif"), include_bonds=True, extra_fields=["charge"])
+    >>> interactions = find_pi_cation_interactions(structure)
+    >>> for ring_indices, cation_index in interactions:
+    ...     print(
+    ...         structure.res_name[ring_indices[0]],
+    ...         structure.res_name[cation_index]
+    ...     )
+    TYR ACH
+    TRP ACH
+    """
+    if atoms.bonds is None:
+        raise BadStructureError("Structure must have an associated BondList")
+
+    if atoms.charge is None:
+        raise BadStructureError(
+            "Structure must have a 'charge' annotation to identify cations."
+        )
+
+    rings = find_aromatic_rings(atoms)
+    if len(rings) == 0:
+        return []
+
+    cation_mask = atoms.charge > 0
+    cation_indices = np.where(cation_mask)[0]
+
+    if len(cation_indices) == 0:
+        return []
+
+    # Calculate ring centroids and normals
+    ring_centroids = np.array(
+        [atoms.coord[atom_indices].mean(axis=0) for atom_indices in rings]
+    )
+    ring_normals = np.array(
+        [_get_ring_normal(atoms.coord[atom_indices]) for atom_indices in rings]
+    )
+
+    cation_coords = atoms.coord[cation_indices]
+
+    # Create an index array that contains the Cartesian product of all rings and cations
+    indices = np.stack(
+        [
+            np.repeat(np.arange(len(rings)), len(cation_indices)),
+            np.tile(np.arange(len(cation_indices)), len(rings)),
+        ],
+        axis=-1,
+    )
+
+    ## Condition 1: Ring centroids and cations are close enough to each other
+    diff = displacement(ring_centroids[indices[:, 0]], cation_coords[indices[:, 1]])
+    # Use squared distance to avoid time consuming sqrt computation
+    sq_distance = vector_dot(diff, diff)
+    is_interacting = sq_distance < distance_cutoff**2
+    indices = indices[is_interacting]
+
+    ## Condition 2: Angle between ring normal and centroid-cation vector
+    diff = displacement(ring_centroids[indices[:, 0]], cation_coords[indices[:, 1]])
+    norm_vector(diff)
+    angles = _minimum_angle(ring_normals[indices[:, 0]], diff)
+    is_interacting = _is_within_tolerance(angles, 0, angle_tol)
+    indices = indices[is_interacting]
+
+    # Only return pairs where all conditions were fulfilled
+    return [(rings[ring_i], cation_indices[cation_j]) for ring_i, cation_j in indices]
 
 
 def _get_ring_normal(ring_coord):

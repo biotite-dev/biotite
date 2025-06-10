@@ -10,6 +10,13 @@ from biotite.interface import LossyConversionWarning
 from tests.util import data_dir
 
 
+def _released_ccd_residues():
+    chem_comp = info.get_ccd()["chem_comp"]
+    residue_names = chem_comp["id"].as_array()
+    release_status = chem_comp["pdbx_release_status"].as_array()
+    return residue_names[release_status == "REL"]
+
+
 def _load_smiles():
     with open(Path(data_dir("interface")) / "smiles.txt") as file:
         return file.read().splitlines()
@@ -19,7 +26,8 @@ def _load_smiles():
 @pytest.mark.filterwarnings("ignore:.*coordinates are missing.*")
 @pytest.mark.filterwarnings("ignore::biotite.interface.LossyConversionWarning")
 @pytest.mark.parametrize(
-    "res_name", np.random.default_rng(0).choice(info.all_residues(), size=200).tolist()
+    "res_name",
+    np.random.default_rng(0).choice(_released_ccd_residues(), size=200).tolist(),
 )
 def test_conversion_from_biotite(res_name):
     """

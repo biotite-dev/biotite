@@ -385,6 +385,7 @@
         "Aromatic rings": [
             "find_aromatic_rings",
             "find_stacking_interactions",
+            "find_pi_cation_interactions",
             "PiStacking"
         ]
     },
