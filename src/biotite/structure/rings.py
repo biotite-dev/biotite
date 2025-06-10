@@ -328,7 +328,6 @@ def find_pi_cation_interactions(
     ...     )
     TRP ACH
     TYR ACH
-    ```
     """
     if atoms.bonds is None:
         raise BadStructureError("Structure must have an associated BondList")
