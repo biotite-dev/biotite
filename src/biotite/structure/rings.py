@@ -326,8 +326,8 @@ def find_pi_cation_interactions(
     ...         structure.res_name[ring_indices[0]],
     ...         structure.res_name[cation_index]
     ...     )
-    TRP ACH
     TYR ACH
+    TRP ACH
     """
     if atoms.bonds is None:
         raise BadStructureError("Structure must have an associated BondList")
