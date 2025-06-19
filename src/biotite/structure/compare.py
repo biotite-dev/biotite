@@ -449,6 +449,8 @@ def lddt(
     # Aggregate the fractions over the desired level
     if isinstance(aggregation, str) and aggregation == "all":
         # Average over all contacts
+        if len(fraction_preserved_bins) == 0:
+            return np.float32(np.nan)
         return np.mean(fraction_preserved_bins, axis=-1)
     else:
         # A string is also a 'Sequence'
