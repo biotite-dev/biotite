@@ -1727,6 +1727,7 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
     """
     from .info.bonds import bonds_in_residue
     from .residues import get_residue_starts
+    from .info.ccd import get_from_ccd
 
     cdef list bonds = []
     cdef int res_i
@@ -1734,13 +1735,14 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
     cdef int curr_start_i, next_start_i
     cdef np.ndarray atom_names = atoms.atom_name
     cdef np.ndarray atom_names_in_res
+    cdef np.ndarray std_atom_ids
     cdef np.ndarray res_names = atoms.res_name
     cdef str atom_name1, atom_name2
     cdef int64[:] atom_indices1, atom_indices2
     cdef dict bond_dict_for_res
 
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
-    # Omit exclsive stop in 'residue_starts'
+    # Omit exclusive stop in 'residue_starts'
     for res_i in range(len(residue_starts)-1):
         curr_start_i = residue_starts[res_i]
         next_start_i = residue_starts[res_i+1]
@@ -1752,12 +1754,37 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
                 res_names[curr_start_i], {}
             )
 
+        # Check if we should use alternative atom names
         atom_names_in_res = atom_names[curr_start_i : next_start_i]
+        std_atom_ids = get_from_ccd(
+            "chem_comp_atom", 
+            res_names[curr_start_i], 
+            "atom_id"
+        ) 
+
+        # Only lookup alternative atom names if we cannot match
+        # all atoms using standard names
+        if (atom_names_in_res is not None and \
+            std_atom_ids is not None and \
+            not set(atom_names_in_res).issubset(std_atom_ids)):
+            # We do not assume that the order of atoms within 
+            # atom_names_in_res matches that of the CCD
+            alt_atom_ids = get_from_ccd(
+                "chem_comp_atom", 
+                res_names[curr_start_i], 
+                "alt_atom_id"
+            ) 
+            if set(atom_names_in_res).issubset(alt_atom_ids):
+                # Residue uses alternative names; standardize them
+                mapping = dict(zip(alt_atom_ids, std_atom_ids))
+                atom_names_in_res = [mapping.get(atom_name) for atom_name in atom_names_in_res]
+
         for (atom_name1, atom_name2), bond_type in bond_dict_for_res.items():
             atom_indices1 = np.where(atom_names_in_res == atom_name1)[0] \
                             .astype(np.int64, copy=False)
             atom_indices2 = np.where(atom_names_in_res == atom_name2)[0] \
                             .astype(np.int64, copy=False)
+
             # In rare cases the same atom name may appear multiple times
             # (e.g. in altlocs)
             # -> create all possible bond combinations
