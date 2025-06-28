@@ -128,8 +128,9 @@ def test_topology_consistency(test_path):
     topology = app.PDBxFile(test_path).topology
     test_atoms = openmm_interface.from_topology(topology)
 
-    # OpenMM does not parse the bond type from CIF files
+    # OpenMM does not parse bond types for all bonds when parsing CIF files
     ref_atoms.bonds.remove_bond_order()
+    test_atoms.bonds.remove_bond_order()
     # Biotite does not parse disulfide bridges
     # -> Remove them from the bonds parsed by OpenMM
     for i, j, _ in test_atoms.bonds.as_array():
