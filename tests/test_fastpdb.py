@@ -1,0 +1,207 @@
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+"""
+All functionalities are tested against equivalent calls in
+:class:`biotite.structure.io.pdb.PDBFile`.
+"""
+
+import itertools
+from io import StringIO
+from pathlib import Path
+import pytest
+import biotite
+import numpy as np
+import biotite.structure.io.pdb as pdb
+import fastpdb as fastpdb
+
+DATA_PATH = Path(__file__).parent / "data"
+TEST_STRUCTURES = list(DATA_PATH.glob("*.pdb"))
+
+
+def test_get_remark():
+    ref_file = pdb.PDBFile.read(DATA_PATH / "1aki.pdb")
+
+    test_file = fastpdb.PDBFile.read(DATA_PATH / "1aki.pdb")
+
+    for remark in np.arange(0, 1000):
+        assert test_file.get_remark(remark) == ref_file.get_remark(remark)
+
+
+@pytest.mark.parametrize(
+    "path", TEST_STRUCTURES
+)
+def test_get_model_count(path):
+    ref_file = pdb.PDBFile.read(path)
+
+    test_file = fastpdb.PDBFile.read(path)
+
+
+    assert ref_file.get_model_count() == test_file.get_model_count()
+
+
+@pytest.mark.parametrize(
+    "path, model",
+    itertools.product(
+        TEST_STRUCTURES,
+        [None, 1, -1],
+    )
+)
+def test_get_coord(path, model):
+    ref_file = pdb.PDBFile.read(path)
+    try:
+        ref_coord = ref_file.get_coord(model)
+    except biotite.InvalidFileError:
+        if model is None:
+            # Cannot create an AtomArrayStack
+            # due to different number of atoms per model
+            return
+        else:
+            raise
+
+    test_file = fastpdb.PDBFile.read(path)
+    test_coord = test_file.get_coord(model)
+
+
+    assert np.allclose(test_coord, ref_coord)
+
+
+@pytest.mark.parametrize(
+    "path, model, altloc, extra_fields, include_bonds",
+    itertools.product(
+        TEST_STRUCTURES,
+        [None, 1, -1],
+        ["occupancy", "first", "all"],
+        [False, True],
+        [False, True],
+    )
+)
+def test_get_structure(path, model, altloc, extra_fields, include_bonds):
+    if extra_fields:
+        extra_fields = ["atom_id", "b_factor", "occupancy", "charge"]
+    else:
+        extra_fields = None
+
+
+    ref_file = pdb.PDBFile.read(path)
+    try:
+        ref_atoms = ref_file.get_structure(
+            model, altloc, extra_fields, include_bonds
+        )
+    except biotite.InvalidFileError:
+        if model is None:
+            # Cannot create an AtomArrayStack
+            # due to different number of atoms per model
+            return
+        else:
+            raise
+
+    test_file = fastpdb.PDBFile.read(path)
+    test_atoms = test_file.get_structure(
+        model, altloc, extra_fields, include_bonds
+    )
+
+
+    if ref_atoms.box is not None:
+        assert np.allclose(test_atoms.box, ref_atoms.box)
+    else:
+        assert test_atoms.box is None
+
+    assert test_atoms.bonds == ref_atoms.bonds
+
+    for category in ref_atoms.get_annotation_categories():
+        if np.issubdtype(ref_atoms.get_annotation(category).dtype, float):
+            assert test_atoms.get_annotation(category).tolist() \
+                == pytest.approx(ref_atoms.get_annotation(category).tolist())
+        else:
+            assert test_atoms.get_annotation(category).tolist() \
+                ==  ref_atoms.get_annotation(category).tolist()
+
+    assert np.allclose(test_atoms.coord, ref_atoms.coord)
+
+
+@pytest.mark.parametrize(
+    "path, model, altloc, extra_fields, include_bonds",
+    itertools.product(
+        TEST_STRUCTURES,
+        [None, 1, -1],
+        ["occupancy", "first", "all"],
+        [False, True],
+        [False, True],
+    )
+)
+def test_set_structure(path, model, altloc, extra_fields, include_bonds):
+    if extra_fields:
+        extra_fields = ["atom_id", "b_factor", "occupancy", "charge"]
+    else:
+        extra_fields = None
+
+    input_file = pdb.PDBFile.read(path)
+    try:
+        atoms = input_file.get_structure(
+            model, altloc, extra_fields, include_bonds
+        )
+    except biotite.InvalidFileError:
+        if model is None:
+            # Cannot create an AtomArrayStack
+            # due to different number of atoms per model
+            return
+        else:
+            raise
+
+    ref_file = pdb.PDBFile()
+    ref_file.set_structure(atoms)
+    ref_file_content = StringIO()
+    ref_file.write(ref_file_content)
+
+    test_file = fastpdb.PDBFile()
+    test_file.set_structure(atoms)
+    test_file_content = StringIO()
+    test_file.write(test_file_content)
+
+    assert test_file_content.getvalue() == ref_file_content.getvalue()
+
+
+def test_get_assembly():
+    """
+    Effectively, this test checks whether inheritance works properly,
+    as `get_assembly()` is not explicitly implemented in
+    `fastpdb.PDBFile`.
+    """
+    ref_file = pdb.PDBFile.read(DATA_PATH / "1aki.pdb")
+
+    test_file = fastpdb.PDBFile.read(DATA_PATH / "1aki.pdb")
+
+    assert test_file.get_assembly() == ref_file.get_assembly()
+
+
+@pytest.mark.filterwarnings("ignore")
+def test_inferred_elements(tmp_path):
+    # Read valid pdb file
+    pdb_file = fastpdb.PDBFile.read(DATA_PATH / "1l2y.pdb")
+    atoms = pdb_file.get_structure()
+    # Remove all elements
+    atoms_wo_elements = atoms.copy()
+    atoms_wo_elements.element[:] = ''
+    # Save stack without elements to file
+    temp = tmp_path / "tmp.pdb"
+    tmp_pdb_file = pdb.PDBFile()
+    tmp_pdb_file.set_structure(atoms_wo_elements)
+    tmp_pdb_file.write(temp)
+
+    # Read new stack from file with guessed elements
+    guessed_pdb_file = fastpdb.PDBFile.read(temp)
+    atoms_guessed_elements = guessed_pdb_file.get_structure()
+
+    assert atoms_guessed_elements.element.tolist() == atoms.element.tolist()
+
+
+def test_non_80_char_columns():
+    with open(DATA_PATH / "1l2y.pdb") as f:
+        lines = list(map(lambda s: s.rstrip(), f.readlines()))
+
+    pdb_file = fastpdb.PDBFile.read(StringIO(str.join("\n", lines)))
+    atoms = pdb_file.get_structure()
+
+    assert atoms is not None

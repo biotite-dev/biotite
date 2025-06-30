@@ -1,0 +1,16 @@
+[package]
+name = "fastpdb"
+version = "1.3.3"
+edition = "2018"
+
+[dependencies]
+numpy = "0.24"
+ndarray = "0.16"
+
+[dependencies.pyo3]
+version = "0.24"
+features = ["extension-module"]
+
+[lib]
+name = "fastpdb"
+crate-type = ["cdylib"]
