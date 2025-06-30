@@ -1,5 +1,5 @@
-import pytest
 import fastpdb
+import pytest
 
 
 @pytest.fixture

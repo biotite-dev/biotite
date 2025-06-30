@@ -14,6 +14,7 @@ dependencies:
   - pip >=10.0
   - setuptools
   - setuptools_scm
+  - setuptools-rust
   - wheel >=0.30
   # Biotite dependencies
   - biotraj >=1.0,<2.0

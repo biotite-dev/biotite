@@ -41,6 +41,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        components: rustfmt, clippy
     - uses: actions/setup-python@v5
       with:
         python-version: "3.12"
@@ -53,6 +58,10 @@ jobs:
       run: ruff check
     - name: Check docstring formatting
       run: numpydoc lint src/biotite/**/*.py
+    - name: Check Rust formatting
+      run: cargo fmt --check
+    - name: Check Rust lints
+      run: cargo clippy -- -Dwarnings
 
 
   build-internal:
