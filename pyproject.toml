@@ -152,32 +152,8 @@ filterwarnings = [
   "ignore:Input structure has no associated 'BondList'",
 ]
 
-[tool.hatch.build.targets.sdist]
-exclude = [
-  "tests",
-  "benchmarks",
-  "doc",
-  "environment.yml",
-  # .github, .gitignore, .gitattributes
-  ".git*",
-]
-artifacts = [
-  "src/biotite/structure/info/components.bcif"
-]
-
-[tool.hatch.build.targets.wheel]
-artifacts = [
-  "src/biotite/structure/info/components.bcif"
-]
-
-[tool.hatch.version]
-source = "vcs"
-
-[tool.hatch.build.hooks.vcs]
-version-file = "src/biotite/version.py"
-
-[tool.hatch.build.targets.wheel.hooks.cython]
-dependencies = ["hatch-cython"]
+[tool.setuptools_scm]
+version_file = "src/biotite/version.py"
 
 [tool.hatch.build.targets.wheel.hooks.cython.options]
 include_numpy = true
@@ -188,10 +164,9 @@ define_macros = [
 
 [build-system]
 requires = [
-    "hatchling",
-    "hatch-vcs == 0.4",
-    "hatch-cython == 0.5",
-    "numpy >= 2.0",
+    "setuptools",
+    "setuptools-scm",
     "cython >= 3.0",
+    "numpy >= 2.0",
 ]
-build-backend = "hatchling.build"
+build-backend = "setuptools.build_meta"

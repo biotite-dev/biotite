@@ -12,8 +12,8 @@ dependencies:
   # Package building
   - cython >=3.0
   - pip >=10.0
-  - hatchling
-  - hatch-vcs == 0.4
+  - setuptools
+  - setuptools_scm
   - wheel >=0.30
   # Biotite dependencies
   - biotraj >=1.0,<2.0
