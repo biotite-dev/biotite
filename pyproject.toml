@@ -166,6 +166,8 @@ define_macros = [
 requires = [
     "setuptools",
     "setuptools-scm",
+    "setuptools-rust",
+    "puccinialin",
     "cython >= 3.0",
     "numpy >= 2.0",
 ]

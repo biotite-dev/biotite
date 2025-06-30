@@ -7,6 +7,7 @@ import itertools
 import sys
 import warnings
 from os.path import join, splitext
+from pathlib import Path
 from tempfile import TemporaryFile
 import numpy as np
 import pytest
@@ -116,11 +117,13 @@ def test_space_group(path):
     assert cryst1 == cryst2, "Space group mismatch after writing and reading."
 
 
+@pytest.mark.parametrize("model", [None, 1, -1])
 @pytest.mark.parametrize(
-    "path, model",
-    itertools.product(glob.glob(join(data_dir("structure"), "*.pdb")), [None, 1, -1]),
+    "path",
+    Path(data_dir("structure")).glob("*.pdb"),
+    ids=lambda p: p.stem,
 )
-def test_pdbx_consistency(path, model):
+def test_pdbx_consistency(model, path):
     bcif_path = splitext(path)[0] + ".bcif"
     pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
     try:
