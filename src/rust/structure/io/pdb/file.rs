@@ -1,8 +1,8 @@
 //! Low-level PDB file parsing and writing.
 
-use numpy::ndarray::{Array, Array1, Array2, Array3, ArrayView2};
+use numpy::ndarray::{Array, Array1, Array2, ArrayView2};
 use numpy::{
-    IntoPyArray, PyArray1, PyArray2, PyArray3, PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray3,
+    IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray3,
 };
 use pyo3::exceptions;
 use pyo3::prelude::*;
@@ -11,20 +11,13 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fs;
 use std::str::FromStr;
+use pyo3::types::PyString;
 
 pyo3::import_exception!(biotite, InvalidFileError);
 // Label as a separate module to indicate that this exception comes
 // from biotite
 mod biotite {
     pyo3::import_exception!(biotite, InvalidFileError);
-}
-
-/// Used to allow a function to process both, `AtomArray` and `AtomArrayStack` objects,
-/// since they differ only in the shape of the objects.
-#[derive(Debug)]
-enum CoordArray {
-    Single(Array2<f32>),
-    Multi(Array3<f32>),
 }
 
 /// This is a low-level abstraction of a PDB file.
@@ -41,9 +34,6 @@ pub struct PDBFile {
 
 #[pymethods]
 impl PDBFile {
-    /// Create an new [`PDBFile`].
-    /// The lines of text are given to `lines`.
-    /// An empty `Vec` represents and empty PDB file.
     #[new]
     fn new(lines: Vec<String>) -> Self {
         //let ljust_lines = lines.iter().map(|line| format!("{:<80}", line)).collect();
@@ -56,13 +46,33 @@ impl PDBFile {
         pdb_file
     }
 
-    /// Read a [`PDBFile`] from a file.
-    /// The file is indicated by its file path as `String`.
+
+    #[getter]
+    fn _model_start_i<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyArray1<i64>>> {
+        Ok(PyArray1::from_iter(
+            py,
+            self.model_start_i.iter().map(|x| *x as i64),
+        ))
+    }
+
+    #[getter]
+    fn _atom_line_i<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyArray1<i64>>> {
+        Ok(PyArray1::from_iter(py, self.atom_line_i.iter().map(|x| *x as i64)).to_owned())
+    }
+
+
     #[staticmethod]
-    fn read(file_path: &str) -> PyResult<Self> {
-        let contents = fs::read_to_string(file_path).map_err(|_| {
-            exceptions::PyOSError::new_err(format!("'{}' cannot be read", file_path))
-        })?;
+    fn read(file: Bound<'_, PyAny>) -> PyResult<Self> {
+        let contents;
+        if let Ok(file_path) = file.downcast::<PyString>() {
+            // Path-like object
+            contents = fs::read_to_string(file_path.extract::<String>()?).map_err(|_| {
+                exceptions::PyOSError::new_err(format!("'{}' cannot be read", file_path))
+            })?;
+        } else {
+            // File-like object
+            contents = file.call_method0("read")?.extract::<String>()?;
+        }
         let lines = contents
             .lines()
             .map(|line| format!("{:<80}", line))
@@ -76,26 +86,21 @@ impl PDBFile {
         Ok(pdb_file)
     }
 
-    #[getter]
-    fn model_start_i<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyArray1<i64>>> {
-        Ok(PyArray1::from_iter(
-            py,
-            self.model_start_i.iter().map(|x| *x as i64),
-        ))
+    fn write(&self, file: Bound<'_, PyAny>) -> PyResult<()> {
+        let content = self.lines.join("\n");
+        if let Ok(file_path) = file.downcast::<PyString>() {
+            // Path-like object
+            fs::write(file_path.extract::<String>()?, content).map_err(|_| {
+                exceptions::PyOSError::new_err(format!("'{}' cannot be written", file_path))
+            })?;
+        } else {
+            // File-like object
+            file.call_method1("write", (content,))?;
+        }
+        Ok(())
     }
 
-    #[getter]
-    fn atom_line_i<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyArray1<i64>>> {
-        Ok(PyArray1::from_iter(py, self.atom_line_i.iter().map(|x| *x as i64)).to_owned())
-    }
-
-    /// Get the number of models contained in the file.
-    fn get_model_count(&self) -> usize {
-        self.model_start_i.len()
-    }
-
-    /// Parse the given `REMARK` record of the PDB file to obtain its content as strings
-    fn parse_remark(&self, number: i64) -> PyResult<Option<Vec<String>>> {
+    fn get_remark(&self, number: i64) -> PyResult<Option<Vec<String>>> {
         const CONTENT_START_COLUMN: usize = 11;
 
         if !(0..=999).contains(&number) {
@@ -120,93 +125,92 @@ impl PDBFile {
         }
     }
 
-    /// Parse the `CRYST1` record of the PDB file to obtain the unit cell lengths
-    /// and angles (in degrees).
-    fn parse_box(&self) -> PyResult<Option<(f32, f32, f32, f32, f32, f32)>> {
-        for line in self.lines.iter() {
-            if line.starts_with("CRYST1") {
-                if line.len() < 80 {
-                    return Err(biotite::InvalidFileError::new_err("Line is too short"));
+    fn get_model_count(&self) -> usize {
+        self.model_start_i.len()
+    }
+
+    #[pyo3(signature = (model=None))]
+    fn get_coord<'py>(&self, py: Python<'py>, model: Option<isize>) -> PyResult<Bound<'py, PyAny>> {
+        match model {
+            Some(model_number) => {
+                let atom_line_i = self.get_atom_indices(model_number)?;
+                let mut coord = Array::zeros((atom_line_i.len(), 3));
+                for (atom_i, line_i) in atom_line_i.iter().enumerate() {
+                    let line = &self.lines[*line_i];
+                    if line.len() < 80 {
+                        return Err(biotite::InvalidFileError::new_err("Line is too short"));
+                    }
+                    coord[[atom_i, 0]] = parse_float_from_string(line, 30, 38)?;
+                    coord[[atom_i, 1]] = parse_float_from_string(line, 38, 46)?;
+                    coord[[atom_i, 2]] = parse_float_from_string(line, 46, 54)?;
                 }
-                let len_a = parse_number(&line[6..15])?;
-                let len_b = parse_number(&line[15..24])?;
-                let len_c = parse_number(&line[24..33])?;
-                let alpha = parse_number(&line[33..40])?;
-                let beta = parse_number(&line[40..47])?;
-                let gamma = parse_number(&line[47..54])?;
-                return Ok(Some((len_a, len_b, len_c, alpha, beta, gamma)));
+                Ok(coord.into_pyarray(py).into_any())
+            }
+
+            None => {
+                let length = self.get_model_length()?;
+                let mut coord = Array::zeros((self.atom_line_i.len(), 3));
+                for (atom_i, line_i) in self.atom_line_i.iter().enumerate() {
+                    let line = &self.lines[*line_i];
+                    if line.len() < 80 {
+                        return Err(biotite::InvalidFileError::new_err("Line is too short"));
+                    }
+                    coord[[atom_i, 0]] = parse_float_from_string(line, 30, 38)?;
+                    coord[[atom_i, 1]] = parse_float_from_string(line, 38, 46)?;
+                    coord[[atom_i, 2]] = parse_float_from_string(line, 46, 54)?;
+                }
+                Ok(
+                    coord
+                        .into_shape((self.model_start_i.len(), length, 3))
+                        .expect("Model length is invalid")
+                        .into_pyarray(py)
+                        .into_any()
+                )
             }
         }
-        // File has no 'CRYST1' record
-        Ok(None)
     }
 
-    /// Get a 2D coordinate *NumPy* array for a single model in the file.
-    /// `model` is the 1-based number of the requested model.
-    fn parse_coord_single_model<'py>(
-        &self,
-        py: Python<'py>,
-        model: isize,
-    ) -> PyResult<Bound<'py, PyArray2<f32>>> {
-        let array = self.parse_coord(Some(model))?;
-        match array {
-            CoordArray::Single(array) => Ok(array.into_pyarray(py)),
-            CoordArray::Multi(_) => panic!("No multi-model coordinates should be returned"),
+    #[pyo3(signature = (model=None, altloc="first", extra_fields=None, include_bonds=false))]
+    fn get_structure<'py>(
+        &self, py: Python<'py>, model: Option<isize>, altloc: &str, extra_fields: Option<Vec<String>>, include_bonds: bool
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let struc = PyModule::import(py, "biotite.structure")?;
+
+        let atom_line_i;
+        let atoms = match model {
+            Some(model_number) => {
+                atom_line_i = self.get_atom_indices(model_number)?;
+                let length = atom_line_i.len();
+                struc.getattr("AtomArray")?.call1((length,))?
+            }
+            None => {
+                atom_line_i = self.get_atom_indices(1)?;
+                let depth = self.model_start_i.len();
+                let length = self.get_model_length()?;
+                struc.getattr("AtomArrayStack")?.call1((depth, length))?
+            }
+        };
+
+        atoms.setattr("coord", self.get_coord(py, model)?)?;
+
+        let include_atom_id;
+        let include_b_factor;
+        let include_occupancy;
+        let include_charge;
+        match extra_fields {
+            Some(extra_fields) => {
+                include_atom_id = extra_fields.contains(&"atom_id".to_string());
+                include_b_factor = extra_fields.contains(&"b_factor".to_string());
+                include_occupancy = extra_fields.contains(&"occupancy".to_string());
+                include_charge = extra_fields.contains(&"charge".to_string());
+            },
+            None => {
+                include_atom_id = false;
+                include_b_factor = false;
+                include_occupancy = false;
+                include_charge = false;
+            }
         }
-    }
-
-    /// Get a 3D coordinate *NumPy* array for all models in the file.
-    /// A `PyErr` is returned if the number of atoms per model differ from each other.
-    fn parse_coord_multi_model<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyArray3<f32>>> {
-        let array = self.parse_coord(None)?;
-        match array {
-            CoordArray::Single(_) => panic!("No single-model coordinates should be returned"),
-            CoordArray::Multi(array) => Ok(array.into_pyarray(py)),
-        }
-    }
-
-    /// Parse the annotation arrays from a given `model` (1-based) in the file.
-    /// The optional annotation categories for an `AtomArray` or `AtomArrayStack` are only parsed
-    /// if the respective `include_<annotation>` parameter is set to true.
-    /// Unicode *NumPy* arrays are represented by 2D *NumPy* arrays with
-    /// `uint32` *dtype*.
-    /// The returned tuple contains the following annotations in the given order:
-    ///
-    /// - `chain_id`
-    /// - `res_id`
-    /// - `ins_code`
-    /// - `res_name`
-    /// - `hetero`
-    /// - `atom_name`
-    /// - `element`
-    /// - `altloc_id`
-    /// - `atom_id`
-    /// - `b_factor`
-    /// - `occupancy`
-    /// - `charge`
-    fn parse_annotations<'py>(
-        &self,
-        py: Python<'py>,
-        model: isize,
-        include_atom_id: bool,
-        include_b_factor: bool,
-        include_occupancy: bool,
-        include_charge: bool,
-    ) -> PyResult<(
-        Bound<'py, PyArray2<u32>>,
-        Bound<'py, PyArray1<i64>>,
-        Bound<'py, PyArray2<u32>>,
-        Bound<'py, PyArray2<u32>>,
-        Bound<'py, PyArray1<bool>>,
-        Bound<'py, PyArray2<u32>>,
-        Bound<'py, PyArray2<u32>>,
-        Bound<'py, PyArray2<u32>>,
-        Option<Bound<'py, PyArray1<i64>>>,
-        Option<Bound<'py, PyArray1<f64>>>,
-        Option<Bound<'py, PyArray1<f64>>>,
-        Option<Bound<'py, PyArray1<i64>>>,
-    )> {
-        let atom_line_i: Vec<usize> = self.get_atom_indices(model)?;
 
         let mut chain_id: Array2<u32> = Array::zeros((atom_line_i.len(), 4));
         let mut res_id: Array1<i64> = Array::zeros(atom_line_i.len());
@@ -287,36 +291,159 @@ impl PDBFile {
             }
         }
 
-        Ok((
-            chain_id.into_pyarray(py),
-            res_id.into_pyarray(py),
-            ins_code.into_pyarray(py),
-            res_name.into_pyarray(py),
-            hetero.into_pyarray(py),
-            atom_name.into_pyarray(py),
-            element.into_pyarray(py),
-            altloc_id.into_pyarray(py),
-            if include_atom_id {
-                Some(atom_id.into_pyarray(py))
+        atoms.setattr("chain_id", chain_id.into_pyarray(py))?;
+        atoms.setattr("res_id", res_id.into_pyarray(py))?;
+        atoms.setattr("ins_code", ins_code.into_pyarray(py))?;
+        atoms.setattr("res_name", res_name.into_pyarray(py))?;
+        atoms.setattr("hetero", hetero.into_pyarray(py))?;
+        atoms.setattr("atom_name", atom_name.into_pyarray(py))?;
+        atoms.setattr("element", element.into_pyarray(py))?;
+        atoms.setattr("altloc_id", altloc_id.into_pyarray(py))?;
+        if include_atom_id {
+            atoms.setattr("atom_id", atom_id.into_pyarray(py))?;
+        }
+        if include_b_factor {
+            atoms.setattr("b_factor", b_factor.into_pyarray(py))?;
+        }
+        if include_occupancy {
+            atoms.setattr("occupancy", occupancy.into_pyarray(py))?;
+        }
+        if include_charge {
+            atoms.setattr("charge", charge.into_pyarray(py))?;
+        }
+
+        Ok(atoms)
+    }
+
+
+
+
+
+
+    /// Index lines in the file that correspond to starts of new models and to
+    /// `ATOM` or `HETATM` records.
+    /// Must be called after the content of the file has been changed.
+    fn index_models_and_atoms(&mut self) {
+        self.atom_line_i = self
+            .lines
+            .iter()
+            .enumerate()
+            .filter(|(_i, line)| line.starts_with("ATOM") || line.starts_with("HETATM"))
+            .map(|(i, _line)| i)
+            .collect();
+        self.model_start_i = self
+            .lines
+            .iter()
+            .enumerate()
+            .filter(|(_i, line)| line.starts_with("MODEL"))
+            .map(|(i, _line)| i)
+            .collect();
+        // It could be an empty file or a file with a single model,
+        // where the 'MODEL' line is missing
+        if self.model_start_i.is_empty() && !self.atom_line_i.is_empty() {
+            self.model_start_i = vec![0]
+        }
+    }
+}
+
+impl PDBFile {
+    /// Get indices to `ATOM` and `HETATM` records within the given model number.
+    fn get_atom_indices(&self, model: isize) -> PyResult<Vec<usize>> {
+        // Find the model index corresponding to the given model number
+        let model_i: isize;
+        match model.cmp(&0) {
+            Ordering::Greater => model_i = model - 1,
+            Ordering::Less => model_i = self.model_start_i.len() as isize + model,
+            Ordering::Equal => {
+                return Err(exceptions::PyValueError::new_err(
+                    "Model index must not be 0",
+                ))
+            }
+        };
+        if model_i >= self.model_start_i.len() as isize || model_i < 0 {
+            return Err(exceptions::PyValueError::new_err(format!(
+                "The file has {} models, the given model {} does not exist",
+                self.model_start_i.len(),
+                model
+            )));
+        }
+
+        // Get the start and stop line index for this model index
+        let (model_start, model_stop) = match model_i.cmp(&(self.model_start_i.len() as isize - 1))
+        {
+            Ordering::Less => (
+                self.model_start_i[model_i as usize],
+                self.model_start_i[(model_i + 1) as usize],
+            ),
+            // Last model -> Model reaches to end of file
+            Ordering::Equal => (self.model_start_i[model_i as usize], self.lines.len()),
+            // This case was excluded above
+            _ => panic!("This branch should not be reached"),
+        };
+
+        // Get the atom records within these line boundaries
+        Ok(self
+            .atom_line_i
+            .iter()
+            .copied()
+            .filter(|i| *i >= model_start && *i < model_stop)
+            .collect())
+    }
+
+    /// Get the number of atoms in each model of the PDB file.
+    /// A `PyErr` is returned if the number of atoms per model differ from each other.
+    fn get_model_length(&self) -> PyResult<usize> {
+        let n_models = self.model_start_i.len();
+        let mut length: Option<usize> = None;
+        for model_i in 0..n_models {
+            let model_start: usize = self.model_start_i[model_i];
+            let model_stop: usize = if model_i + 1 < n_models {
+                self.model_start_i[model_i + 1]
             } else {
-                None
-            },
-            if include_b_factor {
-                Some(b_factor.into_pyarray(py))
-            } else {
-                None
-            },
-            if include_occupancy {
-                Some(occupancy.into_pyarray(py))
-            } else {
-                None
-            },
-            if include_charge {
-                Some(charge.into_pyarray(py))
-            } else {
-                None
-            },
-        ))
+                self.lines.len()
+            };
+            let model_length = self
+                .atom_line_i
+                .iter()
+                .filter(|&line_i| *line_i >= model_start && *line_i < model_stop)
+                .count();
+            match length {
+                None => length = Some(model_length),
+                Some(l) => {
+                    if model_length != l {
+                        return Err(biotite::InvalidFileError::new_err(
+                            "Inconsistent number of models",
+                        ));
+                    }
+                }
+            };
+        }
+
+        match length {
+            None => panic!("Length cannot be 'None'"),
+            Some(l) => Ok(l),
+        }
+    }
+
+    /// Parse the `CRYST1` record of the PDB file to obtain the unit cell lengths
+    /// and angles (in degrees).
+    fn parse_box(&self) -> PyResult<Option<(f32, f32, f32, f32, f32, f32)>> {
+        for line in self.lines.iter() {
+            if line.starts_with("CRYST1") {
+                if line.len() < 80 {
+                    return Err(biotite::InvalidFileError::new_err("Line is too short"));
+                }
+                let len_a = parse_number(&line[6..15])?;
+                let len_b = parse_number(&line[15..24])?;
+                let len_c = parse_number(&line[24..33])?;
+                let alpha = parse_number(&line[33..40])?;
+                let beta = parse_number(&line[40..47])?;
+                let gamma = parse_number(&line[47..54])?;
+                return Ok(Some((len_a, len_b, len_c, alpha, beta, gamma)));
+            }
+        }
+        // File has no 'CRYST1' record
+        Ok(None)
     }
 
     /// Parse the `CONECT` records of the PDB file to obtain a 2D *NumPy* array
@@ -518,153 +645,6 @@ impl PDBFile {
             }
         }
         Ok(())
-    }
-
-    /// Index lines in the file that correspond to starts of new models and to
-    /// `ATOM` or `HETATM` records.
-    /// Must be called after the content of the file has been changed.
-    fn index_models_and_atoms(&mut self) {
-        self.atom_line_i = self
-            .lines
-            .iter()
-            .enumerate()
-            .filter(|(_i, line)| line.starts_with("ATOM") || line.starts_with("HETATM"))
-            .map(|(i, _line)| i)
-            .collect();
-        self.model_start_i = self
-            .lines
-            .iter()
-            .enumerate()
-            .filter(|(_i, line)| line.starts_with("MODEL"))
-            .map(|(i, _line)| i)
-            .collect();
-        // It could be an empty file or a file with a single model,
-        // where the 'MODEL' line is missing
-        if self.model_start_i.is_empty() && !self.atom_line_i.is_empty() {
-            self.model_start_i = vec![0]
-        }
-    }
-}
-
-impl PDBFile {
-    /// Get an `ndarray` containing coordinates for a single model (2D) or
-    /// multiple models (3D) in the file.
-    /// The number of returned dimensions is based on whether a `model` is
-    /// given.
-    fn parse_coord(&self, model: Option<isize>) -> PyResult<CoordArray> {
-        match model {
-            Some(model_number) => {
-                let atom_line_i = self.get_atom_indices(model_number)?;
-                let mut coord = Array::zeros((atom_line_i.len(), 3));
-                for (atom_i, line_i) in atom_line_i.iter().enumerate() {
-                    let line = &self.lines[*line_i];
-                    if line.len() < 80 {
-                        return Err(biotite::InvalidFileError::new_err("Line is too short"));
-                    }
-                    coord[[atom_i, 0]] = parse_float_from_string(line, 30, 38)?;
-                    coord[[atom_i, 1]] = parse_float_from_string(line, 38, 46)?;
-                    coord[[atom_i, 2]] = parse_float_from_string(line, 46, 54)?;
-                }
-                Ok(CoordArray::Single(coord))
-            }
-
-            None => {
-                let length = self.get_model_length()?;
-                let mut coord = Array::zeros((self.atom_line_i.len(), 3));
-                for (atom_i, line_i) in self.atom_line_i.iter().enumerate() {
-                    let line = &self.lines[*line_i];
-                    if line.len() < 80 {
-                        return Err(biotite::InvalidFileError::new_err("Line is too short"));
-                    }
-                    coord[[atom_i, 0]] = parse_float_from_string(line, 30, 38)?;
-                    coord[[atom_i, 1]] = parse_float_from_string(line, 38, 46)?;
-                    coord[[atom_i, 2]] = parse_float_from_string(line, 46, 54)?;
-                }
-                Ok(CoordArray::Multi(
-                    coord
-                        .into_shape_with_order((self.model_start_i.len(), length, 3))
-                        .expect("Model length is invalid"),
-                ))
-            }
-        }
-    }
-
-    /// Get indices to `ATOM` and `HETATM` records within the given model number.
-    fn get_atom_indices(&self, model: isize) -> PyResult<Vec<usize>> {
-        // Find the model index corresponding to the given model number
-        let model_i: isize;
-        match model.cmp(&0) {
-            Ordering::Greater => model_i = model - 1,
-            Ordering::Less => model_i = self.model_start_i.len() as isize + model,
-            Ordering::Equal => {
-                return Err(exceptions::PyValueError::new_err(
-                    "Model index must not be 0",
-                ))
-            }
-        };
-        if model_i >= self.model_start_i.len() as isize || model_i < 0 {
-            return Err(exceptions::PyValueError::new_err(format!(
-                "The file has {} models, the given model {} does not exist",
-                self.model_start_i.len(),
-                model
-            )));
-        }
-
-        // Get the start and stop line index for this model index
-        let (model_start, model_stop) = match model_i.cmp(&(self.model_start_i.len() as isize - 1))
-        {
-            Ordering::Less => (
-                self.model_start_i[model_i as usize],
-                self.model_start_i[(model_i + 1) as usize],
-            ),
-            // Last model -> Model reaches to end of file
-            Ordering::Equal => (self.model_start_i[model_i as usize], self.lines.len()),
-            // This case was excluded above
-            _ => panic!("This branch should not be reached"),
-        };
-
-        // Get the atom records within these line boundaries
-        Ok(self
-            .atom_line_i
-            .iter()
-            .copied()
-            .filter(|i| *i >= model_start && *i < model_stop)
-            .collect())
-    }
-
-    /// Get the number of atoms in each model of the PDB file.
-    /// A `PyErr` is returned if the number of atoms per model differ from each other.
-    fn get_model_length(&self) -> PyResult<usize> {
-        let n_models = self.model_start_i.len();
-        let mut length: Option<usize> = None;
-        for model_i in 0..n_models {
-            let model_start: usize = self.model_start_i[model_i];
-            let model_stop: usize = if model_i + 1 < n_models {
-                self.model_start_i[model_i + 1]
-            } else {
-                self.lines.len()
-            };
-            let model_length = self
-                .atom_line_i
-                .iter()
-                .filter(|&line_i| *line_i >= model_start && *line_i < model_stop)
-                .count();
-            match length {
-                None => length = Some(model_length),
-                Some(l) => {
-                    if model_length != l {
-                        return Err(biotite::InvalidFileError::new_err(
-                            "Inconsistent number of models",
-                        ));
-                    }
-                }
-            };
-        }
-
-        match length {
-            None => panic!("Length cannot be 'None'"),
-            Some(l) => Ok(l),
-        }
     }
 }
 

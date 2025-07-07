@@ -23,7 +23,7 @@ if _should_build_wheel():
             env = {**os.environ, **extra_env}
         else:
             env = None
-        rust_extension = [
+        rust_extensions = [
             RustExtension(
                 target="biotite.rust",
                 path="Cargo.toml",

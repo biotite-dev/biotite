@@ -1704,8 +1704,8 @@ class PDBFile(_PDBFile):
 
     def _index_models_and_atoms(self):
         self._pdb_file.index_models_and_atoms()
-        self._model_start_i = self._pdb_file.model_start_i
-        self._atom_line_i = self._pdb_file.atom_line_i
+        self._model_start_i = self._pdb_file._model_start_i
+        self._atom_line_i = self._pdb_file._atom_line_i
 
 
 def _convert_unicode_to_uint32(array):

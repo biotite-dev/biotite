@@ -1,5 +1,3 @@
-use core::panic;
-
 use pyo3::prelude::*;
 
 mod file;
