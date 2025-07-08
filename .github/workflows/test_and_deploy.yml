@@ -354,6 +354,7 @@ jobs:
     - sdist
     - test-interfaces
     - test-muscle5
+    - docs
     runs-on: ubuntu-latest
     environment:
       name: publish
@@ -401,6 +402,11 @@ jobs:
     permissions:
       contents: write
     needs:
+    - lint
+    - test-and-build
+    - sdist
+    - test-interfaces
+    - test-muscle5
     - docs
     runs-on: ubuntu-latest
     steps:
