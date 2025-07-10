@@ -6,6 +6,7 @@ edition = "2018"
 [dependencies]
 numpy = "0.25"
 ndarray = "0.16"
+num-traits = "0.2"
 
 [dependencies.pyo3]
 version = "0.25"

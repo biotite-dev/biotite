@@ -1721,3 +1721,22 @@ def _convert_unicode_to_uint32(array):
     length = array.shape[0]
     n_char = dtype.itemsize // 4
     return np.frombuffer(array, dtype=np.uint32).reshape(length, n_char)
+
+
+class PDBFile(RustPDBFile):
+    def get_structure(
+        self, model=None, altloc="first", extra_fields=None, include_bonds=False
+    ):
+        atoms = super().get_structure(model, altloc, extra_fields, include_bonds)
+        # Replace empty strings for elements with guessed types
+        # This is used e.g. for PDB files created by Gromacs
+        empty_element_mask = atoms.element == ""
+        if empty_element_mask.any():
+            warnings.warn(
+                f"{np.count_nonzero(empty_element_mask)} elements "
+                "were guessed from atom name"
+            )
+            atoms.element[empty_element_mask] = struc.infer_elements(
+                atoms.element[empty_element_mask]
+            )
+        return atoms

@@ -1,6 +1,6 @@
 //! Low-level PDB file parsing and writing.
 
-use numpy::ndarray::{Array, Array1, Array2, ArrayView2};
+use numpy::ndarray::{Array, Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1};
 use numpy::{
     IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray3,
 };
@@ -11,7 +11,10 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fs;
 use std::str::FromStr;
-use pyo3::types::PyString;
+use pyo3::types::{PyString, PyEllipsis, PyDict};
+use numpy::PyArrayMethods;
+use num_traits::{Float, FloatConst};
+use pyo3::ffi::c_str;
 
 pyo3::import_exception!(biotite, InvalidFileError);
 // Label as a separate module to indicate that this exception comes
@@ -42,7 +45,7 @@ impl PDBFile {
             model_start_i: Vec::new(),
             atom_line_i: Vec::new(),
         };
-        pdb_file.index_models_and_atoms();
+        pdb_file._index_models_and_atoms();
         pdb_file
     }
 
@@ -82,7 +85,7 @@ impl PDBFile {
             model_start_i: Vec::new(),
             atom_line_i: Vec::new(),
         };
-        pdb_file.index_models_and_atoms();
+        pdb_file._index_models_and_atoms();
         Ok(pdb_file)
     }
 
@@ -161,7 +164,7 @@ impl PDBFile {
                 }
                 Ok(
                     coord
-                        .into_shape((self.model_start_i.len(), length, 3))
+                        .into_shape_with_order((self.model_start_i.len(), length, 3))
                         .expect("Model length is invalid")
                         .into_pyarray(py)
                         .into_any()
@@ -177,16 +180,17 @@ impl PDBFile {
         let struc = PyModule::import(py, "biotite.structure")?;
 
         let atom_line_i;
+        let length;
         let atoms = match model {
             Some(model_number) => {
                 atom_line_i = self.get_atom_indices(model_number)?;
-                let length = atom_line_i.len();
+                length = atom_line_i.len();
                 struc.getattr("AtomArray")?.call1((length,))?
             }
             None => {
                 atom_line_i = self.get_atom_indices(1)?;
+                length = self.get_model_length()?;
                 let depth = self.model_start_i.len();
-                let length = self.get_model_length()?;
                 struc.getattr("AtomArrayStack")?.call1((depth, length))?
             }
         };
@@ -195,7 +199,7 @@ impl PDBFile {
 
         let include_atom_id;
         let include_b_factor;
-        let include_occupancy;
+        let mut include_occupancy;
         let include_charge;
         match extra_fields {
             Some(extra_fields) => {
@@ -211,6 +215,9 @@ impl PDBFile {
                 include_charge = false;
             }
         }
+        if altloc == "occupancy" {
+            include_occupancy = true;
+        }
 
         let mut chain_id: Array2<u32> = Array::zeros((atom_line_i.len(), 4));
         let mut res_id: Array1<i64> = Array::zeros(atom_line_i.len());
@@ -222,7 +229,7 @@ impl PDBFile {
         let mut altloc_id: Array2<u32> = Array::zeros((atom_line_i.len(), 1));
 
         let mut atom_id: Array1<i64>;
-        if include_atom_id {
+        if include_atom_id || include_bonds {
             atom_id = Array::zeros(atom_line_i.len());
         } else {
             // Array will not be used
@@ -253,17 +260,17 @@ impl PDBFile {
             if line.len() < 80 {
                 return Err(biotite::InvalidFileError::new_err("Line is too short"));
             }
-            write_string_to_array(&mut chain_id, atom_i, line[21..22].trim());
+            write_string_to_array(&mut chain_id.column_mut(atom_i), line[21..22].trim());
             res_id[atom_i] = parse_number(&line[22..26])?;
-            write_string_to_array(&mut ins_code, atom_i, line[26..27].trim());
-            write_string_to_array(&mut res_name, atom_i, line[17..20].trim());
+            write_string_to_array(&mut ins_code.column_mut(atom_i), line[26..27].trim());
+            write_string_to_array(&mut res_name.column_mut(atom_i), line[17..20].trim());
             hetero[atom_i] = &line[0..4] != "ATOM";
-            write_string_to_array(&mut atom_name, atom_i, line[12..16].trim());
-            write_string_to_array(&mut element, atom_i, line[76..78].trim());
-            write_string_to_array(&mut altloc_id, atom_i, &line[16..17]);
+            write_string_to_array(&mut atom_name.column_mut(atom_i), line[12..16].trim());
+            write_string_to_array(&mut element.column_mut(atom_i), line[76..78].trim());
+            write_string_to_array(&mut altloc_id.column_mut(atom_i), &line[16..17]);
 
             // Set optional annotation arrays
-            if include_atom_id {
+            if include_atom_id || include_bonds {
                 atom_id[atom_i] = parse_number(&line[6..11])?;
             }
             if include_b_factor {
@@ -291,39 +298,153 @@ impl PDBFile {
             }
         }
 
-        atoms.setattr("chain_id", chain_id.into_pyarray(py))?;
-        atoms.setattr("res_id", res_id.into_pyarray(py))?;
-        atoms.setattr("ins_code", ins_code.into_pyarray(py))?;
-        atoms.setattr("res_name", res_name.into_pyarray(py))?;
-        atoms.setattr("hetero", hetero.into_pyarray(py))?;
-        atoms.setattr("atom_name", atom_name.into_pyarray(py))?;
-        atoms.setattr("element", element.into_pyarray(py))?;
-        atoms.setattr("altloc_id", altloc_id.into_pyarray(py))?;
-        if include_atom_id {
-            atoms.setattr("atom_id", atom_id.into_pyarray(py))?;
+        // Set annotations in the structure
+        atoms.call_method1("set_annotation", ("chain_id", chain_id.into_pyarray(py)))?;
+        atoms.call_method1("set_annotation", ("res_id", res_id.into_pyarray(py)))?;
+        atoms.call_method1("set_annotation", ("ins_code", ins_code.into_pyarray(py)))?;
+        atoms.call_method1("set_annotation", ("res_name", res_name.into_pyarray(py)))?;
+        atoms.call_method1("set_annotation", ("hetero", hetero.into_pyarray(py)))?;
+        atoms.call_method1("set_annotation", ("atom_name", atom_name.into_pyarray(py)))?;
+        atoms.call_method1("set_annotation", ("element", element.into_pyarray(py)))?;
+        atoms.call_method1("set_annotation", ("altloc_id", altloc_id.into_pyarray(py)))?;
+        // Added for convenience in altloc filtering, removed later if not in 'extra_fields'
+        if include_atom_id || include_bonds {
+            atoms.call_method1("set_annotation", ("atom_id", atom_id.into_pyarray(py)))?;
         }
         if include_b_factor {
-            atoms.setattr("b_factor", b_factor.into_pyarray(py))?;
+            atoms.call_method1("set_annotation", ("b_factor", b_factor.into_pyarray(py)))?;
         }
         if include_occupancy {
-            atoms.setattr("occupancy", occupancy.into_pyarray(py))?;
+            atoms.call_method1("set_annotation", ("occupancy", occupancy.into_pyarray(py)))?;
         }
         if include_charge {
-            atoms.setattr("charge", charge.into_pyarray(py))?;
+            atoms.call_method1("set_annotation", ("charge", charge.into_pyarray(py)))?;
         }
 
+        match self.parse_box(py) {
+            Ok(box_vectors) => atoms.setattr("box", box_vectors)?,
+            Err(_) => {
+                PyErr::warn(
+                    py,
+                    &py.get_type::<pyo3::exceptions::PyUserWarning>(),
+                    c_str!("File contains invalid 'CRYST1' record, box is ignored"),
+                    0
+                )?;
+            }
+        };
+
+        let atoms = filter_altloc(py, atoms, altloc)?;
+
+        if include_bonds {
+            let atom_id: Bound<'py, PyArray1<i64>> = atoms.getattr("atom_id")?.extract()?;
+            let bond_array = self.parse_bonds(
+                py, &atom_id.readonly().as_array()
+            )?;
+            let bond_list = struc.getattr("BondList")?.call1((length, bond_array))?;
+            atoms.setattr("bonds", bond_list)?;
+        }
+
+        if !include_atom_id {
+            atoms.call_method1("del_annotation", ("atom_id",))?;
+        }
+        if altloc != "all" {
+            atoms.call_method1("del_annotation", ("altloc_id",))?;
+        }
         Ok(atoms)
     }
 
+    fn set_structure(
+        &mut self,
+        atoms: Bound<'_, PyAny>,
+    ) -> PyResult<()> {
+        let coord: ArrayView2<f32> = atoms
+            .getattr("coord")?
+            .extract::<Bound<'_, PyArray2<f32>>>()?
+            .readonly()
+            .as_array();
+        let chain_id = get_annotation_as_type(atoms, "chain_id", "U")?.readonly().as_array();
+        let res_id = get_annotation_as_type(atoms, "res_id", "int64")?.readonly().as_array();
+        let ins_code = get_annotation_as_type(atoms, "ins_code", "U")?.readonly().as_array();
+        let res_name = get_annotation_as_type(atoms, "res_name", "U")?.readonly().as_array();
+        let hetero = get_annotation_as_type(atoms, "hetero", "bool")?.readonly().as_array();
+        let atom_name = get_annotation_as_type(atoms, "atom_name", "U")?.readonly().as_array();
+        let element = get_annotation_as_type(atoms, "element", "U")?.readonly().as_array();
 
+        let atom_id = atom_id.as_ref().map(|arr| arr.as_array());
+        let b_factor = b_factor.as_ref().map(|arr| arr.as_array());
+        let occupancy = occupancy.as_ref().map(|arr| arr.as_array());
+        let charge = charge.as_ref().map(|arr| arr.as_array());
 
+        let is_multi_model = coord.shape()[0] > 1;
 
+        // These will contain the ATOM records for each atom
+        // These are reused in every model by adding the coordinates to the string
+        // This procedure aims to increase the performance is repetitive formatting is omitted
+        let mut prefix: Vec<String> = Vec::new();
+        let mut suffix: Vec<String> = Vec::new();
 
+        for i in 0..coord.shape()[1] {
+            let element_i = parse_string_from_array(&element.column(i))?;
+            let atom_name_i = parse_string_from_array(&atom_name.column(i))?;
+
+            prefix.push(format!(
+                "{:6}{:>5} {:4} {:>3} {:1}{:>4}{:1}   ",
+                if hetero[i] { "HETATM" } else { "ATOM" },
+                atom_id
+                    .as_ref()
+                    .map_or((i + 1) as i64, |arr| truncate_id(arr[i], 99999)),
+                if element_i.len() == 1 && atom_name_i.len() < 4 {
+                    format!(" {}", atom_name_i)
+                } else {
+                    atom_name_i
+                },
+                parse_string_from_array(&res_name.column(i))?,
+                parse_string_from_array(&chain_id.column(i))?,
+                truncate_id(res_id[i], 9999),
+                parse_string_from_array(&ins_code.column(i))?,
+            ));
+
+            suffix.push(format!(
+                "{:>6.2}{:>6.2}          {:>2}{}",
+                occupancy.as_ref().map_or(1f64, |arr| arr[i]),
+                b_factor.as_ref().map_or(0f64, |arr| arr[i]),
+                element_i,
+                charge.as_ref().map_or(String::from("  "), |arr| {
+                    let c = arr[i];
+                    match c.cmp(&0) {
+                        Ordering::Greater => format!("{:1}+", c),
+                        Ordering::Less => format!("{:1}-", -c),
+                        Ordering::Equal => String::from("  "),
+                    }
+                }),
+            ));
+        }
+
+        for model_i in 0..coord.shape()[0] {
+            if is_multi_model {
+                self.lines.push(format!("MODEL {:>8}", model_i + 1));
+            }
+            for atom_i in 0..coord.shape()[1] {
+                let coord_string = format!(
+                    "{:>8.3}{:>8.3}{:>8.3}",
+                    coord[[model_i, atom_i, 0]],
+                    coord[[model_i, atom_i, 1]],
+                    coord[[model_i, atom_i, 2]],
+                );
+                self.lines
+                    .push(prefix[atom_i].clone() + &coord_string + &suffix[atom_i]);
+            }
+            if is_multi_model {
+                self.lines.push(String::from("ENDMDL"));
+            }
+        }
+        Ok(())
+    }
 
     /// Index lines in the file that correspond to starts of new models and to
     /// `ATOM` or `HETATM` records.
     /// Must be called after the content of the file has been changed.
-    fn index_models_and_atoms(&mut self) {
+    fn _index_models_and_atoms(&mut self) {
         self.atom_line_i = self
             .lines
             .iter()
@@ -425,21 +546,26 @@ impl PDBFile {
         }
     }
 
-    /// Parse the `CRYST1` record of the PDB file to obtain the unit cell lengths
-    /// and angles (in degrees).
-    fn parse_box(&self) -> PyResult<Option<(f32, f32, f32, f32, f32, f32)>> {
+    /// Parse the `CRYST1` record of the PDB file to obtain the box dimensions.
+    fn parse_box<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyArray2<u32>>>> {
+        let struc = PyModule::import(py, "biotite.structure")?;
+
         for line in self.lines.iter() {
             if line.starts_with("CRYST1") {
                 if line.len() < 80 {
                     return Err(biotite::InvalidFileError::new_err("Line is too short"));
                 }
-                let len_a = parse_number(&line[6..15])?;
-                let len_b = parse_number(&line[15..24])?;
-                let len_c = parse_number(&line[24..33])?;
-                let alpha = parse_number(&line[33..40])?;
-                let beta = parse_number(&line[40..47])?;
-                let gamma = parse_number(&line[47..54])?;
-                return Ok(Some((len_a, len_b, len_c, alpha, beta, gamma)));
+                let len_a: f64 = parse_number(&line[6..15])?;
+                let len_b: f64 = parse_number(&line[15..24])?;
+                let len_c: f64 = parse_number(&line[24..33])?;
+                let alpha: f64 = parse_number(&line[33..40])?;
+                let beta: f64 = parse_number(&line[40..47])?;
+                let gamma: f64 = parse_number(&line[47..54])?;
+                return Ok(Some(
+                    struc.getattr("vectors_from_unitcell")?.call1(
+                        (len_a, len_b, len_c, deg2rad(alpha), deg2rad(beta), deg2rad(gamma))
+                    )?.extract()?
+                ));
             }
         }
         // File has no 'CRYST1' record
@@ -454,11 +580,11 @@ impl PDBFile {
     fn parse_bonds<'py>(
         &self,
         py: Python<'py>,
-        atom_id: PyReadonlyArray1<'py, i64>,
+        atom_id: &ArrayView1<i64>,
     ) -> PyResult<Bound<'py, PyArray2<u32>>> {
         // Mapping from atom ids to indices in an AtomArray
         let mut atom_id_to_index: HashMap<i64, u32> = HashMap::new();
-        for (i, id) in atom_id.as_array().iter().enumerate() {
+        for (i, id) in atom_id.iter().enumerate() {
             atom_id_to_index.insert(*id, i as u32);
         }
 
@@ -510,101 +636,6 @@ impl PDBFile {
         ));
     }
 
-    /// Write models to this [`PDBFile`] based on the given coordinates and annotation arrays.
-    fn write_models<'py>(
-        &mut self,
-        coord: PyReadonlyArray3<'py, f32>,
-        chain_id: PyReadonlyArray2<'py, u32>,
-        res_id: PyReadonlyArray1<'py, i64>,
-        ins_code: PyReadonlyArray2<'py, u32>,
-        res_name: PyReadonlyArray2<'py, u32>,
-        hetero: PyReadonlyArray1<'py, bool>,
-        atom_name: PyReadonlyArray2<'py, u32>,
-        element: PyReadonlyArray2<'py, u32>,
-        atom_id: Option<PyReadonlyArray1<'py, i64>>,
-        b_factor: Option<PyReadonlyArray1<'py, f64>>,
-        occupancy: Option<PyReadonlyArray1<'py, f64>>,
-        charge: Option<PyReadonlyArray1<'py, i64>>,
-    ) -> PyResult<()> {
-        let coord = coord.as_array();
-        let chain_id = chain_id.as_array();
-        let res_id = res_id.as_array();
-        let ins_code = ins_code.as_array();
-        let res_name = res_name.as_array();
-        let hetero = hetero.as_array();
-        let atom_name = atom_name.as_array();
-        let element = element.as_array();
-        let atom_id = atom_id.as_ref().map(|arr| arr.as_array());
-        let b_factor = b_factor.as_ref().map(|arr| arr.as_array());
-        let occupancy = occupancy.as_ref().map(|arr| arr.as_array());
-        let charge = charge.as_ref().map(|arr| arr.as_array());
-
-        let is_multi_model = coord.shape()[0] > 1;
-
-        // These will contain the ATOM records for each atom
-        // These are reused in every model by adding the coordinates to the string
-        // This procedure aims to increase the performance is repetitive formatting is omitted
-        let mut prefix: Vec<String> = Vec::new();
-        let mut suffix: Vec<String> = Vec::new();
-
-        for i in 0..coord.shape()[1] {
-            let element_i = parse_string_from_array(&element, i)?;
-            let atom_name_i = parse_string_from_array(&atom_name, i)?;
-
-            prefix.push(format!(
-                "{:6}{:>5} {:4} {:>3} {:1}{:>4}{:1}   ",
-                if hetero[i] { "HETATM" } else { "ATOM" },
-                atom_id
-                    .as_ref()
-                    .map_or((i + 1) as i64, |arr| truncate_id(arr[i], 99999)),
-                if element_i.len() == 1 && atom_name_i.len() < 4 {
-                    format!(" {}", atom_name_i)
-                } else {
-                    atom_name_i
-                },
-                parse_string_from_array(&res_name, i)?,
-                parse_string_from_array(&chain_id, i)?,
-                truncate_id(res_id[i], 9999),
-                parse_string_from_array(&ins_code, i)?,
-            ));
-
-            suffix.push(format!(
-                "{:>6.2}{:>6.2}          {:>2}{}",
-                occupancy.as_ref().map_or(1f64, |arr| arr[i]),
-                b_factor.as_ref().map_or(0f64, |arr| arr[i]),
-                element_i,
-                charge.as_ref().map_or(String::from("  "), |arr| {
-                    let c = arr[i];
-                    match c.cmp(&0) {
-                        Ordering::Greater => format!("{:1}+", c),
-                        Ordering::Less => format!("{:1}-", -c),
-                        Ordering::Equal => String::from("  "),
-                    }
-                }),
-            ));
-        }
-
-        for model_i in 0..coord.shape()[0] {
-            if is_multi_model {
-                self.lines.push(format!("MODEL {:>8}", model_i + 1));
-            }
-            for atom_i in 0..coord.shape()[1] {
-                let coord_string = format!(
-                    "{:>8.3}{:>8.3}{:>8.3}",
-                    coord[[model_i, atom_i, 0]],
-                    coord[[model_i, atom_i, 1]],
-                    coord[[model_i, atom_i, 2]],
-                );
-                self.lines
-                    .push(prefix[atom_i].clone() + &coord_string + &suffix[atom_i]);
-            }
-            if is_multi_model {
-                self.lines.push(String::from("ENDMDL"));
-            }
-        }
-        Ok(())
-    }
-
     /// Write `CONECT` records to this [`PDBFile`] based on the given `bonds`
     /// array containing indices pointing to bonded atoms in the `AtomArray`.
     /// The `atom_id` annotation array is required to map the atom IDs in `CONECT` records
@@ -648,31 +679,78 @@ impl PDBFile {
     }
 }
 
-/// Write the characters of a `String` into the 2nd dimension of a 2D *Numpy* array.
-/// This function is the reverse of [`parse_string_from_array()`].
-#[inline(always)]
-fn write_string_to_array(array: &mut Array2<u32>, index: usize, string: &str) {
-    for (i, char) in string.chars().enumerate() {
-        array[[index, i]] = char as u32
+
+fn get_annotation_as_type<'py, T: numpy::Element>(
+    atoms: Bound<'py, PyAny>,
+    annotation: &str,
+    dtype: &str,
+) -> PyResult<Bound<'py, PyArray1<T>>> {
+    let kwargs = PyDict::new(atoms.py());
+    kwargs.set_item("dtype", dtype.to_string())?;
+    kwargs.set_item("copy", false)?;
+    Ok(atoms
+        .getattr(annotation)?
+        .call_method("astype", (), Some(&kwargs))?
+        .extract()?
+    )
+}
+
+/// Filter the given ``AtomArray`` according to the given *altloc* identifier.
+fn filter_altloc<'py>(
+    py: Python<'py>, atoms: Bound<'py, PyAny>, altloc: &str
+) -> PyResult<Bound<'py, PyAny>> {
+    let struc = PyModule::import(py, "biotite.structure")?;
+
+    match altloc {
+        "first" => {
+            let altloc_id = atoms.getattr("altloc_id")?;
+            let filter = struc.getattr("filter_first_altloc")?.call1((atoms.clone(), altloc_id))?;
+            // Ellipsis in the first dimension in case of an ``AtomArrayStack``
+            let index = (PyEllipsis::get(py), filter);
+            Ok(atoms.call_method1("__getitem__", (index,))?)
+        },
+        "occupancy" => {
+            let altloc_id = atoms.getattr("altloc_id")?;
+            let occupancy = atoms.getattr("occupancy")?;
+            let filter = struc.getattr("filter_highest_occupancy_altloc")?.call1(
+                (atoms.clone(), altloc_id, occupancy)
+            )?;
+            let index = (PyEllipsis::get(py), filter);
+            Ok(atoms.call_method1("__getitem__", (index,))?)
+        },
+        "all" => Ok(atoms),
+        _ => Err(biotite::InvalidFileError::new_err(format!(
+            "'{}' is not a valid 'altloc' option",
+            altloc
+        ))),
     }
 }
 
-/// Create a `String` from a row in a 2D *Numpy* array.
-/// Each `uint32` value in the array is interpreted a an UTF-32 character.
+
+/// Write the characters of a ``String`` into a UTF-32 formatted array.
+/// This function is the reverse of [`parse_string_from_array()`].
+#[inline(always)]
+fn write_string_to_array(array: &mut ArrayViewMut1<u32>, string: &str) {
+    array.iter_mut().zip(string.chars()).for_each(|(element, char)| {
+        *element = char as u32;
+    });
+}
+
+/// Create a ``String`` from a UTF-32 formatted  array.
+/// Such an array would be for example an element of a NumPy array with *Unicode* dtype.
 /// This function is the reverse of [`write_string_to_array()`].
 #[inline(always)]
-fn parse_string_from_array(array: &ArrayView2<u32>, index: usize) -> PyResult<String> {
-    let mut out_string: String = String::new();
-    for i in 0..array.shape()[1] {
-        let utf_32_val = array[[index, i]];
-        if utf_32_val == 0 {
-            // End of string
-            break;
-        }
-        let ascii_val: u8 = utf_32_val.try_into()?;
-        out_string.push(ascii_val as char);
-    }
-    Ok(out_string)
+fn parse_string_from_array(array: &ArrayView1<u32>) -> PyResult<String> {
+    let maybe_string: Result<String, _> = array
+            .iter()
+            .take_while(|&utf32_val| *utf32_val != 0)
+            .map(|&utf32_val| TryInto::<u8>::try_into(utf32_val).map(|x| x as char))
+            .collect();
+    maybe_string.map_err(|_| {
+        biotite::InvalidFileError::new_err(format!(
+            "Unicode array contains invalid characters"
+        ))
+    })
 }
 
 /// Parse a string into a number.
@@ -702,7 +780,7 @@ fn parse_digit(digit: &u8) -> PyResult<i64> {
     )
 }
 
-//
+/// Parse a float from a string slice.
 fn parse_float_from_string(line: &str, start: usize, stop: usize) -> PyResult<f32> {
     line[start..stop].trim().parse().map_err(|_| {
         biotite::InvalidFileError::new_err(format!(
@@ -722,4 +800,9 @@ fn truncate_id(id: i64, max_id: i64) -> i64 {
         return id;
     }
     ((id - 1) % max_id) + 1
+}
+
+/// Convert degrees to radians.
+fn deg2rad<T: Float + FloatConst>(deg: T) -> T {
+    deg * T::PI() / T::from(180.0).unwrap()
 }
