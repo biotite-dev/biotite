@@ -8,7 +8,7 @@ Common functions used by a number of subpackages.
 
 __name__ = "biotite.structure.io"
 __author__ = "Patrick Kunzmann"
-__all__ = ["number_of_integer_digits"]
+__all__ = ["number_of_integer_digits", "convert_unicode_to_uint32"]
 
 import numpy as np
 
@@ -36,3 +36,29 @@ def number_of_integer_digits(values):
     n_digits = max(n_digits, len(str(np.min(values))))
     n_digits = max(n_digits, len(str(np.max(values))))
     return n_digits
+
+
+def convert_unicode_to_uint32(array):
+    """
+    Convert a unicode string array into a 2D uint32 array.
+
+    The second dimension corresponds to the character position within a
+    string.
+
+    Parameters
+    ----------
+    array : ndarray, dtype=unicode
+        The unicode string array to be converted.
+
+    Returns
+    -------
+    array : ndarray, dtype=uint32
+        The converted unicode string array.
+        Each element along the second dimension corresponds to an UTF-32 symbol.
+    """
+    dtype = array.dtype
+    if not np.issubdtype(dtype, np.str_):
+        raise TypeError("Expected unicode string array")
+    length = array.shape[0]
+    n_char = dtype.itemsize // 4
+    return np.frombuffer(array, dtype=np.uint32).reshape(length, n_char)

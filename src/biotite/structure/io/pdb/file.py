@@ -1708,21 +1708,6 @@ class PDBFile(_PDBFile):
         self._atom_line_i = self._pdb_file._atom_line_i
 
 
-def _convert_unicode_to_uint32(array):
-    """
-    Convert a unicode string array into a 2D uint32 array.
-
-    The second dimension corresponds to the character position within a
-    string.
-    """
-    dtype = array.dtype
-    if not np.issubdtype(dtype, np.str_):
-        raise TypeError("Expected unicode string array")
-    length = array.shape[0]
-    n_char = dtype.itemsize // 4
-    return np.frombuffer(array, dtype=np.uint32).reshape(length, n_char)
-
-
 class PDBFile(RustPDBFile):
     def get_structure(
         self, model=None, altloc="first", extra_fields=None, include_bonds=False

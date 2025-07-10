@@ -1,8 +1,9 @@
 //! Low-level PDB file parsing and writing.
 
-use numpy::ndarray::{Array, Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1};
+use ndarray::Axis;
+use numpy::ndarray::{Array, Array1, Array2, ArrayView1, ArrayView2, ArrayView3, ArrayViewMut1, ArrayViewD, Ix3};
 use numpy::{
-    IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray3,
+    IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray3, PyArrayDyn,
 };
 use pyo3::exceptions;
 use pyo3::prelude::*;
@@ -16,11 +17,11 @@ use numpy::PyArrayMethods;
 use num_traits::{Float, FloatConst};
 use pyo3::ffi::c_str;
 
-pyo3::import_exception!(biotite, InvalidFileError);
 // Label as a separate module to indicate that this exception comes
 // from biotite
 mod biotite {
     pyo3::import_exception!(biotite, InvalidFileError);
+    pyo3::import_exception!(biotite.structure, BadStructureError);
 }
 
 /// This is a low-level abstraction of a PDB file.
@@ -357,25 +358,34 @@ impl PDBFile {
         &mut self,
         atoms: Bound<'_, PyAny>,
     ) -> PyResult<()> {
-        let coord: ArrayView2<f32> = atoms
+        // Create a binding first to avoid borrowing a dropped array
+        let coord_array = atoms
             .getattr("coord")?
-            .extract::<Bound<'_, PyArray2<f32>>>()?
-            .readonly()
-            .as_array();
-        let chain_id = get_annotation_as_type(atoms, "chain_id", "U")?.readonly().as_array();
-        let res_id = get_annotation_as_type(atoms, "res_id", "int64")?.readonly().as_array();
-        let ins_code = get_annotation_as_type(atoms, "ins_code", "U")?.readonly().as_array();
-        let res_name = get_annotation_as_type(atoms, "res_name", "U")?.readonly().as_array();
-        let hetero = get_annotation_as_type(atoms, "hetero", "bool")?.readonly().as_array();
-        let atom_name = get_annotation_as_type(atoms, "atom_name", "U")?.readonly().as_array();
-        let element = get_annotation_as_type(atoms, "element", "U")?.readonly().as_array();
-
-        let atom_id = atom_id.as_ref().map(|arr| arr.as_array());
-        let b_factor = b_factor.as_ref().map(|arr| arr.as_array());
-        let occupancy = occupancy.as_ref().map(|arr| arr.as_array());
-        let charge = charge.as_ref().map(|arr| arr.as_array());
-
+            .extract::<Bound<'_, PyArrayDyn<f32>>>()?
+            .readonly();
+        let coord: ArrayViewD<f32> = coord_array.as_array();
+        let coord: ArrayView3<f32> = match coord.ndim() {
+            2 => coord.insert_axis(Axis(0)),
+            3 => coord,
+            _ => Err(biotite::BadStructureError::new_err("Invalid dimensions of coordinates"))?,
+        }.into_dimensionality::<Ix3>().unwrap();
         let is_multi_model = coord.shape()[0] > 1;
+
+        let chain_id = get_annotation_as_strings(&atoms, "chain_id")?;
+        let res_id_numpy = get_annotation_as_type(&atoms, "res_id", "int64")?.readonly();
+        let res_id: ArrayView1<i64> = res_id_numpy.as_array();
+        let ins_code = get_annotation_as_strings(&atoms, "ins_code")?;
+        let res_name = get_annotation_as_strings(&atoms, "res_name")?;
+        let hetero_numpy = get_annotation_as_type(&atoms, "hetero", "bool")?.readonly();
+        let hetero: ArrayView1<bool> = hetero_numpy.as_array();
+        let atom_name = get_annotation_as_strings(&atoms, "atom_name")?;
+        let element = get_annotation_as_strings(&atoms, "element")?;
+
+        let atom_id_numpy = atoms.hasattr("atom_id")?.then(|| get_annotation_as_type(&atoms, "atom_id", "int64")).transpose()?.readonly();
+        let atom_id = atom_id_numpy.as_array();
+        let b_factor: Option<ArrayView1<f64>> = atoms.hasattr("b_factor")?.then(|| get_annotation_as_type(&atoms, "b_factor", "float64").map(|arr| arr.readonly().as_array())).transpose()?;
+        let occupancy: Option<ArrayView1<f64>> = atoms.hasattr("occupancy")?.then(|| get_annotation_as_type(&atoms, "occupancy", "float64").map(|arr| arr.readonly().as_array())).transpose()?;
+        let charge: Option<ArrayView1<i64>> = atoms.hasattr("charge")?.then(|| get_annotation_as_type(&atoms, "charge", "int64").map(|arr| arr.readonly().as_array())).transpose()?;
 
         // These will contain the ATOM records for each atom
         // These are reused in every model by adding the coordinates to the string
@@ -384,8 +394,8 @@ impl PDBFile {
         let mut suffix: Vec<String> = Vec::new();
 
         for i in 0..coord.shape()[1] {
-            let element_i = parse_string_from_array(&element.column(i))?;
-            let atom_name_i = parse_string_from_array(&atom_name.column(i))?;
+            let element_i = &element[i];
+            let atom_name_i = &atom_name[i];
 
             prefix.push(format!(
                 "{:6}{:>5} {:4} {:>3} {:1}{:>4}{:1}   ",
@@ -396,12 +406,12 @@ impl PDBFile {
                 if element_i.len() == 1 && atom_name_i.len() < 4 {
                     format!(" {}", atom_name_i)
                 } else {
-                    atom_name_i
+                    format!("{}", atom_name_i)
                 },
-                parse_string_from_array(&res_name.column(i))?,
-                parse_string_from_array(&chain_id.column(i))?,
+                res_name[i],
+                chain_id[i],
                 truncate_id(res_id[i], 9999),
-                parse_string_from_array(&ins_code.column(i))?,
+                ins_code[i],
             ));
 
             suffix.push(format!(
@@ -681,7 +691,7 @@ impl PDBFile {
 
 
 fn get_annotation_as_type<'py, T: numpy::Element>(
-    atoms: Bound<'py, PyAny>,
+    atoms: &Bound<'py, PyAny>,
     annotation: &str,
     dtype: &str,
 ) -> PyResult<Bound<'py, PyArray1<T>>> {
@@ -693,6 +703,24 @@ fn get_annotation_as_type<'py, T: numpy::Element>(
         .call_method("astype", (), Some(&kwargs))?
         .extract()?
     )
+}
+
+fn get_annotation_as_strings<'py>(
+    atoms: &Bound<'py, PyAny>,
+    annotation: &str,
+) -> PyResult<Vec<String>> {
+    let convert_unicode_to_uint32 = PyModule::import(atoms.py(), "biotite.structure.io")?.getattr("convert_unicode_to_uint32")?;
+
+    let annot_array = atoms.getattr(annotation)?;
+    let string_array: Bound<'py, PyArray1<u32>> = convert_unicode_to_uint32
+        .call1((annot_array,))?
+        .extract::<Bound<'py, PyArray1<u32>>>()?;
+    string_array
+        .readonly()
+        .as_array()
+        .columns()
+        .into_iter()
+        .map(|x| parse_string_from_array(&x)).collect()
 }
 
 /// Filter the given ``AtomArray`` according to the given *altloc* identifier.
