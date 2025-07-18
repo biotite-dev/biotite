@@ -1,0 +1,4 @@
+prune tests/
+prune benchmarks/
+prune doc/
+include src/biotite/structure/info/components.bcif
