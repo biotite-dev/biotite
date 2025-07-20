@@ -445,3 +445,12 @@ class TestCompatibilityWithExistingCode:
             "(chain_id == 'A') & (atom_name == 'CA') & ~has_nan_coord()"
         )
         assert idxs.tolist() == [1]
+
+    def test_compound_queries2(self, atom_array):
+        atom_array.set_annotation("b_factor", np.array([10, 51, 93, 40, 50, 60, 70], dtype=np.float32))
+        result = atom_array.query("(res_name in ['ALA', 'GLY']) & (b_factor > 50)")
+        assert result.array_length() == 2
+        assert result.res_name[0] == "ALA"
+        assert result.res_name[1] == "GLY"
+        assert result.b_factor[0] > 50
+        assert result.b_factor[1] > 50
