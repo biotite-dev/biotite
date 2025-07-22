@@ -155,6 +155,7 @@ def _assert_valid_file(response_text, pdb_id):
             "<title>PDB Archive over AWS</title>",
             "No fasta files were found.",
             "No valid PDB IDs were submitted.",
+            "The requested URL was incorrect, too long or otherwise malformed.",
         ]
     ):
         raise RequestError("PDB ID {:} is invalid".format(pdb_id))
