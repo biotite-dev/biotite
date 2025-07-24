@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
 import tempfile
 from datetime import date
 from os.path import join
@@ -23,16 +22,27 @@ CUTOFF_DATE = date(2025, 4, 30)
 TC5B_TERM = "Miniprotein Construct TC5b"
 
 
-@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
+@pytest.mark.parametrize("as_file_like", [False, True])
 @pytest.mark.parametrize(
-    "format, as_file_like",
-    itertools.product(["pdb", "cif", "bcif", "fasta"], [False, True]),
+    "format, extended_id",
+    [
+        pytest.param("pdb", False),
+        pytest.param("cif", False),
+        pytest.param("cif", True),
+        pytest.param("bcif", False),
+        # https://models.rcsb.org/ does not support extended PDB IDs yet
+        pytest.param("bcif", True, marks=pytest.mark.xfail),
+        pytest.param("fasta", False),
+    ],
 )
-def test_fetch(format, as_file_like):
+def test_fetch(format, as_file_like, extended_id):
+    PDB_ID = "1aki"
+    pdb_id = PDB_ID if not extended_id else "pdb_0000" + PDB_ID
     path = None if as_file_like else tempfile.gettempdir()
-    file_path_or_obj = rcsb.fetch("1l2y", format, path, overwrite=True)
+    file_path_or_obj = rcsb.fetch(pdb_id, format, path, overwrite=True)
     if format == "pdb":
         file = pdb.PDBFile.read(file_path_or_obj)
+        print(file.lines)
         pdb.get_structure(file)
     elif format == "cif":
         file = pdbx.CIFFile.read(file_path_or_obj)
