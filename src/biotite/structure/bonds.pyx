@@ -1735,6 +1735,7 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
     cdef np.ndarray atom_names = atoms.atom_name
     cdef np.ndarray atom_names_in_res
     cdef np.ndarray res_names = atoms.res_name
+    cdef np.ndarray hetero = atoms.hetero
     cdef str atom_name1, atom_name2
     cdef int64[:] atom_indices1, atom_indices2
     cdef dict bond_dict_for_res
@@ -1744,6 +1745,10 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
     for res_i in range(len(residue_starts)-1):
         curr_start_i = residue_starts[res_i]
         next_start_i = residue_starts[res_i+1]
+
+        # Skip lookup for ligands
+        if hetero[curr_start_i]:
+            continue
 
         if custom_bond_dict is None:
             bond_dict_for_res = bonds_in_residue(res_names[curr_start_i])
