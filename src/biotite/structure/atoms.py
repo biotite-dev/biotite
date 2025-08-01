@@ -1554,7 +1554,7 @@ def coord(item):
         Atom coordinates.
     """
 
-    if type(item) in (Atom, AtomArray, AtomArrayStack):
+    if isinstance(item, (Atom, _AtomArrayBase)):
         return item.coord
     elif isinstance(item, np.ndarray):
         return item.astype(np.float32, copy=False)
