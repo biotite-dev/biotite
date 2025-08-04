@@ -1648,7 +1648,8 @@ def connect_via_distances(atoms, dict distance_range=None, bint inter_residue=Tr
 
 
 def connect_via_residue_names(atoms, bint inter_residue=True,
-                              dict custom_bond_dict=None):
+                              dict custom_bond_dict=None,
+                              bint ignore_hetero=False):
     """
     connect_via_residue_names(atoms, inter_residue=True, custom_bond_dict=None)
 
@@ -1674,6 +1675,8 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
         respective :class:`BondType` (represented as integer).
         If given, these bonds are used instead of the bonds read from
         ``components.cif``.
+    ignore_hetero : bool, optional
+        If true, no bonds are created for hetero atoms.
 
     Returns
     -------
@@ -1735,6 +1738,7 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
     cdef np.ndarray atom_names = atoms.atom_name
     cdef np.ndarray atom_names_in_res
     cdef np.ndarray res_names = atoms.res_name
+    cdef np.ndarray hetero = atoms.hetero
     cdef str atom_name1, atom_name2
     cdef int64[:] atom_indices1, atom_indices2
     cdef dict bond_dict_for_res
@@ -1744,6 +1748,12 @@ def connect_via_residue_names(atoms, bint inter_residue=True,
     for res_i in range(len(residue_starts)-1):
         curr_start_i = residue_starts[res_i]
         next_start_i = residue_starts[res_i+1]
+
+        # Skip lookup for ligands 
+        # need to special case water, see test case 1crr where water CONECT entries are missing
+        # but present in cif.
+        if ignore_hetero and hetero[curr_start_i] and res_names[curr_start_i] != "HOH":
+            continue
 
         if custom_bond_dict is None:
             bond_dict_for_res = bonds_in_residue(res_names[curr_start_i])
