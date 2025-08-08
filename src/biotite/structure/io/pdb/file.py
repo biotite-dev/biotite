@@ -6,12 +6,16 @@ __name__ = "biotite.structure.io.pdb"
 __author__ = "Patrick Kunzmann, Daniel Bauer, Claude J. Rogers"
 __all__ = ["PDBFile"]
 
+import itertools
 import warnings
 from collections import namedtuple
 import numpy as np
 from biotite.file import InvalidFileError, TextFile
 from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
-from biotite.structure.bonds import BondList, connect_via_residue_names
+from biotite.structure.bonds import (
+    BondList,
+    connect_via_residue_names,
+)
 from biotite.structure.box import unitcell_from_vectors, vectors_from_unitcell
 from biotite.structure.error import BadStructureError
 from biotite.structure.filter import (
@@ -19,6 +23,7 @@ from biotite.structure.filter import (
     filter_highest_occupancy_altloc,
     filter_solvent,
 )
+from biotite.structure.info.bonds import bonds_in_residue
 from biotite.structure.io.pdb.hybrid36 import (
     decode_hybrid36,
     encode_hybrid36,
@@ -544,8 +549,15 @@ class PDBFile(TextFile):
         # Read bonds
         if include_bonds:
             bond_list = self._get_bonds(atom_id)
+            # Create bond dict containing only non-hetero residues (+ water)
+            custom_bond_dict = {
+                res_name: bonds_in_residue(res_name)
+                for res_name in itertools.chain(
+                    np.unique(array[..., ~array.hetero].res_name), ["HOH"]
+                )
+            }
             bond_list = bond_list.merge(
-                connect_via_residue_names(array, ignore_hetero=True)
+                connect_via_residue_names(array, custom_bond_dict=custom_bond_dict)
             )
             array.bonds = bond_list
 
