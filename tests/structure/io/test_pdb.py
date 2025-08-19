@@ -587,7 +587,7 @@ def test_hetatm_intra_residue_bonds():
         ],
         dtype=np.uint32,
     )
-    path = join(data_dir("structure"), "hetatm/ligand.pdb")
+    path = join(data_dir("structure"), "edge_cases", "hetatm.pdb")
 
     pdb_file = pdb.PDBFile.read(path)
     structure = pdb.get_structure(pdb_file, model=1, include_bonds=True)
