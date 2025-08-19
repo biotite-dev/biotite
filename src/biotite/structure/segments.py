@@ -62,13 +62,13 @@ def get_segment_starts(
     # Convert mask to indices
     # Add 1, to shift the indices from the end of a segment
     # to the start of a new segment
-    chain_starts = np.where(segment_start_mask)[0] + 1
+    segment_starts = np.where(segment_start_mask)[0] + 1
 
     # The first chain is not included yet -> Insert '[0]'
     if add_exclusive_stop:
-        return np.concatenate(([0], chain_starts, [array.array_length()]))
+        return np.concatenate(([0], segment_starts, [array.array_length()]))
     else:
-        return np.concatenate(([0], chain_starts))
+        return np.concatenate(([0], segment_starts))
 
 
 def apply_segment_wise(starts, data, function, axis=None):
