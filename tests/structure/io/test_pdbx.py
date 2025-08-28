@@ -180,6 +180,29 @@ def test_filter_altloc(pdb_id):
         assert atoms["all"].array_length() == atoms["first"].array_length()
 
 
+@pytest.mark.parametrize("altloc", ["first", "occupancy"])
+def test_filter_altloc_edge_case(altloc):
+    """
+    Check if the https://github.com/biotite-dev/biotite/issues/824 is resolved:
+    Expect that only one altloc ID is selected for the same residue, even if that
+    residue in some altloc has a different residue name.
+    """
+    pdbx_file = pdbx.CIFFile.read(
+        join(data_dir("structure"), "edge_cases", "altloc.cif")
+    )
+    test_atoms = pdbx.get_structure(pdbx_file, model=1, altloc=altloc)
+    ref_atoms = pdbx.get_structure(pdbx_file, model=1, altloc="all")
+
+    # Check if the any of the alternatives matches the test structure
+    passed = False
+    for altloc_id in np.unique(ref_atoms.altloc_id):
+        altloc_atoms = ref_atoms[ref_atoms.altloc_id == altloc_id]
+        if test_atoms.atom_name.tolist() == altloc_atoms.atom_name.tolist():
+            passed = True
+            break
+    assert passed
+
+
 @pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_bonds_from_ccd(format):
     """

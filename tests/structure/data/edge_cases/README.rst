@@ -8,3 +8,5 @@
   makes it hard to determine where a new residue starts.
   However, using ``label_seq_id`` as fallback allows resolving the residue starts.
   Derived from PDB entry ``5HU8``.
+- ``altloc.cif``: An altloc for a residue has a different residue name.
+  It should still be considered as the same residue.
