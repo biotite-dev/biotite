@@ -88,7 +88,7 @@ EVALUE_THRESHOLD = 1e-1
 # Limitation of protein sequence alignment
 # ----------------------------------------
 #
-# To motivate using a structural alphabet, we first we try a regular sequence alignment
+# To motivate using a structural alphabet, we first try a regular sequence alignment
 # on the two homologs.
 
 
@@ -124,10 +124,10 @@ graphics.plot_alignment_similarity_based(
 
 ########################################################################################
 # The sequence identity is quite low.
-# One would typically refer to this range as the *twilight zone*, were it is unclear if
+# One would typically refer to this range as the *twilight zone*, where it is unclear if
 # the two sequences are actually homologs.
 # If the database comprised the entire AlphaFold DB :footcite:`Varadi2024`, the
-# probability of an finding an alignment as good as this one by chance would be quite
+# probability of finding an alignment as good as this one by chance would be quite
 # high as the E-value suggests below.
 #
 # The background frequencies for E-value calculation are taken from
