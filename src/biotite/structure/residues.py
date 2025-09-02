@@ -72,7 +72,7 @@ def get_residue_starts(array, add_exclusive_stop=False, extra_categories=()):
     [  0  16  35  56  75  92 116 135 157 169 176 183 197 208 219 226 250 264
      278 292 304]
     """
-    categories = ["chain_id", "res_id", "ins_code", "res_name"] + list(extra_categories)
+    categories = ["chain_id", "res_id", "ins_code"] + list(extra_categories)
     if "sym_id" in array.get_annotation_categories():
         categories.append("sym_id")
     return get_segment_starts(array, add_exclusive_stop, equal_categories=categories)
