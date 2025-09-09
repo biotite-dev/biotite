@@ -367,6 +367,7 @@
         ],
         "Proteins" : [
             "dihedral_backbone",
+            "dihedral_side_chain",
             "annotate_sse"
         ],
         "Nucleic acids" : [
