@@ -180,6 +180,29 @@ def test_filter_altloc(pdb_id):
         assert atoms["all"].array_length() == atoms["first"].array_length()
 
 
+@pytest.mark.parametrize("altloc", ["first", "occupancy"])
+def test_filter_altloc_edge_case(altloc):
+    """
+    Check if the https://github.com/biotite-dev/biotite/issues/824 is resolved:
+    Expect that only one altloc ID is selected for the same residue, even if that
+    residue in some altloc has a different residue name.
+    """
+    pdbx_file = pdbx.CIFFile.read(
+        join(data_dir("structure"), "edge_cases", "altloc.cif")
+    )
+    test_atoms = pdbx.get_structure(pdbx_file, model=1, altloc=altloc)
+    ref_atoms = pdbx.get_structure(pdbx_file, model=1, altloc="all")
+
+    # Check if the any of the alternatives matches the test structure
+    passed = False
+    for altloc_id in np.unique(ref_atoms.altloc_id):
+        altloc_atoms = ref_atoms[ref_atoms.altloc_id == altloc_id]
+        if test_atoms.atom_name.tolist() == altloc_atoms.atom_name.tolist():
+            passed = True
+            break
+    assert passed
+
+
 @pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_bonds_from_ccd(format):
     """
@@ -283,6 +306,38 @@ def test_extra_fields(tmpdir, format):
     assert test_atoms.occupancy.tolist() == approx(ref_atoms.occupancy.tolist())
     assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
     assert test_atoms == ref_atoms
+
+
+def test_hetero_residue_borders():
+    """
+    Check if the https://github.com/biotite-dev/biotite/issues/553 is resolved:
+    Even if the ``label_xxx`` annotation is not sufficient to determine residue starts,
+    the ``auth_seq_id`` should be used to create incrementing residue IDs.
+    As reference the structure using author fields is taken, as this problem does not
+    apply for them.
+    The created residue IDs are manually checked, based on the CIF file, representing
+    this edge case.
+    """
+    path = join(data_dir("structure"), "edge_cases", "res_ids.cif")
+    pdbx_file = pdbx.CIFFile.read(path)
+    # The issue does not exist for author fields, hence they represent the reference
+    ref_atoms = pdbx.get_structure(pdbx_file, model=1, use_author_fields=True)
+    test_atoms = pdbx.get_structure(pdbx_file, model=1, use_author_fields=False)
+
+    # The `label_xxx` variant should provide the same residue starts
+    ref_res_starts = struc.get_residue_starts(ref_atoms)
+    assert struc.get_residue_starts(test_atoms).tolist() == ref_res_starts.tolist()
+    # The residue numbering should be incrementing from residue to residue
+    # within the same chain for hetero residues
+    test_het_res_ids, _ = struc.get_residues(test_atoms[test_atoms.hetero])
+    assert (
+        test_het_res_ids.tolist()
+        == [1, 2, 1, 2, 3, 1, 2, 1, 2, 3, 1, 2, 1, 2, 3, 1, 1, 1]
+    )  # fmt: skip
+    # For non-hetero residues, the residue IDs represent the true sequence position
+    # Hence, they represent the original `label_seq_id` values
+    test_protein_res_ids, _ = struc.get_residues(test_atoms[~test_atoms.hetero])
+    assert test_protein_res_ids.tolist() == [5, 6, 7]
 
 
 def test_dynamic_dtype():

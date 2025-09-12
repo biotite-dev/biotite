@@ -55,6 +55,7 @@ from biotite.structure.io.pdbx.bcif import (
 from biotite.structure.io.pdbx.cif import CIFBlock, CIFFile
 from biotite.structure.io.pdbx.component import MaskValue
 from biotite.structure.io.pdbx.encoding import StringArrayEncoding
+from biotite.structure.repair import create_continuous_res_ids
 from biotite.structure.residues import (
     get_residue_count,
     get_residue_positions,
@@ -496,12 +497,6 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
             atom_site, f"{prefix}_asym_id", f"{alt_prefix}_asym_id"
         ).as_array(str),
     )
-    array.set_annotation(
-        "res_id",
-        _get_or_fallback(
-            atom_site, f"{prefix}_seq_id", f"{alt_prefix}_seq_id"
-        ).as_array(int, -1),
-    )
     array.set_annotation("ins_code", atom_site["pdbx_PDB_ins_code"].as_array(str, ""))
     array.set_annotation(
         "res_name",
@@ -517,6 +512,22 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
         ).as_array(str),
     )
     array.set_annotation("element", atom_site["type_symbol"].as_array(str))
+
+    # Special handling for `res_id`, as the `label_seq_id` is equal (`.`) for all
+    # hetero residues, which makes distinguishing subsequent residues from another
+    # difficult (https://github.com/biotite-dev/biotite/issues/553)
+    res_id = _get_or_fallback(
+        atom_site, f"{prefix}_seq_id", f"{alt_prefix}_seq_id"
+    ).as_array(int, -1)
+    if not use_author_fields and "auth_seq_id" in atom_site:
+        # Therefore, the `auth_seq_id` is still used to determine residue starts
+        # in `create_continuous_res_ids()`, even if `use_author_fields = False`.
+        res_id_for_residue_starts = atom_site["auth_seq_id"].as_array(int, -1)
+        array.set_annotation("res_id", res_id_for_residue_starts)
+        fallback_res_ids = create_continuous_res_ids(array)
+        array.set_annotation("res_id", np.where(res_id == -1, fallback_res_ids, res_id))
+    else:
+        array.set_annotation("res_id", res_id)
 
     if "atom_id" in extra_fields:
         if "id" in atom_site:
