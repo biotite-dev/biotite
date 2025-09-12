@@ -331,8 +331,10 @@
             "get_residue_masks",
             "get_residue_starts_for",
             "get_residue_positions",
+            "get_all_residue_positions",
             "get_residue_count",
-            "residue_iter"
+            "residue_iter",
+            "get_atom_name_indices"
         ],
         "Chain level utility" : [
             "get_chain_starts",
@@ -341,6 +343,7 @@
             "get_chain_masks",
             "get_chain_starts_for",
             "get_chain_positions",
+            "get_all_chain_positions",
             "get_chains",
             "get_chain_count",
             "chain_iter"
@@ -367,6 +370,7 @@
         ],
         "Proteins" : [
             "dihedral_backbone",
+            "dihedral_side_chain",
             "annotate_sse"
         ],
         "Nucleic acids" : [
