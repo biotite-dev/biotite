@@ -269,7 +269,7 @@ class BondList(Copyable):
 
     def __init__(self, uint32 atom_count, np.ndarray bonds=None):
         self._atom_count = atom_count
-
+        bonds = memoryview(bonds)
         if bonds is not None and len(bonds) > 0:
             if bonds.ndim != 2:
                 raise ValueError("Expected a 2D-ndarray for input bonds")
