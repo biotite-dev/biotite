@@ -879,21 +879,41 @@ class StringArrayEncoding(Encoding):
             # -> Bring into the original order
             _, unique_indices = np.unique(data, return_index=True)
             self.strings = data[np.sort(unique_indices)]
+            # Empty strings are represented as -1 indices
+            # -> We do not need to represent them in the string list
+            self.strings = self.strings[self.strings != ""]
             check_present = False
         else:
             check_present = True
 
-        string_order = _safe_cast(np.argsort(self.strings), np.int32)
-        sorted_strings = self.strings[string_order]
-        sorted_indices = np.searchsorted(sorted_strings, data)
-        indices = string_order[sorted_indices]
-        if check_present and not np.all(self.strings[indices] == data):
+        if len(self.strings) > 0:
+            string_order = _safe_cast(np.argsort(self.strings), np.int32)
+            sorted_strings = self.strings[string_order]
+            sorted_indices = np.searchsorted(sorted_strings, data)
+            indices = string_order[sorted_indices]
+            # Represent empty strings as -1
+            indices[data == ""] = -1
+        else:
+            # There are no strings -> The indices can only ever be -1 to indicate
+            # missing values
+            # The check if this is correct is done below
+            indices = np.full(data.shape[0], -1, dtype=np.int32)
+
+        valid_indices_mask = indices != -1
+        if check_present and not np.all(
+            self.strings[indices[valid_indices_mask]] == data[valid_indices_mask]
+        ):
             raise ValueError("Data contains strings not present in 'strings'")
         return encode_stepwise(indices, self.data_encoding)
 
     def decode(self, data):
         indices = decode_stepwise(data, self.data_encoding)
-        return self.strings[indices]
+        # Initialize with empty strings
+        strings = np.zeros(indices.shape[0], dtype=self.strings.dtype)
+        # `-1`` indices indicate missing values
+        valid_indices_mask = indices != -1
+        strings[valid_indices_mask] = self.strings[indices[valid_indices_mask]]
+        return strings
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
