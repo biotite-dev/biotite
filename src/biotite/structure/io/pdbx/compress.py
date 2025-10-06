@@ -162,8 +162,13 @@ def _compress_data(bcif_data, rtol, atol):
             best_encoding, size_compressed = _find_best_integer_compression(
                 integer_array
             )
-            if size_compressed < _data_size_in_file(bcif.BinaryCIFData(array)):
-                return bcif.BinaryCIFData(array, [to_integer_encoding] + best_encoding)
+            compressed_data = bcif.BinaryCIFData(
+                array, [to_integer_encoding] + best_encoding
+            )
+            if _data_size_in_file(compressed_data) < _data_size_in_file(
+                bcif.BinaryCIFData(array)
+            ):
+                return compressed_data
             else:
                 # The float array is smaller -> encode it directly as bytes
                 return bcif.BinaryCIFData(array, [ByteArrayEncoding()])
