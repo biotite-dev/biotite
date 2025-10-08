@@ -879,9 +879,6 @@ class StringArrayEncoding(Encoding):
             # -> Bring into the original order
             _, unique_indices = np.unique(data, return_index=True)
             self.strings = data[np.sort(unique_indices)]
-            # Empty strings are represented as -1 indices
-            # -> We do not need to represent them in the string list
-            self.strings = self.strings[self.strings != ""]
             check_present = False
         else:
             check_present = True
@@ -891,8 +888,13 @@ class StringArrayEncoding(Encoding):
             sorted_strings = self.strings[string_order]
             sorted_indices = np.searchsorted(sorted_strings, data)
             indices = string_order[sorted_indices]
-            # Represent empty strings as -1
-            indices[data == ""] = -1
+            # `"" not in self.strings` can be quite costly and is only necessary,
+            # if the the `strings` were given by the user, as otherwise we always
+            # include an empty string explicitly when we compute them in this function
+            # -> Only run if `check_present` is True
+            if check_present and "" not in self.strings:
+                # Represent empty strings as -1
+                indices[data == ""] = -1
         else:
             # There are no strings -> The indices can only ever be -1 to indicate
             # missing values
