@@ -1031,6 +1031,11 @@ def decode_stepwise(data, encoding):
     """
     for enc in reversed(encoding):
         data = enc.decode(data)
+    # ByteEncoding may decode in a non-writable array,
+    # as it creates the ndarray cheaply from buffer
+    if not data.flags.writeable:
+        # Make the resulting ndarray writable, by copying the underlying buffer
+        data = data.copy()
     return data
 
 
