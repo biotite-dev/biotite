@@ -225,9 +225,13 @@ class Encoding(_Component, metaclass=ABCMeta):
         -------
         decoded_data : ndarray
             The decoded data.
+
+        Warnings
+        --------
+        When overriding this method, do not omit bound checks with
+        ``@cython.boundscheck(False)`` or ``@cython.wraparound(False)``,
+        since the file content may be invalid/malicious.
         """
-        # Important: Do not omit bound checks for decoding,
-        # since the file content may be invalid/malicious.
         raise NotImplementedError()
 
     def __str__(self):
