@@ -140,8 +140,8 @@ def _compress_data(bcif_data, rtol, atol):
         # Run encode to initialize the data and offset arrays
         indices = encoding.encode(array)
         offsets = np.cumsum([0] + [len(s) for s in encoding.strings])
-        encoding.data_encoding, _ = _find_best_integer_compression(indices)
-        encoding.offset_encoding, _ = _find_best_integer_compression(offsets)
+        encoding.data_encoding = _find_best_integer_compression(indices)
+        encoding.offset_encoding = _find_best_integer_compression(offsets)
         return bcif.BinaryCIFData(array, [encoding])
 
     elif np.issubdtype(array.dtype, np.floating):
@@ -159,18 +159,22 @@ def _compress_data(bcif_data, rtol, atol):
             # -> do not use integer encoding
             return bcif.BinaryCIFData(array, [ByteArrayEncoding()])
         else:
-            best_encoding, size_compressed = _find_best_integer_compression(
-                integer_array
+            best_encoding = _find_best_integer_compression(integer_array)
+            compressed_data = bcif.BinaryCIFData(
+                array, [to_integer_encoding] + best_encoding
             )
-            if size_compressed < _data_size_in_file(bcif.BinaryCIFData(array)):
-                return bcif.BinaryCIFData(array, [to_integer_encoding] + best_encoding)
+            uncompressed_data = bcif.BinaryCIFData(array, [ByteArrayEncoding()])
+            if _data_size_in_file(compressed_data) < _data_size_in_file(
+                uncompressed_data
+            ):
+                return compressed_data
             else:
                 # The float array is smaller -> encode it directly as bytes
-                return bcif.BinaryCIFData(array, [ByteArrayEncoding()])
+                return uncompressed_data
 
     elif np.issubdtype(array.dtype, np.integer):
         array = _to_smallest_integer_type(array)
-        encodings, _ = _find_best_integer_compression(array)
+        encodings = _find_best_integer_compression(array)
         return bcif.BinaryCIFData(array, encodings)
 
     else:
@@ -233,7 +237,7 @@ def _find_best_integer_compression(array):
                 if size < smallest_size:
                     best_encoding_sequence = encodings
                     smallest_size = size
-    return best_encoding_sequence, smallest_size
+    return best_encoding_sequence
 
 
 def _estimate_packed_length(array, packed_byte_count):

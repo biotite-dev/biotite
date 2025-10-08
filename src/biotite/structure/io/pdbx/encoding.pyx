@@ -225,9 +225,13 @@ class Encoding(_Component, metaclass=ABCMeta):
         -------
         decoded_data : ndarray
             The decoded data.
+
+        Warnings
+        --------
+        When overriding this method, do not omit bound checks with
+        ``@cython.boundscheck(False)`` or ``@cython.wraparound(False)``,
+        since the file content may be invalid/malicious.
         """
-        # Important: Do not omit bound checks for decoding,
-        # since the file content may be invalid/malicious.
         raise NotImplementedError()
 
     def __str__(self):
@@ -883,17 +887,39 @@ class StringArrayEncoding(Encoding):
         else:
             check_present = True
 
-        string_order = _safe_cast(np.argsort(self.strings), np.int32)
-        sorted_strings = self.strings[string_order]
-        sorted_indices = np.searchsorted(sorted_strings, data)
-        indices = string_order[sorted_indices]
-        if check_present and not np.all(self.strings[indices] == data):
+        if len(self.strings) > 0:
+            string_order = _safe_cast(np.argsort(self.strings), np.int32)
+            sorted_strings = self.strings[string_order]
+            sorted_indices = np.searchsorted(sorted_strings, data)
+            indices = string_order[sorted_indices]
+            # `"" not in self.strings` can be quite costly and is only necessary,
+            # if the the `strings` were given by the user, as otherwise we always
+            # include an empty string explicitly when we compute them in this function
+            # -> Only run if `check_present` is True
+            if check_present and "" not in self.strings:
+                # Represent empty strings as -1
+                indices[data == ""] = -1
+        else:
+            # There are no strings -> The indices can only ever be -1 to indicate
+            # missing values
+            # The check if this is correct is done below
+            indices = np.full(data.shape[0], -1, dtype=np.int32)
+
+        valid_indices_mask = indices != -1
+        if check_present and not np.all(
+            self.strings[indices[valid_indices_mask]] == data[valid_indices_mask]
+        ):
             raise ValueError("Data contains strings not present in 'strings'")
         return encode_stepwise(indices, self.data_encoding)
 
     def decode(self, data):
         indices = decode_stepwise(data, self.data_encoding)
-        return self.strings[indices]
+        # Initialize with empty strings
+        strings = np.zeros(indices.shape[0], dtype=self.strings.dtype)
+        # `-1`` indices indicate missing values
+        valid_indices_mask = indices != -1
+        strings[valid_indices_mask] = self.strings[indices[valid_indices_mask]]
+        return strings
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -1009,6 +1035,11 @@ def decode_stepwise(data, encoding):
     """
     for enc in reversed(encoding):
         data = enc.decode(data)
+    # ByteEncoding may decode in a non-writable array,
+    # as it creates the ndarray cheaply from buffer
+    if not data.flags.writeable:
+        # Make the resulting ndarray writable, by copying the underlying buffer
+        data = data.copy()
     return data
 
 
