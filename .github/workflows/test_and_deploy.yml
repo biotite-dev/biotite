@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CIBW_BUILD: cp311-* cp312-* cp313-*
+  CIBW_BUILD: cp311-* cp312-* cp313-* cp314-*
   CIBW_TEST_EXTRAS: test
   CIBW_TEST_COMMAND: >
     pytest {project}
@@ -106,7 +106,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install cibuildwheel
         # MAKE SURE THIS STAYS IN SYNC WITH THE LOWER GHA cibuildwheel
-        run: pipx install cibuildwheel==2.23.3
+        run: pipx install cibuildwheel==3.1.4
       - id: set-matrix
         run: |
           MATRIX=$(
@@ -157,7 +157,7 @@ jobs:
 
       - name: Build & (optionally) test wheels
         # MAKE SURE THIS STAYS IN SYNC WITH THE UPPER pipx call to cibuildwheel
-        uses: pypa/cibuildwheel@v2.23.3
+        uses: pypa/cibuildwheel@v3.1.4
         with:
           only: ${{ matrix.dist }}
 
