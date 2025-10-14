@@ -16,6 +16,7 @@ __all__ = [
     "list_assemblies",
     "get_assembly",
     "get_unit_cell",
+    "get_symmetry_mates",
 ]
 
 import warnings
