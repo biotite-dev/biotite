@@ -139,12 +139,12 @@ They can be included in search results by adding ``"computational"`` to the
 .. jupyter-execute::
 
     query = (
-        rcsb.FieldQuery("rcsb_polymer_entity.pdbx_description", contains_phrase="Hexokinase")
+        rcsb.FieldQuery("rcsb_polymer_entity.pdbx_description", contains_phrase="Lysozyme")
         & rcsb.FieldQuery(
             "rcsb_entity_source_organism.scientific_name", exact_match="Homo sapiens"
         )
     )
-    ids = rcsb.search(query, content_types=("experimental", "computational"))
+    ids = rcsb.search(query, content_types=("computational",))
     print(ids)
 
 The returned four-character IDs are the RCSB PDB IDs of experimental structures

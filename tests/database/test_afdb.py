@@ -5,6 +5,7 @@
 import tempfile
 import pytest
 import biotite.database.afdb as afdb
+import biotite.database.rcsb as rcsb
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
 from biotite.database import RequestError
@@ -15,7 +16,9 @@ AFDB_URL = "https://alphafold.ebi.ac.uk/"
 
 @pytest.mark.skipif(cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available")
 @pytest.mark.parametrize("as_file_like", [False, True])
-@pytest.mark.parametrize("entry_id", ["P12345", "AF-P12345-F1", "AF-P12345F1"])
+@pytest.mark.parametrize(
+    "entry_id", ["P12345", "AF-P12345-F1", "AF-P12345F1", "AF_AFP12345F1"]
+)
 @pytest.mark.parametrize("format", ["pdb", "cif", "bcif"])
 def test_fetch(as_file_like, entry_id, format):
     """
@@ -35,6 +38,31 @@ def test_fetch(as_file_like, entry_id, format):
         file = pdbx.BinaryCIFFile.read(file_path_or_obj)
         pdbx.get_structure(file)
         assert file.block["struct_ref"]["pdbx_db_accession"].as_item() == "P12345"
+
+
+def test_fetch_cross_id():
+    """
+    Test if :func:`afdb.fetch()` works with AlphaFold DB cross-references
+    in search results from :func:`rcsb.search()`.
+    """
+    UNIPROT_ID = "P12345"
+
+    ids = rcsb.search(
+        rcsb.FieldQuery(
+            "rcsb_entry_info.structure_determination_methodology",
+            exact_match="computational",
+        )
+        & rcsb.FieldQuery(
+            "rcsb_polymer_entity_container_identifiers"
+            ".reference_sequence_identifiers"
+            ".database_accession",
+            exact_match=UNIPROT_ID,
+        ),
+        content_types=("computational",),
+    )
+    assert len(ids) == 1
+    pdbx_file = pdbx.CIFFile.read(afdb.fetch(ids[0], "cif"))
+    assert pdbx_file.block["struct_ref"]["pdbx_db_accession"].as_item() == UNIPROT_ID
 
 
 @pytest.mark.skipif(cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available")

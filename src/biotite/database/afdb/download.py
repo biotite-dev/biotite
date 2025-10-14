@@ -18,7 +18,7 @@ _BINARY_FORMATS = ["bcif"]
 # Adopted from https://www.uniprot.org/help/accession_numbers
 # adding the optional 'AF-' prefix and '-F1' suffix used by RCSB
 _UNIPROT_PATTERN = (
-    r"^(?P<prefix>AF-)?"
+    r"^(?P<prefix>(AF-)|(AF_AF))?"
     r"(?P<id>[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})"
     r"(?P<suffix>-?F1)?$"
 )
@@ -34,8 +34,8 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
     ----------
     ids : str or iterable object of str
         A single ID or a list of IDs of the file(s) to be downloaded.
-        They can be either UniProt IDs (e.g. ``P12345``) or AlphaFold DB IDs
-        (e.g. ``AF-P12345F1``).
+        They can be either UniProt IDs (e.g. ``P12345``), AlphaFold DB IDs
+        (e.g. ``AF-P12345-F1``) or computational RCSB IDs (e.g. ``AF_AFP12345F1``).
     format : {'pdb', 'pdbx', 'cif', 'mmcif', 'bcif', 'fasta'}
         The format of the files to be downloaded.
     target_path : str, optional
