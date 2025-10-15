@@ -63,7 +63,8 @@ _canonical_aa_list = [
 ]
 _canonical_nucleotide_list = ["A", "DA", "G", "DG", "C", "DC", "U", "DT"]
 
-_solvent_list = ["HOH", "SOL"]
+# Residue names of solvent molecules non only in CCD, but also from modeling software
+_solvent_list = ["HOH", "DOD", "SOL", "WAT", "H2O", "TIP3", "TIP4", "TIP5"]
 
 _peptide_backbone_atoms = ["N", "CA", "C"]
 _phosphate_backbone_atoms = ["P", "O5'", "C5'", "C4'", "C3'", "O3'"]

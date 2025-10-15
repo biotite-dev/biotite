@@ -3,6 +3,7 @@
 # information.
 
 import itertools
+import json
 from os.path import join
 import numpy as np
 import numpy.random as random
@@ -73,6 +74,12 @@ def test_dihedral_backbone_consistency(multi_model):
     Check if the computed dihedral angles are equal to the reference computed with
     MDTraj.
     """
+    with open(join(data_dir("structure"), "misc", "dihedrals.json")) as file:
+        ref_dihedrals = json.load(file)
+        ref_phi = np.array(ref_dihedrals["phi"])
+        ref_psi = np.array(ref_dihedrals["psi"])
+        ref_omega = np.array(ref_dihedrals["omega"])
+
     pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
     atoms = pdbx.get_structure(pdbx_file, model=1)
     if multi_model:
@@ -81,29 +88,6 @@ def test_dihedral_backbone_consistency(multi_model):
 
     test_phi, test_psi, test_ome = struc.dihedral_backbone(atoms)
 
-    ref_dihedrals = np.array([
-        [np.nan, -0.980,  3.085],
-        [-0.768, -0.896,  3.122],
-        [-1.160, -0.539,  3.053],
-        [-1.138, -0.802,  3.069],
-        [-1.130, -0.530,  2.994],
-        [-1.276, -0.758,  3.098],
-        [-1.132, -0.755, -3.122],
-        [-1.039, -0.449,  3.042],
-        [-1.361, -0.154, -3.112],
-        [ 1.934,  0.141,  3.128],
-        [ 0.964, -2.171,  3.106],
-        [-1.012, -0.502, -3.083],
-        [-1.428,  0.334, -3.078],
-        [-2.165,  0.234,  3.067],
-        [ 1.186,  0.440, -3.013],
-        [-2.512,  2.292, -3.141],
-        [-1.223,  2.794,  3.110],
-        [-1.213,  2.542,  3.077],
-        [-1.349,  2.168,  2.996],
-        [-1.363, np.nan, np.nan],
-    ])  # fmt: skip
-
     if multi_model:
         assert np.array_equal(test_phi[1], test_phi[0], equal_nan=True)
         assert np.array_equal(test_psi[1], test_psi[0], equal_nan=True)
@@ -111,10 +95,39 @@ def test_dihedral_backbone_consistency(multi_model):
         test_phi = test_phi[0]
         test_psi = test_psi[0]
         test_ome = test_ome[0]
+    assert test_phi == pytest.approx(ref_phi, abs=1e-3, nan_ok=True)
+    assert test_psi == pytest.approx(ref_psi, abs=1e-3, nan_ok=True)
+    assert test_ome == pytest.approx(ref_omega, abs=1e-3, nan_ok=True)
 
-    assert test_phi == pytest.approx(ref_dihedrals[:, 0], abs=1e-3, nan_ok=True)
-    assert test_psi == pytest.approx(ref_dihedrals[:, 1], abs=1e-3, nan_ok=True)
-    assert test_ome == pytest.approx(ref_dihedrals[:, 2], abs=1e-3, nan_ok=True)
+
+@pytest.mark.parametrize("multi_model", [False, True])
+def test_dihedral_side_chain_consistency(multi_model):
+    """
+    Check if the computed dihedral angles are equal to the reference computed with
+    MDTraj.
+    """
+    with open(join(data_dir("structure"), "misc", "dihedrals.json")) as file:
+        ref_dihedrals = json.load(file)
+        ref_chi = np.stack(
+            [
+                np.array(ref_dihedrals[name])
+                for name in ("chi1", "chi2", "chi3", "chi4")
+            ],
+            axis=-1,
+        )
+
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    atoms = pdbx.get_structure(pdbx_file, model=1)
+    if multi_model:
+        # Use models with equal coordinates
+        atoms = struc.stack([atoms] * 2)
+
+    test_chi = struc.dihedral_side_chain(atoms)
+
+    if multi_model:
+        assert np.array_equal(test_chi[1], test_chi[0], equal_nan=True)
+        test_chi = test_chi[0]
+    assert test_chi == pytest.approx(ref_chi, abs=1e-3, nan_ok=True)
 
 
 def test_index_distance_non_periodic():

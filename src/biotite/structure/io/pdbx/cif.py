@@ -243,7 +243,7 @@ class CIFColumn:
         else:
             # Array needs to be converted, but masked values are
             # not necessarily convertible
-            # (e.g. '' cannot be converted to int)
+            # (e.g. '.' cannot be converted to int)
             if masked_value is None:
                 array = np.zeros(len(self._data), dtype=dtype)
             else:

@@ -15,11 +15,12 @@ AFDB_URL = "https://alphafold.ebi.ac.uk/"
 
 @pytest.mark.skipif(cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available")
 @pytest.mark.parametrize("as_file_like", [False, True])
-@pytest.mark.parametrize("entry_id", ["P12345", "AF-P12345-F1"])
+@pytest.mark.parametrize("entry_id", ["P12345", "AF-P12345-F1", "AF-P12345F1"])
 @pytest.mark.parametrize("format", ["pdb", "cif", "bcif"])
 def test_fetch(as_file_like, entry_id, format):
     """
     Check if files in different formats can be downloaded by being able to parse them.
+    Also ensure that the downloaded file refers to the given input ID
     """
     path = None if as_file_like else tempfile.gettempdir()
     file_path_or_obj = afdb.fetch(entry_id, format, path, overwrite=True)
@@ -29,9 +30,11 @@ def test_fetch(as_file_like, entry_id, format):
     elif format == "cif":
         file = pdbx.CIFFile.read(file_path_or_obj)
         pdbx.get_structure(file)
+        assert file.block["struct_ref"]["pdbx_db_accession"].as_item() == "P12345"
     elif format == "bcif":
         file = pdbx.BinaryCIFFile.read(file_path_or_obj)
         pdbx.get_structure(file)
+        assert file.block["struct_ref"]["pdbx_db_accession"].as_item() == "P12345"
 
 
 @pytest.mark.skipif(cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available")

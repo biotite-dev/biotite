@@ -764,13 +764,13 @@ def test_bcif_encoding():
         encoding: False
         for encoding in [
             pdbx.ByteArrayEncoding,
-            pdbx.FixedPointEncoding,
-            # This encoding is not used in the test file
-            # pdbx.IntervalQuantizationEncoding,
             pdbx.RunLengthEncoding,
             pdbx.DeltaEncoding,
             pdbx.IntegerPackingEncoding,
             pdbx.StringArrayEncoding,
+            # These encodings are not used in the test file
+            # pdbx.IntervalQuantizationEncoding,
+            # pdbx.FixedPointEncoding,
         ]
     }
 
@@ -860,16 +860,28 @@ def test_bcif_cif_consistency():
                 if cif_column.mask is None:
                     assert bcif_column.mask is None
                 else:
+                    # Currently the reference written by py-mmcif always writes masks as
+                    # `MISSING`, even if `INAPPLICABLE` would be correct
+                    # -> Check only the presence of mask values
                     assert (
-                        cif_column.mask.array.tolist()
-                        == bcif_column.mask.array.tolist()
-                    )
+                        cif_column.mask.array == pdbx.MaskValue.PRESENT
+                    ).tolist() == (
+                        bcif_column.mask.array == pdbx.MaskValue.PRESENT
+                    ).tolist()
                 # In CIF format, all vales are strings
                 # -> ensure consistency
                 dtype = bcif_column.data.array.dtype
-                assert cif_column.as_array(dtype).tolist() == pytest.approx(
-                    bcif_column.as_array(dtype).tolist()
+                cif_array = cif_column.as_array(dtype)
+                bcif_array = bcif_column.as_array(dtype)
+                mask = (
+                    cif_column.mask.array == pdbx.MaskValue.PRESENT
+                    if cif_column.mask is not None
+                    else np.full(len(cif_column.data), True)
                 )
+                assert cif_array[mask].tolist() == pytest.approx(
+                    bcif_array[mask].tolist()
+                )
+
             except Exception:
                 raise Exception(
                     f"Comparison failed for '{category_name}.{column_name}'"
@@ -965,8 +977,8 @@ def test_compress_data():
     bcif_file = pdbx.BinaryCIFFile.read(path)
     for category_name, category in bcif_file.block.items():
         for column_name, column in category.items():
-            try:
-                for attr_name, data in [("data", column.data), ("mask", column.mask)]:
+            for attr_name, data in [("data", column.data), ("mask", column.mask)]:
+                try:
                     if data is None:
                         continue
                     ref_size = len(
@@ -993,8 +1005,10 @@ def test_compress_data():
                         serialized_compressed_data
                     )
                     assert restored_data.array.tolist() == data.array.tolist()
-            except AssertionError:
-                raise AssertionError(f"{category_name}.{column_name} {attr_name}")
+                except AssertionError:
+                    print(data.encoding)
+                    print(compressed_data.encoding)
+                    raise AssertionError(f"{category_name}.{column_name} {attr_name}")
 
 
 @pytest.mark.parametrize(
