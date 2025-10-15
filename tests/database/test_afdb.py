@@ -26,7 +26,10 @@ def test_fetch(as_file_like, entry_id, format):
     Also ensure that the downloaded file refers to the given input ID
     """
     path = None if as_file_like else tempfile.gettempdir()
-    file_path_or_obj = afdb.fetch(entry_id, format, path, overwrite=True)
+    try:
+        file_path_or_obj = afdb.fetch(entry_id, format, path, overwrite=True)
+    except RequestError:
+        pytest.skip("AFDB is probably busy")
     if format == "pdb":
         file = pdb.PDBFile.read(file_path_or_obj)
         pdb.get_structure(file)
@@ -61,7 +64,10 @@ def test_fetch_cross_id():
         content_types=("computational",),
     )
     assert len(ids) == 1
-    pdbx_file = pdbx.CIFFile.read(afdb.fetch(ids[0], "cif"))
+    try:
+        pdbx_file = pdbx.CIFFile.read(afdb.fetch(ids[0], "cif"))
+    except RequestError:
+        pytest.skip("AFDB is probably busy")
     assert pdbx_file.block["struct_ref"]["pdbx_db_accession"].as_item() == UNIPROT_ID
 
 

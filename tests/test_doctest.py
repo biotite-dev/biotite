@@ -86,9 +86,13 @@ TEST_PARAMETERS = [
     pytest.param(
         "biotite.database.afdb",
         [],
-        marks=pytest.mark.skipif(
-            cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available"
-        ),
+        marks=[
+            pytest.mark.skipif(
+                cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available"
+            ),
+            # TODO: Check if AFDB tests in CI are still flaky
+            pytest.mark.skip("Currently, AFDB is regularly busy"),
+        ],
     ),
     pytest.param(
         "biotite.database.uniprot",

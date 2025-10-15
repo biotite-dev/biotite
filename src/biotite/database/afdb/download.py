@@ -145,7 +145,10 @@ def _get_file_url(id, format):
         The URL of the file to be downloaded.
     """
     uniprot_id = _extract_id(id)
-    metadata = requests.get(f"{_METADATA_URL}/{uniprot_id}").json()
+    try:
+        metadata = requests.get(f"{_METADATA_URL}/{uniprot_id}").json()
+    except requests.exceptions.JSONDecodeError:
+        raise RequestError("Received malformed JSON response")
     if len(metadata) == 0:
         raise RequestError(f"ID {id} is invalid")
     # A list of length 1 is always returned, if the response is valid
