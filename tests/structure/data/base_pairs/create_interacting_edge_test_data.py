@@ -25,7 +25,7 @@ def process(input, output, chain):
         # Get edge annotations from string
         edges = [lw_string[-2], lw_string[-1]]
 
-        # Dont allow unspecified edges in test data
+        # Don't allow unspecified edges in test data
         if "." in edges:
             continue
 

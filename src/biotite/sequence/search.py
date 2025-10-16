@@ -73,7 +73,7 @@ def find_symbol(sequence, symbol):
 
 def find_symbol_first(sequence, symbol):
     """
-    Find first occurence of a symbol in a sequence.
+    Find first occurrence of a symbol in a sequence.
 
     Parameters
     ----------
@@ -96,7 +96,7 @@ def find_symbol_first(sequence, symbol):
 
 def find_symbol_last(sequence, symbol):
     """
-    Find last occurence of a symbol in a sequence.
+    Find last occurrence of a symbol in a sequence.
 
     Parameters
     ----------

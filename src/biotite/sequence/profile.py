@@ -553,7 +553,7 @@ class SequenceProfile(object):
 
     def __getitem__(self, index):
         if isinstance(index, Integral):
-            # Do not allow to collapse dimensions
+            # Do not allow collapsing dimensions
             index = slice(index, index + 1)
         return SequenceProfile(self.symbols[index], self.gaps[index], self.alphabet)
 

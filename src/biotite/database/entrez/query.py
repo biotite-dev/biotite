@@ -48,11 +48,11 @@ class Query(metaclass=abc.ABCMeta):
 
 class CompositeQuery(Query):
     """
-    A representation of an composite query
+    A representation of a composite query
     for the NCBI Entrez search service.
 
     A composite query is a combination of two other queries,
-    combined either with an 'AND', 'OR' or 'NOT' operator.
+    combined with an 'AND', 'OR' or 'NOT' operator.
 
     Usually the user does not create instances of this class directly,
     but :class:`Query` instances are combined with

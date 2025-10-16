@@ -294,8 +294,8 @@ def cleanup_tempfile(temp_file):
     This function is a small helper function intended for usage in
     `LocalApp` subclasses.
 
-    The manual deletion is necessary, as Windows does not allow to open
-    a :class:`NamedTemporaryFile` as second time
+    The manual deletion is necessary, as Windows does not allow opening
+    a :class:`NamedTemporaryFile` a second time
     (e.g. by the file name), if `delete` is set to ``True``.
 
     Parameters
@@ -338,5 +338,5 @@ def get_version(bin_path, version_option="--version"):
             f"from the string '{output}'"
         )
     version_string = match.group(0)
-    splitted = version_string.split(".")
-    return int(splitted[0]), int(splitted[1])
+    parts = version_string.split(".")
+    return int(parts[0]), int(parts[1])

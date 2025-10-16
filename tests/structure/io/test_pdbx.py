@@ -1021,7 +1021,7 @@ def test_compress_file(path):
     the same as from the uncompressed file, while the file size it at least as small
     as the file compressed by the RCSB PDB.
     """
-    # Use a relatively high precision to increase strictness of of the equality check
+    # Use a relatively high precision to increase strictness of the equality check
     ATOL = 1e-5
     RTOL = 1e-10
 

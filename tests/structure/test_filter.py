@@ -245,7 +245,7 @@ def test_filter_altloc(all_atloc_structure, filter_func):
 def test_filter_highest_occupancy_altloc(all_atloc_structure):
     """
     When filtering altlocs with the highest occupancy, the average
-    occupancy should be higher than the the average occupancy when the
+    occupancy should be higher than the average occupancy when the
     first altloc ID is always filtered.
     """
     # Set the occupancy of SECOND altloc ID very high

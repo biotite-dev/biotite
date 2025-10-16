@@ -1066,7 +1066,7 @@ class BondList(Copyable):
         If a bond appears in both :class:`BondList`'s, the
         :class:`BondType` from the given `bond_list` takes precedence.
 
-        The internal :class:`ndarray` instances containg the bonds are
+        The internal :class:`ndarray` instances containing the bonds are
         simply concatenated and the new atom count is the maximum of
         both bond lists.
 
@@ -1171,7 +1171,7 @@ class BondList(Copyable):
             # the bond is removed from the list
             # If an atom is masked,
             # its index value is decreased by the respective offset
-            # The offset is neccessary, removing atoms in an AtomArray
+            # The offset is necessary, removing atoms in an AtomArray
             # decreases the index of the following atoms
             for i in range(all_bonds_v.shape[0]):
                 # Usage of pointer to increase performance
