@@ -111,7 +111,7 @@ alignment = align.align_optimal(
     local=True,
 )[0]
 
-print(f"Seqence identity: {int(100 * align.get_sequence_identity(alignment))}%")
+print(f"Sequence identity: {int(100 * align.get_sequence_identity(alignment))}%")
 fig, ax = plt.subplots(figsize=(8.0, 3.0), constrained_layout=True)
 graphics.plot_alignment_similarity_based(
     ax,
@@ -338,7 +338,7 @@ for query_pos, db_index, db_pos in accepted_hits:
 for db_index, (alignment, log_evalue) in significant_alignments.items():
     print("Aligned target:", db_ids[db_index])
     print(f"E-value: {10**log_evalue:.2e}")
-    print(f"Seqence identity: {int(100 * align.get_sequence_identity(alignment))}%")
+    print(f"Sequence identity: {int(100 * align.get_sequence_identity(alignment))}%")
     fig, ax = plt.subplots(figsize=(8.0, 4.0), constrained_layout=True)
     graphics.plot_alignment_similarity_based(
         ax,

@@ -39,7 +39,7 @@ assert len(struc.get_residues(protein_l)) == len(struc.get_residues(protein_r))
 
 
 # Fast identification of contacts via a cell list:
-# The cell list is initiliazed with the coordinates of the DNA
+# The cell list is initialized with the coordinates of the DNA
 # and later provided with the atom coordinates of the two protein chains
 cell_list = struc.CellList(dna, cell_size=THRESHOLD_DISTANCE)
 

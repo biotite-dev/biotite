@@ -81,7 +81,7 @@ def detect_disulfide_bonds(
                 and bond_dihed > dihedral - dihedral_tol
                 and bond_dihed < dihedral + dihedral_tol
             ):
-                # Atom meet criteria -> we found a disulfide bond
+                # Atoms meet criteria -> we found a disulfide bond
                 # -> the indices of the bond S-gamma atoms
                 # are put into a tuple with the lower index first
                 bond_tuple = sorted((sulfide_i, sulfide_j))

@@ -4,7 +4,7 @@ Multiple Structural alignment of orthologous proteins
 
 In this example we perform a structural alignment of multiple lysozyme
 variants from different organisms.
-A feasible approach to perfrom such a multiple structure alignment is the
+A feasible approach to perform such a multiple structure alignment is the
 usage of a structural alphabet:
 At first the structure is translated into a sequence that represents
 the structure.

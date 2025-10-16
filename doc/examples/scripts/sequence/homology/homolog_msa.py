@@ -8,7 +8,7 @@ sequence alignment of the hit sequences afterwards, using MUSCLE.
 """
 
 # Code source: Patrick Kunzmann
-# License: BSD 3 cl
+# License: BSD 3 clause
 from tempfile import gettempdir
 import matplotlib.pyplot as plt
 import biotite.application.blast as blast

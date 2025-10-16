@@ -13,7 +13,7 @@ For one thing, the docking procedure requires annotated hydrogen atoms
 for the receptor molecule, which seldom is the case for low resolution
 X-ray structures.
 On the other hand, we would like to have a reliable reference binding
-mode of the ligand, to evaluate how well out docking procedure went
+mode of the ligand, to evaluate how well our docking procedure went.
 
 After separation of the receptor and the reference ligand,
 a biotin model is loaded from the chemical components dictionary and
@@ -118,7 +118,7 @@ plt.show()
 # For this specific case *AutoDock Vina* shows only a low Spearman
 # correlation between the RMSD of the calculated models to the
 # correct binding mode and the associated calculated binding energy.
-# A high correlation is desireable to ensure that docking results with
+# A high correlation is desirable to ensure that docking results with
 # good binding energies correspond to the correct binding mode for cases
 # in which the correct binding conformation is unknown.
 # However, at least the calculated model with highest predicted affinity
