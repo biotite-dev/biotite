@@ -10,8 +10,8 @@ We simply specify the PDB ID, the file format and the target directory
 for the :func:`fetch()` function.
 The function returns the path to the downloaded file, so you
 can simply load the file via the :mod:`biotite.structure.io` subpackage
-(more on this in a :doc:`later tutorial <../structure/formats>`).
-We will download on a protein structure of the miniprotein *TC5b*
+(more on this in a :doc:`later tutorial <../structure/io>`).
+We will download a protein structure of the miniprotein *TC5b*
 (PDB: 1L2Y) into a temporary directory.
 
 .. jupyter-execute::
@@ -24,7 +24,7 @@ We will download on a protein structure of the miniprotein *TC5b*
     print(basename(file_path))
 
 In case we want to download multiple files, we are able to specify a
-list of PDB IDs, which in return gives us a list of file paths.
+list of PDB IDs, which in turn gives us a list of file paths.
 
 .. jupyter-execute::
 
@@ -35,7 +35,7 @@ list of PDB IDs, which in return gives us a list of file paths.
 By default :func:`fetch()` checks whether the file to be fetched
 already exists in the directory and downloads it, if it does not
 exist yet.
-If we want to download files irrespectively, set :obj:`overwrite` to
+If we want to download files regardless, set :obj:`overwrite` to
 true.
 
 .. jupyter-execute::
@@ -56,7 +56,7 @@ file on the disk at all.
 Searching for entries
 ---------------------
 As mentioned in the previous chapter, in many cases one is not interested in a
-specific structure, but in set of structures that fits some desired criteria.
+specific structure, but in a set of structures that fits some desired criteria.
 And also similar to the other :mod:`biotite.database` subpackages,
 PDB IDs matching those criteria can be searched for by defining a
 :class:`Query` and passing it to :func:`search()`.
@@ -77,10 +77,10 @@ This was a simple search for the occurrence of the search term in any
 field.
 You can also search for a value in a specific field with a
 :class:`FieldQuery`.
-A complete list of the available fields and its supported operators
+A complete list of the available fields and their supported operators
 is documented
 `on this page <https://search.rcsb.org/structure-search-attributes.html>`_
-and `on that page <https://search.rcsb.org/chemical-search-attributes.html>_`.
+and `on that page <https://search.rcsb.org/chemical-search-attributes.html>`_.
 
 .. jupyter-execute::
 
@@ -105,7 +105,7 @@ A :class:`FieldQuery` is negated with ``~``.
     composite_query = query1 & ~query2
     print(rcsb.search(composite_query))
 
-Often the structures behind the obtained PDB IDs have degree of
+Often the structures behind the obtained PDB IDs have a degree of
 redundancy.
 For example they may represent the same protein sequences or result
 from the same set of experiments.
@@ -126,7 +126,7 @@ entries or even return only single representatives of each group.
 
 Note that grouping may omit PDB IDs in search results, if such PDB IDs
 cannot be grouped.
-For example in the case shown above only a few PDB entries were
+For example, in the case shown above only a few PDB entries were
 uploaded as collection and hence are part of the search results.
 
 Getting computational models
@@ -155,7 +155,7 @@ The IDs with the ``AF_`` on the other hand are computational models from
 .. currentmodule:: biotite.database.afdb
 
 To download those we require another subpackage: :mod:`biotite.database.afdb`.
-Its :func:`fetch()` function works very similar.
+Its :func:`fetch()` function works very similarly.
 
 .. jupyter-execute::
 

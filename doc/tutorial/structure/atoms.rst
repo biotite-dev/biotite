@@ -27,7 +27,7 @@ explained :doc:`in the next chapter <io>`.
         atom_name="C", element="C"
     )
 
-The first parameter are the coordinates (internally converted into an
+The first parameter is the coordinates (internally converted into an
 :class:`ndarray`), the other parameters are annotations.
 The annotations shown in this example are mandatory:
 The chain ID, residue ID, residue name, insertion code, atom name, element and
@@ -112,7 +112,7 @@ array.
 In some cases, you might need to handle structures, where each atom is
 present in multiple locations
 (multiple models in NMR structures, MD trajectories).
-For theses cases :class:`AtomArrayStack` objects enter the stage:
+For these cases :class:`AtomArrayStack` objects enter the stage:
 They represent a list of atom arrays with the same atoms in each model/frame,
 but differing coordinates.
 Hence the annotation arrays in :class:`AtomArrayStack` objects still have the
@@ -120,7 +120,7 @@ same length *n* as in :class:`AtomArray`.
 However, a stack stores the coordinates in a *(m,n,3)*-shaped
 :class:`ndarray`, where *m* is the number of frames.
 A stack is constructed with :func:`stack()` analogous to the code
-snipped above.
+snippet above.
 It is crucial that all :class:`AtomArray` objects, that should be stacked,
 have the same annotation arrays, otherwise an exception is raised.
 For simplicity reasons, we create a stack containing two identical

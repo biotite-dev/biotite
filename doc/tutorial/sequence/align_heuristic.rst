@@ -35,12 +35,10 @@ on two toy sequences:
 one representing a reference sequence, that could be substituted by a sequence
 database or a genome in a real-world scenario, and the other one representing a
 query sequence, that a user would give as input to the alignment program.
-one representing a query sequence and the other one representing a
-longer reference sequence.
 The latter could be substituted by a sequence database or a genome in a
 real-world scenario.
 
-Note that although the setup of an such an heuristic alignment is more involved
+Note that although the setup of such a heuristic alignment is more involved
 than the optimal alignment approach presented before, the performance of the
 heuristic method scales much better for large sequence data.
 
@@ -65,7 +63,7 @@ Stage 1: k-mer matching
 A popular approach to alignment search is *k-mer matching*, which is used
 by prominent software such as *BLAST* or *MMseqs*.
 The *k-mers* of a sequence are all subsequences with length *k*.
-The :class:`KmerAlphabet` class in provides a way to enumerate all *k-mers*
+The :class:`KmerAlphabet` class provides a way to enumerate all *k-mers*
 in a sequence.
 
 .. jupyter-execute::
@@ -131,7 +129,7 @@ In this simple case we choose rather short 3-mers.
 
 These are quite a bunch of matches.
 However, they are mostly appearing in consecutive positions in both sequences,
-for the simple reason that the stretches, where both sequence match, are longer
+for the simple reason that the stretches, where both sequences match, are longer
 than *k*.
 We say that these matches are on the same *diagonal*.
 Often one is interested only in one alignment per diagonal, as the later stages
@@ -189,7 +187,7 @@ For the purpose of this tutorial this threshold is arbitrarily chosen.
 Stage 3: Gapped sequence alignment
 ----------------------------------
 The difference between the heuristic gapped sequence alignment methods and
-:meth:`align_optimal()` is that the former only ideally only traverse through a
+:meth:`align_optimal()` is that the former only ideally traverses through a
 small fraction of the possible alignment search space, allowing them to run
 much faster.
 However, like :meth:`align_local_ungapped()` they need to be informed with a
@@ -232,7 +230,7 @@ Stage 4: Significance evaluation
 --------------------------------
 Now we have obtained multiple alignments, but which one of them is the
 'correct' one?
-in this simple example we could simply select the one with the highest
+in this simple example, we could simply select the one with the highest
 similarity score, but this approach is not sound in general:
 A reference sequence might contain multiple regions, that are homologous to the
 query, or none at all.
@@ -283,7 +281,7 @@ software like *BLAST* use.
 Since the *k-mer* matching step is very fast and the gapped alignments take the
 largest part of the time, you usually want to have additional filters before
 you trigger a gapped alignment:
-For example commonly a gapped alignment is only started at a match, if there is
+For example, commonly a gapped alignment is only started at a match, if there is
 another match on the same diagonal in proximity.
 Furthermore, the parameter selection, e.g. the *k-mer* length, is key to a fast
 but also sensitive alignment procedure.

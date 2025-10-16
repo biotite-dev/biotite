@@ -7,14 +7,14 @@ Accessing sequence data in NCBI Entrez
 
 An important source of biological sequences including their annotations is the
 *NCBI Entrez* database, which is commonly known as '*the NCBI*'.
-To download data we need to provide the provide the *unique record identifier*
+To download data we need to provide the *unique record identifier*
 (UID) of the entry.
 This can either be the *Accession* or *GI*, which are parallel identification
 systems.
 Furthermore, we need
 
-- the database name from which we like to download the record, which can either
-  be the internal name (e.g. ``'nuccore'``) or the user-faced name
+- the database name from which we would like to download the record, which can either
+  be the internal name (e.g. ``'nuccore'``) or the user-facing name
   (e.g. ``'Nucleotide'``),
 - and the retrieval type, which is the file format of the downloaded data
   (e.g. ``'fasta'``).
@@ -39,7 +39,7 @@ Note the ``subunit alpha`` in the header of the FASTA file:
 Hemoglobin is a tetramer, consisting of two alpha and two beta subunits.
 Hence, we will download the sequence of the beta subunit as well.
 We can download multiple records at once by providing a list of UIDs.
-In addition, now we are interested also in sequence annotation, like sequence
+In addition, now we are also interested in sequence annotation, like sequence
 ranges where some secondary structure is present.
 Therefore, we want to download the data in *GenBank* format.
 
@@ -77,7 +77,7 @@ above.
 
 .. jupyter-execute::
 
-    # Search the Nucleotide database in all fields for the term "BL21 genome"
+    # Search the Nucleotide database in all fields for the term "Lysozyme"
     print(entrez.search(entrez.SimpleQuery("Lysozyme"), db_name="nuccore"))
 
 :func:`search()` takes a :class:`Query` and returns a list of UIDs.

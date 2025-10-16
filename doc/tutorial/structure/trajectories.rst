@@ -72,7 +72,7 @@ Comparing frames with each other
 
 .. currentmodule:: biotite.structure
 
-In the analysis of MD simulations, the frames are seldomly only observed in
+In the analysis of MD simulations, the frames are seldom only observed in
 isolation, but also compared with each other.
 For example, the *root mean square deviation* (RMSD) over the course of the
 simulation gives a hint about the convergence of the simulation.
@@ -144,7 +144,7 @@ automatically used.
 
     pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("1aki", "bcif", gettempdir()))
     stack = pdbx.get_structure(pdbx_file)
-    print(array.box)
+    print(stack.box)
 
 Measurements over periodic boundaries
 -------------------------------------

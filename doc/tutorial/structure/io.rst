@@ -49,7 +49,7 @@ PDB file:
     temp_file.close()
 
 Other information (authors, secondary structure, etc.) cannot be
-easily from PDB files using :class:`PDBFile`.
+easily extracted from PDB files using :class:`PDBFile`.
 
 Working with the PDBx format
 ----------------------------
@@ -111,7 +111,7 @@ instead has a ``data`` and ``mask`` attribute.
     data = column.data
     print(data.array)
 
-The data access can be cut short, especially if the contains a single block
+The data access can be cut short, especially if the file contains a single block
 and a certain data type is expected instead of strings.
 
 .. jupyter-execute::

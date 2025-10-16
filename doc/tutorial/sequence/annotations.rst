@@ -75,10 +75,10 @@ poly-A signal, as the feature qualifiers make clear:
         if feature.key == "regulatory":
             print(feature.qual["regulatory_class"])
 
-Similarily to :class:`Alignment` objects, we can visualize an
+Similarly to :class:`Alignment` objects, we can visualize an
 :class:`Annotation` using the :mod:`biotite.sequence.graphics` subpackage, in
 a so called *feature map*.
-In order to avoid overlaping features, we draw only the *CDS* feature.
+In order to avoid overlapping features, we draw only the *CDS* feature.
 
 .. jupyter-execute::
 
@@ -89,7 +89,7 @@ In order to avoid overlaping features, we draw only the *CDS* feature.
     # Get the range of the entire annotation via the *source* feature
     for feature in annotation:
         if feature.key == "source":
-            # loc_range has exclusive stop
+            # loc_range has an exclusive stop
             loc = list(feature.locs)[0]
             loc_range = (loc.first, loc.last+1)
     fig, ax = plt.subplots(figsize=(8.0, 1.0))
@@ -115,15 +115,15 @@ subannotation that includes only features in range of the gene itself
 
 .. jupyter-execute::
 
-    # At first we have the find the feature with the 'gene' key
+    # At first, we have to find the feature with the 'gene' key
     for feature in annotation:
         if feature.key == "gene":
             gene_feature = feature
-    # Then we create a subannotation from the feature's location
+    # Then, we create a subannotation from the feature's location
     # Since the stop value of the slice is still exclusive,
-    # the stop value is the position of the last base +1
+    # the stop value is the position of the last base + 1
     loc = list(gene_feature.locs)[0]
-    sub_annot = annotation[loc.first : loc.last +1]
+    sub_annot = annotation[loc.first : loc.last + 1]
     # Print the remaining features and their locations
     for feature in sub_annot:
         locs = [str(loc) for loc in sorted(feature.locs, key=lambda l: l.first)]
@@ -132,14 +132,14 @@ subannotation that includes only features in range of the gene itself
 The regulatory sequences have disappeared in the subannotation.
 Another interesting thing happened:
 The location of the ``source`` feature narrowed and
-is in range of the slice now. This happened, because the feature was
+is in range of the slice now. This happened because the feature was
 *truncated*:
 The bases that were not in range of the slice were removed.
 
-Let's have a closer look into location defects now:
-A :class:`Location` instance has a defect, when the feature itself is
+Let's have a closer look at location defects now:
+A :class:`Location` instance has a defect when the feature itself is
 not directly located in the range of the first to the last base,
-for example when the exact postion is not known or, as in our case, a
+for example when the exact position is not known or, as in our case, a
 part of the feature was truncated.
 Let's have a closer look at the location defects of our subannotation:
 
@@ -151,23 +151,23 @@ Let's have a closer look at the location defects of our subannotation:
         print(f"{feature.key:12}   {defects}")
 
 The class :class:`Location.Defect` is a :class:`Flag`.
-This means that multiple defects can be combined to one value.
+This means that multiple defects can be combined into one value.
 ``NONE`` means that the location has no defect, which is true for most
 of the features.
-The ``source`` feature has a defect - a combination of ``MISS_LEFT``
-and ``MISS_RIGHT``. ``MISS_LEFT`` is applied, if a feature was
-truncated before the first base, and ``MISS_RIGHT`` is applied, if
+The ``source`` feature has a defect—a combination of ``MISS_LEFT``
+and ``MISS_RIGHT``. ``MISS_LEFT`` is applied if a feature was
+truncated before the first base, and ``MISS_RIGHT`` is applied if
 a feature was truncated after the last base.
 Since ``source`` was truncated from both sides, the combination is
 applied.
 ``gene`` has the defect values ``BEYOND_LEFT`` and ``BEYOND_RIGHT``.
-These defects already appear in the GenBank file, since
+These defects already appear in the GenBank file since
 the gene is defined as the unit that is transcribed into one
 (pre-)mRNA.
 As the transcription starts somewhere before the start of the coding
 region and the exact start location is not known, ``BEYOND_LEFT`` is
 applied.
-In an analogous way, the transcription does stop somewhere after the
+In an analogous way, the transcription stops somewhere after the
 coding region (at the terminator signal).
 Hence, ``BEYOND_RIGHT`` is applied.
 These two defects are also reflected in the ``mRNA`` feature.
@@ -203,11 +203,11 @@ value (usually *1*).
                 polya_feature = feature
     loc = list(polya_feature.locs)[0]
     # Get annotated sequence containing only the poly-A signal region
-    poly_a = annot_seq[loc.first : loc.last +1]
+    poly_a = annot_seq[loc.first : loc.last + 1]
     print("Sequence start after indexing:", poly_a.sequence_start)
     print(poly_a.sequence)
 
-Here we get the poly-A signal Sequence ``'AATAAA'``.
+Here we get the poly-A signal sequence ``'AATAAA'``.
 As you might have noticed, the sequence start has shifted to the start
 of the slice index (the first base of the ``regulatory`` feature).
 
@@ -240,7 +240,7 @@ characters in the translation given by the CDS feature.
 
 .. jupyter-execute::
 
-    # To make alphabet unambiguous we create a new NucleotideSequence
+    # To make alphabet unambiguous, we create a new NucleotideSequence
     # containing only the CDS portion, which is unambiguous
     # Thus, the resulting NucleotideSequence has an unambiguous alphabet
     cds_seq = seq.NucleotideSequence(cds_seq)

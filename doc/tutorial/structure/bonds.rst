@@ -76,7 +76,7 @@ We will try that by deleting the ``C`` atom.
     print("Bonds (atoms names):")
     print(sub_array.atom_name[sub_bond_list.as_array()[:, :2]])
 
-As you see, the the bond involving the ``C`` atom is removed and the remaining
+As you see, the bond involving the ``C`` atom is removed and the remaining
 indices are shifted.
 
 Connecting atoms and bonds
@@ -155,7 +155,7 @@ as transient representation and creating a new :class:`BondList` from the modifi
 
     # Transiently convert the bond list to an array
     bond_array = tyrosine.bonds.as_array()
-    # As example Remove all single bonds
+    # As an example, remove all single bonds
     bond_array = bond_array[bond_array[:, 2] != struc.BondType.SINGLE]
     # Create a new bond list from the modified array
     tyrosine.bonds = struc.BondList(tyrosine.array_length(), bond_array)

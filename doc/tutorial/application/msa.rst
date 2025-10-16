@@ -114,7 +114,7 @@ Let's show this on the example of a nonsense alphabet.
         ])
     )
     alignment = mafft.MafftApp.align(sequences, matrix=matrix)
-    # As the alphabet do not has characters as symbols
+    # As the alphabet does not have characters as symbols
     # the alignment cannot be directly printed
     # However, we can print the trace
     print(alignment.trace)

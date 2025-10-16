@@ -15,7 +15,7 @@ Sequence profiles
 .. currentmodule:: biotite.sequence
 
 This is where *sequence profiles* come into play:
-The condense the a collection of aligned sequences into a matrix that tracks the
+They condense a collection of aligned sequences into a matrix that tracks the
 frequency of each symbol at each position of the alignment.
 Hence, asking the questions such as '*How frequent is an alanine at the n-th position?*'
 becomes a trivial indexing operation.
@@ -90,9 +90,9 @@ Profile visualization as sequence logo
 
 A common way to visualize a sequence profile is a sequence logo.
 It depicts each profile position as a stack of letters:
-The degree of conversation (more precisely the
+The degree of conservation (more precisely the
 `Shannon entropy <https://en.wikipedia.org/wiki/Entropy_(information_theory)>`_)
-is the height of a stack and each letter's height in the stack is proportional to its
+is the height of a stack, and each letter's height in the stack is proportional to its
 frequency at the respective position.
 
 .. jupyter-execute::
@@ -132,10 +132,10 @@ To create a :class:`SubstitutionMatrix` object from the log-odds matrix, we requ
 :class:`.Alphabet` objects:
 One is taken from the query sequence to be aligned to the profile, but which alphabet
 do we use for the positional axis of the matrix?
-Likewise, the alignment functions (e.g. :func:`align_optimal()`) require a two sequences
+Likewise, the alignment functions (e.g. :func:`align_optimal()`) require two sequences
 to be aligned, but we only have one query sequence.
 
-To solve this problem :mod:`biotite.sequence` provides the :class:`.PositionalSequence`
+To solve this problem, :mod:`biotite.sequence` provides the :class:`.PositionalSequence`
 which acts as a placeholder for the second sequence in the alignment.
 Its alphabet contains a unique symbol for each position, i.e. the alphabet has the
 sought length.
@@ -173,7 +173,7 @@ As a toy example, let's say we want to harness the information that cyclotides h
 strongly conserved disulfide bridges.
 Hence, we want the score matrix not only to reward when cysteines are paired with
 cysteines in general, but specifically when cysteines are paired with cysteines at the
-corresponding position, i.e. the first cysteine with the first cysteine etc.
+corresponding position, i.e. the first cysteine with the first cysteine, etc.
 As template we will use the standard *BLOSUM62* substitution matrix, expanded into
 a position-specific scoring matrix using :meth:`SubstitutionMatrix.as_positional()`:
 
