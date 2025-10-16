@@ -16,7 +16,7 @@ The logo is available as PNG in different sizes (
 :download:`L </static/assets/general/biotite_logo_l.png>`
 )
 and as
-:download:`SVG</static/assets/general/biotite_logo.svg>`.
+:download:`SVG </static/assets/general/biotite_logo.svg>`.
 
 The corresponding icon is also available in different formats and sizes (
 :download:`32x32 </static/assets/general/biotite_icon_32p.png>`,

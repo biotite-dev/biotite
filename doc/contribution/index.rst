@@ -16,7 +16,7 @@ The complete development workflow is hosted on
 This is also the place where you would post feature propositions,
 questions, bug reports, etc.
 
-If you are interested in improving *Biotite*, you feel free join our chat on
+If you are interested in improving *Biotite*, you feel free to join our chat on
 `Discord <https://discord.gg/cUjDguF>`_.
 We are happy to answer questions, discuss ideas and provide mentoring for
 newcomers.

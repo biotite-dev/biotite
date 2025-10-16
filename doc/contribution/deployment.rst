@@ -1,6 +1,6 @@
 Deployment of a new release
 ===========================
-This section describes how create and deploy a release build of the *Biotite*
+This section describes how to create and deploy a release build of the *Biotite*
 package and documentation.
 Therefore, this section primarily addresses the maintainers of the project.
 
