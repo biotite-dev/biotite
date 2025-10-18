@@ -42,7 +42,7 @@ class Alignment(object):
     conversion into strings in order to make the alignment human
     readable.
 
-    Unless an :class:`Alignment` object is the result of an multiple
+    Unless an :class:`Alignment` object is the result of a multiple
     sequence alignment, the object will contain only two sequences.
 
     All attributes of this class are publicly accessible.

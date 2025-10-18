@@ -115,7 +115,7 @@ alignment = align.align_ungapped(
     drug_type_consensus, fiber_type_consensus, matrix=matrix
 )
 
-# A colormap for hightlighting sequence dissimilarity:
+# A colormap for highlighting sequence dissimilarity:
 # At low similarity the symbols are colored red,
 # at high similarity the symbols are colored white
 cmap = LinearSegmentedColormap.from_list(

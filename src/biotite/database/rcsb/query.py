@@ -958,6 +958,6 @@ def _initialize_query_dict(query, return_type, group_by, content_types):
 
 def _to_isoformat(object):
     """
-    Convert a datetime into the specifc ISO 8601 format required by the RCSB.
+    Convert a datetime into the specific ISO 8601 format required by the RCSB.
     """
     return object.strftime("%Y-%m-%dT%H:%M:%SZ")

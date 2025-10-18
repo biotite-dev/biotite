@@ -10,11 +10,11 @@ overlapping sequences can be used to identify the epitope of antibodies
 on a protein antigen at amino acid level.
 
 General scannings for molecular recognition using peptide arrays
-are particlularly useful for epitope identification on monoclonal
+are particularly useful for epitope identification on monoclonal
 antibodies. This example visualizes the data from two epitope mapping
 studies, using a color coded sequence alignment representation
 of the antigens screened. The scannings interrogated a monoclonal
-antibody (MAb) against two arrays of overlaping peptides :footcite:`Iyamu2023`.
+antibody (MAb) against two arrays of overlapping peptides :footcite:`Iyamu2023`.
 The files containing peptide array data can be downloaded
 :download:`here </examples/download/FCR3_10ug.csv>`
 and
@@ -25,7 +25,7 @@ virulence factor of *Plasmodiun falciparum* for the strains FCR3
 the two domains can be downloaded
 :download:`here </examples/download/Array_Seq.txt>`.
 
-First, we generate a sequence aligment of the two VAR2CSA strains:
+First, we generate a sequence alignment of the two VAR2CSA strains:
 """
 
 # Code source: Daniel Ferrer-Vinals
@@ -65,15 +65,15 @@ print(alignment)
 # Epitope mapping data
 # --------------------
 #
-# This study used arrays of overlaping peptides to achive high acurracy
+# This study used arrays of overlapping peptides to achieve high accuracy
 # in mapping the epitope. Both FCR3 and NF54 arrays, consisted of
 # 20-mer peptides with an overlap of 19 and 18 amino acids respectively.
 # Arbitrary units (AU) of fluorescence intensity quantified the antibody
 # recognition for each peptide.
-# Our goal is to decorate the aligment, with the fluorescence intensity
+# Our goal is to decorate the alignment, with the fluorescence intensity
 # scores of each peptide in the arrays. We used a
 # color code from red to white for high to low intensity, respectively.
-# The background color of the symbols on the aligment corresponds to the
+# The background color of the symbols on the alignment corresponds to the
 # score for the 20th amino acid at the end of the peptide.
 #
 # Lets create a function that maps the peptide score to the 20th residue
@@ -120,7 +120,7 @@ ag1_scan.head(5)
 # need to combine the values of those experimental replicates into a
 # unique score for each peptide. Typically, this unique value could come
 # from the geometric mean between replicates that do not deviate wildly.
-# If the average deviation between replicates is high, one can assumme
+# If the average deviation between replicates is high, one can assume
 # that experimental errors should result in a lower score at a given spot.
 # It is easy to imagine that imperfections on the printing of the spot,
 # will rather decrease and not increase, the antibody recognition, in
@@ -159,16 +159,16 @@ def combine_scores(dataframe, combine="max", flag_noisy=True):
     return df
 
 
-# Make the corresponding signal equal the replicate with the higest
+# Make the corresponding signal equal the replicate with the highest
 # score value.
 dfa = combine_scores(ag1_scan, combine="max", flag_noisy=True)
 dfb = combine_scores(ag2_scan, combine="max", flag_noisy=True)
 dfa.head(5)
 
 ########################################################################
-# Many molecular recognition screening campaings e.g. epitope mapping
+# Many molecular recognition screening campaigns e.g. epitope mapping
 # screenings follow a long-tailed data distribution. To properly
-# represent such distribution one can normalize the date using linear or
+# represent such distribution one can normalize the data using linear or
 # non-linear transformations on the combined score data.
 
 
@@ -221,7 +221,7 @@ def gapped_seq(dataframe, seq_trace, p_len, overlap_step=1):
 
     Note:
     -----
-    The 'gapped' sequence may be shorter than the aligment trace if the alignment results
+    The 'gapped' sequence may be shorter than the alignment trace if the alignment results
     in gaps at either end. Any remaining elements in the trace with 'None' values are
     filled with tuples: ('None', 0).
     """
@@ -431,7 +431,7 @@ def draw_colorbar(axes, array1, array2, colormap, orient=None, title=None):
     vmxB = df2["comb_signal"].max()
 
     # The normalization of this colormap needs to be consistent with the
-    # data trasnformtion used earlier on this example. The "cubic" law:
+    # data transformation used earlier on this example. The "cubic" law:
     norm = mpl.colors.PowerNorm(gamma=0.33, vmin=min(vmiA, vmiB), vmax=max(vmxA, vmxB))
 
     fig = mpl.pyplot.figure()

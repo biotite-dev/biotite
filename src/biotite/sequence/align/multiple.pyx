@@ -275,7 +275,7 @@ def align_multiple(sequences, matrix, gap_penalty=-10, terminal_penalty=True,
     for i in range(len(aligned_seqs)):
         aligned_seqs[i].code = aligned_seq_codes[i]
 
-    # Reorder alignmets into original alignemnt
+    # Reorder alignments into original alignment
     new_order = np.argsort(order)
     aligned_seqs = [aligned_seqs[pos] for pos in new_order]
     trace = trace[:, new_order]
@@ -408,7 +408,7 @@ def _count_gaps(int64[:,:] trace_v, bint terminal_penalty):
     Parameters
     ----------
     trace_v : ndarary, shape=(n,2), dtype=int
-        The alignemnt trace.
+        The alignment trace.
     terminal_penalty : bool
         Whether to or not count terminal gap penalties.
 
@@ -587,7 +587,7 @@ def _replace_gaps(CodeType[:] _T,
         sequence code of the sequences in a static way
         (important for Cython).
     partial_trace_v : ndarary, shape=(m,), dtype=int
-        The row of the alignemnt trace reffering to the given sequence.
+        The row of the alignment trace referring to the given sequence.
     seq_code : ndarary, shape=(n,)
         The sequence code representing the given sequence.
     gap_symbol_code : int

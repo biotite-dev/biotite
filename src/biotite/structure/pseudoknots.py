@@ -186,7 +186,7 @@ class _Region:
 
         Returns
         -------
-        comparision : bool
+        comparison : bool
             The evaluated comparison.
         """
         return id(self) < id(other)
@@ -446,7 +446,7 @@ def _remove_pseudoknots(regions):
     region_array, (start_stops,) = _get_region_array_for(
         regions, [lambda a: (a.start, a.stop)], ["int32"]
     )
-    # Initialise the matrix diagonal with ndarrays of empty frozensets
+    # Initialize the matrix diagonal with ndarrays of empty frozensets
     for i in range(len(dp_matrix)):
         dp_matrix[i, i] = np.array([frozenset()])
 
@@ -579,7 +579,7 @@ def _get_results(regions, results, max_pseudoknot_order, order=0):
         return results
 
     # Get the optimal solutions for given regions. Evaluate each clique
-    # of mutually conflicting regions seperately
+    # of mutually conflicting regions separately
     cliques = [component for component in nx.connected_components(regions)]
     solutions = [
         set(chain(*e))

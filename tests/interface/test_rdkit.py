@@ -151,7 +151,7 @@ def test_kekulization():
     """
     atoms = info.residue("BNZ")
     atoms = atoms[atoms.element != "H"]
-    # Omit hydrogen for easier comparison of of aromatic bond types later on
+    # Omit hydrogen for easier comparison of aromatic bond types later on
     ref_bond_types = atoms.bonds.as_array()[:, 2]
 
     mol = rdkit_interface.to_mol(atoms)

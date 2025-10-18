@@ -97,7 +97,7 @@ with warnings.catch_warnings():
     structure = strucio.load_structure(PDB_FILE_PATH)
 # We cannot go over periodic boundaries in this case,
 # because the input PDB does not define a box -> periodic=False
-# However, as we have a planer lipid bilayer,
+# However, as we have a planar lipid bilayer,
 # periodicity should not matter
 leaflets = find_leaflets(
     structure,

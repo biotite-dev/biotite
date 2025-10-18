@@ -111,7 +111,7 @@ Then we can sum up the values for each residue, to get the residue-wise SASA.
 
 Besides other parameters, you can choose between different
 Van-der-Waals radii sets:
-*Prot0r*, the default set, is a set that defines radii for
+*ProtOr*, the default set, is a set that defines radii for
 non-hydrogen atoms, but determines the radius of an atom based on the
 assumed amount of hydrogen atoms connected to it.
 Therefore, ``"ProtOr"`` is suitable for structures with missing hydrogen

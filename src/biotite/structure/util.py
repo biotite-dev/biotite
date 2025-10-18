@@ -48,7 +48,7 @@ def norm_vector(v):
     Parameters
     ----------
     v : ndarray
-        The array containg the vector(s).
+        The array containing the vector(s).
         The vectors are represented by the last axis.
     """
     factor = np.linalg.norm(v, axis=-1)

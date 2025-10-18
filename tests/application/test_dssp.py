@@ -23,7 +23,7 @@ from tests.util import data_dir, is_not_installed
 @pytest.mark.skipif(is_not_installed("mkdssp"), reason="DSSP is not installed")
 def test_annotation(pdb_id):
     """
-    Check if the the DSSP annotation has the correct length and reasonable values.
+    Check if the DSSP annotation has the correct length and reasonable values.
     """
     atoms = pdbx.get_structure(
         pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{pdb_id}.bcif")), model=1

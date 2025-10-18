@@ -164,7 +164,7 @@ def check_duplicate_atoms(array):
     -------
     duplicate : ndarray, dtype=int
         Contains the indices of duplicate atoms.
-        The first occurence of an atom is not counted as duplicate.
+        The first occurrence of an atom is not counted as duplicate.
     """
     duplicates = []
     annots = [

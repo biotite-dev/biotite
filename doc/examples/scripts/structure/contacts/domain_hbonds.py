@@ -3,7 +3,7 @@ Hydrogen bonds between protein domains
 ======================================
 
 In this example we will identify the hydrogen bonds between the p-Helix
-and the selecivity filter of the channel protein KcsA (PDB: 2KB1).
+and the selectivity filter of the channel protein KcsA (PDB: 2KB1).
 The structure was resolved using NMR, so multiple models are present
 in the structure.
 Hence, we can also calculate the frequency of each bond.

@@ -36,7 +36,7 @@ alignments = align.align_optimal(
 )
 
 # Draw first and only alignment
-# The color intensity indicates the similiarity
+# The color intensity indicates the similarity
 fig = plt.figure(figsize=(8.0, 2.5))
 ax = fig.add_subplot(111)
 graphics.plot_alignment_similarity_based(

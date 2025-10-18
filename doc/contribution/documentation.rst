@@ -25,7 +25,7 @@ Documentation structure
 -----------------------
 *Biotite* employs the
 `Divio documentation system <https://documentation.divio.com>`_.
-In short, the documentation is splitted into four different parts that
+In short, the documentation is split into four different parts that
 addresses different purposes and audiences:
 
 .. list-table:: Documentation sections

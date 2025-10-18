@@ -232,12 +232,12 @@ def hbond(
         )
 
     else:
-        raise ValueError(f"Unkown selection type '{selection1_type}'")
+        raise ValueError(f"Unknown selection type '{selection1_type}'")
 
     if single_model:
-        # For a atom array (not stack),
+        # For an atom array (not stack),
         # hbond_mask contains only 'True' values,
-        # since all interaction are in the one model
+        # since all interactions are in the one model
         # -> Simply return triplets without hbond_mask
         return triplets
     else:

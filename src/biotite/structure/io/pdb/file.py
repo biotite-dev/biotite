@@ -613,7 +613,7 @@ class PDBFile(TextFile):
             is given, each array in the stack is saved as separate
             model.
         hybrid36 : bool, optional
-            Defines wether the file should be written in hybrid-36
+            Defines whether the file should be written in hybrid-36
             format.
 
         Notes

@@ -5,7 +5,7 @@ Secondary structure annotation
 
 .. currentmodule:: biotite.application.dssp
 
-Althogh :mod:`biotite.structure` offers the function :func:`annotate_sse()` to
+Although :mod:`biotite.structure` offers the function :func:`annotate_sse()` to
 assign secondary structure elements based on the P-SEA algorithm, DSSP can also
 be used via the :mod:`biotite.application.dssp` subpackage.
 Let us demonstrate this on the example of the good old miniprotein *TC5b*.

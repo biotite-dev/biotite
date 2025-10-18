@@ -4,7 +4,7 @@
 
 """
 This module provides functions for geometric measurements between atoms
-in a structure, mainly lenghts and angles.
+in a structure, mainly lengths and angles.
 """
 
 __name__ = "biotite.structure"

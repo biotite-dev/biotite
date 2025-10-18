@@ -63,7 +63,7 @@ if __name__ == "__main__":
         "--file",
         "-f",
         dest="file",
-        help="read mutliple PDB IDs from text file (line break separated IDs)",
+        help="read multiple PDB IDs from text file (line break separated IDs)",
     )
     parser.add_argument(
         "--gromacs",

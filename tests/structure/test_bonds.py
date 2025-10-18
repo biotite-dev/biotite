@@ -128,7 +128,7 @@ def test_modification(bond_list):
     bond_list.remove_bond(4, 0)
     # Not in list -> Do nothing
     bond_list.remove_bond(0, 3)
-    # Remove mutliple bonds, one of them is not in list
+    # Remove multiple bonds, one of them is not in list
     bond_list.remove_bonds(struc.BondList(10, np.array([(1, 0), (1, 2), (8, 9)])))
     assert bond_list.as_array().tolist() == [[1, 3, 1], [3, 4, 0], [4, 6, 0], [1, 4, 0]]
 

@@ -20,8 +20,8 @@ cdef int _ASCII_LAST_LETTER_LOWER = 122
 @cython.cpow(True)
 def encode_hybrid36(int number, unsigned int length):
     """
-    Encode an integer value into a hyrbid-36 string representation.
-    
+    Encode an integer value into a hybrid-36 string representation.
+
     Parameters
     ----------
     number : int
@@ -30,7 +30,7 @@ def encode_hybrid36(int number, unsigned int length):
         The desired length of the string representation.
         The resulting hybrid-36 string depends on the length the string
         should have.
-    
+
     Returns
     -------
     hybrid36 : str
@@ -44,7 +44,7 @@ def encode_hybrid36(int number, unsigned int length):
         raise ValueError(
             "String length must be at least 1"
         )
-    
+
     cdef int num = number
     if num < 10**length:
         # Normal decimal representation
@@ -83,7 +83,7 @@ cdef str _encode_base36(int number, unsigned int length,
                         unsigned int ascii_letter_offset):
     """
     Encode an integer value into a base-36 string representation.
-    
+
     Parameters
     ----------
     number : int
@@ -94,7 +94,7 @@ cdef str _encode_base36(int number, unsigned int length,
         The ASCII value of the first letter.
         This parameter determines whether upper or lower case letters
         should be used.
-    
+
     Returns
     -------
     hybrid36 : str
@@ -131,12 +131,12 @@ cdef str _encode_base36(int number, unsigned int length,
 def decode_hybrid36(str string):
     """
     Convert a hybrid-36 string into a integer value.
-    
+
     Parameters
     ----------
     string : str
         A hybrid-36 string representing a positive integer.
-    
+
     Returns
     -------
     number : int
@@ -144,12 +144,12 @@ def decode_hybrid36(str string):
     """
     cdef int base_value
     cdef unsigned int length
-    
+
     try:
         return int(string)
     except ValueError:
         pass
-    
+
     # String is not parseable -> expect base36 string
     cdef bytes char_array = string.strip().encode("ascii")
     cdef const unsigned char[:] char_array_v = char_array
@@ -173,7 +173,7 @@ def decode_hybrid36(str string):
             )
             # Transform and add the value range represented
             # by upper case hybrid-36:
-            # 
+            #
             #   |----- e.g. A000 to 10000 -----| |---- upper hy36 ---|
             # - 10 * 36**(length-1) + 10**length + 26 * 36**(length-1)
             #
@@ -191,16 +191,16 @@ cdef int _decode_base36(const unsigned char[:] char_array_v,
                         unsigned int ascii_letter_offset):
     """
     Convert a base-36 string into a integer value.
-    
+
     Parameters
     ----------
     char_array_v : bytes
         A hybrid-36 string representing a positive integer.
     ascii_letter_offset : int
         The ASCII value of the first letter.
-        This parameter determines whether teh string uses upper or
+        This parameter determines whether the string uses upper or
         lower case letters.
-    
+
     Returns
     -------
     number : int
@@ -215,7 +215,7 @@ cdef int _decode_base36(const unsigned char[:] char_array_v,
         number *= 36
         # Get ASCII get of next base-36 'digit'
         ascii_code = char_array_v[i]
-        # Get the numerical value of the 'digit' and add to number 
+        # Get the numerical value of the 'digit' and add to number
         if ascii_code <= _ASCII_LAST_NUMBER:
             number += ascii_code - _ASCII_FIRST_NUMBER
         else:
@@ -226,12 +226,12 @@ def max_hybrid36_number(length):
     """
     Give the maximum integer value that can be represented by a
     hybrid-36 string of the given length.
-    
+
     Parameters
     ----------
     length : int
         The length of a hybrid-36 string.
-    
+
     Returns
     -------
     max_number : int

@@ -91,7 +91,7 @@ figure.tight_layout()
 # simulation.
 # After a about 200 ps the RMSD stays in a range of approx. 1 - 2 Å.
 #
-# In order to futher evaluate the unfolding of our enzyme in the
+# In order to further evaluate the unfolding of our enzyme in the
 # course of simulation, we calculate and plot the radius of gyration
 # (a measure for the protein radius).
 
@@ -108,7 +108,7 @@ figure.tight_layout()
 
 ########################################################################
 # From this perspective, the protein seems really stable.
-# The radius does merely fluctuate in a range of approximately 0.3 Å
+# The radius merely fluctuates in a range of approximately 0.3 Å
 # during the entire simulation.
 #
 # Let's have a look at single amino acids:

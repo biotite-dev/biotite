@@ -310,7 +310,7 @@ fasta_file = fasta.FastaFile.read(
     entrez.fetch_single_file(uids, None, "protein", "fasta")
 )
 sequence_dict = fasta.get_sequences(fasta_file)
-# Currently there seems to b a bug in the NCBI search,
+# Currently there seems to be a bug in the NCBI search,
 # so that 'Precursor' results are still included
 # Solve this by filtering the sequence length
 sequence_dict = {header: seq for header, seq in sequence_dict.items() if len(seq) < 100}

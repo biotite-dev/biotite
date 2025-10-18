@@ -844,7 +844,7 @@ class AtomArrayStack(_AtomArrayBase):
     A collection of multiple :class:`AtomArray` instances, where each
     atom array has equal annotation arrays.
 
-    Effectively, this means that each atom is occuring in every array in
+    Effectively, this means that each atom is occurring in every array in
     the stack at differing coordinates. This situation arises e.g. in
     NMR-elucidated or simulated structures. Since the annotations are
     equal for each array, the annotation arrays are 1-D, while the
@@ -882,7 +882,7 @@ class AtomArrayStack(_AtomArrayBase):
     Attributes
     ----------
     {annot} : ndarray, shape=(n,)
-        Mutliple n-length annotation arrays.
+        Multiple n-length annotation arrays.
     coord : ndarray, dtype=float, shape=(m,n,3)
         ndarray containing the x, y and z coordinate of the
         atoms.
