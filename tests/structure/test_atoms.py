@@ -225,3 +225,20 @@ def test_pickle(atom, array, stack):
 
     test_stack = pickle.loads(pickle.dumps(stack))
     assert test_stack == stack
+
+
+def test_set_print_limits(array, stack):
+    """
+    Check the output of :func:`set_print_limits()`
+    by setting the maximum number of models and atoms to print very low.
+    """
+    atom_string = str(array[0])
+    atom_repr = repr(array[0])
+    struc.set_print_limits(max_models=1, max_atoms=1)
+    assert str(array) == f"{atom_string}\n\t..."
+    assert str(stack) == f"Model 1\n{atom_string}\n\t...\n\n...\n\n"
+    assert repr(array) == f"array([\n\t{atom_repr},\n\t...,\n])"
+    assert (
+        repr(stack)
+        == f"stack([\n\tarray([\n\t\t{atom_repr},\n\t\t...,\n\t]),\n\t...,\n])"
+    )

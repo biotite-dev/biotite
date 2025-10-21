@@ -19,10 +19,12 @@ __all__ = [
     "repeat",
     "from_template",
     "coord",
+    "set_print_limits",
 ]
 
 import abc
 import numbers
+import textwrap
 from collections.abc import Sequence
 import numpy as np
 from biotite.copyable import Copyable
@@ -41,6 +43,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     length : int
         The amount of atoms in the structure.
     """
+
+    _max_models_printed = 10
+    _max_atoms_printed = 1000
 
     def __init__(self, length):
         """
@@ -685,12 +690,11 @@ class AtomArray(_AtomArrayBase):
     def __repr__(self):
         """Represent AtomArray as a string for debugging."""
         atoms = ""
-        for i in range(0, self.array_length()):
-            if len(atoms) == 0:
-                atoms = "\n\t" + self.get_atom(i).__repr__()
-            else:
-                atoms = atoms + ",\n\t" + self.get_atom(i).__repr__()
-        return f"array([{atoms}\n])"
+        for i in range(0, min(self.array_length(), _AtomArrayBase._max_atoms_printed)):
+            atoms = textwrap.indent(self.get_atom(i).__repr__(), "\t") + ",\n"
+        if self.array_length() > _AtomArrayBase._max_atoms_printed:
+            atoms = atoms + "\t...,\n"
+        return f"array([\n{atoms}])"
 
     @property
     def shape(self):
@@ -833,7 +837,12 @@ class AtomArray(_AtomArrayBase):
 
         Each line contains the attributes of one atom.
         """
-        return "\n".join([str(atom) for atom in self])
+        string = "\n".join(
+            [str(atom) for atom in self[: _AtomArrayBase._max_atoms_printed]]
+        )
+        if self.array_length() > _AtomArrayBase._max_atoms_printed:
+            string += "\n\t..."
+        return string
 
     def __copy_create__(self):
         return AtomArray(self.array_length())
@@ -940,12 +949,11 @@ class AtomArrayStack(_AtomArrayBase):
     def __repr__(self):
         """Represent AtomArrayStack as a string for debugging."""
         arrays = ""
-        for i in range(0, self.stack_depth()):
-            if len(arrays) == 0:
-                arrays = "\n\t" + self.get_array(i).__repr__()
-            else:
-                arrays = arrays + ",\n\t" + self.get_array(i).__repr__()
-        return f"stack([{arrays}\n])"
+        for i in range(0, min(self.stack_depth(), _AtomArrayBase._max_models_printed)):
+            arrays = textwrap.indent(self.get_array(i).__repr__(), "\t") + ",\n"
+        if self.stack_depth() > _AtomArrayBase._max_models_printed:
+            arrays = arrays + "\t...,\n"
+        return f"stack([\n{arrays}])"
 
     def get_array(self, index):
         """
@@ -1150,6 +1158,9 @@ class AtomArrayStack(_AtomArrayBase):
         """
         string = ""
         for i, array in enumerate(self):
+            if i >= _AtomArrayBase._max_models_printed:
+                string += "..." + "\n" + "\n"
+                break
             string += "Model " + str(i + 1) + "\n"
             string += str(array) + "\n" + "\n"
         return string
@@ -1560,3 +1571,21 @@ def coord(item):
         return item.astype(np.float32, copy=False)
     else:
         return np.array(item, dtype=np.float32)
+
+
+def set_print_limits(max_models=10, max_atoms=1000):
+    """
+    Set the maximum number of models and atoms to print in the ``str()`` and ``repr()``
+    representations.
+
+    The remaining models/atoms are abbreviated by ellipses.
+
+    Parameters
+    ----------
+    max_models : int
+        The maximum number of models to print.
+    max_atoms : int
+        The maximum number of atoms to print.
+    """
+    _AtomArrayBase._max_models_printed = max_models
+    _AtomArrayBase._max_atoms_printed = max_atoms
