@@ -427,7 +427,7 @@ def _minimum_angle(v1, v2):
     have no 'preferred side'.
     """
     # Do not distinguish between the 'sides' of the rings -> take absolute of cosine
-    return np.arccos(np.abs(vector_dot(v1, v2)))
+    return np.arccos(np.minimum(np.abs(vector_dot(v1, v2)), 1.))
 
 
 def _is_within_tolerance(angles, expected_angle, tolerance):
