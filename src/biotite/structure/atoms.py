@@ -208,10 +208,13 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         new_coord = self._coord[..., index, :]
         new_length = new_coord.shape[-2]
         if isinstance(self, AtomArray):
-            new_object = AtomArray(new_length)
+            # Initialize with length 0 to avoid unnecessary memory allocation
+            # for large arrays, as the individual annotation arrays ar
+            # overwritten later anyway
+            new_object = AtomArray(0)
         elif isinstance(self, AtomArrayStack):
             new_depth = new_coord.shape[-3]
-            new_object = AtomArrayStack(new_depth, new_length)
+            new_object = AtomArrayStack(new_depth, 0)
         new_object._coord = new_coord
         if self._bonds is not None:
             new_object._bonds = self._bonds[index]
@@ -219,6 +222,8 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             new_object._box = self._box
         for annotation in self._annot:
             new_object._annot[annotation] = self._annot[annotation].__getitem__(index)
+        # Update the array length, since has currently length '0'
+        new_object._array_length = new_length
         return new_object
 
     def _set_element(self, index, atom):
