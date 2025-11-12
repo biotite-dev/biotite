@@ -250,8 +250,8 @@ def search(query, db_name, number=20):
     if api_key is not None:
         param_dict["api_key"] = api_key
     r = requests.get(_search_url, params=param_dict)
+    check_for_errors(r)
     xml_response = r.text
-    check_for_errors(xml_response)
     try:
         root = ElementTree.fromstring(xml_response)
     except ElementTree.ParseError:

@@ -117,26 +117,26 @@ def fetch(
         if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
             if format == "pdb":
                 r = requests.get(_standard_url + id + ".pdb" + gz_suffix)
+                _assert_valid_file(r, id)
                 if gzip:
                     content = r.content
                 else:
                     content = r.text
-                _assert_valid_file(r.text, id)
             elif format in ["cif", "mmcif", "pdbx"]:
                 r = requests.get(_standard_url + id + ".cif" + gz_suffix)
+                _assert_valid_file(r, id)
                 if gzip:
                     content = r.content
                 else:
                     content = r.text
-                _assert_valid_file(r.text, id)
             elif format in ["bcif"]:
                 r = requests.get(_bcif_url + id + ".bcif" + gz_suffix)
+                _assert_valid_file(r, id)
                 content = r.content
-                _assert_valid_file(r.text, id)
             elif format == "fasta":
                 r = requests.get(_fasta_url + id)
+                _assert_valid_file(r, id)
                 content = r.text
-                _assert_valid_file(r.text, id)
             else:
                 raise ValueError(f"Format '{format}' is not supported")
 
@@ -160,15 +160,15 @@ def fetch(
         return files
 
 
-def _assert_valid_file(response_text, pdb_id):
+def _assert_valid_file(response, pdb_id):
     """
     Checks whether the response is an actual structure file
     or the response a *404* error due to invalid PDB ID.
     """
     # Structure file and FASTA file retrieval
     # have different error messages
-    if len(response_text) == 0 or any(
-        err_msg in response_text
+    if len(response.text) == 0 or any(
+        err_msg in response.text
         for err_msg in [
             "404 Not Found",
             "<title>RCSB Protein Data Bank Error Page</title>",
@@ -179,3 +179,5 @@ def _assert_valid_file(response_text, pdb_id):
         ]
     ):
         raise RequestError("PDB ID {:} is invalid".format(pdb_id))
+    # Fallback for other errors
+    response.raise_for_status()
