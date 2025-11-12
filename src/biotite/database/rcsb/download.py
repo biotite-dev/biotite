@@ -102,6 +102,7 @@ def fetch(
         gz_suffix = ""
 
     files = []
+    session = requests.Session()
     for i, id in enumerate(pdb_ids):
         # Verbose output
         if verbose:
@@ -116,25 +117,25 @@ def fetch(
 
         if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
             if format == "pdb":
-                r = requests.get(_standard_url + id + ".pdb" + gz_suffix)
+                r = session.get(_standard_url + id + ".pdb" + gz_suffix)
                 _assert_valid_file(r, id)
                 if gzip:
                     content = r.content
                 else:
                     content = r.text
             elif format in ["cif", "mmcif", "pdbx"]:
-                r = requests.get(_standard_url + id + ".cif" + gz_suffix)
+                r = session.get(_standard_url + id + ".cif" + gz_suffix)
                 _assert_valid_file(r, id)
                 if gzip:
                     content = r.content
                 else:
                     content = r.text
             elif format in ["bcif"]:
-                r = requests.get(_bcif_url + id + ".bcif" + gz_suffix)
+                r = session.get(_bcif_url + id + ".bcif" + gz_suffix)
                 _assert_valid_file(r, id)
                 content = r.content
             elif format == "fasta":
-                r = requests.get(_fasta_url + id)
+                r = session.get(_fasta_url + id)
                 _assert_valid_file(r, id)
                 content = r.text
             else:

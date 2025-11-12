@@ -106,6 +106,7 @@ def fetch(
     if target_path is not None and not isdir(target_path):
         os.makedirs(target_path)
     files = []
+    session = requests.Session()
     for i, id in enumerate(uids):
         # Verbose output
         if verbose:
@@ -127,7 +128,7 @@ def fetch(
             api_key = get_api_key()
             if api_key is not None:
                 param_dict["api_key"] = api_key
-            r = requests.get(_fetch_url, params=param_dict)
+            r = session.get(_fetch_url, params=param_dict)
             check_for_errors(r)
             content = r.text
             if file is None:

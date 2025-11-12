@@ -107,6 +107,7 @@ def fetch(
         os.makedirs(target_path)
 
     files = []
+    session = requests.Session()
     for i, cid in enumerate(cids):
         # Prevent IDs as strings, this could be a common error, as other
         # database interfaces of Biotite use string IDs
@@ -125,7 +126,7 @@ def fetch(
 
         if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
             record_type = "2d" if as_structural_formula else "3d"
-            r = requests.get(
+            r = session.get(
                 _base_url + f"compound/cid/{cid}/{format.upper()}",
                 params={"record_type": record_type},
             )

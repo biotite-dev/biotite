@@ -87,6 +87,7 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
         target_path.mkdir(parents=True, exist_ok=True)
 
     files = []
+    session = requests.Session()
     for i, id in enumerate(ids):
         # Verbose output
         if verbose:
@@ -98,7 +99,7 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
             # 'file = None' -> store content in a file-like object
             file = None
         if file is None or not file.is_file() or file.stat().st_size == 0 or overwrite:
-            file_response = requests.get(_get_file_url(id, format))
+            file_response = session.get(_get_file_url(session, id, format))
             _assert_valid_file(file_response, id)
             if format in _BINARY_FORMATS:
                 content = file_response.content
@@ -128,12 +129,14 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
         return files
 
 
-def _get_file_url(id, format):
+def _get_file_url(session, id, format):
     """
     Get the actual file URL for the given ID from the ``prediction`` API endpoint.
 
     Parameters
     ----------
+    session : requests.Session
+        The session to use for the request.
     id : str
         The ID of the file to be downloaded.
     format : str
@@ -146,7 +149,7 @@ def _get_file_url(id, format):
     """
     uniprot_id = _extract_id(id)
     try:
-        metadata = requests.get(f"{_METADATA_URL}/{uniprot_id}").json()
+        metadata = session.get(f"{_METADATA_URL}/{uniprot_id}").json()
     except requests.exceptions.JSONDecodeError:
         raise RequestError("Received malformed JSON response")
     if len(metadata) == 0:

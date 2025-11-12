@@ -98,7 +98,7 @@ def test_fetch_invalid(monkeypatch, format, invalid_id, bypass_metadata):
         monkeypatch.setattr(
             module,
             "_get_file_url",
-            lambda id, f: f"https://alphafold.ebi.ac.uk/files/AF-{id}-F1-model_v4.{f}",
+            lambda session, id, format: f"{AFDB_URL}files/AF-{id}-F1-model_v4.{format}",
         )
     with pytest.raises((RequestError, ValueError)):
         afdb.fetch(invalid_id, format)
