@@ -64,7 +64,7 @@ atom_id    int          1,2,3, ...          Atom serial number
 b_factor   float        0.9, 12.3, ...      Temperature factor
 occupancy  float        .1, .3, .9, ...     Occupancy
 charge     int          -2,-1,0,1,2, ...    Electric charge of the atom
-sym_id     string       '1','2','3', ...    Symmetry ID for assemblies/symmetry mates
+sym_id     string       1,2,3, ...          Symmetry ID for assemblies/symmetry mates
 =========  ===========  =================   =========================================
 
 For each type, the attributes can be accessed directly.

@@ -547,10 +547,15 @@ def test_assembly_sym_id(pdb_id, assembly_id, symmetric_unit_count):
     number of symmetry IDs for a known example.
     """
     pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{pdb_id}.bcif"))
-    assembly = pdbx.get_assembly(pdbx_file, assembly_id=assembly_id)
+    assembly = pdbx.get_assembly(
+        pdbx_file, assembly_id=assembly_id, use_author_fields=False
+    )
+    # Check if the number of symmetry IDs is as expected
     assert sorted(np.unique(assembly.sym_id).tolist()) == list(
         range(symmetric_unit_count)
     )
+    # The symmetry IDs should be continuously increasing
+    assert np.isin(np.diff(assembly.sym_id), [0, 1]).all()
 
 
 @pytest.mark.parametrize("model", [None, 1])
