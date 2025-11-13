@@ -112,7 +112,7 @@ def benchmark_get_assembly():
     Use BinaryCIF to focus on the performance of the assembly operations, rather than
     file parsing.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / f"1f2n.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1f2n.bcif")
     pdbx.get_assembly(pdbx_file, model=1)
 
 
