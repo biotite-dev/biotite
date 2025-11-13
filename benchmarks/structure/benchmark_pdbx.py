@@ -1,4 +1,3 @@
-import itertools
 from pathlib import Path
 import pytest
 import biotite.structure.io.pdbx as pdbx
@@ -71,9 +70,8 @@ def benchmark_serialize_pdbx(deserialized_data, tmp_path, format):
 
 
 @pytest.mark.benchmark
-@pytest.mark.parametrize(
-    "format, include_bonds", itertools.product(["cif", "bcif"], [False, True])
-)
+@pytest.mark.parametrize("include_bonds", [False, True])
+@pytest.mark.parametrize("format", ["cif", "bcif"])
 def benchmark_get_structure(format, include_bonds):
     """
     Parse a structure from a CIF or BinaryCIF file.
@@ -87,9 +85,8 @@ def benchmark_get_structure(format, include_bonds):
 
 
 @pytest.mark.benchmark
-@pytest.mark.parametrize(
-    "format, include_bonds", itertools.product(["cif", "bcif"], [False, True])
-)
+@pytest.mark.parametrize("include_bonds", [False, True])
+@pytest.mark.parametrize("format", ["cif", "bcif"])
 def benchmark_set_structure(atoms, tmp_path, format, include_bonds):
     """
     Write a structure into a CIF or BinaryCIF file.
@@ -108,15 +105,14 @@ def benchmark_set_structure(atoms, tmp_path, format, include_bonds):
 
 
 @pytest.mark.benchmark
-def benchmark_get_assembly(format):
+def benchmark_get_assembly():
     """
-    Parse an assembly from a CIF or BinaryCIF file.
+    Parse an assembly from PDBx.
+
+    Use BinaryCIF to focus on the performance of the assembly operations, rather than
+    file parsing.
     """
-    path = Path(data_dir("structure")) / f"1f2n.{format}"
-    if format == "cif":
-        pdbx_file = pdbx.CIFFile.read(path)
-    else:
-        pdbx_file = pdbx.BinaryCIFFile.read(path)
+    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / f"1f2n.bcif")
     pdbx.get_assembly(pdbx_file, model=1)
 
 
