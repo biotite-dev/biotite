@@ -93,6 +93,7 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
     if target_path is not None and not isdir(target_path):
         os.makedirs(target_path)
     files = []
+    session = requests.Session()
     for i, id in enumerate(ids):
         db_name = _get_database_name(id)
         # Verbose output
@@ -106,7 +107,7 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
             file = None
         if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
             if format in ["fasta", "gff", "txt", "xml", "rdf", "tab"]:
-                r = requests.get(_fetch_url + db_name + "/" + id + "." + format)
+                r = session.get(_fetch_url + db_name + "/" + id + "." + format)
                 content = r.text
                 assert_valid_response(r)
             else:
