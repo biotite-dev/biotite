@@ -2,6 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+import gzip
 import tempfile
 from datetime import date
 from os.path import join
@@ -24,25 +25,40 @@ TC5B_TERM = "Miniprotein Construct TC5b"
 
 @pytest.mark.parametrize("as_file_like", [False, True])
 @pytest.mark.parametrize(
-    "format, extended_id",
+    "format, extended_id, use_gzip",
     [
-        pytest.param("pdb", False),
-        pytest.param("cif", False),
-        pytest.param("cif", True),
-        pytest.param("bcif", False),
+        pytest.param("pdb", False, False),
+        pytest.param("pdb", False, True),
+        pytest.param("cif", False, False),
+        pytest.param("cif", False, True),
+        pytest.param("cif", True, False),
+        pytest.param("cif", True, True),
+        pytest.param("bcif", False, False),
+        pytest.param("bcif", False, True),
         # https://models.rcsb.org/ does not support extended PDB IDs yet
-        pytest.param("bcif", True, marks=pytest.mark.xfail),
-        pytest.param("fasta", False),
+        pytest.param("bcif", True, False, marks=pytest.mark.xfail),
+        pytest.param("bcif", True, True, marks=pytest.mark.xfail),
+        pytest.param("fasta", False, False),
     ],
 )
-def test_fetch(format, as_file_like, extended_id):
+def test_fetch(format, as_file_like, extended_id, use_gzip):
+    HANDLE_CHAR = {
+        "pdb": "t",
+        "cif": "t",
+        "bcif": "b",
+        "fasta": "t",
+    }
     PDB_ID = "1aki"
+
     pdb_id = PDB_ID if not extended_id else "pdb_0000" + PDB_ID
     path = None if as_file_like else tempfile.gettempdir()
-    file_path_or_obj = rcsb.fetch(pdb_id, format, path, overwrite=True)
+    file_path_or_obj = rcsb.fetch(pdb_id, format, path, overwrite=True, gzip=use_gzip)
+
+    if use_gzip:
+        file_path_or_obj = gzip.open(file_path_or_obj, "r" + HANDLE_CHAR[format])
+
     if format == "pdb":
         file = pdb.PDBFile.read(file_path_or_obj)
-        print(file.lines)
         pdb.get_structure(file)
     elif format == "cif":
         file = pdbx.CIFFile.read(file_path_or_obj)

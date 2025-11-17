@@ -19,7 +19,9 @@ _fasta_url = "https://www.rcsb.org/fasta/entry/"
 _binary_formats = ["bcif"]
 
 
-def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
+def fetch(
+    pdb_ids, format, target_path=None, overwrite=False, verbose=False, gzip=False
+):
     """
     Download structure files (or sequence files) from the RCSB PDB in
     various formats.
@@ -46,6 +48,11 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
         the file is empty.
     verbose : bool, optional
         If set to true, the function will output the download progress.
+    gzip : bool, optional
+        If set to true, the file will be downloaded in gzipped format.
+        If `format` is not ``None``, the written files get the additional ``.gz``
+        extension.
+        Not supported for ``"fasta"`` format.
 
     Returns
     -------
@@ -87,6 +94,13 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
     if target_path is not None and not os.path.isdir(target_path):
         os.makedirs(target_path)
 
+    if gzip:
+        gz_suffix = ".gz"
+        if format == "fasta":
+            raise ValueError("Gzip is not supported for 'fasta' format")
+    else:
+        gz_suffix = ""
+
     files = []
     for i, id in enumerate(pdb_ids):
         # Verbose output
@@ -95,38 +109,44 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
 
         # Fetch file from database
         if target_path is not None:
-            file = join(target_path, id + "." + format)
+            file = join(target_path, id + "." + format + gz_suffix)
         else:
             # 'file = None' -> store content in a file-like object
             file = None
 
         if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
             if format == "pdb":
-                r = requests.get(_standard_url + id + ".pdb")
-                content = r.text
-                _assert_valid_file(content, id)
+                r = requests.get(_standard_url + id + ".pdb" + gz_suffix)
+                _assert_valid_file(r, id)
+                if gzip:
+                    content = r.content
+                else:
+                    content = r.text
             elif format in ["cif", "mmcif", "pdbx"]:
-                r = requests.get(_standard_url + id + ".cif")
-                content = r.text
-                _assert_valid_file(content, id)
+                r = requests.get(_standard_url + id + ".cif" + gz_suffix)
+                _assert_valid_file(r, id)
+                if gzip:
+                    content = r.content
+                else:
+                    content = r.text
             elif format in ["bcif"]:
-                r = requests.get(_bcif_url + id + ".bcif")
+                r = requests.get(_bcif_url + id + ".bcif" + gz_suffix)
+                _assert_valid_file(r, id)
                 content = r.content
-                _assert_valid_file(r.text, id)
             elif format == "fasta":
                 r = requests.get(_fasta_url + id)
+                _assert_valid_file(r, id)
                 content = r.text
-                _assert_valid_file(content, id)
             else:
                 raise ValueError(f"Format '{format}' is not supported")
 
             if file is None:
-                if format in _binary_formats:
+                if format in _binary_formats or gzip:
                     file = io.BytesIO(content)
                 else:
                     file = io.StringIO(content)
             else:
-                mode = "wb+" if format in _binary_formats else "w+"
+                mode = "wb+" if format in _binary_formats or gzip else "w+"
                 with open(file, mode) as f:
                     f.write(content)
 
@@ -140,15 +160,15 @@ def fetch(pdb_ids, format, target_path=None, overwrite=False, verbose=False):
         return files
 
 
-def _assert_valid_file(response_text, pdb_id):
+def _assert_valid_file(response, pdb_id):
     """
     Checks whether the response is an actual structure file
     or the response a *404* error due to invalid PDB ID.
     """
     # Structure file and FASTA file retrieval
     # have different error messages
-    if len(response_text) == 0 or any(
-        err_msg in response_text
+    if len(response.text) == 0 or any(
+        err_msg in response.text
         for err_msg in [
             "404 Not Found",
             "<title>RCSB Protein Data Bank Error Page</title>",
@@ -159,3 +179,5 @@ def _assert_valid_file(response_text, pdb_id):
         ]
     ):
         raise RequestError("PDB ID {:} is invalid".format(pdb_id))
+    # Fallback for other errors
+    response.raise_for_status()

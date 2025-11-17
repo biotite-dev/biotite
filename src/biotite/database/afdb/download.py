@@ -185,7 +185,7 @@ def _assert_valid_file(response, id):
     or the response a *404* error due to invalid UniProt ID.
     """
     if len(response.text) == 0:
-        raise RequestError(f"Received no repsone for '{id}'")
+        raise RequestError(f"Received no response for '{id}'")
     try:
         root = ElementTree.fromstring(response.text)
         if root.tag == "Error":
@@ -195,3 +195,5 @@ def _assert_valid_file(response, id):
     except ElementTree.ParseError:
         # This is not XML -> the response is probably a valid file
         pass
+    # Fallback for other errors
+    response.raise_for_status()

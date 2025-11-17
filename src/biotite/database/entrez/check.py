@@ -26,13 +26,13 @@ _error_messages = [
 ]
 
 
-def check_for_errors(message):
+def check_for_errors(response):
     """
     Check for common error messages in NCBI Entrez database responses.
 
     Parameters
     ----------
-    message : str
+    response : requests.Response
         The message received from NCBI Entrez.
 
     Raises
@@ -41,20 +41,26 @@ def check_for_errors(message):
         If the message contains an error message.
     """
     # Server can respond short JSON error messages
-    if len(message) < 500:
+    if len(response.text) < 500:
         try:
-            message_json = json.loads(message)
+            message_json = json.loads(response.text)
             if "error" in message_json:
                 raise RequestError(message_json["error"])
         except json.decoder.JSONDecodeError:
             # It is not a JSON message
             pass
 
-    # Error always appear at the end of message
-    message_end = message[-200:]
+    # Sometimes the error message is at the beginning of the response...
+    if response.text.startswith("Error"):
+        raise RequestError(response.text[7:])
+    # ...and sometimes at the end of the message
+    message_end = response.text[-200:]
     # Seemingly arbitrary '+' characters are in NCBI error messages
     message_end = message_end.replace("+", "")
     for error_msg in _error_messages:
         # Often whitespace is also replaced by '+' in error message
         if error_msg.replace(" ", "") in message_end:
             raise RequestError(error_msg)
+
+    # Fallback for other errors
+    response.raise_for_status()
