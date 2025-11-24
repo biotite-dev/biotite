@@ -139,7 +139,7 @@ for i, n_carbon in enumerate(range(1, PLOT_MAX_CARBON_COUNT + 1)):
         file = files[file_index]
         atoms = mol.MOLFile.read(file).get_structure()
         # Plot skeletal formula -> remove hydrogen
-        atoms = atoms[atoms.element != "H"]
+        atoms = atoms[struc.filter_heavy(atoms)]
         # Center atoms in origin
         atoms.coord -= struc.centroid(atoms)
         # Structural formula is 0 in z-dimension

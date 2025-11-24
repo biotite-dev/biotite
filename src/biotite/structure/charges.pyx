@@ -18,6 +18,7 @@ from libc.math cimport isnan
 import warnings
 import numpy as np
 from .bonds import BondType
+from .filter import filter_heavy
 
 
 ctypedef np.float32_t float32
@@ -457,7 +458,7 @@ def partial_charges(atom_array, int iteration_step_num=6, charges=None):
     # which enter as divisor the equation for charge transfer
     pos_en_values = np.sum(parameters, axis=1)
     # Substituting values for hydrogen with the special value
-    pos_en_values[atom_array.element == "H"] = EN_POS_HYDROGEN
+    pos_en_values[~filter_heavy(atom_array)] = EN_POS_HYDROGEN
     cdef float32[:] pos_en_values_v = pos_en_values
 
 

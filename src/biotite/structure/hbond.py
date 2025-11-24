@@ -14,6 +14,7 @@ import warnings
 import numpy as np
 from biotite.structure.atoms import AtomArrayStack, stack
 from biotite.structure.celllist import CellList
+from biotite.structure.filter import filter_heavy
 from biotite.structure.geometry import angle, distance
 
 
@@ -129,7 +130,7 @@ def hbond(
         A      16  ARG N      N         8.043   -1.206   -1.866
         A       6  TRP NE1    N         3.420    0.332   -0.121
     """
-    if not (atoms.element == "H").any():
+    if filter_heavy(atoms).all():
         warnings.warn(
             "Input structure does not contain hydrogen atoms, "
             "hence no hydrogen bonds can be identified"
@@ -329,7 +330,7 @@ def _get_bonded_h(array, donor_mask, bonds):
     all donors in atoms[donor_mask].
     A `BondsList` is used for detecting bonded hydrogen atoms.
     """
-    hydrogen_mask = array.element == "H"
+    hydrogen_mask = ~filter_heavy(array)
 
     donor_hydrogen_mask = np.zeros(len(array), dtype=bool)
     associated_donor_indices = np.full(len(array), -1, dtype=int)
@@ -360,7 +361,7 @@ def _get_bonded_h_via_distance(array, donor_mask, box):
 
     coord = array.coord
     res_id = array.res_id
-    hydrogen_mask = array.element == "H"
+    hydrogen_mask = ~filter_heavy(array)
 
     donor_hydrogen_mask = np.zeros(len(array), dtype=bool)
     associated_donor_indices = np.full(len(array), -1, dtype=int)

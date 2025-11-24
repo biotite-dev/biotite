@@ -642,7 +642,7 @@ def convert_atoms(atoms, charges):
     for i in range(atoms.array_length()):
         element = atoms.element[i]
         bonded_atoms = all_bonds[i][all_bonds[i] != -1]
-        if element == "H":
+        if element in ("H", "D"):
             if len(bonded_atoms) == 0:
                 # Free proton
                 atom_types[i] = "H"

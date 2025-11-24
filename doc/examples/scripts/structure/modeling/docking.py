@@ -143,8 +143,8 @@ docked_ligand = docked_ligand[np.argmin(rmsd)]
 # Vina only keeps polar hydrogens in the modeled structure
 # For consistency, remove all hydrogen atoms in the reference and
 # modelled structure
-ref_ligand = ref_ligand[ref_ligand.element != "H"]
-docked_ligand = docked_ligand[docked_ligand.element != "H"]
+ref_ligand = ref_ligand[struc.filter_heavy(ref_ligand)]
+docked_ligand = docked_ligand[struc.filter_heavy(docked_ligand)]
 
 
 # Visualization with PyMOL

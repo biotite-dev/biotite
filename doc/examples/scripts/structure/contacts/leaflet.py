@@ -118,7 +118,7 @@ temp.close()
 # Visualization with PyMOL
 pymol_interface.cmd.set("sphere_scale", 1.5)
 # Remove hydrogen and water
-structure = structure[(structure.element != "H") & (structure.res_name != "TIP")]
+structure = structure[(struc.filter_heavy(structure)) & (structure.res_name != "TIP")]
 structure.bonds = struc.connect_via_distances(structure)
 pymol_obj = pymol_interface.PyMOLObject.from_structure(structure)
 # Configure lipid tails
