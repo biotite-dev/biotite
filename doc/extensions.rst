@@ -62,4 +62,4 @@ Python packages that are developed independently.
         :img-top: https://raw.githubusercontent.com/cch1999/pocketeer/main/docs/assets/logo_nameless.png
         :class-img-top: extension-logo
 
-        A suite for working with protein pockets
+        A suite for detecting and working with protein pockets
