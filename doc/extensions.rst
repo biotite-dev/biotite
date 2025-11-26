@@ -9,6 +9,9 @@
     .extension-logo {
         padding: 20px;
         height: 150px;
+        /* Enforce correct aspect ratio for bitmap graphics */
+        object-fit: contain;
+        width: 100%;
     }
     </style>
 
