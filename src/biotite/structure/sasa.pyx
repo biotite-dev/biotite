@@ -17,7 +17,7 @@ from libc.stdlib cimport malloc, free
 
 import numpy as np
 from .celllist import CellList
-from .filter import filter_solvent, filter_monoatomic_ions
+from .filter import filter_solvent, filter_monoatomic_ions, filter_heavy
 from .info.radii import vdw_radius_protor, vdw_radius_single
 
 ctypedef np.uint8_t np_bool
@@ -140,7 +140,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
                 f"amount of atoms ({array.array_length()}) are not equal"
             )
     elif vdw_radii == "ProtOr":
-        filter = (array.element != "H")
+        filter = filter_heavy(array)
         sasa_filter = sasa_filter & filter
         occl_filter = occl_filter & filter
         radii = np.full(len(array), np.nan, dtype=np.float32)

@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
+from biotite.structure.filter import filter_heavy
 from tests.util import data_dir
 
 
@@ -11,7 +12,7 @@ def atoms():
     pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1gya.bcif")
     atoms = pdbx.get_structure(pdbx_file)
     # Reduce the number of atoms to speed up the benchmark
-    return atoms[..., atoms.element != "H"]
+    return atoms[..., filter_heavy(atoms)]
 
 
 @pytest.mark.benchmark

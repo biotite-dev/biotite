@@ -50,7 +50,7 @@ def test_res_id_continuity_check(gapped_sample_array):
 def test_linear_continuity_check(gapped_sample_array):
     # Take the first ASN residue and remove hydrogens
     asn = gapped_sample_array[
-        (gapped_sample_array.res_id == 1) & (gapped_sample_array.element != "H")
+        (gapped_sample_array.res_id == 1) & (struc.filter_heavy(gapped_sample_array))
     ]
     # The consecutive atom groups are
     # (1) N, CA, C, O

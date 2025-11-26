@@ -256,7 +256,7 @@ def test_lddt_consistency(models):
     ]
 
     # The web server computes the lDDT without hydrogen atoms
-    models = models[:, models.element != "H"]
+    models = models[:, struc.filter_heavy(models)]
 
     reference = models[0]
     subject = models[: len(REFERENCE_LDDT)]

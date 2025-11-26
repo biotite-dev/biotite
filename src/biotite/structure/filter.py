@@ -12,6 +12,7 @@ __author__ = "Patrick Kunzmann, Tom David Müller"
 __all__ = [
     "filter_solvent",
     "filter_monoatomic_ions",
+    "filter_heavy",
     "filter_nucleotides",
     "filter_canonical_nucleotides",
     "filter_amino_acids",
@@ -89,6 +90,24 @@ def filter_monoatomic_ions(array):
     # Exclusively in monoatomic ions,
     # the element name is equal to the residue name
     return array.res_name == array.element
+
+
+def filter_heavy(array):
+    """
+    Filter all non-hydrogen atoms of an atom array.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The array to be filtered.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool
+        This array is `True` for all indices in `array`, where the atom
+        is a non-hydrogen atom.
+    """
+    return (array.element != "H") & (array.element != "D")
 
 
 def filter_solvent(array):

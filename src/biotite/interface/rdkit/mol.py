@@ -19,6 +19,7 @@ from biotite.interface.warning import LossyConversionWarning
 from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.bonds import BondList, BondType
 from biotite.structure.error import BadStructureError
+from biotite.structure.filter import filter_heavy
 
 _KEKULIZED_TO_AROMATIC_BOND_TYPE = {
     BondType.SINGLE: BondType.AROMATIC_SINGLE,
@@ -157,8 +158,8 @@ def to_mol(
     HB3
     HXT
     """
-    hydrogen_mask = atoms.element == "H"
-    _has_hydrogen = hydrogen_mask.any()
+    heavy_mask = filter_heavy(atoms)
+    _has_hydrogen = not heavy_mask.all()
     if explicit_hydrogen is None:
         explicit_hydrogen = _has_hydrogen
     elif explicit_hydrogen:
@@ -174,7 +175,7 @@ def to_mol(
                 "Hydrogen atoms are present in the input, although 'explicit_hydrogen' "
                 "is set to 'False'"
             )
-        atoms = atoms[..., ~hydrogen_mask]
+        atoms = atoms[..., heavy_mask]
 
     mol = Chem.EditableMol(Chem.Mol())
 
@@ -381,7 +382,7 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
                 tempFactor=float("nan"),
                 altLoc=".",
             )
-            if element == "H":
+            if element in ("H", "D"):
                 # ... attempt inferring residue information from nearest heavy atom
                 #     in case of a hydrogen atom without explicit residue information
                 nearest_heavy_atom = rdkit_atom.GetNeighbors()[0]
