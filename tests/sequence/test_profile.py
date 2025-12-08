@@ -9,12 +9,11 @@ import biotite.sequence.align as align
 
 
 def test_from_alignment():
-    seq1 = seq.NucleotideSequence("CGTCAT")
-    seq2 = seq.NucleotideSequence("TCATGC")
-    ali_str = ["CGTCAT--", "--TCATGC"]
-    trace = align.Alignment.trace_from_strings(ali_str)
-    alignment = align.Alignment([seq1, seq2], trace, None)
-
+    ali_str = [
+        "CGTCAT--",
+        "--TCATGC",
+    ]
+    alignment = align.Alignment.from_strings(ali_str, seq.NucleotideSequence)
     profile = seq.SequenceProfile.from_alignment(alignment)
     symbols = np.array(
         [

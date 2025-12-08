@@ -5,6 +5,7 @@
 __name__ = "biotite.sequence.io.fasta"
 __author__ = "Patrick Kunzmann"
 
+import functools
 import warnings
 from collections import OrderedDict
 from biotite.sequence.align.alignment import Alignment
@@ -184,13 +185,9 @@ def get_alignment(fasta_file, additional_gap_chars=("_",), seq_type=None):
     for char in additional_gap_chars:
         for i, seq_str in enumerate(seq_strings):
             seq_strings[i] = seq_str.replace(char, "-")
-    # Remove gaps for creation of sequences
-    sequences = [
-        _convert_to_sequence(seq_str.replace("-", ""), seq_type)
-        for seq_str in seq_strings
-    ]
-    trace = Alignment.trace_from_strings(seq_strings)
-    return Alignment(sequences, trace, score=None)
+    return Alignment.from_strings(
+        seq_strings, functools.partial(_convert_to_sequence, seq_type=seq_type)
+    )
 
 
 def set_alignment(fasta_file, alignment, seq_names):
