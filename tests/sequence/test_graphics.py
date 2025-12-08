@@ -6,6 +6,7 @@ import glob
 from os.path import abspath, dirname, join
 import pytest
 import biotite.sequence as seq
+import biotite.structure.alphabet as struc_alph
 from tests.util import cannot_import
 
 
@@ -23,7 +24,8 @@ def test_load_color_scheme(scheme_path):
     supported_alphabets = [
         seq.NucleotideSequence.alphabet_amb,
         seq.ProteinSequence.alphabet,
-        seq.LetterAlphabet("abcdefghijklmnop"),  # Protein block alphabet
+        struc_alph.I3DSequence.alphabet,
+        struc_alph.ProteinBlocksSequence.alphabet,
     ]
 
     test_scheme = graphics.load_color_scheme(scheme_path)
