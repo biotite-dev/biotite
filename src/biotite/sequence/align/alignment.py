@@ -179,19 +179,16 @@ class Alignment(object):
         ):
             raise IndexError("All sequence strings must have the same length")
 
-        seq_i = np.zeros(len(sequence_strings))
+        # Start with a trace filled with gaps (-1)
         trace = np.full(
             (len(sequence_strings[0]), len(sequence_strings)), -1, dtype=int
         )
-        # Get length of string (same length for all strings)
-        # rather than length of list
-        for pos_i in range(len(sequence_strings[0])):
-            for str_j in range(len(sequence_strings)):
-                if sequence_strings[str_j][pos_i] == gap_character:
-                    trace[pos_i, str_j] = -1
-                else:
-                    trace[pos_i, str_j] = seq_i[str_j]
-                    seq_i[str_j] += 1
+        for i, seq_str in enumerate(sequence_strings):
+            # Convert into NumPy byte array to use vectorized operations
+            byte_array = np.frombuffer(seq_str.encode("ASCII"), dtype=np.ubyte)
+            # Fill the trace with the positions of each sequence where there is no gap
+            not_gap_mask = byte_array != ord(gap_character)
+            trace[not_gap_mask, i] = np.arange(np.count_nonzero(not_gap_mask))
 
         return trace
 
