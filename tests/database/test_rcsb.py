@@ -208,7 +208,7 @@ def test_search_motif():
     MOTIF = "C-x(2,4)-C-x(3)-[LIVMFYWC]-x(8)-H-x(3,5)-H."
     query = rcsb.MotifQuery(MOTIF, "prosite", "protein")
     test_count = rcsb.count(query, return_type="polymer_entity")
-    assert test_count == pytest.approx(719, rel=0.1)
+    assert test_count == pytest.approx(792, rel=0.1)
 
 
 @pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
