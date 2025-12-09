@@ -144,6 +144,25 @@ def test_alignment_conversion():
     assert str(alignment) == str(alignment2)
 
 
+def test_a3m_alignment_conversion():
+    """
+    Check if reading alignments from file and writing them again gives the same file
+    content.
+    """
+    a3m_file = fasta.FastaFile.read(
+        os.path.join(data_dir("sequence"), "1a00_A_uniref90.a3m")
+    )
+    ref_content = a3m_file.lines
+
+    labels = list(a3m_file.keys())
+    alignments = fasta.get_a3m_alignments(a3m_file)
+
+    a3m_file = fasta.FastaFile(chars_per_line=10000)
+    fasta.set_a3m_alignments(a3m_file, alignments, labels[0], labels[1:])
+    test_content = a3m_file.lines
+    assert test_content == ref_content
+
+
 @pytest.mark.parametrize(
     "file_name", glob.glob(os.path.join(data_dir("sequence"), "*.fasta"))
 )

@@ -112,10 +112,10 @@ class Alignment(object):
             The strings, where each each one represents a sequence
             (with gaps) in an alignment.
             All strings must have the same length.
-        sequence_factory: Callable (str -> Sequence)
+        sequence_factory : Callable (str -> Sequence)
             Callable that takes a sequence string (with gaps already removed) and
             produces a :class:`Sequence` object.
-        gap_character: str, optional
+        gap_character : str, optional
             This character is interpreted as gap.
 
         Returns
@@ -159,7 +159,7 @@ class Alignment(object):
         sequence_strings : list of str
             The strings, where each each one represents a sequence
             (with gaps) in an alignment.
-        gap_character: str, optional
+        gap_character : str, optional
             This character is interpreted as gap.
 
         Returns
@@ -167,7 +167,7 @@ class Alignment(object):
         trace : ndarray, dtype=int, shape=(n,2)
             The created trace.
 
-        See also
+        See Also
         --------
         from_strings:
             Creates directly an :class:`Alignment` object.
