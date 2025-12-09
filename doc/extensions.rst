@@ -61,7 +61,7 @@ Python packages that are developed independently.
         Evaluation of predicted poses against reference structures
 
     .. grid-item-card:: Pocketeer
-        :link: https://github.com/cch1999/pocketeer
+        :link: https://pocketeer.readthedocs.io/
         :img-top: https://raw.githubusercontent.com/cch1999/pocketeer/main/docs/assets/logo_nameless.png
         :class-img-top: extension-logo
 
