@@ -8,18 +8,15 @@ import biotite.sequence as seq
 import biotite.sequence.align as align
 
 
-def test_alignment_str():
+def test_alignment_from_string():
     """
     Test reading alignments from string.
     """
-    seq1 = seq.NucleotideSequence("ACCTGA")
-    seq2 = seq.NucleotideSequence("TATGCT")
     ali_str = [
         "A-CCTGA----",
         "----T-ATGCT"
     ]  # fmt: skip
-    trace = align.Alignment.trace_from_strings(ali_str)
-    alignment = align.Alignment([seq1, seq2], trace, None)
+    alignment = align.Alignment.from_strings(ali_str, seq.NucleotideSequence)
     assert str(alignment).split("\n") == ali_str
 
 
@@ -27,15 +24,12 @@ def test_conversion_to_symbols():
     """
     Test conversion of alignments to strings.
     """
-    seq_str1 = "HAKLPRDD--WKL--"
-    seq_str2 = "HA--PRDDADWKLHH"
-    seq_str3 = "HA----DDADWKLHH"
-    seq_strings = [seq_str1, seq_str2, seq_str3]
-    sequences = [
-        seq.ProteinSequence(seq_str.replace("-", "")) for seq_str in seq_strings
+    seq_strings = [
+        "HAKLPRDD--WKL--",
+        "HA--PRDDADWKLHH",
+        "HA----DDADWKLHH",
     ]
-    trace = align.Alignment.trace_from_strings(seq_strings)
-    alignment = align.Alignment(sequences, trace, score=None)
+    alignment = align.Alignment.from_strings(seq_strings, seq.ProteinSequence)
     # Test the conversion bach to strings of symbols
     symbols = align.get_symbols(alignment)
     symbols = [
@@ -50,14 +44,11 @@ def test_identity():
     Test correct calculation of `get_sequence_identity()` via a known
     test case.
     """
-    seq_str1 = "--HAKLPRDD--WL--"
-    seq_str2 = "FRHA--QRTDADWLHH"
-    seq_strings = [seq_str1, seq_str2]
-    sequences = [
-        seq.ProteinSequence(seq_str.replace("-", "")) for seq_str in seq_strings
+    seq_strings = [
+        "--HAKLPRDD--WL--",
+        "FRHA--QRTDADWLHH",
     ]
-    trace = align.Alignment.trace_from_strings(seq_strings)
-    alignment = align.Alignment(sequences, trace, score=None)
+    alignment = align.Alignment.from_strings(seq_strings, seq.ProteinSequence)
     # Assert correct sequence identity calculation
     modes = ["all", "not_terminal", "shortest"]
     values = [6 / 16, 6 / 12, 6 / 10]
