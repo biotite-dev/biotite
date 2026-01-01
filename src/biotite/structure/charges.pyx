@@ -307,13 +307,13 @@ def _get_parameters(elements, bond_types, amount_of_binding_partners):
             joined_list.append(unparametrized_valences[i] + "\n")
         joined_array = np.reshape(
             joined_list,
-            newshape=(int(len(joined_list) / 2), 2)
+            (int(len(joined_list) / 2), 2)
         )
         joined_array = np.unique(joined_array, axis=0)
         # Array must be flattened in order ro be able to apply the
         # 'join' method
         flattened_joined_array = np.reshape(
-            joined_array, newshape=(2*joined_array.shape[0])
+            joined_array, (2*joined_array.shape[0])
         )
         warnings.warn(
             f"Parameters for specific valence states of some atoms "
