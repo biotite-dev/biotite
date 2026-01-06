@@ -168,17 +168,13 @@ def _assert_valid_file(response, pdb_id):
     """
     # Structure file and FASTA file retrieval
     # have different error messages
-    if len(response.text) == 0 or any(
-        err_msg in response.text
-        for err_msg in [
-            "404 Not Found",
-            "<title>RCSB Protein Data Bank Error Page</title>",
-            "<title>PDB Archive over AWS</title>",
-            "No fasta files were found.",
-            "No valid PDB IDs were submitted.",
-            "The requested URL was incorrect, too long or otherwise malformed.",
-        ]
-    ):
-        raise RequestError("PDB ID {:} is invalid".format(pdb_id))
+    if response.status_code == 404:
+        raise RequestError(f"PDB ID {pdb_id} is invalid")
     # Fallback for other errors
     response.raise_for_status()
+
+    content_type = response.headers.get("Content-Type", "")
+    if "text" in content_type or "html" in content_type:
+        text = response.text
+        if len(text) == 0 or "404 Not Found" in text:
+            raise RequestError(f"PDB ID {pdb_id} is invalid")
