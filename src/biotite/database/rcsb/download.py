@@ -173,7 +173,7 @@ def _assert_valid_file(response, pdb_id):
     # Fallback for other errors
     try:
         response.raise_for_status()
-    except requests.HTTPError as err:
+    except requests.HTTPError:
         raise RequestError(f"PDB ID {pdb_id} is invalid")
 
     content_type = response.headers.get("Content-Type", "")
