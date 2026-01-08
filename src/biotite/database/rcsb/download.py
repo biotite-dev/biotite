@@ -17,6 +17,14 @@ _bcif_url = "https://models.rcsb.org/"
 _fasta_url = "https://www.rcsb.org/fasta/entry/"
 
 _binary_formats = ["bcif"]
+_rcsb_error_msgs = [
+    "404 Not Found",
+    "<title>RCSB Protein Data Bank Error Page</title>",
+    "<title>PDB Archive over AWS</title>",
+    "No fasta files were found.",
+    "No valid PDB IDs were submitted.",
+    "The requested URL was incorrect, too long or otherwise malformed.",
+]
 
 
 def fetch(
@@ -166,19 +174,18 @@ def _assert_valid_file(response, pdb_id):
     Checks whether the response is an actual structure file
     or the response a *404* error due to invalid PDB ID.
     """
+    if response.status_code == 404:
+        raise RequestError(f"PDB ID {pdb_id} is invalid")
+    # Fallback for other errors
+    try:
+        response.raise_for_status()
+    except requests.HTTPError:
+        raise RequestError(f"PDB ID {pdb_id} is invalid")
+
+    content_type = response.headers.get("Content-Type", "")
     # Structure file and FASTA file retrieval
     # have different error messages
-    if len(response.text) == 0 or any(
-        err_msg in response.text
-        for err_msg in [
-            "404 Not Found",
-            "<title>RCSB Protein Data Bank Error Page</title>",
-            "<title>PDB Archive over AWS</title>",
-            "No fasta files were found.",
-            "No valid PDB IDs were submitted.",
-            "The requested URL was incorrect, too long or otherwise malformed.",
-        ]
-    ):
-        raise RequestError("PDB ID {:} is invalid".format(pdb_id))
-    # Fallback for other errors
-    response.raise_for_status()
+    if "text" in content_type or "html" in content_type:
+        text = response.text
+        if len(text) == 0 or any(err_msg in text for err_msg in _rcsb_error_msgs):
+            raise RequestError(f"PDB ID {pdb_id} is invalid")
