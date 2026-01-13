@@ -54,7 +54,7 @@ Python packages that are developed independently.
         Investigation of molecular dynamics using elastic network models
 
     .. grid-item-card:: pepp'r
-        :link: https://peppr.vant.ai/
+        :link: https://proximabio.com/
         :img-top: https://raw.githubusercontent.com/aivant/peppr/refs/heads/main/docs/static/assets/general/icon.svg
         :class-img-top: extension-logo
 
