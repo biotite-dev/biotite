@@ -198,8 +198,8 @@ for pdb_id in database_pdb_ids:
             continue
         # Since we input a single chain, we know only one sequence is created
         structural_sequence = strucalph.to_3di(chain)[0][0]
-        if len(structural_sequence) < K:
-            # Cannot index a sequence later, if it is shorter than the k-mer length
+        if len(structural_sequence) < len(SPACED_SEED):
+            # Cannot index a sequence later, if it is shorter than the k-mer span
             continue
         db_ids.append((pdb_id, representative_chain_id))
         db_sequences.append(structural_sequence)
