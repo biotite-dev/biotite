@@ -86,13 +86,19 @@ Code efficiency
 ---------------
 The central aims of *Biotite* are that it is both, convenient and fast.
 Therefore, the code should be vectorized as much as possible using *NumPy*.
+
 In cases the problem cannot be reasonably or conveniently solved this way,
-writing modules in `Cython <https://cython.readthedocs.io/en/latest/>`_ is the
+writing modules in *Rust*  using `PyO3 <https://pyo3.rs>` is the
 preferred way to go.
-Writing extensions directly in C/C++ is discouraged due to the bad readability.
-Writing extensions in other programming languages
-(e.g. in *Rust* via `PyO3 <https://pyo3.rs>`_) is currently not permitted to
-keep the build process simple.
+The *Rust* part of the codebase is located in ``src/biotite/rust/`` and mirrors the
+structure of the *Python* side.
+For example *Rust* functionalities for ``biotite.structure.io.pdb`` residue in
+``biotite.rust.structure.io.pdb``.
+``biotite.rust`` itself is not publicly exposed, but its functionalities are instead
+internally used or reexported in ``biotite`` subpackages.
+
+Parts of the code are still written in `Cython <https://cython.readthedocs.io/en/latest/>`_,
+but adding new *Cython* modules is discouraged in favor of *Rust*.
 
 Docstrings
 ----------

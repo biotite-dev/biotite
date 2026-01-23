@@ -10,12 +10,39 @@ use numpy::{IntoPyArray, PyArray1, PyArray2, PyArrayDyn, PyReadonlyArray1, PyRea
 use pyo3::exceptions;
 use pyo3::ffi::c_str;
 use pyo3::prelude::*;
-use pyo3::types::{IntoPyDict, PyDict, PyEllipsis, PyString};
+use pyo3::types::{IntoPyDict, PyDict, PyEllipsis, PyString, PyType};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fs;
 use std::str::FromStr;
+
+use crate::structure::io::pdb::hybrid36::{decode_hybrid36, encode_hybrid36};
+use std::ops::Range;
+
+// Column ranges for ATOM/HETATM records
+const RECORD: Range<usize> = 0..6;
+const ATOM_ID: Range<usize> = 6..11;
+const ATOM_NAME: Range<usize> = 12..16;
+const ALT_LOC: Range<usize> = 16..17;
+const RES_NAME: Range<usize> = 17..20;
+const CHAIN_ID: Range<usize> = 21..22;
+const RES_ID: Range<usize> = 22..26;
+const INS_CODE: Range<usize> = 26..27;
+const COORD_X: Range<usize> = 30..38;
+const COORD_Y: Range<usize> = 38..46;
+const COORD_Z: Range<usize> = 46..54;
+const OCCUPANCY: Range<usize> = 54..60;
+const TEMP_F: Range<usize> = 60..66;
+const ELEMENT: Range<usize> = 76..78;
+const CHARGE: Range<usize> = 78..80;
+// Column ranges for CRYST1 record
+const CRYST_A: Range<usize> = 6..15;
+const CRYST_B: Range<usize> = 15..24;
+const CRYST_C: Range<usize> = 24..33;
+const CRYST_ALPHA: Range<usize> = 33..40;
+const CRYST_BETA: Range<usize> = 40..47;
+const CRYST_GAMMA: Range<usize> = 47..54;
 
 // Label as a separate module to indicate that this exception comes
 // from biotite
@@ -24,9 +51,10 @@ mod biotite {
     pyo3::import_exception!(biotite.structure, BadStructureError);
 }
 
-/// This is a low-level abstraction of a PDB file.
-/// While the actual file input and output is managed in Python, this struct is able to parse
-/// coordinates, models, bonds etc. from lines of text and vice versa.
+/// Private base class for :class:`PDBFile`.
+///
+/// It contains efficient Rust implementation of the methods that would otherwise
+/// become major bottlenecks
 #[pyclass(subclass)]
 pub struct PDBFile {
     /// Lines of text from the PDB file.
@@ -39,8 +67,9 @@ pub struct PDBFile {
 #[pymethods]
 impl PDBFile {
     #[new]
-    fn new(lines: Vec<String>) -> Self {
-        //let ljust_lines = lines.iter().map(|line| format!("{:<80}", line)).collect();
+    #[pyo3(signature = (lines=None))]
+    fn new(lines: Option<Vec<String>>) -> Self {
+        let lines = lines.unwrap_or_default();
         let mut pdb_file = PDBFile {
             lines,
             model_start_i: Vec::new(),
@@ -63,8 +92,22 @@ impl PDBFile {
         Ok(PyArray1::from_iter(py, self.atom_line_i.iter().map(|x| *x as i64)).to_owned())
     }
 
-    #[staticmethod]
-    fn read(file: Bound<'_, PyAny>) -> PyResult<Self> {
+    /// read(file)
+    ///
+    /// Read a PDB file.
+    ///
+    /// Parameters
+    /// ----------
+    /// file : file-like object or str
+    ///     The file to be read.
+    ///     Alternatively a file path can be supplied.
+    ///
+    /// Returns
+    /// -------
+    /// file_object : PDBFile
+    ///     The parsed file.
+    #[classmethod]
+    fn read<'py>(cls: &Bound<'py, PyType>, file: Bound<'py, PyAny>) -> PyResult<Bound<'py, PyAny>> {
         let contents;
         if let Ok(file_path) = file.downcast::<PyString>() {
             // String path
@@ -81,17 +124,13 @@ impl PDBFile {
             // File-like object
             contents = file.call_method0("read")?.extract::<String>()?;
         }
-        let lines = contents
+        let lines: Vec<String> = contents
             .lines()
+            // Pad lines with whitespace if lines are shorter than the required 80 characters
             .map(|line| format!("{:<80}", line))
             .collect();
-        let mut pdb_file = PDBFile {
-            lines,
-            model_start_i: Vec::new(),
-            atom_line_i: Vec::new(),
-        };
-        pdb_file._index_models_and_atoms();
-        Ok(pdb_file)
+        // Instantiate via the class (cls) to support subclasses
+        cls.call1((lines,))
     }
 
     fn write(&self, file: Bound<'_, PyAny>) -> PyResult<()> {
@@ -114,6 +153,43 @@ impl PDBFile {
         Ok(())
     }
 
+    /// get_remark(self, number)
+    ///
+    /// Get the lines containing the *REMARK* records with the given
+    /// `number`.
+    ///
+    /// Parameters
+    /// ----------
+    /// number : int
+    ///     The *REMARK* number, i.e. the `XXX` in ``REMARK XXX``.
+    ///
+    /// Returns
+    /// -------
+    /// remark_lines : None or list of str
+    ///     The content of the selected *REMARK* lines.
+    ///     Each line is an element of this list.
+    ///     The ``REMARK XXX `` part of each line is omitted.
+    ///     Furthermore, the first line, which always must be empty, is
+    ///     not included.
+    ///     ``None`` is returned, if the selected *REMARK* records do not
+    ///     exist in the file.
+    ///
+    /// Examples
+    /// --------
+    ///
+    /// >>> import os.path
+    /// >>> file = PDBFile.read(os.path.join(path_to_structures, "1l2y.pdb"))
+    /// >>> remarks = file.get_remark(900)
+    /// >>> print("\n".join(remarks))
+    /// RELATED ENTRIES
+    /// RELATED ID: 5292   RELATED DB: BMRB
+    /// BMRB 5292 IS CHEMICAL SHIFTS FOR TC5B IN BUFFER AND BUFFER
+    /// CONTAINING 30 VOL-% TFE.
+    /// RELATED ID: 1JRJ   RELATED DB: PDB
+    /// 1JRJ IS AN ANALAGOUS C-TERMINAL STRUCTURE.
+    /// >>> nonexistent_remark = file.get_remark(999)
+    /// >>> print(nonexistent_remark)
+    /// None
     fn get_remark(&self, number: i64) -> PyResult<Option<Vec<String>>> {
         const CONTENT_START_COLUMN: usize = 11;
 
@@ -139,10 +215,91 @@ impl PDBFile {
         }
     }
 
+    /// get_model_count(self)
+    ///
+    /// Get the number of models contained in the PDB file.
+    ///
+    /// Returns
+    /// -------
+    /// model_count : int
+    ///     The number of models.
     fn get_model_count(&self) -> usize {
         self.model_start_i.len()
     }
 
+    /// get_coord(self, model=None)
+    ///
+    /// Get only the coordinates from the PDB file.
+    ///
+    /// Parameters
+    /// ----------
+    /// model : int, optional
+    ///     If this parameter is given, the function will return a
+    ///     2D coordinate array from the atoms corresponding to the
+    ///     given model number (starting at 1).
+    ///     Negative values are used to index models starting from the
+    ///     last model instead of the first model.
+    ///     If this parameter is omitted, an 3D coordinate array
+    ///     containing all models will be returned, even if
+    ///     the structure contains only one model.
+    ///
+    /// Returns
+    /// -------
+    /// coord : ndarray, shape=(m,n,3) or shape=(n,3), dtype=float
+    ///     The coordinates read from the ATOM and HETATM records of the
+    ///     file.
+    ///
+    /// Notes
+    /// -----
+    /// Note that :func:`get_coord()` may output more coordinates than
+    /// the atom array (stack) from the corresponding
+    /// :func:`get_structure()` call has.
+    /// The reason for this is, that :func:`get_structure()` filters
+    /// *altloc* IDs, while `get_coord()` does not.
+    ///
+    /// Examples
+    /// --------
+    /// Read an :class:`AtomArrayStack` from multiple PDB files, where
+    /// each PDB file contains the same atoms but different positions.
+    /// This is an efficient approach when a trajectory is spread into
+    /// multiple PDB files, as done e.g. by the *Rosetta* modeling
+    /// software.
+    ///
+    /// For the purpose of this example, the PDB files are created from
+    /// an existing :class:`AtomArrayStack`.
+    ///
+    /// >>> import os.path
+    /// >>> from tempfile import gettempdir
+    /// >>> file_names = []
+    /// >>> for i in range(atom_array_stack.stack_depth()):
+    /// ...     pdb_file = PDBFile()
+    /// ...     pdb_file.set_structure(atom_array_stack[i])
+    /// ...     file_name = os.path.join(gettempdir(), f"model_{i+1}.pdb")
+    /// ...     pdb_file.write(file_name)
+    /// ...     file_names.append(file_name)
+    /// >>> print(file_names)
+    /// ['...model_1.pdb', '...model_2.pdb', ..., '...model_38.pdb']
+    ///
+    /// Now the PDB files are used to create an :class:`AtomArrayStack`,
+    /// where each model represents a different model.
+    ///
+    /// Construct a new :class:`AtomArrayStack` with annotations taken
+    /// from one of the created files used as template and coordinates
+    /// from all of the PDB files.
+    ///
+    /// >>> template_file = PDBFile.read(file_names[0])
+    /// >>> template = template_file.get_structure()
+    /// >>> coord = []
+    /// >>> for i, file_name in enumerate(file_names):
+    /// ...     pdb_file = PDBFile.read(file_name)
+    /// ...     coord.append(pdb_file.get_coord(model=1))
+    /// >>> new_stack = from_template(template, np.array(coord))
+    ///
+    /// The newly created :class:`AtomArrayStack` should now be equal to
+    /// the :class:`AtomArrayStack` the PDB files were created from.
+    ///
+    /// >>> print(np.allclose(new_stack.coord, atom_array_stack.coord))
+    /// True
     #[pyo3(signature = (model=None))]
     fn get_coord<'py>(&self, py: Python<'py>, model: Option<isize>) -> PyResult<Bound<'py, PyAny>> {
         match model {
@@ -154,9 +311,9 @@ impl PDBFile {
                     if line.len() < 80 {
                         return Err(biotite::InvalidFileError::new_err("Line is too short"));
                     }
-                    coord[[atom_i, 0]] = parse_float_from_string(line, 30, 38)?;
-                    coord[[atom_i, 1]] = parse_float_from_string(line, 38, 46)?;
-                    coord[[atom_i, 2]] = parse_float_from_string(line, 46, 54)?;
+                    coord[[atom_i, 0]] = parse_float_from_string(line, &COORD_X)?;
+                    coord[[atom_i, 1]] = parse_float_from_string(line, &COORD_Y)?;
+                    coord[[atom_i, 2]] = parse_float_from_string(line, &COORD_Z)?;
                 }
                 Ok(coord.into_pyarray(py).into_any())
             }
@@ -169,9 +326,9 @@ impl PDBFile {
                     if line.len() < 80 {
                         return Err(biotite::InvalidFileError::new_err("Line is too short"));
                     }
-                    coord[[atom_i, 0]] = parse_float_from_string(line, 30, 38)?;
-                    coord[[atom_i, 1]] = parse_float_from_string(line, 38, 46)?;
-                    coord[[atom_i, 2]] = parse_float_from_string(line, 46, 54)?;
+                    coord[[atom_i, 0]] = parse_float_from_string(line, &COORD_X)?;
+                    coord[[atom_i, 1]] = parse_float_from_string(line, &COORD_Y)?;
+                    coord[[atom_i, 2]] = parse_float_from_string(line, &COORD_Z)?;
                 }
                 Ok(coord
                     .into_shape_with_order((self.model_start_i.len(), length, 3))
@@ -182,6 +339,122 @@ impl PDBFile {
         }
     }
 
+    /// get_b_factor(self, model=None)
+    ///
+    /// Get only the B-factors from the PDB file.
+    ///
+    /// Parameters
+    /// ----------
+    /// model : int, optional
+    ///     If this parameter is given, the function will return a
+    ///     1D B-factor array from the atoms corresponding to the
+    ///     given model number (starting at 1).
+    ///     Negative values are used to index models starting from the
+    ///     last model instead of the first model.
+    ///     If this parameter is omitted, an 2D B-factor array
+    ///     containing all models will be returned, even if
+    ///     the structure contains only one model.
+    ///
+    /// Returns
+    /// -------
+    /// b_factor : ndarray, shape=(m,n) or shape=(n,), dtype=float
+    ///     The B-factors read from the ATOM and HETATM records of the
+    ///     file.
+    ///
+    /// Notes
+    /// -----
+    /// Note that :func:`get_b_factor()` may output more B-factors
+    /// than the atom array (stack) from the corresponding
+    /// :func:`get_structure()` call has atoms.
+    /// The reason for this is, that :func:`get_structure()` filters
+    /// *altloc* IDs, while `get_b_factor()` does not.
+    #[pyo3(signature = (model=None))]
+    fn get_b_factor<'py>(
+        &self,
+        py: Python<'py>,
+        model: Option<isize>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        match model {
+            Some(model_number) => {
+                let atom_line_i = self.get_atom_indices(model_number)?;
+                let mut b_factor = Array::zeros(atom_line_i.len());
+                for (atom_i, line_i) in atom_line_i.iter().enumerate() {
+                    let line = &self.lines[*line_i];
+                    if line.len() < 80 {
+                        return Err(biotite::InvalidFileError::new_err("Line is too short"));
+                    }
+                    b_factor[atom_i] = parse_float_from_string(line, &TEMP_F)?;
+                }
+                Ok(b_factor.into_pyarray(py).into_any())
+            }
+
+            None => {
+                let length = self.get_model_length()?;
+                let mut b_factor = Array::zeros(self.atom_line_i.len());
+                for (atom_i, line_i) in self.atom_line_i.iter().enumerate() {
+                    let line = &self.lines[*line_i];
+                    if line.len() < 80 {
+                        return Err(biotite::InvalidFileError::new_err("Line is too short"));
+                    }
+                    b_factor[atom_i] = parse_float_from_string(line, &TEMP_F)?;
+                }
+                Ok(b_factor
+                    .into_shape_with_order((self.model_start_i.len(), length))
+                    .expect("Model length is invalid")
+                    .into_pyarray(py)
+                    .into_any())
+            }
+        }
+    }
+
+    /// get_structure(self, model=None, altloc="first", extra_fields=[], include_bonds=False)
+    ///
+    /// Get an :class:`AtomArray` or :class:`AtomArrayStack` from the PDB file.
+    ///
+    /// This function parses standard base-10 PDB files as well as
+    /// hybrid-36 PDB.
+    ///
+    /// Parameters
+    /// ----------
+    /// model : int, optional
+    ///     If this parameter is given, the function will return an
+    ///     :class:`AtomArray` from the atoms corresponding to the given
+    ///     model number (starting at 1).
+    ///     Negative values are used to index models starting from the
+    ///     last model instead of the first model.
+    ///     If this parameter is omitted, an :class:`AtomArrayStack`
+    ///     containing all models will be returned, even if the
+    ///     structure contains only one model.
+    /// altloc : {'first', 'occupancy', 'all'}
+    ///     This parameter defines how *altloc* IDs are handled:
+    ///         - ``'first'`` - Use atoms that have the first
+    ///           *altloc* ID appearing in a residue.
+    ///         - ``'occupancy'`` - Use atoms that have the *altloc* ID
+    ///           with the highest occupancy for a residue.
+    ///         - ``'all'`` - Use all atoms.
+    ///           Note that this leads to duplicate atoms.
+    ///           When this option is chosen, the ``altloc_id``
+    ///           annotation array is added to the returned structure.
+    /// extra_fields : list of str, optional
+    ///     The strings in the list are optional annotation categories
+    ///     that should be stored in the output array or stack.
+    ///     These are valid values:
+    ///     ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and
+    ///     ``'charge'``.
+    /// include_bonds : bool, optional
+    ///     If set to true, a :class:`BondList` will be created for the
+    ///     resulting :class:`AtomArray` containing the bond information
+    ///     from the file.
+    ///     Bonds, whose order could not be determined from the
+    ///     *Chemical Component Dictionary*
+    ///     (e.g. especially inter-residue bonds),
+    ///     have :attr:`BondType.ANY`, since the PDB format itself does
+    ///     not support bond orders.
+    ///
+    /// Returns
+    /// -------
+    /// array : AtomArray or AtomArrayStack
+    ///     The return type depends on the `model` parameter.
     #[pyo3(signature = (model=None, altloc="first", extra_fields=None, include_bonds=false))]
     fn get_structure<'py>(
         &self,
@@ -211,22 +484,24 @@ impl PDBFile {
 
         atoms.setattr("coord", self.get_coord(py, model)?)?;
 
-        let include_atom_id;
-        let include_b_factor;
-        let mut include_occupancy;
-        let include_charge;
-        match extra_fields {
-            Some(extra_fields) => {
-                include_atom_id = extra_fields.contains(&"atom_id".to_string());
-                include_b_factor = extra_fields.contains(&"b_factor".to_string());
-                include_occupancy = extra_fields.contains(&"occupancy".to_string());
-                include_charge = extra_fields.contains(&"charge".to_string());
-            }
-            None => {
-                include_atom_id = false;
-                include_b_factor = false;
-                include_occupancy = false;
-                include_charge = false;
+        let mut include_atom_id = false;
+        let mut include_b_factor = false;
+        let mut include_occupancy = false;
+        let mut include_charge = false;
+        if let Some(extra_fields) = extra_fields {
+            for field in extra_fields {
+                match field.as_str() {
+                    "atom_id" => include_atom_id = true,
+                    "b_factor" => include_b_factor = true,
+                    "occupancy" => include_occupancy = true,
+                    "charge" => include_charge = true,
+                    _ => {
+                        return Err(exceptions::PyValueError::new_err(format!(
+                            "Unknown extra field: {}",
+                            field
+                        )))
+                    }
+                }
             }
         }
         if altloc == "occupancy" {
@@ -274,27 +549,30 @@ impl PDBFile {
             if line.len() < 80 {
                 return Err(biotite::InvalidFileError::new_err("Line is too short"));
             }
-            write_string_to_array(&mut chain_id.row_mut(atom_i), line[21..22].trim());
-            res_id[atom_i] = parse_number(&line[22..26])?;
-            write_string_to_array(&mut ins_code.row_mut(atom_i), line[26..27].trim());
-            write_string_to_array(&mut res_name.row_mut(atom_i), line[17..20].trim());
-            hetero[atom_i] = &line[0..4] != "ATOM";
-            write_string_to_array(&mut atom_name.row_mut(atom_i), line[12..16].trim());
-            write_string_to_array(&mut element.row_mut(atom_i), line[76..78].trim());
-            write_string_to_array(&mut altloc_id.row_mut(atom_i), &line[16..17]);
+            write_string_to_array(&mut chain_id.row_mut(atom_i), line[CHAIN_ID.clone()].trim());
+            res_id[atom_i] = decode_hybrid36(&line[RES_ID.clone()])?;
+            write_string_to_array(&mut ins_code.row_mut(atom_i), line[INS_CODE.clone()].trim());
+            write_string_to_array(&mut res_name.row_mut(atom_i), line[RES_NAME.clone()].trim());
+            hetero[atom_i] = &line[RECORD.clone()] != "ATOM  ";
+            write_string_to_array(
+                &mut atom_name.row_mut(atom_i),
+                line[ATOM_NAME.clone()].trim(),
+            );
+            write_string_to_array(&mut element.row_mut(atom_i), line[ELEMENT.clone()].trim());
+            write_string_to_array(&mut altloc_id.row_mut(atom_i), &line[ALT_LOC.clone()]);
 
             // Set optional annotation arrays
             if include_atom_id || include_bonds {
-                atom_id[atom_i] = parse_number(&line[6..11])?;
+                atom_id[atom_i] = decode_hybrid36(&line[ATOM_ID.clone()])?;
             }
             if include_b_factor {
-                b_factor[atom_i] = parse_number(&line[60..66])?;
+                b_factor[atom_i] = parse_number(&line[TEMP_F.clone()])?;
             }
             if include_occupancy {
-                occupancy[atom_i] = parse_number(&line[54..60])?;
+                occupancy[atom_i] = parse_number(&line[OCCUPANCY.clone()])?;
             }
             if include_charge {
-                let charge_raw = line[78..80].as_bytes();
+                let charge_raw = line[CHARGE.clone()].as_bytes();
                 // Allow both "X+" and "+X"
                 charge[atom_i] = match charge_raw[0] {
                     b' ' => 0,
@@ -305,7 +583,7 @@ impl PDBFile {
                         b'-' => -parse_digit(&charge_raw[0])?,
                         _ => Err(biotite::InvalidFileError::new_err(format!(
                             "'{}' is not a valid charge identifier",
-                            &line[78..80]
+                            &line[CHARGE.clone()]
                         )))?,
                     },
                 }
@@ -381,7 +659,8 @@ impl PDBFile {
                     let np = PyModule::import(py, "numpy")?;
                     let stack_depth: i64 = atoms.call_method0("stack_depth")?.extract()?;
                     // box[np.newaxis, ...]
-                    let box_expanded = box_vectors.get_item((np.getattr("newaxis")?, py.Ellipsis()))?;
+                    let box_expanded =
+                        box_vectors.get_item((np.getattr("newaxis")?, py.Ellipsis()))?;
                     // np.repeat(box[np.newaxis, ...], stack_depth, axis=0)
                     let box_repeated = np.call_method(
                         "repeat",
@@ -409,7 +688,10 @@ impl PDBFile {
         if include_bonds {
             let atom_id: Bound<'py, PyArray1<i64>> = atoms.getattr("atom_id")?.extract()?;
             let bond_array = self.parse_bonds(py, &atom_id.readonly().as_array())?;
-            let bond_list = struc.getattr("BondList")?.call1((atom_id.len() as i64, bond_array))?;
+            let bond_list = struc
+                .getattr("BondList")?
+                .call1((atom_id.len()?, bond_array))?;
+            atoms.setattr("bonds", bond_list)?;
         }
 
         if !include_atom_id {
@@ -421,11 +703,51 @@ impl PDBFile {
         Ok(atoms)
     }
 
-    fn set_structure(&mut self, py: Python<'_>, atoms: Bound<'_, PyAny>) -> PyResult<()> {
+    /// set_structure(self, atoms, hybrid36=False)
+    ///
+    /// Set the :class:`AtomArray` or :class:`AtomArrayStack` for the
+    /// file.
+    ///
+    /// This makes also use of the optional annotation arrays
+    /// ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
+    /// If the atom array (stack) contains the annotation ``'atom_id'``,
+    /// these values will be used for atom numbering instead of
+    /// continuous numbering.
+    ///
+    /// Parameters
+    /// ----------
+    /// array : AtomArray or AtomArrayStack
+    ///     The array or stack to be saved into this file. If a stack
+    ///     is given, each array in the stack is saved as separate
+    ///     model.
+    /// hybrid36 : bool, optional
+    ///     Defines wether the file should be written in hybrid-36
+    ///     format.
+    ///
+    /// Notes
+    /// -----
+    /// If `array` has an associated :class:`BondList`, ``CONECT``
+    /// records are also written for all non-water hetero residues
+    /// and all inter-residue connections.
+    fn set_structure(
+        &mut self,
+        py: Python<'_>,
+        atoms: Bound<'_, PyAny>,
+        hybrid36: bool,
+    ) -> PyResult<()> {
         // Write the CRYST1 record if box is present
         let box_vectors = atoms.getattr("box")?;
         if !box_vectors.is_none() {
-            self.write_box(py, box_vectors)?;
+            // For AtomArrayStack, the box is 3D - use first model's box
+            let box_ndim: usize = box_vectors.getattr("ndim")?.extract()?;
+            let box_to_write = match box_ndim {
+                3 => box_vectors.get_item(0)?,
+                2 => box_vectors,
+                _ => Err(biotite::BadStructureError::new_err(
+                    "Invalid box dimensions",
+                ))?,
+            };
+            self.write_box(py, box_to_write)?;
         }
 
         // Create a binding first to avoid borrowing a dropped array
@@ -490,20 +812,31 @@ impl PDBFile {
             let element_i = &element[i];
             let atom_name_i = &atom_name[i];
 
+            let raw_atom_id_i = atom_id.as_ref().map_or((i + 1) as i64, |arr| arr[i]);
+            let atom_id_i = if hybrid36 {
+                encode_hybrid36(raw_atom_id_i, 5)?
+            } else {
+                truncate_id(raw_atom_id_i, 99999).to_string()
+            };
+
+            let res_id_i = if hybrid36 {
+                encode_hybrid36(res_id[i], 4)?
+            } else {
+                truncate_id(res_id[i], 9999).to_string()
+            };
+
             prefix.push(format!(
                 "{:6}{:>5} {:4} {:>3} {:1}{:>4}{:1}   ",
                 if hetero[i] { "HETATM" } else { "ATOM" },
-                atom_id
-                    .as_ref()
-                    .map_or((i + 1) as i64, |arr| truncate_id(arr[i], 99999)),
+                atom_id_i,
                 if element_i.len() == 1 && atom_name_i.len() < 4 {
                     format!(" {}", atom_name_i)
                 } else {
-                    format!("{}", atom_name_i)
+                    atom_name_i.to_string()
                 },
                 res_name[i],
                 chain_id[i],
-                truncate_id(res_id[i], 9999),
+                res_id_i,
                 ins_code[i],
             ));
 
@@ -545,21 +878,18 @@ impl PDBFile {
         // Write CONECT records if bonds are present
         let bonds = atoms.getattr("bonds")?;
         if !bonds.is_none() {
-            let bonds_array: PyReadonlyArray2<'_, i32> =
-                bonds.call_method0("as_array")?.extract()?;
-            // If atom_id annotation is not present, generate sequential IDs
+            // Bond type is unused since PDB does not support bond orders
+            let (bonds_array, _bond_types): (PyReadonlyArray2<'_, i32>, PyReadonlyArray2<'_, i8>) =
+                bonds.call_method0("get_all_bonds")?.extract()?;
             let atom_id_for_bonds: Bound<'_, PyArray1<i64>> = match &atom_id_numpy {
                 Some(arr) => arr.as_array().to_owned().into_pyarray(py),
-                None => PyArray1::from_iter(
-                    py,
-                    (1..=coord.shape()[1] as i64)
-                        .collect::<Vec<_>>()
-                        .into_iter(),
-                ),
+                // If atom_id annotation is not present, generate sequential IDs
+                None => PyArray1::from_iter(py, (1..=coord.shape()[1] as i64).collect::<Vec<_>>()),
             };
             self.write_bonds(bonds_array, atom_id_for_bonds.readonly())?;
         }
 
+        self._index_models_and_atoms();
         Ok(())
     }
 
@@ -586,6 +916,11 @@ impl PDBFile {
         if self.model_start_i.is_empty() && !self.atom_line_i.is_empty() {
             self.model_start_i = vec![0]
         }
+    }
+
+    /// Set the line at the given index to the given string.
+    fn _set_line(&mut self, line_index: usize, line: String) {
+        self.lines[line_index] = line;
     }
 }
 
@@ -677,12 +1012,12 @@ impl PDBFile {
                 if line.len() < 80 {
                     return Err(biotite::InvalidFileError::new_err("Line is too short"));
                 }
-                let len_a: f64 = parse_number(&line[6..15])?;
-                let len_b: f64 = parse_number(&line[15..24])?;
-                let len_c: f64 = parse_number(&line[24..33])?;
-                let alpha: f64 = parse_number(&line[33..40])?;
-                let beta: f64 = parse_number(&line[40..47])?;
-                let gamma: f64 = parse_number(&line[47..54])?;
+                let len_a: f64 = parse_number(&line[CRYST_A.clone()])?;
+                let len_b: f64 = parse_number(&line[CRYST_B.clone()])?;
+                let len_c: f64 = parse_number(&line[CRYST_C.clone()])?;
+                let alpha: f64 = parse_number(&line[CRYST_ALPHA.clone()])?;
+                let beta: f64 = parse_number(&line[CRYST_BETA.clone()])?;
+                let gamma: f64 = parse_number(&line[CRYST_GAMMA.clone()])?;
                 return Ok(Some(
                     struc
                         .getattr("vectors_from_unitcell")?
@@ -724,14 +1059,17 @@ impl PDBFile {
         let mut bonds: Vec<(u32, u32)> = Vec::new();
         for line in self.lines.iter() {
             if line.starts_with("CONECT") {
+                if line.len() < 80 {
+                    return Err(biotite::InvalidFileError::new_err("Line is too short"));
+                }
                 // Extract ID of center atom
-                let center_index = atom_id_to_index.get(&parse_number(&line[6..11])?);
+                let center_index = atom_id_to_index.get(&decode_hybrid36(&line[ATOM_ID.clone()])?);
                 match center_index {
                     None => continue, // Atom ID is not in the AtomArray (probably removed altloc)
                     Some(center_index) => {
                         // Iterate over atom IDs bonded to center atom
                         for i in (11..31).step_by(5) {
-                            match &parse_number(&line[i..i + 5]) {
+                            match &decode_hybrid36(&line[i..i + 5]) {
                                 Ok(bonded_id) => {
                                     let bonded_index = atom_id_to_index.get(bonded_id);
                                     match bonded_index {
@@ -799,21 +1137,28 @@ impl PDBFile {
                 }
                 if n_added == 0 {
                     // Add new record
-                    line.push_str(&format!("CONECT{:>5}", atom_id[center_i]));
+                    line.push_str(&format!(
+                        "CONECT{:>5}",
+                        encode_hybrid36(atom_id[center_i], 5)?
+                    ));
                 }
-                line.push_str(&format!("{:>5}", atom_id[*bonded_i as usize]));
+                line.push_str(&format!(
+                    "{:>5}",
+                    encode_hybrid36(atom_id[*bonded_i as usize], 5)?
+                ));
                 n_added += 1;
                 if n_added == 4 {
                     // Only a maximum of 4 bond partners can be put
                     // into a single line
                     // If there are more, use an extra record
                     n_added = 0;
-                    self.lines.push(line);
+                    // Pad the line to 80 characters
+                    self.lines.push(format!("{:<80}", line));
                     line = String::new();
                 }
             }
             if n_added > 0 {
-                self.lines.push(line);
+                self.lines.push(format!("{:<80}", line));
             }
         }
         Ok(())
@@ -829,10 +1174,10 @@ fn get_annotation_as_type<'py, T: numpy::Element>(
     let kwargs = PyDict::new(atoms.py());
     kwargs.set_item("dtype", dtype.to_string())?;
     kwargs.set_item("copy", false)?;
-    Ok(atoms
+    atoms
         .getattr(annotation)?
         .call_method("astype", (), Some(&kwargs))?
-        .extract()?)
+        .extract()
 }
 
 // Get an `AtomArray` annotation as a `Vec` of strings.
@@ -845,13 +1190,13 @@ fn get_annotation_as_strings<'py>(
         .getattr("convert_unicode_to_uint32")?;
 
     let annot_array = atoms.getattr(annotation)?;
-    let string_array: Bound<'py, PyArray1<u32>> = convert_unicode_to_uint32
+    let string_array: Bound<'py, PyArray2<u32>> = convert_unicode_to_uint32
         .call1((annot_array,))?
-        .extract::<Bound<'py, PyArray1<u32>>>()?;
+        .extract::<Bound<'py, PyArray2<u32>>>()?;
     string_array
         .readonly()
         .as_array()
-        .columns()
+        .rows()
         .into_iter()
         .map(|x| parse_string_from_array(&x))
         .collect()
@@ -917,7 +1262,7 @@ fn parse_string_from_array(array: &ArrayView1<u32>) -> PyResult<String> {
         .map(|&utf32_val| TryInto::<u8>::try_into(utf32_val).map(|x| x as char))
         .collect();
     maybe_string.map_err(|_| {
-        biotite::InvalidFileError::new_err(format!("Unicode array contains invalid characters"))
+        biotite::InvalidFileError::new_err("Unicode array contains invalid characters".to_string())
     })
 }
 
@@ -949,11 +1294,12 @@ fn parse_digit(digit: &u8) -> PyResult<i64> {
 }
 
 /// Parse a float from a string slice.
-fn parse_float_from_string(line: &str, start: usize, stop: usize) -> PyResult<f32> {
-    line[start..stop].trim().parse().map_err(|_| {
+/// Parse a float from a string slice using a Range.
+fn parse_float_from_string(line: &str, range: &Range<usize>) -> PyResult<f32> {
+    line[range.clone()].trim().parse().map_err(|_| {
         biotite::InvalidFileError::new_err(format!(
             "'{}' cannot be parsed into a float",
-            line[start..stop].trim()
+            line[range.clone()].trim()
         ))
     })
 }

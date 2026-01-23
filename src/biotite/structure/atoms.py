@@ -377,7 +377,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 else:  # AtomArrayStack
                     if value.ndim == 2:
                         # Use the same box for each model
-                        value = np.repeat(box[np.newaxis, ...], self.shape[0], axis=0)
+                        value = np.repeat(value[np.newaxis, ...], self.shape[0], axis=0)
                     elif value.ndim != 3:
                         raise ValueError(
                             "A 3-dimensional ndarray is expected for an AtomArrayStack"

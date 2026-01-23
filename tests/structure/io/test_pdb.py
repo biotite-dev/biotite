@@ -15,8 +15,12 @@ from pytest import approx
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
-import biotite.structure.io.pdb.hybrid36 as hybrid36
 import biotite.structure.io.pdbx as pdbx
+from biotite.rust.structure.io.pdb import (
+    decode_hybrid36,
+    encode_hybrid36,
+    max_hybrid36_number,
+)
 from tests.util import data_dir
 
 
@@ -406,7 +410,7 @@ LENGTHS = [3, 4, 5]
         list(
             itertools.chain(
                 *[
-                    np.random.randint(0, hybrid36.max_hybrid36_number(length), N)
+                    np.random.randint(0, max_hybrid36_number(length), N)
                     for length in LENGTHS
                 ]
             )
@@ -419,14 +423,14 @@ def test_hybrid36_codec(number, length):
     Test whether hybrid-36 encoding and subsequent decoding restores the
     same number.
     """
-    string = hybrid36.encode_hybrid36(number, length)
-    test_number = hybrid36.decode_hybrid36(string)
+    string = encode_hybrid36(number, length)
+    test_number = decode_hybrid36(string)
     assert test_number == number
 
 
 def test_max_hybrid36_number():
-    assert hybrid36.max_hybrid36_number(4) == 2436111
-    assert hybrid36.max_hybrid36_number(5) == 87440031
+    assert max_hybrid36_number(4) == 2436111
+    assert max_hybrid36_number(5) == 87440031
 
 
 @pytest.mark.parametrize("hybrid36", [False, True])
