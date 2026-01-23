@@ -87,7 +87,7 @@ def test_protor_radii():
     This means, that none of the resulting radii should be the None.
     """
     array = load_structure(join(data_dir("structure"), "1gya.bcif"))
-    array = array[..., array.element != "H"]
+    array = array[..., struc.filter_heavy(array)]
     array = array[..., struc.filter_amino_acids(array)]
     for res_name, atom_name in zip(array.res_name, array.atom_name):
         radius = strucinfo.vdw_radius_protor(res_name, atom_name)
@@ -177,7 +177,8 @@ def test_standardize_order(multi_model, seed):
 
     assert restored.shape == original.shape
     assert (
-        restored[..., restored.element != "H"] == original[..., original.element != "H"]
+        restored[..., struc.filter_heavy(restored)]
+        == original[..., struc.filter_heavy(original)]
     )
 
 

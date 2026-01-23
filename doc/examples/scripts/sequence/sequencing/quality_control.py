@@ -164,7 +164,7 @@ ax.set_ylabel("Sequence count")
 fig.tight_layout()
 
 ########################################################################
-# In this case the actual data stick relatively good to the idealized
+# In this case the actual data stick relatively well to the idealized
 # curve.
 # Strong deviations may indicate contaminations or a biased library.
 #

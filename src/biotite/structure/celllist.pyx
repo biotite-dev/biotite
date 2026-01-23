@@ -372,7 +372,7 @@ cdef class CellList:
             A      18  PRO HB3    H         2.781    3.223    3.618
             A      18  PRO CB     C         3.035    4.190    3.187
 
-        Get adjacent atoms for mutliple positions:
+        Get adjacent atoms for multiple positions:
 
         >>> cell_list = CellList(atom_array, 3)
         >>> pos = np.array([[1.0,2.0,3.0], [2.0,3.0,4.0], [3.0,4.0,5.0]])
@@ -838,7 +838,7 @@ def _prepare_vectorization(np.ndarray coord, radius, radius_dtype):
             raise ValueError("Radius must be a positive value")
         # If only a single integer is given,
         # create numpy array filled with identical values
-        # with the same length as the coordiantes
+        # with the same length as the coordinates
         radius = np.full(coord.shape[0], radius, dtype=radius_dtype)
         is_multi_radius = False
 

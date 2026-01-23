@@ -3263,7 +3263,7 @@ def _to_kmer_mask(uint8[:] mask not None, kmer_alphabet):
 def _check_position_shape(position_arrays, kmer_arrays):
     """
     Check if the given lists and each element have the same length
-    and raise an exception, if this is not teh case.
+    and raise an exception, if this is not the case.
     """
     if len(position_arrays) != len(kmer_arrays):
         raise IndexError(

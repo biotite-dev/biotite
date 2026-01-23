@@ -150,8 +150,8 @@ def test_kekulization():
     Check if a benzene ring has alternating single and double bonds.
     """
     atoms = info.residue("BNZ")
-    atoms = atoms[atoms.element != "H"]
-    # Omit hydrogen for easier comparison of of aromatic bond types later on
+    atoms = atoms[struc.filter_heavy(atoms)]
+    # Omit hydrogen for easier comparison of aromatic bond types later on
     ref_bond_types = atoms.bonds.as_array()[:, 2]
 
     mol = rdkit_interface.to_mol(atoms)

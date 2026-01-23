@@ -4,11 +4,11 @@ Finding homologous regions in two genomes
 
 .. currentmodule:: biotite.sequence.align
 
-Presumably, plant cells obtained its ability for photosynthesis through
+Presumably, plant cells obtained their ability for photosynthesis through
 endosymbiosis:
 In the past, eukaryotic cells probably have incorporated a
 cyanobacterium that evolved to the current chloroplasts in plant cells.
-As a side effect, chloroplasts contain its own genome, that has a
+As a side effect, chloroplasts contain their own genome, that has a
 high similarity to cyanobacteria.
 This example highlights regions in the chloroplast genome that have
 been conserved, by comparing the chloroplast genome of
@@ -358,7 +358,7 @@ for (alignment, log_evalue), ax in zip(unique_alignments, axes.flatten()):
     for feature in excerpt:
         for loc in feature.locs:
             draw_arrow(ax, feature, loc)
-    # Draw rectangle representing homologuous region
+    # Draw rectangle representing homologous region
     ax.add_patch(
         Rectangle(
             (first, 0.1),

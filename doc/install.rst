@@ -56,7 +56,7 @@ Installation from source
 You can also install *Biotite* from the
 `project repository <https://github.com/biotite-dev/biotite>`_.
 However, in addition to building and installing the package, the internal
-`Chemical Component Dictionary (CCD) <https://www.wwpdb.org/data/ccd>`_. for
+`Chemical Component Dictionary (CCD) <https://www.wwpdb.org/data/ccd>`_ for
 :mod:`biotite.structure.info` needs to be built with the ``setup_ccd`` module.
 The script in turn requires *Biotite*.
 The solution to this chicken-and-egg problem is to first install Biotite without the

@@ -5,7 +5,7 @@ Structural alphabets
 
 .. currentmodule:: biotite.structure.alphabet
 
-In the previous chapters we have seen the multitude of methods, than can be applied
+In the previous chapters we have seen the multitude of methods, that can be applied
 to sequence and structure data.
 *Structural alphabets* combine the best of both worlds:
 A structural alphabet is a representation of protein or nucleic acid structures,
@@ -60,7 +60,7 @@ element in the list.
 Each symbol in this rather cryptic sequence corresponds to one residue in the structure.
 To get the corresponding residues as :class:`.AtomArray` objects we can use the
 residue-level functionality of :mod:`biotite.structure`.
-While the sequence is hardly human-readable, it true power lies in its ability to
+While the sequence is hardly human-readable, its true power lies in its ability to
 be compared to *3Di* sequences from other proteins.
 
 Sequence alignments on structural alphabets
@@ -167,7 +167,7 @@ One simply inputs the ``CA`` atoms of the aligned residues.
 
 Again, with a classical amino acid sequence based approach the accuracy of the
 superimposition would be much lower:
-In this case less corresponding residues can be found from the the amino sequence
+In this case less corresponding residues can be found from the amino sequence
 alignment and the RMSD between them is significantly higher.
 
 .. jupyter-execute::

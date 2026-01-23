@@ -1230,7 +1230,7 @@ def map_nucleotide(residue, min_atoms_per_base=3, rmsd_cutoff=0.28):
         The one-letter-code of the mapped base. ``None`` if no base can
         be mapped.
     exact_match : bool
-        Wether or not the residue name exactly matches one of the common
+        Whether or not the residue name exactly matches one of the common
         bases, i.e. the ``res_name`` of the input `residue` is one of
         ``A``, ``G``, ``T``, ``C``, ``U``, ``DA``, ``DG``, ``DT``,
         ``DC`` or ``DU``.

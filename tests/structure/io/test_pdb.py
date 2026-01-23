@@ -476,7 +476,6 @@ def test_bond_parsing():
 
     ref_bonds = struc.connect_via_residue_names(atoms)
     ref_bonds.remove_bond_order()
-
     assert test_bonds.as_set() == ref_bonds.as_set()
 
 
@@ -575,3 +574,26 @@ def test_setting_incompatible_structure(annotation, value, warning_only):
     else:
         with pytest.raises(struc.BadStructureError):
             pdb_file.set_structure(atoms)
+
+
+def test_hetatm_intra_residue_bonds():
+    """
+    Expect that HETATM intra-residues bonds are only parsed from CONECT records
+    and not looked up via residue names.
+    """
+    expected_bonds = np.array(
+        [
+            [0, 1, 0],
+            [1, 2, 0],
+            [2, 3, 0],
+            [3, 4, 0],
+        ],
+        dtype=np.uint32,
+    )
+    path = join(data_dir("structure"), "edge_cases", "hetatm.pdb")
+
+    pdb_file = pdb.PDBFile.read(path)
+    structure = pdb.get_structure(pdb_file, model=1, include_bonds=True)
+    actual_bonds = structure.bonds.as_array()
+
+    np.testing.assert_array_equal(actual_bonds, expected_bonds)

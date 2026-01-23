@@ -5,6 +5,7 @@
 import tempfile
 import pytest
 import biotite.database.afdb as afdb
+import biotite.database.rcsb as rcsb
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
 from biotite.database import RequestError
@@ -15,23 +16,59 @@ AFDB_URL = "https://alphafold.ebi.ac.uk/"
 
 @pytest.mark.skipif(cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available")
 @pytest.mark.parametrize("as_file_like", [False, True])
-@pytest.mark.parametrize("entry_id", ["P12345", "AF-P12345-F1"])
+@pytest.mark.parametrize(
+    "entry_id", ["P12345", "AF-P12345-F1", "AF-P12345F1", "AF_AFP12345F1"]
+)
 @pytest.mark.parametrize("format", ["pdb", "cif", "bcif"])
 def test_fetch(as_file_like, entry_id, format):
     """
     Check if files in different formats can be downloaded by being able to parse them.
+    Also ensure that the downloaded file refers to the given input ID
     """
     path = None if as_file_like else tempfile.gettempdir()
-    file_path_or_obj = afdb.fetch(entry_id, format, path, overwrite=True)
+    try:
+        file_path_or_obj = afdb.fetch(entry_id, format, path, overwrite=True)
+    except RequestError:
+        pytest.skip("AFDB is probably busy")
     if format == "pdb":
         file = pdb.PDBFile.read(file_path_or_obj)
         pdb.get_structure(file)
     elif format == "cif":
         file = pdbx.CIFFile.read(file_path_or_obj)
         pdbx.get_structure(file)
+        assert file.block["struct_ref"]["pdbx_db_accession"].as_item() == "P12345"
     elif format == "bcif":
         file = pdbx.BinaryCIFFile.read(file_path_or_obj)
         pdbx.get_structure(file)
+        assert file.block["struct_ref"]["pdbx_db_accession"].as_item() == "P12345"
+
+
+def test_fetch_cross_id():
+    """
+    Test if :func:`afdb.fetch()` works with AlphaFold DB cross-references
+    in search results from :func:`rcsb.search()`.
+    """
+    UNIPROT_ID = "P12345"
+
+    ids = rcsb.search(
+        rcsb.FieldQuery(
+            "rcsb_entry_info.structure_determination_methodology",
+            exact_match="computational",
+        )
+        & rcsb.FieldQuery(
+            "rcsb_polymer_entity_container_identifiers"
+            ".reference_sequence_identifiers"
+            ".database_accession",
+            exact_match=UNIPROT_ID,
+        ),
+        content_types=("computational",),
+    )
+    assert len(ids) == 1
+    try:
+        pdbx_file = pdbx.CIFFile.read(afdb.fetch(ids[0], "cif"))
+    except RequestError:
+        pytest.skip("AFDB is probably busy")
+    assert pdbx_file.block["struct_ref"]["pdbx_db_accession"].as_item() == UNIPROT_ID
 
 
 @pytest.mark.skipif(cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available")
@@ -61,7 +98,7 @@ def test_fetch_invalid(monkeypatch, format, invalid_id, bypass_metadata):
         monkeypatch.setattr(
             module,
             "_get_file_url",
-            lambda id, f: f"https://alphafold.ebi.ac.uk/files/AF-{id}-F1-model_v4.{f}",
+            lambda session, id, format: f"{AFDB_URL}files/AF-{id}-F1-model_v4.{format}",
         )
     with pytest.raises((RequestError, ValueError)):
         afdb.fetch(invalid_id, format)

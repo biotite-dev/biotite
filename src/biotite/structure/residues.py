@@ -16,13 +16,17 @@ __all__ = [
     "get_residue_masks",
     "get_residue_starts_for",
     "get_residue_positions",
+    "get_all_residue_positions",
     "get_residues",
     "get_residue_count",
     "residue_iter",
+    "get_atom_name_indices",
 ]
 
+import numpy as np
 from biotite.structure.segments import (
     apply_segment_wise,
+    get_all_segment_positions,
     get_segment_masks,
     get_segment_positions,
     get_segment_starts,
@@ -72,7 +76,7 @@ def get_residue_starts(array, add_exclusive_stop=False, extra_categories=()):
     [  0  16  35  56  75  92 116 135 157 169 176 183 197 208 219 226 250 264
      278 292 304]
     """
-    categories = ["chain_id", "res_id", "ins_code", "res_name"] + list(extra_categories)
+    categories = ["chain_id", "res_id", "ins_code"] + list(extra_categories)
     if "sym_id" in array.get_annotation_categories():
         categories.append("sym_id")
     return get_segment_starts(array, add_exclusive_stop, equal_categories=categories)
@@ -361,6 +365,11 @@ def get_residue_positions(array, indices):
     residue_indices : ndarray, dtype=int, shape=(k,)
         The indices that point to the position of the residues.
 
+    See Also
+    --------
+    get_all_residue_positions :
+        Similar to this function, but for all atoms in the :class:`struc.AtomArray`.
+
     Examples
     --------
     >>> atom_index = [5, 42]
@@ -378,6 +387,50 @@ def get_residue_positions(array, indices):
     """
     starts = get_residue_starts(array, add_exclusive_stop=True)
     return get_segment_positions(starts, indices)
+
+
+def get_all_residue_positions(array):
+    """
+    For each atom, obtain the position of the residue
+    corresponding to this atom in the input `array`.
+
+    For example, the position of the first residue in the atom array is
+    ``0``, the the position of the second residue is ``1``, etc.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The atom array (stack) to determine the residues from.
+
+    Returns
+    -------
+    residue_indices : ndarray, dtype=int, shape=(k,)
+        The indices that point to the position of the residues.
+
+    See Also
+    --------
+    get_residue_positions :
+        Similar to this function, but for a given subset of atom indices.
+
+    Examples
+    --------
+    >>> print(get_all_residue_positions(atom_array))
+    [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  1  1  1  1  1  1  1  1
+      1  1  1  1  1  1  1  1  1  1  1  2  2  2  2  2  2  2  2  2  2  2  2  2
+      2  2  2  2  2  2  2  2  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3
+      3  3  3  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  5  5  5  5
+      5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  6  6  6  6
+      6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  7  7  7  7  7  7  7  7  7
+      7  7  7  7  7  7  7  7  7  7  7  7  7  8  8  8  8  8  8  8  8  8  8  8
+      8  9  9  9  9  9  9  9 10 10 10 10 10 10 10 11 11 11 11 11 11 11 11 11
+     11 11 11 11 11 12 12 12 12 12 12 12 12 12 12 12 13 13 13 13 13 13 13 13
+     13 13 13 14 14 14 14 14 14 14 15 15 15 15 15 15 15 15 15 15 15 15 15 15
+     15 15 15 15 15 15 15 15 15 15 16 16 16 16 16 16 16 16 16 16 16 16 16 16
+     17 17 17 17 17 17 17 17 17 17 17 17 17 17 18 18 18 18 18 18 18 18 18 18
+     18 18 18 18 19 19 19 19 19 19 19 19 19 19 19 19]
+    """
+    starts = get_residue_starts(array, add_exclusive_stop=True)
+    return get_all_segment_positions(starts, array.array_length())
 
 
 def get_residues(array):
@@ -542,3 +595,122 @@ def residue_iter(array):
     starts = get_residue_starts(array, add_exclusive_stop=True)
     for residue in segment_iter(array, starts):
         yield residue
+
+
+def get_atom_name_indices(atoms, atom_names):
+    """
+    For each residue, get the index of the atom with the given atom name.
+
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack
+        Search for the indices of the given atom names in this structure.
+    atom_names : list of str, length=p
+        The names of the atoms to get the indices of.
+
+    Returns
+    -------
+    indices : ndarray, dtype=int, shape=(k, p)
+        For every residue and atom name, the return value contains the atom index in
+        the :class:`AtomArray` where the sought atom name is located.
+        Where the atom name is not present in a residue, the array is filled with `-1`.
+
+    Examples
+    --------
+
+    >>> indices = get_atom_name_indices(atom_array, ["CA", "CB"])
+    >>> print(indices)
+    [[  1   4]
+     [ 17  20]
+     [ 36  39]
+     [ 57  60]
+     [ 76  79]
+     [ 93  96]
+     [117 120]
+     [136 139]
+     [158 161]
+     [170  -1]
+     [177  -1]
+     [184 187]
+     [198 201]
+     [209 212]
+     [220  -1]
+     [227 230]
+     [251 254]
+     [265 268]
+     [279 282]
+     [293 296]]
+    >>> for row in indices:
+    ...     for index in row:
+    ...         if index != -1:
+    ...             print(atom_array[index])
+    ...     print()
+        A       1  ASN CA     C        -8.608    3.135   -1.618
+        A       1  ASN CB     C        -9.437    3.396   -2.889
+    <BLANKLINE>
+        A       2  LEU CA     C        -4.923    4.002   -2.452
+        A       2  LEU CB     C        -4.411    5.450   -2.619
+    <BLANKLINE>
+        A       3  TYR CA     C        -3.690    2.738    0.981
+        A       3  TYR CB     C        -3.964    3.472    2.302
+    <BLANKLINE>
+        A       4  ILE CA     C        -5.857   -0.449    0.613
+        A       4  ILE CB     C        -7.386   -0.466    0.343
+    <BLANKLINE>
+        A       5  GLN CA     C        -4.122   -1.167   -2.743
+        A       5  GLN CB     C        -4.292   -0.313   -4.013
+    <BLANKLINE>
+        A       6  TRP CA     C        -0.716   -0.631   -0.993
+        A       6  TRP CB     C        -0.221    0.703   -0.417
+    <BLANKLINE>
+        A       7  LEU CA     C        -1.641   -2.932    1.963
+        A       7  LEU CB     C        -2.710   -2.645    3.033
+    <BLANKLINE>
+        A       8  LYS CA     C        -3.024   -5.791   -0.269
+        A       8  LYS CB     C        -4.224   -5.697   -1.232
+    <BLANKLINE>
+        A       9  ASP CA     C         0.466   -6.016   -1.905
+        A       9  ASP CB     C         1.033   -4.839   -2.724
+    <BLANKLINE>
+        A      10  GLY CA     C         2.060   -6.618    1.593
+    <BLANKLINE>
+        A      11  GLY CA     C         2.626   -2.967    2.723
+    <BLANKLINE>
+        A      12  PRO CA     C         6.333   -2.533    3.806
+        A      12  PRO CB     C         6.740   -2.387    5.279
+    <BLANKLINE>
+        A      13  SER CA     C         7.049   -6.179    2.704
+        A      13  SER CB     C         6.458   -7.371    3.472
+    <BLANKLINE>
+        A      14  SER CA     C         6.389   -5.315   -1.015
+        A      14  SER CB     C         4.914   -4.993   -1.265
+    <BLANKLINE>
+        A      15  GLY CA     C         9.451   -3.116   -1.870
+    <BLANKLINE>
+        A      16  ARG CA     C         7.289    0.084   -2.054
+        A      16  ARG CB     C         6.110   -0.243   -2.994
+    <BLANKLINE>
+        A      17  PRO CA     C         6.782    3.088    0.345
+        A      17  PRO CB     C         7.554    4.394    0.119
+    <BLANKLINE>
+        A      18  PRO CA     C         3.287    4.031    1.686
+        A      18  PRO CB     C         3.035    4.190    3.187
+    <BLANKLINE>
+        A      19  PRO CA     C         1.185    6.543   -0.353
+        A      19  PRO CB     C         0.048    6.014   -1.229
+    <BLANKLINE>
+        A      20  SER CA     C         0.852   10.027    1.285
+        A      20  SER CB     C         1.972   11.071    1.284
+    <BLANKLINE>
+    """
+    residue_indices = get_all_residue_positions(atoms)
+    indices = np.full(
+        (residue_indices[-1] + 1, len(atom_names)), fill_value=-1, dtype=int
+    )
+    for i, atom_name in enumerate(atom_names):
+        if atom_name is None:
+            atom_name_indices = np.where(atoms.hetero)[0]
+        else:
+            atom_name_indices = np.where(atoms.atom_name == atom_name)[0]
+        indices[residue_indices[atom_name_indices], i] = atom_name_indices
+    return indices

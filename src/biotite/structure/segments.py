@@ -11,6 +11,7 @@ __all__ = [
     "get_segment_masks",
     "get_segment_starts_for",
     "get_segment_positions",
+    "get_all_segment_positions",
     "segment_iter",
 ]
 
@@ -62,13 +63,13 @@ def get_segment_starts(
     # Convert mask to indices
     # Add 1, to shift the indices from the end of a segment
     # to the start of a new segment
-    chain_starts = np.where(segment_start_mask)[0] + 1
+    segment_starts = np.where(segment_start_mask)[0] + 1
 
     # The first chain is not included yet -> Insert '[0]'
     if add_exclusive_stop:
-        return np.concatenate(([0], chain_starts, [array.array_length()]))
+        return np.concatenate(([0], segment_starts, [array.array_length()]))
     else:
-        return np.concatenate(([0], chain_starts))
+        return np.concatenate(([0], segment_starts))
 
 
 def apply_segment_wise(starts, data, function, axis=None):
@@ -252,6 +253,11 @@ def get_segment_positions(starts, indices):
     -------
     segment_indices : ndarray, shape=(k,)
         The indices that point to the position of the segments.
+
+    See Also
+    --------
+    get_all_segment_positions :
+        Similar to this function, but for all atoms in the :class:`struc.AtomArray`.
     """
     indices = np.asarray(indices)
     length = starts[-1]
@@ -267,6 +273,36 @@ def get_segment_positions(starts, indices):
         )
 
     return np.searchsorted(starts, indices, side="right") - 1
+
+
+def get_all_segment_positions(starts, length):
+    """
+    Generalized version of :func:`get_all_residue_positions()`
+    for residues and chains.
+
+    Parameters
+    ----------
+    starts : ndarray, dtype=int
+        The sorted start indices of segments.
+        Includes exclusive stop, i.e. the length of the corresponding
+        atom array.
+    length : int
+        The length of the corresponding :class:`struc.AtomArray`.
+
+    Returns
+    -------
+    segment_indices : ndarray, shape=(k,)
+        For each atom the indices that point to the corresponding position of the
+        segments.
+
+    See Also
+    --------
+    get_segment_positions :
+        Similar to this function, but for a given subset of atom indices.
+    """
+    segment_changes = np.zeros(length, dtype=int)
+    segment_changes[starts[1:-1]] = 1
+    return np.cumsum(segment_changes)
 
 
 def segment_iter(array, starts):

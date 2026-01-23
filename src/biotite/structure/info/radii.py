@@ -210,8 +210,8 @@ def _calculate_protor_radii(res_name):
         # for and the other time vice versa
         for main_atom, bound_atom in ((atom1, atom2), (atom2, atom1)):
             element = main_atom[0]
-            # Calculating ProtOr radii for hydrogens in not meaningful
-            if element == "H":
+            # Calculating ProtOr radii for hydrogens is not meaningful
+            if element in ("H", "D"):
                 continue
             # Only for these elements ProtOr groups exist
             # Calculation of group for all other elements would be

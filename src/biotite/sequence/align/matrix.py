@@ -45,7 +45,7 @@ class SubstitutionMatrix(object):
     to be provided for each possible combination.
 
     At last a valid matrix name can be given, which is loaded from the
-    internal matrix database. The following matrices are avaliable:
+    internal matrix database. The following matrices are available:
 
         - Nucleotide substitution matrices from NCBI database
             - **NUC** - Also usable with ambiguous alphabet

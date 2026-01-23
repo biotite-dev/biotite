@@ -16,6 +16,7 @@ __all__ = [
     "get_chain_masks",
     "get_chain_starts_for",
     "get_chain_positions",
+    "get_all_chain_positions",
     "chain_iter",
     "get_chains",
     "get_chain_count",
@@ -24,6 +25,7 @@ __all__ = [
 
 from biotite.structure.segments import (
     apply_segment_wise,
+    get_all_segment_positions,
     get_segment_masks,
     get_segment_positions,
     get_segment_starts,
@@ -212,9 +214,41 @@ def get_chain_positions(array, indices):
     -------
     start_indices : ndarray, dtype=int, shape=(k,)
         The indices that point to the position of the chains.
+
+    See Also
+    --------
+    get_all_chain_positions :
+        Similar to this function, but for all atoms in the :class:`struc.AtomArray`.
     """
     starts = get_chain_starts(array, add_exclusive_stop=True)
     return get_segment_positions(starts, indices)
+
+
+def get_all_chain_positions(array):
+    """
+    For each atom, obtain the position of the chain
+    corresponding to this atom in the input `array`.
+
+    For example, the position of the first chain in the atom array is
+    ``0``, the the position of the second chain is ``1``, etc.
+
+    Parameters
+    ----------
+    array : AtomArray or AtomArrayStack
+        The atom array (stack) to determine the chains from.
+
+    Returns
+    -------
+    chain_indices : ndarray, dtype=int, shape=(k,)
+        The indices that point to the position of the chains.
+
+    See Also
+    --------
+    get_chain_positions :
+        Similar to this function, but for a given subset of atom indices.
+    """
+    starts = get_chain_starts(array, add_exclusive_stop=True)
+    return get_all_segment_positions(starts, array.array_length())
 
 
 def get_chains(array):

@@ -79,7 +79,7 @@ for cds in k12_genome.annotation:
         # otherwise the CDS is malformed
         continue
     # Iterate over the sequence in non-overlapping frames of 3
-    # and count the occurence of each codon
+    # and count the occurrence of each codon
     for i in range(0, len(cds_seq), 3):
         codon_code = tuple(cds_seq.code[i : i + 3])
         codon_counter[codon_code] += 1
@@ -124,9 +124,9 @@ for amino_acid_code in range(20):
 # However, there is a variety of different algorithms for codon
 # optimization.
 # For simplicity reasons, this example uses an approach, where for every
-# amino acid always the most frequently occuring codon is used.
+# amino acid always the most frequently occurring codon is used.
 #
-# In the follwing we will derive a codon optimized DNA sequence of
+# In the following we will derive a codon optimized DNA sequence of
 # streptavidin for expression in *E. coli* K-12.
 
 

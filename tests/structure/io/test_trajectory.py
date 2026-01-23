@@ -57,7 +57,7 @@ def test_array_conversion(format, tmp_path):
 )
 def test_bcif_consistency(format, start, stop, step, chunk_size):
     if format == "netcdf" and stop is not None and step is not None:
-        # Currently, there is an inconsistency in in biotraj's
+        # Currently, there is an inconsistency in biotraj's
         # NetCDFTrajectoryFile class:
         # In this class the number of frames in the output arrays
         # is dependent on the 'stride' parameter
@@ -121,7 +121,7 @@ def test_read_iter(format, start, stop, step, stack_size):
     from a corresponding :class:`TrajectoryFile` object.
     """
     if format == "netcdf" and step is not None:
-        # Currently, there is an inconsistency in in biotraj's
+        # Currently, there is an inconsistency in biotraj's
         # NetCDFTrajectoryFile class:
         # In this class the number of frames in the output arrays
         # is dependent on the 'stride' parameter
@@ -192,7 +192,7 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
     :class:`TrajectoryFile` object.
     """
     if format == "netcdf" and step is not None:
-        # Currently, there is an inconsistency in in biotraj's
+        # Currently, there is an inconsistency in biotraj's
         # NetCDFTrajectoryFile class:
         # In this class the number of frames in the output arrays
         # is dependent on the 'stride' parameter

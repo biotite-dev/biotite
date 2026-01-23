@@ -88,7 +88,7 @@ EVALUE_THRESHOLD = 1e-1
 # Limitation of protein sequence alignment
 # ----------------------------------------
 #
-# To motivate using a structural alphabet, we first we try a regular sequence alignment
+# To motivate using a structural alphabet, we first try a regular sequence alignment
 # on the two homologs.
 
 
@@ -111,7 +111,7 @@ alignment = align.align_optimal(
     local=True,
 )[0]
 
-print(f"Seqence identity: {int(100 * align.get_sequence_identity(alignment))}%")
+print(f"Sequence identity: {int(100 * align.get_sequence_identity(alignment))}%")
 fig, ax = plt.subplots(figsize=(8.0, 3.0), constrained_layout=True)
 graphics.plot_alignment_similarity_based(
     ax,
@@ -124,10 +124,10 @@ graphics.plot_alignment_similarity_based(
 
 ########################################################################################
 # The sequence identity is quite low.
-# One would typically refer to this range as the *twilight zone*, were it is unclear if
+# One would typically refer to this range as the *twilight zone*, where it is unclear if
 # the two sequences are actually homologs.
 # If the database comprised the entire AlphaFold DB :footcite:`Varadi2024`, the
-# probability of an finding an alignment as good as this one by chance would be quite
+# probability of finding an alignment as good as this one by chance would be quite
 # high as the E-value suggests below.
 #
 # The background frequencies for E-value calculation are taken from
@@ -198,8 +198,8 @@ for pdb_id in database_pdb_ids:
             continue
         # Since we input a single chain, we know only one sequence is created
         structural_sequence = strucalph.to_3di(chain)[0][0]
-        if len(structural_sequence) < K:
-            # Cannot index a sequence later, if it is shorter than the k-mer length
+        if len(structural_sequence) < len(SPACED_SEED):
+            # Cannot index a sequence later, if it is shorter than the k-mer span
             continue
         db_ids.append((pdb_id, representative_chain_id))
         db_sequences.append(structural_sequence)
@@ -338,7 +338,7 @@ for query_pos, db_index, db_pos in accepted_hits:
 for db_index, (alignment, log_evalue) in significant_alignments.items():
     print("Aligned target:", db_ids[db_index])
     print(f"E-value: {10**log_evalue:.2e}")
-    print(f"Seqence identity: {int(100 * align.get_sequence_identity(alignment))}%")
+    print(f"Sequence identity: {int(100 * align.get_sequence_identity(alignment))}%")
     fig, ax = plt.subplots(figsize=(8.0, 4.0), constrained_layout=True)
     graphics.plot_alignment_similarity_based(
         ax,

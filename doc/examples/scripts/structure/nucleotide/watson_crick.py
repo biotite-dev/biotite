@@ -92,7 +92,7 @@ for purine, pyrimidine in pairs:
         ax.plot(x, y, z, linestyle=":", color="gold", linewidth=2)
 
 # Label heavy atoms
-heavy_atoms = atoms[atoms.element != "H"]
+heavy_atoms = atoms[struc.filter_heavy(atoms)]
 for name, coord in zip(heavy_atoms.atom_name, heavy_atoms.coord):
     coord = coord + [0.3, 0.15, 0]
     ax.text(*coord, name, fontsize="6")

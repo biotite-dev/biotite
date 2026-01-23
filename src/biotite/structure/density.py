@@ -54,7 +54,7 @@ def density(atoms, selection=None, delta=1.0, bins=None, density=False, weights=
         *m* models.
         If the shape is *(n,)*, the weights will be interpreted as
         *per atom*.
-        A shape of *(m,n)* allows to additionally weight atoms on a
+        A shape of *(m,n)* allows additionally weighting atoms on a
         *per model* basis.
 
     Returns

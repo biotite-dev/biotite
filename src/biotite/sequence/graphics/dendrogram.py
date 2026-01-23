@@ -70,7 +70,7 @@ def plot_dendrogram(
         Returns
         -------
         pos : float
-            the postion of the node on the 'label' axis
+            the position of the node on the 'label' axis
         """
         # The term 'distance'
         # refers to positions along the 'distance' axis

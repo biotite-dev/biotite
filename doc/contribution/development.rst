@@ -3,7 +3,7 @@ Writing source code
 
 Scope
 -----
-The scope of *Biotite* are methods that make up the backbone of
+The scope of *Biotite* includes methods that make up the backbone of
 computational molecular biology. Thus, new functionalities added to
 *Biotite* should be relatively general and well established.
 
@@ -115,7 +115,7 @@ Methods do not need to be summarized in the class docstring.
 
 The CI validates the docstrings using ``numpydoc lint``.
 However, this validation sometimes also raised false positives.
-Hence, to exclude a specific functin/class from validation, add the name
+Hence, to exclude a specific function/class from validation, add the name
 (or regular expression) to ``tool.numpydoc_validation.exclude`` in the
 ``pyproject.toml``.
 

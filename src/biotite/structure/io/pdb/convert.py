@@ -16,6 +16,7 @@ __all__ = [
     "list_assemblies",
     "get_assembly",
     "get_unit_cell",
+    "get_symmetry_mates",
 ]
 
 import warnings
@@ -116,7 +117,7 @@ def set_structure(pdb_file, array, hybrid36=False):
         The structure to be written. If a stack is given, each array in
         the stack will be in a separate model.
     hybrid36 : boolean, optional
-        Defines wether the file should be written in hybrid-36 format.
+        Defines whether the file should be written in hybrid-36 format.
 
     Notes
     -----

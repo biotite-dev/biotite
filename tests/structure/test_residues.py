@@ -75,7 +75,50 @@ def test_get_residues(array):
     assert len(ids) == struc.get_residue_count(array)
 
 
+@pytest.mark.parametrize("seed", range(10))
+def test_get_residue_positions(array, seed):
+    """
+    The positions returned by :func:`get_residue_positions()` with some ``indices``,
+    should be the same as indexing the return value of
+    :func:`get_all_residue_positions()` with the given indices.
+    """
+    SIZE = 100
+
+    rng = np.random.default_rng(seed)
+    indices = rng.integers(0, array.array_length(), size=SIZE)
+
+    all_positions = struc.get_all_residue_positions(array)
+    ref_positions = all_positions[indices]
+
+    test_positions = struc.get_residue_positions(array, indices)
+
+    assert test_positions.tolist() == ref_positions.tolist()
+
+
 def test_residue_iter(array):
     centroid = [struc.centroid(res).tolist() for res in struc.residue_iter(array)]
     ref_centroid = struc.apply_residue_wise(array, array.coord, np.average, axis=0)
     assert centroid == ref_centroid.tolist()
+
+
+def test_get_atom_name_indices(array):
+    """
+    The indices returned by `get_atom_name_indices()` should only point to one atom per
+    residue (for a peptide chain) and should always point to an atom with the
+    requested atom name.
+    """
+    ATOM_NAMES = ("CA", "CB")
+
+    for atom_name, indices in zip(
+        ATOM_NAMES, struc.get_atom_name_indices(array, ATOM_NAMES).T, strict=True
+    ):
+        # There should be one index per residue
+        # (including residues where the atom is not present)
+        assert len(indices) == struc.get_residue_count(array)
+        indices = indices[indices != -1]
+        # The indices should capture all atoms in the structure with the requested name
+        assert len(indices) == np.count_nonzero(array.atom_name == atom_name)
+        # All indices should actually point to atoms with the requested name
+        assert np.all(array.atom_name[indices] == atom_name)
+        # All indices should point to unique residues
+        assert len(set(array.res_id[indices])) == len(indices)

@@ -221,7 +221,7 @@ class LetterSimilarityPlotter(LetterPlotter):
 
     def set_color(self, color=None, cmap=None):
         """
-        Set the alignemnt colors used for plotting.
+        Set the alignment colors used for plotting.
 
         This function takes either a color or a colormap.
 
@@ -1089,7 +1089,7 @@ def _get_last_valid_index(alignment, column_i, seq_i):
             # Iterated from column_i back to beyond the beginning
             # and no index has been found
             # -> Terminal gap
-            # -> First symbol of sequence has not occured yet
+            # -> First symbol of sequence has not occurred yet
             # -> return -1
             index = -1
             index_found = True

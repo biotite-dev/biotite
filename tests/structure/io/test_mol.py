@@ -325,7 +325,7 @@ def test_structure_bond_type_fallback(path):
     # Extract original list of bonds from an SDF file
     mol_file = mol.MOLFile.read(path)
     ref_atoms = mol.get_structure(mol_file)
-    # Update one bond in `ref_atoms` with with a quadruple bond type,
+    # Update one bond in `ref_atoms` with a quadruple bond type,
     # which is not supported by SDF files and thus translates to
     # the default bond type
     ref_atoms.bonds.add_bond(0, 1, BondType.QUADRUPLE)

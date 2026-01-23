@@ -180,6 +180,29 @@ def test_filter_altloc(pdb_id):
         assert atoms["all"].array_length() == atoms["first"].array_length()
 
 
+@pytest.mark.parametrize("altloc", ["first", "occupancy"])
+def test_filter_altloc_edge_case(altloc):
+    """
+    Check if the https://github.com/biotite-dev/biotite/issues/824 is resolved:
+    Expect that only one altloc ID is selected for the same residue, even if that
+    residue in some altloc has a different residue name.
+    """
+    pdbx_file = pdbx.CIFFile.read(
+        join(data_dir("structure"), "edge_cases", "altloc.cif")
+    )
+    test_atoms = pdbx.get_structure(pdbx_file, model=1, altloc=altloc)
+    ref_atoms = pdbx.get_structure(pdbx_file, model=1, altloc="all")
+
+    # Check if the any of the alternatives matches the test structure
+    passed = False
+    for altloc_id in np.unique(ref_atoms.altloc_id):
+        altloc_atoms = ref_atoms[ref_atoms.altloc_id == altloc_id]
+        if test_atoms.atom_name.tolist() == altloc_atoms.atom_name.tolist():
+            passed = True
+            break
+    assert passed
+
+
 @pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_bonds_from_ccd(format):
     """
@@ -283,6 +306,38 @@ def test_extra_fields(tmpdir, format):
     assert test_atoms.occupancy.tolist() == approx(ref_atoms.occupancy.tolist())
     assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
     assert test_atoms == ref_atoms
+
+
+def test_hetero_residue_borders():
+    """
+    Check if the https://github.com/biotite-dev/biotite/issues/553 is resolved:
+    Even if the ``label_xxx`` annotation is not sufficient to determine residue starts,
+    the ``auth_seq_id`` should be used to create incrementing residue IDs.
+    As reference the structure using author fields is taken, as this problem does not
+    apply for them.
+    The created residue IDs are manually checked, based on the CIF file, representing
+    this edge case.
+    """
+    path = join(data_dir("structure"), "edge_cases", "res_ids.cif")
+    pdbx_file = pdbx.CIFFile.read(path)
+    # The issue does not exist for author fields, hence they represent the reference
+    ref_atoms = pdbx.get_structure(pdbx_file, model=1, use_author_fields=True)
+    test_atoms = pdbx.get_structure(pdbx_file, model=1, use_author_fields=False)
+
+    # The `label_xxx` variant should provide the same residue starts
+    ref_res_starts = struc.get_residue_starts(ref_atoms)
+    assert struc.get_residue_starts(test_atoms).tolist() == ref_res_starts.tolist()
+    # The residue numbering should be incrementing from residue to residue
+    # within the same chain for hetero residues
+    test_het_res_ids, _ = struc.get_residues(test_atoms[test_atoms.hetero])
+    assert (
+        test_het_res_ids.tolist()
+        == [1, 2, 1, 2, 3, 1, 2, 1, 2, 3, 1, 2, 1, 2, 3, 1, 1, 1]
+    )  # fmt: skip
+    # For non-hetero residues, the residue IDs represent the true sequence position
+    # Hence, they represent the original `label_seq_id` values
+    test_protein_res_ids, _ = struc.get_residues(test_atoms[~test_atoms.hetero])
+    assert test_protein_res_ids.tolist() == [5, 6, 7]
 
 
 def test_dynamic_dtype():
@@ -492,10 +547,15 @@ def test_assembly_sym_id(pdb_id, assembly_id, symmetric_unit_count):
     number of symmetry IDs for a known example.
     """
     pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{pdb_id}.bcif"))
-    assembly = pdbx.get_assembly(pdbx_file, assembly_id=assembly_id)
+    assembly = pdbx.get_assembly(
+        pdbx_file, assembly_id=assembly_id, use_author_fields=False
+    )
+    # Check if the number of symmetry IDs is as expected
     assert sorted(np.unique(assembly.sym_id).tolist()) == list(
         range(symmetric_unit_count)
     )
+    # The symmetry IDs should be continuously increasing
+    assert np.isin(np.diff(assembly.sym_id), [0, 1]).all()
 
 
 @pytest.mark.parametrize("model", [None, 1])
@@ -709,13 +769,13 @@ def test_bcif_encoding():
         encoding: False
         for encoding in [
             pdbx.ByteArrayEncoding,
-            pdbx.FixedPointEncoding,
-            # This encoding is not used in the test file
-            # pdbx.IntervalQuantizationEncoding,
             pdbx.RunLengthEncoding,
             pdbx.DeltaEncoding,
             pdbx.IntegerPackingEncoding,
             pdbx.StringArrayEncoding,
+            # These encodings are not used in the test file
+            # pdbx.IntervalQuantizationEncoding,
+            # pdbx.FixedPointEncoding,
         ]
     }
 
@@ -805,16 +865,28 @@ def test_bcif_cif_consistency():
                 if cif_column.mask is None:
                     assert bcif_column.mask is None
                 else:
+                    # Currently the reference written by py-mmcif always writes masks as
+                    # `MISSING`, even if `INAPPLICABLE` would be correct
+                    # -> Check only the presence of mask values
                     assert (
-                        cif_column.mask.array.tolist()
-                        == bcif_column.mask.array.tolist()
-                    )
+                        cif_column.mask.array == pdbx.MaskValue.PRESENT
+                    ).tolist() == (
+                        bcif_column.mask.array == pdbx.MaskValue.PRESENT
+                    ).tolist()
                 # In CIF format, all vales are strings
                 # -> ensure consistency
                 dtype = bcif_column.data.array.dtype
-                assert cif_column.as_array(dtype).tolist() == pytest.approx(
-                    bcif_column.as_array(dtype).tolist()
+                cif_array = cif_column.as_array(dtype)
+                bcif_array = bcif_column.as_array(dtype)
+                mask = (
+                    cif_column.mask.array == pdbx.MaskValue.PRESENT
+                    if cif_column.mask is not None
+                    else np.full(len(cif_column.data), True)
                 )
+                assert cif_array[mask].tolist() == pytest.approx(
+                    bcif_array[mask].tolist()
+                )
+
             except Exception:
                 raise Exception(
                     f"Comparison failed for '{category_name}.{column_name}'"
@@ -910,8 +982,8 @@ def test_compress_data():
     bcif_file = pdbx.BinaryCIFFile.read(path)
     for category_name, category in bcif_file.block.items():
         for column_name, column in category.items():
-            try:
-                for attr_name, data in [("data", column.data), ("mask", column.mask)]:
+            for attr_name, data in [("data", column.data), ("mask", column.mask)]:
+                try:
                     if data is None:
                         continue
                     ref_size = len(
@@ -938,8 +1010,10 @@ def test_compress_data():
                         serialized_compressed_data
                     )
                     assert restored_data.array.tolist() == data.array.tolist()
-            except AssertionError:
-                raise AssertionError(f"{category_name}.{column_name} {attr_name}")
+                except AssertionError:
+                    print(data.encoding)
+                    print(compressed_data.encoding)
+                    raise AssertionError(f"{category_name}.{column_name} {attr_name}")
 
 
 @pytest.mark.parametrize(
@@ -952,7 +1026,7 @@ def test_compress_file(path):
     the same as from the uncompressed file, while the file size it at least as small
     as the file compressed by the RCSB PDB.
     """
-    # Use a relatively high precision to increase strictness of of the equality check
+    # Use a relatively high precision to increase strictness of the equality check
     ATOL = 1e-5
     RTOL = 1e-10
 

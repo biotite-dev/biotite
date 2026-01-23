@@ -1,0 +1,58 @@
+data_structure
+#
+loop_
+_atom_site.group_PDB
+_atom_site.id
+_atom_site.type_symbol
+_atom_site.label_atom_id
+_atom_site.label_alt_id
+_atom_site.label_comp_id
+_atom_site.label_asym_id
+_atom_site.label_entity_id
+_atom_site.label_seq_id
+_atom_site.pdbx_PDB_ins_code
+_atom_site.Cartn_x
+_atom_site.Cartn_y
+_atom_site.Cartn_z
+_atom_site.occupancy
+_atom_site.B_iso_or_equiv
+_atom_site.pdbx_formal_charge
+_atom_site.auth_seq_id
+_atom_site.auth_comp_id
+_atom_site.auth_asym_id
+_atom_site.auth_atom_id
+_atom_site.pdbx_PDB_model_num
+ATOM   352 N N    A SER A 1 22 ? 4.909  12.659 -3.127 0.20 3.03  ? 22 SER A N    1
+ATOM   353 N N    B SER A 1 22 ? 4.909  12.659 -3.127 0.20 3.03  ? 22 SER A N    1
+ATOM   354 C CA   A SER A 1 22 ? 6.035  13.459 -2.622 0.20 3.04  ? 22 SER A CA   1
+ATOM   355 C CA   B SER A 1 22 ? 6.035  13.459 -2.622 0.20 3.04  ? 22 SER A CA   1
+ATOM   356 C C    A SER A 1 22 ? 6.362  13.139 -1.174 0.20 3.08  ? 22 SER A C    1
+ATOM   357 C C    B SER A 1 22 ? 6.362  13.139 -1.174 0.20 3.08  ? 22 SER A C    1
+ATOM   358 O O    A SER A 1 22 ? 5.473  12.959 -0.323 0.20 3.67  ? 22 SER A O    1
+ATOM   359 O O    B SER A 1 22 ? 5.473  12.959 -0.323 0.20 3.67  ? 22 SER A O    1
+ATOM   360 C CB   A SER A 1 22 ? 5.644  14.934 -2.679 0.20 3.96  ? 22 SER A CB   1
+ATOM   361 C CB   B SER A 1 22 ? 5.644  14.934 -2.679 0.20 3.96  ? 22 SER A CB   1
+ATOM   362 O OG   A SER A 1 22 ? 4.712  15.250 -1.677 0.20 3.53  ? 22 SER A OG   1
+ATOM   363 O OG   B SER A 1 22 ? 6.688  15.800 -2.315 0.20 7.09  ? 22 SER A OG   1
+ATOM   364 H H    A SER A 1 22 ? 4.323  13.093 -3.663 0.20 2.42  ? 22 SER A H    1
+ATOM   365 H H    B SER A 1 22 ? 4.323  13.093 -3.663 0.20 2.42  ? 22 SER A H    1
+ATOM   366 H HA   A SER A 1 22 ? 6.808  13.304 -3.209 0.20 3.46  ? 22 SER A HA   1
+ATOM   367 H HA   B SER A 1 22 ? 6.808  13.304 -3.209 0.20 3.46  ? 22 SER A HA   1
+ATOM   368 H HB2  A SER A 1 22 ? 6.463  15.471 -2.534 0.20 3.82  ? 22 SER A HB2  1
+ATOM   369 H HB2  B SER A 1 22 ? 5.381  15.136 -3.616 0.20 5.09  ? 22 SER A HB2  1
+ATOM   370 H HB3  A SER A 1 22 ? 5.292  15.151 -3.585 0.20 3.90  ? 22 SER A HB3  1
+ATOM   371 H HB3  B SER A 1 22 ? 4.838  15.084 -2.107 0.20 4.66  ? 22 SER A HB3  1
+ATOM   372 N N    C PRO A 1 22 ? 4.909  12.659 -3.127 0.60 3.03  ? 22 PRO A N    1
+ATOM   373 C CA   C PRO A 1 22 ? 6.035  13.459 -2.622 0.60 3.04  ? 22 PRO A CA   1
+ATOM   374 C C    C PRO A 1 22 ? 6.362  13.139 -1.174 0.60 3.08  ? 22 PRO A C    1
+ATOM   375 O O    C PRO A 1 22 ? 5.473  12.959 -0.323 0.60 3.67  ? 22 PRO A O    1
+ATOM   376 C CB   C PRO A 1 22 ? 5.528  14.895 -2.825 0.60 4.19  ? 22 PRO A CB   1
+ATOM   377 C CG   C PRO A 1 22 ? 4.614  14.846 -4.059 0.60 3.91  ? 22 PRO A CG   1
+ATOM   378 C CD   C PRO A 1 22 ? 3.904  13.493 -3.885 0.60 3.25  ? 22 PRO A CD   1
+ATOM   379 H HA   C PRO A 1 22 ? 6.808  13.304 -3.209 0.60 3.46  ? 22 PRO A HA   1
+ATOM   380 H HB2  C PRO A 1 22 ? 5.093  15.252 -2.128 0.60 3.86  ? 22 PRO A HB2  1
+ATOM   381 H HB3  C PRO A 1 22 ? 6.254  15.492 -2.981 0.60 4.22  ? 22 PRO A HB3  1
+ATOM   382 H HG2  C PRO A 1 22 ? 4.063  15.462 -4.030 0.60 3.83  ? 22 PRO A HG2  1
+ATOM   383 H HG3  C PRO A 1 22 ? 5.119  14.843 -4.884 0.60 3.68  ? 22 PRO A HG3  1
+ATOM   384 H HD2  C PRO A 1 22 ? 3.086  13.595 -3.383 0.60 3.65  ? 22 PRO A HD2  1
+ATOM   385 H HD3  C PRO A 1 22 ? 3.686  13.019 -4.709 0.60 3.25  ? 22 PRO A HD3  1

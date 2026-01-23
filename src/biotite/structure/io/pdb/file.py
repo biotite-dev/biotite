@@ -16,7 +16,10 @@ import biotite.structure as struc
 from biotite.file import InvalidFileError, TextFile, is_text
 from biotite.rust.structure.io.pdb import PDBFile as RustPDBFile
 from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
-from biotite.structure.bonds import BondList, connect_via_residue_names
+from biotite.structure.bonds import (
+    BondList,
+    connect_via_residue_names,
+)
 from biotite.structure.box import unitcell_from_vectors, vectors_from_unitcell
 from biotite.structure.error import BadStructureError
 from biotite.structure.filter import (
@@ -550,7 +553,16 @@ class _PDBFile(TextFile):
         # Read bonds
         if include_bonds:
             bond_list = self._get_bonds(atom_id)
-            bond_list = bond_list.merge(connect_via_residue_names(array))
+            # Create bond dict containing only non-hetero residues (+ water)
+            custom_bond_dict = {
+                res_name: bonds_in_residue(res_name)
+                for res_name in itertools.chain(
+                    np.unique(array[..., ~array.hetero].res_name), ["HOH"]
+                )
+            }
+            bond_list = bond_list.merge(
+                connect_via_residue_names(array, custom_bond_dict=custom_bond_dict)
+            )
             array.bonds = bond_list
 
         return array
@@ -605,7 +617,7 @@ class _PDBFile(TextFile):
             is given, each array in the stack is saved as separate
             model.
         hybrid36 : bool, optional
-            Defines wether the file should be written in hybrid-36
+            Defines whether the file should be written in hybrid-36
             format.
 
         Notes

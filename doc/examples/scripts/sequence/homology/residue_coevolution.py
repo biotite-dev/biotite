@@ -64,7 +64,7 @@ structure = pdbx.get_structure(pdbx_file, model=1, use_author_fields=False)
 structure = structure[struc.filter_amino_acids(structure)]
 
 # Identity threshold for a sequence to be counted as homologous sequence
-IDENTITY_THESHOLD = 0.4
+IDENTITY_THRESHOLD = 0.4
 # Find homologous proteins in SwissProt via BLAST
 app = blast.BlastWebApp("blastp", sequence, database="swissprot")
 app.start()
@@ -76,7 +76,7 @@ hit_starts = [1]
 for ali in alignments:
     identity = align.get_sequence_identity(ali)
     # Do not include the exact same sequence -> identity < 1.0
-    if identity > IDENTITY_THESHOLD and identity < 1.0:
+    if identity > IDENTITY_THRESHOLD and identity < 1.0:
         hit_seqs.append(ali.sequences[1])
         hit_ids.append(ali.hit_id)
         hit_starts.append(ali.hit_interval[0])

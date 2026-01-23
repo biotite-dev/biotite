@@ -920,7 +920,7 @@ cdef _chunk_wise_reverse_argcummin(int64[:] values, uint32 chunk_size):
     The same as above but starting from the other end and iterating
     backwards.
     Separation into two functions leads to code duplication.
-    However, single implemention with reversed `values` as input
+    However, single implementation with reversed `values` as input
     has some disadvantages:
 
     - Indices must be transformed so that they point to the

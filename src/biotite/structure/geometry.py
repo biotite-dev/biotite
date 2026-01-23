@@ -4,7 +4,7 @@
 
 """
 This module provides functions for geometric measurements between atoms
-in a structure, mainly lenghts and angles.
+in a structure, mainly lengths and angles.
 """
 
 __name__ = "biotite.structure"
@@ -19,18 +19,78 @@ __all__ = [
     "dihedral",
     "index_dihedral",
     "dihedral_backbone",
+    "dihedral_side_chain",
     "centroid",
 ]
 
+import functools
 import numpy as np
 from biotite.structure.atoms import AtomArray, AtomArrayStack, coord
 from biotite.structure.box import coord_to_fraction, fraction_to_coord, is_orthogonal
-from biotite.structure.filter import filter_amino_acids
+from biotite.structure.filter import filter_amino_acids, filter_canonical_amino_acids
+from biotite.structure.residues import get_residue_starts
 from biotite.structure.util import (
     coord_for_atom_name_per_residue,
     norm_vector,
     vector_dot,
 )
+
+# The names of the atoms participating in chi angle
+_CHI_ATOMS = {
+    "ARG": [
+        ("N", "CA", "CB", "CG"),
+        ("CA", "CB", "CG", "CD"),
+        ("CB", "CG", "CD", "NE"),
+        ("CG", "CD", "NE", "CZ"),
+    ],
+    "LEU": [
+        ("N", "CA", "CB", "CG"),
+        # By convention chi2 is defined using CD1 instead of CD2
+        ("CA", "CB", "CG", "CD1"),
+    ],
+    "VAL": [("N", "CA", "CB", "CG1")],
+    "ILE": [("N", "CA", "CB", "CG1"), ("CA", "CB", "CG1", "CD1")],
+    "MET": [
+        ("N", "CA", "CB", "CG"),
+        ("CA", "CB", "CG", "SD"),
+        ("CB", "CG", "SD", "CE"),
+    ],
+    "LYS": [
+        ("N", "CA", "CB", "CG"),
+        ("CA", "CB", "CG", "CD"),
+        ("CB", "CG", "CD", "CE"),
+        ("CG", "CD", "CE", "NZ"),
+    ],
+    "PHE": [
+        ("N", "CA", "CB", "CG"),
+        ("CA", "CB", "CG", "CD1"),
+    ],
+    "TRP": [
+        ("N", "CA", "CB", "CG"),
+        ("CA", "CB", "CG", "CD1"),
+    ],
+    "TYR": [
+        ("N", "CA", "CB", "CG"),
+        ("CA", "CB", "CG", "CD1"),
+    ],
+    "ASN": [("N", "CA", "CB", "CG"), ("CA", "CB", "CG", "OD1")],
+    "GLN": [
+        ("N", "CA", "CB", "CG"),
+        ("CA", "CB", "CG", "CD"),
+        ("CB", "CG", "CD", "OE1"),
+    ],
+    "ASP": [("N", "CA", "CB", "CG"), ("CA", "CB", "CG", "OD1")],
+    "GLU": [
+        ("N", "CA", "CB", "CG"),
+        ("CA", "CB", "CG", "CD"),
+        ("CB", "CG", "CD", "OE1"),
+    ],
+    "CYS": [("N", "CA", "CB", "SG")],
+    "HIS": [("N", "CA", "CB", "CG"), ("CA", "CB", "CG", "ND1")],
+    "PRO": [("N", "CA", "CB", "CG"), ("CA", "CB", "CG", "CD")],
+    "SER": [("N", "CA", "CB", "OG")],
+    "THR": [("N", "CA", "CB", "OG1")],
+}
 
 
 def displacement(atoms1, atoms2, box=None):
@@ -492,7 +552,7 @@ def dihedral_backbone(atom_array):
 
     Returns
     -------
-    phi, psi, omega : ndarray
+    phi, psi, omega : ndarray, shape=(m,n) or shape=(n,), dtype=float
         An array containing the 3 backbone dihedral angles for every CA atom.
         `phi` is not defined at the N-terminus, `psi` and `omega` are not defined at the
         C-terminus.
@@ -560,6 +620,96 @@ def dihedral_backbone(atom_array):
     )
 
     return phi, psi, omg
+
+
+def dihedral_side_chain(atoms):
+    r"""
+    Measure the side chain :math:`\chi` dihedral angles of amino acid residues.
+
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack
+        The protein structure to measure the side chain dihedral angles for.
+
+    Returns
+    -------
+    chi : ndarray, shape=(m, n, 4) or shape=(n, 4), dtype=float
+        An array containing the up to four side chain dihedral angles for every
+        amino acid residue.
+        Trailing :math:`\chi` angles that are not defined for an amino acid are filled
+        with :math:`NaN` values.
+        The same is True for all residues that are not canonical amino acids.
+
+    Notes
+    -----
+    By convention, the :math:`\chi_2` angle of leucine is defined using ``CD1``
+    instead of ``CD2``.
+
+    Examples
+    --------
+
+    >>> res_ids, res_names = get_residues(atom_array)
+    >>> dihedrals = dihedral_side_chain(atom_array)
+    >>> for res_id, res_name, dihedrals in zip(res_ids, res_names, dihedrals):
+    ...     print(f"{res_name.capitalize()}{res_id:<2d}:", dihedrals)
+    Asn1 : [-1.180 -0.066    nan    nan]
+    Leu2 : [0.923 1.866   nan   nan]
+    Tyr3 : [-2.593 -1.487    nan    nan]
+    Ile4 : [-0.781 -0.972    nan    nan]
+    Gln5 : [-2.557  1.410 -1.776    nan]
+    Trp6 : [3.117 1.372   nan   nan]
+    Leu7 : [-1.33  3.08   nan   nan]
+    Lys8 : [ 1.320  1.734  3.076 -2.022]
+    Asp9 : [-1.623  0.909    nan    nan]
+    Gly10: [nan nan nan nan]
+    Gly11: [nan nan nan nan]
+    Pro12: [-0.331  0.539    nan    nan]
+    Ser13: [-1.067    nan    nan    nan]
+    Ser14: [-2.514    nan    nan    nan]
+    Gly15: [nan nan nan nan]
+    Arg16: [ 1.032 -3.063  1.541 -1.568]
+    Pro17: [ 0.522 -0.601    nan    nan]
+    Pro18: [ 0.475 -0.577    nan    nan]
+    Pro19: [ 0.561 -0.602    nan    nan]
+    Ser20: [-1.055    nan    nan    nan]
+    """
+    is_multi_model = isinstance(atoms, AtomArrayStack)
+
+    chi_atoms = _all_chi_atoms()
+    res_names = atoms.res_name[get_residue_starts(atoms)]
+    chi_atom_coord = coord_for_atom_name_per_residue(
+        atoms, chi_atoms, filter_canonical_amino_acids(atoms)
+    )
+    chi_atoms_to_coord_index = {atom_name: i for i, atom_name in enumerate(chi_atoms)}
+
+    if is_multi_model:
+        shape = (atoms.stack_depth(), len(res_names), 4)
+    else:
+        shape = (len(res_names), 4)
+    chi_angles = np.full(shape, np.nan, dtype=np.float32)
+    for res_name, chi_atom_names_for_all_angles in _CHI_ATOMS.items():
+        res_mask = res_names == res_name
+        for chi_i, chi_atom_names in enumerate(chi_atom_names_for_all_angles):
+            dihedrals = dihedral(
+                chi_atom_coord[
+                    chi_atoms_to_coord_index[chi_atom_names[0]], ..., res_mask, :
+                ],
+                chi_atom_coord[
+                    chi_atoms_to_coord_index[chi_atom_names[1]], ..., res_mask, :
+                ],
+                chi_atom_coord[
+                    chi_atoms_to_coord_index[chi_atom_names[2]], ..., res_mask, :
+                ],
+                chi_atom_coord[
+                    chi_atoms_to_coord_index[chi_atom_names[3]], ..., res_mask, :
+                ],
+            )
+            if is_multi_model:
+                # Swap dimensions due to NumPy's behavior when using advanced indexing
+                # (https://numpy.org/devdocs/user/basics.indexing.html#combining-advanced-and-basic-indexing)
+                dihedrals = dihedrals.T
+            chi_angles[..., res_mask, chi_i] = dihedrals
+    return chi_angles
 
 
 def centroid(atoms):
@@ -653,3 +803,15 @@ def _displacement_triclinic_box(fractions, box, disp):
     disp[:] = shifted_diffs[
         np.arange(len(shifted_diffs)), np.argmin(sq_distance, axis=1)
     ]
+
+
+@functools.cache
+def _all_chi_atoms():
+    """
+    Get the names of the atoms participating in any chi angle.
+    """
+    atom_names = set()
+    for angles in _CHI_ATOMS.values():
+        for angle in angles:
+            atom_names.update(angle)
+    return sorted(atom_names)

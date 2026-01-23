@@ -19,7 +19,7 @@ __all__ = [
 
 import itertools
 import warnings
-from collections import defaultdict
+from collections import Counter
 import numpy as np
 from biotite.file import InvalidFileError
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
@@ -55,6 +55,7 @@ from biotite.structure.io.pdbx.bcif import (
 from biotite.structure.io.pdbx.cif import CIFBlock, CIFFile
 from biotite.structure.io.pdbx.component import MaskValue
 from biotite.structure.io.pdbx.encoding import StringArrayEncoding
+from biotite.structure.repair import create_continuous_res_ids
 from biotite.structure.residues import (
     get_residue_count,
     get_residue_positions,
@@ -496,12 +497,6 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
             atom_site, f"{prefix}_asym_id", f"{alt_prefix}_asym_id"
         ).as_array(str),
     )
-    array.set_annotation(
-        "res_id",
-        _get_or_fallback(
-            atom_site, f"{prefix}_seq_id", f"{alt_prefix}_seq_id"
-        ).as_array(int, -1),
-    )
     array.set_annotation("ins_code", atom_site["pdbx_PDB_ins_code"].as_array(str, ""))
     array.set_annotation(
         "res_name",
@@ -517,6 +512,22 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
         ).as_array(str),
     )
     array.set_annotation("element", atom_site["type_symbol"].as_array(str))
+
+    # Special handling for `res_id`, as the `label_seq_id` is equal (`.`) for all
+    # hetero residues, which makes distinguishing subsequent residues from another
+    # difficult (https://github.com/biotite-dev/biotite/issues/553)
+    res_id = _get_or_fallback(
+        atom_site, f"{prefix}_seq_id", f"{alt_prefix}_seq_id"
+    ).as_array(int, -1)
+    if not use_author_fields and "auth_seq_id" in atom_site:
+        # Therefore, the `auth_seq_id` is still used to determine residue starts
+        # in `create_continuous_res_ids()`, even if `use_author_fields = False`.
+        res_id_for_residue_starts = atom_site["auth_seq_id"].as_array(int, -1)
+        array.set_annotation("res_id", res_id_for_residue_starts)
+        fallback_res_ids = create_continuous_res_ids(array)
+        array.set_annotation("res_id", np.where(res_id == -1, fallback_res_ids, res_id))
+    else:
+        array.set_annotation("res_id", res_id)
 
     if "atom_id" in extra_fields:
         if "id" in atom_site:
@@ -1720,7 +1731,8 @@ def get_assembly(
     )
 
     ### Get transformations and apply them to the affected asym IDs
-    chain_ops = defaultdict(list)
+    sub_assemblies = []
+    sym_id_counter = Counter()
     for id, op_expr, asym_id_expr in zip(
         assembly_gen_category["assembly_id"].as_array(str),
         assembly_gen_category["oper_expression"].as_array(str),
@@ -1729,15 +1741,26 @@ def get_assembly(
         # Find the operation expressions for given assembly ID
         # We already asserted that the ID is actually present
         if id == assembly_id:
-            for chain_id in asym_id_expr.split(","):
-                chain_ops[chain_id].extend(_parse_operation_expression(op_expr))
+            chain_ids = asym_id_expr.split(",")
+            operations = _parse_operation_expression(op_expr)
+            sub_structure = structure[..., np.isin(structure.label_asym_id, chain_ids)]
+            sub_assembly = _apply_transformations(
+                sub_structure, transformations, operations
+            )
 
-    sub_assemblies = []
-    for asym_id, op_list in chain_ops.items():
-        sub_struct = structure[..., structure.label_asym_id == asym_id]
-        sub_assembly = _apply_transformations(sub_struct, transformations, op_list)
-        # Merge the chain's sub_assembly into the rest of the assembly
-        sub_assemblies.append(sub_assembly)
+            # Add 'sym_id' annotation, that should increment for each 'oper_expression'
+            sub_assembly.set_annotation(
+                "sym_id",
+                np.repeat(np.arange(len(operations)), sub_structure.array_length()),
+            )
+            # As different 'oper_expression's may comprise different chains
+            # increment the 'sym_id' individually for each chain
+            for chain_id in chain_ids:
+                chain_mask = sub_assembly.label_asym_id == chain_id
+                sub_assembly.sym_id[chain_mask] += sym_id_counter[chain_id]
+                sym_id_counter[chain_id] += len(operations)
+
+            sub_assemblies.append(sub_assembly)
     assembly = concatenate(sub_assemblies)
 
     # Sort AtomArray or AtomArrayStack by 'sym_id'
@@ -1771,9 +1794,6 @@ def _apply_transformations(structure, transformation_dict, operations):
         assembly_coord[i] = coord
 
     assembly = repeat(structure, assembly_coord)
-    assembly.set_annotation(
-        "sym_id", np.repeat(np.arange(len(operations)), structure.array_length())
-    )
     return assembly
 
 

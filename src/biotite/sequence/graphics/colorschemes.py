@@ -104,7 +104,7 @@ def get_color_scheme(name, alphabet, default="#FFFFFF"):
         if scheme["name"] == name and scheme["alphabet"].extends(alphabet):
             return _fit_color_scheme(alphabet, scheme, default)
 
-    raise ValueError(f"Unkown scheme '{name}' for given alphabet")
+    raise ValueError(f"Unknown scheme '{name}' for given alphabet")
 
 
 def list_color_scheme_names(alphabet, strict=False):

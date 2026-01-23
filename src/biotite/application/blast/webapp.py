@@ -338,22 +338,20 @@ class BlastWebApp(WebApp):
 
             seq1_str = hsp.find("Hsp_qseq").text
             seq2_str = hsp.find("Hsp_hseq").text
-            if self._program in ["blastn", "megablast"]:
-                # NucleotideSequence/ProteinSequence do ignore gaps
-                # Gaps are represented by the trace
-                seq1, seq2 = [
-                    NucleotideSequence(s.replace("-", "")) for s in (seq1_str, seq2_str)
-                ]
-            else:
-                seq1, seq2 = [
-                    ProteinSequence(s.replace("-", "").replace("U", "C"))
-                    for s in (seq1_str, seq2_str)
-                ]
-            trace = Alignment.trace_from_strings([seq1_str, seq2_str])
+            base_alignment = Alignment.from_strings(
+                [seq1_str, seq2_str],
+                sequence_factory=(
+                    NucleotideSequence
+                    if self._program in ["blastn", "megablast"]
+                    else lambda seq_str: ProteinSequence(
+                        seq_str.replace("U", "C").replace("O", "K")
+                    )
+                ),
+            )
 
             alignment = BlastAlignment(
-                [seq1, seq2],
-                trace,
+                base_alignment.sequences,
+                base_alignment.trace,
                 score,
                 e_value,
                 (query_begin, query_end),

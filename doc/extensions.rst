@@ -9,6 +9,9 @@
     .extension-logo {
         padding: 20px;
         height: 150px;
+        /* Enforce correct aspect ratio for bitmap graphics */
+        object-fit: contain;
+        width: 100%;
     }
     </style>
 
@@ -51,8 +54,15 @@ Python packages that are developed independently.
         Investigation of molecular dynamics using elastic network models
 
     .. grid-item-card:: pepp'r
-        :link: https://peppr.vant.ai/
+        :link: https://proximabio.com/
         :img-top: https://raw.githubusercontent.com/aivant/peppr/refs/heads/main/docs/static/assets/general/icon.svg
         :class-img-top: extension-logo
 
         Evaluation of predicted poses against reference structures
+
+    .. grid-item-card:: Pocketeer
+        :link: https://pocketeer.readthedocs.io/
+        :img-top: https://raw.githubusercontent.com/cch1999/pocketeer/main/docs/assets/logo_nameless.png
+        :class-img-top: extension-logo
+
+        A suite for detecting and working with protein pockets

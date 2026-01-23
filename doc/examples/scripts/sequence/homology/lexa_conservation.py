@@ -84,7 +84,7 @@ for source in all_sources[:20]:
 # To reduce this bias, we only want each species to occur only a single
 # time.
 # So we use a set to store the source name of sequences we already
-# listed and ignore all further occurences of that source species.
+# listed and ignore all further occurrences of that source species.
 
 # List of sequences
 binding_sites = []

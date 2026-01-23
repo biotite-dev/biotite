@@ -2,7 +2,7 @@
 Feature map of a synthetic operon
 =================================
 
-This script shows how to create a picture of an synthetic operon for
+This script shows how to create a picture of a synthetic operon for
 publication purposes.
 """
 

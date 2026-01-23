@@ -204,7 +204,7 @@ ax.legend(
 
 def hydropathy_to_color(hydropathy, colormap):
     # Normalize hydropathy to range between 0 and 1
-    # (orginally between -4.5 and 4.5)
+    # (originally between -4.5 and 4.5)
     norm_hydropathy = (hydropathy - (-4.5)) / (4.5 - (-4.5))
     return colormap(norm_hydropathy)
 

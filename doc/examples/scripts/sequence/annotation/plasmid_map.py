@@ -25,8 +25,8 @@ import biotite.sequence.graphics as graphics
 import biotite.sequence.io.genbank as gb
 
 PLASMID_URL = (
-    "https://media.addgene.org/snapgene-media/v2.0.0/sequences/12250/"
-    "9998fdbe-051f-4dc6-ba0f-24e65127a0c5/addgene-plasmid-26092-sequence-12250.gbk"
+    "https://www.addgene.org/browse/sequences/466943/"
+    "17c6ce2c-cf6d-46e8-a4c9-58cd4a4760b6/addgene-plasmid-26092-sequence-466943.gbk"
 )
 
 

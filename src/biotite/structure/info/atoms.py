@@ -6,6 +6,7 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["residue"]
 
+import functools
 from biotite.structure.info.ccd import get_ccd
 
 # fmt: off
@@ -75,6 +76,13 @@ def residue(res_name, allow_missing_coord=False):
      ['CB' 'HB3']
      ['OXT' 'HXT']]
     """
+    # Use a cache internally, but always return a copy,
+    # as the returned AtomArray is mutable
+    return _residue(res_name, allow_missing_coord).copy()
+
+
+@functools.lru_cache(maxsize=100)
+def _residue(res_name, allow_missing_coord=False):
     # Avoid circular import
     from biotite.structure.io.pdbx import get_component
 

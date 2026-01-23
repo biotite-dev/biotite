@@ -16,8 +16,11 @@ from biotite.database.error import RequestError
 _METADATA_URL = "https://alphafold.com/api/prediction"
 _BINARY_FORMATS = ["bcif"]
 # Adopted from https://www.uniprot.org/help/accession_numbers
+# adding the optional 'AF-' prefix and '-F1' suffix used by RCSB
 _UNIPROT_PATTERN = (
-    "[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}"
+    r"^(?P<prefix>(AF-)|(AF_AF))?"
+    r"(?P<id>[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})"
+    r"(?P<suffix>-?F1)?$"
 )
 
 
@@ -31,8 +34,8 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
     ----------
     ids : str or iterable object of str
         A single ID or a list of IDs of the file(s) to be downloaded.
-        They can be either UniProt IDs (e.g. ``P12345``) or AlphaFold DB IDs
-        (e.g. ``AF-P12345F1``).
+        They can be either UniProt IDs (e.g. ``P12345``), AlphaFold DB IDs
+        (e.g. ``AF-P12345-F1``) or computational RCSB IDs (e.g. ``AF_AFP12345F1``).
     format : {'pdb', 'pdbx', 'cif', 'mmcif', 'bcif', 'fasta'}
         The format of the files to be downloaded.
     target_path : str, optional
@@ -84,6 +87,7 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
         target_path.mkdir(parents=True, exist_ok=True)
 
     files = []
+    session = requests.Session()
     for i, id in enumerate(ids):
         # Verbose output
         if verbose:
@@ -95,7 +99,7 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
             # 'file = None' -> store content in a file-like object
             file = None
         if file is None or not file.is_file() or file.stat().st_size == 0 or overwrite:
-            file_response = requests.get(_get_file_url(id, format))
+            file_response = session.get(_get_file_url(session, id, format))
             _assert_valid_file(file_response, id)
             if format in _BINARY_FORMATS:
                 content = file_response.content
@@ -125,12 +129,14 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
         return files
 
 
-def _get_file_url(id, format):
+def _get_file_url(session, id, format):
     """
     Get the actual file URL for the given ID from the ``prediction`` API endpoint.
 
     Parameters
     ----------
+    session : requests.Session
+        The session to use for the request.
     id : str
         The ID of the file to be downloaded.
     format : str
@@ -142,7 +148,10 @@ def _get_file_url(id, format):
         The URL of the file to be downloaded.
     """
     uniprot_id = _extract_id(id)
-    metadata = requests.get(f"{_METADATA_URL}/{uniprot_id}").json()
+    try:
+        metadata = session.get(f"{_METADATA_URL}/{uniprot_id}").json()
+    except requests.exceptions.JSONDecodeError:
+        raise RequestError("Received malformed JSON response")
     if len(metadata) == 0:
         raise RequestError(f"ID {id} is invalid")
     # A list of length 1 is always returned, if the response is valid
@@ -167,10 +176,10 @@ def _extract_id(id):
     uniprot_id : str
         The UniProt ID.
     """
-    match = re.search(_UNIPROT_PATTERN, id)
+    match = re.match(_UNIPROT_PATTERN, id)
     if match is None:
         raise ValueError(f"Cannot extract AFDB identifier from '{id}'")
-    return match.group()
+    return match.group("id")
 
 
 def _assert_valid_file(response, id):
@@ -179,7 +188,7 @@ def _assert_valid_file(response, id):
     or the response a *404* error due to invalid UniProt ID.
     """
     if len(response.text) == 0:
-        raise RequestError(f"Received no repsone for '{id}'")
+        raise RequestError(f"Received no response for '{id}'")
     try:
         root = ElementTree.fromstring(response.text)
         if root.tag == "Error":
@@ -189,3 +198,5 @@ def _assert_valid_file(response, id):
     except ElementTree.ParseError:
         # This is not XML -> the response is probably a valid file
         pass
+    # Fallback for other errors
+    response.raise_for_status()

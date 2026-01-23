@@ -74,7 +74,7 @@ class SingleQuery(Query, metaclass=abc.ABCMeta):
     A terminal query node for the RCSB search API.
 
     Multiple :class:`SingleQuery` objects can be combined to
-    :class:`CompositeQuery`objects using the ``|`` and ``&`` operators.
+    :class:`CompositeQuery` objects using the ``|`` and ``&`` operators.
 
     This is the abstract base class for all queries that are
     terminal nodes.
@@ -783,7 +783,7 @@ def search(
         The type of the returned identifiers:
 
         - ``'entry'``: Only the PDB ID is returned (e.g. ``'XXXX'``).
-          These can be used directly a input to :func:`fetch()`.
+          These can be used directly as input to :func:`fetch()`.
         - ``'assembly'``: The PDB ID appended with assembly ID is
           returned (e.g. ``'XXXX-1'``).
         - ``'polymer_entity'``: The PDB ID appended with entity ID of
@@ -958,6 +958,6 @@ def _initialize_query_dict(query, return_type, group_by, content_types):
 
 def _to_isoformat(object):
     """
-    Convert a datetime into the specifc ISO 8601 format required by the RCSB.
+    Convert a datetime into the specific ISO 8601 format required by the RCSB.
     """
     return object.strftime("%Y-%m-%dT%H:%M:%SZ")

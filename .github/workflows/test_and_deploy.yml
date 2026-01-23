@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CIBW_BUILD: cp311-* cp312-* cp313-*
+  CIBW_BUILD: cp311-* cp312-* cp313-* cp314-*
   CIBW_TEST_EXTRAS: test
   CIBW_TEST_COMMAND: >
     pytest {project}
@@ -28,9 +28,6 @@ env:
     --ignore={project}//tests//test_doctest.py
     --ignore={project}//tests//test_modname.py
   CIBW_DEPENDENCY_VERSIONS: "pinned"
-  # Once GHA and cibuildwheel are updated this can be removed
-  # mussllinux takes 6+ hrs to build and test so ignore it
-  CIBW_TEST_SKIP: "*musllinux* *-macosx_arm64"
   # Configuration for the architecture-agnostic jobs
   PY_VERSION: "3.12"  # Keep in sync with version in environment.yml
 
@@ -115,13 +112,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install cibuildwheel
         # MAKE SURE THIS STAYS IN SYNC WITH THE LOWER GHA cibuildwheel
-        run: pipx install cibuildwheel==2.23.3
+        run: pipx install cibuildwheel==3.3.0
       - id: set-matrix
         run: |
           MATRIX=$(
             {
-              cibuildwheel --print-build-identifiers --platform linux \
+              cibuildwheel --print-build-identifiers --platform linux --archs x86_64 \
               | jq -nRc '{"dist": inputs, "os": "ubuntu-latest"}' \
+              && cibuildwheel --print-build-identifiers --platform linux --archs aarch64 \
+              | jq -nRc '{"dist": inputs, "os": "ubuntu-24.04-arm"}' \
               && cibuildwheel --print-build-identifiers --platform macos \
               | jq -nRc '{"dist": inputs, "os": "macos-latest"}' \
               && cibuildwheel --print-build-identifiers --platform windows \
@@ -130,7 +129,7 @@ jobs:
           )
           echo "include=$MATRIX" | tee -a $GITHUB_OUTPUT
         env:
-          CIBW_ARCHS_LINUX: "x86_64"
+          CIBW_ARCHS_LINUX: "x86_64 aarch64"
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_ARCHS_WINDOWS: "x86 AMD64"
           # Skip musllinux because it takes too long to compile on GHA
@@ -166,7 +165,7 @@ jobs:
 
       - name: Build & (optionally) test wheels
         # MAKE SURE THIS STAYS IN SYNC WITH THE UPPER pipx call to cibuildwheel
-        uses: pypa/cibuildwheel@v2.23.3
+        uses: pypa/cibuildwheel@v3.3.0
         with:
           only: ${{ matrix.dist }}
 
@@ -363,6 +362,7 @@ jobs:
     - sdist
     - test-interfaces
     - test-muscle5
+    - docs
     runs-on: ubuntu-latest
     environment:
       name: publish
@@ -410,6 +410,11 @@ jobs:
     permissions:
       contents: write
     needs:
+    - lint
+    - test-and-build
+    - sdist
+    - test-interfaces
+    - test-muscle5
     - docs
     runs-on: ubuntu-latest
     steps:

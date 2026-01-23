@@ -35,7 +35,7 @@ class Permutation(metaclass=abc.ABCMeta):
         The minimum and maximum value, the permutated value
         (i.e. the return value of :meth:`permute()`)
         can take.
-        Must be overriden by subclasses.
+        Must be overridden by subclasses.
     """
 
 
@@ -295,7 +295,7 @@ class FrequencyPermutation(Permutation):
 @cython.wraparound(False)
 def _invert_mapping(int64[:] mapping):
     """
-    If `mapping` maps an unqiue integer ``A`` to an unique integer
+    If `mapping` maps a unique integer ``A`` to a unique integer
     ``B``, i.e. ``B = mapping[A]``, this function inverts the mapping
     so that ``A = inverted[B]``.
 

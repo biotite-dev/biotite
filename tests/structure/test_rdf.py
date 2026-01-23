@@ -84,7 +84,7 @@ def test_rdf_with_selection():
 
 def test_rdf_atom_argument():
     """
-    Test if the first argument allows to use AtomArrayStack.
+    Test if the first argument allows using AtomArrayStack.
     """
     stack = load_structure(TEST_FILE)
 
@@ -104,7 +104,7 @@ def test_rdf_atom_argument():
 
 def test_rdf_multiple_center():
     """
-    Test if the first argument allows to use multiple centers.
+    Test if the first argument allows using multiple centers.
     """
     stack = load_structure(TEST_FILE)
 
@@ -155,7 +155,7 @@ def test_rdf_box():
     # Test proper stacking of single AtomArrays -> Use box attribute
     rdf(stack[0, 0], stack[0])
 
-    # Use box attribute and dont fail because stack has no box
+    # Use box attribute and don't fail because stack has no box
     stack.box = None
     rdf(stack[:, 0], stack, box=box_stack)
 

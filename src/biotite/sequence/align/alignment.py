@@ -42,7 +42,7 @@ class Alignment(object):
     conversion into strings in order to make the alignment human
     readable.
 
-    Unless an :class:`Alignment` object is the result of an multiple
+    Unless an :class:`Alignment` object is the result of a multiple
     sequence alignment, the object will contain only two sequences.
 
     All attributes of this class are publicly accessible.
@@ -98,6 +98,99 @@ class Alignment(object):
         self.sequences = sequences.copy()
         self.trace = trace
         self.score = score
+
+    @staticmethod
+    def from_strings(sequence_strings, sequence_factory, gap_character="-"):
+        """
+        Create an :class:`Alignment` from strings that represent aligned sequences.
+
+        **DEPRECATED**: Use :meth:`Alignment.from_strings()` instead.
+
+        Parameters
+        ----------
+        sequence_strings : list of str
+            The strings, where each each one represents a sequence
+            (with gaps) in an alignment.
+            All strings must have the same length.
+        sequence_factory : Callable (str -> Sequence)
+            Callable that takes a sequence string (with gaps already removed) and
+            produces a :class:`Sequence` object.
+        gap_character : str, optional
+            This character is interpreted as gap.
+
+        Returns
+        -------
+        alignment : Alignment
+            The created alignment.
+
+        Examples
+        --------
+
+        >>> alignment = Alignment.from_strings(
+        ...     [
+        ...         "BIQTITE",
+        ...         "-IQLITE"
+        ...     ],
+        ...     ProteinSequence,
+        ... )
+        >>> print(alignment)
+        BIQTITE
+        -IQLITE
+        >>> print(alignment.sequences[0])
+        BIQTITE
+        >>> print(alignment.sequences[1])
+        IQLITE
+        """
+        sequences = [
+            sequence_factory(seq_str.replace(gap_character, ""))
+            for seq_str in sequence_strings
+        ]
+        return Alignment(
+            sequences, Alignment.trace_from_strings(sequence_strings, gap_character)
+        )
+
+    @staticmethod
+    def trace_from_strings(sequence_strings, gap_character="-"):
+        """
+        Create a trace from strings that represent aligned sequences.
+
+        Parameters
+        ----------
+        sequence_strings : list of str
+            The strings, where each each one represents a sequence
+            (with gaps) in an alignment.
+        gap_character : str, optional
+            This character is interpreted as gap.
+
+        Returns
+        -------
+        trace : ndarray, dtype=int, shape=(n,2)
+            The created trace.
+
+        See Also
+        --------
+        from_strings:
+            Creates directly an :class:`Alignment` object.
+        """
+        if len(sequence_strings) < 2:
+            raise ValueError("An alignment must contain at least two sequences")
+        if any(
+            len(seq_str) != len(sequence_strings[0]) for seq_str in sequence_strings
+        ):
+            raise IndexError("All sequence strings must have the same length")
+
+        # Start with a trace filled with gaps (-1)
+        trace = np.full(
+            (len(sequence_strings[0]), len(sequence_strings)), -1, dtype=int
+        )
+        for i, seq_str in enumerate(sequence_strings):
+            # Convert into NumPy byte array to use vectorized operations
+            byte_array = np.frombuffer(seq_str.encode("ASCII"), dtype=np.ubyte)
+            # Fill the trace with the positions of each sequence where there is no gap
+            not_gap_mask = byte_array != ord(gap_character)
+            trace[not_gap_mask, i] = np.arange(np.count_nonzero(not_gap_mask))
+
+        return trace
 
     def __repr__(self):
         """Represent Alignment a string for debugging."""
@@ -201,38 +294,6 @@ class Alignment(object):
             return sequences[index]
         else:
             raise IndexError(f"Invalid alignment index type '{type(index).__name__}'")
-
-    @staticmethod
-    def trace_from_strings(seq_str_list):
-        """
-        Create a trace from strings that represent aligned sequences.
-
-        Parameters
-        ----------
-        seq_str_list : list of str
-            The strings, where each each one represents a sequence
-            (with gaps) in an alignment.
-            A ``-`` is interpreted as gap.
-
-        Returns
-        -------
-        trace : ndarray, dtype=int, shape=(n,2)
-            The created trace.
-        """
-        if len(seq_str_list) < 2:
-            raise ValueError("An alignment must contain at least two sequences")
-        seq_i = np.zeros(len(seq_str_list))
-        trace = np.full((len(seq_str_list[0]), len(seq_str_list)), -1, dtype=int)
-        # Get length of string (same length for all strings)
-        # rather than length of list
-        for pos_i in range(len(seq_str_list[0])):
-            for str_j in range(len(seq_str_list)):
-                if seq_str_list[str_j][pos_i] == "-":
-                    trace[pos_i, str_j] = -1
-                else:
-                    trace[pos_i, str_j] = seq_i[str_j]
-                    seq_i[str_j] += 1
-        return trace
 
 
 def get_codes(alignment):

@@ -2,7 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
+import gzip
 import tempfile
 from datetime import date
 from os.path import join
@@ -23,14 +23,40 @@ CUTOFF_DATE = date(2025, 4, 30)
 TC5B_TERM = "Miniprotein Construct TC5b"
 
 
-@pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
+@pytest.mark.parametrize("as_file_like", [False, True])
 @pytest.mark.parametrize(
-    "format, as_file_like",
-    itertools.product(["pdb", "cif", "bcif", "fasta"], [False, True]),
+    "format, extended_id, use_gzip",
+    [
+        pytest.param("pdb", False, False),
+        pytest.param("pdb", False, True),
+        pytest.param("cif", False, False),
+        pytest.param("cif", False, True),
+        pytest.param("cif", True, False),
+        pytest.param("cif", True, True),
+        pytest.param("bcif", False, False),
+        pytest.param("bcif", False, True),
+        # https://models.rcsb.org/ does not support extended PDB IDs yet
+        pytest.param("bcif", True, False, marks=pytest.mark.xfail),
+        pytest.param("bcif", True, True, marks=pytest.mark.xfail),
+        pytest.param("fasta", False, False),
+    ],
 )
-def test_fetch(format, as_file_like):
+def test_fetch(format, as_file_like, extended_id, use_gzip):
+    HANDLE_CHAR = {
+        "pdb": "t",
+        "cif": "t",
+        "bcif": "b",
+        "fasta": "t",
+    }
+    PDB_ID = "1aki"
+
+    pdb_id = PDB_ID if not extended_id else "pdb_0000" + PDB_ID
     path = None if as_file_like else tempfile.gettempdir()
-    file_path_or_obj = rcsb.fetch("1l2y", format, path, overwrite=True)
+    file_path_or_obj = rcsb.fetch(pdb_id, format, path, overwrite=True, gzip=use_gzip)
+
+    if use_gzip:
+        file_path_or_obj = gzip.open(file_path_or_obj, "r" + HANDLE_CHAR[format])
+
     if format == "pdb":
         file = pdb.PDBFile.read(file_path_or_obj)
         pdb.get_structure(file)
@@ -182,7 +208,7 @@ def test_search_motif():
     MOTIF = "C-x(2,4)-C-x(3)-[LIVMFYWC]-x(8)-H-x(3,5)-H."
     query = rcsb.MotifQuery(MOTIF, "prosite", "protein")
     test_count = rcsb.count(query, return_type="polymer_entity")
-    assert test_count == pytest.approx(719, rel=0.1)
+    assert test_count == pytest.approx(792, rel=0.1)
 
 
 @pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
@@ -318,7 +344,8 @@ def test_search_content_types():
                     ("2VB1_1",),
                     ("7VOS_1", "3A38_1", "5D8V_1"),
                     ("1UCS_1",),
-                    ("3NIR_1", "9EWK_1", "1EJG_1"),
+                    ("3NIR_1", "1EJG_1"),
+                    ("9EWK_1",),
                 ]
             ),
         ),

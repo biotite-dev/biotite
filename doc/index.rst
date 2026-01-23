@@ -245,8 +245,8 @@ Biotite documentation
     :class-container: sponsors
 
     .. grid-item-card::
-        :img-background: /static/assets/sponsors/vantai_logo.jpg
-        :link: https://www.vant.ai/
+        :img-background: /static/assets/sponsors/proxima_logo.svg
+        :link: https://proximabio.com/
 
 
 .. toctree::

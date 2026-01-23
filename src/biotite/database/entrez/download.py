@@ -13,7 +13,6 @@ import requests
 from biotite.database.entrez.check import check_for_errors
 from biotite.database.entrez.dbnames import sanitize_database_name
 from biotite.database.entrez.key import get_api_key
-from biotite.database.error import RequestError
 
 _fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
@@ -107,6 +106,7 @@ def fetch(
     if target_path is not None and not isdir(target_path):
         os.makedirs(target_path)
     files = []
+    session = requests.Session()
     for i, id in enumerate(uids):
         # Verbose output
         if verbose:
@@ -128,11 +128,9 @@ def fetch(
             api_key = get_api_key()
             if api_key is not None:
                 param_dict["api_key"] = api_key
-            r = requests.get(_fetch_url, params=param_dict)
+            r = session.get(_fetch_url, params=param_dict)
+            check_for_errors(r)
             content = r.text
-            check_for_errors(content)
-            if content.startswith(" Error"):
-                raise RequestError(content[8:])
             if file is None:
                 file = io.StringIO(content)
             else:
@@ -216,10 +214,8 @@ def fetch_single_file(
     if api_key is not None:
         param_dict["api_key"] = api_key
     r = requests.get(_fetch_url, params=param_dict)
+    check_for_errors(r)
     content = r.text
-    check_for_errors(content)
-    if content.startswith(" Error"):
-        raise RequestError(content[8:])
     if file_name is None:
         return io.StringIO(content)
     else:
