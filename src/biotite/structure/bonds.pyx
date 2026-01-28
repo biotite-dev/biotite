@@ -267,7 +267,18 @@ class BondList(Copyable):
     SINGLE bond between C6 and H6
     """
 
-    def __init__(self, uint32 atom_count, np.ndarray bonds=None):
+    cdef uint32 _atom_count
+    cdef uint32 _max_bonds_per_atom
+    cdef object _bonds
+    cdef int32 atom_index1
+    cdef int32 atom_index2
+    
+    def __init__(self, uint32 atom_count, long[:, :] bonds=None):
+        cdef:
+            Py_ssize_t i, n_bonds
+            int bond_a, bond_b
+
+        n_bonds = bonds.shape[0]
         self._atom_count = atom_count
 
         if bonds is not None and len(bonds) > 0:
@@ -279,27 +290,38 @@ class BondList(Copyable):
                 # Input contains bonds (index 0 and 1)
                 # including the bond type value (index 2)
                 # Bond indices:
-                self._bonds[:,:2] = np.sort(
+                for i in range(n_bonds):
+                    bond_a = bonds[i, 0]
+                    bond_b = bonds[i, 1]
+
+                    if bond_a == bond_b:
+                        raise ValueError(f"Atom {bond_a} cannot bind to itself {bond_b}")
+                self._bonds[:, :2] = np.sort(
                     # Indices are sorted per bond
                     # so that the lower index is at the first position
-                    _to_positive_index_array(bonds[:,:2], atom_count), axis=1
+                    _to_positive_index_array(np.asarray(bonds[:, :2]), atom_count), axis=1
                 )
                 # Bond type:
-                if (bonds[:, 2] >= len(BondType)).any():
+                if (np.asarray(bonds[:, 2]) >= len(BondType)).any():
                     raise ValueError(
                         f"BondType {np.max(bonds[:, 2])} is invalid"
                     )
-                self._bonds[:,2] = bonds[:, 2]
+                self._bonds[:, 2] = bonds[:, 2]
 
                 # Indices are sorted per bond
                 # so that the lower index is at the first position
             elif bonds.shape[1] == 2:
+                for i in range(n_bonds):
+                    bond_a = bonds[i, 0]
+                    bond_b = bonds[i, 1]
+                    if bond_a == bond_b:
+                        raise ValueError(f"Atom {bond_a} cannot bind to itself {bond_b}")
                 # Input contains the bonds without bond type
                 # -> Default: Set bond type ANY (0)
-                self._bonds[:,:2] = np.sort(
+                self._bonds[:, :2] = np.sort(
                     # Indices are sorted per bond
                     # so that the lower index is at the first position
-                    _to_positive_index_array(bonds[:,:2], atom_count), axis=1
+                    _to_positive_index_array(np.asarray(bonds[:, :2]), atom_count), axis=1
                 )
             else:
                 raise ValueError(
@@ -936,6 +958,9 @@ class BondList(Copyable):
         """
         if bond_type >= len(BondType):
             raise ValueError(f"BondType {bond_type} is invalid")
+
+        if atom_index1 == atom_index2:
+            raise ValueError("Atom indices must be different because the same atom cannot be bonded to itself")
 
         cdef uint32 index1 = _to_positive_index(atom_index1, self._atom_count)
         cdef uint32 index2 = _to_positive_index(atom_index2, self._atom_count)
