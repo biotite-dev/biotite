@@ -50,16 +50,16 @@ def alphabet():
     return seq.NucleotideSequence.unambiguous_alphabet()
 
 
-@pytest.fixture
-def random_sequences(k, alphabet):
+@pytest.fixture(params=range(3))
+def random_sequences(request, k, alphabet):
     N_SEQS = 10
     SEQ_LENGTH = 1000
 
-    np.random.seed(0)
+    rng = np.random.default_rng(request.param)
     sequences = []
     for _ in range(N_SEQS):
         sequence = seq.NucleotideSequence()
-        sequence.code = np.random.randint(len(alphabet), size=SEQ_LENGTH)
+        sequence.code = rng.integers(len(alphabet), size=SEQ_LENGTH)
         sequences.append(sequence)
     return sequences
 
@@ -82,7 +82,7 @@ def random_sequences(k, alphabet):
 def test_from_sequences(k, random_sequences, spacing, table_class):
     """
     Test the :meth:`from_sequences()` constructor, by checking for each
-    sequence position, if the position is in the C-array of the
+    sequence position, if the position is in the internal array of the
     corresponding k-mer.
     """
     table = table_class.from_sequences(k, random_sequences, spacing=spacing)
@@ -136,9 +136,9 @@ def test_from_kmer_selection(k, alphabet, random_sequences, table_class):
     kmer_arrays = [
         kmer_alph.create_kmers(sequence.code) for sequence in random_sequences
     ]
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
     filtered_pos_arrays = [
-        np.random.randint(len(kmers), size=N_POSITIONS) for kmers in kmer_arrays
+        rng.integers(len(kmers), size=N_POSITIONS) for kmers in kmer_arrays
     ]
     filtered_kmer_arrays = [
         kmers[filtered_pos]
@@ -305,8 +305,8 @@ def test_match_kmer_selection(k, random_sequences, table_class):
     table = table_class.from_sequences(k, table_sequences)
 
     kmers = table.kmer_alphabet.create_kmers(query_sequence.code)
-    np.random.seed(0)
-    positions = np.random.randint(len(kmers), size=N_POS)
+    rng = np.random.default_rng(0)
+    positions = rng.integers(len(kmers), size=N_POS)
     ref_matches = []
     for pos in positions:
         kmer = kmers[pos]
@@ -341,9 +341,9 @@ def test_match_equivalence(k, random_sequences, table_class, use_mask):
 
     if use_mask:
         # Create a random removal mask with low removal probability
-        np.random.seed(0)
+        rng = np.random.default_rng(0)
         removal_masks = [
-            np.random.choice([False, True], size=len(sequence), p=[0.95, 0.05])
+            rng.choice([False, True], size=len(sequence), p=[0.95, 0.05])
             for sequence in random_sequences
         ]
     else:
@@ -432,8 +432,8 @@ def test_count(k, random_sequences, table_class, selected_kmers):
     table = table_class.from_sequences(k, random_sequences)
 
     if selected_kmers:
-        np.random.seed(0)
-        kmers = np.random.randint(len(table.kmer_alphabet), size=N_KMERS)
+        rng = np.random.default_rng(0)
+        kmers = rng.integers(len(table.kmer_alphabet), size=N_KMERS)
         ref_counts = [len(table[kmer]) for kmer in kmers]
         test_counts = table.count(kmers)
     else:
@@ -454,10 +454,10 @@ def test_get_kmers(table_class):
     :meth:`get_kmers()`, by constructing a table with exactly one
     appearance for each *k-mer* in a random list of *k-mers*.
     """
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
 
     kmer_alphabet = align.KmerAlphabet(seq.NucleotideSequence.unambiguous_alphabet(), 8)
-    ref_mask = np.random.choice([False, True], size=len(kmer_alphabet))
+    ref_mask = rng.choice([False, True], size=len(kmer_alphabet))
     ref_kmers = np.where(ref_mask)[0]
     table = table_class.from_kmers(kmer_alphabet, [ref_kmers])
 
