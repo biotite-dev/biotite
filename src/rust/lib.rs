@@ -11,7 +11,7 @@ fn add_subpackage(
 ) -> PyResult<()> {
     module.add_submodule(submodule)?;
     let sys = PyModule::import(module.py(), "sys")?;
-    let sys_modules: Bound<'_, PyDict> = sys.getattr("modules")?.downcast_into()?;
+    let sys_modules: Bound<'_, PyDict> = sys.getattr("modules")?.cast_into()?;
     submodule.setattr("__name__", submodule_name)?;
     submodule.setattr("__package__", submodule_name)?;
     sys_modules.set_item(submodule_name, submodule)?;

@@ -4,12 +4,12 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies]
-numpy = "0.25"
-ndarray = "0.16"
+numpy = "0.27"
+ndarray = "0.17"
 num-traits = "0.2"
 
 [dependencies.pyo3]
-version = "0.25"
+version = "0.27"
 features = ["extension-module"]
 
 [lib]
