@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
+mod sequence;
 mod structure;
 
 /// Add a submodule to a module and make it discoverable as package
@@ -25,5 +26,6 @@ fn rust(module: &Bound<'_, PyModule>) -> PyResult<()> {
         &structure::module(module)?,
         "biotite.rust.structure",
     )?;
+    add_subpackage(module, &sequence::module(module)?, "biotite.rust.sequence")?;
     Ok(())
 }
