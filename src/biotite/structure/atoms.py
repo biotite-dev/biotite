@@ -28,6 +28,7 @@ import textwrap
 from collections.abc import Sequence
 import numpy as np
 from biotite.copyable import Copyable
+from biotite.structure import query
 from biotite.structure.bonds import BondList
 
 
@@ -449,6 +450,72 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             clone._box = np.copy(self._box)
         if self._bonds is not None:
             clone._bonds = self._bonds.copy()
+
+    def query(self, expr):
+        """
+        Query the AtomArray using a pandas-like expression string.
+
+        Parameters
+        ----------
+        expr : str
+            Query expression in pandas-like syntax.
+
+        Returns
+        -------
+        filtered_array : AtomArray or AtomArrayStack
+            Filtered atom array containing only atoms that match the query expression.
+
+        Examples
+        --------
+        Select all CA atoms in chain A:
+
+        >>> ca_atoms = atom_array.query("(chain_id == 'A') & (atom_name == 'CA')")
+
+        Select atoms without NaN coordinates:
+
+        >>> valid_atoms = atom_array.query("~has_nan_coord()")
+        """
+        return query.query(self, expr)
+
+    def mask(self, expr):
+        """
+        Query the AtomArray using a pandas-like expression string and return a boolean mask.
+
+        Parameters
+        ----------
+        expr : str
+            Query expression in pandas-like syntax.
+
+        Returns
+        -------
+        mask : ndarray, dtype=bool
+            Boolean numpy array indicating which atoms match the query.
+
+        Examples
+        --------
+        >>> mask = atom_array.mask("atom_name == 'CA'")
+        """
+        return query.mask(self, expr)
+
+    def idxs(self, expr):
+        """
+        Query the AtomArray using a pandas-like expression string and return the indices of matching atoms.
+
+        Parameters
+        ----------
+        expr : str
+            Query expression in pandas-like syntax.
+
+        Returns
+        -------
+        indices : ndarray, dtype=int
+            Numpy array of indices for atoms that match the query expression.
+
+        Examples
+        --------
+        >>> idxs = atom_array.idxs("atom_name == 'CA'")
+        """
+        return query.idxs(self, expr)
 
 
 class Atom(Copyable):
