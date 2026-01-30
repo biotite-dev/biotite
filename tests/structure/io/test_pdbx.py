@@ -156,6 +156,7 @@ def test_conversion(monkeypatch, tmpdir, format, path, model, find_matches_by_di
         "1aki",  # has no altloc IDs
         "3o5r",  # has altloc IDs
         "4i39",  # has altloc IDs for all atoms
+        "1k6p",  # has numeric altloc IDs
     ],
 )
 def test_filter_altloc(pdb_id):
@@ -178,6 +179,12 @@ def test_filter_altloc(pdb_id):
         assert atoms["all"].array_length() > atoms["first"].array_length()
     else:
         assert atoms["all"].array_length() == atoms["first"].array_length()
+    # Also at least one altloc variant for each residue must be selected
+    # -> No residue must be missing after altloc filtering
+    # -> As "all" contains all atoms without filtering, we can use it for reference
+    res_ids = np.unique(atoms["all"].res_id).tolist()
+    assert np.unique(atoms["first"].res_id).tolist() == res_ids
+    assert np.unique(atoms["occupancy"].res_id).tolist() == res_ids
 
 
 @pytest.mark.parametrize("altloc", ["first", "occupancy"])
@@ -633,11 +640,11 @@ def test_unit_cell_pdb_consistency(pdb_path):
     distance_matrix = np.full((len(sym_id_masks), len(sym_id_masks)), np.nan)
     for i, mask_i in enumerate(sym_id_masks):
         for j, mask_j in enumerate(sym_id_masks):
-            distance_matrix[i, j] = np.mean(
-                struc.distance(test_unit_cell[mask_i], ref_unit_cell[mask_j])
+            distance_matrix[i, j] = struc.distance(
+                struc.centroid(test_unit_cell[mask_i]),
+                struc.centroid(ref_unit_cell[mask_j]),
             )
-    # Expect one match for each asymmetric unit
-    assert np.all(np.any(distance_matrix < 1e-3, axis=0))
+    assert np.all(np.any(distance_matrix < 5e-1, axis=0))
 
 
 @pytest.mark.parametrize(

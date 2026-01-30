@@ -522,7 +522,7 @@ def filter_first_altloc(atoms, altloc_ids):
     # And filter all atoms for each residue with the first altloc ID
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
     for start, stop in zip(residue_starts[:-1], residue_starts[1:]):
-        letter_altloc_ids = [loc for loc in altloc_ids[start:stop] if loc.isalpha()]
+        letter_altloc_ids = [loc for loc in altloc_ids[start:stop] if loc.isalnum()]
         if len(letter_altloc_ids) > 0:
             first_id = letter_altloc_ids[0]
             altloc_filter[start:stop] |= altloc_ids[start:stop] == first_id
@@ -603,7 +603,7 @@ def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
         occupancies_in_res = occupancies[start:stop]
         altloc_ids_in_res = altloc_ids[start:stop]
 
-        letter_altloc_ids = [loc for loc in altloc_ids_in_res if loc.isalpha()]
+        letter_altloc_ids = [loc for loc in altloc_ids_in_res if loc.isalnum()]
 
         if len(letter_altloc_ids) > 0:
             highest = -1.0
