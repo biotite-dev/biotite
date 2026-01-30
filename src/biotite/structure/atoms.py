@@ -1361,6 +1361,11 @@ def concatenate(atoms):
     has_bonds = False
     for element in atoms:
         if element_type is None:
+            if not isinstance(element, (AtomArray, AtomArrayStack)):
+                raise TypeError(
+                    "Expected 'AtomArray' or 'AtomArrayStack', "
+                    f"but got '{type(element).__name__}'"
+                )
             element_type = type(element)
         else:
             if not isinstance(element, element_type):
@@ -1381,9 +1386,9 @@ def concatenate(atoms):
         if element.bonds is not None:
             has_bonds = True
 
-    if element_type == AtomArray:
+    if issubclass(element_type, AtomArray):
         concat_atoms = AtomArray(length)
-    elif element_type == AtomArrayStack:
+    else:
         concat_atoms = AtomArrayStack(depth, length)
     concat_atoms.coord = np.concatenate([element.coord for element in atoms], axis=-2)
     for category in common_categories:
