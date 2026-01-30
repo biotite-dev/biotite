@@ -865,7 +865,7 @@ def set_structure(
 
     This will save the coordinates, the mandatory annotation categories
     and the optional annotation categories
-    ``atom_id``, ``b_factor``, ``occupancy`` and ``charge``.
+    ``b_factor``, ``occupancy`` and ``charge``.
     If the atom array (stack) contains the annotation ``'atom_id'``,
     these values will be used for atom numbering instead of continuous
     numbering.
@@ -950,8 +950,6 @@ def set_structure(
     atom_site["auth_atom_id"] = atom_site["label_atom_id"]
 
     annot_categories = array.get_annotation_categories()
-    if "atom_id" in annot_categories:
-        atom_site["id"] = np.copy(array.atom_id)
     if "b_factor" in annot_categories:
         atom_site["B_iso_or_equiv"] = np.copy(array.b_factor)
     if "occupancy" in annot_categories:
@@ -1019,9 +1017,9 @@ def set_structure(
             np.arange(1, array.stack_depth() + 1, dtype=np.int32),
             repeats=array.array_length(),
         )
-    if "atom_id" not in annot_categories:
-        # Count from 1
-        atom_site["id"] = np.arange(1, len(atom_site["group_PDB"]) + 1)
+    # `atom_site.id` values must be unique across all models
+    # -> Use continuous numbering
+    atom_site["id"] = np.arange(1, atom_site.row_count + 1)
     block["atom_site"] = atom_site
 
     # Write box into file
