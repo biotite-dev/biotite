@@ -344,8 +344,7 @@ def test_search_content_types():
                     ("2VB1_1",),
                     ("7VOS_1", "3A38_1", "5D8V_1"),
                     ("1UCS_1",),
-                    ("3NIR_1", "1EJG_1"),
-                    ("9EWK_1",),
+                    ("3NIR_1", "9EWK_1", "1EJG_1"),
                 ]
             ),
         ),
