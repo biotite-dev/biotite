@@ -12,10 +12,25 @@ mod biotite {
     pyo3::import_exception!(biotite.sequence, AlphabetError);
 }
 
-#[derive(Default)]
+// An element of the k-mer table.
+// Describes the position of a k-mer.
+#[derive(Copy, Clone, Default)]
 struct KmerTableElement {
     ref_id: u32,
     position: u32,
+}
+
+// Allows using a `counter` field in the last element of a slice in a k-mer table.
+// The counter is used to track the current write position in the slice during table filling.
+union ElementOrCounter<T: Copy> {
+    element: T,
+    counter: usize,
+}
+
+impl<T: Copy> Default for ElementOrCounter<T> {
+    fn default() -> Self {
+        Self { counter: 0 }
+    }
 }
 
 /// A thin wrapper around the Python `KmerAlphabet` class.
@@ -388,11 +403,9 @@ impl KmerTable {
         }
 
         // Create NestedArray with appropriate sizes
-        let mut table: NestedArray<KmerTableElement> = NestedArray::new(counts);
+        // The last element of each slice is used as a counter during filling
+        let mut table: NestedArray<ElementOrCounter<KmerTableElement>> = NestedArray::new(counts);
         // Fill the table with k-mer positions
-        // Track current write position for each k-mer
-        let n_kmers = kmer_alphabet.len(py)?;
-        let mut write_indices: Vec<usize> = vec![0; n_kmers];
         for ((kmers, mask), ref_id) in kmers_list.iter().zip(masks_list.iter()).zip(ref_ids.iter())
         {
             for (seq_pos, (&kmer, &is_included)) in
@@ -400,15 +413,28 @@ impl KmerTable {
             {
                 if is_included {
                     let kmer_idx = kmer as usize;
-                    let write_idx = write_indices[kmer_idx];
-                    table[kmer_idx][write_idx] = KmerTableElement {
-                        ref_id: *ref_id,
-                        position: seq_pos as u32,
+                    let occurrences = &mut table[kmer_idx];
+                    // SAFETY: The last element is initialized as a `counter` (default)
+                    // and we only read/write the counter field until we overwrite it
+                    // with the final element
+                    let write_idx = unsafe { occurrences.last().unwrap().counter };
+                    occurrences[write_idx] = ElementOrCounter {
+                        element: KmerTableElement {
+                            ref_id: *ref_id,
+                            position: seq_pos as u32,
+                        },
                     };
-                    write_indices[kmer_idx] += 1;
+                    // Increment counter stored in last element (if not yet overwritten)
+                    if write_idx + 1 < occurrences.len() {
+                        occurrences.last_mut().unwrap().counter = write_idx + 1;
+                    }
                 }
             }
         }
+
+        // SAFETY: After filling, all elements contain valid `KmerTableElement` values,
+        // so the transmutation is safe.
+        let table: NestedArray<KmerTableElement> = unsafe { std::mem::transmute(table) };
 
         Ok(Self {
             k,
