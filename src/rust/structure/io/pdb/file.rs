@@ -1,7 +1,7 @@
 //! Low-level PDB file parsing and writing.
 
-use ndarray::Axis;
 use num_traits::{Float, FloatConst};
+use numpy::ndarray::Axis;
 use numpy::ndarray::{
     Array, Array1, Array2, ArrayView1, ArrayView3, ArrayViewD, ArrayViewMut1, Ix3,
 };
@@ -109,7 +109,7 @@ impl PDBFile {
     #[classmethod]
     fn read<'py>(cls: &Bound<'py, PyType>, file: Bound<'py, PyAny>) -> PyResult<Bound<'py, PyAny>> {
         let contents;
-        if let Ok(file_path) = file.downcast::<PyString>() {
+        if let Ok(file_path) = file.cast::<PyString>() {
             // String path
             contents = fs::read_to_string(file_path.extract::<String>()?).map_err(|_| {
                 exceptions::PyOSError::new_err(format!("'{}' cannot be read", file_path))
@@ -135,7 +135,7 @@ impl PDBFile {
 
     fn write(&self, file: Bound<'_, PyAny>) -> PyResult<()> {
         let content = self.lines.join("\n");
-        if let Ok(file_path) = file.downcast::<PyString>() {
+        if let Ok(file_path) = file.cast::<PyString>() {
             // String path
             fs::write(file_path.extract::<String>()?, content).map_err(|_| {
                 exceptions::PyOSError::new_err(format!("'{}' cannot be written", file_path))
@@ -1177,7 +1177,8 @@ fn get_annotation_as_type<'py, T: numpy::Element>(
     atoms
         .getattr(annotation)?
         .call_method("astype", (), Some(&kwargs))?
-        .extract()
+        .cast_into()
+        .map_err(|e| e.into())
 }
 
 // Get an `AtomArray` annotation as a `Vec` of strings.

@@ -7,7 +7,7 @@ use file::*;
 use hybrid36::*;
 
 pub fn module<'py>(parent_module: &Bound<'py, PyModule>) -> PyResult<Bound<'py, PyModule>> {
-    let module = PyModule::new(parent_module.py(), "structure")?;
+    let module = PyModule::new(parent_module.py(), "pdb")?;
     module.add_class::<PDBFile>()?;
     module.add_function(wrap_pyfunction!(encode_hybrid36, &module)?)?;
     module.add_function(wrap_pyfunction!(decode_hybrid36, &module)?)?;
