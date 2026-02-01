@@ -1,7 +1,7 @@
 from pathlib import Path
 import pytest
+import biotite.structure.info as info
 import biotite.structure.io.pdb as pdb
-from biotite.structure.info.ccd import get_ccd
 from tests.util import data_dir
 
 
@@ -10,22 +10,27 @@ def load_ccd():
     """
     Ensure that the CCD is already loaded to avoid biasing tests with its loading time.
     """
-    get_ccd()
+    info.get_ccd()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def pdb_file_path():
     return Path(data_dir("structure")) / "1aki.pdb"
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def empty_pdb_file():
     return pdb.PDBFile()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def pdb_file(pdb_file_path):
     return pdb.PDBFile.read(pdb_file_path)
+
+
+@pytest.fixture(scope="module")
+def atoms(pdb_file):
+    return pdb_file.get_structure(model=1, include_bonds=True)
 
 
 @pytest.mark.benchmark
@@ -51,11 +56,6 @@ def benchmark_get_structure_with_bonds(pdb_file):
 @pytest.mark.benchmark
 def benchmark_get_remark(pdb_file):
     pdb_file.get_remark(350)
-
-
-@pytest.fixture
-def atoms(pdb_file):
-    return pdb_file.get_structure(model=1, include_bonds=True)
 
 
 @pytest.mark.benchmark
