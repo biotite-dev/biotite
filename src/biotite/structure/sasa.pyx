@@ -16,7 +16,7 @@ cimport numpy as np
 from libc.stdlib cimport malloc, free
 
 import numpy as np
-from .celllist import CellList
+from biotite.rust.structure import CellList
 from .filter import filter_solvent, filter_monoatomic_ions, filter_heavy
 from .info.radii import vdw_radius_protor, vdw_radius_single
 
@@ -218,7 +218,7 @@ def sasa(array, float probe_radius=1.4, np.ndarray atom_filter=None,
     # Therefore intersecting atoms are always in the same or adjacent cell.
     cell_list = CellList(occl_array, np.max(radii[occl_filter])*2)
     cdef np.ndarray cell_indices
-    cdef int[:,:] cell_indices_view
+    cdef int64[:,:] cell_indices_view
     cdef int length
     cdef int max_adj_list_length = 0
     cdef int array_length = array.array_length()

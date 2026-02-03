@@ -237,27 +237,51 @@ def skip_nonrelevant(app, what, name, obj, skip, options):
         return True
     if not _is_relevant_type(obj):
         return True
-    if obj.__module__ is None:
-        # Some built-in functions have '__module__' set to None
+    module = _get_module(obj)
+    if module is None:
         return True
-    package_name = obj.__module__.split(".")[0]
+    package_name = module.split(".")[0]
     if package_name != "biotite":
         return True
     return False
 
 
+def _get_module(obj):
+    """
+    Get the module name of an object.
+
+    For most objects, this is simply ``obj.__module__``.
+    However, some extension types (e.g. PyO3 method descriptors)
+    don't have a ``__module__`` attribute, so we fall back to
+    ``obj.__objclass__.__module__``.
+    """
+    module = getattr(obj, "__module__", None)
+    if module is not None:
+        return module
+    # Fallback for PyO3 method descriptors that don't have __module__
+    objclass = getattr(obj, "__objclass__", None)
+    if objclass is not None:
+        return getattr(objclass, "__module__", None)
+    return None
+
+
 def _is_relevant_type(obj):
-    if type(obj).__name__ == "method_descriptor":
-        # These are some special built-in Python methods
-        return False
     return (
         (
             # Functions
-            type(obj)
-            in [types.FunctionType, types.BuiltinFunctionType, types.MethodType]
+            isinstance(
+                obj,
+                (
+                    types.FunctionType,
+                    types.BuiltinFunctionType,
+                    types.MethodType,
+                    types.BuiltinMethodType,
+                    types.MethodDescriptorType,
+                ),
+            )
         )
         | (
-            # Functions from C-extensions and wrapped functions
+            # Functions from Cython extensions and wrapped functions
             type(obj).__name__
             in [
                 "cython_function_or_method",

@@ -17,7 +17,10 @@ def find_all_modules(package_name, src_dir):
     module_names = []
     for _, module_name, is_package in pkgutil.iter_modules([src_dir]):
         if module_name == "setup_ccd":
-            # This module is not intended to be imported
+            # This script is not intended to be imported
+            continue
+        if module_name == "rust":
+            # The Rust extension module is not directly user-facing
             continue
         full_module_name = f"{package_name}.{module_name}"
         if is_package:

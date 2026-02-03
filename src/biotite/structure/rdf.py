@@ -12,9 +12,9 @@ __all__ = ["rdf"]
 
 from numbers import Integral
 import numpy as np
+from biotite.rust.structure import CellList, CellListResult
 from biotite.structure.atoms import AtomArray, coord, stack
 from biotite.structure.box import box_volume
-from biotite.structure.celllist import CellList
 from biotite.structure.geometry import displacement
 from biotite.structure.util import vector_dot
 
@@ -202,7 +202,9 @@ def rdf(
         # This is enough to find all atoms that are in the given
         # interval (and more), since the size of each cell is as large
         # as the last edge of the bins
-        near_atom_mask = cell_list.get_atoms_in_cells(center[i], as_mask=True)
+        near_atom_mask = cell_list.get_atoms_in_cells(
+            center[i], result_format=CellListResult.MASK
+        )
         # Calculate distances of each center to preselected atoms
         # for each center
         for j in range(center.shape[1]):
