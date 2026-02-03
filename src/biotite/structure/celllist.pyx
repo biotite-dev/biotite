@@ -244,7 +244,7 @@ cdef class CellList:
         -----
         The highest performance is achieved when the the cell size is
         equal to the threshold distance. However, this is purely
-        optinal: The resulting adjacency matrix is the same for every
+        optional: The resulting adjacency matrix is the same for every
         cell size.
 
         Although the adjacency matrix should be symmetric in most cases,
@@ -538,7 +538,7 @@ cdef class CellList:
         If more than one periodic copy of an atom is within the
         threshold radius, the returned `indices` array contains the
         corresponding index multiple times.
-        Please use ``numpy.unique()``, if this is undesireable.
+        Please use ``numpy.unique()``, if this is undesirable.
         """
         # This function is a thin wrapper around the private method
         # with the same name, with addition of handling periodicty

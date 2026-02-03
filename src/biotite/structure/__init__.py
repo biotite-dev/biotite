@@ -94,6 +94,10 @@ Some functionalities require that the input structure has an associated
 If no :class:`BondList` is associated, the ``bonds`` attribute is
 ``None``.
 
+A unit cell or simulation box can be associated by setting the ``box`` attribute with a
+``(3, 3)``-shaped :class:`ndarray` for an :class:`AtomArray` or a
+``(m, 3, 3)``-shaped :class:`ndarray` for an :class:`AtomArrayStack`.
+
 Based on the implementation in *NumPy* arrays, this package furthermore
 contains a comprehensive set of functions for structure analysis,
 manipulation and visualization.
