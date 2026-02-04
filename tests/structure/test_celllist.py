@@ -9,6 +9,7 @@ import pytest
 import biotite.structure as struc
 import biotite.structure.io as strucio
 from tests.util import data_dir
+import pickle
 
 
 # Result should be independent of cell size
@@ -91,16 +92,80 @@ def test_adjacency_matrix(cell_size, threshold, periodic, use_selection):
     assert np.array_equal(test_matrix, exp_matrix)
 
 
-def test_outside_location():
+@pytest.mark.parametrize("result_format", [struc.CellListResult.MAPPING, struc.CellListResult.MATRIX, struc.CellListResult.PAIRS])
+def test_result_format_consistency(result_format):
+    """
+    Test that independent of the result format, the matrix constructed from it is
+    consistent.
+    """
+    CELL_SIZE = 5
+
+    atoms = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
+    cell_list = struc.CellList(atoms, cell_size=CELL_SIZE)
+    ref_matrix = cell_list.create_adjacency_matrix(threshold=CELL_SIZE)
+
+    result = cell_list.get_atoms(atoms.coord, CELL_SIZE, result_format=result_format)
+    match result_format:
+        case struc.CellListResult.MAPPING:
+            mapping = result
+            test_matrix = np.zeros((atoms.array_length(), atoms.array_length()), dtype=bool)
+            for i, adjacent_atoms in enumerate(mapping):
+                for j in adjacent_atoms[adjacent_atoms != -1]:
+                    test_matrix[i, j] = True
+        case struc.CellListResult.MATRIX:
+            test_matrix = result
+        case struc.CellListResult.PAIRS:
+            pairs = result
+            test_matrix = np.zeros((atoms.array_length(), atoms.array_length()), dtype=bool)
+            test_matrix[pairs[:, 0], pairs[:, 1]] = True
+
+    assert np.array_equal(test_matrix, ref_matrix)
+
+
+@pytest.mark.parametrize("displacement", [-1000, 1000])
+def test_outside_location(displacement):
     """
     Test result for location outside any cell.
     """
+    CELL_SIZE = 5
+
     array = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
     array = array[struc.filter_amino_acids(array)]
-    cell_list = struc.CellList(array, cell_size=5)
-    outside_coord = np.min(array.coord, axis=0) - 100
+    cell_list = struc.CellList(array, cell_size=CELL_SIZE)
+    outside_coord = np.mean(array.coord, axis=0) + displacement
     # Expect empty array
-    assert len(cell_list.get_atoms(outside_coord, 5)) == 0
+    assert len(cell_list.get_atoms(outside_coord, CELL_SIZE)) == 0
+
+
+@pytest.mark.parametrize("radius", [2, 5, 10])
+@pytest.mark.parametrize("method", [struc.CellList.get_atoms, struc.CellList.get_atoms_in_cells])
+def test_single_and_multiple_radii(radius, method):
+    """
+    Check if getting neighbors with multiple radii results in the same result as getting neighbors
+    with a single radius for each coordinate.
+    """
+    CELL_SIZE = 5
+    RADIUS_RANGE = (2, 10)
+    N_SAMPLES = 100
+
+    atoms = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
+    cell_list = struc.CellList(atoms, cell_size=CELL_SIZE)
+
+    # Pick random radii
+    rng = np.random.default_rng(0)
+    radii = rng.integers(RADIUS_RANGE[0], RADIUS_RANGE[1], size=N_SAMPLES)
+
+    mutliple_radius_result = method(cell_list, atoms.coord[:N_SAMPLES], radii, result_format=struc.CellListResult.MAPPING)
+    max_neighbors = mutliple_radius_result.shape[-1]
+
+    multiple_radius_result = method(cell_list, atoms.coord, radii, result_format=struc.CellListResult.MAPPING)
+
+    single_radius_result = np.zeros((N_SAMPLES, max_neighbors), dtype=int)
+    for i in range(N_SAMPLES):
+        result = method(cell_list, atoms.coord[i], radii[i], result_format=struc.CellListResult.MAPPING)
+        single_radius_result[i, :len(result)] = result
+
+    assert np.array_equal(multiple_radius_result, single_radius_result)
 
 
 def test_selection():
@@ -124,7 +189,8 @@ def test_selection():
     assert test_near_atoms == ref_near_atoms
 
 
-def test_empty_coordinates():
+@pytest.mark.parametrize("method", [struc.CellList.get_atoms, struc.CellList.get_atoms_in_cells])
+def test_empty_coordinates(method):
     """
     Test whether empty input coordinates result in an empty output
     array/mask.
@@ -132,10 +198,27 @@ def test_empty_coordinates():
     array = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
     cell_list = struc.CellList(array, cell_size=10)
 
-    for method in (struc.CellList.get_atoms, struc.CellList.get_atoms_in_cells):
-        indices = method(cell_list, np.array([]), 1, as_mask=False)
-        mask = method(cell_list, np.array([]), 1, as_mask=True)
-        assert len(indices) == 0
-        assert len(mask) == 0
-        assert indices.dtype == np.int32
-        assert mask.dtype == bool
+    indices = method(cell_list, np.array([]), 1, as_mask=False)
+    mask = method(cell_list, np.array([]), 1, as_mask=True)
+    assert len(indices) == 0
+    assert len(mask) == 0
+    assert indices.dtype == np.int32
+    assert mask.dtype == bool
+
+
+def test_pickle():
+    """
+    Test whether the CellList can be pickled and unpickled.
+    The unpickled cell list should give the same results as the original cell list.
+    """
+    N_SAMPLES = 10
+    CELL_SIZE = 5
+
+    array = strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
+    original_cell_list = struc.CellList(array, cell_size=CELL_SIZE)
+    pickled = pickle.dumps(original_cell_list)
+    unpickled_cell_list = pickle.loads(pickled)
+    assert np.array_equal(
+        original_cell_list.get_atoms(array.coord[:N_SAMPLES], CELL_SIZE),
+        unpickled_cell_list.get_atoms(array.coord[:N_SAMPLES], CELL_SIZE)
+    )
