@@ -2,7 +2,7 @@ use numpy::ndarray::{Array2, Array3};
 use numpy::{IntoPyArray, PyArray2, PyReadonlyArray2};
 use pyo3::exceptions;
 use pyo3::prelude::*;
-use std::cmp::max;
+use pyo3::types::{PyDict, PyInt};
 use std::convert::TryInto;
 use std::ops::{Index, IndexMut};
 
@@ -31,7 +31,6 @@ enum CellListResult {
     MATRIX,
     PAIRS,
 }
-
 
 /// Enum for efficient support of both single and multiple radii
 /// given in `get_atoms()` and `get_atoms_in_cells()`.
@@ -94,10 +93,7 @@ impl<T: Clone + Default> CellContainer<T> {
             offset[1] += 1;
         }
 
-        CellContainer {
-            data,
-            offsets,
-        }
+        CellContainer { data, offsets }
     }
 
     /// Check if a given cell position is within the bounds of the ``CellContainer``.
@@ -360,9 +356,10 @@ impl CellList {
                     .filter(|(i, _)| selection[*i])
                     .map(|(_, c)| *c)
                     .collect();
-                let mut sub_matrix: Array2<bool> =
-                    Array2::default((coord.len(), self.orig_length));
-                for matrix_index in self.get_atoms_from_slice(&coord, Radius::Single(threshold_distance)) {
+                let mut sub_matrix: Array2<bool> = Array2::default((coord.len(), self.orig_length));
+                for matrix_index in
+                    self.get_atoms_from_slice(&coord, Radius::Single(threshold_distance))
+                {
                     sub_matrix[matrix_index] = true;
                 }
                 let mut matrix: Array2<bool> =
@@ -379,7 +376,9 @@ impl CellList {
             None => {
                 let mut matrix: Array2<bool> =
                     Array2::default((self.orig_length, self.orig_length));
-                for matrix_index in self.get_atoms_from_slice(&self.coord, Radius::Single(threshold_distance)) {
+                for matrix_index in
+                    self.get_atoms_from_slice(&self.coord, Radius::Single(threshold_distance))
+                {
                     matrix[matrix_index] = true;
                 }
                 Ok(matrix.into_pyarray(py))
@@ -396,9 +395,8 @@ impl CellList {
         as_mask: bool,
         result_format: CellListResult,
     ) -> PyResult<Bound<'py, PyAny>> {
-        let (converted_coord, is_multi_coord) =
-            prepare_coord_from_python(py, coord, self.periodic_box)?;
-        let converted_radius = prepare_radius_from_python::<f32>(radius)?;
+        let (converted_coord, is_multi_coord) = self.prepare_coord_from_python(py, coord)?;
+        let converted_radius = Self::prepare_radius_from_python_f32(radius)?;
         let pairs = self.get_atoms_from_slice(&converted_coord, converted_radius);
         format_result(
             py,
@@ -411,18 +409,19 @@ impl CellList {
         )
     }
 
-    #[pyo3(signature = (coord, cell_radius=PyInt.new(1), as_mask=false, result_format=CellListResult::MAPPING))]
+    #[pyo3(signature = (coord, cell_radius=None, as_mask=false, result_format=CellListResult::MAPPING))]
     fn get_atoms_in_cells<'py>(
         &self,
         py: Python<'py>,
         coord: &Bound<'py, PyAny>,
-        cell_radius: &Bound<'py, PyAny>,
+        cell_radius: Option<&Bound<'py, PyAny>>,
         as_mask: bool,
         result_format: CellListResult,
     ) -> PyResult<Bound<'py, PyAny>> {
-        let (converted_coord, is_multi_coord) =
-            prepare_coord_from_python(py, coord, self.periodic_box)?;
-        let converted_radius = prepare_radius_from_python(cell_radius)?;
+        let (converted_coord, is_multi_coord) = self.prepare_coord_from_python(py, coord)?;
+        let converted_radius = Self::prepare_radius_from_python_i32(
+            cell_radius.unwrap_or(&PyInt::new(py, 1).into_any()),
+        )?;
         let pairs = self.get_atoms_in_cells_from_slice(&converted_coord, converted_radius);
         format_result(
             py,
@@ -434,8 +433,6 @@ impl CellList {
             is_multi_coord,
         )
     }
-
-
 }
 
 impl CellList {
@@ -454,32 +451,34 @@ impl CellList {
         ]
     }
 
-    fn get_atoms_from_slice(
-        &self,
-        coord: &[[f32; 3]],
-        radius: Radius<f32>,
-    ) -> Vec<[usize; 2]> {
+    fn get_atoms_from_slice(&self, coord: &[[f32; 3]], radius: Radius<f32>) -> Vec<[usize; 2]> {
         match radius {
             Radius::Single(r) => {
                 let sq_r = r.powi(2);
-                self.get_atoms_in_cells_from_slice(coord, Radius::Single((r / self.cell_size).ceil() as i32))
-                    .iter()
-                    .filter(|pair| distance_squared(coord[pair[0]], self.coord[pair[1]]) <= sq_r)
-                    .map(|pair| *pair)
-                    .collect()
+                self.get_atoms_in_cells_from_slice(
+                    coord,
+                    Radius::Single((r / self.cell_size).ceil() as i32),
+                )
+                .iter()
+                .filter(|pair| distance_squared(coord[pair[0]], self.coord[pair[1]]) <= sq_r).copied()
+                .collect()
             }
             Radius::Multiple(rs) => {
-                let radii = rs.iter().map(|r| (*r / self.cell_size).ceil() as i32).collect();
+                let radii = rs
+                    .iter()
+                    .map(|r| (*r / self.cell_size).ceil() as i32)
+                    .collect();
                 self.get_atoms_in_cells_from_slice(coord, Radius::Multiple(radii))
                     .iter()
                     .zip(rs.iter())
-                    .filter(|(pair, r)| distance_squared(coord[pair[0]], self.coord[pair[1]]) <= r.powi(2))
+                    .filter(|(pair, r)| {
+                        distance_squared(coord[pair[0]], self.coord[pair[1]]) <= r.powi(2)
+                    })
                     .map(|(pair, _)| *pair)
                     .collect()
             }
         }
     }
-
 
     fn get_atoms_in_cells_from_slice(
         &self,
@@ -514,6 +513,71 @@ impl CellList {
             }
         }
         adjacent_atoms
+    }
+
+    fn prepare_coord_from_python<'py>(
+        &self,
+        py: Python<'py>,
+        coord: &Bound<'py, PyAny>,
+    ) -> PyResult<(Vec<[f32; 3]>, bool)> {
+        let struc = PyModule::import(py, "biotite.structure")?;
+
+        // Convert into expected f32 array
+        let kwargs = PyDict::new(py);
+        kwargs.set_item("dtype", "float32")?;
+        kwargs.set_item("copy", false)?;
+        let coord = coord.call_method("astype", (), Some(&kwargs))?;
+
+        // Handle periodicity if needed
+        let coord = if let Some(box_matrix) = self.periodic_box {
+            let box_array = Array2::from_shape_vec((3, 3), box_matrix.concat())
+                .map_err(|_| exceptions::PyRuntimeError::new_err("Failed to create box array"))?;
+            struc
+                .getattr("move_inside_box")?
+                .call1((coord, box_array.into_pyarray(py)))?
+        } else {
+            coord.clone()
+        };
+
+        // Consistently use 2 dimensions
+        // -> if only one coordinate is given, convert it to a 2D array
+        if let Ok(single_coord) = coord.extract::<[f32; 3]>() {
+            return Ok((vec![single_coord], false));
+        }
+        if let Ok(array) = coord.extract::<PyReadonlyArray2<f32>>() {
+            return Ok((extract_coord(array)?, true));
+        }
+        Err(exceptions::PyTypeError::new_err(
+            "Coordinates must be a single coordinate or a 2D array of coordinates",
+        ))
+    }
+
+    fn prepare_radius_from_python_f32(radius: &Bound<'_, PyAny>) -> PyResult<Radius<f32>> {
+        // Try to extract as a single float
+        if let Ok(r) = radius.extract::<f32>() {
+            return Ok(Radius::Single(r));
+        }
+        // Try to extract as an array
+        if let Ok(rs) = radius.extract::<Vec<f32>>() {
+            return Ok(Radius::Multiple(rs));
+        }
+        Err(exceptions::PyTypeError::new_err(
+            "Radius must be a single float or an array of floats",
+        ))
+    }
+
+    fn prepare_radius_from_python_i32(radius: &Bound<'_, PyAny>) -> PyResult<Radius<i32>> {
+        // Try to extract as a single int
+        if let Ok(r) = radius.extract::<i32>() {
+            return Ok(Radius::Single(r));
+        }
+        // Try to extract as an array
+        if let Ok(rs) = radius.extract::<Vec<i32>>() {
+            return Ok(Radius::Multiple(rs));
+        }
+        Err(exceptions::PyTypeError::new_err(
+            "Cell radius must be a single int or an array of ints",
+        ))
     }
 }
 
@@ -580,40 +644,6 @@ fn extract_coord(coord_array: PyReadonlyArray2<f32>) -> PyResult<Vec<[f32; 3]>> 
     Ok(result)
 }
 
-fn prepare_coord_from_python<'py>(py: Python<'py>, coord: &Bound<'py, PyAny>, periodic_box: Option<[[f32; 3]; 3]>) -> PyResult<(Vec<[f32; 3]>), bool> {
-    // Convert into expected f32 array
-    coord = coord.call_method("astype", (), Some([("dtype", "float32"), ("copy", false)].into_py_dict(py)?))?;
-    if let Some(r#box) = self.periodic_box {
-        coord = struc
-            .getattr("move_inside_box")?
-            .call1((&coord, r#box.into_pyarray(py)))?;
-    }
-    // Consistently use 2 dimensions
-    // -> if only one coordinate is given, convert it to a 2D array
-    let converted_coord: Vec<[f32; 3]>;
-    if let Ok(c) = coord.cast::<[f32; 3]>() {
-        (vec![c], false)
-    } else if let Ok(cs) = coord.cast::<PyReadonlyArray2<f32>>() {
-        (extract_coord(cs)?, true)
-    } else {
-        Err(exceptions::PyTypeError::new_err(
-            "Coordinates must be a single coordinate or a 2D array of coordinates",
-        ));
-    }
-}
-
-fn prepare_radius_from_python<T>(radius: &Bound<'_, PyAny>) -> PyResult<Radius<T>> {
-    if let Ok(r) = radius.cast::<T>() {
-        Radius::Single(r);
-    } else if let Ok(rs) = radius.cast::<Vec<T>>() {
-        Radius::Multiple(rs);
-    } else {
-        Err(exceptions::PyTypeError::new_err(
-            "Radius must be a single float or an array of floats",
-        ));
-    }
-}
-
 fn as_usize(x: [isize; 3]) -> Option<[usize; 3]> {
     for e in &x {
         if *e < 0 {
@@ -623,18 +653,16 @@ fn as_usize(x: [isize; 3]) -> Option<[usize; 3]> {
     Some([x[0] as usize, x[1] as usize, x[2] as usize])
 }
 
-
 fn distance_squared(a: [f32; 3], b: [f32; 3]) -> f32 {
     (a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)
 }
 
-
-fn format_as_mapping<'py>(
-    py: Python<'py>,
+fn format_as_mapping(
+    py: Python<'_>,
     n_query: usize,
     pairs: Vec<[usize; 2]>,
     is_multi_coord: bool,
-) -> PyResult<Bound<'py, PyAny>> {
+) -> PyResult<Bound<'_, PyAny>> {
     // Initialize mapping with empty vecs
     let mut mapping: Vec<Vec<i64>> = vec![Vec::new(); n_query];
     for pair in pairs.iter() {
@@ -652,17 +680,21 @@ fn format_as_mapping<'py>(
     if is_multi_coord {
         Ok(mapping_matrix.into_pyarray(py).into_any())
     } else {
-        Ok(mapping_matrix.row(0).into_owned().into_pyarray(py).into_any())
+        Ok(mapping_matrix
+            .row(0)
+            .into_owned()
+            .into_pyarray(py)
+            .into_any())
     }
 }
 
-fn format_as_matrix<'py>(
-    py: Python<'py>,
+fn format_as_matrix(
+    py: Python<'_>,
     n_query: usize,
     n_atoms: usize,
     pairs: Vec<[usize; 2]>,
     is_multi_coord: bool,
-) -> PyResult<Bound<'py, PyAny>> {
+) -> PyResult<Bound<'_, PyAny>> {
     let mut matrix = Array2::from_elem((n_query, n_atoms), false);
     for pair in pairs.iter() {
         matrix[*pair] = true;
@@ -675,11 +707,11 @@ fn format_as_matrix<'py>(
     }
 }
 
-fn format_as_pairs<'py>(
-    py: Python<'py>,
+fn format_as_pairs(
+    py: Python<'_>,
     pairs: Vec<[usize; 2]>,
     is_multi_coord: bool,
-) -> PyResult<Bound<'py, PyAny>> {
+) -> PyResult<Bound<'_, PyAny>> {
     let n_pairs = pairs.len();
     let mut pairs_array = Array2::<i64>::from_elem((n_pairs, 2), 0);
     for (i, pair) in pairs.iter().enumerate() {
@@ -691,19 +723,23 @@ fn format_as_pairs<'py>(
         Ok(pairs_array.into_pyarray(py).into_any())
     } else {
         // For single coord, return just the second column (atom indices)
-        Ok(pairs_array.column(1).into_owned().into_pyarray(py).into_any())
+        Ok(pairs_array
+            .column(1)
+            .into_owned()
+            .into_pyarray(py)
+            .into_any())
     }
 }
 
-fn format_result<'py>(
-    py: Python<'py>,
+fn format_result(
+    py: Python<'_>,
     n_query: usize,
     n_atoms: usize,
     pairs: Vec<[usize; 2]>,
     mut result_format: CellListResult,
     as_mask: bool,
     is_multi_coord: bool,
-) -> PyResult<Bound<'py, PyAny>> {
+) -> PyResult<Bound<'_, PyAny>> {
     if as_mask {
         result_format = CellListResult::MATRIX;
     }
@@ -713,4 +749,3 @@ fn format_result<'py>(
         CellListResult::PAIRS => format_as_pairs(py, pairs, is_multi_coord),
     }
 }
-
