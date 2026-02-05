@@ -400,6 +400,7 @@ impl CellList {
         }
     }
 
+    #[pyo3(signature = (coord, radius, as_mask=false, result_format=CellListResult::MAPPING))]
     fn get_atoms<'py>(
         &self,
         py: Python<'py>,
@@ -410,9 +411,26 @@ impl CellList {
     ) -> PyResult<Bound<'py, PyAny>> {
         let struc = PyModule::import(py, "biotite.structure")?;
 
-        let converted_coord, is_multi_coord = prepare_coord_from_python(coord, self.periodic_box)?;
-        let converted_radius = prepare_radius_from_python(radius)?;
+        let (converted_coord, is_multi_coord) = prepare_coord_from_python(coord, self.periodic_box)?;
+        let converted_radius: Radius<f32> = prepare_radius_from_python(radius)?;
         let pairs = self.get_atoms_from_slice(&converted_coord, converted_radius);
+        format_result(py, converted_coord.len(), pairs, result_format, as_mask, is_multi_coord)
+    }
+
+    #[pyo3(signature = (coord, cell_radius=1, as_mask=false, result_format=CellListResult::MAPPING))]
+    fn get_atoms_in_cells<'py>(
+        &self,
+        py: Python<'py>,
+        mut coord: &Bound<'py, PyAny>,
+        cell_radius: &Bound<'py, PyAny>,
+        as_mask: bool,
+        mut result_format: CellListResult,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let struc = PyModule::import(py, "biotite.structure")?;
+
+        let (converted_coord, is_multi_coord) = prepare_coord_from_python(coord, self.periodic_box)?;
+        let converted_radius: Radius<i32> = prepare_radius_from_python(cell_radius)?;
+        let pairs = self.get_atoms_in_cells_from_slice(&converted_coord, converted_radius);
         format_result(py, converted_coord.len(), pairs, result_format, as_mask, is_multi_coord)
     }
 
