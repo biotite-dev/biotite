@@ -90,9 +90,9 @@ Therefore, the code should be vectorized as much as possible using *NumPy*.
 In cases the problem cannot be reasonably or conveniently solved this way,
 writing modules in *Rust*  using `PyO3 <https://pyo3.rs>` is the
 preferred way to go.
-The *Rust* part of the codebase is located in ``src/biotite/rust/`` and mirrors the
+The *Rust* part of the codebase is located in ``src/rust/`` and mirrors the
 structure of the *Python* side.
-For example *Rust* functionalities for ``biotite.structure.io.pdb`` residue in
+For example *Rust* functionalities for ``biotite.structure.io.pdb`` reside in
 ``biotite.rust.structure.io.pdb``.
 ``biotite.rust`` itself is not publicly exposed, but its functionalities are instead
 internally used or reexported in ``biotite`` subpackages.

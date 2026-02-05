@@ -26,7 +26,7 @@ mod biotite {
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Copy)]
 #[pyclass]
-enum CellListResult {
+pub enum CellListResult {
     MAPPING,
     MATRIX,
     PAIRS,
@@ -263,7 +263,7 @@ impl CellList {
                 }
             }
 
-            orig_length = coord_object.call_method0("array_length")?.extract()?;
+            orig_length = coord_object.call_method0("__len__")?.extract()?;
             coord_object = struc
                 .getattr("move_inside_box")?
                 .call1((&coord_object, &box_object))?;
@@ -285,7 +285,7 @@ impl CellList {
             );
         } else {
             periodic_box = None;
-            orig_length = coord_object.call_method0("array_length")?.extract()?;
+            orig_length = coord_object.call_method0("__len__")?.extract()?;
         }
         let coord: Vec<[f32; 3]> = extract_coord(coord_object.extract::<PyReadonlyArray2<f32>>()?)?;
         let coord_range: [[f32; 3]; 2] = calculate_coord_range(&coord)?;
@@ -358,7 +358,7 @@ impl CellList {
                     .collect();
                 let mut sub_matrix: Array2<bool> = Array2::default((coord.len(), self.orig_length));
                 for matrix_index in
-                    self.get_atoms_from_slice(&coord, Radius::Single(threshold_distance))
+                    self.get_atoms_from_slice(py, &coord, Radius::Single(threshold_distance))?
                 {
                     sub_matrix[matrix_index] = true;
                 }
@@ -377,7 +377,7 @@ impl CellList {
                 let mut matrix: Array2<bool> =
                     Array2::default((self.orig_length, self.orig_length));
                 for matrix_index in
-                    self.get_atoms_from_slice(&self.coord, Radius::Single(threshold_distance))
+                    self.get_atoms_from_slice(py, &self.coord, Radius::Single(threshold_distance))?
                 {
                     matrix[matrix_index] = true;
                 }
@@ -397,7 +397,7 @@ impl CellList {
     ) -> PyResult<Bound<'py, PyAny>> {
         let (converted_coord, is_multi_coord) = self.prepare_coord_from_python(py, coord)?;
         let converted_radius = Self::prepare_radius_from_python::<f32>(radius)?;
-        let pairs = self.get_atoms_from_slice(&converted_coord, converted_radius);
+        let pairs = self.get_atoms_from_slice(py, &converted_coord, converted_radius)?;
         format_result(
             py,
             converted_coord.len(),
@@ -422,7 +422,7 @@ impl CellList {
         let converted_radius = Self::prepare_radius_from_python::<i32>(
             cell_radius.unwrap_or(&PyInt::new(py, 1).into_any()),
         )?;
-        let pairs = self.get_atoms_in_cells_from_slice(&converted_coord, converted_radius);
+        let pairs = self.get_atoms_in_cells_from_slice(py, &converted_coord, converted_radius)?;
         format_result(
             py,
             converted_coord.len(),
@@ -451,41 +451,50 @@ impl CellList {
         ]
     }
 
-    fn get_atoms_from_slice(&self, coord: &[[f32; 3]], radius: Radius<f32>) -> Vec<[usize; 2]> {
+    fn get_atoms_from_slice<'py>(
+        &self,
+        py: Python<'py>,
+        coord: &[[f32; 3]],
+        radius: Radius<f32>,
+    ) -> PyResult<Vec<[usize; 2]>> {
         match radius {
             Radius::Single(r) => {
                 let sq_r = r.powi(2);
-                self.get_atoms_in_cells_from_slice(
+                let pairs = self.get_atoms_in_cells_from_slice(
+                    py,
                     coord,
                     Radius::Single((r / self.cell_size).ceil() as i32),
-                )
+                )?
                 .iter()
                 .filter(|pair| distance_squared(coord[pair[0]], self.coord[pair[1]]) <= sq_r)
                 .copied()
-                .collect()
+                .collect();
+                Ok(pairs)
             }
             Radius::Multiple(rs) => {
                 let radii = rs
                     .iter()
                     .map(|r| (*r / self.cell_size).ceil() as i32)
                     .collect();
-                self.get_atoms_in_cells_from_slice(coord, Radius::Multiple(radii))
+                let pairs = self.get_atoms_in_cells_from_slice(py, coord, Radius::Multiple(radii))?
                     .iter()
                     .zip(rs.iter())
                     .filter(|(pair, r)| {
                         distance_squared(coord[pair[0]], self.coord[pair[1]]) <= r.powi(2)
                     })
                     .map(|(pair, _)| *pair)
-                    .collect()
+                    .collect();
+                Ok(pairs)
             }
         }
     }
 
-    fn get_atoms_in_cells_from_slice(
+    fn get_atoms_in_cells_from_slice<'py>(
         &self,
+        py: Python<'py>,
         coord: &[[f32; 3]],
         cell_radii: Radius<i32>,
-    ) -> Vec<[usize; 2]> {
+    ) -> PyResult<Vec<[usize; 2]>> {
         let mut adjacent_atoms = Vec::new();
 
         for (coord_idx, c) in coord.iter().enumerate() {
@@ -512,8 +521,12 @@ impl CellList {
                     }
                 }
             }
+            // The size of `coord` is arbitrary
+            // -> the function may take a long time to complete
+            // -> check for interrupts regularly
+            py.check_signals()?;
         }
-        adjacent_atoms
+        Ok(adjacent_atoms)
     }
 
     fn prepare_coord_from_python<'py>(
@@ -701,6 +714,7 @@ fn format_as_pairs(
     pairs: Vec<[usize; 2]>,
     is_multi_coord: bool,
 ) -> PyResult<Bound<'_, PyAny>> {
+    // TODO: Try to use an array creation from raw pointer to avoid copying the data
     let n_pairs = pairs.len();
     let mut pairs_array = Array2::<i64>::from_elem((n_pairs, 2), 0);
     for (i, pair) in pairs.iter().enumerate() {
@@ -730,6 +744,15 @@ fn format_result(
     is_multi_coord: bool,
 ) -> PyResult<Bound<'_, PyAny>> {
     if as_mask {
+        // Raise DeprecationWarning when `as_mask`` is used
+        let warnings = py.import("warnings")?;
+        let _ = warnings.call_method1(
+            "warn",
+            (
+                "The 'as_mask' parameter is deprecated, use 'result_format' instead.",
+                py.import("builtins")?.getattr("DeprecationWarning")?,
+            ),
+        );
         result_format = CellListResult::MATRIX;
     }
     match result_format {

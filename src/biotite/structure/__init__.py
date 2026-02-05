@@ -135,5 +135,5 @@ from .sse import *
 from .superimpose import *
 from .tm import *
 from .transform import *
-from biotite.rust.celllist import *
+from biotite.rust.structure import *
 # util and segments are used internally
