@@ -403,40 +403,17 @@ impl CellList {
     fn get_atoms<'py>(
         &self,
         py: Python<'py>,
-        coord: &Bound<'py, PyAny>,
+        mut coord: &Bound<'py, PyAny>,
         radius: &Bound<'py, PyAny>,
         as_mask: bool,
         mut result_format: CellListResult,
     ) -> PyResult<Bound<'py, PyAny>> {
-        let converted_coord: Vec<[f32; 3]>;
-        if let Ok(c) = coord.cast::<[f32; 3]>() {
-            converted_coord = vec![c];
-        } else if let Ok(cs) = coord.cast::<PyReadonlyArray2<f32>>() {
-            converted_coord = extract_coord(cs)?;
-        } else {
-            return Err(exceptions::PyTypeError::new_err(
-                "Coordinates must be a single coordinate or a 2D array of coordinates",
-            ));
-        }
-        // TODO: Move inside box
+        let struc = PyModule::import(py, "biotite.structure")?;
 
-        let converted_radius: Radius<f32>;
-        if let Ok(r) = coord.cast::<f32>() {
-            converted_radius = Radius::Single(r);
-        } else if let Ok(rs) = coord.cast::<Vec<f32>>() {
-            converted_radius = Radius::Multiple(rs);
-        } else {
-            return Err(exceptions::PyTypeError::new_err(
-                "Radius must be a single float or an array of floats",
-            ));
-        }
-
-        if as_mask {
-            result_format = CellListResult::MATRIX;
-        }
-
+        let converted_coord, is_multi_coord = prepare_coord_from_python(coord, self.periodic_box)?;
+        let converted_radius = prepare_radius_from_python(radius)?;
         let pairs = self.get_atoms_from_slice(&converted_coord, converted_radius);
-        format_result(py, converted_coord.len(), pairs, result_format)
+        format_result(py, converted_coord.len(), pairs, result_format, as_mask, is_multi_coord)
     }
 
 
@@ -584,6 +561,40 @@ fn extract_coord(coord_array: PyReadonlyArray2<f32>) -> PyResult<Vec<[f32; 3]>> 
     Ok(result)
 }
 
+fn prepare_coord_from_python(coord: &Bound<'py, PyAny>, periodic_box: Option<[[f32; 3]; 3]>) -> PyResult<(Vec<[f32; 3]>), bool> {
+    // Convert into expected f32 array
+    coord = coord.call_method("astype", (), Some([("dtype", "float32"), ("copy", false)].into_py_dict(py)?))?;
+    if let Some(r#box) = self.periodic_box {
+        coord = struc
+            .getattr("move_inside_box")?
+            .call1((&coord, r#box.into_pyarray(py)))?;
+    }
+    // Consistently use 2 dimensions
+    // -> if only one coordinate is given, convert it to a 2D array
+    let converted_coord: Vec<[f32; 3]>;
+    if let Ok(c) = coord.cast::<[f32; 3]>() {
+        (vec![c], false)
+    } else if let Ok(cs) = coord.cast::<PyReadonlyArray2<f32>>() {
+        (extract_coord(cs)?, true)
+    } else {
+        Err(exceptions::PyTypeError::new_err(
+            "Coordinates must be a single coordinate or a 2D array of coordinates",
+        ));
+    }
+}
+
+fn prepare_radius_from_python<T>(radius: &Bound<'py, PyAny>) -> PyResult<Radius<T>> {
+    if let Ok(r) = radius.cast::<T>() {
+        Radius::Single(r);
+    } else if let Ok(rs) = radius.cast::<Vec<T>>() {
+        Radius::Multiple(rs);
+    } else {
+        Err(exceptions::PyTypeError::new_err(
+            "Radius must be a single float or an array of floats",
+        ));
+    }
+}
+
 fn as_usize(x: [isize; 3]) -> Option<[usize; 3]> {
     for e in &x {
         if *e < 0 {
@@ -599,8 +610,7 @@ fn distance_squared(a: [f32; 3], b: [f32; 3]) -> f32 {
 }
 
 
-
-fn format_as_mapping<'py>(py: Python<'py>, n: usize, pairs: Vec<[usize; 2]>) -> PyResult<Bound<'py, PyAny>> {
+fn format_as_mapping<'py>(py: Python<'py>, n: usize, pairs: Vec<[usize; 2]>, is_multi_coord: bool) -> PyResult<Bound<'py, PyAny>> {
     let mut mapping: Vec<Vec<i64>> = Vec::with_capacity(n);
     for pair in pairs.iter() {
         mapping[pair[0]].push(pair[1] as i64);
@@ -614,27 +624,41 @@ fn format_as_mapping<'py>(py: Python<'py>, n: usize, pairs: Vec<[usize; 2]>) -> 
         }
     }
 
-    Ok(mapping.into_pyarray(py))
+    if is_multi_coord {
+        Ok(mapping_matrix.into_pyarray(py))
+    } else {
+        Ok(mapping_matrix.row(0).into_pyarray(py))
+    }
 }
 
-
-fn format_as_matrix<'py>(py: Python<'py>, n: usize, pairs: Vec<[usize; 2]>) -> PyResult<Bound<'py, PyAny>> {
+fn format_as_matrix<'py>(py: Python<'py>, n: usize, pairs: Vec<[usize; 2]>, is_multi_coord: bool) -> PyResult<Bound<'py, PyAny>> {
     let mut mapping = Array2::from_elem((n, n), false);
     for pair in pairs.iter() {
         mapping[pair] = true;
     }
-    Ok(mapping.into_pyarray(py))
+
+    if is_multi_coord {
+        Ok(mapping.into_pyarray(py))
+    } else {
+        Ok(mapping.row(0).into_pyarray(py))
+    }
 }
 
-fn format_as_pairs<'py>(py: Python<'py>, n: usize, pairs: Vec<[usize; 2]>) -> PyResult<Bound<'py, PyAny>> {
-    Ok(pairs.into_pyarray(py))
+fn format_as_pairs<'py>(py: Python<'py>, n: usize, pairs: Vec<[usize; 2]>, is_multi_coord: bool) -> PyResult<Bound<'py, PyAny>> {
+    if is_multi_coord {
+        Ok(pairs.into_pyarray(py))
+    } else {
+        Ok(pairs.row(1).into_pyarray(py))
+    }
 }
 
-
-fn format_result<'py>(py: Python<'py>, n: usize, pairs: Vec<[usize; 2]>, result_format: CellListResult) -> PyResult<Bound<'py, PyAny>> {
+fn format_result<'py>(py: Python<'py>, n: usize, pairs: Vec<[usize; 2]>, mut result_format: CellListResult, as_mask: bool, is_multi_coord: bool) -> PyResult<Bound<'py, PyAny>> {
+    if as_mask {
+        result_format = CellListResult::MATRIX;
+    }
     match result_format {
-        CellListResult::MAPPING => format_as_mapping(py, n, pairs),
-        CellListResult::MATRIX => format_as_matrix(py, n, pairs),
-        CellListResult::PAIRS => format_as_pairs(py, n, pairs),
+        CellListResult::MAPPING => format_as_mapping(py, n, pairs, is_multi_coord),
+        CellListResult::MATRIX => format_as_matrix(py, n, pairs, is_multi_coord),
+        CellListResult::PAIRS => format_as_pairs(py, n, pairs, is_multi_coord),
     }
 }
