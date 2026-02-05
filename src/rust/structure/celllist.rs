@@ -396,7 +396,7 @@ impl CellList {
         result_format: CellListResult,
     ) -> PyResult<Bound<'py, PyAny>> {
         let (converted_coord, is_multi_coord) = self.prepare_coord_from_python(py, coord)?;
-        let converted_radius = Self::prepare_radius_from_python_f32(radius)?;
+        let converted_radius = Self::prepare_radius_from_python::<f32>(radius)?;
         let pairs = self.get_atoms_from_slice(&converted_coord, converted_radius);
         format_result(
             py,
@@ -419,7 +419,7 @@ impl CellList {
         result_format: CellListResult,
     ) -> PyResult<Bound<'py, PyAny>> {
         let (converted_coord, is_multi_coord) = self.prepare_coord_from_python(py, coord)?;
-        let converted_radius = Self::prepare_radius_from_python_i32(
+        let converted_radius = Self::prepare_radius_from_python::<i32>(
             cell_radius.unwrap_or(&PyInt::new(py, 1).into_any()),
         )?;
         let pairs = self.get_atoms_in_cells_from_slice(&converted_coord, converted_radius);
@@ -460,7 +460,8 @@ impl CellList {
                     Radius::Single((r / self.cell_size).ceil() as i32),
                 )
                 .iter()
-                .filter(|pair| distance_squared(coord[pair[0]], self.coord[pair[1]]) <= sq_r).copied()
+                .filter(|pair| distance_squared(coord[pair[0]], self.coord[pair[1]]) <= sq_r)
+                .copied()
                 .collect()
             }
             Radius::Multiple(rs) => {
@@ -552,31 +553,19 @@ impl CellList {
         ))
     }
 
-    fn prepare_radius_from_python_f32(radius: &Bound<'_, PyAny>) -> PyResult<Radius<f32>> {
-        // Try to extract as a single float
-        if let Ok(r) = radius.extract::<f32>() {
+    fn prepare_radius_from_python<'py, T>(radius: &Bound<'py, PyAny>) -> PyResult<Radius<T>>
+    where
+        T: for<'a> FromPyObject<'a, 'py>,
+        Vec<T>: for<'a> FromPyObject<'a, 'py>,
+    {
+        if let Ok(r) = radius.extract::<T>() {
             return Ok(Radius::Single(r));
         }
-        // Try to extract as an array
-        if let Ok(rs) = radius.extract::<Vec<f32>>() {
+        if let Ok(rs) = radius.extract::<Vec<T>>() {
             return Ok(Radius::Multiple(rs));
         }
         Err(exceptions::PyTypeError::new_err(
-            "Radius must be a single float or an array of floats",
-        ))
-    }
-
-    fn prepare_radius_from_python_i32(radius: &Bound<'_, PyAny>) -> PyResult<Radius<i32>> {
-        // Try to extract as a single int
-        if let Ok(r) = radius.extract::<i32>() {
-            return Ok(Radius::Single(r));
-        }
-        // Try to extract as an array
-        if let Ok(rs) = radius.extract::<Vec<i32>>() {
-            return Ok(Radius::Multiple(rs));
-        }
-        Err(exceptions::PyTypeError::new_err(
-            "Cell radius must be a single int or an array of ints",
+            "Radius must be a single value or an array of values",
         ))
     }
 }
