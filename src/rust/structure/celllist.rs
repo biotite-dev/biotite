@@ -34,6 +34,7 @@ pub enum CellListResult {
 
 /// Enum for efficient support of both single and multiple radii
 /// given in `get_atoms()` and `get_atoms_in_cells()`.
+#[derive(Clone, Debug)]
 enum Radius<T> {
     Single(T),
     Multiple(Vec<T>),
@@ -451,47 +452,49 @@ impl CellList {
         ]
     }
 
-    fn get_atoms_from_slice<'py>(
+    fn get_atoms_from_slice(
         &self,
-        py: Python<'py>,
+        py: Python<'_>,
         coord: &[[f32; 3]],
         radius: Radius<f32>,
     ) -> PyResult<Vec<[usize; 2]>> {
         match radius {
             Radius::Single(r) => {
                 let sq_r = r.powi(2);
-                let pairs = self.get_atoms_in_cells_from_slice(
-                    py,
-                    coord,
-                    Radius::Single((r / self.cell_size).ceil() as i32),
-                )?
-                .iter()
-                .filter(|pair| distance_squared(coord[pair[0]], self.coord[pair[1]]) <= sq_r)
-                .copied()
-                .collect();
+                let pairs = self
+                    .get_atoms_in_cells_from_slice(
+                        py,
+                        coord,
+                        Radius::Single((r / self.cell_size).ceil() as i32),
+                    )?
+                    .iter()
+                    .filter(|pair| distance_squared(coord[pair[0]], self.coord[pair[1]]) <= sq_r)
+                    .copied()
+                    .collect();
                 Ok(pairs)
             }
             Radius::Multiple(rs) => {
-                let radii = rs
+                let cell_radii = rs
                     .iter()
                     .map(|r| (*r / self.cell_size).ceil() as i32)
                     .collect();
-                let pairs = self.get_atoms_in_cells_from_slice(py, coord, Radius::Multiple(radii))?
+                let sq_rs: Vec<f32> = rs.iter().map(|r| r.powi(2)).collect();
+                let pairs = self
+                    .get_atoms_in_cells_from_slice(py, coord, Radius::Multiple(cell_radii))?
                     .iter()
-                    .zip(rs.iter())
-                    .filter(|(pair, r)| {
-                        distance_squared(coord[pair[0]], self.coord[pair[1]]) <= r.powi(2)
+                    .filter(|pair| {
+                        distance_squared(coord[pair[0]], self.coord[pair[1]]) <= sq_rs[pair[0]]
                     })
-                    .map(|(pair, _)| *pair)
+                    .copied()
                     .collect();
                 Ok(pairs)
             }
         }
     }
 
-    fn get_atoms_in_cells_from_slice<'py>(
+    fn get_atoms_in_cells_from_slice(
         &self,
-        py: Python<'py>,
+        py: Python<'_>,
         coord: &[[f32; 3]],
         cell_radii: Radius<i32>,
     ) -> PyResult<Vec<[usize; 2]>> {
