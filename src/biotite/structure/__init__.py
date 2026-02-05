@@ -112,7 +112,6 @@ from .atoms import *
 from .basepairs import *
 from .bonds import *
 from .box import *
-from .celllist import *
 from .chains import *
 from .charges import *
 from .compare import *
@@ -136,4 +135,5 @@ from .sse import *
 from .superimpose import *
 from .tm import *
 from .transform import *
+from biotite.rust.celllist import *
 # util and segments are used internally

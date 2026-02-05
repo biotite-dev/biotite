@@ -22,7 +22,7 @@ import warnings
 from enum import IntEnum
 import numpy as np
 from biotite.structure.atoms import Atom, array
-from biotite.structure.celllist import CellList
+from biotite.rust.structure import CellList
 from biotite.structure.compare import rmsd
 from biotite.structure.error import (
     BadStructureError,

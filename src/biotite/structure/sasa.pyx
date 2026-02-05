@@ -16,7 +16,7 @@ cimport numpy as np
 from libc.stdlib cimport malloc, free
 
 import numpy as np
-from .celllist import CellList
+from biotite.rust.structure import CellList
 from .filter import filter_solvent, filter_monoatomic_ions, filter_heavy
 from .info.radii import vdw_radius_protor, vdw_radius_single
 
