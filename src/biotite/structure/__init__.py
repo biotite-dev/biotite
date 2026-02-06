@@ -108,6 +108,7 @@ The universal length unit in this package is Å.
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 
+from biotite.rust.structure import *
 from .atoms import *
 from .basepairs import *
 from .bonds import *
@@ -135,5 +136,4 @@ from .sse import *
 from .superimpose import *
 from .tm import *
 from .transform import *
-from biotite.rust.structure import *
 # util and segments are used internally

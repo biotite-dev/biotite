@@ -14,8 +14,8 @@ __all__ = ["rmsd", "rmspd", "rmsf", "average", "lddt"]
 import collections.abc
 import warnings
 import numpy as np
-from biotite.structure.atoms import AtomArray, AtomArrayStack, coord
 from biotite.rust.structure import CellList
+from biotite.structure.atoms import AtomArray, AtomArrayStack, coord
 from biotite.structure.chains import get_chain_count, get_chain_positions
 from biotite.structure.geometry import index_distance
 from biotite.structure.residues import get_residue_count, get_residue_positions

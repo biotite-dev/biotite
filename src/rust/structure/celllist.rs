@@ -377,9 +377,11 @@ impl CellList {
             None => {
                 let mut matrix: Array2<bool> =
                     Array2::default((self.orig_length, self.orig_length));
-                for matrix_index in
-                    self.get_atoms_from_slice(py, &self.coord, Radius::Single(threshold_distance))?
-                {
+                for matrix_index in self.get_atoms_from_slice(
+                    py,
+                    &self.coord[..self.orig_length],
+                    Radius::Single(threshold_distance),
+                )? {
                     matrix[matrix_index] = true;
                 }
                 Ok(matrix.into_pyarray(py))
