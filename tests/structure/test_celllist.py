@@ -81,15 +81,15 @@ def test_adjacency_matrix(atoms, cell_size, threshold, periodic, use_selection):
     )
     distance = np.reshape(distance, (length, length))
     # Create adjacency matrix from distance matrix
-    exp_matrix = distance <= threshold
+    ref_matrix = distance <= threshold
     if use_selection:
         # Set rows and columns to False for filtered out atoms
-        exp_matrix[~selection, :] = False
-        exp_matrix[:, ~selection] = False
+        ref_matrix[~selection, :] = False
+        ref_matrix[:, ~selection] = False
 
     # Both ways to create an adjacency matrix
     # should give the same result
-    assert np.array_equal(test_matrix, exp_matrix)
+    assert np.array_equal(test_matrix, ref_matrix)
 
 
 @pytest.mark.parametrize(
@@ -99,6 +99,7 @@ def test_adjacency_matrix(atoms, cell_size, threshold, periodic, use_selection):
         struc.CellListResult.MATRIX,
         struc.CellListResult.PAIRS,
     ],
+    ids=lambda format: str(format).split(".")[-1],
 )
 def test_result_format_consistency(atoms, result_format):
     """
@@ -108,7 +109,7 @@ def test_result_format_consistency(atoms, result_format):
     CELL_SIZE = 5
 
     cell_list = struc.CellList(atoms, cell_size=CELL_SIZE)
-    ref_matrix = cell_list.create_adjacency_matrix(threshold=CELL_SIZE)
+    ref_matrix = cell_list.create_adjacency_matrix(threshold_distance=CELL_SIZE)
 
     result = cell_list.get_atoms(atoms.coord, CELL_SIZE, result_format=result_format)
     match result_format:
@@ -172,10 +173,13 @@ def test_single_and_multiple_radii(atoms, method):
     max_neighbors = mutliple_radius_result.shape[-1]
 
     multiple_radius_result = method(
-        cell_list, atoms.coord, radii, result_format=struc.CellListResult.MAPPING
+        cell_list,
+        atoms.coord[:N_SAMPLES],
+        radii,
+        result_format=struc.CellListResult.MAPPING,
     )
 
-    single_radius_result = np.zeros((N_SAMPLES, max_neighbors), dtype=int)
+    single_radius_result = np.full((N_SAMPLES, max_neighbors), -1, dtype=int)
     for i in range(N_SAMPLES):
         result = method(
             cell_list,
@@ -211,19 +215,31 @@ def test_selection(atoms):
 @pytest.mark.parametrize(
     "method", [struc.CellList.get_atoms, struc.CellList.get_atoms_in_cells]
 )
-def test_empty_coordinates(atoms, method):
+@pytest.mark.parametrize(
+    "result_format",
+    [
+        struc.CellListResult.MAPPING,
+        struc.CellListResult.MATRIX,
+        struc.CellListResult.PAIRS,
+    ],
+    ids=lambda format: str(format).split(".")[-1],
+)
+def test_empty_coordinates(atoms, method, result_format):
     """
     Test whether empty input coordinates result in an empty output
     array/mask.
     """
+    n_atoms = atoms.array_length()
     cell_list = struc.CellList(atoms, cell_size=10)
 
-    indices = method(cell_list, np.array([]), 1, as_mask=False)
-    mask = method(cell_list, np.array([]), 1, as_mask=True)
-    assert len(indices) == 0
-    assert len(mask) == 0
-    assert indices.dtype == np.int32
-    assert mask.dtype == bool
+    result = method(cell_list, np.zeros((0, 3)), 1, result_format=result_format)
+    match result_format:
+        case struc.CellListResult.MAPPING:
+            assert len(result) == 0
+        case struc.CellListResult.MATRIX:
+            assert result.shape == (0, n_atoms)
+        case struc.CellListResult.PAIRS:
+            assert result.shape == (0, 2)
 
 
 def test_pickle(atoms):

@@ -311,9 +311,7 @@ impl CellList {
             }
             positions
                 .push(as_usize(Self::get_cell_position(*coord, &coord_range, cell_size)).unwrap());
-            // Ensure that the atom indices point to the original atom array
-            // and not to the periodic copies
-            elements.push(i % orig_length);
+            elements.push(i);
         }
         // To get the number of cells in each dimension, use the position of the maximum coordinate
         let dimensions: [usize; 3] =
@@ -361,7 +359,8 @@ impl CellList {
                 for matrix_index in
                     self.get_atoms_from_slice(py, &coord, Radius::Single(threshold_distance))?
                 {
-                    sub_matrix[matrix_index] = true;
+                    // Map index to potentially periodic copy to original atom index
+                    sub_matrix[[matrix_index[0], matrix_index[1] % self.orig_length]] = true;
                 }
                 let mut matrix: Array2<bool> =
                     Array2::default((self.orig_length, self.orig_length));
@@ -382,7 +381,8 @@ impl CellList {
                     &self.coord[..self.orig_length],
                     Radius::Single(threshold_distance),
                 )? {
-                    matrix[matrix_index] = true;
+                    // Map index to potentially periodic copy to original atom index
+                    matrix[[matrix_index[0], matrix_index[1] % self.orig_length]] = true;
                 }
                 Ok(matrix.into_pyarray(py))
             }
@@ -454,6 +454,10 @@ impl CellList {
         ]
     }
 
+    /// Notes
+    /// -----
+    /// This function returns the indices to the full coordinate array, potentially
+    /// including periodic copies.
     fn get_atoms_from_slice(
         &self,
         py: Python<'_>,
@@ -494,14 +498,27 @@ impl CellList {
         }
     }
 
+    /// Notes
+    /// -----
+    /// This function returns the indices to the full coordinate array, potentially
+    /// including periodic copies.
     fn get_atoms_in_cells_from_slice(
         &self,
         py: Python<'_>,
         coord: &[[f32; 3]],
         cell_radii: Radius<i32>,
     ) -> PyResult<Vec<[usize; 2]>> {
-        let mut adjacent_atoms = Vec::new();
+        if let Radius::Multiple(ref rs) = cell_radii {
+            if rs.len() != coord.len() {
+                return Err(exceptions::PyValueError::new_err(format!(
+                    "{} coordinates were provided, but {} radii",
+                    coord.len(),
+                    rs.len()
+                )));
+            }
+        }
 
+        let mut adjacent_atoms = Vec::new();
         for (coord_idx, c) in coord.iter().enumerate() {
             // Skip non-finite coordinates
             if !c[0].is_finite() || !c[1].is_finite() || !c[2].is_finite() {
@@ -622,11 +639,6 @@ fn extract_coord(coord_array: PyReadonlyArray2<f32>) -> PyResult<Vec<[f32; 3]>> 
             "Coordinates must have shape (n,3)",
         ));
     }
-    if shape[0] == 0 {
-        return Err(exceptions::PyValueError::new_err(
-            "Coordinates must not be empty",
-        ));
-    }
     if shape[1] != 3 {
         return Err(exceptions::PyValueError::new_err(
             "Coordinates must have form (x,y,z)",
@@ -667,13 +679,15 @@ fn distance_squared(a: [f32; 3], b: [f32; 3]) -> f32 {
 fn format_as_mapping(
     py: Python<'_>,
     n_query: usize,
+    n_atoms: usize,
     pairs: Vec<[usize; 2]>,
     is_multi_coord: bool,
 ) -> PyResult<Bound<'_, PyAny>> {
     // Initialize mapping with empty vecs
     let mut mapping: Vec<Vec<i64>> = vec![Vec::new(); n_query];
     for pair in pairs.iter() {
-        mapping[pair[0]].push(pair[1] as i64);
+        // Map index to potentially periodic copy to original atom index
+        mapping[pair[0]].push((pair[1] % n_atoms) as i64);
     }
 
     let max_length = mapping.iter().map(|elem| elem.len()).max().unwrap_or(0);
@@ -704,7 +718,8 @@ fn format_as_matrix(
 ) -> PyResult<Bound<'_, PyAny>> {
     let mut matrix = Array2::from_elem((n_query, n_atoms), false);
     for pair in pairs.iter() {
-        matrix[*pair] = true;
+        // Map index to potentially periodic copy to original atom index
+        matrix[[pair[0], pair[1] % n_atoms]] = true;
     }
 
     if is_multi_coord {
@@ -716,6 +731,7 @@ fn format_as_matrix(
 
 fn format_as_pairs(
     py: Python<'_>,
+    n_atoms: usize,
     pairs: Vec<[usize; 2]>,
     is_multi_coord: bool,
 ) -> PyResult<Bound<'_, PyAny>> {
@@ -724,7 +740,8 @@ fn format_as_pairs(
     let mut pairs_array = Array2::<i64>::from_elem((n_pairs, 2), 0);
     for (i, pair) in pairs.iter().enumerate() {
         pairs_array[[i, 0]] = pair[0] as i64;
-        pairs_array[[i, 1]] = pair[1] as i64;
+        // Map index to potentially periodic copy to original atom index
+        pairs_array[[i, 1]] = (pair[1] % n_atoms) as i64;
     }
 
     if is_multi_coord {
@@ -761,8 +778,8 @@ fn format_result(
         result_format = CellListResult::MATRIX;
     }
     match result_format {
-        CellListResult::MAPPING => format_as_mapping(py, n_query, pairs, is_multi_coord),
+        CellListResult::MAPPING => format_as_mapping(py, n_query, n_atoms, pairs, is_multi_coord),
         CellListResult::MATRIX => format_as_matrix(py, n_query, n_atoms, pairs, is_multi_coord),
-        CellListResult::PAIRS => format_as_pairs(py, pairs, is_multi_coord),
+        CellListResult::PAIRS => format_as_pairs(py, n_atoms, pairs, is_multi_coord),
     }
 }
