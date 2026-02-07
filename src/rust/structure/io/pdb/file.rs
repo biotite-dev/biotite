@@ -55,7 +55,7 @@ mod biotite {
 ///
 /// It contains efficient Rust implementation of the methods that would otherwise
 /// become major bottlenecks
-#[pyclass(subclass)]
+#[pyclass(subclass, module = "biotite.structure")]
 pub struct PDBFile {
     /// Lines of text from the PDB file.
     #[pyo3(get)]

@@ -12,8 +12,8 @@ __all__ = ["hbond", "hbond_frequency"]
 
 import warnings
 import numpy as np
+from biotite.rust.structure import CellList
 from biotite.structure.atoms import AtomArrayStack, stack
-from biotite.structure.celllist import CellList
 from biotite.structure.filter import filter_heavy
 from biotite.structure.geometry import angle, distance
 
