@@ -2,7 +2,7 @@ use numpy::ndarray::{Array2, Array3};
 use numpy::{IntoPyArray, PyArray2, PyReadonlyArray2};
 use pyo3::exceptions;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyInt};
+use pyo3::types::{PyDict, PyInt, PyTuple};
 use std::convert::TryInto;
 use std::ops::{Index, IndexMut};
 
@@ -40,14 +40,20 @@ enum Radius<T> {
     Multiple(Vec<T>),
 }
 
-/// A three-dimensional container for storing elements in cells.
-struct CellContainer<T> {
+/// A three-dimensional grid of cells, where each cell is a container for elements.
+struct CellGrid<T> {
     data: Vec<T>,
     offsets: Array3<[usize; 2]>,
 }
 
-impl<T: Clone + Default> CellContainer<T> {
-    /// Create a new ``CellContainer`` filled with the given elements at the given
+impl<T: Clone + Default> CellGrid<T> {
+    /// Create a ``CellGrid`` directly from raw data and offsets.
+    /// Used for unpickling.
+    pub fn new(data: Vec<T>, offsets: Array3<[usize; 2]>) -> Self {
+        CellGrid { data, offsets }
+    }
+
+    /// Create a new ``CellGrid`` filled with the given elements at the given
     /// positions.
     ///
     /// Parameters
@@ -59,7 +65,11 @@ impl<T: Clone + Default> CellContainer<T> {
     /// elements : Vec<T>
     ///     The elements to store.
     ///
-    pub fn new(dimensions: [usize; 3], positions: Vec<[usize; 3]>, elements: Vec<T>) -> Self {
+    pub fn from_elements(
+        dimensions: [usize; 3],
+        positions: Vec<[usize; 3]>,
+        elements: Vec<T>,
+    ) -> Self {
         if positions.len() != elements.len() {
             panic!("Positions and elements must have the same length");
         }
@@ -94,10 +104,16 @@ impl<T: Clone + Default> CellContainer<T> {
             offset[1] += 1;
         }
 
-        CellContainer { data, offsets }
+        CellGrid { data, offsets }
     }
 
-    /// Check if a given cell position is within the bounds of the ``CellContainer``.
+    /// Get the dimensions of the cell grid.
+    pub fn dimensions(&self) -> [usize; 3] {
+        let s = self.offsets.shape();
+        [s[0], s[1], s[2]]
+    }
+
+    /// Check if a given cell position is within the bounds of the ``CellGrid``.
     ///
     /// Parameters
     /// ----------
@@ -106,11 +122,11 @@ impl<T: Clone + Default> CellContainer<T> {
     ///
     /// Returns
     /// -------
-    /// True if the cell position is within the bounds of the cell container, false otherwise.
+    /// True if the cell position is within the bounds of the cell grid, false otherwise.
     ///
     /// Notes
     /// -----
-    /// If the cell position is outside the bounds of the ``CellContainer``,
+    /// If the cell position is outside the bounds of the ``CellGrid``,
     /// ``index()`` will return an empty slice and ``index_mut()`` will panic.
     pub fn cell_exists(&self, cell_position: [isize; 3]) -> bool {
         let shape = self.offsets.shape();
@@ -123,7 +139,7 @@ impl<T: Clone + Default> CellContainer<T> {
     }
 }
 
-impl<T: Clone + Default> Index<[isize; 3]> for CellContainer<T> {
+impl<T: Clone + Default> Index<[isize; 3]> for CellGrid<T> {
     type Output = [T];
     fn index(&self, cell_position: [isize; 3]) -> &Self::Output {
         if self.cell_exists(cell_position) {
@@ -135,7 +151,7 @@ impl<T: Clone + Default> Index<[isize; 3]> for CellContainer<T> {
     }
 }
 
-impl<T: Clone + Default> IndexMut<[isize; 3]> for CellContainer<T> {
+impl<T: Clone + Default> IndexMut<[isize; 3]> for CellGrid<T> {
     fn index_mut(&mut self, cell_position: [isize; 3]) -> &mut Self::Output {
         if !self.cell_exists(cell_position) {
             panic!(
@@ -190,12 +206,12 @@ impl<T: Clone + Default> IndexMut<[isize; 3]> for CellContainer<T> {
 ///
 /// >>> cell_list = CellList(atom_array, cell_size=5)
 /// >>> near_atoms = atom_array[cell_list.get_atoms(np.array([1,2,3]), radius=7.0)]
-#[pyclass]
+#[pyclass(module = "biotite.structure")]
 pub struct CellList {
     coord: Vec<[f32; 3]>,
     // A boolean mask that covers the selected atoms
     selection: Option<Vec<bool>>,
-    cells: CellContainer<usize>,
+    cells: CellGrid<usize>,
     cell_size: f32,
     // The minimum and maximum coordinates for all atoms
     // Used as origin ('coord_range[0]' is at 'cells[[0,0,0]]')
@@ -321,7 +337,7 @@ impl CellList {
                 .collect::<Vec<usize>>()
                 .try_into()
                 .unwrap();
-        let cells = CellContainer::new(dimensions, positions, elements);
+        let cells = CellGrid::from_elements(dimensions, positions, elements);
 
         Ok(CellList {
             coord,
@@ -332,6 +348,83 @@ impl CellList {
             periodic_box,
             orig_length,
         })
+    }
+
+    /// Reconstruct a CellList from its serialized state.
+    /// This is used for unpickling.
+    #[staticmethod]
+    #[pyo3(name = "_from_state")]
+    #[allow(clippy::too_many_arguments)]
+    fn from_state(
+        coord: Vec<[f32; 3]>,
+        selection: Option<Vec<bool>>,
+        cells_data: Vec<usize>,
+        cells_offsets_flat: Vec<[usize; 2]>,
+        cells_offsets_shape: [usize; 3],
+        cell_size: f32,
+        coord_range: [[f32; 3]; 2],
+        periodic_box: Option<[[f32; 3]; 3]>,
+        orig_length: usize,
+    ) -> PyResult<Self> {
+        // Reconstruct the offsets Array3 from the flattened data
+        let offsets =
+            Array3::from_shape_vec(cells_offsets_shape, cells_offsets_flat).map_err(|e| {
+                exceptions::PyValueError::new_err(format!(
+                    "Failed to reconstruct cell offsets: {}",
+                    e
+                ))
+            })?;
+        let cells = CellGrid::new(cells_data, offsets);
+
+        Ok(CellList {
+            coord,
+            selection,
+            cells,
+            cell_size,
+            coord_range,
+            periodic_box,
+            orig_length,
+        })
+    }
+
+    /// Pickle support: return callable and arguments for reconstruction.
+    fn __reduce__<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyTuple>> {
+        // Get the class from the module to ensure pickle can find it
+        let struc = PyModule::import(py, "biotite.structure")?;
+        let cls = struc.getattr("CellList")?;
+        let from_state = cls.getattr("_from_state")?;
+
+        // Flatten the offsets Array3 to a Vec for serialization
+        let cells_offsets_flat: Vec<[usize; 2]> = self.cells.offsets.iter().cloned().collect();
+        let cells_offsets_shape = self.cells.dimensions();
+
+        // Build the args tuple
+        let args = PyTuple::new(
+            py,
+            [
+                self.coord.clone().into_pyobject(py)?.into_any().unbind(),
+                self.selection
+                    .clone()
+                    .into_pyobject(py)?
+                    .into_any()
+                    .unbind(),
+                self.cells
+                    .data
+                    .clone()
+                    .into_pyobject(py)?
+                    .into_any()
+                    .unbind(),
+                cells_offsets_flat.into_pyobject(py)?.into_any().unbind(),
+                cells_offsets_shape.into_pyobject(py)?.into_any().unbind(),
+                self.cell_size.into_pyobject(py)?.into_any().unbind(),
+                self.coord_range.into_pyobject(py)?.into_any().unbind(),
+                self.periodic_box.into_pyobject(py)?.into_any().unbind(),
+                self.orig_length.into_pyobject(py)?.into_any().unbind(),
+            ],
+        )?;
+
+        // Return (callable, args) tuple
+        PyTuple::new(py, [from_state.unbind(), args.into_any().unbind()])
     }
 
     fn create_adjacency_matrix<'py>(
