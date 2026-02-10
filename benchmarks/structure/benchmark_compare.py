@@ -7,7 +7,7 @@ from biotite.structure.filter import filter_heavy
 from tests.util import data_dir
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def atoms():
     pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1gya.bcif")
     atoms = pdbx.get_structure(pdbx_file)
