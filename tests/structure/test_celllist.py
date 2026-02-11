@@ -95,9 +95,9 @@ def test_adjacency_matrix(atoms, cell_size, threshold, periodic, use_selection):
 @pytest.mark.parametrize(
     "result_format",
     [
-        struc.CellListResult.MAPPING,
-        struc.CellListResult.MASK,
-        struc.CellListResult.PAIRS,
+        struc.CellList.Result.MAPPING,
+        struc.CellList.Result.MASK,
+        struc.CellList.Result.PAIRS,
     ],
     ids=lambda format: str(format).split(".")[-1],
 )
@@ -113,7 +113,7 @@ def test_result_format_consistency(atoms, result_format):
 
     result = cell_list.get_atoms(atoms.coord, CELL_SIZE, result_format=result_format)
     match result_format:
-        case struc.CellListResult.MAPPING:
+        case struc.CellList.Result.MAPPING:
             mapping = result
             test_matrix = np.zeros(
                 (atoms.array_length(), atoms.array_length()), dtype=bool
@@ -121,9 +121,9 @@ def test_result_format_consistency(atoms, result_format):
             for i, adjacent_atoms in enumerate(mapping):
                 for j in adjacent_atoms[adjacent_atoms != -1]:
                     test_matrix[i, j] = True
-        case struc.CellListResult.MASK:
+        case struc.CellList.Result.MASK:
             test_matrix = result
-        case struc.CellListResult.PAIRS:
+        case struc.CellList.Result.PAIRS:
             pairs = result
             test_matrix = np.zeros(
                 (atoms.array_length(), atoms.array_length()), dtype=bool
@@ -168,7 +168,7 @@ def test_single_and_multiple_radii(atoms, method):
         cell_list,
         atoms.coord[:N_SAMPLES],
         radii,
-        result_format=struc.CellListResult.MAPPING,
+        result_format=struc.CellList.Result.MAPPING,
     )
     max_neighbors = mutliple_radius_result.shape[-1]
 
@@ -176,7 +176,7 @@ def test_single_and_multiple_radii(atoms, method):
         cell_list,
         atoms.coord[:N_SAMPLES],
         radii,
-        result_format=struc.CellListResult.MAPPING,
+        result_format=struc.CellList.Result.MAPPING,
     )
 
     single_radius_result = np.full((N_SAMPLES, max_neighbors), -1, dtype=int)
@@ -185,7 +185,7 @@ def test_single_and_multiple_radii(atoms, method):
             cell_list,
             atoms.coord[i],
             radii[i],
-            result_format=struc.CellListResult.MAPPING,
+            result_format=struc.CellList.Result.MAPPING,
         )
         single_radius_result[i, : len(result)] = result
 
@@ -218,9 +218,9 @@ def test_selection(atoms):
 @pytest.mark.parametrize(
     "result_format",
     [
-        struc.CellListResult.MAPPING,
-        struc.CellListResult.MASK,
-        struc.CellListResult.PAIRS,
+        struc.CellList.Result.MAPPING,
+        struc.CellList.Result.MASK,
+        struc.CellList.Result.PAIRS,
     ],
     ids=lambda format: str(format).split(".")[-1],
 )
@@ -234,11 +234,11 @@ def test_empty_coordinates(atoms, method, result_format):
 
     result = method(cell_list, np.zeros((0, 3)), 1, result_format=result_format)
     match result_format:
-        case struc.CellListResult.MAPPING:
+        case struc.CellList.Result.MAPPING:
             assert len(result) == 0
-        case struc.CellListResult.MASK:
+        case struc.CellList.Result.MASK:
             assert result.shape == (0, n_atoms)
-        case struc.CellListResult.PAIRS:
+        case struc.CellList.Result.PAIRS:
             assert result.shape == (0, 2)
 
 

@@ -14,7 +14,7 @@ __all__ = ["rmsd", "rmspd", "rmsf", "average", "lddt"]
 import collections.abc
 import warnings
 import numpy as np
-from biotite.rust.structure import CellList, CellListResult
+from biotite.rust.structure import CellList
 from biotite.structure.atoms import AtomArray, AtomArrayStack, coord
 from biotite.structure.chains import get_chain_count, get_chain_positions
 from biotite.structure.geometry import index_distance
@@ -570,11 +570,11 @@ def _find_contacts(
     # Pairs of indices for atoms within the inclusion radius
     if atom_mask is None:
         contacts = cell_list.get_atoms(
-            coords, inclusion_radius, result_format=CellListResult.PAIRS
+            coords, inclusion_radius, result_format=CellList.Result.PAIRS
         )
     else:
         contacts = cell_list.get_atoms(
-            coords[atom_mask], inclusion_radius, result_format=CellListResult.PAIRS
+            coords[atom_mask], inclusion_radius, result_format=CellList.Result.PAIRS
         )
         # Map indices from masked indices back to original indices
         mapping = np.nonzero(atom_mask)[0]

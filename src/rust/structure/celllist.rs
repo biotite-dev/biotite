@@ -45,24 +45,24 @@ mod biotite {
 /// >>> single_coord = atoms.coord[0]
 /// >>> multiple_coords = atoms.coord[:2]
 /// >>> # MAPPING: indices of neighboring atoms, -1 indicates padding values to be ignored
-/// >>> print(cell_list.get_atoms(single_coord, radius=2, result_format=CellListResult.MAPPING))
+/// >>> print(cell_list.get_atoms(single_coord, radius=2, result_format=CellList.Result.MAPPING))
 /// [6 1 0 7]
-/// >>> print(cell_list.get_atoms(multiple_coords, radius=2, result_format=CellListResult.MAPPING))
+/// >>> print(cell_list.get_atoms(multiple_coords, radius=2, result_format=CellList.Result.MAPPING))
 /// [[ 6  1  0  7 -1]
 ///  [ 2  1  0  4  8]]
 /// >>> # MASK: boolean mask indicating neighbors
-/// >>> print(cell_list.get_atoms(single_coord, radius=2, result_format=CellListResult.MASK))
+/// >>> print(cell_list.get_atoms(single_coord, radius=2, result_format=CellList.Result.MASK))
 /// [ True  True False False False False  True  True False False False False
 ///  False]
-/// >>> print(cell_list.get_atoms(multiple_coords, radius=2, result_format=CellListResult.MASK))
+/// >>> print(cell_list.get_atoms(multiple_coords, radius=2, result_format=CellList.Result.MASK))
 /// [[ True  True False False False False  True  True False False False False
 ///   False]
 ///  [ True  True  True False  True False False False  True False False False
 ///   False]]
 /// >>> # PAIRS: (query_idx, atom_idx) tuples
-/// >>> print(cell_list.get_atoms(single_coord, radius=2, result_format=CellListResult.PAIRS))
+/// >>> print(cell_list.get_atoms(single_coord, radius=2, result_format=CellList.Result.PAIRS))
 /// [6 1 0 7]
-/// >>> print(cell_list.get_atoms(multiple_coords, radius=2, result_format=CellListResult.PAIRS))
+/// >>> print(cell_list.get_atoms(multiple_coords, radius=2, result_format=CellList.Result.PAIRS))
 /// [[0 6]
 ///  [0 1]
 ///  [0 0]
@@ -74,7 +74,7 @@ mod biotite {
 ///  [1 8]]
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Copy, PartialEq)]
-#[pyclass]
+#[pyclass(module = "biotite.structure")]
 pub enum CellListResult {
     MAPPING,
     MASK,
@@ -651,7 +651,7 @@ impl CellList {
         }
     }
 
-    /// get_atoms(coord, radius, as_mask=False, result_format=CellListResult.MAPPING)
+    /// get_atoms(coord, radius, as_mask=False, result_format=CellList.Result.MAPPING)
     ///
     /// Find atoms with a maximum distance from given coordinates.
     ///
@@ -666,18 +666,18 @@ impl CellList {
     ///     radii for each position in `coord` can be provided as
     ///     :class:`ndarray`.
     /// as_mask : bool, optional
-    ///     **Deprecated:** Use ``result_format=CellListResult.MASK`` instead.
+    ///     **Deprecated:** Use ``result_format=CellList.Result.MASK`` instead.
     ///     If true, the result is returned as boolean mask instead
     ///     of an index array.
-    /// result_format : CellListResult, optional
-    ///     The format of the result. See :class:`CellListResult` for options.
-    ///     Default is ``CellListResult.MAPPING``.
+    /// result_format : CellList.Result, optional
+    ///     The format of the result. See :class:`CellList.Result` for options.
+    ///     Default is ``CellList.Result.MAPPING``.
     ///
     /// Returns
     /// -------
     /// result : ndarray
     ///     The result format depends on `result_format`.
-    ///     See :class:`CellListResult` for details.
+    ///     See :class:`CellList.Result` for details.
     ///
     /// See Also
     /// --------
@@ -723,7 +723,7 @@ impl CellList {
         )
     }
 
-    /// get_atoms_in_cells(coord, cell_radius=1, as_mask=False, result_format=CellListResult.MAPPING)
+    /// get_atoms_in_cells(coord, cell_radius=1, as_mask=False, result_format=CellList.Result.MAPPING)
     ///
     /// Find atoms with a maximum cell distance from given coordinates.
     ///
@@ -751,18 +751,18 @@ impl CellList {
     ///     By default, atoms are searched in the cell of `coord`
     ///     and directly adjacent cells (``cell_radius=1``).
     /// as_mask : bool, optional
-    ///     **Deprecated:** Use ``result_format=CellListResult.MASK`` instead.
+    ///     **Deprecated:** Use ``result_format=CellList.Result.MASK`` instead.
     ///     If true, the result is returned as boolean mask instead
     ///     of an index array.
-    /// result_format : CellListResult, optional
-    ///     The format of the result. See :class:`CellListResult` for options.
-    ///     Default is ``CellListResult.MAPPING``.
+    /// result_format : CellList.Result, optional
+    ///     The format of the result. See :class:`CellList.Result` for options.
+    ///     Default is ``CellList.Result.MAPPING``.
     ///
     /// Returns
     /// -------
     /// result : ndarray
     ///     The result format depends on `result_format`.
-    ///     See :class:`CellListResult` for details.
+    ///     See :class:`CellList.Result` for details.
     ///
     /// See Also
     /// --------
