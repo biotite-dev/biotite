@@ -16,3 +16,7 @@ features = ["extension-module"]
 name = "rust"
 crate-type = ["cdylib"]
 path = "src/rust/lib.rs"
+
+# Enable optimizations in dev mode for better performance during development
+[profile.dev]
+opt-level = 3

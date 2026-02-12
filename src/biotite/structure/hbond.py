@@ -12,8 +12,8 @@ __all__ = ["hbond", "hbond_frequency"]
 
 import warnings
 import numpy as np
+from biotite.rust.structure import CellList
 from biotite.structure.atoms import AtomArrayStack, stack
-from biotite.structure.celllist import CellList
 from biotite.structure.filter import filter_heavy
 from biotite.structure.geometry import angle, distance
 
@@ -295,7 +295,9 @@ def _hbond(
         cell_list = CellList(
             donor_h_coord, cell_size=cutoff_dist, periodic=periodic, box=box_for_model
         )
-        possible_bonds |= cell_list.get_atoms_in_cells(acceptor_coord, as_mask=True)
+        possible_bonds |= cell_list.get_atoms_in_cells(
+            acceptor_coord, result_format=CellList.Result.MASK
+        )
     possible_bonds_i = np.where(possible_bonds)
     # Narrow down
     acceptor_i = acceptor_i[possible_bonds_i[0]]

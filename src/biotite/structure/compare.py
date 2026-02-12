@@ -14,8 +14,8 @@ __all__ = ["rmsd", "rmspd", "rmsf", "average", "lddt"]
 import collections.abc
 import warnings
 import numpy as np
+from biotite.rust.structure import CellList
 from biotite.structure.atoms import AtomArray, AtomArrayStack, coord
-from biotite.structure.celllist import CellList
 from biotite.structure.chains import get_chain_count, get_chain_positions
 from biotite.structure.geometry import index_distance
 from biotite.structure.residues import get_residue_count, get_residue_positions
@@ -514,37 +514,6 @@ def _sq_euclidian(reference, subject):
     return vector_dot(dif, dif)
 
 
-def _to_sparse_indices(all_contacts):
-    """
-    Create tuples of contact indices from the :meth:`CellList.get_atoms()` return value.
-
-    In other words, they would mark the non-zero elements in a dense contact matrix.
-
-    Parameters
-    ----------
-    all_contacts : ndarray, dtype=int, shape=(m,n)
-        The contact indices as returned by :meth:`CellList.get_atoms()`.
-        Padded with -1, in the second dimension.
-        Dimension *m* marks the query atoms, dimension *n* marks the contact atoms.
-
-    Returns
-    -------
-    combined_indices : ndarray, dtype=int, shape=(l,2)
-        The contact indices.
-        Each column contains the query and contact atom index.
-    """
-    # Find rows where a query atom has at least one contact
-    non_empty_indices = np.where(np.any(all_contacts != -1, axis=1))[0]
-    # Take those rows and flatten them
-    contact_indices = all_contacts[non_empty_indices].flatten()
-    # For each row the corresponding query atom is the same
-    # Hence in the flattened form the query atom index is simply repeated
-    query_indices = np.repeat(non_empty_indices, all_contacts.shape[1])
-    combined_indices = np.stack([query_indices, contact_indices], axis=1)
-    # Remove the padding values
-    return combined_indices[contact_indices != -1]
-
-
 def _find_contacts(
     atoms=None,
     atom_mask=None,
@@ -600,20 +569,16 @@ def _find_contacts(
     cell_list = CellList(coords, inclusion_radius, selection=selection)
     # Pairs of indices for atoms within the inclusion radius
     if atom_mask is None:
-        all_contacts = cell_list.get_atoms(coords, inclusion_radius)
-    else:
-        filtered_contacts = cell_list.get_atoms(coords[atom_mask], inclusion_radius)
-        # Map the contacts for the masked atoms to the original coordinates
-        # Rows that were filtered out by the mask are fully padded with -1
-        # consistent with the padding of `get_atoms()`
-        all_contacts = np.full(
-            (coords.shape[0], filtered_contacts.shape[-1]),
-            -1,
-            dtype=filtered_contacts.dtype,
+        contacts = cell_list.get_atoms(
+            coords, inclusion_radius, result_format=CellList.Result.PAIRS
         )
-        all_contacts[atom_mask] = filtered_contacts
-    # Convert into pairs of indices
-    contacts = _to_sparse_indices(all_contacts)
+    else:
+        contacts = cell_list.get_atoms(
+            coords[atom_mask], inclusion_radius, result_format=CellList.Result.PAIRS
+        )
+        # Map indices from masked indices back to original indices
+        mapping = np.nonzero(atom_mask)[0]
+        contacts[:, 0] = mapping[contacts[:, 0]]
 
     if exclude_same_chain:
         # Do the same for the chain level

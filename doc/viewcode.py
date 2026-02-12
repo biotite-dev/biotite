@@ -10,14 +10,161 @@ lines at GitHub.
 __author__ = "Patrick Kunzmann"
 __all__ = ["linkcode_resolve"]
 
+import ast
 import inspect
+import re
+from enum import Enum, auto
 from importlib import import_module
-from os import listdir
-from os.path import dirname, isdir, join, splitext
+from pathlib import Path
 import biotite
 
 
-def _index_attributes(package_name, src_path):
+class Source(Enum):
+    """Type of source file for an attribute."""
+
+    PYTHON = auto()
+    CYTHON = auto()
+    RUST = auto()
+
+
+def _index_rust_code(code_lines):
+    """
+    Find the line position of structs and enums in *Rust* files.
+
+    This analyzer looks for `pub struct` and `pub enum` definitions
+    decorated with `#[pyclass]`.
+
+    Parameters
+    ----------
+    code_lines : list of str
+        The *Rust* source code split into lines.
+
+    Returns
+    -------
+    line_index : dict (str -> tuple(int, int))
+        Maps an attribute name to its first and last line in a Rust
+        module.
+    """
+    line_index = {}
+
+    # Track pyclass decorator lines
+    pyclass_line = None
+
+    for i, line in enumerate(code_lines):
+        stripped_line = line.strip()
+
+        # Skip empty and comment lines
+        if len(stripped_line) == 0 or stripped_line.startswith("//"):
+            continue
+
+        # Check for #[pyclass] decorator
+        if stripped_line.startswith("#[pyclass"):
+            pyclass_line = i
+            continue
+
+        # Check for pub struct or pub enum after pyclass
+        if pyclass_line is not None:
+            match = re.match(r"pub\s+(struct|enum)\s+(\w+)", stripped_line)
+            if match:
+                attr_name = match.group(2)
+                attr_line_start = pyclass_line
+
+                # Find the end of the struct/enum by matching braces
+                brace_count = 0
+                started = False
+                attr_line_stop = i + 1
+
+                for j in range(i, len(code_lines)):
+                    for char in code_lines[j]:
+                        if char == "{":
+                            brace_count += 1
+                            started = True
+                        elif char == "}":
+                            brace_count -= 1
+                    if started and brace_count == 0:
+                        attr_line_stop = j + 1
+                        break
+
+                line_index[attr_name] = (
+                    # 'One' based indexing
+                    attr_line_start + 1,
+                    # 'One' based indexing and inclusive stop
+                    attr_line_stop,
+                )
+            pyclass_line = None
+
+    return line_index
+
+
+def _index_rust_files(rust_src_path):
+    """
+    Index all Rust source files and their pyclass-decorated attributes.
+
+    Parameters
+    ----------
+    rust_src_path : Path
+        Path to the Rust source directory (src/rust).
+
+    Returns
+    -------
+    rust_attribute_index : dict(str -> str)
+        Maps attribute names to their Rust file paths (relative to src/).
+    rust_line_index : dict(str -> tuple(int, int))
+        Maps attribute names to their first and last line in the Rust file.
+    """
+    rust_attribute_index = {}
+    rust_line_index = {}
+
+    for file_path in rust_src_path.rglob("*.rs"):
+        lines = file_path.read_text().splitlines()
+        line_positions = _index_rust_code(lines)
+        for attr_name, (first, last) in line_positions.items():
+            # Path relative to src/ directory
+            rel_path = file_path.relative_to(rust_src_path.parent)
+            rust_attribute_index[attr_name] = str(rel_path)
+            rust_line_index[attr_name] = (first, last)
+
+    return rust_attribute_index, rust_line_index
+
+
+def _get_rust_imports(module_path):
+    """
+    Parse a Python module file to find attributes imported from biotite.rust.
+
+    Parameters
+    ----------
+    module_path : Path
+        Path to the Python module file.
+
+    Returns
+    -------
+    rust_imports : set of str
+        Names of attributes imported from biotite.rust.
+    """
+    rust_imports = set()
+
+    try:
+        tree = ast.parse(module_path.read_text())
+    except SyntaxError:
+        return rust_imports
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            if node.module and node.module.startswith("biotite.rust"):
+                for alias in node.names:
+                    # Use the local name (asname if aliased, otherwise name)
+                    local_name = alias.asname if alias.asname else alias.name
+                    rust_imports.add(local_name)
+
+    return rust_imports
+
+
+def _index_attributes(
+    package_name,
+    src_path,
+    rust_attribute_index=None,
+    rust_line_index=None,
+):
     """
     Assign a Python module to each combination of (sub)package and
     attribute (e.g. function, class, etc.) in a given (sub)package.
@@ -26,59 +173,60 @@ def _index_attributes(package_name, src_path):
     ----------
     package_name : str
         Name of the (sub)package.
-    src_path : str
+    src_path : Path
         File path to `package_name`.
+    rust_attribute_index, rust_line_index : dict or None
+        Indices for Rust attributes.
+        If None (first call), they are computed from the Rust source files.
 
-    Parameters
-    ----------
-    attribute_index : dict( tuple(str, str) -> (str, bool))
+    Returns
+    -------
+    attribute_index : dict( tuple(str, str) -> (str, Source))
         Maps the combination of (sub)package name and attribute to
-        the name of a Python module and to a boolean value that
-        indicates, whether it is a Cython module.
-    cython_line_index : dict( tuple(str, str) -> tuple(int, int) ) )
+        the name of a Python module and to the source type.
+    extension_line_index : dict( tuple(str, str) -> tuple(int, int) ) )
         Maps the combination of (sub)package name and attribute to
-        the first and last line in a Cython module.
-        Does not contain entries for attributes that are not part of a
-        Cython module.
+        the first and last line in an extension module (Cython or Rust).
+        Does not contain entries for attributes that are not part of an
+        extension module.
     """
+    if rust_attribute_index is None:
+        rust_attribute_index, rust_line_index = _index_rust_files(
+            src_path.parent / "rust"
+        )
+
     if not _is_package(src_path):
         # Directory is not a Python package/subpackage
         # -> Nothing to do
         return {}, {}
 
     attribute_index = {}
-    cython_line_index = {}
+    extension_line_index = {}
 
-    # Identify all subdirectories...
-    directory_content = listdir(src_path)
-    dirs = [f for f in directory_content if isdir(join(src_path, f))]
-    # ... and index them recursively
-    for directory in dirs:
-        sub_attribute_index, sub_cython_line_index = _index_attributes(
-            f"{package_name}.{directory}",
-            join(src_path, directory),
-        )
-        attribute_index.update(sub_attribute_index)
-        cython_line_index.update(sub_cython_line_index)
+    # Identify all subdirectories and index them recursively
+    for subdir in src_path.iterdir():
+        if subdir.is_dir():
+            sub_attribute_index, sub_extension_line_index = _index_attributes(
+                f"{package_name}.{subdir.name}",
+                subdir,
+                rust_attribute_index,
+                rust_line_index,
+            )
+            attribute_index.update(sub_attribute_index)
+            extension_line_index.update(sub_extension_line_index)
 
     # Import package
     package = import_module(package_name)
 
     # Import all modules in directory and index attributes
     source_files = [
-        file_name
-        for file_name in directory_content
-        if file_name != "__init__.py"
-        and (
-            # Standard Python modules
-            file_name.endswith(".py")
-            or
-            # Extension modules
-            file_name.endswith(".pyx")
-        )
+        f
+        for f in src_path.iterdir()
+        if f.is_file() and f.name != "__init__.py" and f.suffix in (".py", ".pyx")
     ]
+
     for source_file in source_files:
-        module_name = f"{package_name}.{splitext(source_file)[0]}"
+        module_name = f"{package_name}.{source_file.stem}"
         if module_name == "biotite.version":
             # Autogenerated module from hatch-vcs
             # It contains no '__all__' attribute on purpose
@@ -97,16 +245,33 @@ def _index_attributes(package_name, src_path):
         if not all([hasattr(package, attr) for attr in module.__all__]):
             continue
 
-        is_cython = source_file.endswith(".pyx")
-        for attribute in module.__all__:
-            attribute_index[(package_name, attribute)] = (module_name, is_cython)
-        if is_cython:
-            with open(join(src_path, source_file), "r") as cython_file:
-                lines = cython_file.read().splitlines()
-            for attribute, (first, last) in _index_cython_code(lines).items():
-                cython_line_index[(package_name, attribute)] = (first, last)
+        # Determine source type
+        is_cython = source_file.suffix == ".pyx"
+        rust_imports = set() if is_cython else _get_rust_imports(source_file)
 
-    return attribute_index, cython_line_index
+        for attribute in module.__all__:
+            if attribute in rust_imports and attribute in rust_attribute_index:
+                # Attribute is imported from Rust
+                source_type = Source.RUST
+                rust_file = rust_attribute_index[attribute]
+                attribute_index[(package_name, attribute)] = (rust_file, source_type)
+                if attribute in rust_line_index:
+                    extension_line_index[(package_name, attribute)] = rust_line_index[
+                        attribute
+                    ]
+            elif is_cython:
+                source_type = Source.CYTHON
+                attribute_index[(package_name, attribute)] = (module_name, source_type)
+            else:
+                source_type = Source.PYTHON
+                attribute_index[(package_name, attribute)] = (module_name, source_type)
+
+        if is_cython:
+            lines = source_file.read_text().splitlines()
+            for attribute, (first, last) in _index_cython_code(lines).items():
+                extension_line_index[(package_name, attribute)] = (first, last)
+
+    return attribute_index, extension_line_index
 
 
 def _index_cython_code(code_lines):
@@ -197,14 +362,12 @@ def _index_cython_code(code_lines):
 
 
 def _is_package(path):
-    content = listdir(path)
-    return "__init__.py" in content
+    return (path / "__init__.py").exists()
 
 
-_attribute_index, _cython_line_index = _index_attributes(
+_attribute_index, _extension_line_index = _index_attributes(
     "biotite",
-    # Directory to src/biotite
-    join(dirname(dirname(__file__)), "src", "biotite"),
+    Path(__file__).parent.parent / "src" / "biotite",
 )
 
 
@@ -218,36 +381,48 @@ def linkcode_resolve(domain, info):
     package_name = info["module"]
     attr_name = info["fullname"]
     try:
-        module_name, is_cython = _attribute_index[(package_name, attr_name)]
+        module_or_path, source_type = _attribute_index[(package_name, attr_name)]
     except KeyError:
         # The attribute is not defined within Biotite
         # It may be e.g. an inherited method from an external source
         return None
 
-    if is_cython:
-        if (package_name, attr_name) in _cython_line_index:
-            first, last = _cython_line_index[(package_name, attr_name)]
-            return base_url + f"{module_name.replace('.', '/')}.pyx#L{first}-L{last}"
-        else:
-            # In case the attribute is not found
-            # by the Cython code analyzer
-            return base_url + f"{module_name.replace('.', '/')}.pyx"
+    match source_type:
+        case Source.RUST:
+            if (package_name, attr_name) in _extension_line_index:
+                first, last = _extension_line_index[(package_name, attr_name)]
+                return base_url + f"{module_or_path}#L{first}-L{last}"
+            else:
+                return base_url + f"{module_or_path}"
 
-    else:
-        module = import_module(module_name)
+        case Source.CYTHON:
+            module_name = module_or_path
+            if (package_name, attr_name) in _extension_line_index:
+                first, last = _extension_line_index[(package_name, attr_name)]
+                return (
+                    base_url + f"{module_name.replace('.', '/')}.pyx#L{first}-L{last}"
+                )
+            else:
+                # In case the attribute is not found
+                # by the Cython code analyzer
+                return base_url + f"{module_name.replace('.', '/')}.pyx"
 
-        # Get the object defined by the attribute name,
-        # by traversing the 'attribute tree' to the leaf
-        obj = module
-        for attr_name_part in attr_name.split("."):
-            obj = getattr(obj, attr_name_part)
+        case Source.PYTHON:
+            module_name = module_or_path
+            module = import_module(module_name)
 
-        # Temporarily change the '__module__' attribute, which is set
-        # to the subpackage in Biotite, back to the actual module in
-        # order to fool Python's inspect module
-        obj.__module__ = module_name
+            # Get the object defined by the attribute name,
+            # by traversing the 'attribute tree' to the leaf
+            obj = module
+            for attr_name_part in attr_name.split("."):
+                obj = getattr(obj, attr_name_part)
 
-        source_lines, first = inspect.getsourcelines(obj)
-        last = first + len(source_lines) - 1
+            # Temporarily change the '__module__' attribute, which is set
+            # to the subpackage in Biotite, back to the actual module in
+            # order to fool Python's inspect module
+            obj.__module__ = module_name
 
-        return base_url + f"{module_name.replace('.', '/')}.py#L{first}-L{last}"
+            source_lines, first = inspect.getsourcelines(obj)
+            last = first + len(source_lines) - 1
+
+            return base_url + f"{module_name.replace('.', '/')}.py#L{first}-L{last}"
