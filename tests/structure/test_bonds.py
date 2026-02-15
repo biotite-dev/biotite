@@ -3,13 +3,13 @@
 # information.
 
 import itertools
+import pickle
 from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io as strucio
-import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
 
@@ -59,8 +59,19 @@ def test_creation(bond_list):
         [0, 4, 0],
         [4, 6, 0],
     ]
-    assert bond_list._max_bonds_per_atom == 3
-    assert bond_list._atom_count == 7
+    assert bond_list.get_atom_count() == 7
+
+
+@pytest.mark.parametrize("dim", [2, 3])
+def test_empty_creation(dim):
+    """
+    Test creating a :class:`BondList` with empty bonds, which should be equal to a
+    :class:`BondList` with no provided bonds.
+    """
+    N_ATOMS = 10
+    assert struc.BondList(
+        N_ATOMS, np.zeros((0, dim), dtype=np.int64)
+    ) == struc.BondList(N_ATOMS)
 
 
 def test_invalid_creation():
@@ -175,7 +186,6 @@ def test_add_two_bond_list():
     bond_list1 = struc.BondList(2, np.array([(0, 1)]))  # max_bond_per_atom=1
     bond_list2 = struc.BondList(3, np.array([(0, 1), (0, 2)]))  # max_bond_per_atom=2
     added_list = bond_list1 + bond_list2
-    assert added_list._max_bonds_per_atom == 2
     assert added_list.get_bonds(2)[0].tolist() == [3, 4]
     assert added_list.as_array().tolist() == [[0, 1, 0], [2, 3, 0], [2, 4, 0]]
 
@@ -246,8 +256,7 @@ def test_concatenation(bond_list):
         [7, 8, 2],
         [8, 9, 2],
     ]
-    assert bond_list._max_bonds_per_atom == 3
-    assert bond_list._atom_count == 10
+    assert bond_list.get_atom_count() == 10
 
 
 def test_indexing(bond_list):
@@ -556,7 +565,7 @@ def test_find_rotatable_bonds(res_name, expected_bonds):
 
 
 @pytest.mark.parametrize(
-    "cif_path, expected_bond_idces",
+    "cif_path, expected_bond_indices",
     [
         (
             join(data_dir("structure"), "3o5r.cif"),
@@ -564,7 +573,7 @@ def test_find_rotatable_bonds(res_name, expected_bonds):
         )
     ],
 )
-def test_canonical_bonds_with_altloc_occupancy(cif_path, expected_bond_idces):
+def test_canonical_bonds_with_altloc_occupancy(cif_path, expected_bond_indices):
     """
     Test whether canonical inter-residue bonds are correctly computed when
     `altloc="occupancy"` and the higher-occupancy atom occurs second in the CIF file.
@@ -575,7 +584,15 @@ def test_canonical_bonds_with_altloc_occupancy(cif_path, expected_bond_idces):
         cif_file.block, altloc="occupancy", include_bonds=True
     )
 
-    atom1, atom2 = expected_bond_idces
+    atom1, atom2 = expected_bond_indices
 
     # Assert that the canonical inter-residue bond exists
     assert atom2 in atom_array.bonds.get_bonds(atom1)[0]
+
+
+def test_pickle(bond_list):
+    """
+    Check that a BondList survives a pickle round-trip unchanged.
+    """
+    restored = pickle.loads(pickle.dumps(bond_list))
+    assert restored == bond_list

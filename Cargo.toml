@@ -7,6 +7,7 @@ edition = "2018"
 numpy = "0.27"
 ndarray = "0.17"
 num-traits = "0.2"
+smallvec = "1"
 
 [dependencies.pyo3]
 version = "0.27"
