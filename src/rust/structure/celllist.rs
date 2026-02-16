@@ -1,3 +1,5 @@
+use crate::structure::util::{distance_squared, extract_coord};
+use crate::util::check_signals_periodically;
 use numpy::ndarray::Array2;
 use numpy::{IntoPyArray, PyArray2, PyReadonlyArray2};
 use pyo3::exceptions;
@@ -81,13 +83,13 @@ pub enum CellListResult {
     PAIRS,
 }
 
-/// Internal enum for efficient support of both single and multiple radii
+/// Enum for efficient support of both single and multiple radii
 /// given in :meth:`CellList.get_atoms` and :meth:`CellList.get_atoms_in_cells`.
 ///
 /// This avoids the overhead of always allocating a ``Vec`` when a single radius
 /// is provided, which is the common case.
 #[derive(Clone, Debug)]
-enum Radius<T> {
+pub enum Radius<T> {
     /// A single radius value applied to all coordinates.
     Single(T),
     /// Individual radius values for each coordinate.
@@ -357,7 +359,7 @@ pub struct CellList {
 impl CellList {
     #[new]
     #[pyo3(signature = (atom_array, cell_size, periodic=false, r#box=None, selection=None))]
-    fn new<'py>(
+    fn from_python_objects<'py>(
         py: Python<'py>,
         atom_array: Bound<'py, PyAny>,
         cell_size: f32,
@@ -438,49 +440,7 @@ impl CellList {
             orig_length = coord_object.call_method0("__len__")?.extract()?;
         }
         let coord: Vec<[f32; 3]> = extract_coord(coord_object.extract::<PyReadonlyArray2<f32>>()?)?;
-        let coord_range: [[f32; 3]; 2] = calculate_coord_range(&coord)?;
-
-        if let Some(ref sel) = selection {
-            if sel.len() != orig_length {
-                return Err(exceptions::PyIndexError::new_err(format!(
-                    "Atom array has length {}, but selection has length {}",
-                    orig_length,
-                    sel.len()
-                )));
-            }
-        }
-
-        let mut positions: Vec<[usize; 3]> = Vec::with_capacity(coord.len());
-        let mut elements: Vec<usize> = Vec::with_capacity(coord.len());
-        for (i, coord) in coord.iter().enumerate() {
-            if let Some(ref selection) = selection {
-                if !selection[i % orig_length] {
-                    continue;
-                }
-            }
-            positions
-                .push(as_usize(Self::get_cell_position(*coord, &coord_range, cell_size)).unwrap());
-            elements.push(i);
-        }
-        // To get the number of cells in each dimension, use the position of the maximum coordinate
-        let dimensions: [usize; 3] =
-            Self::get_cell_position(coord_range[1], &coord_range, cell_size)
-                .iter()
-                .map(|x| (x + 1) as usize)
-                .collect::<Vec<usize>>()
-                .try_into()
-                .unwrap();
-        let cells = CellGrid::from_elements(dimensions, positions, elements);
-
-        Ok(CellList {
-            coord,
-            selection,
-            cells,
-            cell_size,
-            coord_range,
-            periodic_box,
-            orig_length,
-        })
+        Self::new(coord, cell_size, periodic_box, selection, orig_length)
     }
 
     /// Reconstruct a :class:`CellList` from its serialized state.
@@ -803,29 +763,56 @@ impl CellList {
 }
 
 impl CellList {
-    /// Convert a 3D coordinate to the corresponding cell position in the grid.
-    ///
-    /// Given a coordinate *[x, y, z]*, this computes the cell indices *[i, j, k]*
-    /// based on the coordinate range and cell size.
-    ///
-    /// Returns
-    /// -------
-    /// The cell position *[i, j, k]*. Note that negative indices or indices
-    /// exceeding the grid dimensions can be returned if the coordinate is
-    /// outside the original coordinate range. The :class:`CellGrid` handles
-    /// out-of-bounds access gracefully by returning empty slices.
-    #[inline(always)]
-    fn get_cell_position(
-        coord: [f32; 3],
-        coord_range: &[[f32; 3]; 2],
-        cellsize: f32,
-    ) -> [isize; 3] {
-        [
-            // Conversion to 'isize' automatically floors the result
-            ((coord[0] - coord_range[0][0]) / cellsize) as isize,
-            ((coord[1] - coord_range[0][1]) / cellsize) as isize,
-            ((coord[2] - coord_range[0][2]) / cellsize) as isize,
-        ]
+    pub fn new(
+        coord: Vec<[f32; 3]>,
+        cell_size: f32,
+        periodic_box: Option<[[f32; 3]; 3]>,
+        selection: Option<Vec<bool>>,
+        orig_length: usize,
+    ) -> PyResult<Self> {
+        let coord_range: [[f32; 3]; 2] = calculate_coord_range(&coord)?;
+
+        if let Some(ref sel) = selection {
+            if sel.len() != orig_length {
+                return Err(exceptions::PyIndexError::new_err(format!(
+                    "Atom array has length {}, but selection has length {}",
+                    orig_length,
+                    sel.len()
+                )));
+            }
+        }
+
+        let mut positions: Vec<[usize; 3]> = Vec::with_capacity(coord.len());
+        let mut elements: Vec<usize> = Vec::with_capacity(coord.len());
+        for (i, coord) in coord.iter().enumerate() {
+            if let Some(ref selection) = selection {
+                if !selection[i % orig_length] {
+                    continue;
+                }
+            }
+            positions
+                .push(as_usize(Self::get_cell_position(*coord, &coord_range, cell_size)).unwrap());
+            elements.push(i);
+        }
+        // To get the number of cells in each dimension, use the position of the maximum coordinate
+        let dimensions: [usize; 3] =
+            Self::get_cell_position(coord_range[1], &coord_range, cell_size)
+                .iter()
+                .map(|x| (x + 1) as usize)
+                .collect::<Vec<usize>>()
+                .try_into()
+                .unwrap();
+        let cells = CellGrid::from_elements(dimensions, positions, elements);
+
+        Ok(CellList {
+            coord,
+            selection,
+            cells,
+            cell_size,
+            coord_range,
+            periodic_box,
+            orig_length,
+        })
     }
 
     /// Find atoms within a Euclidean distance from given coordinates.
@@ -839,7 +826,7 @@ impl CellList {
     ///     A vector of *[query_idx, atom_idx]* pairs where ``atom_idx`` may refer to
     ///     periodic copies (``indices >= orig_length``). The caller is responsible for
     ///     mapping these back to original indices using ``atom_idx % orig_length``.
-    fn get_atoms_from_slice(
+    pub fn get_atoms_from_slice(
         &self,
         py: Python<'_>,
         coord: &[[f32; 3]],
@@ -900,7 +887,7 @@ impl CellList {
     ///     the full coordinate array, which may include periodic copies when
     ///     ``periodic=True``. These indices can exceed ``orig_length`` and should be
     ///     mapped back using ``atom_idx % orig_length`` when needed.
-    fn get_atoms_in_cells_from_slice(
+    pub fn get_atoms_in_cells_from_slice(
         &self,
         py: Python<'_>,
         coord: &[[f32; 3]],
@@ -942,14 +929,34 @@ impl CellList {
                     }
                 }
             }
-            // The size of `coord` is arbitrary
-            // -> the function may take a long time to complete
-            // Check for interrupts periodically (every 256 coords)
-            if coord_idx & 0xFF == 0 {
-                py.check_signals()?;
-            }
+            check_signals_periodically(py, coord_idx)?;
         }
         Ok(adjacent_atoms)
+    }
+
+    /// Convert a 3D coordinate to the corresponding cell position in the grid.
+    ///
+    /// Given a coordinate *[x, y, z]*, this computes the cell indices *[i, j, k]*
+    /// based on the coordinate range and cell size.
+    ///
+    /// Returns
+    /// -------
+    /// The cell position *[i, j, k]*. Note that negative indices or indices
+    /// exceeding the grid dimensions can be returned if the coordinate is
+    /// outside the original coordinate range. The :class:`CellGrid` handles
+    /// out-of-bounds access gracefully by returning empty slices.
+    #[inline(always)]
+    fn get_cell_position(
+        coord: [f32; 3],
+        coord_range: &[[f32; 3]; 2],
+        cellsize: f32,
+    ) -> [isize; 3] {
+        [
+            // Conversion to 'isize' automatically floors the result
+            ((coord[0] - coord_range[0][0]) / cellsize) as isize,
+            ((coord[1] - coord_range[0][1]) / cellsize) as isize,
+            ((coord[2] - coord_range[0][2]) / cellsize) as isize,
+        ]
     }
 
     /// Convert Python coordinate input to a uniform Rust representation.
@@ -1078,55 +1085,6 @@ fn calculate_coord_range(coord: &[[f32; 3]]) -> PyResult<[[f32; 3]; 2]> {
     Ok([min_coord, max_coord])
 }
 
-/// Extract coordinates from a 2D NumPy array into a ``Vec<[f32; 3]>``.
-///
-/// Raises
-/// ------
-/// PyValueError
-///     If the array does not have shape *(n, 3)* or contains non-finite values (NaN or Inf).
-fn extract_coord(coord_array: PyReadonlyArray2<f32>) -> PyResult<Vec<[f32; 3]>> {
-    let coord_ndarray = coord_array.as_array();
-    let shape = coord_ndarray.shape();
-    if shape.len() != 2 {
-        return Err(exceptions::PyValueError::new_err(
-            "Coordinates must have shape (n,3)",
-        ));
-    }
-    if shape[1] != 3 {
-        return Err(exceptions::PyValueError::new_err(
-            "Coordinates must have form (x,y,z)",
-        ));
-    }
-    if !coord_ndarray.is_all_infinite() {
-        return Err(exceptions::PyValueError::new_err(
-            "Coordinates contain non-finite values",
-        ));
-    }
-
-    // Try to access as contiguous slice for maximum efficiency
-    if let Some(slice) = coord_ndarray.as_slice() {
-        // Data is contiguous in memory, we can reinterpret directly
-        let n_coords = shape[0];
-        let mut result: Vec<[f32; 3]> = Vec::with_capacity(n_coords);
-        for i in 0..n_coords {
-            let base = i * 3;
-            result.push([slice[base], slice[base + 1], slice[base + 2]]);
-        }
-        Ok(result)
-    } else {
-        // Fallback for non-contiguous arrays (e.g., transposed or sliced)
-        let mut result: Vec<[f32; 3]> = Vec::with_capacity(shape[0]);
-        for i in 0..shape[0] {
-            result.push([
-                coord_ndarray[[i, 0]],
-                coord_ndarray[[i, 1]],
-                coord_ndarray[[i, 2]],
-            ]);
-        }
-        Ok(result)
-    }
-}
-
 /// Convert an ``[isize; 3]`` to ``[usize; 3]`` if all elements are non-negative.
 ///
 /// Returns ``None`` if any element is negative.
@@ -1138,15 +1096,6 @@ fn as_usize(x: [isize; 3]) -> Option<[usize; 3]> {
         }
     }
     Some([x[0] as usize, x[1] as usize, x[2] as usize])
-}
-
-/// Compute the squared Euclidean distance between two 3D points.
-///
-/// Using squared distance avoids the expensive square root operation,
-/// which is sufficient for distance comparisons.
-#[inline(always)]
-fn distance_squared(a: [f32; 3], b: [f32; 3]) -> f32 {
-    (a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)
 }
 
 /// Format query results as a mapping array (the default format).

@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
 mod structure;
+pub mod util;
 
 /// Add a submodule to a module and make it discoverable as package
 fn add_subpackage(
