@@ -852,6 +852,17 @@ def _get_box(block):
     return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
 
 
+def _get_chem_comp_bond_type(bond_type):
+    try:
+        return COMP_BOND_TYPE_TO_ORDER[bond_type]
+    except KeyError:
+        warnings.warn(
+            f"Bond type '{BondType(bond_type).name}' is not recognized by "
+            "'chem_comp_bond', a single bond will be assigned instead"
+        )
+        return ("SING", "N")
+
+
 def set_structure(
     pdbx_file,
     array,
@@ -1147,7 +1158,7 @@ def _set_intra_residue_bonds(array, atom_site):
         if bond_type == BondType.ANY:
             # ANY bonds will be masked anyway, no need to set the value
             continue
-        order, aromatic = COMP_BOND_TYPE_TO_ORDER[bond_type]
+        order, aromatic = _get_chem_comp_bond_type(bond_type)
         value_order[i] = order
         aromatic_flag[i] = aromatic
     any_mask = bond_array[:, 2] == BondType.ANY
@@ -1520,7 +1531,7 @@ def set_component(pdbx_file, array, data_block=None):
         order_flags = []
         aromatic_flags = []
         for bond_type in bond_array[:, 2]:
-            order_flag, aromatic_flag = COMP_BOND_TYPE_TO_ORDER[bond_type]
+            order_flag, aromatic_flag = _get_chem_comp_bond_type(bond_type)
             order_flags.append(order_flag)
             aromatic_flags.append(aromatic_flag)
 
