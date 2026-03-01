@@ -7,6 +7,8 @@ use smallvec::SmallVec;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 
+const TYPICAL_MAX_BONDS_PER_ATOM: usize = 4;
+
 /// Rust reflection of the :class:`BondType` enum.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[repr(u8)]
@@ -478,36 +480,46 @@ impl BondList {
     ///     The third column stores the :class:`BondType`.
     fn as_array<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray2<u32>> {
         let n_bonds = self.bonds.len();
-        let mut data: Vec<u32> = Vec::with_capacity(n_bonds * 3);
-        for bond in &self.bonds {
-            data.push(bond.atom1 as u32);
-            data.push(bond.atom2 as u32);
-            data.push(bond.bond_type as u32);
+        // Allocate uninitialized numpy array and write directly
+        let mut array = Array2::<u32>::uninit([n_bonds, 3]);
+        // SAFETY: The indices are created in this function and are within the bounds
+        unsafe {
+            let slice = array.as_slice_mut().expect("Array not contiguous");
+            for (i, bond) in self.bonds.iter().enumerate() {
+                let slice_i = i * 3;
+                slice.get_unchecked_mut(slice_i).write(bond.atom1 as u32);
+                slice
+                    .get_unchecked_mut(slice_i + 1)
+                    .write(bond.atom2 as u32);
+                slice
+                    .get_unchecked_mut(slice_i + 2)
+                    .write(bond.bond_type as u32);
+            }
         }
-        Array2::from_shape_vec((n_bonds, 3), data)
-            .expect("Shape mismatch")
-            .into_pyarray(py)
+        // SAFETY: In the previous block, we have written all elements of the array
+        let array = unsafe { array.assume_init() };
+        array.into_pyarray(py)
     }
 
     /// Obtain a set representation of the :class:`BondList`.
     ///
     /// Returns
     /// -------
-    /// bond_set : set of tuple(int, int, BondType)
+    /// bond_set : set of tuple(int, int, int)
     ///     A set of tuples.
     ///     Each tuple represents one bond:
     ///     The first integer represents the first atom,
     ///     the second integer represents the second atom,
-    ///     the third value represents the :class:`BondType`.
+    ///     the third integer represents the :class:`BondType`.
     fn as_set<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PySet>> {
         let set = PySet::empty(py)?;
         for bond in &self.bonds {
             let tuple = PyTuple::new(
                 py,
                 [
-                    bond.atom1.into_pyobject(py)?.into_any(),
-                    bond.atom2.into_pyobject(py)?.into_any(),
-                    bond.bond_type.into_pyobject(py)?.into_any(),
+                    (bond.atom1).into_pyobject(py)?.into_any(),
+                    (bond.atom2).into_pyobject(py)?.into_any(),
+                    (bond.bond_type as u32).into_pyobject(py)?.into_any(),
                 ],
             )?;
             set.add(tuple)?;
@@ -742,11 +754,8 @@ impl BondList {
     ///     to the respective atom.
     ///     Atoms can have have different numbers of atoms bonded to
     ///     them.
-    ///     Therefore, the length of the second dimension *k* is equal
-    ///     to the maximum number of bonds for an atom in this
-    ///     :class:`BondList`.
-    ///     For atoms with less bonds, the corresponding entry in the
-    ///     array is padded with ``-1`` values.
+    ///     Hence, each column in the
+    ///     array may be padded with ``-1`` values.
     /// bond_types : np.ndarray, dtype=np.int8, shape=(n,k)
     ///     Array of integers, interpreted as :class:`BondType`
     ///     instances.
@@ -825,30 +834,11 @@ impl BondList {
         &self,
         py: Python<'py>,
     ) -> (Bound<'py, PyArray2<i32>>, Bound<'py, PyArray2<i8>>) {
-        let n_atoms = self.atom_count;
-
-        // Collect bonds per atom using SmallVec to avoid heap allocation,
-        // as usually in chemistry an atom has a maximum of 4 bonds
-        let mut per_atom: Vec<SmallVec<[(i32, i8); 4]>> = vec![SmallVec::new(); n_atoms];
-
-        for bond in &self.bonds {
-            let bt = bond.bond_type as i8;
-            per_atom[bond.atom1].push((bond.atom2 as i32, bt));
-            per_atom[bond.atom2].push((bond.atom1 as i32, bt));
-        }
-
-        let max_bonds_per_atom = per_atom.iter().map(|v| v.len()).max().unwrap_or(0);
-        let mut bonds_matrix = Array2::from_elem((n_atoms, max_bonds_per_atom), -1i32);
-        let mut types_matrix = Array2::from_elem((n_atoms, max_bonds_per_atom), -1i8);
-
-        for (i, entries) in per_atom.iter().enumerate() {
-            for (j, &(atom_idx, bt)) in entries.iter().enumerate() {
-                bonds_matrix[[i, j]] = atom_idx;
-                types_matrix[[i, j]] = bt;
-            }
-        }
-
-        (bonds_matrix.into_pyarray(py), types_matrix.into_pyarray(py))
+        let (bonds, types) = match self.get_all_bonds_typical() {
+            Some(result) => result,
+            None => self.get_all_bonds_atypical(),
+        };
+        (bonds.into_pyarray(py), types.into_pyarray(py))
     }
 
     /// Represent this :class:`BondList` as adjacency matrix.
@@ -1174,7 +1164,7 @@ impl BondList {
         let target = match Bond::new(item.0, item.1, BondType::Any, self.atom_count) {
             Ok(bond) => bond,
             // If the atom indices are out of range, the bond is not part of the bond list
-            Err(e) => return Ok(false),
+            Err(_) => return Ok(false),
         };
         Ok(self.bonds.iter().any(|bond| bond.equal_atoms(&target)))
     }
@@ -1284,14 +1274,86 @@ impl BondList {
         let mut seen_per_atom: Vec<SmallVec<[usize; TYPICAL_MAX_BONDS_PER_ATOM]>> =
             vec![SmallVec::new(); self.atom_count];
         self.bonds.retain(|bond| {
-            let key = (bond.atom1, bond.atom2);
-            if seen.contains(&key) {
+            let neighbors = &mut seen_per_atom[bond.atom1];
+            if neighbors.contains(&bond.atom2) {
                 false
             } else {
-                seen.insert(key);
+                neighbors.push(bond.atom2);
                 true
             }
         });
+    }
+
+    /// Optimistic one-pass method for `get_all_bonds`.
+    /// Pre-allocates arrays assuming at most `TYPICAL_MAX_BONDS_PER_ATOM` bonds per atom.
+    /// Returns `None` if any atom exceeds that limit.
+    fn get_all_bonds_typical(&self) -> Option<(Array2<i32>, Array2<i8>)> {
+        let k = TYPICAL_MAX_BONDS_PER_ATOM;
+        let total = self.atom_count * k;
+        let mut bonds_data: Vec<i32> = vec![-1i32; total];
+        let mut types_data: Vec<i8> = vec![-1i8; total];
+        let mut counts: Vec<usize> = vec![0; self.atom_count];
+
+        for bond in &self.bonds {
+            let bt = bond.bond_type as i8;
+            let a1 = bond.atom1;
+            let a2 = bond.atom2;
+
+            if counts[a1] >= k || counts[a2] >= k {
+                return None;
+            }
+
+            bonds_data[a1 * k + counts[a1]] = a2 as i32;
+            types_data[a1 * k + counts[a1]] = bt;
+            counts[a1] += 1;
+
+            bonds_data[a2 * k + counts[a2]] = a1 as i32;
+            types_data[a2 * k + counts[a2]] = bt;
+            counts[a2] += 1;
+        }
+
+        Some((
+            Array2::from_shape_vec((self.atom_count, k), bonds_data).expect("Shape mismatch"),
+            Array2::from_shape_vec((self.atom_count, k), types_data).expect("Shape mismatch"),
+        ))
+    }
+
+    /// Two-pass fallback for `get_all_bonds`.
+    /// First counts bonds per atom to determine the exact column count,
+    /// then fills the arrays.
+    fn get_all_bonds_atypical(&self) -> (Array2<i32>, Array2<i8>) {
+        let mut counts: Vec<usize> = vec![0; self.atom_count];
+        for bond in &self.bonds {
+            counts[bond.atom1] += 1;
+            counts[bond.atom2] += 1;
+        }
+        let max_bonds = counts.iter().copied().max().unwrap_or(0);
+
+        let total = self.atom_count * max_bonds;
+        let mut bonds_data: Vec<i32> = vec![-1i32; total];
+        let mut types_data: Vec<i8> = vec![-1i8; total];
+
+        counts.fill(0);
+        for bond in &self.bonds {
+            let bt = bond.bond_type as i8;
+            let a1 = bond.atom1;
+            let a2 = bond.atom2;
+
+            bonds_data[a1 * max_bonds + counts[a1]] = a2 as i32;
+            types_data[a1 * max_bonds + counts[a1]] = bt;
+            counts[a1] += 1;
+
+            bonds_data[a2 * max_bonds + counts[a2]] = a1 as i32;
+            types_data[a2 * max_bonds + counts[a2]] = bt;
+            counts[a2] += 1;
+        }
+
+        (
+            Array2::from_shape_vec((self.atom_count, max_bonds), bonds_data)
+                .expect("Shape mismatch"),
+            Array2::from_shape_vec((self.atom_count, max_bonds), types_data)
+                .expect("Shape mismatch"),
+        )
     }
 
     /// Index the bond list with a boolean mask.

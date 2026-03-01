@@ -10,6 +10,7 @@ import pytest
 import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
 
@@ -158,13 +159,9 @@ def test_concatenation_and_splitting(seed):
     split_bond_lists = []
     starts = [0]
     for _ in range(N_BOND_LISTS):
-        n_atoms = rng.integers(1, MAX_ATOMS)
-        bonds = rng.integers(0, n_atoms, size=(MAX_BONDS, 2))
-        bond_types = rng.integers(0, len(struc.BondType), size=MAX_BONDS)
+        n_atoms = rng.integers(2, MAX_ATOMS)
         split_bond_lists.append(
-            struc.BondList(
-                n_atoms, np.concatenate([bonds, bond_types[:, np.newaxis]], axis=1)
-            )
+            generate_random_bond_list(n_atoms, MAX_BONDS, seed=seed)
         )
         starts.append(starts[-1] + n_atoms)
 
@@ -288,11 +285,43 @@ def test_indexing(bond_list):
     assert sub_list.as_array().tolist() == [[1, 2, 0], [0, 2, 0], [2, 3, 0]]
 
 
-def test_get_all_bonds():
+def test_get_all_bonds_typical():
     """
     Test whether the individual rows returned from
     :func:`get_all_bonds()` are equal to corresponding calls of
     :func:`get_bonds()`.
+
+    The bonds are taken from a real structure, so no atom exceeds 4 bonds per atom.
+    """
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    atoms = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
+
+    bonds, bond_types = atoms.bonds.get_all_bonds()
+
+    assert (bonds != -1).all(axis=1).any(axis=0)
+    assert (bond_types != -1).all(axis=1).any(axis=0)
+
+    test_bonds = [
+        (bonded_i[bonded_i != -1].tolist(), bond_type[bond_type != -1].tolist())
+        for bonded_i, bond_type in zip(bonds, bond_types)
+    ]
+
+    ref_bonds = [atoms.bonds.get_bonds(i) for i in range(atoms.array_length())]
+    ref_bonds = [
+        (bonded_i.tolist(), bond_type.tolist()) for bonded_i, bond_type in ref_bonds
+    ]
+
+    assert test_bonds == ref_bonds
+
+
+def test_get_all_bonds_atypical():
+    """
+    Test whether the individual rows returned from
+    :func:`get_all_bonds()` are equal to corresponding calls of
+    :func:`get_bonds()`.
+
+    The average number of bonds per atom is greater than the typical maximum of 4,
+    so the internal fallback method is used.
     """
     ATOM_COUNT = 100
     BOND_COUNT = 500
