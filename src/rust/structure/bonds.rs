@@ -119,6 +119,11 @@ impl Bond {
     fn new(atom1: isize, atom2: isize, bond_type: BondType, atom_count: usize) -> PyResult<Self> {
         let a1 = to_positive_index(atom1, atom_count)?;
         let a2 = to_positive_index(atom2, atom_count)?;
+        if a1 == a2 {
+            return Err(exceptions::PyValueError::new_err(
+                "An atom cannot be bonded to itself",
+            ));
+        }
         let (a1, a2) = if a1 <= a2 { (a1, a2) } else { (a2, a1) };
         Ok(Bond {
             atom1: a1,
