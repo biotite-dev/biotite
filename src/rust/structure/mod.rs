@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 
 pub mod bonds;
 pub mod celllist;
+pub mod connect;
 pub mod io;
 pub mod sasa;
 pub mod util;
@@ -13,6 +14,13 @@ pub fn module<'py>(parent_module: &Bound<'py, PyModule>) -> PyResult<Bound<'py, 
     module.add_class::<celllist::CellList>()?;
     module.add_class::<celllist::CellListResult>()?;
     module.add_function(wrap_pyfunction!(bonds::bond_type_members, &module)?)?;
+    module.add_function(wrap_pyfunction!(
+        connect::connect_via_residue_names,
+        &module
+    )?)?;
+    module.add_function(wrap_pyfunction!(connect::connect_inter_residue, &module)?)?;
+    module.add_function(wrap_pyfunction!(connect::connect_via_distances, &module)?)?;
+    module.add_function(wrap_pyfunction!(connect::find_connected, &module)?)?;
     module.add_function(wrap_pyfunction!(sasa::sasa, &module)?)?;
     add_subpackage(&module, &io::module(&module)?, "biotite.rust.structure.io")?;
     Ok(module)

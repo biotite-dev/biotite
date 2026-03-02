@@ -300,7 +300,7 @@ pub struct BondList {
 impl BondList {
     #[new]
     #[pyo3(signature = (atom_count, bonds=None))]
-    fn new<'py>(
+    pub fn new<'py>(
         py: Python<'py>,
         atom_count: usize,
         bonds: Option<&Bound<'py, PyAny>>,
@@ -398,7 +398,7 @@ impl BondList {
     ///  [2 3]
     ///  [2 4]]
     #[staticmethod]
-    fn concatenate(bond_lists: Vec<BondList>) -> PyResult<BondList> {
+    pub fn concatenate(bond_lists: Vec<BondList>) -> PyResult<BondList> {
         if bond_lists.is_empty() {
             return Ok(BondList {
                 atom_count: 0,
@@ -453,7 +453,7 @@ impl BondList {
     /// [[2 3 0]
     ///  [3 5 0]
     ///  [3 6 0]]
-    fn offset_indices(&mut self, offset: isize) -> PyResult<()> {
+    pub fn offset_indices(&mut self, offset: isize) -> PyResult<()> {
         if offset < 0 {
             return Err(exceptions::PyValueError::new_err("Offset must be positive"));
         }
@@ -478,7 +478,7 @@ impl BondList {
     ///     first atom, the second column the index of the second atom
     ///     involved in the bond.
     ///     The third column stores the :class:`BondType`.
-    fn as_array<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray2<u32>> {
+    pub fn as_array<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray2<u32>> {
         let n_bonds = self.bonds.len();
         // Allocate uninitialized numpy array and write directly
         let mut array = Array2::<u32>::uninit([n_bonds, 3]);
@@ -511,7 +511,7 @@ impl BondList {
     ///     The first integer represents the first atom,
     ///     the second integer represents the second atom,
     ///     the third integer represents the :class:`BondType`.
-    fn as_set<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PySet>> {
+    pub fn as_set<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PySet>> {
         let set = PySet::empty(py)?;
         for bond in &self.bonds {
             let tuple = PyTuple::new(
@@ -553,7 +553,7 @@ impl BondList {
     /// 0 1 {'bond_type': <BondType.DOUBLE: 2>}
     /// 1 3 {'bond_type': <BondType.SINGLE: 1>}
     /// 1 4 {'bond_type': <BondType.SINGLE: 1>}
-    fn as_graph<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+    pub fn as_graph<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let nx = PyModule::import(py, "networkx")?;
         let graph = nx.call_method0("Graph")?;
 
@@ -592,7 +592,7 @@ impl BondList {
     /// ...     print(i, j, BondType(bond_type).name)
     /// 0 1 SINGLE
     /// 1 2 DOUBLE
-    fn remove_aromaticity(&mut self) {
+    pub fn remove_aromaticity(&mut self) {
         for bond in &mut self.bonds {
             bond.bond_type = bond.bond_type.without_aromaticity();
         }
@@ -612,7 +612,7 @@ impl BondList {
     /// ...     print(i, j, BondType(bond_type).name)
     /// 0 1 AROMATIC
     /// 1 2 AROMATIC
-    fn remove_kekulization(&mut self) {
+    pub fn remove_kekulization(&mut self) {
         for bond in &mut self.bonds {
             if matches!(
                 bond.bond_type,
@@ -624,7 +624,7 @@ impl BondList {
     }
 
     /// Convert all bonds to :attr:`BondType.ANY`.
-    fn remove_bond_order(&mut self) {
+    pub fn remove_bond_order(&mut self) {
         for bond in &mut self.bonds {
             bond.bond_type = BondType::Any;
         }
@@ -659,7 +659,7 @@ impl BondList {
     /// 0 1 DOUBLE
     /// 1 2 SINGLE
     /// 2 3 SINGLE
-    fn convert_bond_type(&mut self, original_bond_type: BondType, new_bond_type: BondType) {
+    pub fn convert_bond_type(&mut self, original_bond_type: BondType, new_bond_type: BondType) {
         for bond in &mut self.bonds {
             if bond.bond_type == original_bond_type {
                 bond.bond_type = new_bond_type;
@@ -673,7 +673,7 @@ impl BondList {
     /// -------
     /// atom_count : int
     ///     The atom count.
-    fn get_atom_count(&self) -> usize {
+    pub fn get_atom_count(&self) -> usize {
         self.atom_count
     }
 
@@ -684,7 +684,7 @@ impl BondList {
     /// bond_count : int
     ///     The number of bonds. This is equal to the length of the
     ///     internal :class:`ndarray` containing the bonds.
-    fn get_bond_count(&self) -> usize {
+    pub fn get_bond_count(&self) -> usize {
         self.bonds.len()
     }
 
@@ -716,7 +716,7 @@ impl BondList {
     /// >>> print(bonds)
     /// [0 3 4]
     #[allow(clippy::type_complexity)]
-    fn get_bonds<'py>(
+    pub fn get_bonds<'py>(
         &self,
         py: Python<'py>,
         atom_index: isize,
@@ -830,7 +830,7 @@ impl BondList {
     /// 9: [3]
     /// 10: [4]
     /// 11: [5]
-    fn get_all_bonds<'py>(
+    pub fn get_all_bonds<'py>(
         &self,
         py: Python<'py>,
     ) -> (Bound<'py, PyArray2<i32>>, Bound<'py, PyArray2<i8>>) {
@@ -878,7 +878,7 @@ impl BondList {
     ///  [ True False False False]
     ///  [ True False False False]
     ///  [ True False False False]]
-    fn adjacency_matrix<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray2<bool>> {
+    pub fn adjacency_matrix<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray2<bool>> {
         let n = self.atom_count;
         let mut matrix = Array2::from_elem((n, n), false);
         for bond in &self.bonds {
@@ -925,7 +925,7 @@ impl BondList {
     ///  [ 2 -1 -1 -1]
     ///  [ 1 -1 -1 -1]
     ///  [ 1 -1 -1 -1]]
-    fn bond_type_matrix<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray2<i8>> {
+    pub fn bond_type_matrix<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray2<i8>> {
         let n = self.atom_count;
         let mut matrix = Array2::from_elem((n, n), -1i8);
         for bond in &self.bonds {
@@ -949,7 +949,7 @@ impl BondList {
     /// bond_type : BondType
     ///     The type of the bond. Default is :attr:`BondType.ANY`.
     #[pyo3(signature = (atom_index1, atom_index2, bond_type=BondType::Any))]
-    fn add_bond(
+    pub fn add_bond(
         &mut self,
         atom_index1: isize,
         atom_index2: isize,
@@ -980,7 +980,7 @@ impl BondList {
     /// ----------
     /// atom_index1, atom_index2 : int
     ///     The indices of the atoms whose bond should be removed.
-    fn remove_bond(&mut self, atom_index1: isize, atom_index2: isize) -> PyResult<()> {
+    pub fn remove_bond(&mut self, atom_index1: isize, atom_index2: isize) -> PyResult<()> {
         let target = Bond::new(atom_index1, atom_index2, BondType::Any, self.atom_count)?;
         self.bonds.retain(|bond| !bond.equal_atoms(&target));
         Ok(())
@@ -995,7 +995,7 @@ impl BondList {
     /// ----------
     /// atom_index : int
     ///     The index of the atom whose bonds should be removed.
-    fn remove_bonds_to(&mut self, atom_index: isize) -> PyResult<()> {
+    pub fn remove_bonds_to(&mut self, atom_index: isize) -> PyResult<()> {
         let index = to_positive_index(atom_index, self.atom_count)?;
         self.bonds
             .retain(|bond| bond.atom1 != index && bond.atom2 != index);
@@ -1015,7 +1015,7 @@ impl BondList {
     /// ----------
     /// bond_list : BondList
     ///     The bonds in `bond_list` are removed from this instance.
-    fn remove_bonds(&mut self, bond_list: &BondList) {
+    pub fn remove_bonds(&mut self, bond_list: &BondList) {
         let bonds_to_remove: HashSet<(usize, usize)> =
             bond_list.bonds.iter().map(|b| (b.atom1, b.atom2)).collect();
         self.bonds
@@ -1077,7 +1077,7 @@ impl BondList {
     /// [[0 1 1]
     ///  [1 2 1]
     ///  [2 3 2]]
-    fn merge(&self, bond_list: &BondList) -> BondList {
+    pub fn merge(&self, bond_list: &BondList) -> BondList {
         let new_atom_count = self.atom_count.max(bond_list.atom_count);
 
         // Concatenate bonds: other bond_list takes precedence (put first)
@@ -1094,11 +1094,11 @@ impl BondList {
         result
     }
 
-    fn __add__(&self, other: &BondList) -> BondList {
+    pub fn __add__(&self, other: &BondList) -> BondList {
         BondList::concatenate(vec![self.clone(), other.clone()]).unwrap()
     }
 
-    fn __getitem__<'py>(
+    pub fn __getitem__<'py>(
         &self,
         py: Python<'py>,
         index: &Bound<'py, PyAny>,
@@ -1160,7 +1160,7 @@ impl BondList {
         }
     }
 
-    fn __contains__(&self, item: (isize, isize)) -> PyResult<bool> {
+    pub fn __contains__(&self, item: (isize, isize)) -> PyResult<bool> {
         let target = match Bond::new(item.0, item.1, BondType::Any, self.atom_count) {
             Ok(bond) => bond,
             // If the atom indices are out of range, the bond is not part of the bond list
@@ -1169,7 +1169,7 @@ impl BondList {
         Ok(self.bonds.iter().any(|bond| bond.equal_atoms(&target)))
     }
 
-    fn __eq__(&self, other: &BondList) -> bool {
+    pub fn __eq__(&self, other: &BondList) -> bool {
         if self.atom_count != other.atom_count {
             return false;
         }
@@ -1178,19 +1178,19 @@ impl BondList {
         self_set == other_set
     }
 
-    fn __str__(&self, py: Python<'_>) -> PyResult<String> {
+    pub fn __str__(&self, py: Python<'_>) -> PyResult<String> {
         let array = self.as_array(py);
         array.call_method0("__str__")?.extract()
     }
 
-    fn __iter__(&self) -> PyResult<()> {
+    pub fn __iter__(&self) -> PyResult<()> {
         Err(exceptions::PyTypeError::new_err(
             "'BondList' object is not iterable",
         ))
     }
 
     // Pickling support
-    fn __reduce__<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyTuple>> {
+    pub fn __reduce__<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyTuple>> {
         let struc = PyModule::import(py, "biotite.structure")?;
         let cls = struc.getattr("BondList")?;
         let from_state = cls.getattr("_from_state")?;
@@ -1215,7 +1215,7 @@ impl BondList {
 
     #[staticmethod]
     #[pyo3(name = "_from_state")]
-    fn from_state(atom_count: usize, bonds_data: Vec<[usize; 3]>) -> PyResult<Self> {
+    pub fn from_state(atom_count: usize, bonds_data: Vec<[usize; 3]>) -> PyResult<Self> {
         let bonds: Vec<Bond> = bonds_data
             .into_iter()
             .map(|[a1, a2, bt]| {
@@ -1231,15 +1231,15 @@ impl BondList {
     }
 
     // Copy support for biotite.Copyable interface
-    fn copy(&self) -> BondList {
+    pub fn copy(&self) -> BondList {
         self.clone()
     }
 
-    fn __copy__(&self) -> BondList {
+    pub fn __copy__(&self) -> BondList {
         self.clone()
     }
 
-    fn __deepcopy__(&self, _memo: &Bound<'_, PyAny>) -> BondList {
+    pub fn __deepcopy__(&self, _memo: &Bound<'_, PyAny>) -> BondList {
         self.clone()
     }
 }

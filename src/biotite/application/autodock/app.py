@@ -11,7 +11,7 @@ from tempfile import NamedTemporaryFile
 import numpy as np
 from biotite.application.application import AppState, requires_state
 from biotite.application.localapp import LocalApp, cleanup_tempfile
-from biotite.structure.bonds import find_connected
+from biotite.structure.connect import find_connected
 from biotite.structure.error import BadStructureError
 from biotite.structure.io.pdbqt import PDBQTFile
 from biotite.structure.residues import get_residue_masks, get_residue_starts_for
