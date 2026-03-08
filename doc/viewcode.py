@@ -31,8 +31,8 @@ def _index_rust_code(code_lines):
     """
     Find the line position of structs and enums in *Rust* files.
 
-    This analyzer looks for `pub struct` and `pub enum` definitions
-    decorated with `#[pyclass]`.
+    This analyzer looks for *structs*, enums and functions
+    decorated with ``#[pyclass]`` or ``#[pyfunction]``.
 
     Parameters
     ----------
@@ -47,8 +47,8 @@ def _index_rust_code(code_lines):
     """
     line_index = {}
 
-    # Track pyclass decorator lines
-    pyclass_line = None
+    # Track pyclass/pyfunction decorator lines
+    decorator_line = None
 
     for i, line in enumerate(code_lines):
         stripped_line = line.strip()
@@ -57,19 +57,25 @@ def _index_rust_code(code_lines):
         if len(stripped_line) == 0 or stripped_line.startswith("//"):
             continue
 
-        # Check for #[pyclass] decorator
-        if stripped_line.startswith("#[pyclass"):
-            pyclass_line = i
+        # Check for #[pyclass] or #[pyfunction] decorator
+        if stripped_line.startswith("#[pyclass") or stripped_line.startswith(
+            "#[pyfunction"
+        ):
+            decorator_line = i
             continue
 
-        # Check for pub struct or pub enum after pyclass
-        if pyclass_line is not None:
-            match = re.match(r"pub\s+(struct|enum)\s+(\w+)", stripped_line)
+        # Other attributes (e.g. #[pyo3(...)], #[allow(...)]) keep the decorator active
+        if decorator_line is not None and stripped_line.startswith("#["):
+            continue
+
+        # Check for pub struct/enum (pyclass) or pub fn (pyfunction)
+        if decorator_line is not None:
+            match = re.match(r"pub\s+(struct|enum|fn)\s+(\w+)", stripped_line)
             if match:
                 attr_name = match.group(2)
-                attr_line_start = pyclass_line
+                attr_line_start = decorator_line
 
-                # Find the end of the struct/enum by matching braces
+                # Find the end of the definition by matching braces
                 brace_count = 0
                 started = False
                 attr_line_stop = i + 1
@@ -91,7 +97,7 @@ def _index_rust_code(code_lines):
                     # 'One' based indexing and inclusive stop
                     attr_line_stop,
                 )
-            pyclass_line = None
+            decorator_line = None
 
     return line_index
 
@@ -422,7 +428,15 @@ def linkcode_resolve(domain, info):
             # order to fool Python's inspect module
             obj.__module__ = module_name
 
-            source_lines, first = inspect.getsourcelines(obj)
+            try:
+                source_lines, first = inspect.getsourcelines(obj)
+            except OSError:
+                # Dynamically created classes (e.g. IntEnum from Rust members)
+                # have no source definition that inspect can find
+                return None
+            except TypeError:
+                # Non-callable attributes are not supported by inspect.getsourcelines
+                return None
             last = first + len(source_lines) - 1
 
             return base_url + f"{module_name.replace('.', '/')}.py#L{first}-L{last}"

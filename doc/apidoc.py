@@ -68,6 +68,9 @@ def _create_package_doc(pck, src_path, doc_path):
         if attr[0] != "_"
         # Check if object is a class
         and isinstance(getattr(module, attr), type)
+        # Skip inner classes (e.g. CellList.Result), which have a dot in __qualname__
+        # They will still be documented as attribute of the enclosing class
+        and "." not in getattr(module, attr).__qualname__
     ]
     func_list = [
         attr
