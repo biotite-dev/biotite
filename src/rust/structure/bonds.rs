@@ -106,6 +106,11 @@ impl<'py> IntoPyObject<'py> for BondType {
 }
 
 /// Internal representation of a single bond.
+///
+/// Warnings
+/// --------
+/// Direct instantiation must ensure that ``atom1 <= atom2``.
+/// Use ``Bond::new()`` for automatic normalization.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct Bond {
     pub atom1: usize,
@@ -116,7 +121,12 @@ pub struct Bond {
 impl Bond {
     /// Create a new bond with normalized atom indices (smaller index first).
     /// Negative indices are resolved relative to `atom_count`.
-    fn new(atom1: isize, atom2: isize, bond_type: BondType, atom_count: usize) -> PyResult<Self> {
+    pub fn new(
+        atom1: isize,
+        atom2: isize,
+        bond_type: BondType,
+        atom_count: usize,
+    ) -> PyResult<Self> {
         let a1 = to_positive_index(atom1, atom_count)?;
         let a2 = to_positive_index(atom2, atom_count)?;
         if a1 == a2 {
@@ -418,6 +428,8 @@ impl BondList {
         for bond_list in &bond_lists {
             for bond in &bond_list.bonds {
                 merged_bonds.push(Bond {
+                    // As bot atom indices are offset by the same amount,
+                    // the order of the atoms is guaranteed to be consistent
                     atom1: bond.atom1 + cum_atom_count,
                     atom2: bond.atom2 + cum_atom_count,
                     bond_type: bond.bond_type,
@@ -1388,6 +1400,10 @@ impl BondList {
             if mask[bond.atom1] && mask[bond.atom2] {
                 // Both atoms involved in bond are masked
                 // -> decrease atom index by offset
+                // Since atom1 < atom2 and the offset is non-decreasing,
+                // and both atoms are in the mask, the number of masked-out
+                // atoms *between* atom1 and atom2 is strictly less than
+                // atom2 - atom1, so the order is preserved.
                 new_bonds.push(Bond {
                     atom1: bond.atom1 - offsets[bond.atom1],
                     atom2: bond.atom2 - offsets[bond.atom2],

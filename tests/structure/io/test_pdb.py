@@ -157,17 +157,19 @@ def test_pdbx_consistency(model, path):
         if model is None:
             ref_atoms = ref_atoms[0]
             test_atoms = test_atoms[0]
-        test_bond_set = set([tuple(e) for e in test_atoms.bonds.as_array()])
-        ref_bond_set = set([tuple(e) for e in ref_atoms.bonds.as_array()])
+        test_bond_set = test_atoms.bonds.as_set()
+        ref_bond_set = ref_atoms.bonds.as_set()
         print("Additional bonds in test_atoms:", file=sys.stderr)
-        for i, j, _ in test_bond_set - ref_bond_set:
+        for i, j, bt in test_bond_set - ref_bond_set:
             print(test_atoms[i], file=sys.stderr)
             print(test_atoms[j], file=sys.stderr)
+            print("Bond type:", struc.BondType(bt).name, file=sys.stderr)
             print(file=sys.stderr)
         print("Additional bonds in ref_atoms:", file=sys.stderr)
-        for i, j, _ in ref_bond_set - test_bond_set:
+        for i, j, bt in ref_bond_set - test_bond_set:
             print(ref_atoms[i], file=sys.stderr)
             print(ref_atoms[j], file=sys.stderr)
+            print("Bond type:", struc.BondType(bt).name, file=sys.stderr)
             print(file=sys.stderr)
         raise
     for category in ref_atoms.get_annotation_categories():

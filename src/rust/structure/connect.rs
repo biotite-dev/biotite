@@ -5,7 +5,6 @@ use numpy::{IntoPyArray, PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::exceptions;
 use pyo3::prelude::*;
 use std::collections::{HashMap, VecDeque};
-use std::convert::TryFrom;
 
 use crate::structure::bonds::{Bond, BondList, BondType};
 
@@ -33,7 +32,7 @@ pub fn connect_via_residue_names<'py>(
     res_names: Vec<String>,
     atom_names: Vec<String>,
     residue_starts: PyReadonlyArray1<'py, i64>,
-    bond_dict: HashMap<String, Vec<(String, String, u32)>>,
+    bond_dict: HashMap<String, Vec<(String, String, BondType)>>,
 ) -> PyResult<BondList> {
     let mut bond_list = BondList::empty(atom_names.len());
     for (start_i, stop_i) in residue_starts.as_array().iter().tuple_windows() {
@@ -53,11 +52,12 @@ pub fn connect_via_residue_names<'py>(
             for atom_index_i in atom_indices_1.iter() {
                 for atom_index_j in atom_indices_2.iter() {
                     unsafe {
-                        bond_list.add(Bond {
-                            atom1: start_i + atom_index_i,
-                            atom2: start_i + atom_index_j,
-                            bond_type: BondType::try_from(*bond_type as u8)?,
-                        })?;
+                        bond_list.add(Bond::new(
+                            (start_i + atom_index_i) as isize,
+                            (start_i + atom_index_j) as isize,
+                            *bond_type,
+                            atom_names.len(),
+                        )?)?;
                     }
                 }
             }
@@ -156,6 +156,7 @@ pub fn connect_via_distances<'py>(
                 let distance = squared_distance(&coord, atom_i, atom_j);
                 if distance >= min_distance && distance <= max_distance {
                     unsafe {
+                        // atom_j < atom_i is guaranteed by the loop range
                         bond_list.add(Bond {
                             atom1: atom_j,
                             atom2: atom_i,
@@ -236,6 +237,8 @@ pub fn connect_inter_residue<'py>(
 
         if let (Some(curr_idx), Some(next_idx)) = (curr_connect_idx, next_connect_idx) {
             unsafe {
+                // curr_start < next_start is guaranteed
+                // by iterating consecutive residues
                 bond_list.add(Bond {
                     atom1: curr_start + curr_idx,
                     atom2: next_start + next_idx,
