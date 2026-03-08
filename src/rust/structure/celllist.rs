@@ -1,5 +1,5 @@
 use crate::structure::util::{distance_squared, extract_coord};
-use crate::util::check_signals_periodically;
+use crate::util::{check_signals_periodically, warn};
 use numpy::ndarray::Array2;
 use numpy::{IntoPyArray, PyArray2, PyReadonlyArray2};
 use pyo3::exceptions;
@@ -1263,15 +1263,11 @@ fn format_result(
     is_multi_coord: bool,
 ) -> PyResult<Bound<'_, PyAny>> {
     if as_mask {
-        // Raise DeprecationWarning when `as_mask`` is used
-        let warnings = py.import("warnings")?;
-        let _ = warnings.call_method1(
-            "warn",
-            (
-                "The 'as_mask' parameter is deprecated, use 'result_format' instead.",
-                py.import("builtins")?.getattr("DeprecationWarning")?,
-            ),
-        );
+        // Raise DeprecationWarning when `as_mask` is used
+        warn::<exceptions::PyDeprecationWarning>(
+            py,
+            "The 'as_mask' parameter is deprecated, use 'result_format' instead.",
+        )?;
         result_format = CellListResult::MASK;
     }
     match result_format {

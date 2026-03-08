@@ -8,7 +8,6 @@ use numpy::ndarray::{
 use numpy::PyArrayMethods;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyArrayDyn, PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::exceptions;
-use pyo3::ffi::c_str;
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyDict, PyEllipsis, PyString, PyType};
 use std::cmp::Ordering;
@@ -18,6 +17,7 @@ use std::fs;
 use std::str::FromStr;
 
 use crate::structure::io::pdb::hybrid36::{decode_hybrid36, encode_hybrid36};
+use crate::util::warn;
 use std::ops::Range;
 
 // Column ranges for ATOM/HETATM records
@@ -674,11 +674,9 @@ impl PDBFile {
             }
             Ok(None) => {}
             Err(_) => {
-                PyErr::warn(
+                warn::<exceptions::PyUserWarning>(
                     py,
-                    &py.get_type::<pyo3::exceptions::PyUserWarning>(),
-                    c_str!("File contains invalid 'CRYST1' record, box is ignored"),
-                    0,
+                    "File contains invalid 'CRYST1' record, box is ignored",
                 )?;
             }
         };

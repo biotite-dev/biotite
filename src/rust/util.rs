@@ -12,6 +12,15 @@ pub fn check_signals_periodically(py: Python<'_>, iteration: usize) -> PyResult<
     Ok(())
 }
 
+/// Issue a Python warning via `warnings.warn()`.
+///
+/// The warning type is given as a generic parameter.
+pub fn warn<T: pyo3::type_object::PyTypeInfo>(py: Python<'_>, message: &str) -> PyResult<()> {
+    let warnings = py.import("warnings")?;
+    warnings.call_method1("warn", (message, py.get_type::<T>()))?;
+    Ok(())
+}
+
 /// Dispatch a generic function call based on a NumPy dtype descriptor.
 ///
 /// Accepts a custom type list.
