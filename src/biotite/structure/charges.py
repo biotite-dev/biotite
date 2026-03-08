@@ -30,16 +30,16 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
 
     Parameters
     ----------
-    atom_array: AtomArray, shape=(n,)
+    atom_array : AtomArray, shape=(n,)
         The :class:`AtomArray` to get the partial charge values for.
         Must have an associated `BondList`.
-    iteration_step_num: int, optional
+    iteration_step_num : int, optional
         The number of iteration steps is an optional argument and can be
         chosen by the user depending on the desired precision of the
         result. If no value is entered by the user, the default value
         ``6`` will be used.
         Gasteiger and Marsili described this number as sufficient.
-    charges: ndarray, dtype=int, optional
+    charges : ndarray, dtype=int, shape=(n,), optional
         The array comprising the formal charges of the atoms in the
         input `atom_array`.
         If none is given, the ``charge`` annotation category of the
@@ -49,7 +49,7 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
 
     Returns
     -------
-    charges: ndarray, dtype=float32
+    charges : ndarray, dtype=float32, shape=(n,)
         The partial charge values of the individual atoms in the input
         `atom_array`.
 
