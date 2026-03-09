@@ -439,9 +439,9 @@ class StructureQuery(SingleQuery):
     Examples
     --------
 
-    >>> query = StructureQuery("1L2Y", chain="A")
+    >>> query = StructureQuery("1GYA", assembly="1")
     >>> print(sorted(search(query)))
-    ['1L2Y', '1RIJ', '2JOF', '2LDJ', '2M7D', '7MQS', '9DPF']
+    ['1CDB', '1GYA', '1QA9']
     """
 
     def __init__(self, pdb_id, chain=None, assembly=None, strict=True):
@@ -452,7 +452,7 @@ class StructureQuery(SingleQuery):
         ):
             raise TypeError("Either the chain ID or assembly ID must be set")
         elif chain is None:
-            self._value = {"entry_id": pdb_id, "asssembly_id": assembly}
+            self._value = {"entry_id": pdb_id, "assembly_id": assembly}
         else:
             self._value = {"entry_id": pdb_id, "asym_id": chain}
 

@@ -196,8 +196,9 @@ def test_search_sequence():
 
 
 @pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
-def test_search_structure():
-    query = rcsb.StructureQuery("1L2Y", chain="A")
+@pytest.mark.parametrize("chain, assembly", [("A", None), (None, "1")])
+def test_search_structure(chain, assembly):
+    query = rcsb.StructureQuery("1L2Y", chain=chain, assembly=assembly)
     test_ids = rcsb.search(query)
     assert "1L2Y" in test_ids
 
