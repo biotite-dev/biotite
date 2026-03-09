@@ -19,7 +19,8 @@ from biotite.rust.structure.io.pdb import (
     max_hybrid36_number,
 )
 from biotite.structure.atoms import repeat
-from biotite.structure.bonds import BondList, connect_via_residue_names
+from biotite.structure.bonds import BondList
+from biotite.structure.connect import connect_via_residue_names
 from biotite.structure.error import BadStructureError
 from biotite.structure.filter import (
     filter_solvent,

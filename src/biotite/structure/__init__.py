@@ -116,6 +116,7 @@ from .celllist import *
 from .chains import *
 from .charges import *
 from .compare import *
+from .connect import *
 from .density import *
 from .dotbracket import *
 from .error import *
