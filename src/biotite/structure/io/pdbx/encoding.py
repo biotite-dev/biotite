@@ -8,54 +8,31 @@ This module contains data encodings for BinaryCIF files.
 
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
-__all__ = ["ByteArrayEncoding", "FixedPointEncoding",
-           "IntervalQuantizationEncoding", "RunLengthEncoding",
-           "DeltaEncoding", "IntegerPackingEncoding", "StringArrayEncoding",
-           "TypeCode"]
+__all__ = [
+    "ByteArrayEncoding",
+    "FixedPointEncoding",
+    "IntervalQuantizationEncoding",
+    "RunLengthEncoding",
+    "DeltaEncoding",
+    "IntegerPackingEncoding",
+    "StringArrayEncoding",
+    "TypeCode",
+]
 
-cimport cython
-cimport numpy as np
-
-from dataclasses import dataclass
-from abc import ABCMeta, abstractmethod
-from numbers import Integral
-from enum import IntEnum
 import re
+from abc import ABCMeta, abstractmethod
+from dataclasses import dataclass
+from enum import IntEnum
+from numbers import Integral
 import numpy as np
-from .component import _Component
-from ....file import InvalidFileError
-
-ctypedef np.int8_t int8
-ctypedef np.int16_t int16
-ctypedef np.int32_t int32
-ctypedef np.uint8_t uint8
-ctypedef np.uint16_t uint16
-ctypedef np.uint32_t uint32
-ctypedef np.float32_t float32
-ctypedef np.float64_t float64
-
-ctypedef fused Integer:
-    uint8
-    uint16
-    uint32
-    int8
-    int16
-    int32
-
-# Used to create cartesian product of type combinations
-# in run-length encoding
-ctypedef fused OutputInteger:
-    uint8
-    uint16
-    uint32
-    int8
-    int16
-    int32
-
-ctypedef fused Float:
-    float32
-    float64
-
+from biotite.file import InvalidFileError
+from biotite.rust.structure.io.pdbx import (
+    integer_packing_decode,
+    integer_packing_encode,
+    run_length_decode,
+    run_length_encode,
+)
+from biotite.structure.io.pdbx.component import _Component
 
 CAMEL_CASE_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 
@@ -65,6 +42,7 @@ class TypeCode(IntEnum):
     This enum type represents integers that represent data types in
     *BinaryCIF*.
     """
+
     INT8 = 1
     INT16 = 2
     INT32 = 3
@@ -113,12 +91,8 @@ class TypeCode(IntEnum):
                 else:
                     supported_dtype = dtype
             else:
-                raise ValueError(
-                    f"dtype '{dtype}' is not supported by BinaryCIF"
-                )
-            return _DTYPE_TO_TYPE_CODE[
-                np.dtype(supported_dtype).newbyteorder("<").str
-            ]
+                raise ValueError(f"dtype '{dtype}' is not supported by BinaryCIF")
+            return _DTYPE_TO_TYPE_CODE[np.dtype(supported_dtype).newbyteorder("<").str]
 
     def to_dtype(self):
         """
@@ -131,6 +105,7 @@ class TypeCode(IntEnum):
         """
         return _TYPE_CODE_TO_DTYPE[self]
 
+
 # Converts BCIF integers representing the type to an actual NumPy dtype
 _TYPE_CODE_TO_DTYPE = {
     # All data types are little-endian
@@ -141,7 +116,7 @@ _TYPE_CODE_TO_DTYPE = {
     TypeCode.UINT16: "<u2",
     TypeCode.UINT32: "<u4",
     TypeCode.FLOAT32: "<f4",
-    TypeCode.FLOAT64: "<f8"
+    TypeCode.FLOAT64: "<f8",
 }
 _DTYPE_TO_TYPE_CODE = {val: key for key, val in _TYPE_CODE_TO_DTYPE.items()}
 
@@ -159,21 +134,16 @@ class Encoding(_Component, metaclass=ABCMeta):
     @classmethod
     def deserialize(cls, content):
         params = {
-            _camel_to_snake_case(param): value
-            for param, value in content.items()
+            _camel_to_snake_case(param): value for param, value in content.items()
         }
         # 'kind' is no parameter, but indicates the class itself
         params.pop("kind")
         try:
             encoding = cls(**params)
-        except TypeError as e:
-            raise InvalidFileError(
-                f"Invalid encoding parameters for {cls.__name__}"
-            )
+        except TypeError:
+            raise InvalidFileError(f"Invalid encoding parameters for {cls.__name__}")
         except ValueError:
-            raise InvalidFileError(
-                f"Missing encoding parameters for {cls.__name__}"
-            )
+            raise InvalidFileError(f"Missing encoding parameters for {cls.__name__}")
         return encoding
 
     def serialize(self):
@@ -189,9 +159,7 @@ class Encoding(_Component, metaclass=ABCMeta):
             _snake_to_camel_case(param): getattr(self, param)
             for param in self.__annotations__
         }
-        serialized.update({
-            "kind": _encoding_classes_kinds[type(self).__name__]
-        })
+        serialized.update({"kind": _encoding_classes_kinds[type(self).__name__]})
         return serialized
 
     @abstractmethod
@@ -225,12 +193,6 @@ class Encoding(_Component, metaclass=ABCMeta):
         -------
         decoded_data : ndarray
             The decoded data.
-
-        Warnings
-        --------
-        When overriding this method, do not omit bound checks with
-        ``@cython.boundscheck(False)`` or ``@cython.wraparound(False)``,
-        since the file content may be invalid/malicious.
         """
         raise NotImplementedError()
 
@@ -246,17 +208,13 @@ class ByteArrayEncoding(Encoding):
     r"""
     Encoding that encodes an array into bytes.
 
-    Parameters
+    Attributes
     ----------
-    type : dytpe or TypeCode, optional
+    type : dtype or TypeCode, optional
         The data type of the array to be encoded.
         Either a NumPy dtype or a *BinaryCIF* type code is accepted.
         If omitted, the data type is taken from the data the
         first time :meth:`encode()` is called.
-
-    Attributes
-    ----------
-    type : TypeCode
 
     Examples
     --------
@@ -267,6 +225,7 @@ class ByteArrayEncoding(Encoding):
     >>> print(ByteArrayEncoding().encode(data))
     b'\x00\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00'
     """
+
     type: ... = None
 
     def __post_init__(self):
@@ -289,7 +248,7 @@ class FixedPointEncoding(Encoding):
     Lossy encoding that multiplies floating point values with a given
     factor and subsequently rounds them to the nearest integer.
 
-    Parameters
+    Attributes
     ----------
     factor : float
         The factor by which the data is multiplied before rounding.
@@ -300,11 +259,6 @@ class FixedPointEncoding(Encoding):
         If omitted, the data type is taken from the data the
         first time :meth:`encode()` is called.
 
-    Attributes
-    ----------
-    factor : float
-    src_type : TypeCode
-
     Examples
     --------
 
@@ -314,6 +268,7 @@ class FixedPointEncoding(Encoding):
     >>> print(FixedPointEncoding(factor=100).encode(data))
     [987 654]
     """
+
     factor: ...
     src_type: ... = None
 
@@ -321,36 +276,30 @@ class FixedPointEncoding(Encoding):
         if self.src_type is not None:
             self.src_type = TypeCode.from_dtype(self.src_type)
             if self.src_type not in (TypeCode.FLOAT32, TypeCode.FLOAT64):
-                raise ValueError(
-                    "Only floating point types are supported"
-                )
+                raise ValueError("Only floating point types are supported")
 
     def encode(self, data):
         # If not given in constructor, it is determined from the data
         if self.src_type is None:
             self.src_type = TypeCode.from_dtype(data.dtype)
             if self.src_type not in (TypeCode.FLOAT32, TypeCode.FLOAT64):
-                raise ValueError(
-                    "Only floating point types are supported"
-                )
+                raise ValueError("Only floating point types are supported")
 
         # Round to avoid wrong values due to floating point inaccuracies
         scaled_data = np.round(data * self.factor)
         return _safe_cast(scaled_data, np.int32, allow_decimal_loss=True)
 
     def decode(self, data):
-        return (data / self.factor).astype(
-            dtype=self.src_type.to_dtype(), copy=False
-        )
+        return (data / self.factor).astype(dtype=self.src_type.to_dtype(), copy=False)
 
 
 @dataclass
 class IntervalQuantizationEncoding(Encoding):
     """
     Lossy encoding that sorts floating point values into bins.
-    Each bin is represented by an integer
+    Each bin is represented by an integer.
 
-    Parameters
+    Attributes
     ----------
     min, max : float
         The minimum and maximum value the bins comprise.
@@ -362,12 +311,6 @@ class IntervalQuantizationEncoding(Encoding):
         The dtype must be a float type.
         If omitted, the data type is taken from the data the
         first time :meth:`encode()` is called.
-
-    Attributes
-    ----------
-    min, max : float
-    num_steps : int
-    src_type : TypeCode
 
     Examples
     --------
@@ -385,6 +328,7 @@ class IntervalQuantizationEncoding(Encoding):
     >>> print(decoded)
     [11.0 11.5 11.5 12.0 12.0 12.0]
     """
+
     min: ...
     max: ...
     num_steps: ...
@@ -399,9 +343,7 @@ class IntervalQuantizationEncoding(Encoding):
         if self.src_type is None:
             self.src_type = TypeCode.from_dtype(data.dtype)
 
-        steps = np.linspace(
-            self.min, self.max, self.num_steps, dtype=data.dtype
-        )
+        steps = np.linspace(self.min, self.max, self.num_steps, dtype=data.dtype)
         indices = np.searchsorted(steps, data, side="left")
         return _safe_cast(indices, np.int32)
 
@@ -418,7 +360,7 @@ class RunLengthEncoding(Encoding):
     Encoding that compresses runs of equal values into pairs of
     (value, run length).
 
-    Parameters
+    Attributes
     ----------
     src_size : int, optional
         The size of the array to be encoded.
@@ -430,11 +372,6 @@ class RunLengthEncoding(Encoding):
         The dtype must be a integer type.
         If omitted, the data type is taken from the data the
         first time :meth:`encode()` is called.
-
-    Attributes
-    ----------
-    src_size : int
-    src_type : TypeCode
 
     Examples
     --------
@@ -451,6 +388,7 @@ class RunLengthEncoding(Encoding):
      [5 1]
      [3 2]]
     """
+
     src_size: ... = None
     src_type: ... = None
 
@@ -465,72 +403,17 @@ class RunLengthEncoding(Encoding):
         if self.src_size is None:
             self.src_size = data.shape[0]
         elif self.src_size != data.shape[0]:
-            raise IndexError(
-                "Given source size does not match actual data size"
-            )
-        return self._encode(_safe_cast(data, self.src_type.to_dtype()))
+            raise IndexError("Given source size does not match actual data size")
+        return np.asarray(run_length_encode(_safe_cast(data, self.src_type.to_dtype())))
 
     def decode(self, data):
-        return self._decode(
-            data, np.empty(0, dtype=self.src_type.to_dtype())
+        return np.asarray(
+            run_length_decode(
+                data.astype(np.int32, copy=False),
+                self.src_size,
+                np.dtype(self.src_type.to_dtype()),
+            )
         )
-
-    def _encode(self, const Integer[:] data):
-        # Pessimistic allocation of output array
-        # -> Run length is 1 for every element
-        cdef int32[:] output = np.zeros(data.shape[0] * 2, dtype=np.int32)
-        cdef int i=0, j=0
-        cdef int val = data[0]
-        cdef int run_length = 0
-        cdef int curr_val
-        for i in range(data.shape[0]):
-            curr_val = data[i]
-            if curr_val == val:
-                run_length += 1
-            else:
-                # New element -> Write element with run-length
-                output[j] = val
-                output[j+1] = run_length
-                j += 2
-                val = curr_val
-                run_length = 1
-        # Write last element
-        output[j] = val
-        output[j+1] = run_length
-        j += 2
-        # Trim to correct size
-        return np.asarray(output)[:j]
-
-    def _decode(self, const Integer[:] data, OutputInteger[:] output_type):
-        """
-        `output_type` is merely a typed placeholder to allow for static
-        typing of output.
-        """
-        if data.shape[0] % 2 != 0:
-            raise ValueError("Invalid run-length encoded data")
-
-        cdef int length = 0
-        cdef int i, j
-        cdef int value, repeat
-
-        if self.src_size is None:
-            # Determine length of output array by summing run lengths
-            for i in range(1, data.shape[0], 2):
-                length += data[i]
-        else:
-            length = self.src_size
-
-        cdef OutputInteger[:] output = np.zeros(
-            length, dtype=np.asarray(output_type).dtype
-        )
-        # Fill output array
-        j = 0
-        for i in range(0, data.shape[0], 2):
-            value = data[i]
-            repeat = data[i+1]
-            output[j : j+repeat] = value
-            j += repeat
-        return np.asarray(output)
 
 
 @dataclass
@@ -539,7 +422,7 @@ class DeltaEncoding(Encoding):
     Encoding that encodes an array of integers into an array of
     consecutive differences.
 
-    Parameters
+    Attributes
     ----------
     src_type : dtype or TypeCode, optional
         The data type of the array to be encoded.
@@ -552,11 +435,6 @@ class DeltaEncoding(Encoding):
         If omitted, the value is taken from the first array element the
         first time :meth:`encode()` is called.
 
-    Attributes
-    ----------
-    src_type : TypeCode
-    origin : int
-
     Examples
     --------
 
@@ -567,6 +445,7 @@ class DeltaEncoding(Encoding):
     >>> print(encoding.origin)
     1
     """
+
     src_type: ... = None
     origin: ... = None
 
@@ -606,7 +485,7 @@ class IntegerPackingEncoding(Encoding):
     the integer is represented by a sum of consecutive elements
     in the compressed array.
 
-    Parameters
+    Attributes
     ----------
     byte_count : int
         The number of bytes the packed integers should occupy.
@@ -622,12 +501,6 @@ class IntegerPackingEncoding(Encoding):
         If omitted, first time :meth:`encode()` is called, determines whether
         the values fit into unsigned integers.
 
-    Attributes
-    ----------
-    byte_count : int
-    src_size : int
-    is_unsigned : bool
-
     Examples
     --------
 
@@ -637,6 +510,7 @@ class IntegerPackingEncoding(Encoding):
     >>> print(IntegerPackingEncoding(byte_count=1).encode(data))
     [  1   2  -3 127   1]
     """
+
     byte_count: ...
     src_size: ... = None
     is_unsigned: ... = None
@@ -645,44 +519,31 @@ class IntegerPackingEncoding(Encoding):
         if self.src_size is None:
             self.src_size = len(data)
         elif self.src_size != len(data):
-            raise IndexError(
-                "Given source size does not match actual data size"
-            )
+            raise IndexError("Given source size does not match actual data size")
         if self.is_unsigned is None:
             # Only positive values -> use unsigned integers
             self.is_unsigned = data.min().item() >= 0
 
         data = _safe_cast(data, np.int32)
-        return self._encode(
-            data, np.empty(0, dtype=self._determine_packed_dtype())
+        packed_dtype = np.dtype(self._determine_packed_dtype())
+        return np.asarray(
+            integer_packing_encode(
+                data,
+                self.byte_count,
+                self.is_unsigned,
+                packed_dtype,
+            )
         )
 
-    def decode(self, const Integer[:] data):
-        cdef int i, j
-        cdef int min_val, max_val
-        cdef int packed_val, unpacked_val
-        bounds = self._get_bounds(data)
-        min_val = bounds[0]
-        max_val = bounds[1]
-        # For signed integers, do not check lower bound (is always 0)
-        # -> Set lower bound to value that is never reached
-        if min_val == 0:
-            min_val = -1
-
-        cdef int32[:] output = np.zeros(self.src_size, dtype=np.int32)
-        j = 0
-        unpacked_val = 0
-        for i in range(data.shape[0]):
-            packed_val = data[i]
-            if packed_val == max_val or packed_val == min_val:
-                unpacked_val += packed_val
-            else:
-                unpacked_val += packed_val
-                output[j] = unpacked_val
-                unpacked_val = 0
-                j += 1
-        # Trim to correct size and return
-        return np.asarray(output)
+    def decode(self, data):
+        return np.asarray(
+            integer_packing_decode(
+                data,
+                self.byte_count,
+                self.is_unsigned,
+                self.src_size,
+            )
+        )
 
     def _determine_packed_dtype(self):
         if self.byte_count == 1:
@@ -697,80 +558,6 @@ class IntegerPackingEncoding(Encoding):
                 return np.int16
         else:
             raise ValueError("Unsupported byte count")
-
-    @cython.cdivision(True)
-    def _encode(self, const Integer[:] data, OutputInteger[:] output_type):
-        """
-        `output_type` is merely a typed placeholder to allow for static
-        typing of output.
-        """
-        cdef int i=0, j=0
-
-        packed_type = np.asarray(output_type).dtype
-        cdef int min_val = np.iinfo(packed_type).min
-        cdef int max_val = np.iinfo(packed_type).max
-
-        # Get length of output array
-        # by summing up required length of each element
-        cdef int number
-        cdef long length = 0
-        for i in range(data.shape[0]):
-            number = data[i]
-            if number < 0:
-                if min_val == 0:
-                    raise ValueError(
-                        "Cannot pack negative numbers into unsigned type"
-                    )
-                # The required packed length for an element is the
-                # number of times min_val/max_val need to be repeated
-                length += number // min_val + 1
-            elif number > 0:
-                length += number // max_val + 1
-            else:
-                # number = 0
-                length += 1
-
-        # Fill output
-        cdef OutputInteger[:] output = np.zeros(length, dtype=packed_type)
-        cdef int remainder
-        j = 0
-        for i in range(data.shape[0]):
-            remainder = data[i]
-            if remainder < 0:
-                if min_val == 0:
-                    raise ValueError(
-                        "Cannot pack negative numbers into unsigned type"
-                    )
-                while remainder <= min_val:
-                    remainder -= min_val
-                    output[j] = min_val
-                    j += 1
-            elif remainder > 0:
-                while remainder >= max_val:
-                    remainder -= max_val
-                    output[j] = max_val
-                    j += 1
-            output[j] = remainder
-            j += 1
-        return np.asarray(output)
-
-    @staticmethod
-    def _get_bounds(const Integer[:] data):
-        if Integer is int8:
-            info = np.iinfo(np.int8)
-        elif Integer is int16:
-            info = np.iinfo(np.int16)
-        elif Integer is int32:
-            info = np.iinfo(np.int32)
-        elif Integer is uint8:
-            info = np.iinfo(np.uint8)
-        elif Integer is uint16:
-            info = np.iinfo(np.uint16)
-        elif Integer is uint32:
-            info = np.iinfo(np.uint32)
-        else:
-            raise ValueError("Unsupported integer type")
-        return info.min, info.max
 
 
 @dataclass
@@ -836,22 +623,19 @@ class StringArrayEncoding(Encoding):
 
     @staticmethod
     def deserialize(content):
-        data_encoding = [
-            deserialize_encoding(e) for e in content["dataEncoding"]
-        ]
-        offset_encoding = [
-            deserialize_encoding(e) for e in content["offsetEncoding"]
-        ]
-        cdef str concatenated_strings = content["stringData"]
-        cdef np.ndarray offsets = decode_stepwise(
-            content["offsets"], offset_encoding
-        )
+        data_encoding = [deserialize_encoding(e) for e in content["dataEncoding"]]
+        offset_encoding = [deserialize_encoding(e) for e in content["offsetEncoding"]]
+        concatenated_strings = content["stringData"]
+        offsets = decode_stepwise(content["offsets"], offset_encoding)
 
-        strings = np.array([
-            concatenated_strings[offsets[i]:offsets[i+1]]
-            # The final offset is the exclusive stop index
-            for i in range(len(offsets)-1)
-        ], dtype="U")
+        strings = np.array(
+            [
+                concatenated_strings[offsets[i] : offsets[i + 1]]
+                # The final offset is the exclusive stop index
+                for i in range(len(offsets) - 1)
+            ],
+            dtype="U",
+        )
 
         return StringArrayEncoding(strings, data_encoding, offset_encoding)
 
@@ -970,9 +754,7 @@ def deserialize_encoding(content):
     try:
         encoding_class = _encoding_classes[content["kind"]]
     except KeyError:
-        raise ValueError(
-            f"Unknown encoding kind '{content['kind']}'"
-        )
+        raise ValueError(f"Unknown encoding kind '{content['kind']}'")
     return encoding_class.deserialize(content)
 
 
@@ -1048,9 +830,7 @@ def _camel_to_snake_case(attribute_name):
 
 
 def _snake_to_camel_case(attribute_name):
-    attribute_name = "".join(
-        word.capitalize() for word in attribute_name.split("_")
-    )
+    attribute_name = "".join(word.capitalize() for word in attribute_name.split("_"))
     return attribute_name[0].lower() + attribute_name[1:]
 
 
