@@ -147,7 +147,7 @@ class Encoding(_Component, metaclass=ABCMeta):
         return encoding
 
     def serialize(self):
-        for param in self.__annotations__:
+        for param in type(self).__annotations__:
             if getattr(self, param) is None:
                 raise ValueError(
                     f"'{param}' must be explicitly given or needs to be "
@@ -157,7 +157,7 @@ class Encoding(_Component, metaclass=ABCMeta):
 
         serialized = {
             _snake_to_camel_case(param): getattr(self, param)
-            for param in self.__annotations__
+            for param in type(self).__annotations__
         }
         serialized.update({"kind": _encoding_classes_kinds[type(self).__name__]})
         return serialized
