@@ -28,9 +28,9 @@ __all__ = [
 ]
 
 
-from functools import partial
+import itertools
 import numpy as np
-from biotite.structure.atoms import array as atom_array
+from biotite.structure.atoms import AtomArrayStack
 from biotite.structure.info.groups import (
     amino_acid_names,
     carbohydrate_names,
@@ -390,14 +390,17 @@ def filter_polymer(array, min_size=2, pol_type="peptide"):
     # Import `check_res_id_continuity` here to avoid circular imports
     from biotite.structure.integrity import check_res_id_continuity
 
-    split_idx = check_res_id_continuity(array)
+    if isinstance(array, AtomArrayStack):
+        array = array[0]
 
-    check_pol = partial(_is_polymer, min_size=min_size, pol_type=pol_type)
-    bool_idx = map(
-        lambda a: np.full(len(a), check_pol(atom_array(a)), dtype=bool),
-        np.split(array, split_idx),
-    )
-    return np.concatenate(list(bool_idx))
+    mask = np.zeros(len(array), dtype=bool)
+    discontinuity_idx = check_res_id_continuity(array)
+    for start, stop in itertools.pairwise(
+        itertools.chain([0], discontinuity_idx, [len(array)])
+    ):
+        segment = array[..., start:stop]
+        mask[start:stop] = _is_polymer(segment, min_size, pol_type)
+    return mask
 
 
 def filter_intersection(array, intersect, categories=None):
