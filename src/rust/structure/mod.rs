@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 
 pub mod bonds;
 pub mod celllist;
+pub mod charges;
 pub mod connect;
 pub mod io;
 pub mod sasa;
@@ -14,6 +15,7 @@ pub fn module<'py>(parent_module: &Bound<'py, PyModule>) -> PyResult<Bound<'py, 
     module.add_class::<celllist::CellList>()?;
     module.add_class::<celllist::CellListResult>()?;
     module.add_function(wrap_pyfunction!(bonds::bond_type_members, &module)?)?;
+    module.add_function(wrap_pyfunction!(charges::partial_charges, &module)?)?;
     module.add_function(wrap_pyfunction!(
         connect::connect_via_residue_names,
         &module

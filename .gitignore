@@ -74,3 +74,7 @@ biotite.egg-info
 
 # Ignore temp files created via Jupyter
 **/.ipynb_checkpoints/
+
+# Ignore instructions for AI assistants
+.claude/
+CLAUDE.md

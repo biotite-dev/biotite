@@ -853,6 +853,17 @@ def _get_box(block):
     return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
 
 
+def _get_chem_comp_bond_type(bond_type):
+    try:
+        return COMP_BOND_TYPE_TO_ORDER[bond_type]
+    except KeyError:
+        warnings.warn(
+            f"Bond type '{BondType(bond_type).name}' is not recognized by "
+            "'chem_comp_bond', a single bond will be assigned instead"
+        )
+        return ("SING", "N")
+
+
 def set_structure(
     pdbx_file,
     array,
@@ -866,7 +877,7 @@ def set_structure(
 
     This will save the coordinates, the mandatory annotation categories
     and the optional annotation categories
-    ``atom_id``, ``b_factor``, ``occupancy`` and ``charge``.
+    ``b_factor``, ``occupancy`` and ``charge``.
     If the atom array (stack) contains the annotation ``'atom_id'``,
     these values will be used for atom numbering instead of continuous
     numbering.
@@ -951,8 +962,6 @@ def set_structure(
     atom_site["auth_atom_id"] = atom_site["label_atom_id"]
 
     annot_categories = array.get_annotation_categories()
-    if "atom_id" in annot_categories:
-        atom_site["id"] = np.copy(array.atom_id)
     if "b_factor" in annot_categories:
         atom_site["B_iso_or_equiv"] = np.copy(array.b_factor)
     if "occupancy" in annot_categories:
@@ -1020,9 +1029,9 @@ def set_structure(
             np.arange(1, array.stack_depth() + 1, dtype=np.int32),
             repeats=array.array_length(),
         )
-    if "atom_id" not in annot_categories:
-        # Count from 1
-        atom_site["id"] = np.arange(1, len(atom_site["group_PDB"]) + 1)
+    # `atom_site.id` values must be unique across all models
+    # -> Use continuous numbering
+    atom_site["id"] = np.arange(1, atom_site.row_count + 1)
     block["atom_site"] = atom_site
 
     # Write box into file
@@ -1150,7 +1159,7 @@ def _set_intra_residue_bonds(array, atom_site):
         if bond_type == BondType.ANY:
             # ANY bonds will be masked anyway, no need to set the value
             continue
-        order, aromatic = COMP_BOND_TYPE_TO_ORDER[bond_type]
+        order, aromatic = _get_chem_comp_bond_type(bond_type)
         value_order[i] = order
         aromatic_flag[i] = aromatic
     any_mask = bond_array[:, 2] == BondType.ANY
@@ -1523,7 +1532,7 @@ def set_component(pdbx_file, array, data_block=None):
         order_flags = []
         aromatic_flags = []
         for bond_type in bond_array[:, 2]:
-            order_flag, aromatic_flag = COMP_BOND_TYPE_TO_ORDER[bond_type]
+            order_flag, aromatic_flag = _get_chem_comp_bond_type(bond_type)
             order_flags.append(order_flag)
             aromatic_flags.append(aromatic_flag)
 
