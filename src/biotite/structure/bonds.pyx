@@ -1875,7 +1875,7 @@ def find_connected(bond_list, uint32 root, bint as_mask=False):
     """
     find_connected(bond_list, root, as_mask=False)
 
-    Get indices to all atoms that are directly or inderectly connected
+    Get indices to all atoms that are directly or indirectly connected
     to the root atom indicated by the given index.
 
     An atom is *connected* to the `root` atom, if that atom is reachable
