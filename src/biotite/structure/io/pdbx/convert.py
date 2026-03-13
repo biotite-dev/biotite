@@ -497,7 +497,16 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
             atom_site, f"{prefix}_asym_id", f"{alt_prefix}_asym_id"
         ).as_array(str),
     )
-    array.set_annotation("ins_code", atom_site["pdbx_PDB_ins_code"].as_array(str, ""))
+    if "pdbx_PDB_ins_code" in atom_site:
+        array.set_annotation(
+            "ins_code",
+            atom_site["pdbx_PDB_ins_code"].as_array(str, ""),
+        )
+    else:
+        array.set_annotation(
+            "ins_code",
+            np.full(array.array_length(), "", dtype="U1"),
+        )
     array.set_annotation(
         "res_name",
         _get_or_fallback(
