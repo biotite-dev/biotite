@@ -1170,3 +1170,22 @@ def test_writing_and_reading_extra_fields(tmpdir):
     assert np.all(
         atoms.get_annotation("my_custom_annotation").astype(int) == custom_annotation
     )
+
+
+@pytest.mark.parametrize("format", ["cif", "bcif"])
+def test_get_structure_missing_ins_code(format):
+    """
+    :func:`get_structure()` should handle a missing ``pdbx_PDB_ins_code``
+    column gracefully, since it is optional in the PDBx dictionary.
+    """
+    base_path = join(data_dir("structure"), "1l2y")
+    if format == "cif":
+        pdbx_file = pdbx.CIFFile.read(base_path + ".cif")
+    else:
+        pdbx_file = pdbx.BinaryCIFFile.read(base_path + ".bcif")
+
+    del pdbx_file.block["atom_site"]["pdbx_PDB_ins_code"]
+    atoms = pdbx.get_structure(pdbx_file, model=1)
+
+    assert atoms.array_length() > 0
+    assert np.all(atoms.ins_code == "")
