@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
+mod sequence;
 mod structure;
 pub mod util;
 
@@ -21,6 +22,7 @@ fn add_subpackage(
 
 #[pymodule]
 fn rust(module: &Bound<'_, PyModule>) -> PyResult<()> {
+    add_subpackage(module, &sequence::module(module)?, "biotite.rust.sequence")?;
     add_subpackage(
         module,
         &structure::module(module)?,
