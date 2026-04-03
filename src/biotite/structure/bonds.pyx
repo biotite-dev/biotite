@@ -529,7 +529,7 @@ class BondList(Copyable):
     def remove_kekulization(self):
         """
         Remove the bond order information from aromatic bonds, i.e. convert all
-        aromatic bonds to :attr:`BondType.ANY`.
+        aromatic bonds to :attr:`BondType.AROMATIC`.
 
         Examples
         --------
