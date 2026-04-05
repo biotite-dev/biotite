@@ -35,6 +35,11 @@ def get_alignment(clustal_file, seq_type=None):
         The alignment from the :class:`ClustalFile`.
     """
     seq_strings = list(clustal_file.values())
+    if len(seq_strings) < 2:
+        raise ValueError(
+            f"ClustalW file contains {len(seq_strings)} sequence(s), "
+            f"but an alignment requires at least 2"
+        )
     return Alignment.from_strings(
         seq_strings,
         functools.partial(_convert_to_sequence, seq_type=seq_type),
@@ -59,13 +64,18 @@ def set_alignment(clustal_file, alignment, seq_names, line_length=60):
         The number of sequence characters per line in each block.
         Default is 60.
     """
+    if line_length < 1:
+        raise ValueError(
+            f"'line_length' must be at least 1, got {line_length}"
+        )
     gapped_seq_strings = alignment.get_gapped_sequences()
     if len(gapped_seq_strings) != len(seq_names):
         raise ValueError(
             f"Alignment has {len(gapped_seq_strings)} sequences, "
             f"but {len(seq_names)} names were given"
         )
-    # Store sequences in internal dict
+    # Clear any existing entries before writing new data
+    clustal_file._entries.clear()
     for name, seq_str in zip(seq_names, gapped_seq_strings):
         clustal_file._entries[name] = seq_str
     # Rebuild the text lines with the specified line length
