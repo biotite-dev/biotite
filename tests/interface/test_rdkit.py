@@ -164,7 +164,7 @@ def test_kekulization():
         or [
             struc.BondType.AROMATIC_SINGLE
             if btype == struc.BondType.AROMATIC_DOUBLE
-            else struc.BondType.AROMATIC_SINGLE
+            else struc.BondType.AROMATIC_DOUBLE
             for btype in test_bond_types
         ]
         == ref_bond_types.tolist()
