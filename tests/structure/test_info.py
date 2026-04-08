@@ -123,9 +123,9 @@ def test_link_type():
 @pytest.mark.parametrize(
     "residues, should_have_one_letter, exception_ratio",
     [
-        (strucinfo.amino_acid_names(), True, 0.4),
-        (strucinfo.nucleotide_names(), True, 0.4),
-        (
+        pytest.param(strucinfo.amino_acid_names(), True, 0.5, id="amino_acid_names"),
+        pytest.param(strucinfo.nucleotide_names(), True, 0.4, id="nucleotide_names"),
+        pytest.param(
             sorted(
                 set(strucinfo.all_residues())
                 - set(strucinfo.amino_acid_names())
@@ -133,6 +133,7 @@ def test_link_type():
             ),
             False,
             0.01,
+            id="non-polymers",
         ),
     ],
 )
