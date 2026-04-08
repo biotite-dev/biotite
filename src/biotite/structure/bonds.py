@@ -47,7 +47,7 @@ def _without_aromaticity(self):
 # Create BondType IntEnum dynamically from Rust enum members
 BondType = IntEnum(
     "BondType",
-    {name: value for name, value in bond_type_members().items()},
+    bond_type_members(),
     module=__name__,
 )
 BondType.__doc__ = """
