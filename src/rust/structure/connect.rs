@@ -199,6 +199,9 @@ pub fn connect_inter_residue<'py>(
 
     let mut bond_list = BondList::empty(atom_names.len());
 
+    if n_residues < 2 {
+        return Ok(bond_list);
+    }
     for i in 0..n_residues - 1 {
         // Check if residues are disconnected
         if is_disconnected[i] {
