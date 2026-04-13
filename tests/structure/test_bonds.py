@@ -512,3 +512,11 @@ def test_pickle(bond_list):
     """
     restored = pickle.loads(pickle.dumps(bond_list))
     assert restored == bond_list
+
+
+def test_bond_type_order():
+    """
+    Check that :class:`BondType` members are ordered by their values.
+    """
+    values = [member.value for member in struc.BondType]
+    assert values == sorted(values)

@@ -4,7 +4,7 @@ use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::types::{PyModule, PySet, PyTuple};
 use smallvec::SmallVec;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::convert::TryFrom;
 
 const TYPICAL_MAX_BONDS_PER_ATOM: usize = 4;
@@ -37,29 +37,29 @@ impl BondType {
     }
 }
 
+/// Return the members of the :class:`BondType` enum as key-value pairs.
+///
+/// Returns
+/// -------
+/// members : list of tuples
+///     The members of the :class:`BondType` enum as key-value pairs.
 #[pyfunction]
-pub fn bond_type_members() -> HashMap<String, u8> {
-    let mut map = HashMap::new();
-    map.insert("ANY".to_string(), BondType::Any as u8);
-    map.insert("SINGLE".to_string(), BondType::Single as u8);
-    map.insert("DOUBLE".to_string(), BondType::Double as u8);
-    map.insert("TRIPLE".to_string(), BondType::Triple as u8);
-    map.insert("QUADRUPLE".to_string(), BondType::Quadruple as u8);
-    map.insert(
-        "AROMATIC_SINGLE".to_string(),
-        BondType::AromaticSingle as u8,
-    );
-    map.insert(
-        "AROMATIC_DOUBLE".to_string(),
-        BondType::AromaticDouble as u8,
-    );
-    map.insert(
-        "AROMATIC_TRIPLE".to_string(),
-        BondType::AromaticTriple as u8,
-    );
-    map.insert("COORDINATION".to_string(), BondType::Coordination as u8);
-    map.insert("AROMATIC".to_string(), BondType::Aromatic as u8);
-    map
+pub fn bond_type_members() -> Vec<(String, u8)> {
+    [
+        ("ANY", BondType::Any),
+        ("SINGLE", BondType::Single),
+        ("DOUBLE", BondType::Double),
+        ("TRIPLE", BondType::Triple),
+        ("QUADRUPLE", BondType::Quadruple),
+        ("AROMATIC_SINGLE", BondType::AromaticSingle),
+        ("AROMATIC_DOUBLE", BondType::AromaticDouble),
+        ("AROMATIC_TRIPLE", BondType::AromaticTriple),
+        ("COORDINATION", BondType::Coordination),
+        ("AROMATIC", BondType::Aromatic),
+    ]
+    .iter()
+    .map(|(name, member)| (name.to_string(), *member as u8))
+    .collect()
 }
 
 impl TryFrom<u8> for BondType {
