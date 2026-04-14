@@ -1179,6 +1179,19 @@ def _set_intra_residue_bonds(array, atom_site):
     # Take the residue name from the first atom index, as the residue
     # name is the same for both atoms, since we have only intra bonds
     comp_id = array.res_name[bond_array[:, 0]]
+    # Two distinct atom indices can share the same (res_name, atom_name)
+    # annotations — that bond would surface in chem_comp_bond as a
+    # self-bond on the chemical component, which is meaningless.
+    not_self_bond = atom_id_1 != atom_id_2
+    atom_id_1 = atom_id_1[not_self_bond]
+    atom_id_2 = atom_id_2[not_self_bond]
+    comp_id = comp_id[not_self_bond]
+    bond_array = bond_array[not_self_bond]
+    value_order = value_order[not_self_bond]
+    aromatic_flag = aromatic_flag[not_self_bond]
+    any_mask = any_mask[not_self_bond]
+    if len(bond_array) == 0:
+        return None
     _, unique_indices = np.unique(
         np.stack([comp_id, atom_id_1, atom_id_2], axis=-1), axis=0, return_index=True
     )

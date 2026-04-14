@@ -110,6 +110,29 @@ def test_invalid_creation():
             ),
         )
 
+    # Reject self-bonds at construction time
+    with pytest.raises(ValueError, match="atom to itself"):
+        struc.BondList(5, np.array([[2, 2]]))
+    # Self-bonds expressed via mixed positive and negative indices
+    # (-1 resolves to 4 with atom_count=5) should also be rejected.
+    with pytest.raises(ValueError, match="atom to itself"):
+        struc.BondList(5, np.array([[4, -1]]))
+
+
+def test_add_self_bond_rejected():
+    """
+    ``BondList.add_bond`` must reject bonds whose two atom indices refer to
+    the same atom, regardless of how the indices are written (positive,
+    negative, or a mix that resolves to the same positive index).
+    """
+    bond_list = struc.BondList(5)
+    with pytest.raises(ValueError, match="atom to itself"):
+        bond_list.add_bond(2, 2)
+    with pytest.raises(ValueError, match="atom to itself"):
+        bond_list.add_bond(4, -1)
+    # The list should remain empty after the rejected adds.
+    assert len(bond_list.as_array()) == 0
+
 
 def test_modification(bond_list):
     """
