@@ -600,24 +600,9 @@ def dihedral_backbone(atom_array):
     coord_for_omg[..., 0:-1, :, 3] = coord_ca[..., 1:,   :]
     # fmt: on
 
-    phi = dihedral(
-        coord_for_phi[..., 0],
-        coord_for_phi[..., 1],
-        coord_for_phi[..., 2],
-        coord_for_phi[..., 3],
-    )
-    psi = dihedral(
-        coord_for_psi[..., 0],
-        coord_for_psi[..., 1],
-        coord_for_psi[..., 2],
-        coord_for_psi[..., 3],
-    )
-    omg = dihedral(
-        coord_for_omg[..., 0],
-        coord_for_omg[..., 1],
-        coord_for_omg[..., 2],
-        coord_for_omg[..., 3],
-    )
+    phi = dihedral(*(coord_for_phi[..., i] for i in range(4)))
+    psi = dihedral(*(coord_for_psi[..., i] for i in range(4)))
+    omg = dihedral(*(coord_for_omg[..., i] for i in range(4)))
 
     return phi, psi, omg
 
@@ -691,18 +676,12 @@ def dihedral_side_chain(atoms):
         res_mask = res_names == res_name
         for chi_i, chi_atom_names in enumerate(chi_atom_names_for_all_angles):
             dihedrals = dihedral(
-                chi_atom_coord[
-                    chi_atoms_to_coord_index[chi_atom_names[0]], ..., res_mask, :
-                ],
-                chi_atom_coord[
-                    chi_atoms_to_coord_index[chi_atom_names[1]], ..., res_mask, :
-                ],
-                chi_atom_coord[
-                    chi_atoms_to_coord_index[chi_atom_names[2]], ..., res_mask, :
-                ],
-                chi_atom_coord[
-                    chi_atoms_to_coord_index[chi_atom_names[3]], ..., res_mask, :
-                ],
+                *(
+                    chi_atom_coord[
+                        chi_atoms_to_coord_index[atom_name], ..., res_mask, :
+                    ]
+                    for atom_name in chi_atom_names
+                )
             )
             if is_multi_model:
                 # Swap dimensions due to NumPy's behavior when using advanced indexing
