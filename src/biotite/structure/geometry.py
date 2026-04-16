@@ -20,6 +20,8 @@ __all__ = [
     "index_dihedral",
     "dihedral_backbone",
     "dihedral_side_chain",
+    "nucleotide_dihedral_backbone",
+    "nucleotide_dihedral_side_chain",
     "centroid",
 ]
 
@@ -27,7 +29,11 @@ import functools
 import numpy as np
 from biotite.structure.atoms import AtomArray, AtomArrayStack, coord
 from biotite.structure.box import coord_to_fraction, fraction_to_coord, is_orthogonal
-from biotite.structure.filter import filter_amino_acids, filter_canonical_amino_acids
+from biotite.structure.filter import (
+    filter_amino_acids,
+    filter_canonical_amino_acids,
+    filter_nucleotides,
+)
 from biotite.structure.residues import get_residue_starts
 from biotite.structure.util import (
     coord_for_atom_name_per_residue,
@@ -689,6 +695,149 @@ def dihedral_side_chain(atoms):
                 dihedrals = dihedrals.T
             chi_angles[..., res_mask, chi_i] = dihedrals
     return chi_angles
+
+
+def nucleotide_dihedral_backbone(atom_array):
+    r"""
+    Measure the six characteristic backbone dihedral angles of a nucleotide chain.
+
+    Parameters
+    ----------
+    atom_array : AtomArray or AtomArrayStack
+        The nucleic acid structure to measure the dihedral angles for.
+        For missing backbone atoms the corresponding angles are `NaN`.
+
+    Returns
+    -------
+    alpha, beta, gamma, delta, epsilon, zeta : ndarray, shape=(m,n) or shape=(n,), dtype=float
+        An array containing the six backbone dihedral angles for every nucleotide
+        residue.
+        :math:`\alpha` is not defined at the 5'-terminus, :math:`\epsilon` and
+        :math:`\zeta` are not defined at the 3'-terminus.
+        In these places the arrays have *NaN* values.
+        If an :class:`AtomArrayStack` is given, the output angles are 2-dimensional,
+        the first dimension corresponds to the model number.
+
+    Notes
+    -----
+    The nucleotide backbone dihedral angles are defined as follows
+    (indices refer to the residue position along the chain):
+
+    - :math:`\alpha`: O3'(i-1) - P(i) - O5'(i) - C5'(i)
+    - :math:`\beta`: P(i) - O5'(i) - C5'(i) - C4'(i)
+    - :math:`\gamma`: O5'(i) - C5'(i) - C4'(i) - C3'(i)
+    - :math:`\delta`: C5'(i) - C4'(i) - C3'(i) - O3'(i)
+    - :math:`\epsilon`: C4'(i) - C3'(i) - O3'(i) - P(i+1)
+    - :math:`\zeta`: C3'(i) - O3'(i) - P(i+1) - O5'(i+1)
+    """
+    coord_p, coord_o5p, coord_c5p, coord_c4p, coord_c3p, coord_o3p = (
+        coord_for_atom_name_per_residue(
+            atom_array,
+            ("P", "O5'", "C5'", "C4'", "C3'", "O3'"),
+            filter_nucleotides(atom_array),
+        )
+    )
+    n_residues = coord_p.shape[-2]
+
+    # Coordinates for dihedral angle calculation
+    # Dim 0: Model index (only for atom array stacks)
+    # Dim 1: Angle index
+    # Dim 2: X, Y, Z coordinates
+    # Dim 3: Atoms involved in dihedral angle
+    if isinstance(atom_array, AtomArray):
+        angle_coord_shape: tuple[int, ...] = (n_residues, 3, 4)
+    elif isinstance(atom_array, AtomArrayStack):
+        angle_coord_shape = (atom_array.stack_depth(), n_residues, 3, 4)
+    (
+        coord_for_alpha,
+        coord_for_beta,
+        coord_for_gamma,
+        coord_for_delta,
+        coord_for_epsilon,
+        coord_for_zeta,
+    ) = [np.full(angle_coord_shape, np.nan, dtype=np.float32) for _ in range(6)]
+
+    # fmt: off
+    coord_for_alpha[..., 1:, :, 0] = coord_o3p[..., 0:-1, :]
+    coord_for_alpha[..., 1:, :, 1] =   coord_p[...,   1:, :]
+    coord_for_alpha[..., 1:, :, 2] = coord_o5p[...,   1:, :]
+    coord_for_alpha[..., 1:, :, 3] = coord_c5p[...,   1:, :]
+
+    coord_for_beta[..., :, :, 0]  =   coord_p
+    coord_for_beta[..., :, :, 1]  = coord_o5p
+    coord_for_beta[..., :, :, 2]  = coord_c5p
+    coord_for_beta[..., :, :, 3]  = coord_c4p
+
+    coord_for_gamma[..., :, :, 0]  = coord_o5p
+    coord_for_gamma[..., :, :, 1]  = coord_c5p
+    coord_for_gamma[..., :, :, 2]  = coord_c4p
+    coord_for_gamma[..., :, :, 3]  = coord_c3p
+
+    coord_for_delta[..., :, :, 0]  = coord_c5p
+    coord_for_delta[..., :, :, 1]  = coord_c4p
+    coord_for_delta[..., :, :, 2]  = coord_c3p
+    coord_for_delta[..., :, :, 3]  = coord_o3p
+
+    coord_for_epsilon[..., 0:-1, :, 0] = coord_c4p[..., 0:-1, :]
+    coord_for_epsilon[..., 0:-1, :, 1] = coord_c3p[..., 0:-1, :]
+    coord_for_epsilon[..., 0:-1, :, 2] = coord_o3p[..., 0:-1, :]
+    coord_for_epsilon[..., 0:-1, :, 3] =   coord_p[...,   1:, :]
+
+    coord_for_zeta[..., 0:-1, :, 0] = coord_c3p[..., 0:-1, :]
+    coord_for_zeta[..., 0:-1, :, 1] = coord_o3p[..., 0:-1, :]
+    coord_for_zeta[..., 0:-1, :, 2] =   coord_p[...,   1:, :]
+    coord_for_zeta[..., 0:-1, :, 3] = coord_o5p[...,   1:, :]
+    # fmt: on
+
+    alpha = dihedral(*(coord_for_alpha[..., i] for i in range(4)))
+    beta = dihedral(*(coord_for_beta[..., i] for i in range(4)))
+    gamma = dihedral(*(coord_for_gamma[..., i] for i in range(4)))
+    delta = dihedral(*(coord_for_delta[..., i] for i in range(4)))
+    epsilon = dihedral(*(coord_for_epsilon[..., i] for i in range(4)))
+    zeta = dihedral(*(coord_for_zeta[..., i] for i in range(4)))
+
+    return alpha, beta, gamma, delta, epsilon, zeta
+
+
+def nucleotide_dihedral_side_chain(atoms):
+    r"""
+    Measure the glycosidic :math:`\chi` dihedral angle of nucleotide residues.
+
+    Parameters
+    ----------
+    atoms : AtomArray or AtomArrayStack
+        The nucleic acid structure to measure the glycosidic dihedral angles for.
+
+    Returns
+    -------
+    chi : ndarray, shape=(m, n) or shape=(n,), dtype=float
+        An array containing the :math:`\chi` angle for every residue.
+        Residues that are not nucleotides or lack the required atoms are filled with
+        :math:`NaN` values.
+
+    Notes
+    -----
+    The :math:`\chi` angle is defined between the sugar and the base:
+
+    - Purines (e.g. ``A``, ``G``): ``O4' - C1' - N9 - C4``
+    - Pyrimidines (e.g. ``C``, ``U``, ``T``): ``O4' - C1' - N1 - C2``
+
+    The base type is inferred from the presence of the ``N9`` atom, so modified
+    nucleotides are handled as long as they use the canonical glycosidic linkage.
+    """
+    coord_o4p, coord_c1p, coord_n9, coord_c4, coord_n1, coord_c2 = (
+        coord_for_atom_name_per_residue(
+            atoms,
+            ("O4'", "C1'", "N9", "C4", "N1", "C2"),
+            filter_nucleotides(atoms),
+        )
+    )
+
+    purine_chi = dihedral(coord_o4p, coord_c1p, coord_n9, coord_c4)
+    pyrimidine_chi = dihedral(coord_o4p, coord_c1p, coord_n1, coord_c2)
+    # Purines are distinguished from pyrimidines by the presence of the N9 atom
+    is_pyrimidine = np.isnan(coord_n9[..., 0])
+    return np.where(is_pyrimidine, pyrimidine_chi, purine_chi)
 
 
 def centroid(atoms):
