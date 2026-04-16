@@ -276,14 +276,13 @@ double_hits = matches[double_hit_indices]
 # We only keep those hits that meet the given score threshold.
 
 substitution_matrix = align.SubstitutionMatrix.std_3di_matrix()
+extension = align.SeedExtension(substitution_matrix, threshold=X_DROP)
 ungapped_scores = np.array(
     [
-        align.align_local_ungapped(
+        extension.align(
             query_sequence,
             db_sequences[db_index],
-            substitution_matrix,
             seed=(i, j),
-            threshold=X_DROP,
             score_only=True,
         )
         for i, db_index, j in double_hits

@@ -85,7 +85,7 @@ def test_simple_alignments(
     uint8_code,
 ):
     """
-    Check if `algin_local_ungapped()` produces correct alignments based on
+    Check if `SeedExtension` produces correct alignments based on
     simple known examples.
     """
     # Limit start or stop reference alignment range to seed
@@ -115,9 +115,8 @@ def test_simple_alignments(
     ref_score = align.score(ref_alignment, matrix)
     ref_alignment.score = ref_score
 
-    test_result = align.align_local_ungapped(
-        seq1, seq2, matrix, seed, threshold, direction, score_only
-    )
+    extension = align.SeedExtension(matrix, threshold, direction)
+    test_result = extension.align(seq1, seq2, seed, score_only=score_only)
 
     if score_only:
         assert test_result == ref_score
@@ -134,7 +133,7 @@ def test_random_alignment(seed, uint8_code):
     each sequence, where both conserved regions are similar to each
     other.
     The conserved regions only contain point mutations and no indels.
-    Expect that the alignment score found by `align_local_ungapped()` is
+    Expect that the alignment score found by `SeedExtension` is
     equal to the alignment score found by `align_optimal()`.
     """
     MIN_SIZE = 200
@@ -196,11 +195,11 @@ def test_random_alignment(seed, uint8_code):
         local=True,
         max_number=1,
         # High gap penalty to prevent introduction of gaps,
-        # since 'align_local_ungapped()' is also no able to place gaps
+        # since 'SeedExtension' is also not able to place gaps
         gap_penalty=-1000,
     )[0].score
 
-    test_alignment = align.align_local_ungapped(seq1, seq2, matrix, seed, THRESHOLD)
+    test_alignment = align.SeedExtension(matrix, THRESHOLD).align(seq1, seq2, seed)
 
     assert test_alignment.score == ref_score
     # Test if the score is also correctly calculated

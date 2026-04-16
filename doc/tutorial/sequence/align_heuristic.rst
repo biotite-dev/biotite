@@ -160,12 +160,11 @@ In other words the alignment comprises only a region that is decently similar.
     THRESHOLD = 20
 
     matrix = align.SubstitutionMatrix.std_protein_matrix()
+    # The scoring scheme is preprocessed once and reused for each seed
+    extension = align.SeedExtension(matrix, threshold=THRESHOLD)
     alignments = []
     for query_pos, ref_id, ref_pos in matches:
-        alignment = align.align_local_ungapped(
-            reference, query, matrix,
-            seed=(ref_pos, query_pos), threshold=THRESHOLD
-        )
+        alignment = extension.align(reference, query, seed=(ref_pos, query_pos))
         alignments.append(alignment)
 
     for alignment in alignments:
@@ -190,7 +189,7 @@ The difference between the heuristic gapped sequence alignment methods and
 :meth:`align_optimal()` is that the former only ideally traverses through a
 small fraction of the possible alignment search space, allowing them to run
 much faster.
-However, like :meth:`align_local_ungapped()` they need to be informed with a
+However, like :class:`SeedExtension` they need to be informed with a
 match position to start from.
 Furthermore, in some cases they might not find the optimal alignment, when the
 assumption of the method does not hold for such alignment.

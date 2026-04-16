@@ -9,6 +9,7 @@ ndarray = "0.17"
 num-traits = "0.2"
 smallvec = "1"
 itertools = "0.14"
+bitflags = "2"
 
 [dependencies.pyo3]
 version = "0.27"
