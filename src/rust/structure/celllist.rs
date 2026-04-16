@@ -198,7 +198,7 @@ impl<T: Clone + Default> CellGrid<T> {
         let mut data: Vec<T> = vec![T::default(); total_count];
 
         // Third iteration: Fill the data vector
-        for (position, element) in positions.iter().zip(elements.into_iter()) {
+        for (position, element) in positions.iter().zip(elements) {
             let linear_idx = position[0] * stride_i + position[1] * stride_j + position[2];
             let end_idx = linear_idx * 2 + 1;
             let current_index = offsets[end_idx];
