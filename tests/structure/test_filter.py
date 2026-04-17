@@ -44,6 +44,12 @@ def all_atloc_structure():
     )
 
 
+def test_monoatomic_ion_filter(sample_carbohydrate):
+    assert (
+        len(sample_carbohydrate[struc.filter_monoatomic_ions(sample_carbohydrate)]) == 3
+    )
+
+
 def test_solvent_filter(canonical_sample_protein):
     assert (
         len(canonical_sample_protein[struc.filter_solvent(canonical_sample_protein)])
