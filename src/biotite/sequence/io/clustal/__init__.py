@@ -15,7 +15,7 @@ getting/setting directly :class:`Alignment` objects, rather than strings.
 """
 
 __name__ = "biotite.sequence.io.clustal"
-__author__ = "Biotite contributors"
+__author__ = "haoyu"
 
 from .convert import *
 from .file import *

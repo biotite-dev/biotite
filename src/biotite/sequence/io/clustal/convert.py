@@ -3,13 +3,12 @@
 # information.
 
 __name__ = "biotite.sequence.io.clustal"
-__author__ = "Biotite contributors"
+__author__ = "haoyu"
 
 import functools
 import warnings
-from collections import OrderedDict
 from biotite.sequence.align.alignment import Alignment
-from biotite.sequence.alphabet import AlphabetError, LetterAlphabet
+from biotite.sequence.alphabet import AlphabetError
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
 __all__ = ["get_alignment", "set_alignment"]
@@ -65,9 +64,7 @@ def set_alignment(clustal_file, alignment, seq_names, line_length=60):
         Default is 60.
     """
     if line_length < 1:
-        raise ValueError(
-            f"'line_length' must be at least 1, got {line_length}"
-        )
+        raise ValueError(f"'line_length' must be at least 1, got {line_length}")
     gapped_seq_strings = alignment.get_gapped_sequences()
     if len(gapped_seq_strings) != len(seq_names):
         raise ValueError(

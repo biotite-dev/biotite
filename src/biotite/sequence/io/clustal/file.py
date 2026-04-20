@@ -3,15 +3,15 @@
 # information.
 
 __name__ = "biotite.sequence.io.clustal"
-__author__ = "Biotite contributors"
+__author__ = "haoyu"
 __all__ = ["ClustalFile"]
 
+import re
 from collections import OrderedDict
 from collections.abc import MutableMapping
 from biotite.file import InvalidFileError, TextFile
 
-
-_CONSENSUS_CHARS = frozenset(" *:.")
+_CONSENSUS_LINE = re.compile(r"[ *:.]+")
 
 
 class ClustalFile(TextFile, MutableMapping):
@@ -85,26 +85,28 @@ class ClustalFile(TextFile, MutableMapping):
 
         self._entries = OrderedDict()
         for line in self.lines[1:]:
-            stripped = line.strip()
             # Skip blank lines
-            if len(stripped) == 0:
+            if len(line.strip()) == 0:
                 continue
-            # Skip consensus lines (lines that start with whitespace
-            # and contain only consensus characters)
-            if line[0] == " " and all(c in _CONSENSUS_CHARS for c in line):
+            # Skip consensus lines (lines containing only the consensus
+            # characters ``*``, ``:``, ``.`` and space)
+            if _CONSENSUS_LINE.fullmatch(line):
                 continue
-            # Sequence lines: name followed by whitespace and sequence
-            # The name must start at the beginning of the line
-            # (no leading whitespace)
-            if line[0] != " ":
-                parts = line.split()
-                if len(parts) >= 2:
-                    name = parts[0]
-                    seq_segment = parts[1]
-                    if name in self._entries:
-                        self._entries[name] += seq_segment
-                    else:
-                        self._entries[name] = seq_segment
+            # Otherwise this must be a sequence line: name followed by
+            # whitespace and a sequence segment.
+            parts = line.split()
+            if len(parts) < 2:
+                raise InvalidFileError(
+                    f"Malformed sequence line, expected a name and a "
+                    f"sequence segment separated by whitespace, got "
+                    f"'{line.rstrip()}'"
+                )
+            name = parts[0]
+            seq_segment = parts[1]
+            if name in self._entries:
+                self._entries[name] += seq_segment
+            else:
+                self._entries[name] = seq_segment
 
     def __setitem__(self, name, seq_str):
         if not isinstance(name, str):
@@ -112,9 +114,7 @@ class ClustalFile(TextFile, MutableMapping):
                 "'ClustalFile' only supports sequence name strings as keys"
             )
         if not isinstance(seq_str, str):
-            raise TypeError(
-                "'ClustalFile' only supports sequence strings as values"
-            )
+            raise TypeError("'ClustalFile' only supports sequence strings as values")
         self._entries[name] = seq_str
         self._rebuild_lines()
 

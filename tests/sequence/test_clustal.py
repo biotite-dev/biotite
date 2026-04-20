@@ -25,14 +25,8 @@ def test_access_multi_block():
     """Test reading a ClustalW file with multiple blocks."""
     path = os.path.join(data_dir("sequence"), "clustal_multi.aln")
     file = clustal.ClustalFile.read(path)
-    assert file["seq1"] == (
-        "ADTRCGTARDCGTR-DRTCGRAGD"
-        "ADTRCGTARDCGTR-DRTCGRAGD"
-    )
-    assert file["seq2"] == (
-        "ADTRCGT---CGTRADRTCGRAGD"
-        "ADTRCGT---CGTRADRTCGRAGD"
-    )
+    assert file["seq1"] == ("ADTRCGTARDCGTR-DRTCGRAGDADTRCGTARDCGTR-DRTCGRAGD")
+    assert file["seq2"] == ("ADTRCGT---CGTRADRTCGRAGDADTRCGT---CGTRADRTCGRAGD")
 
 
 def test_dict_interface():
@@ -69,11 +63,9 @@ def test_round_trip():
 
     # Write alignment to a new ClustalFile
     file2 = clustal.ClustalFile()
-    clustal.set_alignment(
-        file2, alignment, seq_names=["seq1", "seq2", "seq3"]
-    )
+    clustal.set_alignment(file2, alignment, seq_names=["seq1", "seq2", "seq3"])
     alignment2 = clustal.get_alignment(file2)
-    assert str(alignment) == str(alignment2)
+    assert alignment == alignment2
 
 
 def test_write_read_round_trip():
@@ -86,16 +78,14 @@ def test_write_read_round_trip():
     # Write to string buffer
     buffer = io.StringIO()
     file2 = clustal.ClustalFile()
-    clustal.set_alignment(
-        file2, alignment, seq_names=["seq1", "seq2", "seq3"]
-    )
+    clustal.set_alignment(file2, alignment, seq_names=["seq1", "seq2", "seq3"])
     file2.write(buffer)
 
     # Read back from string buffer
     buffer.seek(0)
     file3 = clustal.ClustalFile.read(buffer)
     alignment3 = clustal.get_alignment(file3)
-    assert str(alignment) == str(alignment3)
+    assert alignment == alignment3
 
 
 def test_name_count_mismatch():
@@ -106,9 +96,7 @@ def test_name_count_mismatch():
 
     file2 = clustal.ClustalFile()
     with pytest.raises(ValueError):
-        clustal.set_alignment(
-            file2, alignment, seq_names=["seq1", "seq2"]
-        )
+        clustal.set_alignment(file2, alignment, seq_names=["seq1", "seq2"])
 
 
 @pytest.mark.parametrize("seq_type", (None, seq.ProteinSequence))
