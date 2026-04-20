@@ -40,7 +40,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions-rs/toolchain@v1
       with:
-        toolchain: stable
+        toolchain: 1.95.0
         override: true
         components: rustfmt, clippy
     - uses: actions/setup-python@v5
