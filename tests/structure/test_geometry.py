@@ -130,6 +130,64 @@ def test_dihedral_side_chain_consistency(multi_model):
     assert test_chi == pytest.approx(ref_chi, abs=1e-3, nan_ok=True)
 
 
+@pytest.mark.parametrize("multi_model", [False, True])
+def test_nucleotide_dihedral_consistency(multi_model):
+    """
+    Check if the computed nucleotide dihedral angles via
+    :func:`nucleotide_dihedral_backbone()` and :func:`nucleotide_dihedral_side_chain()`
+    are equal to the reference computed with ``barnaba``.
+    """
+    with open(join(data_dir("structure"), "misc", "nucleotide_dihedrals.json")) as file:
+        ref_dihedrals = json.load(file)
+
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "4p5j.bcif"))
+    atoms = pdbx.get_structure(pdbx_file, model=1)
+    if multi_model:
+        atoms = struc.stack([atoms] * 2)
+    # `barnaba` only outputs values for canonical nucleotides
+    # -> filter them here as well for consistency
+    atoms = atoms[..., struc.filter_canonical_nucleotides(atoms)]
+
+    test_bb_angles = struc.nucleotide_dihedral_backbone(atoms)
+    test_chi = struc.nucleotide_dihedral_side_chain(atoms)
+    test_angles = test_bb_angles + (test_chi,)
+
+    if multi_model:
+        for angle in test_angles:
+            assert np.array_equal(angle[1], angle[0], equal_nan=True)
+        test_angles = tuple(angle[0] for angle in test_angles)
+
+    for angle_name, test_angle in zip(
+        ["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "chi"], test_angles
+    ):
+        ref_angle = np.array(ref_dihedrals[angle_name])
+        assert test_angle == pytest.approx(ref_angle, abs=1e-3, nan_ok=True)
+
+
+def test_nucleotide_dihedrals_full_structure():
+    """
+    :func:`nucleotide_dihedral_backbone()` and :func:`nucleotide_dihedral_side_chain()`
+    should be able to run on structures with non-canonical nucleotides.
+    For non-nucleotide residues all angles should be NaN.
+    """
+    # `4p5j` contains a non-canonical nucleotide at the terminus
+    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "4p5j.bcif"))
+    atoms = pdbx.get_structure(pdbx_file, model=1)
+    # This mask will also include the non-canonical nucleotide
+    nucleotide_mask = struc.filter_nucleotides(atoms[struc.get_residue_starts(atoms)])
+
+    bb_angles = np.stack(struc.nucleotide_dihedral_backbone(atoms), axis=-1)
+    chi_angles = struc.nucleotide_dihedral_side_chain(atoms)
+
+    # For nucleotide residues the dihedral angles should be defined
+    # (with exception of some backbone angles, as they are missing at the termini)
+    assert np.all(np.isfinite(bb_angles[nucleotide_mask]).any(axis=-1))
+    assert np.all(np.isfinite(chi_angles[nucleotide_mask]))
+    # For non-nucleotide residues all angles should be NaN
+    assert np.all(np.isnan(bb_angles[~nucleotide_mask]))
+    assert np.all(np.isnan(chi_angles[~nucleotide_mask]))
+
+
 def test_index_distance_non_periodic():
     """
     Without PBC the result should be equal to the normal distance

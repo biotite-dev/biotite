@@ -385,7 +385,9 @@
             "base_pairs_glycosidic_bond",
             "dot_bracket",
             "dot_bracket_from_structure",
-            "base_pairs_from_dot_bracket"
+            "base_pairs_from_dot_bracket",
+            "nucleotide_dihedral_backbone",
+            "nucleotide_dihedral_side_chain"
         ],
         "Aromatic rings": [
             "find_aromatic_rings",

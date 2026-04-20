@@ -28,7 +28,7 @@ if __name__ == "__main__":
         # MDTraj only outputs the dihedral angles only for residues,
         # where they are applicable
         # -> Map the angles to the correct residues using the returned indices
-        # amd keep the inapplicable residues as NaN
+        # and keep the inapplicable residues as NaN
         mapped_dihedrals = np.full((struc.get_residue_count(atoms)), np.nan)
         # Use the second atom of each angle to infer the residue,
         # to handle the edge case of 'phi'
