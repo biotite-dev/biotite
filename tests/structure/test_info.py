@@ -11,7 +11,7 @@ import biotite.structure.info as strucinfo
 import biotite.structure.io.pdbx as pdbx
 from biotite.structure.info.ccd import _CCD_FILE as INTERNAL_CCD_FILE
 from biotite.structure.io import load_structure
-from tests.util import data_dir
+from tests.util import cannot_import, data_dir
 
 
 @pytest.fixture
@@ -149,6 +149,55 @@ def test_one_letter_code(residues, should_have_one_letter, exception_ratio):
         if should_have_one_letter ^ has_one_letter:
             exception_count += 1
     assert exception_count / len(residues) <= exception_ratio
+
+
+def test_common_ion_names():
+    """
+    Test if the typical ions are present in the ion names.
+    """
+    ION_NAMES = [
+        # Alkali metals
+        "LI",
+        "NA",
+        "K",
+        "RB",
+        "CS",
+        # Alkaline earth metals
+        "0BE",
+        "MG",
+        "CA",
+        "SR",
+        "BA",
+        # Halogens
+        "F",
+        "CL",
+        "BR",
+        "IOD",
+    ]
+    for ion in ION_NAMES:
+        assert ion in strucinfo.ion_names()
+
+
+@pytest.mark.skipif(cannot_import("rdkit"), reason="RDKit not installed")
+def test_ion_names_in_periodic_table():
+    """
+    The chemical formula of all monoatomic ions must be part of the periodic table.
+    """
+    import rdkit.Chem.AllChem as Chem
+
+    periodic_table = Chem.GetPeriodicTable()
+    for ion_name in strucinfo.ion_names():
+        element = strucinfo.get_from_ccd("chem_comp", ion_name, "formula").as_item()
+        if element == "D":
+            # Deuterium is a valid element, but not part of the periodic table
+            continue
+        # Raises RuntimeError if the symbol is not in the periodic table
+        try:
+            assert periodic_table.GetAtomicNumber(element) > 0
+        except Exception:
+            raise ValueError(
+                f"Symbol '{element}' of '{ion_name}' was not found in periodic table"
+            )
 
 
 @pytest.mark.parametrize(

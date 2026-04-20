@@ -34,6 +34,7 @@ from biotite.structure.atoms import AtomArrayStack
 from biotite.structure.info.groups import (
     amino_acid_names,
     carbohydrate_names,
+    ion_names,
     nucleotide_names,
 )
 from biotite.structure.residues import get_residue_count, get_residue_starts
@@ -87,9 +88,7 @@ def filter_monoatomic_ions(array):
         This array is `True` for all indices in `array`, where the atom
         is a monoatomic ion.
     """
-    # Exclusively in monoatomic ions,
-    # the element name is equal to the residue name
-    return array.res_name == array.element
+    return np.isin(array.res_name, ion_names())
 
 
 def filter_heavy(array):
