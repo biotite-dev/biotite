@@ -260,6 +260,29 @@ def test_metal_coordination_bonds():
     assert np.all(conn_type_id == "metalc")
 
 
+def test_set_structure_self_bond_raises():
+    """
+    Two distinct atoms sharing the same ``(res_name, atom_name)`` annotation
+    with a bond between them would produce a ``chem_comp_bond`` self-bond.
+    ``set_structure()`` must raise :class:`BadStructureError` instead of
+    silently filtering the offending row.
+    """
+    atoms = struc.AtomArray(2)
+    atoms.coord[:] = 0.0
+    atoms.chain_id[:] = "A"
+    atoms.res_id[:] = 1
+    atoms.res_name[:] = "ALA"
+    # Same atom_name on both atoms — the ambiguous annotation.
+    atoms.atom_name[:] = "CA"
+    atoms.element[:] = "C"
+    atoms.hetero[:] = False
+    atoms.bonds = struc.BondList(2, np.array([[0, 1]]))
+
+    pdbx_file = pdbx.BinaryCIFFile()
+    with pytest.raises(struc.BadStructureError, match="sharing the same"):
+        pdbx.set_structure(pdbx_file, atoms)
+
+
 def test_bond_sparsity():
     """
     Ensure that only as much intra-residue bonds are written as necessary,
