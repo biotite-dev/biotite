@@ -218,9 +218,9 @@ class FieldQuery(SingleQuery):
     Examples
     --------
 
-    >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
+    >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.5)
     >>> print(sorted(search(query)))
-    ['1EJG', '1I0T', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG', '7R0H']
+    ['3NIR', '4JLJ', '5D8V', '7R0H']
     """
 
     def __init__(
@@ -731,12 +731,12 @@ def count(query, return_type="entry", group_by=None, content_types=("experimenta
     Examples
     --------
 
-    >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
+    >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.5)
     >>> print(count(query))
-    9
+    4
     >>> ids = search(query)
     >>> print(sorted(ids))
-    ['1EJG', '1I0T', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG', '7R0H']
+    ['3NIR', '4JLJ', '5D8V', '7R0H']
     """
     query_dict = _initialize_query_dict(query, return_type, group_by, content_types)
 
@@ -853,22 +853,22 @@ def search(
     Examples
     --------
 
-    >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.6)
+    >>> query = FieldQuery("reflns.d_resolution_high", less_or_equal=0.5)
     >>> print(sorted(search(query)))
-    ['1EJG', '1I0T', '3NIR', '3P4J', '4JLJ', '5D8V', '5NW3', '7ATG', '7R0H']
+    ['3NIR', '4JLJ', '5D8V', '7R0H']
     >>> print(search(query, sort_by="rcsb_accession_info.initial_release_date"))
-    ['7R0H', '7ATG', '5NW3', '5D8V', '4JLJ', '3P4J', '3NIR', '1I0T', '1EJG']
+    ['7R0H', '5D8V', '4JLJ', '3NIR']
     >>> print(search(
     ...     query, range=(1,4), sort_by="rcsb_accession_info.initial_release_date"
     ... ))
-    ['7ATG', '5NW3', '5D8V']
+    ['5D8V', '4JLJ', '3NIR']
     >>> print(sorted(search(query, return_type="polymer_instance")))
-    ['1EJG.A', '1I0T.A', '1I0T.B', '3NIR.A', '3P4J.A', '3P4J.B', '4JLJ.A', '4JLJ.B', '5D8V.A', '5NW3.A', '7ATG.A', '7ATG.B', '7R0H.A']
+    ['3NIR.A', '4JLJ.A', '4JLJ.B', '5D8V.A', '7R0H.A']
     >>> print(search(
     ...     query, return_type="polymer_entity", return_groups=True,
     ...     group_by=UniprotGrouping(sort_by="rcsb_accession_info.initial_release_date"),
     ... ))
-    {'P24297': ['5NW3_1'], 'P27707': ['4JLJ_1'], 'P80176': ['5D8V_1'], 'O29777': ['7R0H_1'], 'P01542': ['3NIR_1', '1EJG_1']}
+    {'P27707': ['4JLJ_1'], 'P80176': ['5D8V_1'], 'O29777': ['7R0H_1'], 'P01542': ['3NIR_1']}
     """
     query_dict = _initialize_query_dict(query, return_type, group_by, content_types)
 
