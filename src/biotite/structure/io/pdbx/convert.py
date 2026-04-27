@@ -48,6 +48,7 @@ from biotite.structure.filter import (
     filter_highest_occupancy_altloc,
 )
 from biotite.structure.geometry import centroid
+from biotite.structure.info.bonds import bonds_in_residue
 from biotite.structure.io.pdbx.bcif import (
     BinaryCIFBlock,
     BinaryCIFColumn,
@@ -419,6 +420,11 @@ def get_structure(
         if "chem_comp_bond" in block:
             try:
                 custom_bond_dict = _parse_intra_residue_bonds(block["chem_comp_bond"])
+                # For some reason the PDB does not add `chem_comp_bond` entries for
+                # some residues
+                # Therefore add the most common missing residues manually
+                for res_name in ["UNK", "N"]:
+                    custom_bond_dict[res_name] = bonds_in_residue(res_name)
             except KeyError:
                 warnings.warn(
                     "The 'chem_comp_bond' category has missing columns, "

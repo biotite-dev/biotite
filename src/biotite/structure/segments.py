@@ -50,7 +50,10 @@ def get_segment_starts(
         The start indices of segments in `array`.
     """
     if array.array_length() == 0:
-        return np.array([], dtype=int)
+        if add_exclusive_stop:
+            return np.array([0], dtype=int)
+        else:
+            return np.array([], dtype=int)
 
     segment_start_mask = np.zeros(array.array_length() - 1, dtype=bool)
     for annot_name in continuous_categories:
