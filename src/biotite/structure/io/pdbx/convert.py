@@ -1185,6 +1185,15 @@ def _set_intra_residue_bonds(array, atom_site):
     # Take the residue name from the first atom index, as the residue
     # name is the same for both atoms, since we have only intra bonds
     comp_id = array.res_name[bond_array[:, 0]]
+    # Two distinct atom indices sharing the same (res_name, atom_name)
+    # annotations would surface in chem_comp_bond as a self-bond on the
+    # chemical component, which is structurally invalid.
+    if np.any(atom_id_1 == atom_id_2):
+        raise BadStructureError(
+            "Structure contains bonded atoms sharing the same "
+            "(res_name, atom_name) annotations, which cannot be "
+            "written to chem_comp_bond without producing a self-bond"
+        )
     _, unique_indices = np.unique(
         np.stack([comp_id, atom_id_1, atom_id_2], axis=-1), axis=0, return_index=True
     )
