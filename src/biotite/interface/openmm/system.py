@@ -2,6 +2,7 @@ __name__ = "biotite.interface.openmm"
 __author__ = "Patrick Kunzmann"
 __all__ = ["to_system", "to_topology", "from_topology"]
 
+import warnings
 import numpy as np
 import openmm
 import openmm.app as app
@@ -109,7 +110,7 @@ def to_topology(atoms):
                 name=atoms.atom_name[i],
                 element=app.Element.getBySymbol(atoms.element[i]),
                 residue=residue_list[res_idx[i]],
-                id=str(atom_id[start_i]),
+                id=str(atom_id[i]),
             )
         )
 
@@ -170,6 +171,7 @@ def from_topology(topology):
     res_names = []
     atom_names = []
     elements = []
+    atom_ids = []
     for chain in topology.chains():
         chain_id = chain.id
         for residue in chain.residues():
@@ -183,6 +185,7 @@ def from_topology(topology):
                 res_names.append(res_name)
                 atom_names.append(atom.name.upper())
                 elements.append(atom.element.symbol.upper())
+                atom_ids.append(str(atom.id))
     atoms.chain_id = chain_ids
     atoms.res_id = res_ids
     atoms.ins_code = ins_codes
@@ -190,6 +193,13 @@ def from_topology(topology):
     atoms.atom_name = atom_names
     atoms.element = elements
     atoms.hetero = ~(struc.filter_amino_acids(atoms) | struc.filter_nucleotides(atoms))
+    atom_ids = np.array(atom_ids, dtype=str)
+    try:
+        atom_ids = atom_ids.astype(int)
+    except ValueError:
+        warnings.warn("Could not convert atom IDs to integers, keeping them as strings")
+        atom_ids = np.array(atom_ids, dtype=str)
+    atoms.set_annotation("atom_id", atom_ids)
 
     bonds = []
     atom_to_index = {atom: i for i, atom in enumerate(topology.atoms())}
