@@ -97,7 +97,9 @@ def test_topology_conversion(test_path, include_box):
     Converting an :class:`AtomArray` into a :class:`Topology` and back
     again should not change the :class:`AtomArray`.
     """
-    ref_atoms = pdbx.get_structure(pdbx.CIFFile.read(test_path), model=1)
+    ref_atoms = pdbx.get_structure(
+        pdbx.CIFFile.read(test_path), model=1, extra_fields=["atom_id"]
+    )
     ref_atoms.bonds = struc.connect_via_residue_names(ref_atoms)
     if not include_box:
         ref_atoms.box = None
