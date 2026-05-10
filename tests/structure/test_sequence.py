@@ -28,11 +28,11 @@ def test_pdbx_sequence_consistency(path):
     ref_sequences = pdbx.get_sequence(pdbx_file)
 
     atoms = pdbx.get_structure(
-        pdbx_file, use_author_fields=False, model=1, extra_fields=["label_entity_id"]
+        pdbx_file, use_author_fields=False, model=1, extra_fields=["entity_id"]
     )
     # Remove non-polymer chains
     polymer_entity_ids = pdbx_file.block["entity_poly"]["entity_id"].as_array(str)
-    atoms = atoms[np.isin(atoms.label_entity_id, polymer_entity_ids)]
+    atoms = atoms[np.isin(atoms.entity_id, polymer_entity_ids)]
     test_sequences, _ = struc.to_sequence(atoms, allow_hetero=True)
 
     # Matching against the PDBx file is not trivial

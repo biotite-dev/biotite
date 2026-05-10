@@ -293,7 +293,8 @@ def get_structure(
         subcategory name.
         The array type is always `str`.
         An exception are the special field identifiers:
-        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'``, ``'charge'`` and
+        ``'entity_id'``.
         These will convert the fitting subcategory into an
         annotation array with reasonable type.
     use_author_fields : bool, optional
@@ -593,6 +594,21 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
             )
             array.set_annotation("charge", np.zeros(array.array_length(), dtype=int))
         extra_fields.remove("charge")
+    if "entity_id" in extra_fields:
+        if "label_entity_id" in atom_site:
+            array.set_annotation(
+                "entity_id", atom_site["label_entity_id"].as_array(str)
+            )
+        else:
+            warnings.warn(
+                "Missing 'label_entity_id' in 'atom_site' category. "
+                "'entity_id' will be set to empty strings.",
+                UserWarning,
+            )
+            array.set_annotation(
+                "entity_id", np.full(array.array_length(), "", dtype="U1")
+            )
+        extra_fields.remove("entity_id")
 
     # Handle all remaining custom fields
     for field in extra_fields:
@@ -891,7 +907,7 @@ def set_structure(
 
     This will save the coordinates, the mandatory annotation categories
     and the optional annotation categories
-    ``b_factor``, ``occupancy`` and ``charge``.
+    ``b_factor``, ``occupancy``, ``charge`` and ``entity_id``.
     If the atom array (stack) contains the annotation ``'atom_id'``,
     these values will be used for atom numbering instead of continuous
     numbering.
@@ -960,11 +976,6 @@ def set_structure(
     )
     atom_site["label_comp_id"] = np.copy(array.res_name)
     atom_site["label_asym_id"] = np.copy(array.chain_id)
-    atom_site["label_entity_id"] = (
-        np.copy(array.label_entity_id)
-        if "label_entity_id" in array.get_annotation_categories()
-        else _determine_entity_id(array.chain_id)
-    )
     atom_site["label_seq_id"] = np.copy(array.res_id)
     atom_site["pdbx_PDB_ins_code"] = Column(
         np.copy(array.ins_code),
@@ -985,6 +996,16 @@ def set_structure(
             np.array([f"{c:+d}" if c != 0 else "?" for c in array.charge]),
             np.where(array.charge == 0, MaskValue.MISSING, MaskValue.PRESENT),
         )
+    if "entity_id" in annot_categories:
+        atom_site["label_entity_id"] = np.copy(array.entity_id)
+    elif "label_entity_id" in annot_categories:
+        warnings.warn(
+            "The 'label_entity_id' annotation is deprecated, use 'entity_id' instead",
+            DeprecationWarning,
+        )
+        atom_site["label_entity_id"] = np.copy(array.label_entity_id)
+    else:
+        atom_site["label_entity_id"] = _determine_entity_id(array.chain_id)
 
     # Handle all remaining custom fields
     if len(extra_fields) > 0:
@@ -1001,6 +1022,7 @@ def set_structure(
             "b_factor",
             "occupancy",
             "charge",
+            "entity_id",
         ]
         _reserved_annotation_names = list(atom_site.keys()) + _standard_annotations
 
@@ -1674,7 +1696,8 @@ def get_assembly(
         subcategory name.
         The array type is always `str`.
         An exception are the special field identifiers:
-        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'``, ``'charge'`` and
+        ``'entity_id'``.
         These will convert the fitting subcategory into an
         annotation array with reasonable type.
     use_author_fields : bool, optional
@@ -1957,7 +1980,8 @@ def get_unit_cell(
         subcategory name.
         The array type is always `str`.
         An exception are the special field identifiers:
-        ``'atom_id'``, ``'b_factor'``, ``'occupancy'`` and ``'charge'``.
+        ``'atom_id'``, ``'b_factor'``, ``'occupancy'``, ``'charge'`` and
+        ``'entity_id'``.
         These will convert the fitting subcategory into an
         annotation array with reasonable type.
     use_author_fields : bool, optional
