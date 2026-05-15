@@ -135,11 +135,18 @@ def create_atom_names(atoms):
     ['N' 'C' 'O' 'N' 'C' 'O' 'C' 'C' 'H' 'H' 'H' 'H']
     >>> print(create_atom_names(atoms))
     ['N1' 'C1' 'O1' 'N2' 'C2' 'O2' 'C3' 'C4' 'H1' 'H2' 'H3' 'H4']
+    >>> # For single atoms, the atom name is the element
+    >>> print(create_atom_names(residue("CL")))
+    ['CL']
     """
     if isinstance(atoms, (AtomArray, AtomArrayStack)):
         elements = atoms.element
     else:
         elements = atoms
+
+    if atoms.array_length() == 1:
+        # For single atoms, the element is used as atom name
+        return elements.astype("U6")
 
     atom_names = np.zeros(len(elements), dtype="U6")
     element_counter = Counter()
