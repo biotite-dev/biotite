@@ -286,6 +286,8 @@ def test_bond_sparsity():
 
 @pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_extra_fields(tmpdir, format):
+    EXTRA_FIELDS = ["atom_id", "b_factor", "occupancy", "charge", "entity_id"]
+
     path = join(data_dir("structure"), f"1l2y.{format}")
     if format == "cif":
         File = pdbx.CIFFile
@@ -293,9 +295,7 @@ def test_extra_fields(tmpdir, format):
         File = pdbx.BinaryCIFFile
 
     pdbx_file = File.read(path)
-    ref_atoms = pdbx.get_structure(
-        pdbx_file, extra_fields=["atom_id", "b_factor", "occupancy", "charge"]
-    )
+    ref_atoms = pdbx.get_structure(pdbx_file, extra_fields=EXTRA_FIELDS)
 
     pdbx_file = File()
     pdbx.set_structure(pdbx_file, ref_atoms, data_block="test")
@@ -303,15 +303,14 @@ def test_extra_fields(tmpdir, format):
     pdbx_file.write(file_path)
 
     pdbx_file = File.read(path)
-    test_atoms = pdbx.get_structure(
-        pdbx_file, extra_fields=["atom_id", "b_factor", "occupancy", "charge"]
-    )
+    test_atoms = pdbx.get_structure(pdbx_file, extra_fields=EXTRA_FIELDS)
 
     assert test_atoms.ins_code.tolist() == ref_atoms.ins_code.tolist()
     assert test_atoms.atom_id.tolist() == ref_atoms.atom_id.tolist()
     assert test_atoms.b_factor.tolist() == approx(ref_atoms.b_factor.tolist())
     assert test_atoms.occupancy.tolist() == approx(ref_atoms.occupancy.tolist())
     assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
+    assert test_atoms.entity_id.tolist() == ref_atoms.entity_id.tolist()
     assert test_atoms == ref_atoms
 
 
