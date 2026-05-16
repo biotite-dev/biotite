@@ -306,6 +306,13 @@ class BondList(Copyable):
                     "Input array containing bonds must be either of shape "
                     "(n,2) or (n,3)"
                 )
+            # After per-row sorting a self-bond appears as a row whose two
+            # atom indices are equal. These cannot represent valid chemistry,
+            # so reject them at the construction boundary.
+            if (self._bonds[:, 0] == self._bonds[:, 1]).any():
+                raise ValueError(
+                    "Input contains a bond from an atom to itself"
+                )
             self._remove_redundant_bonds()
             self._max_bonds_per_atom = self._get_max_bonds_per_atom()
 
@@ -939,6 +946,11 @@ class BondList(Copyable):
 
         cdef uint32 index1 = _to_positive_index(atom_index1, self._atom_count)
         cdef uint32 index2 = _to_positive_index(atom_index2, self._atom_count)
+        if index1 == index2:
+            raise ValueError(
+                f"Cannot create a bond from an atom to itself "
+                f"(atom index {index1})"
+            )
         _sort(&index1, &index2)
 
         cdef int i
