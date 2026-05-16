@@ -59,6 +59,9 @@ biotite.egg-info
 *.code-workspace
 .vscode/*
 
+# Ignore Zed project files
+.zed/*
+
 # Ignore hidden OS related files
 *.fuse_hidden*
 .DS_Store

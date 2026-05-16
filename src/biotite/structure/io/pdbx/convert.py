@@ -1729,6 +1729,11 @@ def get_assembly(
         Contains the `sym_id` annotation, which enumerates the copies of the asymmetric
         unit in the assembly.
 
+    Notes
+    -----
+    The ``box`` attribute of the :class:`AtomArray`/:class:`AtomArrayStack` returned by
+    this function has limited meaning, as the assembly is not tied to the unit cell.
+
     Examples
     --------
 
