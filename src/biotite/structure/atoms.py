@@ -13,6 +13,8 @@ __all__ = [
     "Atom",
     "AtomArray",
     "AtomArrayStack",
+    "Coord",
+    "MultiCoord",
     "concatenate",
     "array",
     "stack",
@@ -26,9 +28,11 @@ import abc
 import numbers
 import textwrap
 from collections.abc import Sequence
+from typing import Generic, TypeAliasType
 import numpy as np
 from biotite.copyable import Copyable
 from biotite.structure.bonds import BondList
+from biotite.typing import XYZ, M, N, NDArray2, NDArray3
 
 
 class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
@@ -571,7 +575,7 @@ class Atom(Copyable):
         return Atom(self.coord, **self._annot)
 
 
-class AtomArray(_AtomArrayBase):
+class AtomArray(_AtomArrayBase, Generic[N]):
     """
     An array representation of a model consisting of multiple atoms.
 
@@ -856,7 +860,7 @@ class AtomArray(_AtomArrayBase):
         return AtomArray(self.array_length())
 
 
-class AtomArrayStack(_AtomArrayBase):
+class AtomArrayStack(_AtomArrayBase, Generic[M, N]):
     """
     A collection of multiple :class:`AtomArray` instances, where each
     atom array has equal annotation arrays.
@@ -1175,6 +1179,19 @@ class AtomArrayStack(_AtomArrayBase):
 
     def __copy_create__(self):
         return AtomArrayStack(self.stack_depth(), self.array_length())
+
+
+#: Alias for either a structure or its coordinates
+Coord = TypeAliasType(
+    "Coord",
+    AtomArray[N] | NDArray2[N, XYZ, np.floating],
+    type_params=(N,),
+)
+MultiCoord = TypeAliasType(
+    "MultiCoord",
+    AtomArrayStack[M, N] | NDArray3[M, N, XYZ, np.floating],
+    type_params=(M, N),
+)
 
 
 def array(atoms):

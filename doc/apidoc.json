@@ -394,6 +394,10 @@
             "find_stacking_interactions",
             "find_pi_cation_interactions",
             "PiStacking"
+        ],
+        "Type annotations" : [
+            "Coord",
+            "MultiCoord"
         ]
     },
     "biotite.structure.info" : {

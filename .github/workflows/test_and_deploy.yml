@@ -197,6 +197,7 @@ jobs:
           --ignore="tests//application//test_sra.py"
           --ignore="tests//database//test_entrez.py"
           tests//test_doctest.py
+          tests//test_typing.py
           tests//test_modname.py
           tests//database
           tests//application

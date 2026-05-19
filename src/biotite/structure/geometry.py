@@ -27,8 +27,9 @@ __all__ = [
 
 import functools
 import numpy as np
-from biotite.structure.atoms import AtomArray, AtomArrayStack, coord
+from biotite.structure.atoms import Atom, AtomArray, AtomArrayStack, coord
 from biotite.structure.box import coord_to_fraction, fraction_to_coord, is_orthogonal
+from biotite.typing import M, N, NDArray1, NDArray2, NDArray3, XYZ
 from biotite.structure.filter import (
     filter_amino_acids,
     filter_canonical_amino_acids,
@@ -264,7 +265,33 @@ def index_displacement(*args, **kwargs):
     return _call_non_index_function(displacement, 2, *args, **kwargs)
 
 
-def distance(atoms1, atoms2, box=None):
+def distance(
+    atoms1: (
+        Atom
+        | AtomArray[N]
+        | AtomArrayStack[M, N]
+        | NDArray1[XYZ, np.floating]
+        | NDArray2[N, XYZ, np.floating]
+        | NDArray3[M, N, XYZ, np.floating]
+    ),
+    atoms2: (
+        Atom
+        | AtomArray[N]
+        | AtomArrayStack[M, N]
+        | NDArray1[XYZ, np.floating]
+        | NDArray2[N, XYZ, np.floating]
+        | NDArray3[M, N, XYZ, np.floating]
+    ),
+    box: (
+        NDArray2[XYZ, XYZ, np.floating]
+        | NDArray3[M, XYZ, XYZ, np.floating]
+        | None
+    ) = None,
+) -> (
+    NDArray1[N, np.floating]
+    | NDArray2[M, N, np.floating]
+    | np.floating
+):
     """
     Measure the euclidian distance between atoms.
 
