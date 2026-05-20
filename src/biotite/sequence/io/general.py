@@ -7,17 +7,22 @@ This module contains a convenience function for loading sequences from
 general sequence files.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.io"
 __author__ = "Patrick Kunzmann"
 __all__ = ["load_sequence", "save_sequence", "load_sequences", "save_sequences"]
 
 import os.path
 from collections import OrderedDict
+from os import PathLike
 import numpy as np
-from biotite.sequence.seqtypes import NucleotideSequence
+from biotite.file import InvalidFileError
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
+from biotite.sequence.sequence import Sequence
 
 
-def load_sequence(file_path):
+def load_sequence(file_path: PathLike[str] | str) -> Sequence:
     """
     Load a sequence from a sequence file without the need
     to manually instantiate a :class:`File` object.
@@ -49,9 +54,11 @@ def load_sequence(file_path):
         # -> Offset is irrelevant
         file = FastqFile.read(file_path, offset="Sanger")
         # Get first sequence
-        for seq_str, scores in file.values():
-            sequence = NucleotideSequence(seq_str)
-            break
+        try:
+            seq_str, _ = next(iter(file.values()))
+        except StopIteration:
+            raise InvalidFileError("File does not contain any sequence")
+        sequence = NucleotideSequence(seq_str)
         return sequence
     elif suffix in [".gb", ".gbk", ".gp"]:
         from biotite.sequence.io.genbank import GenBankFile, get_sequence
@@ -63,7 +70,7 @@ def load_sequence(file_path):
         raise ValueError(f"Unknown file format '{suffix}'")
 
 
-def save_sequence(file_path, sequence):
+def save_sequence(file_path: PathLike[str] | str, sequence: Sequence) -> None:
     """
     Save a sequence into a sequence file without the need
     to manually instantiate a :class:`File` object.
@@ -101,13 +108,17 @@ def save_sequence(file_path, sequence):
 
         file = GenBankFile()
         set_locus(file, "sequence", len(sequence))
+        if not isinstance(sequence, (NucleotideSequence, ProteinSequence)):
+            raise TypeError(
+                "GenBank files require a NucleotideSequence or ProteinSequence"
+            )
         set_sequence(file, sequence)
         file.write(file_path)
     else:
         raise ValueError(f"Unknown file format '{suffix}'")
 
 
-def load_sequences(file_path):
+def load_sequences(file_path: PathLike[str] | str) -> dict[str, Sequence]:
     """
     Load multiple sequences from a sequence file without the need
     to manually instantiate a :class:`File` object.
@@ -157,7 +168,9 @@ def load_sequences(file_path):
         raise ValueError(f"Unknown file format '{suffix}'")
 
 
-def save_sequences(file_path, sequences):
+def save_sequences(
+    file_path: PathLike[str] | str, sequences: dict[str, Sequence]
+) -> None:
     """
     Save multiple sequences into a sequence file without the need
     to manually instantiate a :class:`File` object.

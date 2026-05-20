@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -17,8 +19,14 @@ __all__ = [
 ]
 
 import abc
+from typing import Any
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.transforms import Bbox
+from biotite.sequence.align.alignment import Alignment
+from biotite.sequence.align.matrix import SubstitutionMatrix
 from biotite.sequence.graphics.colorschemes import get_color_scheme
+from biotite.typing import K, M, MplColor, N, NDArray2
 from biotite.visualize import colors
 
 
@@ -35,15 +43,17 @@ class SymbolPlotter(metaclass=abc.ABCMeta):
         A *Matplotlib* axes, that is used as plotting area.
     """
 
-    def __init__(self, axes):
+    def __init__(self, axes: Axes) -> None:
         self._axes = axes
 
     @property
-    def axes(self):
+    def axes(self) -> Axes:
         return self._axes
 
     @abc.abstractmethod
-    def plot_symbol(self, bbox, alignment, column_i, seq_i):
+    def plot_symbol(
+        self, bbox: Bbox, alignment: Alignment, column_i: int, seq_i: int
+    ) -> None:
         """
         Get the color of a symbol at a specified position in the
         alignment.
@@ -88,18 +98,26 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
         :class:`matplotlib.Text` instance of each symbol.
     """
 
-    def __init__(self, axes, color_symbols=False, font_size=None, font_param=None):
+    def __init__(
+        self,
+        axes: Axes,
+        color_symbols: bool = False,
+        font_size: float | None = None,
+        font_param: dict[str, Any] | None = None,
+    ) -> None:
         super().__init__(axes)
         self._color_symbols = color_symbols
         self._font_size = font_size
         self._font_param = font_param if font_param is not None else {}
 
-    def plot_symbol(self, bbox, alignment, column_i, seq_i):
+    def plot_symbol(
+        self, bbox: Bbox, alignment: Alignment, column_i: int, seq_i: int
+    ) -> None:
         from matplotlib.patches import Rectangle
 
         trace = alignment.trace
         if trace[column_i, seq_i] != -1:
-            symbol = alignment.sequences[seq_i][trace[column_i, seq_i]]
+            symbol = str(alignment.sequences[seq_i][trace[column_i, seq_i]])
         else:
             symbol = "-"
         color = self.get_color(alignment, column_i, seq_i)
@@ -125,7 +143,7 @@ class LetterPlotter(SymbolPlotter, metaclass=abc.ABCMeta):
             box.set_color(color)
 
     @abc.abstractmethod
-    def get_color(self, alignment, column_i, seq_i):
+    def get_color(self, alignment: Alignment, column_i: int, seq_i: int) -> Any:
         """
         Get the color of a symbol at a specified position in the
         alignment.
@@ -209,8 +227,13 @@ class LetterSimilarityPlotter(LetterPlotter):
     """
 
     def __init__(
-        self, axes, matrix=None, color_symbols=False, font_size=None, font_param=None
-    ):
+        self,
+        axes: Axes,
+        matrix: SubstitutionMatrix | None = None,
+        color_symbols: bool = False,
+        font_size: float | None = None,
+        font_param: dict[str, Any] | None = None,
+    ) -> None:
         super().__init__(axes, color_symbols, font_size, font_param)
         if matrix is not None:
             self._matrix = matrix.score_matrix()
@@ -219,7 +242,11 @@ class LetterSimilarityPlotter(LetterPlotter):
         # Default colormap
         self._cmap = self._generate_colormap(colors["dimgreen"], self._color_symbols)
 
-    def set_color(self, color=None, cmap=None):
+    def set_color(
+        self,
+        color: MplColor | None = None,
+        cmap: Any | None = None,
+    ) -> None:
         """
         Set the alignment colors used for plotting.
 
@@ -254,27 +281,36 @@ class LetterSimilarityPlotter(LetterPlotter):
                 # cmap is a colormap
                 self._cmap = cmap
 
-    def get_color(self, alignment, column_i, seq_i):
+    def get_color(
+        self, alignment: Alignment, column_i: int, seq_i: int
+    ) -> tuple[float, float, float, float]:
         # Calculate average normalize similarity
         index1 = alignment.trace[column_i, seq_i]
         if index1 == -1:
-            similarity = 0
+            similarity = 0.0
         else:
-            code1 = alignment.sequences[seq_i].code[index1]
+            code1 = int(alignment.sequences[seq_i].code[index1])
             similarities = np.zeros(alignment.trace.shape[1])
             for i in range(alignment.trace.shape[1]):
                 index2 = alignment.trace[column_i, i]
                 if index2 == -1:
                     similarities[i] = 0
                 else:
-                    code2 = alignment.sequences[i].code[index2]
+                    code2 = int(alignment.sequences[i].code[index2])
                     similarities[i] = self._get_similarity(self._matrix, code1, code2)
             # Delete self-similarity
             similarities = np.delete(similarities, seq_i)
-            similarity = np.average(similarities)
+            similarity = float(np.average(similarities))
+        if self._cmap is None:
+            raise ValueError("Colormap is not set")
         return self._cmap(similarity)
 
-    def _get_similarity(self, matrix, code1, code2):
+    def _get_similarity(
+        self,
+        matrix: NDArray2[M, N, np.integer] | None,
+        code1: int,
+        code2: int,
+    ) -> float:
         if matrix is None:
             return 1 if code1 == code2 else 0
         else:
@@ -286,7 +322,7 @@ class LetterSimilarityPlotter(LetterPlotter):
             return sim
 
     @staticmethod
-    def _generate_colormap(color, to_black):
+    def _generate_colormap(color: Any, to_black: bool) -> Any:
         from matplotlib.colors import ListedColormap, to_rgb
 
         color = to_rgb(color)
@@ -341,13 +377,13 @@ class LetterTypePlotter(LetterPlotter):
 
     def __init__(
         self,
-        axes,
-        alphabet,
-        color_scheme=None,
-        color_symbols=False,
-        font_size=None,
-        font_param=None,
-    ):
+        axes: Axes,
+        alphabet: Any,
+        color_scheme: str | list[Any] | None = None,
+        color_symbols: bool = False,
+        font_size: float | None = None,
+        font_param: dict[str, Any] | None = None,
+    ) -> None:
         super().__init__(axes, color_symbols, font_size, font_param)
 
         if color_scheme is None:
@@ -357,7 +393,7 @@ class LetterTypePlotter(LetterPlotter):
         else:
             self._colors = color_scheme
 
-    def get_color(self, alignment, column_i, seq_i):
+    def get_color(self, alignment: Alignment, column_i: int, seq_i: int) -> Any:
         index = alignment.trace[column_i, seq_i]
         if index == -1:
             # Gaps are white
@@ -394,13 +430,20 @@ class ArrayPlotter(LetterPlotter):
     """
 
     def __init__(
-        self, axes, fl_score, color_symbols=False, font_size=None, font_param=None
-    ):
+        self,
+        axes: Axes,
+        fl_score: NDArray2[K, N, np.floating],
+        color_symbols: bool = False,
+        font_size: float | None = None,
+        font_param: dict[str, Any] | None = None,
+    ) -> None:
         super().__init__(axes, color_symbols, font_size, font_param)
         self.fl_score = fl_score
         self._cmap = self._generate_colormap(colors["dimorange"], self._color_symbols)
 
-    def get_color(self, alignment, column_i, seq_i):
+    def get_color(
+        self, alignment: Alignment, column_i: int, seq_i: int
+    ) -> tuple[float, float, float, float]:
         index1 = alignment.trace[column_i, seq_i]
         if index1 == -1:
             spot_signal = 0
@@ -408,17 +451,24 @@ class ArrayPlotter(LetterPlotter):
             spot_signal = self._get_signal(self.fl_score, column_i, seq_i)
         return self._cmap(spot_signal)
 
-    def _get_signal(self, fl_score, column_i, seq_i):
+    def _get_signal(
+        self,
+        fl_score: NDArray2[K, N, np.floating] | None,
+        column_i: int,
+        seq_i: int,
+    ) -> float:
         if fl_score is None:
             signal = 0.0
         else:
             signal = fl_score[column_i, seq_i]
         return signal
 
-    def get_cmap(self):
+    def get_cmap(self) -> Any:
         return self._cmap
 
-    def plot_symbol(self, bbox, alignment, column_i, seq_i):
+    def plot_symbol(
+        self, bbox: Bbox, alignment: Alignment, column_i: int, seq_i: int
+    ) -> None:
         from matplotlib.patches import Rectangle
 
         trace = alignment.trace
@@ -430,9 +480,9 @@ class ArrayPlotter(LetterPlotter):
                 if seq_i == 1:
                     symbol = "*"
                 else:
-                    symbol = alignment.sequences[seq_i][trace[column_i, seq_i]]
+                    symbol = str(alignment.sequences[seq_i][trace[column_i, seq_i]])
             else:
-                symbol = alignment.sequences[seq_i][trace[column_i, seq_i]]
+                symbol = str(alignment.sequences[seq_i][trace[column_i, seq_i]])
         else:
             symbol = "-"
         color = self.get_color(alignment, column_i, seq_i)
@@ -457,7 +507,7 @@ class ArrayPlotter(LetterPlotter):
             box.set_color(color)
 
     @staticmethod
-    def _generate_colormap(color, to_black):
+    def _generate_colormap(color: Any, to_black: bool) -> Any:
         from matplotlib.colors import ListedColormap, to_rgb
 
         color = to_rgb(color)
@@ -479,19 +529,19 @@ class ArrayPlotter(LetterPlotter):
 
 
 def plot_alignment(
-    axes,
-    alignment,
-    symbol_plotter,
-    symbols_per_line=50,
-    show_numbers=False,
-    number_size=None,
-    number_functions=None,
-    labels=None,
-    label_size=None,
-    show_line_position=False,
-    spacing=1,
-    symbol_spacing=None,
-):
+    axes: Axes,
+    alignment: Alignment,
+    symbol_plotter: SymbolPlotter,
+    symbols_per_line: int = 50,
+    show_numbers: bool = False,
+    number_size: float | None = None,
+    number_functions: list[Any] | None = None,
+    labels: list[str] | None = None,
+    label_size: float | None = None,
+    show_line_position: bool = False,
+    spacing: float = 1,
+    symbol_spacing: int | None = None,
+) -> None:
     """
     Plot a pairwise or multiple sequence alignment.
 
@@ -680,24 +730,24 @@ def plot_alignment(
 
 
 def plot_alignment_similarity_based(
-    axes,
-    alignment,
-    symbols_per_line=50,
-    show_numbers=False,
-    number_size=None,
-    number_functions=None,
-    labels=None,
-    label_size=None,
-    show_line_position=False,
-    spacing=1,
-    color=None,
-    cmap=None,
-    matrix=None,
-    color_symbols=False,
-    symbol_spacing=None,
-    symbol_size=None,
-    symbol_param=None,
-):
+    axes: Axes,
+    alignment: Alignment,
+    symbols_per_line: int = 50,
+    show_numbers: bool = False,
+    number_size: float | None = None,
+    number_functions: list[Any] | None = None,
+    labels: list[str] | None = None,
+    label_size: float | None = None,
+    show_line_position: bool = False,
+    spacing: float = 1,
+    color: MplColor | None = None,
+    cmap: Any | None = None,
+    matrix: SubstitutionMatrix | None = None,
+    color_symbols: bool = False,
+    symbol_spacing: int | None = None,
+    symbol_size: float | None = None,
+    symbol_param: dict[str, Any] | None = None,
+) -> None:
     r"""
     Plot a pairwise or multiple sequence alignment highlighting
     the similarity per alignment column.
@@ -841,22 +891,22 @@ def plot_alignment_similarity_based(
 
 
 def plot_alignment_type_based(
-    axes,
-    alignment,
-    symbols_per_line=50,
-    show_numbers=False,
-    number_size=None,
-    number_functions=None,
-    labels=None,
-    label_size=None,
-    show_line_position=False,
-    spacing=1,
-    color_scheme=None,
-    color_symbols=False,
-    symbol_size=None,
-    symbol_param=None,
-    symbol_spacing=None,
-):
+    axes: Axes,
+    alignment: Alignment,
+    symbols_per_line: int = 50,
+    show_numbers: bool = False,
+    number_size: float | None = None,
+    number_functions: list[Any] | None = None,
+    labels: list[str] | None = None,
+    label_size: float | None = None,
+    show_line_position: bool = False,
+    spacing: float = 1,
+    color_scheme: str | list[Any] | None = None,
+    color_symbols: bool = False,
+    symbol_size: float | None = None,
+    symbol_param: dict[str, Any] | None = None,
+    symbol_spacing: int | None = None,
+) -> None:
     """
     Plot a pairwise or multiple sequence alignment coloring each symbol
     based on the symbol type.
@@ -963,23 +1013,23 @@ def plot_alignment_type_based(
 
 
 def plot_alignment_array(
-    axes,
-    alignment,
-    fl_score,
-    symbols_per_line=50,
-    show_numbers=False,
-    number_size=None,
-    number_functions=None,
-    labels=None,
-    label_size=None,
-    show_line_position=False,
-    spacing=1,
-    color=None,
-    cmap=None,
-    symbol_spacing=None,
-    symbol_size=None,
-    symbol_param=None,
-):
+    axes: Axes,
+    alignment: Alignment,
+    fl_score: NDArray2[K, N, np.floating],
+    symbols_per_line: int = 50,
+    show_numbers: bool = False,
+    number_size: float | None = None,
+    number_functions: list[Any] | None = None,
+    labels: list[str] | None = None,
+    label_size: float | None = None,
+    show_line_position: bool = False,
+    spacing: float = 1,
+    color: MplColor | None = None,
+    cmap: Any | None = None,
+    symbol_spacing: int | None = None,
+    symbol_size: float | None = None,
+    symbol_param: dict[str, Any] | None = None,
+) -> None:
     """
     Plot a pairwise sequence alignment using an :class:`ArrayPlotter`
     instance.
@@ -1078,11 +1128,12 @@ def plot_alignment_array(
     )
 
 
-def _get_last_valid_index(alignment, column_i, seq_i):
+def _get_last_valid_index(alignment: Alignment, column_i: int, seq_i: int) -> int:
     """
     Find the last trace value that belongs to a valid sequence index
     (no gap -> no -1) up to the specified column.
     """
+    index = -1
     index_found = False
     while not index_found:
         if column_i == -1:
@@ -1098,4 +1149,6 @@ def _get_last_valid_index(alignment, column_i, seq_i):
             if index != -1:
                 index_found = True
         column_i -= 1
+    if index == -1:
+        raise ValueError("No valid index found")
     return index

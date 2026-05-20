@@ -2,24 +2,30 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __all__ = ["SubstitutionMatrix"]
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 
 import functools
 from pathlib import Path
+from typing import Any, Generic
 import numpy as np
+from biotite.sequence.alphabet import Alphabet
 from biotite.sequence.seqtypes import (
     NucleotideSequence,
     PositionalSequence,
     ProteinSequence,
 )
+from biotite.sequence.sequence import Sequence
+from biotite.typing import C2, S1, S2, K, M, N, NDArray1, NDArray2
 
 # Directory of matrix files
 _DB_DIR = Path(__file__).parent / "matrix_data"
 
 
-class SubstitutionMatrix(object):
+class SubstitutionMatrix(Generic[S1, S2]):
     """
     A :class:`SubstitutionMatrix` is the foundation for scoring in
     sequence alignments.
@@ -100,6 +106,11 @@ class SubstitutionMatrix(object):
     KeyError
         If the matrix dictionary misses a symbol given in the alphabet.
 
+    Notes
+    -----
+    The type annotation of this class is generic on the types of the symbols its
+    alphabets use.
+
     References
     ----------
 
@@ -141,7 +152,12 @@ class SubstitutionMatrix(object):
     >>> matrix = SubstitutionMatrix(alph, alph, "BLOSUM50")
     """
 
-    def __init__(self, alphabet1, alphabet2, score_matrix):
+    def __init__(
+        self,
+        alphabet1: Alphabet[S1],
+        alphabet2: Alphabet[S2],
+        score_matrix: NDArray2[M, N, np.integer] | dict[tuple[S1, S2], int] | str,
+    ) -> None:
         self._alph1 = alphabet1
         self._alph2 = alphabet2
         if isinstance(score_matrix, dict):
@@ -180,7 +196,7 @@ class SubstitutionMatrix(object):
         self._matrix.setflags(write=False)
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[int, int]:
         """
         Get the shape (i.e. the length of both alphabets)
         of the substitution matrix.
@@ -192,7 +208,7 @@ class SubstitutionMatrix(object):
         """
         return (len(self._alph1), len(self._alph2))
 
-    def get_alphabet1(self):
+    def get_alphabet1(self) -> Alphabet[S1]:
         """
         Get the first alphabet.
 
@@ -203,7 +219,7 @@ class SubstitutionMatrix(object):
         """
         return self._alph1
 
-    def get_alphabet2(self):
+    def get_alphabet2(self) -> Alphabet[S2]:
         """
         Get the second alphabet.
 
@@ -214,7 +230,7 @@ class SubstitutionMatrix(object):
         """
         return self._alph2
 
-    def score_matrix(self):
+    def score_matrix(self) -> NDArray2[M, N, np.int32]:
         """
         Get the 2-D :class:`ndarray` containing the score values.
 
@@ -224,9 +240,9 @@ class SubstitutionMatrix(object):
             The symbol code indexed score matrix.
             The array is read-only.
         """
-        return self._matrix
+        return self._matrix  # pyright: ignore[reportReturnType]
 
-    def transpose(self):
+    def transpose(self) -> SubstitutionMatrix[S2, S1]:
         """
         Get a copy of this instance, where the alphabets are
         interchanged.
@@ -241,7 +257,7 @@ class SubstitutionMatrix(object):
         new_matrix = np.transpose(self._matrix)
         return SubstitutionMatrix(new_alph1, new_alph2, new_matrix)
 
-    def is_symmetric(self):
+    def is_symmetric(self) -> bool:
         """
         Check whether the substitution matrix is symmetric,
         i.e. both alphabets are identical
@@ -257,7 +273,7 @@ class SubstitutionMatrix(object):
             self._matrix, np.transpose(self._matrix)
         )
 
-    def get_score_by_code(self, code1, code2):
+    def get_score_by_code(self, code1: int, code2: int) -> int:
         """
         Get the substitution score of two symbols,
         represented by their code.
@@ -274,7 +290,7 @@ class SubstitutionMatrix(object):
         """
         return self._matrix[code1, code2]
 
-    def get_score(self, symbol1, symbol2):
+    def get_score(self, symbol1: S1, symbol2: S2) -> int:
         """
         Get the substitution score of two symbols.
 
@@ -292,7 +308,9 @@ class SubstitutionMatrix(object):
         code2 = self._alph2.encode(symbol2)
         return self._matrix[code1, code2]
 
-    def as_positional(self, sequence1, sequence2):
+    def as_positional(
+        self, sequence1: Sequence[Any], sequence2: Sequence[Any]
+    ) -> tuple[SubstitutionMatrix[Any, Any], PositionalSequence, PositionalSequence]:
         """
         Transform this substitution matrix and two sequences into positional
         equivalents.
@@ -412,14 +430,14 @@ class SubstitutionMatrix(object):
 
         return pos_matrix, pos_sequence1, pos_sequence2
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent SubstitutionMatrix as a string for debugging."""
         return (
             f"SubstitutionMatrix({self._alph1.__repr__()}, {self._alph2.__repr__()}, "
             f"np.{np.array_repr(self._matrix)})"
         )
 
-    def __eq__(self, item):
+    def __eq__(self, item: object) -> bool:
         if not isinstance(item, SubstitutionMatrix):
             return False
         if self._alph1 != item.get_alphabet1():
@@ -430,10 +448,10 @@ class SubstitutionMatrix(object):
             return False
         return True
 
-    def __ne__(self, item):
+    def __ne__(self, item: object) -> bool:
         return not self == item
 
-    def __str__(self):
+    def __str__(self) -> str:
         # Create matrix in NCBI format
         string = " "
         for symbol in self._alph2:
@@ -449,7 +467,7 @@ class SubstitutionMatrix(object):
         return string
 
     @staticmethod
-    def dict_from_str(string):
+    def dict_from_str(string: str) -> dict[tuple[str, str], int]:
         """
         Create a matrix dictionary from a string in NCBI matrix format.
 
@@ -483,7 +501,7 @@ class SubstitutionMatrix(object):
         return matrix_dict
 
     @staticmethod
-    def dict_from_db(matrix_name):
+    def dict_from_db(matrix_name: str) -> dict[tuple[str, str], int]:
         """
         Create a matrix dictionary from a valid matrix name in the
         internal matrix database.
@@ -506,7 +524,7 @@ class SubstitutionMatrix(object):
             return SubstitutionMatrix.dict_from_str(f.read())
 
     @staticmethod
-    def list_db():
+    def list_db() -> list[str]:
         """
         List all matrix names in the internal database.
 
@@ -519,7 +537,7 @@ class SubstitutionMatrix(object):
 
     @staticmethod
     @functools.cache
-    def std_protein_matrix():
+    def std_protein_matrix() -> SubstitutionMatrix[str, str]:
         """
         Get the default :class:`SubstitutionMatrix` for protein sequence
         alignments, which is BLOSUM62.
@@ -535,7 +553,7 @@ class SubstitutionMatrix(object):
 
     @staticmethod
     @functools.cache
-    def std_nucleotide_matrix():
+    def std_nucleotide_matrix() -> SubstitutionMatrix[str, str]:
         """
         Get the default :class:`SubstitutionMatrix` for DNA sequence
         alignments.
@@ -551,7 +569,7 @@ class SubstitutionMatrix(object):
 
     @staticmethod
     @functools.cache
-    def std_3di_matrix():
+    def std_3di_matrix() -> SubstitutionMatrix[str, str]:
         """
         Get the default :class:`SubstitutionMatrix` for 3Di sequence
         alignments.
@@ -569,7 +587,9 @@ class SubstitutionMatrix(object):
 
     @staticmethod
     @functools.cache
-    def std_protein_blocks_matrix(undefined_match=200, undefined_mismatch=-200):
+    def std_protein_blocks_matrix(
+        undefined_match: int = 200, undefined_mismatch: int = -200
+    ) -> SubstitutionMatrix[str, str]:
         """
         Get the default :class:`SubstitutionMatrix` for Protein Blocks sequences.
 
@@ -610,7 +630,7 @@ class SubstitutionMatrix(object):
             matrix_dict,
         )
 
-    def _fill_with_matrix_dict(self, matrix_dict):
+    def _fill_with_matrix_dict(self, matrix_dict: dict[tuple[Any, Any], int]) -> None:
         self._matrix = np.zeros((len(self._alph1), len(self._alph2)), dtype=np.int32)
         for i in range(len(self._alph1)):
             for j in range(len(self._alph2)):
@@ -619,7 +639,9 @@ class SubstitutionMatrix(object):
                 self._matrix[i, j] = int(matrix_dict[sym1, sym2])
 
 
-def _cartesian_product(array1, array2):
+def _cartesian_product(
+    array1: NDArray1[M, np.integer], array2: NDArray1[N, np.integer]
+) -> NDArray2[K, C2, np.integer]:
     """
     Create all combinations of elements from two arrays.
     """

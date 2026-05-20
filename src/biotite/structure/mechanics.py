@@ -11,12 +11,28 @@ __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["mass_center", "gyration_radius"]
 
+from typing import overload
 import numpy as np
+from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.geometry import distance
 from biotite.structure.info.masses import mass
+from biotite.typing import XYZ, M, N, NDArray1, NDArray2
 
 
-def gyration_radius(array, masses=None):
+@overload
+def gyration_radius(
+    array: AtomArray[N],
+    masses: NDArray1[N, np.floating] | None = None,
+) -> np.floating: ...
+@overload
+def gyration_radius(
+    array: AtomArrayStack[M, N],
+    masses: NDArray1[N, np.floating] | None = None,
+) -> NDArray1[M, np.floating]: ...
+def gyration_radius(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    masses: NDArray1[N, np.floating] | None = None,
+) -> np.floating | NDArray1[M, np.floating]:
     """
     Compute the radius/radii of gyration of an atom array or stack.
 
@@ -46,7 +62,20 @@ def gyration_radius(array, masses=None):
     return np.sqrt(inertia_moment / np.sum(masses))
 
 
-def mass_center(array, masses=None):
+@overload
+def mass_center(
+    array: AtomArray[N],
+    masses: NDArray1[N, np.floating] | None = None,
+) -> NDArray1[XYZ, np.floating]: ...
+@overload
+def mass_center(
+    array: AtomArrayStack[M, N],
+    masses: NDArray1[N, np.floating] | None = None,
+) -> NDArray2[M, XYZ, np.floating]: ...
+def mass_center(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    masses: NDArray1[N, np.floating] | None = None,
+) -> NDArray1[XYZ, np.floating] | NDArray2[M, XYZ, np.floating]:
     """
     Calculate the center(s) of mass of an atom array or stack.
 

@@ -11,25 +11,31 @@ __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["sasa"]
 
+from collections.abc import Callable
+from typing import Literal
 import numpy as np
 from biotite.rust.structure import sasa as rust_sasa
+from biotite.structure.atoms import AtomArray
 from biotite.structure.filter import (
     filter_heavy,
     filter_monoatomic_ions,
     filter_solvent,
 )
 from biotite.structure.info.radii import vdw_radius_protor, vdw_radius_single
+from biotite.typing import XYZ, N, NDArray1, NDArray2
 
 
 def sasa(
-    array,
-    probe_radius=1.4,
-    atom_filter=None,
-    ignore_ions=True,
-    point_number=1000,
-    point_distr="Fibonacci",
-    vdw_radii="ProtOr",
-):
+    array: AtomArray[N],
+    probe_radius: float = 1.4,
+    atom_filter: NDArray1[N, np.bool_] | None = None,
+    ignore_ions: bool = True,
+    point_number: int = 1000,
+    point_distr: (
+        Literal["Fibonacci"] | Callable[[int], NDArray2[int, XYZ, np.floating]]
+    ) = "Fibonacci",
+    vdw_radii: Literal["ProtOr", "Single"] | NDArray1[N, np.floating] = "ProtOr",
+) -> NDArray1[N, np.floating]:
     """
     sasa(array, probe_radius=1.4, atom_filter=None, ignore_ions=True,
          point_number=1000, point_distr="Fibonacci", vdw_radii="ProtOr")
@@ -57,7 +63,7 @@ def sasa(
         The number of points in the mesh occupying each atom for SASA
         calculation.
         The SASA calculation time is proportional to the amount of sphere points.
-    point_distr : str or function, optional
+    point_distr : {'Fibonacci'} or function, optional
         If a function is given, the function is used to calculate the
         point distribution for the mesh.
         The function must take `float` *n* as parameter and return a
@@ -68,7 +74,7 @@ def sasa(
             - **Fibonacci** - Distribute points using a golden section spiral.
 
         By default *Fibonacci* is used.
-    vdw_radii : str or ndarray, dtype=float, optional
+    vdw_radii : {'ProtOr', 'Single'} or ndarray, dtype=float, optional
         Indicates the set of VdW radii to be used. If an `array`-length
         :class:`ndarray` is given, each atom gets the radius at the
         corresponding index. Radii given for atoms that are not used in
@@ -139,13 +145,13 @@ def sasa(
         occlusion_filter = occlusion_filter & filter
         radii = np.full(len(array), np.nan, dtype=np.float32)
         for i in np.arange(len(radii))[occlusion_filter]:
-            rad = vdw_radius_protor(array.res_name[i], array.atom_name[i])
+            rad = vdw_radius_protor(array.res_name[i].item(), array.atom_name[i].item())
             # 1.8 is default radius
             radii[i] = rad if rad is not None else 1.8
     elif vdw_radii == "Single":
         radii = np.full(len(array), np.nan, dtype=np.float32)
         for i in np.arange(len(radii))[occlusion_filter]:
-            rad = vdw_radius_single(array.element[i])
+            rad = vdw_radius_single(array.element[i].item())
             # 1.5 is default radius
             radii[i] = rad if rad is not None else 1.8
     else:
@@ -156,7 +162,7 @@ def sasa(
     return rust_sasa(array.coord, radii, sphere_points, sasa_filter, occlusion_filter)
 
 
-def _create_fibonacci_points(n):
+def _create_fibonacci_points(n: int) -> NDArray2[int, XYZ, np.floating]:
     """
     Get an array of approximately equidistant points on a unit sphere surface
     using a golden section spiral.
@@ -168,4 +174,4 @@ def _create_fibonacci_points(n):
     coords[:, 0] = radius * np.cos(phi)
     coords[:, 1] = radius * np.sin(phi)
     coords[:, 2] = z
-    return coords
+    return coords  # pyright: ignore[reportReturnType]

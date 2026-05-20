@@ -2,11 +2,16 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application.blast"
 __author__ = "Patrick Kunzmann"
 __all__ = ["BlastAlignment"]
 
+import numpy as np
 from biotite.sequence.align.alignment import Alignment
+from biotite.sequence.sequence import Sequence
+from biotite.typing import K, N, NDArray2
 
 
 class BlastAlignment(Alignment):
@@ -45,17 +50,23 @@ class BlastAlignment(Alignment):
         The name of the hit sequence.
     """
 
+    e_value: float
+    query_interval: tuple[int, int]
+    hit_interval: tuple[int, int]
+    hit_id: str
+    hit_definition: str
+
     def __init__(
         self,
-        sequences,
-        trace,
-        score,
-        e_value,
-        query_interval,
-        hit_interval,
-        hit_id,
-        hit_definition,
-    ):
+        sequences: list[Sequence],
+        trace: NDArray2[K, N, np.integer],
+        score: int,
+        e_value: float,
+        query_interval: tuple[int, int],
+        hit_interval: tuple[int, int],
+        hit_id: str,
+        hit_definition: str,
+    ) -> None:
         super().__init__(sequences, trace, score)
         self.e_value = e_value
         self.query_interval = query_interval
@@ -63,7 +74,7 @@ class BlastAlignment(Alignment):
         self.hit_id = hit_id
         self.hit_definition = hit_definition
 
-    def __eq__(self, item):
+    def __eq__(self, item: object) -> bool:
         if not isinstance(item, BlastAlignment):
             return False
         if self.e_value != item.e_value:
@@ -78,8 +89,13 @@ class BlastAlignment(Alignment):
             return False
         return super().__eq__(item)
 
-    def __getitem__(self, index):
+    def __getitem__(
+        self,
+        index: int | slice | tuple[int | slice, int | slice],
+    ) -> BlastAlignment:
         super_alignment = super().__getitem__(index)
+        if super_alignment.score is None:
+            raise ValueError("Cannot index a BlastAlignment without a score")
         return BlastAlignment(
             super_alignment.sequences,
             super_alignment.trace,

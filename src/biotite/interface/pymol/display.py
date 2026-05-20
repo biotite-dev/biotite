@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __name__ = "biotite.interface.pymol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["TimeoutError", "RenderError", "show", "play"]
@@ -9,7 +11,11 @@ import tempfile
 import time
 from os import remove
 from os.path import getsize, join
-from biotite.interface.pymol.startup import get_and_set_pymol_instance
+from typing import TYPE_CHECKING, Literal
+from biotite.interface.pymol.startup import PyMOLInstance, get_and_set_pymol_instance
+
+if TYPE_CHECKING:
+    from IPython.display import Image, Video
 
 _INTERVAL = 0.1
 
@@ -30,7 +36,12 @@ class RenderError(Exception):
     pass
 
 
-def show(size=None, use_ray=False, timeout=60.0, pymol_instance=None):
+def show(
+    size: tuple[int, int] | None = None,
+    use_ray: bool = False,
+    timeout: float = 60.0,
+    pymol_instance: PyMOLInstance | None = None,
+) -> Image:
     """
     Render an image of the *PyMOL* session and display it in the current
     *Jupyter* notebook.
@@ -104,8 +115,12 @@ def show(size=None, use_ray=False, timeout=60.0, pymol_instance=None):
 
 
 def play(
-    size=None, fps=30, format="gif", html_attributes="controls", pymol_instance=None
-):
+    size: tuple[int, int] | None = None,
+    fps: int = 30,
+    format: Literal["gif", "mp4"] = "gif",
+    html_attributes: str = "controls",
+    pymol_instance: PyMOLInstance | None = None,
+) -> Image | Video:
     """
     Render an video of the *PyMOL* video frames and display it in the current
     *Jupyter* notebook.
@@ -171,7 +186,7 @@ def play(
         return Image(video_data, embed=True, metadata={"source": "PyMOL"})
 
 
-def _create_video(input_dir, fps, format):
+def _create_video(input_dir: str, fps: int, format: Literal["gif", "mp4"]) -> bytes:
     """
     Create a video from the images in the given directory using ``ffmpeg```
     or ``imagemagick``.
@@ -204,9 +219,11 @@ def _create_video(input_dir, fps, format):
             return _create_video_with_ffmpeg(input_dir, fps, format)
         else:
             raise RenderError("'ffmpeg' is not installed")
+    else:
+        raise ValueError(f"Unsupported video format '{format}'")
 
 
-def _create_gif_with_imagemagick(input_dir, fps):
+def _create_gif_with_imagemagick(input_dir: str, fps: int) -> bytes:
     # See https://usage.imagemagick.org/anim_basics/ for reference
     completed_process = subprocess.run(
         [
@@ -229,7 +246,9 @@ def _create_gif_with_imagemagick(input_dir, fps):
     return completed_process.stdout
 
 
-def _create_video_with_ffmpeg(input_dir, fps, format):
+def _create_video_with_ffmpeg(
+    input_dir: str, fps: int, format: Literal["gif", "mp4"]
+) -> bytes:
     # 'input_dir' is a temporary directory anyway
     video_path = join(input_dir, f"video.{format}")
     completed_process = subprocess.run(
@@ -250,7 +269,7 @@ def _create_video_with_ffmpeg(input_dir, fps, format):
     return video_data
 
 
-def _is_installed(program):
+def _is_installed(program: str) -> bool:
     """
     Check whether the given program is installed.
 

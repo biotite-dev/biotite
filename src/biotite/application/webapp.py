@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application"
 __author__ = "Patrick Kunzmann"
 __all__ = ["WebApp", "RuleViolationError"]
@@ -32,12 +34,12 @@ class WebApp(Application, metaclass=abc.ABCMeta):
         the server rules are violated.
     """
 
-    def __init__(self, app_url, obey_rules=True):
+    def __init__(self, app_url: str, obey_rules: bool = True) -> None:
         super().__init__()
         self._obey_rules = obey_rules
         self._app_url = app_url
 
-    def violate_rule(self, msg=None):
+    def violate_rule(self, msg: str | None = None) -> None:
         """
         Indicate that a server rule was violated, i.e. this raises a
         :class:`RuleViolationError` unless `obey_rules` is false.
@@ -55,7 +57,7 @@ class WebApp(Application, metaclass=abc.ABCMeta):
             else:
                 raise RuleViolationError(msg)
 
-    def app_url(self):
+    def app_url(self) -> str:
         """
         Get the URL of the web app.
 

@@ -15,12 +15,19 @@ __all__ = [
     "segment_iter",
 ]
 
+from collections.abc import Callable, Iterator, Sequence
+from typing import Any, overload
 import numpy as np
+from biotite.structure.atoms import AtomArray, AtomArrayStack
+from biotite.typing import K, M, N, NDArray1, NDArray2
 
 
 def get_segment_starts(
-    array, add_exclusive_stop, continuous_categories=(), equal_categories=()
-):
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    add_exclusive_stop: bool = False,
+    continuous_categories: Sequence[str] = (),
+    equal_categories: Sequence[str] = (),
+) -> NDArray1[K, np.integer]:
     """
     Generalized version of :func:`get_residue_starts()` for residues and chains.
 
@@ -75,7 +82,12 @@ def get_segment_starts(
         return np.concatenate(([0], segment_starts))
 
 
-def apply_segment_wise(starts, data, function, axis=None):
+def apply_segment_wise(
+    starts: NDArray1[K, np.integer],
+    data: np.ndarray,
+    function: Callable[..., Any],
+    axis: int | None = None,
+) -> np.ndarray:
     """
     Generalized version of :func:`apply_residue_wise()` for
     residues and chains.
@@ -126,10 +138,15 @@ def apply_segment_wise(starts, data, function, axis=None):
                 processed_data = np.zeros(len(starts) - 1, dtype=type(value))
         # Write values into result arrays
         processed_data[i] = value
-    return processed_data
+    # Callers always pass `starts` with an exclusive stop appended,
+    # so the loop runs at least once
+    return processed_data  # pyright: ignore[reportReturnType]
 
 
-def spread_segment_wise(starts, input_data):
+def spread_segment_wise(
+    starts: NDArray1[K, np.integer],
+    input_data: np.ndarray,
+) -> np.ndarray:
     """
     Generalized version of :func:`spread_residue_wise()`
     for residues and chains.
@@ -155,7 +172,10 @@ def spread_segment_wise(starts, input_data):
     return np.repeat(input_data, seg_lens, axis=0)
 
 
-def get_segment_masks(starts, indices):
+def get_segment_masks(
+    starts: NDArray1[K, np.integer],
+    indices: NDArray1[Any, np.integer] | Sequence[int],
+) -> NDArray2[Any, Any, np.bool_]:
     """
     Generalized version of :func:`get_residue_masks()`
     for residues and chains.
@@ -197,7 +217,10 @@ def get_segment_masks(starts, indices):
     return masks
 
 
-def get_segment_starts_for(starts, indices):
+def get_segment_starts_for(
+    starts: NDArray1[K, np.integer],
+    indices: NDArray1[Any, np.integer] | Sequence[int],
+) -> NDArray1[Any, np.integer]:
     """
     Generalized version of :func:`get_residue_starts_for()`
     for residues and chains.
@@ -236,7 +259,10 @@ def get_segment_starts_for(starts, indices):
     return starts[insertion_points]
 
 
-def get_segment_positions(starts, indices):
+def get_segment_positions(
+    starts: NDArray1[K, np.integer],
+    indices: NDArray1[Any, np.integer] | Sequence[int],
+) -> NDArray1[Any, np.integer]:
     """
     Generalized version of :func:`get_residue_positions()`
     for residues and chains.
@@ -278,7 +304,10 @@ def get_segment_positions(starts, indices):
     return np.searchsorted(starts, indices, side="right") - 1
 
 
-def get_all_segment_positions(starts, length):
+def get_all_segment_positions(
+    starts: NDArray1[K, np.integer],
+    length: int,
+) -> NDArray1[Any, np.integer]:
     """
     Generalized version of :func:`get_all_residue_positions()`
     for residues and chains.
@@ -308,7 +337,20 @@ def get_all_segment_positions(starts, length):
     return np.cumsum(segment_changes)
 
 
-def segment_iter(array, starts):
+@overload
+def segment_iter(
+    array: AtomArray[N],
+    starts: NDArray1[K, np.integer],
+) -> Iterator[AtomArray[Any]]: ...
+@overload
+def segment_iter(
+    array: AtomArrayStack[M, N],
+    starts: NDArray1[K, np.integer],
+) -> Iterator[AtomArrayStack[M, Any]]: ...
+def segment_iter(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    starts: NDArray1[K, np.integer],
+) -> Iterator[AtomArray[Any] | AtomArrayStack[M, Any]]:
     """
     Generalized version of :func:`residue_iter()`
     for residues and chains.

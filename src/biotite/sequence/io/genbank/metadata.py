@@ -6,6 +6,8 @@
 Functions for obtaining metadata fields of a GenBank file.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.io.genbank"
 __author__ = "Patrick Kunzmann, Natasha Jaffe"
 __all__ = [
@@ -19,10 +21,14 @@ __all__ = [
     "set_locus",
 ]
 
+from collections import OrderedDict
 from biotite.file import InvalidFileError
+from biotite.sequence.io.genbank.file import GenBankFile
 
 
-def get_locus(gb_file):
+def get_locus(
+    gb_file: GenBankFile,
+) -> tuple[str, int, str | None, bool, str | None, str]:
     """
     Parse the *LOCUS* field of a GenBank or GenPept file.
 
@@ -135,6 +141,8 @@ def get_locus(gb_file):
     if fields[next_idx] in divisions:
         division = fields[next_idx]
         next_idx += 1
+    else:
+        division = None
 
     # The last field is a date in the format DD-M-YYYY
     date = fields[next_idx]
@@ -142,7 +150,7 @@ def get_locus(gb_file):
     return name, length, mol_type, is_circular, division, date
 
 
-def get_definition(gb_file):
+def get_definition(gb_file: GenBankFile) -> str:
     """
     Parse the *DEFINITION* field of a GenBank or GenPept file.
 
@@ -168,7 +176,7 @@ def get_definition(gb_file):
     return " ".join([line.strip() for line in lines])
 
 
-def get_accession(gb_file):
+def get_accession(gb_file: GenBankFile) -> str:
     """
     Parse the *ACCESSION* field of a GenBank or GenPept file.
 
@@ -195,7 +203,7 @@ def get_accession(gb_file):
     return lines[0]
 
 
-def get_version(gb_file):
+def get_version(gb_file: GenBankFile) -> str:
     """
     Parse the version from the *VERSION* field of a GenBank or GenPept
     file.
@@ -215,7 +223,7 @@ def get_version(gb_file):
     return lines[0].split()[0]
 
 
-def get_gi(gb_file):
+def get_gi(gb_file: GenBankFile) -> int:
     """
     Parse the GI from the *VERSION* field of a GenBank or GenPept
     file.
@@ -239,7 +247,7 @@ def get_gi(gb_file):
     return int(version_info[1][3:])
 
 
-def get_db_link(gb_file):
+def get_db_link(gb_file: GenBankFile) -> dict[str, str]:
     """
     Parse the *DBLINK* field of a GenBank or GenPept file.
 
@@ -272,7 +280,7 @@ def get_db_link(gb_file):
     return link_dict
 
 
-def get_source(gb_file):
+def get_source(gb_file: GenBankFile) -> str:
     """
     Parse the *SOURCE* field of a GenBank or GenPept file.
 
@@ -291,7 +299,9 @@ def get_source(gb_file):
     return lines[0]
 
 
-def _expect_single_field(gb_file, name):
+def _expect_single_field(
+    gb_file: GenBankFile, name: str
+) -> tuple[list[str], OrderedDict[str, list[str]]]:
     fields = gb_file.get_fields(name)
     if len(fields) == 0:
         raise InvalidFileError(f"File has no '{name}' field")
@@ -301,8 +311,14 @@ def _expect_single_field(gb_file, name):
 
 
 def set_locus(
-    gb_file, name, length, mol_type=None, is_circular=False, division=None, date=None
-):
+    gb_file: GenBankFile,
+    name: str,
+    length: int,
+    mol_type: str | None = None,
+    is_circular: bool = False,
+    division: str | None = None,
+    date: str | None = None,
+) -> None:
     """
     Set the *LOCUS* field of a GenBank file.
 

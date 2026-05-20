@@ -1,0 +1,39 @@
+__all__ = ["Permutation", "RandomPermutation", "FrequencyPermutation"]
+
+import abc
+from typing import Any
+import numpy as np
+from biotite.sequence.align.kmeralphabet import KmerAlphabet
+from biotite.sequence.align.kmertable import KmerTable
+from biotite.typing import N, NDArray1
+
+class Permutation(metaclass=abc.ABCMeta):
+    @property
+    @abc.abstractmethod
+    def min(self) -> int: ...
+    @property
+    @abc.abstractmethod
+    def max(self) -> int: ...
+    @abc.abstractmethod
+    def permute(self, kmers: NDArray1[N, np.int64]) -> NDArray1[N, np.int64]: ...
+
+class RandomPermutation(Permutation):
+    @property
+    def min(self) -> int: ...
+    @property
+    def max(self) -> int: ...
+    def permute(self, kmers: NDArray1[N, np.int64]) -> NDArray1[N, np.int64]: ...
+
+class FrequencyPermutation(Permutation):
+    def __init__(
+        self, kmer_alphabet: KmerAlphabet[Any], counts: NDArray1[N, np.int64]
+    ) -> None: ...
+    @property
+    def min(self) -> int: ...
+    @property
+    def max(self) -> int: ...
+    @property
+    def kmer_alphabet(self) -> KmerAlphabet[Any]: ...
+    @staticmethod
+    def from_table(kmer_table: KmerTable[Any]) -> FrequencyPermutation: ...
+    def permute(self, kmers: NDArray1[N, np.int64]) -> NDArray1[N, np.int64]: ...

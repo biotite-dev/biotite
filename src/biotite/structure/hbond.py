@@ -11,23 +11,53 @@ __author__ = "Daniel Bauer, Patrick Kunzmann"
 __all__ = ["hbond", "hbond_frequency"]
 
 import warnings
+from collections.abc import Sequence
+from typing import Any, Literal, cast, overload
 import numpy as np
 from biotite.rust.structure import CellList
-from biotite.structure.atoms import AtomArrayStack, stack
+from biotite.structure.atoms import AtomArray, AtomArrayStack, stack
 from biotite.structure.filter import filter_heavy
 from biotite.structure.geometry import angle, distance
+from biotite.typing import C3, K, M, N, NDArray1, NDArray2
 
 
+@overload
 def hbond(
-    atoms,
-    selection1=None,
-    selection2=None,
-    selection1_type="both",
-    cutoff_dist=2.5,
-    cutoff_angle=120,
-    donor_elements=("O", "N", "S"),
-    acceptor_elements=("O", "N", "S"),
-    periodic=False,
+    atoms: AtomArray[N],
+    selection1: NDArray1[N, np.bool_] | None = None,
+    selection2: NDArray1[N, np.bool_] | None = None,
+    selection1_type: Literal["both", "acceptor", "donor"] = "both",
+    cutoff_dist: float = 2.5,
+    cutoff_angle: float = 120,
+    donor_elements: Sequence[str] = ("O", "N", "S"),
+    acceptor_elements: Sequence[str] = ("O", "N", "S"),
+    periodic: bool = False,
+) -> NDArray2[K, C3, np.integer]: ...
+@overload
+def hbond(
+    atoms: AtomArrayStack[M, N],
+    selection1: NDArray1[N, np.bool_] | None = None,
+    selection2: NDArray1[N, np.bool_] | None = None,
+    selection1_type: Literal["both", "acceptor", "donor"] = "both",
+    cutoff_dist: float = 2.5,
+    cutoff_angle: float = 120,
+    donor_elements: Sequence[str] = ("O", "N", "S"),
+    acceptor_elements: Sequence[str] = ("O", "N", "S"),
+    periodic: bool = False,
+) -> tuple[NDArray2[K, C3, np.integer], NDArray2[M, K, np.bool_]]: ...
+def hbond(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+    selection1: NDArray1[N, np.bool_] | None = None,
+    selection2: NDArray1[N, np.bool_] | None = None,
+    selection1_type: Literal["both", "acceptor", "donor"] = "both",
+    cutoff_dist: float = 2.5,
+    cutoff_angle: float = 120,
+    donor_elements: Sequence[str] = ("O", "N", "S"),
+    acceptor_elements: Sequence[str] = ("O", "N", "S"),
+    periodic: bool = False,
+) -> (
+    NDArray2[K, C3, np.integer]
+    | tuple[NDArray2[K, C3, np.integer], NDArray2[M, K, np.bool_]]
 ):
     r"""
     Find hydrogen bonds in a structure using the Baker-Hubbard
@@ -136,26 +166,35 @@ def hbond(
             "hence no hydrogen bonds can be identified"
         )
 
-    # Create AtomArrayStack from AtomArray
+    # Promote `AtomArray` to a single-model stack so the rest of the
+    # function can treat `atoms_stack` uniformly
+    atoms_stack: AtomArrayStack[Any, Any]
     if not isinstance(atoms, AtomArrayStack):
-        atoms = stack([atoms])
+        atoms_stack = stack([atoms])
         single_model = True
     else:
+        atoms_stack = atoms
         single_model = False
 
     if periodic:
-        box = atoms.box
+        box = atoms_stack.box
     else:
         box = None
 
     # Mask for donor/acceptor elements
-    donor_element_mask = np.isin(atoms.element, donor_elements)
-    acceptor_element_mask = np.isin(atoms.element, acceptor_elements)
+    donor_element_mask = np.isin(atoms_stack.element, donor_elements)
+    acceptor_element_mask = np.isin(atoms_stack.element, acceptor_elements)
 
     if selection1 is None:
-        selection1 = np.ones(atoms.array_length(), dtype=bool)
+        selection1 = cast(
+            "NDArray1[N, np.bool_]",
+            np.ones(atoms_stack.array_length(), dtype=bool),
+        )
     if selection2 is None:
-        selection2 = np.ones(atoms.array_length(), dtype=bool)
+        selection2 = cast(
+            "NDArray1[N, np.bool_]",
+            np.ones(atoms_stack.array_length(), dtype=bool),
+        )
 
     if selection1_type == "both":
         # The two selections are separated into three selections:
@@ -193,7 +232,7 @@ def hbond(
             ):
                 # Calculate triplets and mask
                 triplets, mask = _hbond(
-                    atoms,
+                    atoms_stack,
                     donor_mask,
                     acceptor_mask,
                     donor_element_mask,
@@ -210,7 +249,7 @@ def hbond(
 
     elif selection1_type == "donor":
         triplets, mask = _hbond(
-            atoms,
+            atoms_stack,
             selection1,
             selection2,
             donor_element_mask,
@@ -222,7 +261,7 @@ def hbond(
 
     elif selection1_type == "acceptor":
         triplets, mask = _hbond(
-            atoms,
+            atoms_stack,
             selection2,
             selection1,
             donor_element_mask,
@@ -240,9 +279,9 @@ def hbond(
         # hbond_mask contains only 'True' values,
         # since all interactions are in the one model
         # -> Simply return triplets without hbond_mask
-        return triplets
+        return triplets  # pyright: ignore[reportReturnType]
     else:
-        return triplets, mask
+        return triplets, mask  # pyright: ignore[reportReturnType]
 
 
 def _hbond(
@@ -390,7 +429,7 @@ def _is_hbond(donor, donor_h, acceptor, box, cutoff_dist, cutoff_angle):
     return (theta > cutoff_angle_rad) & (dist <= cutoff_dist)
 
 
-def hbond_frequency(mask):
+def hbond_frequency(mask: NDArray2[M, K, np.bool_]) -> NDArray1[K, np.floating]:
     """
     Get the relative frequency of each hydrogen bond in a multi-model
     structure.

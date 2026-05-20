@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -15,24 +17,27 @@ __all__ = [
 ]
 
 import abc
-from biotite.sequence.annotation import Location
+from typing import Any
+from matplotlib.axes import Axes
+from matplotlib.transforms import Bbox
+from biotite.sequence.annotation import Annotation, Feature, Location
 from biotite.visualize import AdaptiveFancyArrow, colors
 
 
 def plot_feature_map(
-    axes,
-    annotation,
-    loc_range=None,
-    multi_line=True,
-    symbols_per_line=1000,
-    show_numbers=False,
-    number_size=None,
-    line_width=0.05,
-    show_line_position=False,
-    spacing=0.25,
-    feature_plotters=None,
-    style_param=None,
-):
+    axes: Axes,
+    annotation: Annotation,
+    loc_range: tuple[int, int] | None = None,
+    multi_line: bool = True,
+    symbols_per_line: int = 1000,
+    show_numbers: bool = False,
+    number_size: float | None = None,
+    line_width: float = 0.05,
+    show_line_position: bool = False,
+    spacing: float = 0.25,
+    feature_plotters: list[FeaturePlotter] | None = None,
+    style_param: dict[str, Any] | None = None,
+) -> None:
     """
     Plot a sequence annotation, by showing the range of each feature
     on one or multiple position depicting line(s).
@@ -234,11 +239,11 @@ class FeaturePlotter(metaclass=abc.ABCMeta):
     :func:`draw()` method.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @abc.abstractmethod
-    def matches(self, feature):
+    def matches(self, feature: Feature) -> bool:
         """
         Check, whether this object is able to draw a given sequence
         feature.
@@ -257,7 +262,14 @@ class FeaturePlotter(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def draw(self, axes, feature, bbox, location, style_param):
+    def draw(
+        self,
+        axes: Axes,
+        feature: Feature,
+        bbox: Bbox,
+        location: Location,
+        style_param: dict[str, Any],
+    ) -> None:
         """
         Draw a feature onto an axes.
 
@@ -296,17 +308,24 @@ class CodingPlotter(FeaturePlotter):
         as fraction of the feature drawing area height.
     """
 
-    def __init__(self, tail_width=0.5, head_width=0.8):
+    def __init__(self, tail_width: float = 0.5, head_width: float = 0.8) -> None:
         self._tail_width = tail_width
         self._head_width = head_width
 
-    def matches(self, feature):
+    def matches(self, feature: Feature) -> bool:
         if feature.key in ["CDS", "gene"]:
             return True
         else:
             return False
 
-    def draw(self, axes, feature, bbox, loc, style_param):
+    def draw(
+        self,
+        axes: Axes,
+        feature: Feature,
+        bbox: Bbox,
+        loc: Location,
+        style_param: dict[str, Any],
+    ) -> None:
         y = bbox.y0 + bbox.height / 2
         dy = 0
         if loc.strand == Location.Strand.FORWARD:
@@ -345,17 +364,14 @@ class CodingPlotter(FeaturePlotter):
             )
         )
 
+        label = None
         if feature.key == "CDS":
-            if "product" not in feature.qual:
-                label = None
-            elif feature.qual["product"] == "hypothetical protein":
-                label = None
-            else:
+            if "product" in feature.qual and (
+                feature.qual["product"] != "hypothetical protein"
+            ):
                 label = feature.qual["product"]
         elif feature.key == "gene":
-            if "gene" not in feature.qual:
-                label = None
-            else:
+            if "gene" in feature.qual:
                 label = feature.qual["gene"]
 
         if label is not None:
@@ -385,13 +401,20 @@ class MiscFeaturePlotter(FeaturePlotter):
         as fraction of the feature drawing area height.
     """
 
-    def __init__(self, height=0.4):
+    def __init__(self, height: float = 0.4) -> None:
         self._height = height
 
-    def matches(self, feature):
+    def matches(self, feature: Feature) -> bool:
         return True
 
-    def draw(self, axes, feature, bbox, loc, style_param):
+    def draw(
+        self,
+        axes: Axes,
+        feature: Feature,
+        bbox: Bbox,
+        loc: Location,
+        style_param: dict[str, Any],
+    ) -> None:
         from matplotlib.patches import Rectangle
 
         rect = Rectangle(
@@ -424,20 +447,33 @@ class PromoterPlotter(FeaturePlotter):
         as fraction of the halffeature drawing area height.
     """
 
-    def __init__(self, line_width=2, head_width=2, head_length=6, head_height=0.8):
+    def __init__(
+        self,
+        line_width: float = 2,
+        head_width: float = 2,
+        head_length: float = 6,
+        head_height: float = 0.8,
+    ) -> None:
         self._line_width = line_width
         self._head_width = head_width
         self._head_length = head_length
         self._head_height = head_height
 
-    def matches(self, feature):
+    def matches(self, feature: Feature) -> bool:
         if feature.key == "regulatory":
             if "regulatory_class" in feature.qual:
                 if feature.qual["regulatory_class"] in ["promoter", "TATA_box"]:
                     return True
         return False
 
-    def draw(self, axes, feature, bbox, loc, style_param):
+    def draw(
+        self,
+        axes: Axes,
+        feature: Feature,
+        bbox: Bbox,
+        loc: Location,
+        style_param: dict[str, Any],
+    ) -> None:
         from matplotlib.patches import ArrowStyle, FancyArrowPatch
         from matplotlib.path import Path
 
@@ -452,7 +488,7 @@ class PromoterPlotter(FeaturePlotter):
             ],
             codes=[Path.MOVETO, Path.CURVE3, Path.CURVE3],
         )
-        style = ArrowStyle.CurveFilledB(
+        style = ArrowStyle.CurveFilledB(  # pyright: ignore[reportCallIssue]
             head_width=self._head_width, head_length=self._head_length
         )
         arrow = FancyArrowPatch(
@@ -460,11 +496,12 @@ class PromoterPlotter(FeaturePlotter):
         )
         axes.add_patch(arrow)
 
-        if "note" in feature.qual:
+        note = feature.qual.get("note")
+        if note is not None:
             axes.text(
                 x_center,
                 y_center + bbox.height / 4,
-                feature.qual["note"],
+                note,
                 color="black",
                 ha="center",
                 va="center",
@@ -484,17 +521,24 @@ class TerminatorPlotter(FeaturePlotter):
         The width of the line representing the bar.
     """
 
-    def __init__(self, bar_width=5):
+    def __init__(self, bar_width: float = 5) -> None:
         self._bar_width = bar_width
 
-    def matches(self, feature):
+    def matches(self, feature: Feature) -> bool:
         if feature.key == "regulatory":
             if "regulatory_class" in feature.qual:
                 if feature.qual["regulatory_class"] == "terminator":
                     return True
         return False
 
-    def draw(self, axes, feature, bbox, loc, style_param):
+    def draw(
+        self,
+        axes: Axes,
+        feature: Feature,
+        bbox: Bbox,
+        loc: Location,
+        style_param: dict[str, Any],
+    ) -> None:
         x = bbox.x0 + bbox.width / 2
 
         axes.plot(
@@ -521,17 +565,24 @@ class RBSPlotter(FeaturePlotter):
         as fraction of the feature drawing area height.
     """
 
-    def __init__(self, height=0.4):
+    def __init__(self, height: float = 0.4) -> None:
         self._height = height
 
-    def matches(self, feature):
+    def matches(self, feature: Feature) -> bool:
         if feature.key == "regulatory":
             if "regulatory_class" in feature.qual:
                 if feature.qual["regulatory_class"] == "ribosome_binding_site":
                     return True
         return False
 
-    def draw(self, axes, feature, bbox, loc, style_param):
+    def draw(
+        self,
+        axes: Axes,
+        feature: Feature,
+        bbox: Bbox,
+        loc: Location,
+        style_param: dict[str, Any],
+    ) -> None:
         from matplotlib.patches import Ellipse
 
         ellipse = Ellipse(

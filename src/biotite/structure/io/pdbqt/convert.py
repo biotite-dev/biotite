@@ -11,8 +11,23 @@ __name__ = "biotite.structure.io.pdbqt"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_structure", "set_structure"]
 
+from typing import Any, Literal, overload
+import numpy as np
+from biotite.structure.atoms import AtomArray, AtomArrayStack
+from biotite.structure.bonds import BondList
+from biotite.structure.io.pdbqt.file import PDBQTFile
+from biotite.typing import N, NDArray1
 
-def get_structure(pdbqt_file, model=None):
+
+@overload
+def get_structure(pdbqt_file: PDBQTFile, model: int) -> AtomArray[Any]: ...
+@overload
+def get_structure(
+    pdbqt_file: PDBQTFile, model: None = None
+) -> AtomArrayStack[Any, Any]: ...
+def get_structure(
+    pdbqt_file: PDBQTFile, model: int | None = None
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
     Get an :class:`AtomArray` or :class:`AtomArrayStack` from the
     PDBQT file.
@@ -42,14 +57,14 @@ def get_structure(pdbqt_file, model=None):
 
 
 def set_structure(
-    pdbqt_file,
-    atoms,
-    charges=None,
-    atom_types=None,
-    rotatable_bonds=None,
-    root=None,
-    include_torsdof=True,
-):
+    pdbqt_file: PDBQTFile,
+    atoms: AtomArray[N],
+    charges: NDArray1[N, np.floating] | None = None,
+    atom_types: NDArray1[N, np.str_] | None = None,
+    rotatable_bonds: BondList | Literal["rigid", "all"] | None = None,
+    root: int | None = None,
+    include_torsdof: bool = True,
+) -> NDArray1[N, np.bool_]:
     """
     Write an :class:`AtomArray` into a PDBQT file.
 

@@ -6,10 +6,12 @@ __name__ = "biotite.structure.io.netcdf"
 __author__ = "Patrick Kunzmann"
 __all__ = ["NetCDFFile"]
 
+from typing import Any
 import biotraj
 import numpy as np
 from biotite.structure.box import unitcell_from_vectors, vectors_from_unitcell
 from biotite.structure.io.trajfile import TrajectoryFile
+from biotite.typing import XYZ, NDArray1, NDArray3
 
 
 class NetCDFFile(TrajectoryFile):
@@ -18,11 +20,17 @@ class NetCDFFile(TrajectoryFile):
     """
 
     @classmethod
-    def traj_type(cls):
+    def traj_type(cls) -> type[biotraj.NetCDFTrajectoryFile]:
         return biotraj.NetCDFTrajectoryFile
 
     @classmethod
-    def process_read_values(cls, read_values):
+    def process_read_values(
+        cls, read_values: Any
+    ) -> tuple[
+        NDArray3[Any, Any, XYZ, np.floating],
+        NDArray3[Any, XYZ, XYZ, np.floating] | None,
+        NDArray1[Any, np.floating] | None,
+    ]:
         # .dcd files use Angstrom
         coord = read_values[0]
         time = read_values[1]
@@ -43,7 +51,12 @@ class NetCDFFile(TrajectoryFile):
         return coord, box, time
 
     @classmethod
-    def prepare_write_values(cls, coord, box, time):
+    def prepare_write_values(
+        cls,
+        coord: NDArray3[Any, Any, XYZ, np.floating] | None,
+        box: NDArray3[Any, XYZ, XYZ, np.floating] | None,
+        time: NDArray1[Any, np.floating] | None,
+    ) -> dict[str, Any]:
         coord = coord.astype(np.float32, copy=False) if coord is not None else None
         time = time.astype(np.float32, copy=False) if time is not None else None
         if box is None:

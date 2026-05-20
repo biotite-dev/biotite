@@ -2,16 +2,23 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.io.fastq"
 __author__ = "Patrick Kunzmann"
 
 from collections import OrderedDict
+import numpy as np
+from biotite.sequence.io.fastq.file import FastqFile
 from biotite.sequence.seqtypes import NucleotideSequence
+from biotite.typing import K, NDArray1
 
 __all__ = ["get_sequence", "get_sequences", "set_sequence", "set_sequences"]
 
 
-def get_sequence(fastq_file, header=None):
+def get_sequence(
+    fastq_file: FastqFile, header: str | None = None
+) -> tuple[NucleotideSequence, np.ndarray]:
     """
     Get a sequence and quality scores from a `FastqFile` instance.
 
@@ -34,17 +41,19 @@ def get_sequence(fastq_file, header=None):
         seq_str, scores = fastq_file[header]
     else:
         # Return first (and probably only) sequence of file
-        seq_str = None
-        scores = None
+        seq_str: str | None = None
+        scores: np.ndarray | None = None
         for seq_str, scores in fastq_file.values():
             break
-        if seq_str is None:
+        if seq_str is None or scores is None:
             raise ValueError("File does not contain any sequences")
     processed_seq_str = seq_str.replace("U", "T").replace("X", "N")
     return NucleotideSequence(processed_seq_str), scores
 
 
-def get_sequences(fastq_file):
+def get_sequences(
+    fastq_file: FastqFile,
+) -> dict[str, tuple[NucleotideSequence, np.ndarray]]:
     """
     Get a dictionary from a `FastqFile` instance,
     where identifiers are keys and sequence-score-tuples are values.
@@ -67,7 +76,13 @@ def get_sequences(fastq_file):
     return seq_dict
 
 
-def set_sequence(fastq_file, sequence, scores, header=None, as_rna=False):
+def set_sequence(
+    fastq_file: FastqFile,
+    sequence: NucleotideSequence,
+    scores: NDArray1[K, np.integer],
+    header: str | None = None,
+    as_rna: bool = False,
+) -> None:
     """
     Set a sequence and a quality score array in a `FastqFile` instance.
 
@@ -90,7 +105,11 @@ def set_sequence(fastq_file, sequence, scores, header=None, as_rna=False):
     fastq_file[header] = _convert_to_string(sequence, as_rna), scores
 
 
-def set_sequences(fastq_file, sequence_dict, as_rna=False):
+def set_sequences(
+    fastq_file: FastqFile,
+    sequence_dict: dict[str, tuple[NucleotideSequence, np.ndarray]],
+    as_rna: bool = False,
+) -> None:
     """
     Set sequences in a `FastqFile` instance from a dictionary.
 
@@ -110,7 +129,7 @@ def set_sequences(fastq_file, sequence_dict, as_rna=False):
         fastq_file[header] = _convert_to_string(sequence, as_rna), scores
 
 
-def _convert_to_string(sequence, as_rna):
+def _convert_to_string(sequence: NucleotideSequence, as_rna: bool) -> str:
     if as_rna:
         return str(sequence).replace("T", "U")
     else:

@@ -2,17 +2,22 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application.viennarna"
 __author__ = "Tom David Müller, Patrick Kunzmann"
 __all__ = ["RNAfoldApp"]
 
+from os import PathLike
 from tempfile import NamedTemporaryFile
 import numpy as np
 from biotite.application.application import AppState, requires_state
 from biotite.application.localapp import LocalApp, cleanup_tempfile
 from biotite.application.viennarna.util import build_constraint_string
 from biotite.sequence.io.fasta import FastaFile, set_sequence
+from biotite.sequence.seqtypes import NucleotideSequence
 from biotite.structure.dotbracket import base_pairs_from_dot_bracket
+from biotite.typing import C2, K, NDArray1, NDArray2
 
 
 class RNAfoldApp(LocalApp):
@@ -45,15 +50,20 @@ class RNAfoldApp(LocalApp):
     (((.((((.......)).)))))....
     """
 
-    def __init__(self, sequence, temperature=37, bin_path="RNAfold"):
-        self._sequence = sequence.copy()
-        self._temperature = str(temperature)
-        self._constraints = None
-        self._enforce = None
+    def __init__(
+        self,
+        sequence: NucleotideSequence,
+        temperature: int = 37,
+        bin_path: PathLike[str] | str = "RNAfold",
+    ) -> None:
+        self._sequence: NucleotideSequence = sequence.copy()
+        self._temperature: str = str(temperature)
+        self._constraints: str | None = None
+        self._enforce: bool | None = None
         self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
         super().__init__(bin_path)
 
-    def run(self):
+    def run(self) -> None:
         # Insert no line breaks
         # -> Extremely high value for characters per line
         fasta_file = FastaFile(chars_per_line=np.iinfo(np.int32).max)
@@ -76,7 +86,7 @@ class RNAfoldApp(LocalApp):
         self.set_arguments(options + [self._in_file.name])
         super().run()
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         super().evaluate()
         lines = self.get_stdout().splitlines()
         content = lines[2]
@@ -86,12 +96,12 @@ class RNAfoldApp(LocalApp):
         self._free_energy = free_energy
         self._dotbracket = dotbracket
 
-    def clean_up(self):
+    def clean_up(self) -> None:
         super().clean_up()
         cleanup_tempfile(self._in_file)
 
     @requires_state(AppState.CREATED)
-    def set_temperature(self, temperature):
+    def set_temperature(self, temperature: int) -> None:
         """
         Adjust the energy parameters according to a temperature in
         degrees Celsius.
@@ -106,13 +116,13 @@ class RNAfoldApp(LocalApp):
     @requires_state(AppState.CREATED)
     def set_constraints(
         self,
-        pairs=None,
-        paired=None,
-        unpaired=None,
-        downstream=None,
-        upstream=None,
-        enforce=False,
-    ):
+        pairs: NDArray2[K, C2, np.integer] | None = None,
+        paired: NDArray1[K, np.integer | np.bool_] | None = None,
+        unpaired: NDArray1[K, np.integer | np.bool_] | None = None,
+        downstream: NDArray1[K, np.integer | np.bool_] | None = None,
+        upstream: NDArray1[K, np.integer | np.bool_] | None = None,
+        enforce: bool = False,
+    ) -> None:
         """
         Add constraints of known paired or unpaired bases to the folding
         algorithm.
@@ -144,7 +154,7 @@ class RNAfoldApp(LocalApp):
         self._enforce = enforce
 
     @requires_state(AppState.JOINED)
-    def get_free_energy(self):
+    def get_free_energy(self) -> float:
         """
         Get the free energy (kcal/mol) of the suggested
         secondary structure.
@@ -167,7 +177,7 @@ class RNAfoldApp(LocalApp):
         return self._free_energy
 
     @requires_state(AppState.JOINED)
-    def get_dot_bracket(self):
+    def get_dot_bracket(self) -> str:
         """
         Get the minimum free energy secondary structure of the input
         sequence in dot bracket notation.
@@ -190,7 +200,7 @@ class RNAfoldApp(LocalApp):
         return self._dotbracket
 
     @requires_state(AppState.JOINED)
-    def get_base_pairs(self):
+    def get_base_pairs(self) -> NDArray2[K, C2, np.integer]:
         """
         Get the base pairs from the minimum free energy secondary
         structure of the input sequence.
@@ -226,7 +236,9 @@ class RNAfoldApp(LocalApp):
         return base_pairs_from_dot_bracket(self._dotbracket)
 
     @staticmethod
-    def compute_secondary_structure(sequence, bin_path="RNAfold"):
+    def compute_secondary_structure(
+        sequence: NucleotideSequence, bin_path: PathLike[str] | str = "RNAfold"
+    ) -> tuple[str, float]:
         """
         Compute the minimum free energy secondary structure of a
         ribonucleic acid sequence using *ViennaRNA's* *RNAfold* software.

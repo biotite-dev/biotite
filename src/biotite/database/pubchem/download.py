@@ -9,7 +9,9 @@ __all__ = ["fetch", "fetch_property"]
 import io
 import numbers
 import os
+from collections.abc import Iterable
 from os.path import getsize, isdir, isfile, join
+from typing import Literal, overload
 import requests
 from biotite.database.error import RequestError
 from biotite.database.pubchem.error import parse_error_details
@@ -18,16 +20,125 @@ from biotite.database.pubchem.throttle import ThrottleStatus
 _base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
 _binary_formats = ["png", "asnb"]
 
+_PubchemFormat = Literal["sdf", "asnt", "asnb", "xml", "json", "jsonp", "png"]
 
+
+# Cartesian product of `cids` x `target_path` x `return_throttle_status`
+@overload
 def fetch(
-    cids,
-    format="sdf",
-    target_path=None,
-    as_structural_formula=False,
-    overwrite=False,
-    verbose=False,
-    throttle_threshold=0.5,
-    return_throttle_status=False,
+    cids: int,
+    format: _PubchemFormat,
+    target_path: str,
+    as_structural_formula: bool = False,
+    overwrite: bool = False,
+    verbose: bool = False,
+    throttle_threshold: float = 0.5,
+    *,
+    return_throttle_status: Literal[False] = False,
+) -> str: ...
+@overload
+def fetch(
+    cids: int,
+    format: _PubchemFormat,
+    target_path: str,
+    as_structural_formula: bool = False,
+    overwrite: bool = False,
+    verbose: bool = False,
+    throttle_threshold: float = 0.5,
+    *,
+    return_throttle_status: Literal[True],
+) -> tuple[str, ThrottleStatus | None]: ...
+@overload
+def fetch(
+    cids: int,
+    format: _PubchemFormat = "sdf",
+    target_path: None = None,
+    as_structural_formula: bool = False,
+    overwrite: bool = False,
+    verbose: bool = False,
+    throttle_threshold: float = 0.5,
+    *,
+    return_throttle_status: Literal[False] = False,
+) -> io.StringIO | io.BytesIO: ...
+@overload
+def fetch(
+    cids: int,
+    format: _PubchemFormat = "sdf",
+    target_path: None = None,
+    as_structural_formula: bool = False,
+    overwrite: bool = False,
+    verbose: bool = False,
+    throttle_threshold: float = 0.5,
+    *,
+    return_throttle_status: Literal[True],
+) -> tuple[io.StringIO | io.BytesIO, ThrottleStatus | None]: ...
+@overload
+def fetch(
+    cids: Iterable[int],
+    format: _PubchemFormat,
+    target_path: str,
+    as_structural_formula: bool = False,
+    overwrite: bool = False,
+    verbose: bool = False,
+    throttle_threshold: float = 0.5,
+    *,
+    return_throttle_status: Literal[False] = False,
+) -> list[str]: ...
+@overload
+def fetch(
+    cids: Iterable[int],
+    format: _PubchemFormat,
+    target_path: str,
+    as_structural_formula: bool = False,
+    overwrite: bool = False,
+    verbose: bool = False,
+    throttle_threshold: float = 0.5,
+    *,
+    return_throttle_status: Literal[True],
+) -> tuple[list[str], ThrottleStatus | None]: ...
+@overload
+def fetch(
+    cids: Iterable[int],
+    format: _PubchemFormat = "sdf",
+    target_path: None = None,
+    as_structural_formula: bool = False,
+    overwrite: bool = False,
+    verbose: bool = False,
+    throttle_threshold: float = 0.5,
+    *,
+    return_throttle_status: Literal[False] = False,
+) -> list[io.StringIO | io.BytesIO]: ...
+@overload
+def fetch(
+    cids: Iterable[int],
+    format: _PubchemFormat = "sdf",
+    target_path: None = None,
+    as_structural_formula: bool = False,
+    overwrite: bool = False,
+    verbose: bool = False,
+    throttle_threshold: float = 0.5,
+    *,
+    return_throttle_status: Literal[True],
+) -> tuple[list[io.StringIO | io.BytesIO], ThrottleStatus | None]: ...
+def fetch(
+    cids: int | Iterable[int],
+    format: _PubchemFormat = "sdf",
+    target_path: str | None = None,
+    as_structural_formula: bool = False,
+    overwrite: bool = False,
+    verbose: bool = False,
+    throttle_threshold: float = 0.5,
+    return_throttle_status: bool = False,
+) -> (
+    str
+    | io.StringIO
+    | io.BytesIO
+    | list[str]
+    | list[io.StringIO | io.BytesIO]
+    | tuple[
+        str | io.StringIO | io.BytesIO | list[str] | list[io.StringIO | io.BytesIO],
+        ThrottleStatus | None,
+    ]
 ):
     """
     Download structure files from *PubChem* in various formats.
@@ -36,7 +147,7 @@ def fetch(
 
     Parameters
     ----------
-    cids : int or iterable object or int
+    cids : int or iterable object of int
         A single compound ID (CID) or a list of CIDs of the structure(s)
         to be downloaded.
     format : {'sdf', 'asnt' 'asnb', 'xml', 'json', 'jsonp', 'png'}
@@ -77,11 +188,13 @@ def fetch(
         object) was given, a list of strings is returned.
         If no `target_path` was given, the file contents are stored in
         either :class:`StringIO` or :class:`BytesIO` objects.
-    throttle_status : ThrottleStatus
+    throttle_status : ThrottleStatus or None
         The :class:`ThrottleStatus` obtained from the server response.
         If multiple CIDs are requested, the :class:`ThrottleStatus` of
         of the final response is returned.
         This can be used for custom request throttling, for example.
+        ``None`` is returned if no HTTP request was actually made,
+        because all requested files were already cached on disk.
         Only returned, if `return_throttle_status` is set to true.
 
     Examples
@@ -97,25 +210,27 @@ def fetch(
     """
     # If only a single CID is present,
     # put it into a single element list
-    if isinstance(cids, numbers.Integral):
-        cids = [cids]
+    if isinstance(cids, (numbers.Integral, int)):
+        cid_list = [cids]
         single_element = True
     else:
+        cid_list = list(cids)
         single_element = False
     # Create the target folder, if not existing
     if target_path is not None and not isdir(target_path):
         os.makedirs(target_path)
 
     files = []
+    throttle_status: ThrottleStatus | None = None
     session = requests.Session()
-    for i, cid in enumerate(cids):
+    for i, cid in enumerate(cid_list):
         # Prevent IDs as strings, this could be a common error, as other
         # database interfaces of Biotite use string IDs
         if isinstance(cid, str):
             raise TypeError("CIDs must be given as integers, not as string")
         # Verbose output
         if verbose:
-            print(f"Fetching file {i + 1:d} / {len(cids):d} ({cid})...", end="\r")
+            print(f"Fetching file {i + 1:d} / {len(cid_list):d} ({cid})...", end="\r")
 
         # Fetch file from database
         if target_path is not None:
@@ -140,13 +255,13 @@ def fetch(
 
             if file is None:
                 if format in _binary_formats:
-                    file = io.BytesIO(content)
+                    file = io.BytesIO(content)  # pyright: ignore[reportArgumentType]
                 else:
-                    file = io.StringIO(content)
+                    file = io.StringIO(content)  # pyright: ignore[reportArgumentType]
             else:
                 mode = "wb+" if format in _binary_formats else "w+"
                 with open(file, mode) as f:
-                    f.write(content)
+                    f.write(content)  # pyright: ignore[reportArgumentType]
 
             throttle_status = ThrottleStatus.from_response(r)
             if throttle_threshold is not None:
@@ -166,7 +281,44 @@ def fetch(
         return return_value
 
 
-def fetch_property(cids, name, throttle_threshold=0.5, return_throttle_status=False):
+@overload
+def fetch_property(
+    cids: int,
+    name: str,
+    throttle_threshold: float | None = 0.5,
+    *,
+    return_throttle_status: Literal[False] = False,
+) -> str: ...
+@overload
+def fetch_property(
+    cids: int,
+    name: str,
+    throttle_threshold: float | None = 0.5,
+    *,
+    return_throttle_status: Literal[True],
+) -> tuple[str, ThrottleStatus]: ...
+@overload
+def fetch_property(
+    cids: Iterable[int],
+    name: str,
+    throttle_threshold: float | None = 0.5,
+    *,
+    return_throttle_status: Literal[False] = False,
+) -> list[str]: ...
+@overload
+def fetch_property(
+    cids: Iterable[int],
+    name: str,
+    throttle_threshold: float | None = 0.5,
+    *,
+    return_throttle_status: Literal[True],
+) -> tuple[list[str], ThrottleStatus]: ...
+def fetch_property(
+    cids: int | Iterable[int],
+    name: str,
+    throttle_threshold: float | None = 0.5,
+    return_throttle_status: bool = False,
+) -> str | list[str] | tuple[str | list[str], ThrottleStatus]:
     """
     Download the given property for the given CID(s).
 
@@ -223,10 +375,11 @@ def fetch_property(cids, name, throttle_threshold=0.5, return_throttle_status=Fa
     """
     # If only a single CID is present,
     # put it into a single element list
-    if isinstance(cids, numbers.Integral):
-        cids = [cids]
+    if isinstance(cids, int):
+        cid_list = [cids]
         single_element = True
     else:
+        cid_list = list(cids)
         single_element = False
 
     # Property names may only contain letters and numbers
@@ -237,7 +390,7 @@ def fetch_property(cids, name, throttle_threshold=0.5, return_throttle_status=Fa
     # within table elements
     r = requests.post(
         _base_url + f"compound/cid/property/{name}/TXT",
-        data={"cid": ",".join([str(cid) for cid in cids])},
+        data={"cid": ",".join([str(cid) for cid in cid_list])},
     )
     if not r.ok:
         raise RequestError(parse_error_details(r.text))

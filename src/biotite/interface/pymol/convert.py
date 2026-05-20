@@ -1,41 +1,47 @@
+from __future__ import annotations
+
 __name__ = "biotite.interface.pymol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["to_model", "from_model"]
 
 import warnings
+from typing import Any
 import numpy as np
 from chempy import Atom, Bond
 from chempy.models import Indexed as IndexedModel
-import biotite.structure as struc
 from biotite.interface import LossyConversionWarning
 from biotite.sequence import ProteinSequence
+from biotite.structure.atoms import AtomArray
+from biotite.structure.bonds import BondList, BondType
 
 # Bond orders in PyMOL (https://pymolwiki.org/index.php/Valence):
 # 1: single bond, 2: double bond, 3:triple bond, 4:delocalized
 _FORMAL_BOND_ORDER = {
-    struc.BondType.SINGLE: 1,
-    struc.BondType.DOUBLE: 2,
-    struc.BondType.TRIPLE: 3,
-    struc.BondType.AROMATIC_SINGLE: 1,
-    struc.BondType.AROMATIC_DOUBLE: 2,
+    BondType.SINGLE: 1,
+    BondType.DOUBLE: 2,
+    BondType.TRIPLE: 3,
+    BondType.AROMATIC_SINGLE: 1,
+    BondType.AROMATIC_DOUBLE: 2,
 }
 _DELOKALIZED_BOND_ORDER = {
-    struc.BondType.SINGLE: 1,
-    struc.BondType.DOUBLE: 2,
-    struc.BondType.TRIPLE: 3,
-    struc.BondType.AROMATIC_SINGLE: 4,
-    struc.BondType.AROMATIC_DOUBLE: 4,
-    struc.BondType.AROMATIC: 4,
+    BondType.SINGLE: 1,
+    BondType.DOUBLE: 2,
+    BondType.TRIPLE: 3,
+    BondType.AROMATIC_SINGLE: 4,
+    BondType.AROMATIC_DOUBLE: 4,
+    BondType.AROMATIC: 4,
 }
 _BIOTITE_BOND_TYPES = {
-    1: struc.BondType.SINGLE,
-    2: struc.BondType.DOUBLE,
-    3: struc.BondType.TRIPLE,
-    4: struc.BondType.AROMATIC,
+    1: BondType.SINGLE,
+    2: BondType.DOUBLE,
+    3: BondType.TRIPLE,
+    4: BondType.AROMATIC,
 }
 
 
-def to_model(atom_array, delocalize_bonds=False):
+def to_model(
+    atom_array: AtomArray[Any], delocalize_bonds: bool = False
+) -> IndexedModel:
     """
     Convert an :class:`AtomArray` into a :class:`chempy.models.Indexed`
     object.
@@ -84,7 +90,8 @@ def to_model(atom_array, delocalize_bonds=False):
         if "charge" in annot_cat:
             atom.formal_charge = atom_array.charge[i]
         atom.coord = tuple(atom_array.coord[..., i, :])
-        atom.index = i + 1
+        # `Atom.index` is read-only per chempy's stub but writable at runtime
+        atom.index = i + 1  # pyright: ignore[reportAttributeAccessIssue]
         model.add_atom(atom)
 
     bond_order_mapping = (
@@ -99,21 +106,24 @@ def to_model(atom_array, delocalize_bonds=False):
                 unmappable_bond_types.append(bond_type)
                 order = 1
             bond.order = order
-            bond.index = [i, j]
+            # `Bond.index` is read-only per chempy's stub but writable at runtime
+            bond.index = [i, j]  # pyright: ignore[reportAttributeAccessIssue]
             model.add_bond(bond)
     else:
         warnings.warn("The given atom array (stack) has no associated bond information")
     if unmappable_bond_types:
         warnings.warn(
             "The following bond types could not be mapped to PyMOL: "
-            + ", ".join([struc.BondType(bt).name for bt in set(unmappable_bond_types)]),
+            + ", ".join([BondType(bt).name for bt in set(unmappable_bond_types)]),
             LossyConversionWarning,
         )
 
     return model
 
 
-def from_model(chempy_model, include_bonds=False):
+def from_model(
+    chempy_model: IndexedModel, include_bonds: bool = False
+) -> AtomArray[Any]:
     """
     Convert a :class:`chempy.models.Indexed`
     object into an :class:`AtomArray`.
@@ -140,7 +150,7 @@ def from_model(chempy_model, include_bonds=False):
 
     bonds = chempy_model.bond
 
-    atom_array = struc.AtomArray(len(atoms))
+    atom_array = AtomArray(len(atoms))
 
     # Add annotation arrays
     atom_array.chain_id = np.array([a.chain for a in atoms], dtype="U3")
@@ -180,6 +190,6 @@ def from_model(chempy_model, include_bonds=False):
             [[b.index[0], b.index[1], _BIOTITE_BOND_TYPES[b.order]] for b in bonds],
             dtype=np.uint32,
         )
-        atom_array.bonds = struc.BondList(len(atoms), bond_array)
+        atom_array.bonds = BondList(len(atoms), bond_array)
 
     return atom_array

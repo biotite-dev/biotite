@@ -9,6 +9,7 @@ __all__ = ["ThrottleStatus"]
 
 import time
 from dataclasses import dataclass
+import requests
 
 
 @dataclass(frozen=True)
@@ -46,12 +47,12 @@ class ThrottleStatus:
         Read-only attributes for the parameters given above.
     """
 
-    count: ...
-    time: ...
-    service: ...
+    count: float
+    time: float
+    service: float
 
     @staticmethod
-    def from_response(response):
+    def from_response(response: requests.Response) -> "ThrottleStatus":
         """
         Extract the throttle status from a *Pubchem* server response.
 
@@ -79,7 +80,7 @@ class ThrottleStatus:
         service_status /= 100
         return ThrottleStatus(count_status, time_status, service_status)
 
-    def wait_if_busy(self, threshold=0.5, wait_time=1.0):
+    def wait_if_busy(self, threshold: float = 0.5, wait_time: float = 1.0) -> None:
         """
         Halt the execution for a given number of seconds, if the current
         request time or count of this user exceeds the given threshold.

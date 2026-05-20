@@ -23,7 +23,10 @@ __all__ = [
     "get_atom_name_indices",
 ]
 
+from collections.abc import Callable, Iterator, Sequence
+from typing import Any, overload
 import numpy as np
+from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.segments import (
     apply_segment_wise,
     get_all_segment_positions,
@@ -34,9 +37,14 @@ from biotite.structure.segments import (
     segment_iter,
     spread_segment_wise,
 )
+from biotite.typing import K, M, N, NDArray1, NDArray2
 
 
-def get_residue_starts(array, add_exclusive_stop=False, extra_categories=()):
+def get_residue_starts(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    add_exclusive_stop: bool = False,
+    extra_categories: Sequence[str] = (),
+) -> NDArray1[K, np.integer]:
     """
     Get indices for an atom array, each indicating the beginning of
     a residue.
@@ -82,7 +90,12 @@ def get_residue_starts(array, add_exclusive_stop=False, extra_categories=()):
     return get_segment_starts(array, add_exclusive_stop, equal_categories=categories)
 
 
-def apply_residue_wise(array, data, function, axis=None):
+def apply_residue_wise(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    data: np.ndarray,
+    function: Callable[..., Any],
+    axis: int | None = None,
+) -> np.ndarray:
     """
     Apply a function to intervals of data, where each interval
     corresponds to one residue.
@@ -166,7 +179,10 @@ def apply_residue_wise(array, data, function, axis=None):
     return apply_segment_wise(starts, data, function, axis)
 
 
-def spread_residue_wise(array, input_data):
+def spread_residue_wise(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    input_data: np.ndarray,
+) -> np.ndarray:
     """
     Expand residue-wise data to atom-wise data.
 
@@ -229,7 +245,10 @@ def spread_residue_wise(array, input_data):
     return spread_segment_wise(starts, input_data)
 
 
-def get_residue_masks(array, indices):
+def get_residue_masks(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    indices: NDArray1[Any, np.integer] | Sequence[int],
+) -> NDArray2[Any, N, np.bool_]:
     """
     Get boolean masks indicating the residues to which the given atom
     indices belong.
@@ -303,7 +322,10 @@ def get_residue_masks(array, indices):
     return get_segment_masks(starts, indices)
 
 
-def get_residue_starts_for(array, indices):
+def get_residue_starts_for(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    indices: NDArray1[Any, np.integer] | Sequence[int],
+) -> NDArray1[Any, np.integer]:
     """
     For each given atom index, get the index that points to the
     start of the residue that atom belongs to.
@@ -343,7 +365,10 @@ def get_residue_starts_for(array, indices):
     return get_segment_starts_for(starts, indices)
 
 
-def get_residue_positions(array, indices):
+def get_residue_positions(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    indices: NDArray1[Any, np.integer] | Sequence[int],
+) -> NDArray1[Any, np.integer]:
     """
     For each given atom index, obtain the position of the residue
     corresponding to this index in the input `array`.
@@ -389,7 +414,9 @@ def get_residue_positions(array, indices):
     return get_segment_positions(starts, indices)
 
 
-def get_all_residue_positions(array):
+def get_all_residue_positions(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.integer]:
     """
     For each atom, obtain the position of the residue
     corresponding to this atom in the input `array`.
@@ -433,7 +460,9 @@ def get_all_residue_positions(array):
     return get_all_segment_positions(starts, array.array_length())
 
 
-def get_residues(array):
+def get_residues(
+    array: AtomArray[Any] | AtomArrayStack[Any, Any],
+) -> tuple[NDArray1[K, np.integer], NDArray1[K, np.str_]]:
     """
     Get the residue IDs and names of an atom array (stack).
 
@@ -492,7 +521,9 @@ def get_residues(array):
     return array.res_id[starts], array.res_name[starts]
 
 
-def get_residue_count(array):
+def get_residue_count(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> int:
     """
     Get the amount of residues in an atom array (stack).
 
@@ -513,7 +544,13 @@ def get_residue_count(array):
     return len(get_residue_starts(array))
 
 
-def residue_iter(array):
+@overload
+def residue_iter(array: AtomArray[N]) -> Iterator[AtomArray[Any]]: ...
+@overload
+def residue_iter(array: AtomArrayStack[M, N]) -> Iterator[AtomArrayStack[M, Any]]: ...
+def residue_iter(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> Iterator[AtomArray[Any] | AtomArrayStack[M, Any]]:
     """
     Iterate over all residues in an atom array (stack).
 
@@ -597,7 +634,10 @@ def residue_iter(array):
         yield residue
 
 
-def get_atom_name_indices(atoms, atom_names):
+def get_atom_name_indices(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+    atom_names: Sequence[str | None],
+) -> NDArray2[Any, Any, np.integer]:
     """
     For each residue, get the index of the atom with the given atom name.
 

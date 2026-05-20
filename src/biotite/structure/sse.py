@@ -13,10 +13,12 @@ __all__ = ["annotate_sse"]
 
 import numpy as np
 from biotite.rust.structure import CellList
+from biotite.structure.atoms import AtomArray
 from biotite.structure.filter import filter_amino_acids
 from biotite.structure.geometry import angle, dihedral, distance
 from biotite.structure.integrity import check_res_id_continuity
 from biotite.structure.residues import get_residue_starts
+from biotite.typing import XYZ, K, N, NDArray1, NDArray2
 
 _r_helix = (np.deg2rad(89 - 12), np.deg2rad(89 + 12))
 _a_helix = (np.deg2rad(50 - 20), np.deg2rad(50 + 20))
@@ -31,7 +33,7 @@ _d3_strand = ((9.9 - 0.9), (9.9 + 0.9))
 _d4_strand = ((12.4 - 1.1), (12.4 + 1.1))
 
 
-def annotate_sse(atom_array):
+def annotate_sse(atom_array: AtomArray[N]) -> NDArray1[K, np.str_]:
     r"""
     Calculate the secondary structure elements (SSEs) of a
     peptide chain based on the `P-SEA` algorithm.
@@ -101,7 +103,7 @@ def annotate_sse(atom_array):
         # Residues where coord are NaN do not belong to amino acids
         # (or at least they have no CA)
         sse[np.isnan(ca_coord).any(axis=-1)] = ""
-        return sse
+        return sse  # pyright: ignore[reportReturnType]
 
     # Add virtual residues w/o CA coord at chain discontinuity indices
     # This ensures that such discontinuities are recognized for the
@@ -201,7 +203,9 @@ def annotate_sse(atom_array):
     return sse[no_virtual_mask]
 
 
-def _mask_consecutive(mask, number):
+def _mask_consecutive(
+    mask: NDArray1[N, np.bool_], number: int
+) -> NDArray1[N, np.bool_]:
     """
     Find all regions in a mask with `number` consecutive ``True``
     values.
@@ -223,10 +227,13 @@ def _mask_consecutive(mask, number):
     for i in range(number):
         consecutive_mask[i : i + len(consecutive_seed)] |= consecutive_seed
 
-    return consecutive_mask
+    return consecutive_mask  # pyright: ignore[reportReturnType]
 
 
-def _extend_region(base_condition_mask, extension_condition_mask):
+def _extend_region(
+    base_condition_mask: NDArray1[N, np.bool_],
+    extension_condition_mask: NDArray1[N, np.bool_],
+) -> NDArray1[N, np.bool_]:
     """
     Extend a ``True`` region in `base_condition_mask` by at maximum of
     one element at each side, if such element fulfills
@@ -255,8 +262,12 @@ def _extend_region(base_condition_mask, extension_condition_mask):
 
 
 def _mask_regions_with_contacts(
-    coord, candidate_mask, min_contacts, min_distance, max_distance
-):
+    coord: NDArray2[N, XYZ, np.floating],
+    candidate_mask: NDArray1[N, np.bool_],
+    min_contacts: int,
+    min_distance: float,
+    max_distance: float,
+) -> NDArray1[N, np.bool_]:
     """
     Mask regions of `candidate_mask` that have at least `min_contacts`
     contacts with `coord` in the range `min_distance` to `max_distance`.
@@ -265,7 +276,7 @@ def _mask_regions_with_contacts(
     if len(potential_contact_coord) == 0:
         # No potential contacts -> no contacts
         # -> no residue can satisfy 'min_contacts'
-        return np.zeros(len(candidate_mask), dtype=bool)
+        return np.zeros(len(candidate_mask), dtype=bool)  # pyright: ignore[reportReturnType]
 
     cell_list = CellList(potential_contact_coord, max_distance)
     # For each candidate position,
@@ -303,4 +314,4 @@ def _mask_regions_with_contacts(
         if total_contacts >= min_contacts:
             output_mask[start:stop] = True
 
-    return output_mask
+    return output_mask  # pyright: ignore[reportReturnType]

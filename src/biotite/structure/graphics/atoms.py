@@ -6,21 +6,24 @@ __name__ = "biotite.structure.graphics"
 __author__ = "Patrick Kunzmann"
 __all__ = ["plot_atoms", "plot_ball_and_stick_model"]
 
+from collections.abc import Iterable
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
+from biotite.structure.atoms import AtomArray
+from biotite.typing import C3, C4, XYZ, MplColor, N, NDArray2
 
 
 def plot_atoms(
-    axes,
-    atoms,
-    colors,
-    line_width=1.0,
-    background_color=None,
-    center=None,
-    size=None,
-    zoom=1.0,
-):
+    axes: Axes3D,
+    atoms: AtomArray[N],
+    colors: NDArray2[N, C3, np.floating] | NDArray2[N, C4, np.floating],
+    line_width: float = 1.0,
+    background_color: MplColor | None = None,
+    center: tuple[float, float, float] | None = None,
+    size: float | None = None,
+    zoom: float = 1.0,
+) -> None:
     """
     Plot an :class:`AtomArray` as lines between bonded atoms.
 
@@ -106,23 +109,23 @@ def plot_atoms(
     axes.axis("off")
     # Set background color
     if background_color is not None:
-        axes.set_facecolor(background_color)
-        axes.get_figure().set_facecolor(background_color)
+        axes.set_facecolor(background_color)  # pyright: ignore[reportArgumentType]
+        axes.get_figure().set_facecolor(background_color)  # pyright: ignore[reportOptionalMemberAccess, reportArgumentType]
     _set_box(axes, atoms.coord, center, size, zoom)
 
 
 def plot_ball_and_stick_model(
-    axes,
-    atoms,
-    colors,
-    ball_size=200,
-    line_color="black",
-    line_width=1.0,
-    background_color=None,
-    center=None,
-    size=None,
-    zoom=1.0,
-):
+    axes: Axes3D,
+    atoms: AtomArray[N],
+    colors: NDArray2[N, C3, np.floating] | NDArray2[N, C4, np.floating],
+    ball_size: float | Iterable[float] = 200,
+    line_color: MplColor = "black",
+    line_width: float = 1.0,
+    background_color: MplColor | None = None,
+    center: tuple[float, float, float] | None = None,
+    size: float | None = None,
+    zoom: float = 1.0,
+) -> None:
     """
     Plot an :class:`AtomArray` as *ball-and-stick* model.
 
@@ -143,7 +146,7 @@ def plot_ball_and_stick_model(
         An array of RGB or RGBA colors for each atom in `atoms`, that
         is used to color the *balls* of the model.
         The values for each color channel are in the range 0 to 1.
-    ball_size : int or iterable of int, shape=(n,)
+    ball_size : float or iterable of float, shape=(n,)
         The size of the *balls* in the model in *pt*.
         Either a single value for all atoms or an iterable object of
         values for each atom.
@@ -199,7 +202,7 @@ def plot_ball_and_stick_model(
     axes.add_collection(sticks)
 
     # Plot balls
-    axes.scatter(*atoms.coord.T, s=ball_size, c=colors, linewidth=0, alpha=1)
+    axes.scatter(*atoms.coord.T, s=ball_size, c=colors, linewidth=0, alpha=1)  # pyright: ignore[reportArgumentType]
 
     # Set viewing angle
     axes.azim = -90
@@ -208,35 +211,59 @@ def plot_ball_and_stick_model(
     axes.axis("off")
     # Set background color
     if background_color is not None:
-        axes.set_facecolor(background_color)
-        axes.get_figure().set_facecolor(background_color)
+        axes.set_facecolor(background_color)  # pyright: ignore[reportArgumentType]
+        axes.get_figure().set_facecolor(background_color)  # pyright: ignore[reportOptionalMemberAccess, reportArgumentType]
     _set_box(axes, atoms.coord, center, size, zoom)
 
 
-def _set_box(axes, coord, center, size, zoom):
+def _set_box(
+    axes: Axes3D,
+    coord: NDArray2[N, XYZ, np.floating],
+    center: tuple[float, float, float] | None,
+    size: float | None,
+    zoom: float,
+) -> None:
     """
     This ensures an approximately equal aspect ratio in a 3D plot under
     the condition, that the :class:`Axes` is quadratic on the display.
     """
-    if center is None:
-        center = (
-            (coord[:, 0].max() + coord[:, 0].min()) / 2,
-            (coord[:, 1].max() + coord[:, 1].min()) / 2,
-            (coord[:, 2].max() + coord[:, 2].min()) / 2,
+    # Fresh locals so pyright sees a single resolved type for each axis,
+    # without reassigning parameters of `tuple | None` / `float | None`.
+    resolved_center: tuple[float, float, float] = (
+        center
+        if center is not None
+        else (
+            float((coord[:, 0].max() + coord[:, 0].min()) / 2),
+            float((coord[:, 1].max() + coord[:, 1].min()) / 2),
+            float((coord[:, 2].max() + coord[:, 2].min()) / 2),
         )
+    )
+    resolved_size: float = (
+        size
+        if size is not None
+        else float(
+            np.array(
+                [
+                    coord[:, 0].max() - coord[:, 0].min(),
+                    coord[:, 1].max() - coord[:, 1].min(),
+                    coord[:, 2].max() - coord[:, 2].min(),
+                ]
+            ).max()
+        )
+    )
 
-    if size is None:
-        size = np.array(
-            [
-                coord[:, 0].max() - coord[:, 0].min(),
-                coord[:, 1].max() - coord[:, 1].min(),
-                coord[:, 2].max() - coord[:, 2].min(),
-            ]
-        ).max()
-
-    axes.set_xlim(center[0] - size / (2 * zoom), center[0] + size / (2 * zoom))
-    axes.set_ylim(center[1] - size / (2 * zoom), center[1] + size / (2 * zoom))
-    axes.set_zlim(center[2] - size / (2 * zoom), center[2] + size / (2 * zoom))
+    axes.set_xlim(
+        resolved_center[0] - resolved_size / (2 * zoom),
+        resolved_center[0] + resolved_size / (2 * zoom),
+    )
+    axes.set_ylim(
+        resolved_center[1] - resolved_size / (2 * zoom),
+        resolved_center[1] + resolved_size / (2 * zoom),
+    )
+    axes.set_zlim(
+        resolved_center[2] - resolved_size / (2 * zoom),
+        resolved_center[2] + resolved_size / (2 * zoom),
+    )
 
     # Make the axis lengths of the 'plot box' equal
     # The 'plot box' is not visible due to 'axes.axis("off")'

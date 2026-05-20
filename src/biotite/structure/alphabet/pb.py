@@ -10,11 +10,15 @@ __name__ = "biotite.structure.alphabet"
 __author__ = "Patrick Kunzmann"
 __all__ = ["ProteinBlocksSequence", "to_protein_blocks"]
 
+from collections.abc import Iterable
+from typing import ClassVar
 import numpy as np
 from biotite.sequence.alphabet import LetterAlphabet
 from biotite.sequence.sequence import Sequence
+from biotite.structure.atoms import AtomArray
 from biotite.structure.chains import get_chain_starts
 from biotite.structure.geometry import dihedral_backbone
+from biotite.typing import K, N, NDArray1
 
 # PB reference angles, adapted from PBxplore
 PB_ANGLES = np.array(
@@ -62,20 +66,20 @@ class ProteinBlocksSequence(Sequence):
     .. footbibliography::
     """
 
-    alphabet = LetterAlphabet("abcdefghijklmnopz")
+    alphabet: ClassVar[LetterAlphabet] = LetterAlphabet("abcdefghijklmnopz")
     undefined_symbol = "z"
 
-    def __init__(self, sequence=""):
+    def __init__(self, sequence: str | Iterable[str] = "") -> None:
         if isinstance(sequence, str):
             sequence = sequence.lower()
         else:
             sequence = [symbol.upper() for symbol in sequence]
         super().__init__(sequence)
 
-    def get_alphabet(self):
+    def get_alphabet(self) -> LetterAlphabet:
         return ProteinBlocksSequence.alphabet
 
-    def remove_undefined(self):
+    def remove_undefined(self) -> "ProteinBlocksSequence":
         """
         Remove undefined symbols from the sequence.
 
@@ -93,7 +97,9 @@ class ProteinBlocksSequence(Sequence):
         return filtered_sequence
 
 
-def to_protein_blocks(atoms):
+def to_protein_blocks(
+    atoms: AtomArray[N],
+) -> tuple[list[ProteinBlocksSequence], NDArray1[K, np.integer]]:
     """
     Encode each chain in the given structure to the *Protein Blocks* structural
     alphabet.
@@ -107,7 +113,7 @@ def to_protein_blocks(atoms):
 
     Returns
     -------
-    sequences : list of Sequence, length=n
+    sequences : list of ProteinBlocksSequence, length=n
         The encoded *Protein Blocks* sequence for each peptide chain in the structure.
     chain_start_indices : ndarray, shape=(n,), dtype=int
         The atom index where each chain starts.
@@ -134,7 +140,7 @@ def to_protein_blocks(atoms):
     return sequences, chain_start_indices[:-1]
 
 
-def _to_protein_blocks(chain):
+def _to_protein_blocks(chain: AtomArray[N]) -> ProteinBlocksSequence:
     undefined_code = ProteinBlocksSequence.alphabet.encode(
         ProteinBlocksSequence.undefined_symbol
     )

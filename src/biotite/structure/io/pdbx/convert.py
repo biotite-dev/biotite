@@ -20,9 +20,12 @@ __all__ = [
 import itertools
 import warnings
 from collections import Counter
+from collections.abc import Iterable
+from typing import Any, Literal, TypeAlias, overload
 import numpy as np
 from biotite.file import InvalidFileError
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
+from biotite.sequence.sequence import Sequence
 from biotite.structure.atoms import (
     AtomArray,
     AtomArrayStack,
@@ -51,10 +54,11 @@ from biotite.structure.geometry import centroid
 from biotite.structure.info.bonds import bonds_in_residue
 from biotite.structure.io.pdbx.bcif import (
     BinaryCIFBlock,
+    BinaryCIFCategory,
     BinaryCIFColumn,
     BinaryCIFFile,
 )
-from biotite.structure.io.pdbx.cif import CIFBlock, CIFFile
+from biotite.structure.io.pdbx.cif import CIFBlock, CIFCategory, CIFColumn, CIFFile
 from biotite.structure.io.pdbx.component import MaskValue
 from biotite.structure.io.pdbx.encoding import StringArrayEncoding
 from biotite.structure.repair import create_continuous_res_ids
@@ -64,6 +68,12 @@ from biotite.structure.residues import (
     get_residue_starts_for,
 )
 from biotite.structure.transform import AffineTransformation
+from biotite.typing import C2, XYZ, M, N, NDArray1, NDArray2
+
+_PDBxFile: TypeAlias = CIFFile | CIFBlock | BinaryCIFFile | BinaryCIFBlock
+_Block: TypeAlias = CIFBlock | BinaryCIFBlock
+_Category: TypeAlias = CIFCategory | BinaryCIFCategory
+_Column: TypeAlias = CIFColumn | BinaryCIFColumn
 
 # Bond types in `struct_conn` category that refer to covalent bonds
 PDBX_BOND_TYPE_ID_TO_TYPE = {
@@ -140,13 +150,18 @@ _other_type_list = [
 ]
 
 
-def _filter(category, index):
+def _filter(
+    category: _Category,
+    index: NDArray1[Any, np.integer] | NDArray1[Any, np.bool_] | slice,
+) -> _Category:
     """
     Reduce the given category to the values selected by the given index,
     """
-    Category = type(category)
-    Column = Category.subcomponent_class()
-    Data = Column.subcomponent_class()
+    # The subcomponent classes are dispatched at runtime by the CIF/BinaryCIF flavour
+    # pyright cannot unify the union calls so we drop to `Any`
+    Category: Any = type(category)
+    Column: Any = Category.subcomponent_class()
+    Data: Any = Column.subcomponent_class()
 
     return Category(
         {
@@ -159,7 +174,10 @@ def _filter(category, index):
     )
 
 
-def get_sequence(pdbx_file, data_block=None):
+def get_sequence(
+    pdbx_file: _PDBxFile,
+    data_block: str | None = None,
+) -> dict[str, Sequence]:
     """
     Get the protein and nucleotide sequences from the
     ``entity_poly.pdbx_seq_one_letter_code_can`` entry.
@@ -211,7 +229,7 @@ def get_sequence(pdbx_file, data_block=None):
     strand_ids = poly_category["pdbx_strand_id"].as_array(str)
     strand_ids = [strand_id.split(",") for strand_id in strand_ids]
 
-    sequence_dict = {
+    sequence_dict: dict[str, Sequence] = {
         strand_id: sequence
         for sequence, strand_ids in zip(sequences, strand_ids)
         for strand_id in strand_ids
@@ -221,7 +239,10 @@ def get_sequence(pdbx_file, data_block=None):
     return sequence_dict
 
 
-def get_model_count(pdbx_file, data_block=None):
+def get_model_count(
+    pdbx_file: _PDBxFile,
+    data_block: str | None = None,
+) -> int:
     """
     Get the number of models contained in a file.
 
@@ -245,15 +266,35 @@ def get_model_count(pdbx_file, data_block=None):
     return len(np.unique((block["atom_site"]["pdbx_PDB_model_num"].as_array(np.int32))))
 
 
+@overload
 def get_structure(
-    pdbx_file,
-    model=None,
-    data_block=None,
-    altloc="first",
-    extra_fields=None,
-    use_author_fields=True,
-    include_bonds=False,
-):
+    pdbx_file: _PDBxFile,
+    model: int,
+    data_block: str | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] | None = None,
+    use_author_fields: bool = True,
+    include_bonds: bool = False,
+) -> AtomArray[Any]: ...
+@overload
+def get_structure(
+    pdbx_file: _PDBxFile,
+    model: None = None,
+    data_block: str | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] | None = None,
+    use_author_fields: bool = True,
+    include_bonds: bool = False,
+) -> AtomArrayStack[Any, Any]: ...
+def get_structure(
+    pdbx_file: _PDBxFile,
+    model: int | None = None,
+    data_block: str | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] | None = None,
+    use_author_fields: bool = True,
+    include_bonds: bool = False,
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from the
     ``atom_site`` category in a file.
@@ -449,7 +490,7 @@ def get_structure(
     return atoms
 
 
-def _get_block(pdbx_component, block_name):
+def _get_block(pdbx_component: _PDBxFile, block_name: str | None) -> _Block:
     if not isinstance(pdbx_component, (CIFBlock, BinaryCIFBlock)):
         # Determine block
         if block_name is None:
@@ -460,7 +501,7 @@ def _get_block(pdbx_component, block_name):
         return pdbx_component
 
 
-def _get_or_fallback(category, key, fallback_key):
+def _get_or_fallback(category: _Category, key: str, fallback_key: str) -> _Column:
     """
     Return column related to key in category if it exists,
     otherwise try to get the column related to fallback key.
@@ -481,7 +522,12 @@ def _get_or_fallback(category, key, fallback_key):
     return category[key]
 
 
-def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
+def _fill_annotations(
+    array: AtomArray[Any] | AtomArrayStack[Any, Any],
+    atom_site: _Category,
+    extra_fields: set[str],
+    use_author_fields: bool,
+) -> None:
     """Fill atom_site annotations in atom array or atom array stack.
 
     Parameters
@@ -616,7 +662,9 @@ def _fill_annotations(array, atom_site, extra_fields, use_author_fields):
         array.set_annotation(field, atom_site[field].as_array(str))
 
 
-def _parse_intra_residue_bonds(chem_comp_bond):
+def _parse_intra_residue_bonds(
+    chem_comp_bond: _Category,
+) -> dict[str, dict[tuple[str, str], BondType]]:
     """
     Create a :func:`connect_via_residue_names()` compatible
     `custom_bond_dict` from the ``chem_comp_bond`` category.
@@ -638,7 +686,11 @@ def _parse_intra_residue_bonds(chem_comp_bond):
     return custom_bond_dict
 
 
-def _parse_inter_residue_bonds(atom_site, struct_conn, atom_count=None):
+def _parse_inter_residue_bonds(
+    atom_site: _Category,
+    struct_conn: _Category,
+    atom_count: int | None = None,
+) -> BondList[Any]:
     """
     Create inter-residue bonds by parsing the ``struct_conn`` category.
     The atom indices of each bond are found by matching the bond labels
@@ -669,7 +721,7 @@ def _parse_inter_residue_bonds(atom_site, struct_conn, atom_count=None):
     if "ptnr2_symmetry" in struct_conn:
         covale_mask &= struct_conn["ptnr2_symmetry"].as_array(str, IDENTITY) == IDENTITY
 
-    atom_indices = [None] * 2
+    atom_indices: list[NDArray1[Any, np.integer] | None] = [None] * 2
     for i in range(2):
         reference_arrays = []
         query_arrays = []
@@ -692,8 +744,8 @@ def _parse_inter_residue_bonds(atom_site, struct_conn, atom_count=None):
         # Match the combination of 'label_asym_id', 'label_comp_id', etc.
         # in 'atom_site' and 'struct_conn'
         atom_indices[i] = _find_matches(query_arrays, reference_arrays)
-    atoms_indices_1 = atom_indices[0]
-    atoms_indices_2 = atom_indices[1]
+    atoms_indices_1: NDArray1[Any, np.integer] = atom_indices[0]  # pyright: ignore[reportAssignmentType]
+    atoms_indices_2: NDArray1[Any, np.integer] = atom_indices[1]  # pyright: ignore[reportAssignmentType]
 
     # Some bonds in 'struct_conn' may not be found in 'atom_site'
     # This is okay,
@@ -717,7 +769,10 @@ def _parse_inter_residue_bonds(atom_site, struct_conn, atom_count=None):
     )
 
 
-def _find_matches(query_arrays, reference_arrays):
+def _find_matches(
+    query_arrays: list[NDArray1[Any, Any]],
+    reference_arrays: list[NDArray1[Any, Any]],
+) -> NDArray1[Any, np.integer]:
     """
     For each index in the `query_arrays` find the indices in the
     `reference_arrays` where all query values match the reference counterpart.
@@ -733,7 +788,10 @@ def _find_matches(query_arrays, reference_arrays):
     return match_indices
 
 
-def _find_matches_by_dense_array(query_arrays, reference_arrays):
+def _find_matches_by_dense_array(
+    query_arrays: list[NDArray1[Any, Any]],
+    reference_arrays: list[NDArray1[Any, Any]],
+) -> NDArray1[Any, np.integer]:
     match_masks_for_all_columns = np.stack(
         [
             query[:, np.newaxis] == reference[np.newaxis, :]
@@ -761,7 +819,10 @@ def _find_matches_by_dense_array(query_arrays, reference_arrays):
     return match_indices
 
 
-def _find_matches_by_dict(query_arrays, reference_arrays):
+def _find_matches_by_dict(
+    query_arrays: list[NDArray1[Any, Any]],
+    reference_arrays: list[NDArray1[Any, Any]],
+) -> NDArray1[Any, np.integer]:
     # Convert reference arrays to a dictionary for O(1) lookups
     reference_dict = {}
     ambiguous_keys = set()
@@ -793,7 +854,7 @@ def _find_matches_by_dict(query_arrays, reference_arrays):
     return np.array(match_indices)
 
 
-def _get_struct_conn_col_name(col_name, partner):
+def _get_struct_conn_col_name(col_name: str, partner: int) -> str:
     """
     For a column name in ``atom_site`` get the corresponding column name
     in ``struct_conn``.
@@ -807,7 +868,11 @@ def _get_struct_conn_col_name(col_name, partner):
         return f"ptnr{partner}_{col_name}"
 
 
-def _filter_altloc(array, atom_site, altloc):
+def _filter_altloc(
+    array: AtomArray[Any] | AtomArrayStack[M, Any],
+    atom_site: _Category,
+    altloc: Literal["first", "occupancy", "all"],
+) -> tuple[AtomArray[Any] | AtomArrayStack[M, Any], _Category]:
     """
     Filter the given :class:`AtomArray` and ``atom_site`` category to the rows
     specified by the given *altloc* identifier.
@@ -816,6 +881,10 @@ def _filter_altloc(array, atom_site, altloc):
     occupancy = atom_site.get("occupancy")
 
     if altloc == "all":
+        if altloc_ids is None:
+            raise InvalidFileError(
+                "Cannot return all altloc IDs: 'atom_site.label_alt_id' is missing"
+            )
         array.set_annotation("altloc_id", altloc_ids.as_array(str))
         return array, atom_site
     elif altloc_ids is None or (
@@ -837,7 +906,7 @@ def _filter_altloc(array, atom_site, altloc):
         raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
 
-def _filter_model(atom_site, model):
+def _filter_model(atom_site: _Category, model: int) -> _Category:
     """
     Reduce the ``atom_site`` category to the values for the given
     model.
@@ -865,7 +934,7 @@ def _filter_model(atom_site, model):
     return _filter(atom_site, index)
 
 
-def _get_box(block):
+def _get_box(block: _Block) -> NDArray2[XYZ, XYZ, np.floating] | None:
     cell = block.get("cell")
     if cell is None:
         return None
@@ -884,7 +953,7 @@ def _get_box(block):
     return vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma)
 
 
-def _get_chem_comp_bond_type(bond_type):
+def _get_chem_comp_bond_type(bond_type: BondType) -> tuple[str, str]:
     try:
         return COMP_BOND_TYPE_TO_ORDER[bond_type]
     except KeyError:
@@ -896,12 +965,12 @@ def _get_chem_comp_bond_type(bond_type):
 
 
 def set_structure(
-    pdbx_file,
-    array,
-    data_block=None,
-    include_bonds=False,
-    extra_fields=[],
-):
+    pdbx_file: _PDBxFile,
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    data_block: str | None = None,
+    include_bonds: bool = False,
+    extra_fields: Iterable[str] = [],
+) -> None:
     """
     Set the ``atom_site`` category with atom information from an
     :class:`AtomArray` or :class:`AtomArrayStack`.
@@ -961,8 +1030,12 @@ def set_structure(
     _check_non_empty(array)
 
     block = _get_or_create_block(pdbx_file, data_block)
-    Category = block.subcomponent_class()
-    Column = Category.subcomponent_class()
+    # `subcomponent_class()` is overloaded at runtime by the block flavour
+    # (CIF vs BinaryCIF); pyright cannot narrow the resulting constructor
+    # type, so cast it to `Any` to avoid spurious overload errors on every
+    # assignment below.
+    Category: Any = block.subcomponent_class()
+    Column: Any = Category.subcomponent_class()
 
     # Fill PDBx columns from information
     # in structures' attribute arrays as good as possible
@@ -1004,11 +1077,12 @@ def set_structure(
             "The 'label_entity_id' annotation is deprecated, use 'entity_id' instead",
             DeprecationWarning,
         )
-        atom_site["label_entity_id"] = np.copy(array.label_entity_id)
+        atom_site["label_entity_id"] = np.copy(array.get_annotation("label_entity_id"))
     else:
         atom_site["label_entity_id"] = _determine_entity_id(array.chain_id)
 
     # Handle all remaining custom fields
+    extra_fields = list(extra_fields)
     if len(extra_fields) > 0:
         # ... check to avoid clashes with standard annotations
         _standard_annotations = [
@@ -1038,10 +1112,10 @@ def set_structure(
     if array.bonds is not None:
         struct_conn = _set_inter_residue_bonds(array, atom_site)
         if struct_conn is not None:
-            block["struct_conn"] = struct_conn
+            block["struct_conn"] = struct_conn  # pyright: ignore[reportArgumentType]
         chem_comp_bond = _set_intra_residue_bonds(array, atom_site)
         if chem_comp_bond is not None:
-            block["chem_comp_bond"] = chem_comp_bond
+            block["chem_comp_bond"] = chem_comp_bond  # pyright: ignore[reportArgumentType]
 
     # In case of a single model handle each coordinate
     # simply like a flattened array
@@ -1069,7 +1143,7 @@ def set_structure(
     # `atom_site.id` values must be unique across all models
     # -> Use continuous numbering
     atom_site["id"] = np.arange(1, atom_site.row_count + 1)
-    block["atom_site"] = atom_site
+    block["atom_site"] = atom_site  # pyright: ignore[reportArgumentType]
 
     # Write box into file
     if array.box is not None:
@@ -1079,7 +1153,7 @@ def set_structure(
             box = array.box[0]
         else:
             box = array.box
-        len_a, len_b, len_c, alpha, beta, gamma = unitcell_from_vectors(box)
+        len_a, len_b, len_c, alpha, beta, gamma = unitcell_from_vectors(box)  # pyright: ignore[reportArgumentType]
         cell = Category()
         cell["length_a"] = len_a
         cell["length_b"] = len_b
@@ -1090,7 +1164,9 @@ def set_structure(
         block["cell"] = cell
 
 
-def _check_non_empty(array):
+def _check_non_empty(
+    array: AtomArray[Any] | AtomArrayStack[Any, Any],
+) -> None:
     if isinstance(array, AtomArray):
         if array.array_length() == 0:
             raise BadStructureError("Structure must not be empty")
@@ -1104,7 +1180,7 @@ def _check_non_empty(array):
         )
 
 
-def _get_or_create_block(pdbx_component, block_name):
+def _get_or_create_block(pdbx_component: _PDBxFile, block_name: str | None) -> _Block:
     Block = pdbx_component.subcomponent_class()
 
     if isinstance(pdbx_component, (CIFFile, BinaryCIFFile)):
@@ -1117,14 +1193,16 @@ def _get_or_create_block(pdbx_component, block_name):
 
         if block_name not in pdbx_component:
             block = Block()
-            pdbx_component[block_name] = block
+            pdbx_component[block_name] = block  # pyright: ignore[reportArgumentType]
         return pdbx_component[block_name]
     else:
         # Already a block
         return pdbx_component
 
 
-def _determine_entity_id(chain_id):
+def _determine_entity_id(
+    chain_id: NDArray1[N, np.str_],
+) -> NDArray1[N, np.integer]:
     entity_id = np.zeros(len(chain_id), dtype=int)
     # Dictionary that translates chain_id to entity_id
     id_translation = {}
@@ -1137,13 +1215,13 @@ def _determine_entity_id(chain_id):
             id_translation[chain_id[i]] = id
             entity_id[i] = id_translation[chain_id[i]]
             id += 1
-    return entity_id
+    return entity_id  # pyright: ignore[reportReturnType]
 
 
-def _repeat(category, repetitions):
-    Category = type(category)
-    Column = Category.subcomponent_class()
-    Data = Column.subcomponent_class()
+def _repeat(category: _Category, repetitions: int) -> _Category:
+    Category: Any = type(category)
+    Column: Any = Category.subcomponent_class()
+    Data: Any = Column.subcomponent_class()
 
     category_dict = {}
     for key, column in category.items():
@@ -1166,7 +1244,9 @@ def _repeat(category, repetitions):
     return Category(category_dict)
 
 
-def _set_intra_residue_bonds(array, atom_site):
+def _set_intra_residue_bonds(
+    array: AtomArray[Any] | AtomArrayStack[Any, Any], atom_site: _Category
+) -> _Category | None:
     """
     Create the ``chem_comp_bond`` category containing the intra-residue
     bonds.
@@ -1184,8 +1264,8 @@ def _set_intra_residue_bonds(array, atom_site):
             "but it is required to write intra-residue bonds"
         )
 
-    Category = type(atom_site)
-    Column = Category.subcomponent_class()
+    Category: Any = type(atom_site)
+    Column: Any = Category.subcomponent_class()
 
     bond_array = _filter_bonds(array, "intra")
     if len(bond_array) == 0:
@@ -1236,7 +1316,9 @@ def _set_intra_residue_bonds(array, atom_site):
     return chem_comp_bond
 
 
-def _set_inter_residue_bonds(array, atom_site):
+def _set_inter_residue_bonds(
+    array: AtomArray[Any] | AtomArrayStack[Any, Any], atom_site: _Category
+) -> _Category | None:
     """
     Create the ``struct_conn`` category containing the inter-residue
     bonds.
@@ -1251,8 +1333,10 @@ def _set_inter_residue_bonds(array, atom_site):
         "pdbx_PDB_ins_code",
     ]
 
-    Category = type(atom_site)
-    Column = Category.subcomponent_class()
+    # The subcomponent classes are dispatched at runtime by the CIF/BinaryCIF
+    # flavour; pyright cannot unify the union calls so we drop to `Any`
+    Category: Any = type(atom_site)
+    Column: Any = Category.subcomponent_class()
 
     bond_array = _filter_bonds(array, "inter")
     if len(bond_array) == 0:
@@ -1289,11 +1373,18 @@ def _set_inter_residue_bonds(array, atom_site):
     return struct_conn
 
 
-def _filter_bonds(array, connection):
+def _filter_bonds(
+    array: AtomArray[Any] | AtomArrayStack[Any, Any],
+    connection: Literal["intra", "inter"],
+) -> NDArray2[Any, C2, np.integer]:
     """
     Get a bonds array, that contain either only intra-residue or
     only inter-residue bonds.
     """
+    if array.bonds is None:
+        raise BadStructureError(
+            "Cannot filter bonds: structure has no associated 'BondList'"
+        )
     bond_array = array.bonds.as_array()
     # To save computation time call 'get_residue_starts_for()' only once
     # with indices of the first and second atom of each bond
@@ -1308,7 +1399,10 @@ def _filter_bonds(array, connection):
         raise ValueError("Invalid 'connection' option")
 
 
-def _filter_canonical_links(array, bond_array):
+def _filter_canonical_links(
+    array: AtomArray[N] | AtomArrayStack[Any, N],
+    bond_array: NDArray2[Any, Any, np.integer],
+) -> NDArray1[N, np.bool_]:
     """
     Filter out peptide bonds between adjacent canonical amino acid residues.
     """
@@ -1330,12 +1424,12 @@ def _filter_canonical_links(array, bond_array):
 
 
 def get_component(
-    pdbx_file,
-    data_block=None,
-    use_ideal_coord=True,
-    res_name=None,
-    allow_missing_coord=False,
-):
+    pdbx_file: _PDBxFile,
+    data_block: str | None = None,
+    use_ideal_coord: bool = True,
+    res_name: str | None = None,
+    allow_missing_coord: bool = False,
+) -> AtomArray[Any]:
     """
     Create an :class:`AtomArray` for a chemical component from the
     ``chem_comp_atom`` and, if available, the ``chem_comp_bond``
@@ -1490,7 +1584,9 @@ def get_component(
     return array
 
 
-def _parse_component_coordinates(coord_columns, allow_missing=False):
+def _parse_component_coordinates(
+    coord_columns: list[_Column], allow_missing: bool = False
+) -> NDArray2[Any, XYZ, np.floating]:
     coord = np.zeros((len(coord_columns[0]), 3), dtype=np.float32)
     for i, column in enumerate(coord_columns):
         if column.mask is not None and column.mask.array.any():
@@ -1504,10 +1600,14 @@ def _parse_component_coordinates(coord_columns, allow_missing=False):
                     "Missing coordinates for some atoms",
                 )
         coord[:, i] = column.as_array(np.float32, masked_value=np.nan)
-    return coord
+    return coord  # pyright: ignore[reportReturnType]
 
 
-def set_component(pdbx_file, array, data_block=None):
+def set_component(
+    pdbx_file: _PDBxFile,
+    array: AtomArray[N],
+    data_block: str | None = None,
+) -> None:
     """
     Set the ``chem_comp_atom`` and, if bonds are available,
     ``chem_comp_bond`` category with atom information from an
@@ -1535,7 +1635,7 @@ def set_component(pdbx_file, array, data_block=None):
     _check_non_empty(array)
 
     block = _get_or_create_block(pdbx_file, data_block)
-    Category = block.subcomponent_class()
+    Category: Any = block.subcomponent_class()
 
     if get_residue_count(array) > 1:
         raise BadStructureError("The input atom array must comprise only one residue")
@@ -1583,7 +1683,10 @@ def set_component(pdbx_file, array, data_block=None):
         block["chem_comp_bond"] = bond_cat
 
 
-def list_assemblies(pdbx_file, data_block=None):
+def list_assemblies(
+    pdbx_file: _PDBxFile,
+    data_block: str | None = None,
+) -> dict[str, str]:
     """
     List the biological assemblies that are available for the structure
     in the given file.
@@ -1639,16 +1742,39 @@ def list_assemblies(pdbx_file, data_block=None):
     }
 
 
+@overload
 def get_assembly(
-    pdbx_file,
-    assembly_id=None,
-    model=None,
-    data_block=None,
-    altloc="first",
-    extra_fields=None,
-    use_author_fields=True,
-    include_bonds=False,
-):
+    pdbx_file: _PDBxFile,
+    assembly_id: str | None = None,
+    *,
+    model: int,
+    data_block: str | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] | None = None,
+    use_author_fields: bool = True,
+    include_bonds: bool = False,
+) -> AtomArray[Any]: ...
+@overload
+def get_assembly(
+    pdbx_file: _PDBxFile,
+    assembly_id: str | None = None,
+    model: None = None,
+    data_block: str | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] | None = None,
+    use_author_fields: bool = True,
+    include_bonds: bool = False,
+) -> AtomArrayStack[Any, Any]: ...
+def get_assembly(
+    pdbx_file: _PDBxFile,
+    assembly_id: str | None = None,
+    model: int | None = None,
+    data_block: str | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] | None = None,
+    use_author_fields: bool = True,
+    include_bonds: bool = False,
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
     Build the given biological assembly.
 
@@ -1766,7 +1892,7 @@ def get_assembly(
     ### Get structure according to additional parameters
     # Include 'label_asym_id' as annotation array
     # for correct asym ID filtering
-    extra_fields = [] if extra_fields is None else extra_fields
+    extra_fields = [] if extra_fields is None else list(extra_fields)
     if "label_asym_id" in extra_fields:
         extra_fields_and_asym = extra_fields
     else:
@@ -1796,7 +1922,8 @@ def get_assembly(
         if id == assembly_id:
             chain_ids = asym_id_expr.split(",")
             operations = _parse_operation_expression(op_expr)
-            sub_structure = structure[..., np.isin(structure.label_asym_id, chain_ids)]
+            structure_asym = structure.get_annotation("label_asym_id")
+            sub_structure = structure[..., np.isin(structure_asym, chain_ids)]
             sub_assembly = _apply_transformations(
                 sub_structure, transformations, operations
             )
@@ -1808,10 +1935,15 @@ def get_assembly(
             )
             # As different 'oper_expression's may comprise different chains
             # increment the 'sym_id' individually for each chain
+            sub_assembly_asym = sub_assembly.get_annotation("label_asym_id")
+            sub_assembly_sym = sub_assembly.get_annotation("sym_id")
             for chain_id in chain_ids:
-                chain_mask = sub_assembly.label_asym_id == chain_id
-                sub_assembly.sym_id[chain_mask] += sym_id_counter[chain_id]
+                chain_mask = sub_assembly_asym == chain_id
+                sub_assembly_sym[chain_mask] = (
+                    sub_assembly_sym[chain_mask] + sym_id_counter[chain_id]
+                )
                 sym_id_counter[chain_id] += len(operations)
+            sub_assembly.set_annotation("sym_id", sub_assembly_sym)
 
             sub_assemblies.append(sub_assembly)
     assembly = concatenate(sub_assemblies)
@@ -1830,13 +1962,29 @@ def get_assembly(
     return assembly
 
 
-def _apply_transformations(structure, transformation_dict, operations):
+@overload
+def _apply_transformations(
+    structure: AtomArray[N],
+    transformation_dict: dict[str, AffineTransformation[Any]],
+    operations: list[tuple[str, ...]],
+) -> AtomArray[Any]: ...
+@overload
+def _apply_transformations(
+    structure: AtomArrayStack[M, N],
+    transformation_dict: dict[str, AffineTransformation[Any]],
+    operations: list[tuple[str, ...]],
+) -> AtomArrayStack[M, Any]: ...
+def _apply_transformations(
+    structure: AtomArray[N] | AtomArrayStack[M, N],
+    transformation_dict: dict[str, AffineTransformation[Any]],
+    operations: list[tuple[str, ...]],
+) -> AtomArray[Any] | AtomArrayStack[M, Any]:
     """
     Get subassembly by applying the given operations to the input
     structure containing affected asym IDs.
     """
-    # Additional first dimesion for 'structure.repeat()'
-    assembly_coord = np.zeros((len(operations),) + structure.coord.shape)
+    # Additional first dimension for 'structure.repeat()'
+    assembly_coord = np.zeros((len(operations), *structure.coord.shape))
     # Apply corresponding transformation for each copy in the assembly
     for i, operation in enumerate(operations):
         coord = structure.coord
@@ -1845,12 +1993,12 @@ def _apply_transformations(structure, transformation_dict, operations):
         for op_step in operation:
             coord = transformation_dict[op_step].apply(coord)
         assembly_coord[i] = coord
-
-    assembly = repeat(structure, assembly_coord)
-    return assembly
+    return repeat(structure, assembly_coord)  # pyright: ignore[reportCallIssue, reportArgumentType]
 
 
-def _get_transformations(struct_oper):
+def _get_transformations(
+    struct_oper: _Category,
+) -> dict[str, AffineTransformation[Any]]:
     """
     Get affine transformation for each operation ID in ``pdbx_struct_oper_list``.
     """
@@ -1874,7 +2022,7 @@ def _get_transformations(struct_oper):
     return transformation_dict
 
 
-def _parse_operation_expression(expression):
+def _parse_operation_expression(expression: str) -> list[tuple[str, ...]]:
     """
     Get successive operation steps (IDs) for the given
     ``oper_expression``.
@@ -1908,7 +2056,7 @@ def _parse_operation_expression(expression):
     return list(itertools.product(*operations))
 
 
-def _convert_string_to_sequence(string, stype):
+def _convert_string_to_sequence(string: str, stype: str) -> Sequence | None:
     """
     Convert strings to `ProteinSequence` if `stype` is contained in
     ``proteinseq_type_list`` or to ``NucleotideSequence`` if `stype` is
@@ -1927,16 +2075,39 @@ def _convert_string_to_sequence(string, stype):
         raise InvalidFileError("mmCIF _entity_poly.type unsupported type: " + stype)
 
 
+@overload
 def get_unit_cell(
-    pdbx_file,
-    center=True,
-    model=None,
-    data_block=None,
-    altloc="first",
-    extra_fields=None,
-    use_author_fields=True,
-    include_bonds=False,
-):
+    pdbx_file: _PDBxFile,
+    center: bool = True,
+    *,
+    model: int,
+    data_block: str | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] | None = None,
+    use_author_fields: bool = True,
+    include_bonds: bool = False,
+) -> AtomArray[Any]: ...
+@overload
+def get_unit_cell(
+    pdbx_file: _PDBxFile,
+    center: bool = True,
+    model: None = None,
+    data_block: str | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] | None = None,
+    use_author_fields: bool = True,
+    include_bonds: bool = False,
+) -> AtomArrayStack[Any, Any]: ...
+def get_unit_cell(
+    pdbx_file: _PDBxFile,
+    center: bool = True,
+    model: int | None = None,
+    data_block: str | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] | None = None,
+    use_author_fields: bool = True,
+    include_bonds: bool = False,
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
     Build a structure model containing all symmetric copies of the structure within a
     single unit cell.
@@ -2029,7 +2200,7 @@ def get_unit_cell(
     block = _get_block(pdbx_file, data_block)
 
     try:
-        space_group = block["symmetry"]["space_group_name_H-M"].as_item()
+        space_group = str(block["symmetry"]["space_group_name_H-M"].as_item())
     except KeyError:
         raise InvalidFileError("File has no 'symmetry.space_group_name_H-M' field")
     transforms = space_group_transforms(space_group)
@@ -2044,7 +2215,7 @@ def get_unit_cell(
         include_bonds,
     )
 
-    fractional_asym_coord = coord_to_fraction(asym.coord, asym.box)
+    fractional_asym_coord = coord_to_fraction(asym.coord, asym.box)  # pyright: ignore[reportCallIssue,reportArgumentType]
     unit_cell_copies = []
     for transform in transforms:
         fractional_coord = transform.apply(fractional_asym_coord)
@@ -2053,7 +2224,7 @@ def get_unit_cell(
             orig_centroid = centroid(fractional_coord)
             new_centroid = orig_centroid % 1
             fractional_coord += (new_centroid - orig_centroid)[..., np.newaxis, :]
-        unit_cell_copies.append(fraction_to_coord(fractional_coord, asym.box))
+        unit_cell_copies.append(fraction_to_coord(fractional_coord, asym.box))  # pyright: ignore[reportCallIssue,reportArgumentType]
 
     unit_cell = repeat(asym, np.stack(unit_cell_copies, axis=0))
     unit_cell.set_annotation(
@@ -2062,7 +2233,11 @@ def get_unit_cell(
     return unit_cell
 
 
-def get_sse(pdbx_file, data_block=None, match_model=None):
+def get_sse(
+    pdbx_file: _PDBxFile,
+    data_block: str | None = None,
+    match_model: int | None = None,
+) -> dict[str, NDArray1[Any, np.str_]]:
     """
     Get the secondary structure from a PDBx file.
 
@@ -2083,7 +2258,7 @@ def get_sse(pdbx_file, data_block=None, match_model=None):
         file.
         If the data block object is passed directly to `pdbx_file`,
         this parameter is ignored.
-    match_model : None, optional
+    match_model : int, optional
         If a model number is given, only secondary structure elements for residues are
         kept, that are resolved in the given model.
         This means secondary structure elements for residues that would not appear

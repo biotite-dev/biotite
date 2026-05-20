@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __name__ = "biotite.interface.pymol"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -9,16 +11,25 @@ __all__ = [
     "DuplicatePyMOLError",
 ]
 
+from types import ModuleType
+from typing import TypeAlias
+from pymol2 import PyMOL, SingletonPyMOL
 
-_pymol = None
+#: A *PyMOL* handle: either the :mod:`pymol` module (GUI mode) or a
+#: :class:`pymol2.PyMOL` / :class:`pymol2.SingletonPyMOL` instance (library mode).
+PyMOLInstance: TypeAlias = ModuleType | PyMOL | SingletonPyMOL
+
+_pymol: PyMOLInstance | None = None
 
 
-def get_and_set_pymol_instance(pymol_instance=None):
+def get_and_set_pymol_instance(
+    pymol_instance: PyMOLInstance | None = None,
+) -> PyMOLInstance:
     """
     Get the global *PyMOL* instance.
 
     This function is intended for internal purposes and should only be
-    used for advanced usages.
+    used for advanced cases.
 
     Parameters
     ----------
@@ -37,7 +48,7 @@ def get_and_set_pymol_instance(pymol_instance=None):
     """
     global _pymol
     if pymol_instance is None:
-        if not is_launched():
+        if _pymol is None:
             _pymol = launch_pymol()
         return _pymol
     elif _pymol is None:
@@ -51,7 +62,7 @@ def get_and_set_pymol_instance(pymol_instance=None):
     return _pymol
 
 
-def is_launched():
+def is_launched() -> bool:
     """
     Check whether a *PyMOL* session is already running.
 
@@ -63,7 +74,7 @@ def is_launched():
     return _pymol is not None
 
 
-def launch_pymol():
+def launch_pymol() -> PyMOLInstance:
     """
     Launch *PyMOL* in object-oriented library mode.
 
@@ -79,20 +90,18 @@ def launch_pymol():
         The started *PyMOL* instance.
         *PyMOL* commands can be invoked by using its :attr:`cmd` attribute.
     """
-    from pymol2 import PyMOL
-
     global _pymol
 
     if is_launched():
         raise DuplicatePyMOLError("A PyMOL instance is already running")
-    else:
-        _pymol = PyMOL()
-        _pymol.start()
-        setup_parameters(_pymol)
-    return _pymol
+    pymol = PyMOL()
+    pymol.start()
+    setup_parameters(pymol)
+    _pymol = pymol
+    return pymol
 
 
-def launch_interactive_pymol(*args):
+def launch_interactive_pymol(*args: str) -> PyMOLInstance:
     """
     Launch a *PyMOL* GUI with the given command line arguments.
 
@@ -129,7 +138,7 @@ def launch_interactive_pymol(*args):
     return pymol
 
 
-def reset():
+def reset() -> None:
     """
     Delete all objects in the PyMOL workspace and reset parameters to
     defaults.
@@ -139,13 +148,13 @@ def reset():
     """
     global _pymol
 
-    if not is_launched():
+    if _pymol is None:
         _pymol = launch_pymol()
     _pymol.cmd.reinitialize()
     setup_parameters(_pymol)
 
 
-def setup_parameters(pymol_instance):
+def setup_parameters(pymol_instance: PyMOLInstance) -> None:
     """
     Sets *PyMOL* parameters that are necessary for *Biotite* to interact
     properly with *PyMOL*.

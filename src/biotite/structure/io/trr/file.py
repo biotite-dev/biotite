@@ -6,9 +6,11 @@ __name__ = "biotite.structure.io.trr"
 __author__ = "Patrick Kunzmann"
 __all__ = ["TRRFile"]
 
+from typing import Any
 import biotraj
 import numpy as np
 from biotite.structure.io.trajfile import TrajectoryFile
+from biotite.typing import XYZ, NDArray1, NDArray3
 
 
 class TRRFile(TrajectoryFile):
@@ -17,11 +19,17 @@ class TRRFile(TrajectoryFile):
     """
 
     @classmethod
-    def traj_type(cls):
+    def traj_type(cls) -> type[biotraj.TRRTrajectoryFile]:
         return biotraj.TRRTrajectoryFile
 
     @classmethod
-    def process_read_values(cls, read_values):
+    def process_read_values(
+        cls, read_values: Any
+    ) -> tuple[
+        NDArray3[Any, Any, XYZ, np.floating],
+        NDArray3[Any, XYZ, XYZ, np.floating] | None,
+        NDArray1[Any, np.floating] | None,
+    ]:
         # nm to Angstrom
         coord = read_values[0] * 10
         box = read_values[3]
@@ -31,7 +39,12 @@ class TRRFile(TrajectoryFile):
         return coord, box, time
 
     @classmethod
-    def prepare_write_values(cls, coord, box, time):
+    def prepare_write_values(
+        cls,
+        coord: NDArray3[Any, Any, XYZ, np.floating] | None,
+        box: NDArray3[Any, XYZ, XYZ, np.floating] | None,
+        time: NDArray1[Any, np.floating] | None,
+    ) -> dict[str, Any]:
         # Angstrom to nm
         xyz = np.divide(coord, 10, dtype=np.float32) if coord is not None else None
         time = time.astype(np.float32, copy=False) if time is not None else None

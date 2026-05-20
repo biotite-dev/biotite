@@ -16,14 +16,17 @@ __all__ = [
     "coord_for_atom_name_per_residue",
 ]
 
+from collections.abc import Sequence
+from typing import Any
 import numpy as np
-from biotite.structure.atoms import AtomArrayStack
+from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.residues import (
     get_atom_name_indices,
 )
+from biotite.typing import N, NDArray1
 
 
-def vector_dot(v1, v2):
+def vector_dot(v1: np.ndarray, v2: np.ndarray) -> np.ndarray | np.floating:
     """
     Calculate vector dot product of two vectors.
 
@@ -41,7 +44,7 @@ def vector_dot(v1, v2):
     return (v1 * v2).sum(axis=-1)
 
 
-def norm_vector(v):
+def norm_vector(v: np.ndarray) -> None:
     """
     Normalise a vector.
 
@@ -58,7 +61,7 @@ def norm_vector(v):
         v /= factor
 
 
-def distance(v1, v2):
+def distance(v1: np.ndarray, v2: np.ndarray) -> np.ndarray | np.floating:
     """
     Calculate the distance between two position vectors.
 
@@ -77,7 +80,7 @@ def distance(v1, v2):
     return np.sqrt((dif * dif).sum(axis=-1))
 
 
-def matrix_rotate(v, matrix):
+def matrix_rotate(v: np.ndarray, matrix: np.ndarray) -> np.ndarray:
     """
     Perform a rotation using a rotation matrix.
 
@@ -94,19 +97,20 @@ def matrix_rotate(v, matrix):
         The rotated coordinates.
     """
     # For proper rotation reshape into a maximum of 2 dimensions
-    orig_ndim = v.ndim
-    if orig_ndim > 2:
-        orig_shape = v.shape
+    orig_shape = v.shape
+    if v.ndim > 2:
         v = v.reshape(-1, 3)
     # Apply rotation
     v = np.dot(matrix, v.T).T
     # Reshape back into original shape
-    if orig_ndim > 2:
-        v = v.reshape(*orig_shape)
-    return v
+    return v.reshape(*orig_shape)
 
 
-def coord_for_atom_name_per_residue(atoms, atom_names, mask=None):
+def coord_for_atom_name_per_residue(
+    atoms: AtomArray[N] | AtomArrayStack[Any, N],
+    atom_names: Sequence[str],
+    mask: NDArray1[N, np.bool_] | None = None,
+) -> np.ndarray:
     """
     Get the coordinates of a specific atom for every residue.
 

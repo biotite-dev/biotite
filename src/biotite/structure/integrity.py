@@ -15,24 +15,30 @@ __all__ = [
     "check_backbone_continuity",
     "check_duplicate_atoms",
     "check_linear_continuity",
+    "check_in_box",
 ]
 
+from typing import Any
 import numpy as np
+from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.box import coord_to_fraction
 from biotite.structure.filter import (
     filter_linear_bond_continuity,
     filter_peptide_backbone,
     filter_phosphate_backbone,
 )
+from biotite.typing import K, M, N, NDArray1
 
 
-def _check_continuity(array):
+def _check_continuity(array: NDArray1[N, np.integer]) -> NDArray1[Any, np.integer]:
     diff = np.diff(array)
     discontinuity = np.where(((diff != 0) & (diff != 1)))
     return discontinuity[0] + 1
 
 
-def check_atom_id_continuity(array):
+def check_atom_id_continuity(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[K, np.integer]:
     """
     Check if the atom IDs are incremented by more than 1 or
     decremented, from one atom to the next one.
@@ -53,7 +59,9 @@ def check_atom_id_continuity(array):
     return _check_continuity(ids)
 
 
-def check_res_id_continuity(array):
+def check_res_id_continuity(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[K, np.integer]:
     """
     Check if the residue IDs are incremented by more than 1 or
     decremented, from one atom to the next one.
@@ -75,7 +83,9 @@ def check_res_id_continuity(array):
     return _check_continuity(ids)
 
 
-def check_linear_continuity(array, min_len=1.2, max_len=1.8):
+def check_linear_continuity(
+    array: AtomArray[N], min_len: float = 1.2, max_len: float = 1.8
+) -> NDArray1[K, np.integer]:
     """
     Check linear (consecutive) bond continuity of atoms in atom array.
 
@@ -108,7 +118,9 @@ def check_linear_continuity(array, min_len=1.2, max_len=1.8):
     return np.where(discon_mask)[0]
 
 
-def check_backbone_continuity(array, min_len=1.2, max_len=1.8):
+def check_backbone_continuity(
+    array: AtomArray[N], min_len: float = 1.2, max_len: float = 1.8
+) -> NDArray1[K, np.integer]:
     """
     Check if the (peptide or phosphate) backbone atoms have
     non-reasonable distance to the next atom.
@@ -146,7 +158,9 @@ def check_backbone_continuity(array, min_len=1.2, max_len=1.8):
     return np.where(discon_mask_full)[0]
 
 
-def check_duplicate_atoms(array):
+def check_duplicate_atoms(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[K, np.integer]:
     """
     Check if a structure contains duplicate atoms, i.e. two atoms in a
     structure have the same annotations (coordinates may be different).
@@ -187,7 +201,7 @@ def check_duplicate_atoms(array):
     return np.array(duplicates)
 
 
-def check_in_box(array):
+def check_in_box(array: AtomArray[N]) -> NDArray1[K, np.integer]:
     r"""
     Check if a structure contains atoms whose position is outside the
     box.
@@ -198,7 +212,7 @@ def check_in_box(array):
 
     Parameters
     ----------
-    array : AtomArray or AtomArrayStack
+    array : AtomArray
         The array to be checked.
 
     Returns
@@ -209,5 +223,5 @@ def check_in_box(array):
     if array.box is None:
         raise TypeError("Structure has no box")
     box = array.box
-    fractions = coord_to_fraction(array, box)
+    fractions = coord_to_fraction(array.coord, box)
     return np.where(((fractions >= 0) & (fractions < 1)).all(axis=-1))[0]

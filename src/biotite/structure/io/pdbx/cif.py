@@ -2,12 +2,16 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 __all__ = ["CIFFile", "CIFBlock", "CIFCategory", "CIFColumn", "CIFData"]
 
 import itertools
-from collections.abc import MutableMapping, Sequence
+from collections.abc import Iterator, Mapping, MutableMapping, Sequence
+from os import PathLike
+from typing import IO, Any, Self, TypeAlias
 import numpy as np
 from biotite.file import (
     DeserializationError,
@@ -17,8 +21,14 @@ from biotite.file import (
     is_text,
 )
 from biotite.structure.io.pdbx.component import MaskValue, _Component
+from biotite.typing import NDArray1
 
 UNICODE_CHAR_SIZE = 4
+
+
+# Used to indicate elements of a CIF file that are not yet deserialized,
+# as deserialization is performed lazily
+_SerializedElement: TypeAlias = str
 
 
 # Small class without much functionality
@@ -61,7 +71,11 @@ class CIFData:
     ['apple']
     """
 
-    def __init__(self, array, dtype=None):
+    def __init__(
+        self,
+        array: NDArray1[Any, Any] | Sequence[Any] | int | float | str,
+        dtype: np.dtype | type | str | None = None,
+    ) -> None:
         self._array = _arrayfy(array)
         if np.issubdtype(self._array.dtype, np.object_):
             raise ValueError("Object arrays are not supported")
@@ -69,21 +83,21 @@ class CIFData:
             self._array = self._array.astype(dtype)
 
     @property
-    def array(self):
+    def array(self) -> NDArray1[Any, Any]:
         return self._array
 
     @staticmethod
-    def subcomponent_class():
+    def subcomponent_class() -> None:
         return None
 
     @staticmethod
-    def supercomponent_class():
+    def supercomponent_class() -> type[CIFColumn]:
         return CIFColumn
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._array)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         return np.array_equal(self._array, other._array)
@@ -132,7 +146,11 @@ class CIFColumn:
     ?
     """
 
-    def __init__(self, data, mask=None):
+    def __init__(
+        self,
+        data: CIFData | NDArray1[Any, Any] | Sequence[Any] | int | float | str,
+        mask: CIFData | NDArray1[Any, Any] | Sequence[int] | None = None,
+    ) -> None:
         if not isinstance(data, CIFData):
             data = CIFData(data, str)
         if mask is None:
@@ -155,22 +173,22 @@ class CIFColumn:
         self._mask = mask
 
     @property
-    def data(self):
+    def data(self) -> CIFData:
         return self._data
 
     @property
-    def mask(self):
+    def mask(self) -> CIFData | None:
         return self._mask
 
     @staticmethod
-    def subcomponent_class():
+    def subcomponent_class() -> type[CIFData]:
         return CIFData
 
     @staticmethod
-    def supercomponent_class():
+    def supercomponent_class() -> type[CIFCategory]:
         return CIFCategory
 
-    def as_item(self):
+    def as_item(self) -> str:
         """
         Get the only item in the data of this column.
 
@@ -186,7 +204,7 @@ class CIFColumn:
         if self._mask is None:
             return self._data.array.item()
         mask = self._mask.array.item()
-        if self._mask is None or mask == MaskValue.PRESENT:
+        if mask == MaskValue.PRESENT:
             item = self._data.array.item()
             # Limit float precision to 3 decimals
             if isinstance(item, float):
@@ -197,8 +215,13 @@ class CIFColumn:
             return "."
         elif mask == MaskValue.MISSING:
             return "?"
+        raise ValueError(f"Unknown mask value: {mask}")
 
-    def as_array(self, dtype=str, masked_value=None):
+    def as_array(
+        self,
+        dtype: np.dtype | type | str = str,
+        masked_value: Any = None,
+    ) -> NDArray1[Any, Any]:
         """
         Get the data of this column as an :class:`ndarray`.
 
@@ -227,7 +250,7 @@ class CIFColumn:
         elif np.issubdtype(dtype, np.str_):
             # Limit float precision to 3 decimals
             if np.issubdtype(self._data.array.dtype, np.floating):
-                array = np.array([f"{e:.3f}" for e in self._data.array], type=dtype)
+                array = np.array([f"{e:.3f}" for e in self._data.array], dtype=dtype)
             else:
                 # Copy, as otherwise original data would be overwritten
                 # with mask values
@@ -253,10 +276,10 @@ class CIFColumn:
             array[present_mask] = self._data.array[present_mask].astype(dtype)
             return array
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         if self._data != other._data:
@@ -266,7 +289,7 @@ class CIFColumn:
         return True
 
 
-class CIFCategory(_Component, MutableMapping):
+class CIFCategory(_Component, MutableMapping[str, CIFColumn]):
     """
     This class represents a category in a :class:`CIFBlock`.
 
@@ -323,29 +346,34 @@ class CIFCategory(_Component, MutableMapping):
     banana tasty     yellow
     """
 
-    def __init__(self, columns=None, name=None):
+    def __init__(
+        self,
+        columns: Mapping[str, CIFColumn | NDArray1[Any, Any] | Sequence[Any]]
+        | None = None,
+        name: str | None = None,
+    ) -> None:
         self._name = name
+        self._columns: dict[str, CIFColumn]
         if columns is None:
-            columns = {}
+            self._columns = {}
         else:
-            columns = {
+            self._columns = {
                 key: CIFColumn(col) if not isinstance(col, CIFColumn) else col
                 for key, col in columns.items()
             }
 
-        self._row_count = None
-        self._columns = columns
+        self._row_count: int | None = None
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         return self._name
 
     @name.setter
-    def name(self, name):
+    def name(self, name: str) -> None:
         self._name = name
 
     @property
-    def row_count(self):
+    def row_count(self) -> int:
         if self._row_count is None:
             # Row count is not determined yet
             # -> check the length of the first column
@@ -353,15 +381,15 @@ class CIFCategory(_Component, MutableMapping):
         return self._row_count
 
     @staticmethod
-    def subcomponent_class():
+    def subcomponent_class() -> type[CIFColumn]:
         return CIFColumn
 
     @staticmethod
-    def supercomponent_class():
+    def supercomponent_class() -> type[CIFBlock]:
         return CIFBlock
 
-    @staticmethod
-    def deserialize(text):
+    @classmethod
+    def deserialize(cls, text: str) -> Self:
         lines = [line.strip() for line in text.splitlines() if not _is_empty(line)]
 
         if _is_loop_start(lines[0]):
@@ -379,9 +407,9 @@ class CIFCategory(_Component, MutableMapping):
             category_dict = CIFCategory._deserialize_looped(lines)
         else:
             category_dict = CIFCategory._deserialize_single(lines)
-        return CIFCategory(category_dict, category_name)
+        return cls(category_dict, category_name)
 
-    def serialize(self):
+    def serialize(self) -> str:
         if self._name is None:
             raise SerializationError("Category name is required")
         if not self._columns:
@@ -407,29 +435,33 @@ class CIFCategory(_Component, MutableMapping):
         lines.append("")
         return "\n".join(lines)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> CIFColumn:
         return self._columns[key]
 
-    def __setitem__(self, key, column):
+    def __setitem__(
+        self,
+        key: str,
+        column: CIFColumn | NDArray1[Any, Any] | Sequence[Any],
+    ) -> None:
         if not isinstance(column, CIFColumn):
             column = CIFColumn(column)
         self._columns[key] = column
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         if len(self._columns) == 1:
             raise ValueError("At least one column must remain")
         del self._columns[key]
 
-    def __contains__(self, key):
+    def __contains__(self, key: object) -> bool:
         return key in self._columns
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._columns)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._columns)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         # Row count can be omitted here, as it is based on the columns
         if not isinstance(other, type(self)):
             return False
@@ -441,7 +473,7 @@ class CIFCategory(_Component, MutableMapping):
         return True
 
     @staticmethod
-    def _deserialize_single(lines):
+    def _deserialize_single(lines: list[str]) -> dict[str, CIFColumn]:
         """
         Process a category where each field has a single value.
         """
@@ -471,7 +503,7 @@ class CIFCategory(_Component, MutableMapping):
         return category_dict
 
     @staticmethod
-    def _deserialize_looped(lines):
+    def _deserialize_looped(lines: list[str]) -> dict[str, CIFColumn]:
         """
         Process a category where each field has multiple values
         (category is a table).
@@ -508,9 +540,13 @@ class CIFCategory(_Component, MutableMapping):
                 "Category contains columns with different lengths"
             )
 
+        for key, column in category_dict.items():
+            category_dict[key] = CIFColumn(column)
         return category_dict
 
-    def _serialize_single(self):
+    def _serialize_single(self) -> list[str]:
+        if self._name is None:
+            raise SerializationError("Category name is required")
         keys = ["_" + self._name + "." + name for name in self.keys()]
         max_len = max(len(key) for key in keys)
         # "+3" Because of three whitespace chars after longest key
@@ -521,7 +557,11 @@ class CIFCategory(_Component, MutableMapping):
             for key, column in zip(keys, self.values())
         ]
 
-    def _serialize_looped(self):
+    def _serialize_looped(self) -> list[str]:
+        if self._name is None:
+            raise SerializationError("Category name is required")
+        if self._row_count is None:
+            raise SerializationError("Category row count is required")
         key_lines = ["_" + self._name + "." + key + " " for key in self.keys()]
 
         column_arrays = []
@@ -549,7 +589,7 @@ class CIFCategory(_Component, MutableMapping):
         return ["loop_"] + key_lines + value_lines
 
 
-class CIFBlock(_Component, MutableMapping):
+class CIFBlock(_Component, MutableMapping[str, CIFCategory]):
     """
     This class represents a block in a :class:`CIFFile`.
 
@@ -603,30 +643,36 @@ class CIFBlock(_Component, MutableMapping):
     #
     """
 
-    def __init__(self, categories=None, name=None):
+    def __init__(
+        self,
+        categories: dict[str, CIFCategory | _SerializedElement] | None = None,
+        name: str | None = None,
+    ) -> None:
         self._name = name
-        if categories is None:
-            categories = {}
-        self._categories = categories
+        # Categories may be stored in not yet deserialized text form alongside
+        # already deserialized `CIFCategory` instances
+        self._categories: dict[str, CIFCategory | str] = (
+            {} if categories is None else dict(categories)
+        )
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         return self._name
 
     @name.setter
-    def name(self, name):
+    def name(self, name: str) -> None:
         self._name = name
 
     @staticmethod
-    def subcomponent_class():
+    def subcomponent_class() -> type[CIFCategory]:
         return CIFCategory
 
     @staticmethod
-    def supercomponent_class():
+    def supercomponent_class() -> type[CIFFile]:
         return CIFFile
 
-    @staticmethod
-    def deserialize(text):
+    @classmethod
+    def deserialize(cls, text: str) -> Self:
         lines = text.splitlines()
         current_category_name = None
         category_starts = []
@@ -647,9 +693,11 @@ class CIFBlock(_Component, MutableMapping):
                     current_category_name = category_name_in_line
                     category_starts.append(i)
                     category_names.append(current_category_name)
-        return CIFBlock(_create_element_dict(lines, category_names, category_starts))
+        return cls(
+            _create_element_dict(lines, category_names, category_starts)  # pyright: ignore[reportArgumentType]
+        )
 
-    def serialize(self):
+    def serialize(self) -> str:
         if self._name is None:
             raise SerializationError("Block name is required")
         # The block starts with the black name line followed by a comment line
@@ -670,7 +718,7 @@ class CIFBlock(_Component, MutableMapping):
                 text_blocks.append("#\n")
         return "".join(text_blocks)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> CIFCategory:
         category = self._categories[key]
         if isinstance(category, str):
             # Element is stored in serialized form
@@ -683,7 +731,7 @@ class CIFBlock(_Component, MutableMapping):
             self._categories[key] = category
         return category
 
-    def __setitem__(self, key, category):
+    def __setitem__(self, key: str, category: CIFCategory) -> None:
         if not isinstance(category, CIFCategory):
             raise TypeError(
                 f"Expected 'CIFCategory', but got '{type(category).__name__}'"
@@ -691,19 +739,19 @@ class CIFBlock(_Component, MutableMapping):
         category.name = key
         self._categories[key] = category
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         del self._categories[key]
 
-    def __contains__(self, key):
+    def __contains__(self, key: object) -> bool:
         return key in self._categories
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._categories)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._categories)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         if set(self.keys()) != set(other.keys()):
@@ -714,7 +762,7 @@ class CIFBlock(_Component, MutableMapping):
         return True
 
 
-class CIFFile(_Component, File, MutableMapping):
+class CIFFile(_Component, File, MutableMapping[str, CIFBlock]):
     """
     This class represents a CIF file.
 
@@ -788,17 +836,19 @@ class CIFFile(_Component, File, MutableMapping):
     >>> file.write(os.path.join(path_to_directory, "some_file.cif"))
     """
 
-    def __init__(self, blocks=None):
-        if blocks is None:
-            blocks = {}
-        self._blocks = blocks
+    def __init__(
+        self, blocks: dict[str, CIFBlock | _SerializedElement] | None = None
+    ) -> None:
+        # Blocks may be stored in not yet deserialized text form alongside
+        # already deserialized `CIFBlock` instances
+        self._blocks: dict[str, CIFBlock | str] = {} if blocks is None else dict(blocks)
 
     @property
-    def lines(self):
+    def lines(self) -> list[str]:
         return self.serialize().splitlines()
 
     @property
-    def block(self):
+    def block(self) -> CIFBlock:
         if len(self) == 0:
             raise ValueError("There are no blocks in the file")
         elif len(self) > 1:
@@ -807,15 +857,15 @@ class CIFFile(_Component, File, MutableMapping):
             return self[next(iter(self))]
 
     @staticmethod
-    def subcomponent_class():
+    def subcomponent_class() -> type[CIFBlock]:
         return CIFBlock
 
     @staticmethod
-    def supercomponent_class():
+    def supercomponent_class() -> None:
         return None
 
-    @staticmethod
-    def deserialize(text):
+    @classmethod
+    def deserialize(cls, text: str) -> Self:
         lines = text.splitlines()
         block_starts = []
         block_names = []
@@ -825,9 +875,11 @@ class CIFFile(_Component, File, MutableMapping):
                 if data_block_name is not None:
                     block_starts.append(i)
                     block_names.append(data_block_name)
-        return CIFFile(_create_element_dict(lines, block_names, block_starts))
+        return cls(
+            _create_element_dict(lines, block_names, block_starts)  # pyright: ignore[reportArgumentType]
+        )
 
-    def serialize(self):
+    def serialize(self) -> str:
         text_blocks = []
         for block_name, block in self._blocks.items():
             if isinstance(block, str):
@@ -846,7 +898,7 @@ class CIFFile(_Component, File, MutableMapping):
         return "".join(text_blocks)
 
     @classmethod
-    def read(cls, file):
+    def read(cls, file: PathLike[str] | str | IO[str]) -> CIFFile:
         """
         Read a CIF file.
 
@@ -872,7 +924,7 @@ class CIFFile(_Component, File, MutableMapping):
             text = file.read()
         return CIFFile.deserialize(text)
 
-    def write(self, file):
+    def write(self, file: PathLike[str] | str | IO[str]) -> None:
         """
         Write the contents of this object into a CIF file.
 
@@ -890,7 +942,7 @@ class CIFFile(_Component, File, MutableMapping):
                 raise TypeError("A file opened in 'text' mode is required")
             file.write(self.serialize())
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> CIFBlock:
         block = self._blocks[key]
         if isinstance(block, str):
             # Element is stored in serialized form
@@ -904,25 +956,25 @@ class CIFFile(_Component, File, MutableMapping):
             self._blocks[key] = block
         return block
 
-    def __setitem__(self, key, block):
+    def __setitem__(self, key: str, block: CIFBlock) -> None:
         if not isinstance(block, CIFBlock):
             raise TypeError(f"Expected 'CIFBlock', but got '{type(block).__name__}'")
         block.name = key
         self._blocks[key] = block
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         del self._blocks[key]
 
-    def __contains__(self, key):
+    def __contains__(self, key: object) -> bool:
         return key in self._blocks
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._blocks)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._blocks)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         if set(self.keys()) != set(other.keys()):
@@ -933,11 +985,13 @@ class CIFFile(_Component, File, MutableMapping):
         return True
 
 
-def _is_empty(line):
+def _is_empty(line: str) -> bool:
     return len(line.strip()) == 0 or line[0] == "#"
 
 
-def _create_element_dict(lines, element_names, element_starts):
+def _create_element_dict(
+    lines: list[str], element_names: list[str], element_starts: list[int]
+) -> dict[str, str]:
     """
     Create a dict mapping the `element_names` to the corresponding
     `lines`, which are located between ``element_starts[i]`` and
@@ -953,7 +1007,7 @@ def _create_element_dict(lines, element_names, element_starts):
     }
 
 
-def _parse_data_block_name(line):
+def _parse_data_block_name(line: str) -> str | None:
     """
     If the line defines a data block, return this name.
     Return ``None`` otherwise.
@@ -964,7 +1018,7 @@ def _parse_data_block_name(line):
         return None
 
 
-def _parse_category_name(line):
+def _parse_category_name(line: str) -> str | None:
     """
     If the line defines a category, return this name.
     Return ``None`` otherwise.
@@ -975,14 +1029,14 @@ def _parse_category_name(line):
         return line[1 : line.find(".")]
 
 
-def _is_loop_start(line):
+def _is_loop_start(line: str) -> bool:
     """
     Return whether the line starts a looped category.
     """
     return line.startswith("loop_")
 
 
-def _to_single(lines):
+def _to_single(lines: list[str]) -> list[str]:
     r"""
     Convert multiline values into singleline values
     (in terms of 'lines' list elements).
@@ -1015,7 +1069,7 @@ def _to_single(lines):
     return processed_lines
 
 
-def _escape(value):
+def _escape(value: str) -> str:
     """
     Escape special characters in a value to make it compatible with CIF.
     """
@@ -1041,7 +1095,7 @@ def _escape(value):
         return value
 
 
-def _multiline(value):
+def _multiline(value: str) -> str:
     """
     Convert a string that may contain linebreaks into CIF-compatible
     multiline string.
@@ -1049,7 +1103,7 @@ def _multiline(value):
     return "\n;" + value + "\n;\n"
 
 
-def _split_one_line(line):
+def _split_one_line(line: str) -> Iterator[str]:
     """
     Split a line into its fields.
     Supporting embedded quotes (' or "), like `'a dog's life'` to  `a dog's life`
@@ -1083,7 +1137,7 @@ def _split_one_line(line):
             yield line
 
 
-def _arrayfy(data):
+def _arrayfy(data: Any) -> NDArray1[Any, Any]:
     if not isinstance(data, (Sequence, np.ndarray)) or isinstance(data, str):
         data = [data]
     elif len(data) == 0:

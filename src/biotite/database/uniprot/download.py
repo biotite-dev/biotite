@@ -8,14 +8,18 @@ __all__ = ["fetch"]
 
 import io
 import os
+from collections.abc import Iterable
 from os.path import getsize, isdir, isfile, join
+from typing import Literal, overload
 import requests
 from biotite.database.uniprot.check import assert_valid_response
 
 _fetch_url = "https://rest.uniprot.org/"
 
+_UniprotFormat = Literal["fasta", "gff", "txt", "xml", "rdf", "tab"]
 
-def _get_database_name(id):
+
+def _get_database_name(id: str) -> str:
     """
     Get the correct UniProt database from the ID of the file to be downloaded.
 
@@ -36,7 +40,45 @@ def _get_database_name(id):
     return "uniprotkb"
 
 
-def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
+@overload
+def fetch(
+    ids: str,
+    format: _UniprotFormat,
+    target_path: str,
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> str: ...
+@overload
+def fetch(
+    ids: str,
+    format: _UniprotFormat,
+    target_path: None = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> io.StringIO: ...
+@overload
+def fetch(
+    ids: Iterable[str],
+    format: _UniprotFormat,
+    target_path: str,
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> list[str]: ...
+@overload
+def fetch(
+    ids: Iterable[str],
+    format: _UniprotFormat,
+    target_path: None = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> list[io.StringIO]: ...
+def fetch(
+    ids: str | Iterable[str],
+    format: _UniprotFormat,
+    target_path: str | None = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> str | io.StringIO | list[str] | list[io.StringIO]:
     """
     Download files from the UniProt in various formats.
 
@@ -52,8 +94,7 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
         The format of the files to be downloaded.
     target_path : str, optional
         The target directory of the downloaded files.
-        By default, the file content is stored in a file-like object
-        (`StringIO` or `BytesIO`, respectively).
+        By default, the file content is stored in a `StringIO` object.
     overwrite : bool, optional
         If true, existing files will be overwritten. Otherwise the
         respective file will only be downloaded if the file does not
@@ -63,13 +104,13 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
 
     Returns
     -------
-    files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
+    files : str or StringIO or list of (str or StringIO)
         The file path(s) to the downloaded files.
         If a single string (a single ID) was given in `ids`,
         a single string is returned. If a list (or other iterable
         object) was given, a list of strings is returned.
         If no `target_path` was given, the file contents are stored in
-        either `StringIO` or `BytesIO` objects.
+        `StringIO` objects.
 
     Examples
     --------
@@ -85,20 +126,21 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
     # If only a single ID is present,
     # put it into a single element list
     if isinstance(ids, str):
-        ids = [ids]
+        id_list = [ids]
         single_element = True
     else:
+        id_list = list(ids)
         single_element = False
     # Create the target folder, if not existing
     if target_path is not None and not isdir(target_path):
         os.makedirs(target_path)
     files = []
     session = requests.Session()
-    for i, id in enumerate(ids):
+    for i, id in enumerate(id_list):
         db_name = _get_database_name(id)
         # Verbose output
         if verbose:
-            print(f"Fetching file {i + 1:d} / {len(ids):d} ({id})...", end="\r")
+            print(f"Fetching file {i + 1:d} / {len(id_list):d} ({id})...", end="\r")
         # Fetch file from database
         if target_path is not None:
             file = join(target_path, id + "." + format)

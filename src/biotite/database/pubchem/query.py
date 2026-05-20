@@ -21,11 +21,14 @@ __all__ = [
 import abc
 import collections
 import copy
+from typing import Any, Literal, overload
 import requests
 from biotite.database.error import RequestError
 from biotite.database.pubchem.error import parse_error_details
 from biotite.database.pubchem.throttle import ThrottleStatus
+from biotite.structure.atoms import AtomArray
 from biotite.structure.io.mol.mol import MOLFile
+from biotite.typing import N
 
 _base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
 
@@ -40,7 +43,7 @@ class Query(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def get_input_url_path(self):
+    def get_input_url_path(self) -> str:
         """
         Get the *input* part of the request URL.
 
@@ -53,7 +56,7 @@ class Query(metaclass=abc.ABCMeta):
         """
         pass
 
-    def get_params(self):
+    def get_params(self) -> dict[str, Any]:
         """
         Get the POST payload for this query.
 
@@ -64,7 +67,7 @@ class Query(metaclass=abc.ABCMeta):
         """
         return {}
 
-    def get_files(self):
+    def get_files(self) -> dict[str, Any]:
         """
         Get the POST file payload for this query.
 
@@ -95,13 +98,13 @@ class NameQuery(Query):
     [5950, ..., ...]
     """
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         self._name = name
 
-    def get_input_url_path(self):
+    def get_input_url_path(self) -> str:
         return "compound/name"
 
-    def get_params(self):
+    def get_params(self) -> dict[str, Any]:
         return {"name": self._name}
 
 
@@ -123,13 +126,13 @@ class SmilesQuery(Query):
     [7843]
     """
 
-    def __init__(self, smiles):
+    def __init__(self, smiles: str) -> None:
         self._smiles = smiles
 
-    def get_input_url_path(self):
+    def get_input_url_path(self) -> str:
         return "compound/smiles"
 
-    def get_params(self):
+    def get_params(self) -> dict[str, Any]:
         return {"smiles": self._smiles}
 
 
@@ -150,13 +153,13 @@ class InchiQuery(Query):
     [7843]
     """
 
-    def __init__(self, inchi):
+    def __init__(self, inchi: str) -> None:
         self._inchi = inchi
 
-    def get_input_url_path(self):
+    def get_input_url_path(self) -> str:
         return "compound/inchi"
 
-    def get_params(self):
+    def get_params(self) -> dict[str, Any]:
         return {"inchi": self._inchi}
 
 
@@ -177,13 +180,13 @@ class InchiKeyQuery(Query):
     [7843]
     """
 
-    def __init__(self, inchi_key):
+    def __init__(self, inchi_key: str) -> None:
         self._inchi_key = inchi_key
 
-    def get_input_url_path(self):
+    def get_input_url_path(self) -> str:
         return "compound/inchikey"
 
-    def get_params(self):
+    def get_params(self) -> dict[str, Any]:
         return {"inchikey": self._inchi_key}
 
 
@@ -218,20 +221,29 @@ class FormulaQuery(Query):
     [..., ..., ..., ..., ...]
     """
 
-    def __init__(self, formula, allow_other_elements=False, number=None):
+    def __init__(
+        self,
+        formula: str,
+        allow_other_elements: bool = False,
+        number: int | None = None,
+    ) -> None:
         self._formula = formula
         self._allow_other_elements = allow_other_elements
         self._number = number
 
     @staticmethod
-    def from_atoms(atoms, allow_other_elements=False, number=None):
+    def from_atoms(
+        atoms: AtomArray[N],
+        allow_other_elements: bool = False,
+        number: int | None = None,
+    ) -> "FormulaQuery":
         """
         Create the query from an the given structure by using its
         molecular formula.
 
         Parameters
         ----------
-        atoms : AtomArray or AtomArrayStack
+        atoms : AtomArray
             The structure to take the molecular formula from.
         allow_other_elements : bool, optional
             If set to true, compounds with additional elements, not
@@ -246,7 +258,7 @@ class FormulaQuery(Query):
         query : FormulaQuery
             The query.
         """
-        element_counter = collections.Counter(atoms.element)
+        element_counter = collections.Counter(atoms.element.tolist())
         formula = ""
         # C and H come first in molecular formula
         if "C" in element_counter:
@@ -261,13 +273,13 @@ class FormulaQuery(Query):
             formula += _format_element(element, element_counter[element])
         return FormulaQuery(formula, allow_other_elements, number)
 
-    def get_input_url_path(self):
+    def get_input_url_path(self) -> str:
         # The 'fastformula' service seems not to accept the formula
         # in the parameter section of the request
         return f"compound/fastformula/{self._formula}"
 
-    def get_params(self):
-        params = {"AllowOtherElements": self._allow_other_elements}
+    def get_params(self) -> dict[str, Any]:
+        params: dict[str, Any] = {"AllowOtherElements": self._allow_other_elements}
         # Only set maximum number, if provided by the user
         # The PubChem default value for this might change over time
         if self._number is not None:
@@ -275,7 +287,7 @@ class FormulaQuery(Query):
         return params
 
 
-def _format_element(element, count):
+def _format_element(element: str, count: int) -> str:
     if count == 1:
         return element.capitalize()
     else:
@@ -312,7 +324,30 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
 
     _query_keys = ("smiles", "smarts", "inchi", "sdf", "cid")
 
-    def __init__(self, **kwargs):
+    # Overloads expose the mutually exclusive query keys.
+    # Subclasses may extend kwargs with additional options (e.g.
+    # `SuperOrSubstructureQuery`'s flags); those flow through `**kwargs`.
+    @overload
+    def __init__(
+        self, *, smiles: str, number: int | None = None, **kwargs: Any
+    ) -> None: ...
+    @overload
+    def __init__(
+        self, *, smarts: str, number: int | None = None, **kwargs: Any
+    ) -> None: ...
+    @overload
+    def __init__(
+        self, *, inchi: str, number: int | None = None, **kwargs: Any
+    ) -> None: ...
+    @overload
+    def __init__(
+        self, *, sdf: str, number: int | None = None, **kwargs: Any
+    ) -> None: ...
+    @overload
+    def __init__(
+        self, *, cid: int, number: int | None = None, **kwargs: Any
+    ) -> None: ...
+    def __init__(self, **kwargs: Any) -> None:
         query_key_found = False
         for query_key in StructureQuery._query_keys:
             if query_key in kwargs:
@@ -345,13 +380,18 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
             raise TypeError(f"'{key}' is an invalid keyword argument")
 
     @classmethod
-    def from_atoms(cls, atoms, *args, **kwargs):
+    def from_atoms(
+        cls,
+        atoms: AtomArray[N],
+        *args: Any,
+        **kwargs: Any,
+    ) -> "StructureQuery":
         """
         Create a query using the given query structure.
 
         Parameters
         ----------
-        atoms : AtomArray or AtomArrayStack
+        atoms : AtomArray
             The query structure.
         *args, **kwargs
             See the constructor for additional options.
@@ -367,7 +407,7 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
         # Important: USE MS-style new lines
         return cls(*args, sdf="\r\n".join(mol_file.lines) + "\r\n$$$$\r\n", **kwargs)
 
-    def get_input_url_path(self):
+    def get_input_url_path(self) -> str:
         input_string = f"compound/{self.search_type()}/{self._query_key}"
         if self._query_key == "cid":
             # Put CID in URL and not in POST payload,
@@ -375,7 +415,8 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
             input_string += "/" + str(self._query_val)
         return input_string
 
-    def get_params(self):
+    def get_params(self) -> dict[str, Any]:
+        params: dict[str, Any]
         if self._query_key not in ("cid", "sdf"):
             # CID is in URL
             # SDF is given as file
@@ -393,7 +434,7 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
             params[key] = val
         return params
 
-    def get_files(self):
+    def get_files(self) -> dict[str, Any]:
         # Multi-line SDF string requires payload as file
         if self._query_key == "sdf":
             return {"sdf": self._query_val}
@@ -401,7 +442,7 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
             return {}
 
     @abc.abstractmethod
-    def search_type(self):
+    def search_type(self) -> str:
         """
         Get the type of performed search for the request input part.
 
@@ -415,7 +456,7 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
         """
         pass
 
-    def search_options(self):
+    def search_options(self) -> dict[str, Any]:
         """
         Get additional options for the POST options.
 
@@ -489,7 +530,7 @@ class SuperOrSubstructureQuery(StructureQuery, metaclass=abc.ABCMeta):
         "stereo": "ignore",
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         self._options = copy.copy(SuperOrSubstructureQuery._option_defaults)
         for option, value in kwargs.items():
             if option in SuperOrSubstructureQuery._option_defaults.keys():
@@ -497,7 +538,7 @@ class SuperOrSubstructureQuery(StructureQuery, metaclass=abc.ABCMeta):
                 del kwargs[option]
         super().__init__(**kwargs)
 
-    def search_options(self):
+    def search_options(self) -> dict[str, Any]:
         return self._options
 
 
@@ -563,7 +604,7 @@ class SuperstructureQuery(SuperOrSubstructureQuery):
     [..., ..., ..., ..., ...]
     """
 
-    def search_type(self):
+    def search_type(self) -> str:
         return "fastsuperstructure"
 
 
@@ -629,7 +670,7 @@ class SubstructureQuery(SuperOrSubstructureQuery):
     [5950, ..., ..., ..., ...]
     """
 
-    def search_type(self):
+    def search_type(self) -> str:
         return "fastsubstructure"
 
 
@@ -690,16 +731,21 @@ class SimilarityQuery(StructureQuery):
     [5950, ..., ..., ..., ...]
     """
 
-    def __init__(self, threshold=0.9, conformation_based=False, **kwargs):
+    def __init__(
+        self,
+        threshold: float = 0.9,
+        conformation_based: bool = False,
+        **kwargs: Any,
+    ) -> None:
         self._threshold = threshold
         self._conformation_based = conformation_based
         super().__init__(**kwargs)
 
-    def search_type(self):
+    def search_type(self) -> str:
         dim = "3d" if self._conformation_based else "2d"
         return f"fastsimilarity_{dim}"
 
-    def search_options(self):
+    def search_options(self) -> dict[str, Any]:
         return {"threshold": int(round(self._threshold * 100))}
 
 
@@ -744,14 +790,26 @@ class IdentityQuery(StructureQuery):
     [5950]
     """
 
-    def __init__(self, identity_type="same_stereo_isotope", **kwargs):
+    def __init__(
+        self,
+        identity_type: Literal[
+            "same_connectivity",
+            "same_tautomer",
+            "same_stereo",
+            "same_isotope",
+            "same_stereo_isotope",
+            "nonconflicting_stereo",
+            "same_isotope_nonconflicting_stereo",
+        ] = "same_stereo_isotope",
+        **kwargs: Any,
+    ) -> None:
         self._identity_type = identity_type
         super().__init__(**kwargs)
 
-    def search_type(self):
+    def search_type(self) -> str:
         return "fastidentity"
 
-    def get_params(self):
+    def get_params(self) -> dict[str, Any]:
         # Use 'get_params()' instead of 'search_options()', since the
         # parameter 'identity_type' in the REST API is *snake case*
         # -> Conversion to *camel case* is undesirable
@@ -760,7 +818,23 @@ class IdentityQuery(StructureQuery):
         return params
 
 
-def search(query, throttle_threshold=0.5, return_throttle_status=False):
+@overload
+def search(
+    query: Query,
+    throttle_threshold: float | None = 0.5,
+    return_throttle_status: Literal[False] = False,
+) -> list[int]: ...
+@overload
+def search(
+    query: Query,
+    throttle_threshold: float | None,
+    return_throttle_status: Literal[True],
+) -> tuple[list[int], ThrottleStatus]: ...
+def search(
+    query: Query,
+    throttle_threshold: float | None = 0.5,
+    return_throttle_status: bool = False,
+) -> list[int] | tuple[list[int], ThrottleStatus]:
     """
     Get all CIDs that meet the given query requirements,
     via the PubChem REST API.

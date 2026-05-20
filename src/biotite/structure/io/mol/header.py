@@ -45,18 +45,18 @@ class Header:
         Same as the parameters.
     """
 
-    mol_name: ... = ""
-    initials: ... = ""
-    program: ... = ""
-    time: ... = None
-    dimensions: ... = ""
-    scaling_factors: ... = ""
-    energy: ... = ""
-    registry_number: ... = ""
-    comments: ... = ""
+    mol_name: str = ""
+    initials: str = ""
+    program: str = ""
+    time: datetime.datetime | datetime.date | None = None
+    dimensions: str = ""
+    scaling_factors: str = ""
+    energy: str = ""
+    registry_number: str = ""
+    comments: str = ""
 
     @staticmethod
-    def deserialize(text):
+    def deserialize(text: str) -> "Header":
         lines = text.splitlines()
 
         mol_name = lines[0].strip()
@@ -90,7 +90,7 @@ class Header:
             comments,
         )
 
-    def serialize(self):
+    def serialize(self) -> str:
         text = ""
 
         if self.time is None:
@@ -116,5 +116,5 @@ class Header:
         text += str(self.comments) + "\n"
         return text
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.serialize()

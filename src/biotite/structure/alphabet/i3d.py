@@ -11,11 +11,16 @@ __author__ = "Martin Larralde"
 __all__ = ["I3DSequence", "to_3di"]
 
 import warnings
+from collections.abc import Iterable
+from typing import ClassVar
+import numpy as np
 from biotite.sequence.alphabet import LetterAlphabet
 from biotite.sequence.sequence import Sequence
 from biotite.structure.alphabet.encoder import Encoder
+from biotite.structure.atoms import AtomArray
 from biotite.structure.chains import get_chain_starts
 from biotite.structure.util import coord_for_atom_name_per_residue
+from biotite.typing import K, N, NDArray1
 
 
 class I3DSequence(Sequence):
@@ -41,24 +46,26 @@ class I3DSequence(Sequence):
     .. footbibliography::
     """
 
-    alphabet = LetterAlphabet("acdefghiklmnpqrstvwy")
+    alphabet: ClassVar[LetterAlphabet] = LetterAlphabet("acdefghiklmnpqrstvwy")
     undefined_symbol = "d"
 
-    def __init__(self, sequence=""):
+    def __init__(self, sequence: str | Iterable[str] = "") -> None:
         if isinstance(sequence, str):
             sequence = sequence.lower()
         else:
             sequence = [symbol.upper() for symbol in sequence]
         super().__init__(sequence)
 
-    def get_alphabet(self):
+    def get_alphabet(self) -> LetterAlphabet:
         return I3DSequence.alphabet
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'I3DSequence("{"".join(self.symbols)}")'
 
 
-def to_3di(atoms):
+def to_3di(
+    atoms: AtomArray[N],
+) -> tuple[list[I3DSequence], NDArray1[K, np.integer]]:
     """
     Encode each chain in the given structure to the 3Di structure alphabet.
     :footcite:`VanKempen2024`
@@ -71,7 +78,7 @@ def to_3di(atoms):
 
     Returns
     -------
-    sequences : list of Sequence, length=n
+    sequences : list of I3DSequence, length=n
         The encoded 3Di sequence for each peptide chain in the structure.
     chain_start_indices : ndarray, shape=(n,), dtype=int
         The atom index where each chain starts.

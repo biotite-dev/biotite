@@ -7,10 +7,10 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["set_api_key", "get_api_key"]
 
 
-_API_KEY = None
+_API_KEY: str | None = None
 
 
-def get_api_key():
+def get_api_key() -> str | None:
     """
     Get the
     `NCBI API key <https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/>`_.
@@ -24,7 +24,7 @@ def get_api_key():
     return _API_KEY
 
 
-def set_api_key(key):
+def set_api_key(key: str) -> None:
     """
     Set the
     `NCBI API key <https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/>`_.

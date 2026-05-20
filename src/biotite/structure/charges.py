@@ -15,9 +15,15 @@ __all__ = ["partial_charges"]
 import warnings
 import numpy as np
 from biotite.rust.structure import partial_charges as rust_partial_charges
+from biotite.structure.atoms import AtomArray
+from biotite.typing import N, NDArray1
 
 
-def partial_charges(atom_array, iteration_step_num=6, charges=None):
+def partial_charges(
+    atom_array: AtomArray[N],
+    iteration_step_num: int = 6,
+    charges: NDArray1[N, np.integer] | None = None,
+) -> NDArray1[N, np.floating]:
     """
     partial_charges(atom_array, iteration_step_num=6, charges=None)
 
@@ -93,11 +99,12 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
             "The input AtomArray doesn't possess an associated BondList."
         )
 
+    float_charges: NDArray1[N, np.floating]
     if charges is None:
         try:
-            charges = atom_array.charge.astype(np.float32)
+            float_charges = atom_array.charge.astype(np.float32)
         except AttributeError:
-            charges = np.zeros(atom_array.shape[0], dtype=np.float32)
+            float_charges = np.zeros(atom_array.shape[0], dtype=np.float32)  # pyright: ignore[reportAssignmentType]
             warnings.warn(
                 "A charge array was neither given as optional "
                 "argument, nor does a charge annotation of the "
@@ -106,19 +113,19 @@ def partial_charges(atom_array, iteration_step_num=6, charges=None):
                 UserWarning,
             )
     else:
-        charges = np.asarray(charges, dtype=np.float32).copy()
+        float_charges = np.asarray(charges, dtype=np.float32).copy()
 
     if atom_array.bonds.get_bond_count() == 0:
         # No bonds along which charge transfer can occur
         # -> Partial charges equal formal charges (e.g. ions)
-        return charges
+        return float_charges
 
     # Call Rust for hybridization determination, parameter lookup
     # and iterative charge transfer
     return np.asarray(
         rust_partial_charges(
             atom_array.element.tolist(),
-            charges,
+            float_charges,
             atom_array.bonds,
             iteration_step_num,
         )

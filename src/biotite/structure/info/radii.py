@@ -132,7 +132,7 @@ We cannot use the CRC values directly as they are not permissively licensed.
 _protor_radii = {}
 
 
-def vdw_radius_protor(res_name, atom_name):
+def vdw_radius_protor(res_name: str, atom_name: str) -> float | None:
     """
     Estimate the Van-der-Waals radius of a heavy atom,
     that includes the radius added by potential bonded hydrogen atoms.
@@ -194,7 +194,7 @@ def vdw_radius_protor(res_name, atom_name):
         return vdw_radius_protor(res_name, atom_name)
 
 
-def _calculate_protor_radii(res_name):
+def _calculate_protor_radii(res_name: str) -> dict[str, float | None]:
     """
     Calculate the ProtOr VdW radii for all atoms (atom names) in
     a residue.
@@ -233,7 +233,7 @@ def _calculate_protor_radii(res_name):
     return radii
 
 
-def vdw_radius_single(element):
+def vdw_radius_single(element: str) -> float | None:
     """
     Get the *Van-der-Waals* radius of an atom from the given element.
     :footcite:`Mantina2009`

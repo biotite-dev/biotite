@@ -21,9 +21,10 @@ __all__ = [
 
 import re
 from abc import ABCMeta, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import IntEnum
 from numbers import Integral
+from typing import Any, Self, TypeAlias, TypeVar, cast, overload
 import numpy as np
 from biotite.file import InvalidFileError
 from biotite.rust.structure.io.pdbx import (
@@ -33,8 +34,11 @@ from biotite.rust.structure.io.pdbx import (
     run_length_encode,
 )
 from biotite.structure.io.pdbx.component import _Component
+from biotite.typing import K, NDArray1
 
 CAMEL_CASE_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
+
+_S = TypeVar("_S", bound=np.generic)
 
 
 class TypeCode(IntEnum):
@@ -53,7 +57,7 @@ class TypeCode(IntEnum):
     FLOAT64 = 33
 
     @staticmethod
-    def from_dtype(dtype):
+    def from_dtype(dtype: "np.dtype | int | TypeCode") -> "TypeCode":
         """
         Convert a *NumPy* dtype to a *BinaryCIF* type code.
 
@@ -72,7 +76,7 @@ class TypeCode(IntEnum):
             # Already a type code
             return TypeCode(dtype)
         else:
-            dtype = np.dtype(dtype)
+            dtype = np.dtype(dtype)  # pyright: ignore[reportCallIssue,reportArgumentType]
             # Find the closest dtype supported by the format
             if np.issubdtype(dtype, np.integer):
                 # int64 is not supported by format
@@ -94,16 +98,19 @@ class TypeCode(IntEnum):
                 raise ValueError(f"dtype '{dtype}' is not supported by BinaryCIF")
             return _DTYPE_TO_TYPE_CODE[np.dtype(supported_dtype).newbyteorder("<").str]
 
-    def to_dtype(self):
+    def to_dtype(self) -> str:
         """
         Convert this type code to a *NumPy* dtype.
 
         Returns
         -------
-        dtype : dtype
-            The corresponding data type.
+        dtype : str
+            The corresponding data type as a NumPy dtype string.
         """
         return _TYPE_CODE_TO_DTYPE[self]
+
+
+_UninitTypeCode: TypeAlias = TypeCode | np.dtype | int | None
 
 
 # Converts BCIF integers representing the type to an actual NumPy dtype
@@ -132,7 +139,7 @@ class Encoding(_Component, metaclass=ABCMeta):
     """
 
     @classmethod
-    def deserialize(cls, content):
+    def deserialize(cls, content: dict) -> Self:
         params = {
             _camel_to_snake_case(param): value for param, value in content.items()
         }
@@ -146,7 +153,7 @@ class Encoding(_Component, metaclass=ABCMeta):
             raise InvalidFileError(f"Missing encoding parameters for {cls.__name__}")
         return encoding
 
-    def serialize(self):
+    def serialize(self) -> dict:
         for param in type(self).__annotations__:
             if getattr(self, param) is None:
                 raise ValueError(
@@ -163,7 +170,9 @@ class Encoding(_Component, metaclass=ABCMeta):
         return serialized
 
     @abstractmethod
-    def encode(self, data):
+    def encode(
+        self, data: NDArray1[K, np.generic]
+    ) -> NDArray1[Any, np.generic] | bytes:
         """
         Apply this encoding to the given data.
 
@@ -176,11 +185,15 @@ class Encoding(_Component, metaclass=ABCMeta):
         -------
         encoded_data : ndarray or bytes
             The encoded data.
+            The length is in general not the same as the input length, e.g.
+            for :class:`RunLengthEncoding` or :class:`IntegerPackingEncoding`.
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def decode(self, data):
+    def decode(
+        self, data: NDArray1[K, np.generic] | bytes
+    ) -> NDArray1[Any, np.generic]:
         """
         Apply the inverse of this encoding to the given data.
 
@@ -196,7 +209,7 @@ class Encoding(_Component, metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
-    def __str__(self):
+    def __str__(self) -> str:
         # Restore original behavior, as `__str__()` implementation of `_Component`
         # may require serialization, which is not possible for some encodings prior
         # to the first encoding pass
@@ -226,20 +239,25 @@ class ByteArrayEncoding(Encoding):
     b'\x00\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00'
     """
 
-    type: ... = None
+    type: _UninitTypeCode = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.type is not None:
             self.type = TypeCode.from_dtype(self.type)
 
-    def encode(self, data):
+    def encode(self, data: NDArray1[K, np.generic]) -> bytes:
         if self.type is None:
             self.type = TypeCode.from_dtype(data.dtype)
-        return _safe_cast(data, self.type.to_dtype()).tobytes()
+        type_code = _expect_initialized(self.type)
+        return _safe_cast(data, type_code.to_dtype()).tobytes()
 
-    def decode(self, data):
-        # Data is raw bytes in this case
-        return np.frombuffer(data, dtype=self.type.to_dtype())
+    def decode(
+        self, data: NDArray1[K, np.generic] | bytes
+    ) -> NDArray1[Any, np.generic]:
+        if isinstance(data, np.ndarray):
+            raise TypeError("This encoding expects bytes, not an array")
+        type_code = _expect_initialized(self.type)
+        return np.frombuffer(data, dtype=type_code.to_dtype())
 
 
 @dataclass
@@ -269,16 +287,16 @@ class FixedPointEncoding(Encoding):
     [987 654]
     """
 
-    factor: ...
-    src_type: ... = None
+    factor: float
+    src_type: _UninitTypeCode = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.src_type is not None:
             self.src_type = TypeCode.from_dtype(self.src_type)
             if self.src_type not in (TypeCode.FLOAT32, TypeCode.FLOAT64):
                 raise ValueError("Only floating point types are supported")
 
-    def encode(self, data):
+    def encode(self, data: NDArray1[K, np.generic]) -> NDArray1[K, np.generic]:
         # If not given in constructor, it is determined from the data
         if self.src_type is None:
             self.src_type = TypeCode.from_dtype(data.dtype)
@@ -286,11 +304,16 @@ class FixedPointEncoding(Encoding):
                 raise ValueError("Only floating point types are supported")
 
         # Round to avoid wrong values due to floating point inaccuracies
-        scaled_data = np.round(data * self.factor)
+        scaled_data = np.round(data * self.factor)  # pyright: ignore[reportOperatorIssue]
         return _safe_cast(scaled_data, np.int32, allow_decimal_loss=True)
 
-    def decode(self, data):
-        return (data / self.factor).astype(dtype=self.src_type.to_dtype(), copy=False)
+    def decode(self, data: NDArray1[K, np.generic] | bytes) -> NDArray1[K, np.generic]:
+        if isinstance(data, bytes):
+            raise TypeError("This encoding expects an array, not bytes")
+        type_code = _expect_initialized(self.src_type)
+        return (data / self.factor).astype(  # pyright: ignore[reportOperatorIssue]
+            dtype=type_code.to_dtype(), copy=False
+        )
 
 
 @dataclass
@@ -329,16 +352,16 @@ class IntervalQuantizationEncoding(Encoding):
     [11.0 11.5 11.5 12.0 12.0 12.0]
     """
 
-    min: ...
-    max: ...
-    num_steps: ...
-    src_type: ... = None
+    min: float
+    max: float
+    num_steps: int
+    src_type: _UninitTypeCode = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.src_type is not None:
             self.src_type = TypeCode.from_dtype(self.src_type)
 
-    def encode(self, data):
+    def encode(self, data: NDArray1[K, np.generic]) -> NDArray1[K, np.generic]:
         # If not given in constructor, it is determined from the data
         if self.src_type is None:
             self.src_type = TypeCode.from_dtype(data.dtype)
@@ -347,9 +370,12 @@ class IntervalQuantizationEncoding(Encoding):
         indices = np.searchsorted(steps, data, side="left")
         return _safe_cast(indices, np.int32)
 
-    def decode(self, data):
-        output = data * (self.max - self.min) / (self.num_steps - 1)
-        output = output.astype(self.src_type.to_dtype(), copy=False)
+    def decode(self, data: NDArray1[K, np.generic] | bytes) -> NDArray1[K, np.generic]:
+        if isinstance(data, bytes):
+            raise TypeError("This encoding expects an array, not bytes")
+        type_code = _expect_initialized(self.src_type)
+        output = data * (self.max - self.min) / (self.num_steps - 1)  # pyright: ignore[reportOperatorIssue]
+        output = output.astype(type_code.to_dtype(), copy=False)
         output += self.min
         return output
 
@@ -389,14 +415,14 @@ class RunLengthEncoding(Encoding):
      [3 2]]
     """
 
-    src_size: ... = None
-    src_type: ... = None
+    src_size: int | None = None
+    src_type: _UninitTypeCode = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.src_type is not None:
             self.src_type = TypeCode.from_dtype(self.src_type)
 
-    def encode(self, data):
+    def encode(self, data: NDArray1[K, np.generic]) -> NDArray1[Any, np.generic]:
         # If not given in constructor, it is determined from the data
         if self.src_type is None:
             self.src_type = TypeCode.from_dtype(data.dtype)
@@ -404,14 +430,20 @@ class RunLengthEncoding(Encoding):
             self.src_size = data.shape[0]
         elif self.src_size != data.shape[0]:
             raise IndexError("Given source size does not match actual data size")
-        return np.asarray(run_length_encode(_safe_cast(data, self.src_type.to_dtype())))
+        type_code = _expect_initialized(self.src_type)
+        return np.asarray(run_length_encode(_safe_cast(data, type_code.to_dtype())))
 
-    def decode(self, data):
+    def decode(
+        self, data: NDArray1[K, np.generic] | bytes
+    ) -> NDArray1[Any, np.generic]:
+        if isinstance(data, bytes):
+            raise TypeError("This encoding expects an array, not bytes")
+        type_code = _expect_initialized(self.src_type)
         return np.asarray(
             run_length_decode(
                 data.astype(np.int32, copy=False),
                 self.src_size,
-                np.dtype(self.src_type.to_dtype()),
+                np.dtype(type_code.to_dtype()),
             )
         )
 
@@ -446,14 +478,14 @@ class DeltaEncoding(Encoding):
     1
     """
 
-    src_type: ... = None
-    origin: ... = None
+    src_type: _UninitTypeCode = None
+    origin: int | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.src_type is not None:
             self.src_type = TypeCode.from_dtype(self.src_type)
 
-    def encode(self, data):
+    def encode(self, data: NDArray1[K, np.generic]) -> NDArray1[K, np.generic]:
         # If not given in constructor, it is determined from the data
         if self.src_type is None:
             self.src_type = TypeCode.from_dtype(data.dtype)
@@ -466,12 +498,15 @@ class DeltaEncoding(Encoding):
         # if the difference is negative
         # -> cast to int64 to avoid this
         data = data.astype(np.int64, copy=False)
-        data = data - self.origin
+        data = data - self.origin  # pyright: ignore[reportOperatorIssue]
         return _safe_cast(np.diff(data, prepend=0), np.int32)
 
-    def decode(self, data):
-        output = np.cumsum(data, dtype=self.src_type.to_dtype())
-        output += self.origin
+    def decode(self, data: NDArray1[K, np.generic] | bytes) -> NDArray1[K, np.generic]:
+        if isinstance(data, bytes):
+            raise TypeError("This encoding expects an array, not bytes")
+        type_code = _expect_initialized(self.src_type)
+        output = np.cumsum(data, dtype=type_code.to_dtype())
+        output += self.origin  # pyright: ignore[reportOperatorIssue]
         return output
 
 
@@ -511,11 +546,11 @@ class IntegerPackingEncoding(Encoding):
     [  1   2  -3 127   1]
     """
 
-    byte_count: ...
-    src_size: ... = None
-    is_unsigned: ... = None
+    byte_count: int
+    src_size: int | None = None
+    is_unsigned: bool | None = None
 
-    def encode(self, data):
+    def encode(self, data: NDArray1[K, np.generic]) -> NDArray1[Any, np.generic]:
         if self.src_size is None:
             self.src_size = len(data)
         elif self.src_size != len(data):
@@ -535,7 +570,11 @@ class IntegerPackingEncoding(Encoding):
             )
         )
 
-    def decode(self, data):
+    def decode(
+        self, data: NDArray1[K, np.generic] | bytes
+    ) -> NDArray1[Any, np.generic]:
+        if isinstance(data, bytes):
+            raise TypeError("This encoding expects an array, not bytes")
         return np.asarray(
             integer_packing_decode(
                 data,
@@ -545,7 +584,7 @@ class IntegerPackingEncoding(Encoding):
             )
         )
 
-    def _determine_packed_dtype(self):
+    def _determine_packed_dtype(self) -> type[np.integer]:
         if self.byte_count == 1:
             if self.is_unsigned:
                 return np.uint8
@@ -571,7 +610,7 @@ class StringArrayEncoding(Encoding):
     The start index of each unique string in the concatenated string
     is stored in an *offset* array.
 
-    Parameters
+    Attributes
     ----------
     strings : ndarray, optional
         The unique strings that are used for encoding.
@@ -585,12 +624,6 @@ class StringArrayEncoding(Encoding):
         The encodings that are applied to the offset array.
         If omitted, the array is directly encoded into bytes without
         further compression.
-
-    Attributes
-    ----------
-    strings : ndarray
-    data_encoding : list of Encoding
-    offset_encoding : list of Encoding
 
     Examples
     --------
@@ -608,21 +641,16 @@ class StringArrayEncoding(Encoding):
     [0 1 2 0 1 0]
     """
 
-    strings: ... = None
-    data_encoding: ... = None
-    offset_encoding: ... = None
+    strings: np.ndarray | None = None
+    data_encoding: list[Encoding] = field(
+        default_factory=lambda: [ByteArrayEncoding(TypeCode.INT32)]
+    )
+    offset_encoding: list[Encoding] = field(
+        default_factory=lambda: [ByteArrayEncoding(TypeCode.INT32)]
+    )
 
-    def __init__(self, strings=None, data_encoding=None, offset_encoding=None):
-        self.strings = strings
-        if data_encoding is None:
-            data_encoding = [ByteArrayEncoding(TypeCode.INT32)]
-        self.data_encoding = data_encoding
-        if offset_encoding is None:
-            offset_encoding = [ByteArrayEncoding(TypeCode.INT32)]
-        self.offset_encoding = offset_encoding
-
-    @staticmethod
-    def deserialize(content):
+    @classmethod
+    def deserialize(cls, content: dict) -> Self:
         data_encoding = [deserialize_encoding(e) for e in content["dataEncoding"]]
         offset_encoding = [deserialize_encoding(e) for e in content["offsetEncoding"]]
         concatenated_strings = content["stringData"]
@@ -637,9 +665,9 @@ class StringArrayEncoding(Encoding):
             dtype="U",
         )
 
-        return StringArrayEncoding(strings, data_encoding, offset_encoding)
+        return cls(strings, data_encoding, offset_encoding)
 
-    def serialize(self):
+    def serialize(self) -> dict:
         if self.strings is None:
             raise ValueError(
                 "'strings' must be explicitly given or needs to be "
@@ -657,30 +685,35 @@ class StringArrayEncoding(Encoding):
             "offsetEncoding": [e.serialize() for e in self.offset_encoding],
         }
 
-    def encode(self, data):
+    def encode(
+        self, data: NDArray1[K, np.generic]
+    ) -> NDArray1[Any, np.generic] | bytes:
         if not np.issubdtype(data.dtype, np.str_):
             raise TypeError("Data must be of string type")
 
+        strings: NDArray1[Any, np.str_]
         if self.strings is None:
             # 'unique()' already sorts the strings, but this is not necessarily
             # desired, as this makes efficient encoding of the indices more difficult
             # -> Bring into the original order
             _, unique_indices = np.unique(data, return_index=True)
-            self.strings = data[np.sort(unique_indices)]
+            strings = data[np.sort(unique_indices)]  # pyright: ignore[reportAssignmentType]
+            self.strings = strings
             check_present = False
         else:
+            strings = self.strings
             check_present = True
 
-        if len(self.strings) > 0:
-            string_order = _safe_cast(np.argsort(self.strings), np.int32)
-            sorted_strings = self.strings[string_order]
+        if len(strings) > 0:
+            string_order = _safe_cast(np.argsort(strings), np.int32)
+            sorted_strings = strings[string_order]
             sorted_indices = np.searchsorted(sorted_strings, data)
             indices = string_order[sorted_indices]
             # `"" not in self.strings` can be quite costly and is only necessary,
             # if the the `strings` were given by the user, as otherwise we always
             # include an empty string explicitly when we compute them in this function
             # -> Only run if `check_present` is True
-            if check_present and "" not in self.strings:
+            if check_present and "" not in strings:
                 # Represent empty strings as -1
                 indices[data == ""] = -1
         else:
@@ -691,24 +724,31 @@ class StringArrayEncoding(Encoding):
 
         valid_indices_mask = indices != -1
         if check_present and not np.all(
-            self.strings[indices[valid_indices_mask]] == data[valid_indices_mask]
+            strings[indices[valid_indices_mask]] == data[valid_indices_mask]
         ):
             raise ValueError("Data contains strings not present in 'strings'")
         return encode_stepwise(indices, self.data_encoding)
 
-    def decode(self, data):
-        indices = decode_stepwise(data, self.data_encoding)
+    def decode(
+        self, data: NDArray1[K, np.generic] | bytes
+    ) -> NDArray1[Any, np.generic]:
+        # `data_encoding` always decodes to integer indices for this encoding
+        indices = cast(
+            "NDArray1[Any, np.integer]", decode_stepwise(data, self.data_encoding)
+        )
+        if self.strings is None:
+            raise ValueError("'strings' field is not set yet")
         # Initialize with empty strings
         strings = np.zeros(indices.shape[0], dtype=self.strings.dtype)
         # `-1`` indices indicate missing values
         valid_indices_mask = indices != -1
-        strings[valid_indices_mask] = self.strings[indices[valid_indices_mask]]
+        strings[valid_indices_mask] = self.strings[indices[valid_indices_mask]]  # pyright: ignore[reportOptionalSubscript]
         return strings
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
-        if not np.array_equal(self.strings, other.strings):
+        if not np.array_equal(self.strings, other.strings):  # pyright: ignore[reportArgumentType]
             return False
         if self.data_encoding != other.data_encoding:
             return False
@@ -737,7 +777,7 @@ _encoding_classes_kinds = {
 }
 
 
-def deserialize_encoding(content):
+def deserialize_encoding(content: dict) -> Encoding:
     """
     Create a :class:`Encoding` by deserializing the given *BinaryCIF* content.
 
@@ -758,7 +798,7 @@ def deserialize_encoding(content):
     return encoding_class.deserialize(content)
 
 
-def create_uncompressed_encoding(array):
+def create_uncompressed_encoding(array: NDArray1[K, np.generic]) -> list[Encoding]:
     """
     Create a simple encoding for the given array that does not compress the data.
 
@@ -778,7 +818,9 @@ def create_uncompressed_encoding(array):
         return [ByteArrayEncoding()]
 
 
-def encode_stepwise(data, encoding):
+def encode_stepwise(
+    data: NDArray1[K, np.generic], encoding: list[Encoding]
+) -> NDArray1[Any, np.generic] | bytes:
     """
     Apply a list of encodings stepwise to the given data.
 
@@ -794,12 +836,17 @@ def encode_stepwise(data, encoding):
     encoded_data : ndarray or bytes
         The encoded data.
     """
-    for encoding in encoding:
-        data = encoding.encode(data)
-    return data
+    encoded_data: NDArray1[Any, np.generic] | bytes = data
+    for enc in encoding:
+        if isinstance(encoded_data, bytes):
+            raise ValueError("Already reached terminal encoding")
+        encoded_data = enc.encode(encoded_data)
+    return encoded_data
 
 
-def decode_stepwise(data, encoding):
+def decode_stepwise(
+    data: NDArray1[K, np.generic] | bytes, encoding: list[Encoding]
+) -> NDArray1[Any, np.generic]:
     """
     Apply a list of encodings stepwise to the given data.
 
@@ -815,26 +862,56 @@ def decode_stepwise(data, encoding):
     decoded_data : ndarray
         The decoded data.
     """
+    decoded_data: NDArray1[Any, np.generic] | None = None
     for enc in reversed(encoding):
-        data = enc.decode(data)
+        if decoded_data is None:
+            decoded_data = enc.decode(data)
+        else:
+            decoded_data = enc.decode(decoded_data)
+
+    if decoded_data is None:
+        raise ValueError("No encoding was applied")
+
     # ByteEncoding may decode in a non-writable array,
     # as it creates the ndarray cheaply from buffer
-    if not data.flags.writeable:
+    if not decoded_data.flags.writeable:
         # Make the resulting ndarray writable, by copying the underlying buffer
-        data = data.copy()
-    return data
+        decoded_data = decoded_data.copy()
+    return decoded_data
 
 
-def _camel_to_snake_case(attribute_name):
+def _camel_to_snake_case(attribute_name: str) -> str:
     return CAMEL_CASE_PATTERN.sub("_", attribute_name).lower()
 
 
-def _snake_to_camel_case(attribute_name):
+def _snake_to_camel_case(attribute_name: str) -> str:
     attribute_name = "".join(word.capitalize() for word in attribute_name.split("_"))
     return attribute_name[0].lower() + attribute_name[1:]
 
 
-def _safe_cast(array, dtype, allow_decimal_loss=False):
+@overload
+def _safe_cast(
+    array: NDArray1[K, np.generic],
+    dtype: type[_S],
+    allow_decimal_loss: bool = False,
+) -> NDArray1[K, _S]: ...
+@overload
+def _safe_cast(
+    array: NDArray1[K, np.generic],
+    dtype: np.dtype[_S],
+    allow_decimal_loss: bool = False,
+) -> NDArray1[K, _S]: ...
+@overload
+def _safe_cast(
+    array: NDArray1[K, np.generic],
+    dtype: str,
+    allow_decimal_loss: bool = False,
+) -> NDArray1[K, np.generic]: ...
+def _safe_cast(
+    array: NDArray1[K, np.generic],
+    dtype: np.dtype | str | type,
+    allow_decimal_loss: bool = False,
+) -> NDArray1[K, np.generic]:
     source_dtype = array.dtype
     target_dtype = np.dtype(dtype)
 
@@ -850,9 +927,17 @@ def _safe_cast(array, dtype, allow_decimal_loss=False):
         elif not np.issubdtype(source_dtype, np.integer):
             # Neither float, nor integer -> cannot cast
             raise ValueError(f"Cannot cast '{source_dtype}' to integer")
-        dtype_info = np.iinfo(target_dtype)
+        dtype_info = np.iinfo(cast("np.dtype[np.integer]", target_dtype))
         # Check if an integer underflow/overflow would occur during conversion
-        if np.max(array) > dtype_info.max or np.min(array) < dtype_info.min:
+        max_val = np.max(array).item()
+        min_val = np.min(array).item()
+        if max_val > dtype_info.max or min_val < dtype_info.min:
             raise ValueError("Values do not fit into the given dtype")
 
     return array.astype(target_dtype)
+
+
+def _expect_initialized(type_code: _UninitTypeCode) -> TypeCode:
+    if not isinstance(type_code, TypeCode):
+        raise TypeError("Type code is not initialized")
+    return type_code

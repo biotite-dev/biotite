@@ -49,7 +49,7 @@ _db_names = {
 # fmt: on
 
 
-def get_database_name(database):
+def get_database_name(database: str) -> str:
     """
     Map a common NCBI Entrez database name to an E-utility database
     name.
@@ -73,7 +73,7 @@ def get_database_name(database):
     return _db_names[database]
 
 
-def sanitize_database_name(db_name):
+def sanitize_database_name(db_name: str) -> str:
     """
     Map a common NCBI Entrez database name to an E-utility database
     name, return E-utility database name, or raise an exception if the

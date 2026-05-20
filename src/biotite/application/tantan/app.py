@@ -2,19 +2,24 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application.tantan"
 __author__ = "Patrick Kunzmann"
 __all__ = ["TantanApp"]
 
 import io
 from collections.abc import Sequence as SequenceABC
+from os import PathLike
 from tempfile import NamedTemporaryFile
 import numpy as np
 from biotite.application.application import AppState, requires_state
 from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.sequence.align.matrix import SubstitutionMatrix
 from biotite.sequence.alphabet import common_alphabet
 from biotite.sequence.io.fasta.file import FastaFile
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
+from biotite.typing import N, NDArray1
 
 MASKING_LETTER = "!"
 
@@ -61,9 +66,18 @@ class TantanApp(LocalApp):
              ^^^^^^^^^^^
     """
 
-    def __init__(self, sequence, matrix=None, bin_path="tantan"):
+    def __init__(
+        self,
+        sequence: NucleotideSequence
+        | ProteinSequence
+        | SequenceABC[NucleotideSequence | ProteinSequence],
+        matrix: SubstitutionMatrix | None = None,
+        bin_path: PathLike[str] | str = "tantan",
+    ) -> None:
         super().__init__(bin_path)
 
+        self._as_list: bool
+        self._sequences: SequenceABC[NucleotideSequence | ProteinSequence]
         if isinstance(sequence, SequenceABC):
             self._as_list = True
             self._sequences = sequence
@@ -72,7 +86,7 @@ class TantanApp(LocalApp):
             self._as_list = False
             self._sequences = [sequence]
 
-        self._is_protein = None
+        self._is_protein: bool | None = None
         for seq in self._sequences:
             if isinstance(seq, NucleotideSequence):
                 if self._is_protein is True:
@@ -110,18 +124,22 @@ class TantanApp(LocalApp):
 
         self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
 
-    def run(self):
+    def run(self) -> None:
         FastaFile.write_iter(
             self._in_file,
             ((f"sequence_{i:d}", str(seq)) for i, seq in enumerate(self._sequences)),
         )
         self._in_file.flush()
         if self._matrix is not None:
+            if self._matrix_file is None:
+                raise RuntimeError(
+                    "Matrix file is missing despite custom matrix being set"
+                )
             self._matrix_file.write(str(self._matrix))
             self._matrix_file.flush()
 
         args = []
-        if self._matrix is not None:
+        if self._matrix is not None and self._matrix_file is not None:
             args += ["-m", self._matrix_file.name]
         if self._is_protein:
             args += ["-p"]
@@ -129,7 +147,7 @@ class TantanApp(LocalApp):
         self.set_arguments(args)
         super().run()
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         super().evaluate()
 
         out_file = io.StringIO(self.get_stdout())
@@ -139,14 +157,14 @@ class TantanApp(LocalApp):
             array = np.frombuffer(masked_seq_string.encode("ASCII"), dtype=np.ubyte)
             self._masks.append(array == encoded_masking_letter)
 
-    def clean_up(self):
+    def clean_up(self) -> None:
         super().clean_up()
         cleanup_tempfile(self._in_file)
         if self._matrix_file is not None:
             cleanup_tempfile(self._matrix_file)
 
     @requires_state(AppState.JOINED)
-    def get_mask(self):
+    def get_mask(self) -> NDArray1[N, np.bool_] | list[NDArray1[N, np.bool_]]:
         """
         Get a boolean mask covering identified repeat regions of each
         input sequence.
@@ -165,7 +183,13 @@ class TantanApp(LocalApp):
             return self._masks[0]
 
     @staticmethod
-    def mask_repeats(sequence, matrix=None, bin_path="tantan"):
+    def mask_repeats(
+        sequence: NucleotideSequence
+        | ProteinSequence
+        | SequenceABC[NucleotideSequence | ProteinSequence],
+        matrix: SubstitutionMatrix | None = None,
+        bin_path: PathLike[str] | str = "tantan",
+    ) -> NDArray1[N, np.bool_] | list[NDArray1[N, np.bool_]]:
         """
         Mask repeat regions of the given input sequence(s).
 

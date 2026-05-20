@@ -7,6 +7,8 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["residue"]
 
 import functools
+from typing import Any
+from biotite.structure.atoms import AtomArray
 from biotite.structure.info.ccd import get_ccd
 
 # fmt: off
@@ -19,7 +21,7 @@ NON_HETERO_RESIDUES = set([
 # fmt: on
 
 
-def residue(res_name, allow_missing_coord=False):
+def residue(res_name: str, allow_missing_coord: bool = False) -> AtomArray[Any]:
     """
     Get an atom array, representing the residue with the given name.
 
@@ -82,7 +84,7 @@ def residue(res_name, allow_missing_coord=False):
 
 
 @functools.lru_cache(maxsize=100)
-def _residue(res_name, allow_missing_coord=False):
+def _residue(res_name: str, allow_missing_coord: bool = False) -> AtomArray[Any]:
     # Avoid circular import
     from biotite.structure.io.pdbx import get_component
 

@@ -28,17 +28,21 @@ import functools
 import json
 from numbers import Integral
 from pathlib import Path
+from typing import Any, overload
 import numpy as np
 import numpy.linalg as linalg
-from biotite.structure.atoms import repeat
+from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
 from biotite.structure.chains import get_chain_masks, get_chain_starts
 from biotite.structure.error import BadStructureError
 from biotite.structure.molecules import get_molecule_masks
 from biotite.structure.transform import AffineTransformation
 from biotite.structure.util import vector_dot
+from biotite.typing import XYZ, M, N, NDArray1, NDArray2, NDArray3
 
 
-def space_group_transforms(space_group):
+def space_group_transforms(
+    space_group: str,
+) -> list[AffineTransformation[int]]:
     """
     Get the coordinate transformations for a given space group.
 
@@ -145,7 +149,14 @@ def space_group_transforms(space_group):
     return transformations
 
 
-def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
+def vectors_from_unitcell(
+    len_a: float,
+    len_b: float,
+    len_c: float,
+    alpha: float,
+    beta: float,
+    gamma: float,
+) -> NDArray2[XYZ, XYZ, np.floating]:
     """
     Calculate the three vectors spanning a box from the unit cell
     lengths and angles.
@@ -190,7 +201,11 @@ def vectors_from_unitcell(len_a, len_b, len_c, alpha, beta, gamma):
     return box
 
 
-def unitcell_from_vectors(box):
+def unitcell_from_vectors(
+    box: NDArray2[XYZ, XYZ, np.floating],
+) -> tuple[
+    np.floating, np.floating, np.floating, np.floating, np.floating, np.floating
+]:
     """
     Get the unit cell lengths and angles from box vectors.
 
@@ -224,7 +239,13 @@ def unitcell_from_vectors(box):
     return len_a, len_b, len_c, alpha, beta, gamma
 
 
-def box_volume(box):
+@overload
+def box_volume(box: NDArray2[XYZ, XYZ, np.floating]) -> np.floating: ...
+@overload
+def box_volume(box: NDArray3[M, XYZ, XYZ, np.floating]) -> NDArray1[M, np.floating]: ...
+def box_volume(
+    box: NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating],
+) -> np.floating | NDArray1[M, np.floating]:
     """
     Get the volume of one ore multiple boxes.
 
@@ -242,7 +263,18 @@ def box_volume(box):
     return np.abs(linalg.det(box))
 
 
-def repeat_box(atoms, amount=1):
+@overload
+def repeat_box(
+    atoms: AtomArray[N], amount: int = 1
+) -> tuple[AtomArray[Any], NDArray1[Any, np.integer]]: ...
+@overload
+def repeat_box(
+    atoms: AtomArrayStack[M, N], amount: int = 1
+) -> tuple[AtomArrayStack[M, Any], NDArray1[Any, np.integer]]: ...
+def repeat_box(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+    amount: int = 1,
+) -> tuple[AtomArray[Any] | AtomArrayStack[M, Any], NDArray1[Any, np.integer]]:
     r"""
     Repeat the atoms in a box by duplicating and placing them in
     adjacent boxes.
@@ -361,28 +393,48 @@ def repeat_box(atoms, amount=1):
     if atoms.box is None:
         raise BadStructureError("Structure has no box")
 
-    repeat_coord, indices = repeat_box_coord(atoms.coord, atoms.box, amount)
-    # Unroll repeated coordinates for input to 'repeat()'
-    if repeat_coord.ndim == 2:
-        repeat_coord = repeat_coord.reshape(-1, atoms.array_length(), 3)
-    else:  # ndim == 3
-        repeat_coord = repeat_coord.reshape(
-            atoms.stack_depth(), -1, atoms.array_length(), 3
+    if isinstance(atoms, AtomArrayStack):
+        repeat_coord_3d, indices = repeat_box_coord(atoms.coord, atoms.box, amount)
+        repeat_coord_4d = np.swapaxes(
+            repeat_coord_3d.reshape(atoms.stack_depth(), -1, atoms.array_length(), 3),
+            0,
+            1,
         )
-        repeat_coord = np.swapaxes(repeat_coord, 0, 1)
-
-    repeated_atoms = repeat(atoms, repeat_coord)
+        repeated_atoms = repeat(atoms, repeat_coord_4d)  # pyright: ignore[reportCallIssue, reportArgumentType]
+    else:
+        repeat_coord_2d, indices = repeat_box_coord(atoms.coord, atoms.box, amount)
+        repeat_coord = repeat_coord_2d.reshape(-1, atoms.array_length(), 3)
+        repeated_atoms = repeat(atoms, repeat_coord)  # pyright: ignore[reportCallIssue, reportArgumentType]
     if "sym_id" in atoms.get_annotation_categories():
         max_sym_id = np.max(atoms.sym_id)
         # for the first repeat, (max_sym_id + 1) is added,
         # for the second repeat 2*(max_sym_id + 1) etc.
-        repeated_atoms.sym_id += (max_sym_id + 1) * (
+        repeated_atoms.sym_id += (max_sym_id + 1) * (  # pyright: ignore[reportOperatorIssue]
             np.arange(repeated_atoms.array_length()) // atoms.array_length()
         )
     return repeated_atoms, indices
 
 
-def repeat_box_coord(coord, box, amount=1):
+@overload
+def repeat_box_coord(
+    coord: NDArray2[N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating],
+    amount: int = 1,
+) -> tuple[NDArray2[Any, XYZ, np.floating], NDArray1[Any, np.integer]]: ...
+@overload
+def repeat_box_coord(
+    coord: NDArray3[M, N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating],
+    amount: int = 1,
+) -> tuple[NDArray3[M, Any, XYZ, np.floating], NDArray1[Any, np.integer]]: ...
+def repeat_box_coord(
+    coord: NDArray2[N, XYZ, np.floating] | NDArray3[M, N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating],
+    amount: int = 1,
+) -> tuple[
+    NDArray2[Any, XYZ, np.floating] | NDArray3[M, Any, XYZ, np.floating],
+    NDArray1[Any, np.integer],
+]:
     r"""
     Similar to :func:`repeat_box()`, repeat the coordinates in a box by
     duplicating and placing them in adjacent boxes.
@@ -440,7 +492,20 @@ def repeat_box_coord(coord, box, amount=1):
     )
 
 
-def move_inside_box(coord, box):
+@overload
+def move_inside_box(
+    coord: NDArray2[N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating],
+) -> NDArray2[N, XYZ, np.floating]: ...
+@overload
+def move_inside_box(
+    coord: NDArray3[M, N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating],
+) -> NDArray3[M, N, XYZ, np.floating]: ...
+def move_inside_box(
+    coord: NDArray2[N, XYZ, np.floating] | NDArray3[M, N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating],
+) -> NDArray2[N, XYZ, np.floating] | NDArray3[M, N, XYZ, np.floating]:
     r"""
     Move all coordinates into the given box, with the box vectors
     originating at *(0,0,0)*.
@@ -484,12 +549,15 @@ def move_inside_box(coord, box):
      [1 2 4]
      [6 8 6]]
     """
-    fractions = coord_to_fraction(coord, box)
+    fractions = coord_to_fraction(coord, box)  # pyright: ignore[reportCallIssue, reportArgumentType]
     fractions_rem = fractions % 1
-    return fraction_to_coord(fractions_rem, box)
+    return fraction_to_coord(fractions_rem, box)  # pyright: ignore[reportCallIssue, reportArgumentType]
 
 
-def remove_pbc(atoms, selection=None):
+def remove_pbc(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+    selection: NDArray1[N, np.bool_] | None = None,
+) -> AtomArray[N] | AtomArrayStack[M, N]:
     """
     Remove segmentation caused by periodic boundary conditions from each
     molecule in the given structure.
@@ -548,13 +616,26 @@ def remove_pbc(atoms, selection=None):
         )
         # Put center of molecule into box
         center = centroid(new_atoms.coord[..., mask, :])[..., np.newaxis, :]
-        center_in_box = move_inside_box(center, new_atoms.box)
+        center_in_box = move_inside_box(center, new_atoms.box)  # pyright: ignore[reportCallIssue, reportArgumentType]
         new_atoms.coord[..., mask, :] += center_in_box - center
 
     return new_atoms
 
 
-def remove_pbc_from_coord(coord, box):
+@overload
+def remove_pbc_from_coord(
+    coord: NDArray2[N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating],
+) -> NDArray2[N, XYZ, np.floating]: ...
+@overload
+def remove_pbc_from_coord(
+    coord: NDArray3[M, N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating],
+) -> NDArray3[M, N, XYZ, np.floating]: ...
+def remove_pbc_from_coord(
+    coord: NDArray2[N, XYZ, np.floating] | NDArray3[M, N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating],
+) -> NDArray2[N, XYZ, np.floating] | NDArray3[M, N, XYZ, np.floating]:
     """
     Remove segmentation caused by periodic boundary conditions from
     given coordinates.
@@ -610,10 +691,36 @@ def remove_pbc_from_coord(coord, box):
     sanitized_coord = np.zeros(coord.shape, coord.dtype)
     sanitized_coord[..., 0:1, :] = base_coord
     sanitized_coord[..., 1:, :] = base_coord + absolute_disp
-    return sanitized_coord
+    return sanitized_coord  # pyright: ignore[reportReturnType]
 
 
-def coord_to_fraction(coord, box):
+@overload
+def coord_to_fraction(
+    coord: NDArray1[XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating],
+) -> NDArray1[XYZ, np.floating]: ...
+@overload
+def coord_to_fraction(
+    coord: NDArray2[N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating],
+) -> NDArray2[N, XYZ, np.floating]: ...
+@overload
+def coord_to_fraction(
+    coord: NDArray3[M, N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating],
+) -> NDArray3[M, N, XYZ, np.floating]: ...
+def coord_to_fraction(
+    coord: (
+        NDArray1[XYZ, np.floating]
+        | NDArray2[N, XYZ, np.floating]
+        | NDArray3[M, N, XYZ, np.floating]
+    ),
+    box: NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating],
+) -> (
+    NDArray1[XYZ, np.floating]
+    | NDArray2[N, XYZ, np.floating]
+    | NDArray3[M, N, XYZ, np.floating]
+):
     """
     Transform coordinates to fractions of box vectors.
 
@@ -658,7 +765,33 @@ def coord_to_fraction(coord, box):
     return np.matmul(coord, linalg.inv(box))
 
 
-def fraction_to_coord(fraction, box):
+@overload
+def fraction_to_coord(
+    fraction: NDArray1[XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating],
+) -> NDArray1[XYZ, np.floating]: ...
+@overload
+def fraction_to_coord(
+    fraction: NDArray2[N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating],
+) -> NDArray2[N, XYZ, np.floating]: ...
+@overload
+def fraction_to_coord(
+    fraction: NDArray3[M, N, XYZ, np.floating],
+    box: NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating],
+) -> NDArray3[M, N, XYZ, np.floating]: ...
+def fraction_to_coord(
+    fraction: (
+        NDArray1[XYZ, np.floating]
+        | NDArray2[N, XYZ, np.floating]
+        | NDArray3[M, N, XYZ, np.floating]
+    ),
+    box: NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating],
+) -> (
+    NDArray1[XYZ, np.floating]
+    | NDArray2[N, XYZ, np.floating]
+    | NDArray3[M, N, XYZ, np.floating]
+):
     """
     Transform fractions of box vectors to coordinates.
 
@@ -685,7 +818,13 @@ def fraction_to_coord(fraction, box):
     return np.matmul(fraction, box)
 
 
-def is_orthogonal(box):
+@overload
+def is_orthogonal(box: NDArray2[XYZ, XYZ, np.floating]) -> np.bool_: ...
+@overload
+def is_orthogonal(box: NDArray3[M, XYZ, XYZ, np.floating]) -> NDArray1[M, np.bool_]: ...
+def is_orthogonal(
+    box: NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating],
+) -> np.bool_ | NDArray1[M, np.bool_]:
     """
     Check, whether a box or multiple boxes is/are orthogonal.
 
@@ -719,6 +858,6 @@ def is_orthogonal(box):
 
 
 @functools.cache
-def _get_transformation_data():
+def _get_transformation_data() -> dict[str, Any]:
     with open(Path(__file__).parent / "spacegroups.json") as file:
         return json.load(file)

@@ -2,13 +2,20 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 __all__ = ["CigarOp", "read_alignment_from_cigar", "write_alignment_to_cigar"]
 
 import enum
+from collections.abc import Iterable
+from collections.abc import Sequence as SequenceABC
+from typing import Literal, overload
 import numpy as np
 from biotite.sequence.align.alignment import Alignment, get_codes
+from biotite.sequence.sequence import Sequence
+from biotite.typing import C2, K, NDArray1, NDArray2
 
 
 class CigarOp(enum.IntEnum):
@@ -28,7 +35,7 @@ class CigarOp(enum.IntEnum):
     BACK = 9
 
     @staticmethod
-    def from_cigar_symbol(symbol):
+    def from_cigar_symbol(symbol: str) -> CigarOp:
         """
         Get the enum value from the CIGAR symbol.
 
@@ -44,7 +51,7 @@ class CigarOp(enum.IntEnum):
         """
         return _str_to_op[symbol]
 
-    def to_cigar_symbol(self):
+    def to_cigar_symbol(self) -> str:
         return _op_to_str[self]
 
 
@@ -63,7 +70,12 @@ _str_to_op = {
 _op_to_str = {v: k for k, v in _str_to_op.items()}
 
 
-def read_alignment_from_cigar(cigar, position, reference_sequence, segment_sequence):
+def read_alignment_from_cigar(
+    cigar: str | NDArray2[K, C2, np.integer] | SequenceABC[tuple[CigarOp, int]],
+    position: int,
+    reference_sequence: Sequence[str],
+    segment_sequence: Sequence[str],
+) -> Alignment:
     """
     Create an :class:`Alignment` from a CIGAR string.
 
@@ -191,16 +203,39 @@ def read_alignment_from_cigar(cigar, position, reference_sequence, segment_seque
     return Alignment([reference_sequence, segment_sequence], trace)
 
 
+@overload
 def write_alignment_to_cigar(
-    alignment,
-    reference_index=0,
-    segment_index=1,
-    introns=(),
-    distinguish_matches=False,
-    hard_clip=False,
-    include_terminal_gaps=False,
-    as_string=True,
-):
+    alignment: Alignment,
+    reference_index: int = 0,
+    segment_index: int = 1,
+    introns: Iterable[tuple[int, int]] = (),
+    distinguish_matches: bool = False,
+    hard_clip: bool = False,
+    include_terminal_gaps: bool = False,
+    as_string: Literal[True] = True,
+) -> str: ...
+@overload
+def write_alignment_to_cigar(
+    alignment: Alignment,
+    reference_index: int = 0,
+    segment_index: int = 1,
+    introns: Iterable[tuple[int, int]] = (),
+    distinguish_matches: bool = False,
+    hard_clip: bool = False,
+    include_terminal_gaps: bool = False,
+    *,
+    as_string: Literal[False],
+) -> NDArray2[K, C2, np.integer]: ...
+def write_alignment_to_cigar(
+    alignment: Alignment,
+    reference_index: int = 0,
+    segment_index: int = 1,
+    introns: Iterable[tuple[int, int]] = (),
+    distinguish_matches: bool = False,
+    hard_clip: bool = False,
+    include_terminal_gaps: bool = False,
+    as_string: bool = True,
+) -> str | NDArray2[K, C2, np.integer]:
     """
     Convert an :class:`Alignment` into a CIGAR string.
 
@@ -357,7 +392,9 @@ def write_alignment_to_cigar(
         return op_tuples
 
 
-def _remove_terminal_segment_gaps(alignment, segment_index):
+def _remove_terminal_segment_gaps(
+    alignment: Alignment, segment_index: int
+) -> Alignment:
     """
     Remove terminal gaps in the segment sequence.
     """
@@ -365,7 +402,7 @@ def _remove_terminal_segment_gaps(alignment, segment_index):
     return alignment[no_gap_pos[0] : no_gap_pos[-1] + 1]
 
 
-def _find_clipped_bases(alignment, segment_index):
+def _find_clipped_bases(alignment: Alignment, segment_index: int) -> tuple[int, int]:
     """
     Find the number of clipped bases at the start and end of the segment.
     """
@@ -383,7 +420,9 @@ def _find_clipped_bases(alignment, segment_index):
     return start_clip_length, end_clip_length
 
 
-def _aggregate_consecutive(operations):
+def _aggregate_consecutive(
+    operations: NDArray1[K, np.integer],
+) -> NDArray2[K, C2, np.integer]:
     """
     Aggregate consecutive operations of the same type.
     """
@@ -396,7 +435,7 @@ def _aggregate_consecutive(operations):
     return np.stack((ops, length), axis=-1)
 
 
-def _cigar_from_op_tuples(op_tuples):
+def _cigar_from_op_tuples(op_tuples: NDArray2[K, C2, np.integer]) -> str:
     """
     Create a CIGAR string from a list of BAM integer tuples.
 
@@ -409,7 +448,7 @@ def _cigar_from_op_tuples(op_tuples):
     return cigar
 
 
-def _op_tuples_from_cigar(cigar):
+def _op_tuples_from_cigar(cigar: str) -> NDArray2[K, C2, np.integer]:
     """
     Create a list of tuples from a CIGAR string.
     """

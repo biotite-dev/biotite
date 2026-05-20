@@ -11,17 +11,23 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["to_sequence"]
 
 import numpy as np
+from biotite.sequence import Sequence
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
+from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.chains import get_chain_starts
 from biotite.structure.error import BadStructureError
 from biotite.structure.info.groups import amino_acid_names, nucleotide_names
 from biotite.structure.info.misc import one_letter_code
 from biotite.structure.residues import get_residues
+from biotite.typing import K, M, N, NDArray1
 
 HETERO_PLACEHOLDER = "."
 
 
-def to_sequence(atoms, allow_hetero=False):
+def to_sequence(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+    allow_hetero: bool = False,
+) -> tuple[list[Sequence], NDArray1[K, np.integer]]:
     """
     Convert each chain in a structure into a sequence.
 

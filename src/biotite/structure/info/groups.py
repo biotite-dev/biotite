@@ -45,15 +45,15 @@ _CARBOHYDRATE_TYPES = [
 
 
 @functools.cache
-def amino_acid_names():
+def amino_acid_names() -> list[str]:
     """
-    Get a tuple of all amino acid residues according to the PDB
+    Get a list of all amino acid residues according to the PDB
     *Chemical Component Dictionary*.
     :footcite:`Westbrook2015`
 
     Returns
     -------
-    amino_acid_names : tuple of str
+    amino_acid_names : list of str
         A list of codes containing residues that are
         peptide monomers.
 
@@ -66,15 +66,15 @@ def amino_acid_names():
 
 
 @functools.cache
-def nucleotide_names():
+def nucleotide_names() -> list[str]:
     """
-    Get a tuple of all nucleotide residues according to the
+    Get a list of all nucleotide residues according to the
     PDB *Chemical Component Dictionary*.
     :footcite:`Westbrook2015`
 
     Returns
     -------
-    nucleotide_names : tuple of str
+    nucleotide_names : list of str
         A list of codes containing residues that are
         DNA/RNA monomers.
 
@@ -87,15 +87,15 @@ def nucleotide_names():
 
 
 @functools.cache
-def carbohydrate_names():
+def carbohydrate_names() -> list[str]:
     """
-    Get a tuple of all carbohydrate residues according to the
+    Get a list of all carbohydrate residues according to the
     PDB *Chemical Component Dictionary*.
     :footcite:`Westbrook2015`
 
     Returns
     -------
-    carbohydrate_names : tuple of str
+    carbohydrate_names : list of str
         A list of codes containing residues that are
         saccharide monomers.
 
@@ -108,15 +108,15 @@ def carbohydrate_names():
 
 
 @functools.cache
-def ion_names():
+def ion_names() -> list[str]:
     """
-    Get a tuple of all residues in the
+    Get a list of all residues in the
     PDB *Chemical Component Dictionary* (CCD) that are monoatomic ions.
     :footcite:`Westbrook2015`
 
     Returns
     -------
-    ion_names : tuple of str
+    ion_names : list of str
         A list of codes containing residues that are monoatomic ions.
 
     References
@@ -137,7 +137,7 @@ def ion_names():
     ion_comp_ids = []
     for comp_id in comp_ids.tolist():
         chem_comp_atom = get_from_ccd("chem_comp_atom", comp_id)
-        if chem_comp_atom.row_count != 1:
+        if chem_comp_atom is None or chem_comp_atom.row_count != 1:
             continue
         if chem_comp_atom["charge"].as_item() == 0:
             continue
@@ -146,7 +146,7 @@ def ion_names():
     return ion_comp_ids
 
 
-def _get_group_members(match_types):
+def _get_group_members(match_types: list[str]) -> list[str]:
     """
     Identify component IDs that matches a given component *type* from the CCD.
 

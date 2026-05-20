@@ -2,33 +2,40 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
 __all__ = ["plot_plasmid_map"]
 
 import re
 import warnings
+from collections.abc import Callable
+from typing import Any
 import numpy as np
-from biotite.sequence.annotation import Feature, Location
+from matplotlib.projections.polar import PolarAxes
+from biotite.sequence.annotation import Annotation, Feature, Location
+from biotite.typing import MplColor
 from biotite.visualize import colors
 
 
 def plot_plasmid_map(
-    axes,
-    annotation,
-    plasmid_size,
-    tick_length=0.02,
-    tick_step=200,
-    ring_width=0.01,
-    feature_width=0.06,
-    spacing=0.01,
-    arrow_head_length=0.04,
-    label=None,
-    face_properties=None,
-    label_properties=None,
-    omit_oversized_labels=True,
-    feature_formatter=None,
-):
+    axes: PolarAxes,
+    annotation: Annotation,
+    plasmid_size: int,
+    tick_length: float = 0.02,
+    tick_step: int = 200,
+    ring_width: float = 0.01,
+    feature_width: float = 0.06,
+    spacing: float = 0.01,
+    arrow_head_length: float = 0.04,
+    label: str | None = None,
+    face_properties: dict[str, Any] | None = None,
+    label_properties: dict[str, Any] | None = None,
+    omit_oversized_labels: bool = True,
+    feature_formatter: Callable[[Feature], tuple[bool, MplColor, MplColor, str | None]]
+    | None = None,
+) -> None:
     """
     Plot a plasmid map using the sequence features in the given
     :class:`Annotation`.
@@ -215,26 +222,29 @@ def plot_plasmid_map(
 try:
     # Only create these classes when matplotlib is installed
     from matplotlib.artist import Artist
+    from matplotlib.backend_bases import RendererBase
     from matplotlib.patches import Polygon, Rectangle
     from matplotlib.transforms import Bbox
 
     class PlasmidMap(Artist):
         def __init__(
             self,
-            axes,
-            zorder,
-            features,
-            plasmid_size,
-            radius,
-            feature_width,
-            spacing,
-            arrow_head_length,
-            label,
-            face_properties,
-            label_properties,
-            omit_oversized_labels,
-            feature_formatter,
-        ):
+            axes: PolarAxes,
+            zorder: float,
+            features: list[Feature],
+            plasmid_size: int,
+            radius: float,
+            feature_width: float,
+            spacing: float,
+            arrow_head_length: float,
+            label: str | None,
+            face_properties: dict[str, Any] | None,
+            label_properties: dict[str, Any] | None,
+            omit_oversized_labels: bool,
+            feature_formatter: Callable[
+                [Feature], tuple[bool, MplColor, MplColor, str | None]
+            ],
+        ) -> None:
             super().__init__()
             self._axes = axes
             self.zorder = zorder
@@ -244,7 +254,7 @@ try:
             self._feature_width = feature_width
             self._spacing = spacing
 
-            self._all_indicators = []
+            self._all_indicators: list[list[FeatureIndicator]] = []
             for feature in features:
                 indicators_for_feature = []
                 for loc in feature.locs:
@@ -268,7 +278,7 @@ try:
                     indicators_for_feature.append(indicator)
                 self._all_indicators.append(indicators_for_feature)
 
-        def draw(self, renderer, *args, **kwargs):
+        def draw(self, renderer: RendererBase, *args: Any, **kwargs: Any) -> None:
             # Find the maximum amount of feature rows
             # (used for overlapping features)
             row_count = int(self._radius // (self._feature_width + self._spacing))
@@ -343,17 +353,19 @@ try:
     class FeatureIndicator(Artist):
         def __init__(
             self,
-            axes,
-            zorder,
-            feature,
-            loc,
-            bbox,
-            head_length,
-            arrow_properties,
-            label_properties,
-            omit_oversized_labels,
-            feature_formatter,
-        ):
+            axes: PolarAxes,
+            zorder: float,
+            feature: Feature,
+            loc: Location,
+            bbox: Bbox,
+            head_length: float,
+            arrow_properties: dict[str, Any] | None,
+            label_properties: dict[str, Any] | None,
+            omit_oversized_labels: bool,
+            feature_formatter: Callable[
+                [Feature], tuple[bool, MplColor, MplColor, str | None]
+            ],
+        ) -> None:
             super().__init__()
             self._axes = axes
             self.zorder = zorder
@@ -361,6 +373,8 @@ try:
             self._bbox = bbox
             self._head_length = head_length
             self._omit_oversized_labels = omit_oversized_labels
+            arrow_properties = {} if arrow_properties is None else arrow_properties
+            label_properties = {} if label_properties is None else label_properties
 
             # Determine how to draw the feature
             directional, face_color, label_color, label = feature_formatter(feature)
@@ -368,61 +382,60 @@ try:
             # Draw arrow as composition of a rectangle and a triangle,
             # as FancyArrow does not properly work for polar plots
 
-            self._arrow_tail = axes.add_patch(
-                Rectangle(
+            self._arrow_tail: Rectangle = Rectangle(
+                # Set positions in 'draw()' method
+                (0, 0),
+                0,
+                0,
+                # Line width is set to 1 to avoid strange artifact in
+                # the transition from rectangle (tail) to polygon (head)
+                color=face_color,
+                linewidth=1,
+                zorder=self.zorder + 1,
+                **arrow_properties,
+            )
+            axes.add_patch(self._arrow_tail)
+
+            self._arrow_head: Polygon | None
+            if directional:
+                # Only draw any arrow head when feature has a direction,
+                # otherwise simply draw the tail (rectangle)
+                self._arrow_head = Polygon(
                     # Set positions in 'draw()' method
-                    (0, 0),
-                    0,
-                    0,
-                    # Line width is set to 1 to avoid strange artifact in
-                    # the transition from rectangle (tail) to polygon (head)
+                    [(0, 0), (0, 0), (0, 0)],
                     color=face_color,
                     linewidth=1,
                     zorder=self.zorder + 1,
                     **arrow_properties,
                 )
-            )
-
-            if directional:
-                # Only draw any arrow head when feature has a direction,
-                # otherwise simply draw the tail (rectangle)
-                self._arrow_head = axes.add_patch(
-                    Polygon(
-                        # Set positions in 'draw()' method
-                        [(0, 0), (0, 0), (0, 0)],
-                        color=face_color,
-                        linewidth=1,
-                        zorder=self.zorder + 1,
-                        **arrow_properties,
-                    )
-                )
+                axes.add_patch(self._arrow_head)
             else:
                 self._arrow_head = None
 
+            self._label: "CurvedText | None"
             if label is not None:
                 label_properties["color"] = label_color
-                self._label = axes.add_artist(
-                    CurvedText(
-                        # Set positions in 'draw()' method
-                        axes,
-                        self.zorder + 1,
-                        0,
-                        0,
-                        label,
-                        label_properties,
-                    )
+                self._label = CurvedText(
+                    # Set positions in 'draw()' method
+                    axes,
+                    self.zorder + 1,
+                    0,
+                    0,
+                    label,
+                    label_properties,
                 )
+                axes.add_artist(self._label)
             else:
                 self._label = None
 
-        def set_bbox(self, bbox):
+        def set_bbox(self, bbox: Bbox) -> None:
             self._bbox = bbox
             center_x = (bbox.x0 + bbox.x1) / 2
             center_y = (bbox.y0 + bbox.y1) / 2
             if self._label is not None:
                 self._label.set_position(center_x, center_y)
 
-        def draw(self, renderer, *args, **kwargs):
+        def draw(self, renderer: RendererBase, *args: Any, **kwargs: Any) -> None:
             bbox = self._bbox
             center_y = (bbox.y0 + bbox.y1) / 2
 
@@ -474,7 +487,15 @@ try:
                     self._label.set_visible(True)
 
     class CurvedText(Artist):
-        def __init__(self, axes, zorder, angle, radius, string, text_properties):
+        def __init__(
+            self,
+            axes: PolarAxes,
+            zorder: float,
+            angle: float,
+            radius: float,
+            string: str,
+            text_properties: dict[str, Any],
+        ) -> None:
             super().__init__()
             self._axes = axes
             self.zorder = zorder
@@ -495,19 +516,19 @@ try:
                 )
                 self._texts.append(text)
 
-        def set_visible(self, visible):
+        def set_visible(self, visible: bool) -> None:
             super().set_visible(visible)
             for text in self._texts:
                 text.set_visible(visible)
 
-        def set_position(self, angle, radius):
+        def set_position(self, angle: float, radius: float) -> None:
             self._angle = angle
             self._radius = radius
 
-        def get_total_angle(self, renderer):
+        def get_total_angle(self, renderer: RendererBase) -> float:
             return np.sum(self.get_word_angles(renderer))
 
-        def get_word_angles(self, renderer):
+        def get_word_angles(self, renderer: RendererBase) -> list[float]:
             ax_px_radius = self._axes.get_window_extent(renderer).width / 2
             ax_unit_radius = self._axes.get_ylim()[1]
             circle_px_circumference = (
@@ -535,7 +556,7 @@ try:
                 text.set_visible(orig_visible)
             return angles
 
-        def draw(self, renderer, *args, **kwargs):
+        def draw(self, renderer: RendererBase, *args: Any, **kwargs: Any) -> None:
             angles = self.get_word_angles(renderer)
             total_angle = np.sum(angles)
 
@@ -575,7 +596,7 @@ except ImportError:
     pass
 
 
-def _loc_to_rad(loc, plasmid_size):
+def _loc_to_rad(loc: int, plasmid_size: int) -> float:
     if loc > plasmid_size:
         raise ValueError(
             f"Location {loc} is larger then the plasmid size of {plasmid_size}"
@@ -584,25 +605,14 @@ def _loc_to_rad(loc, plasmid_size):
     return ((loc - 1) / plasmid_size) * 2 * np.pi
 
 
-def _rad_to_loc(rad, plasmid_size):
-    # Location starts at 1 -> + 1
-    return rad / (2 * np.pi) * plasmid_size + 1
-
-
-def _merge_over_periodic_boundary(feature, plasmid_size):
+def _merge_over_periodic_boundary(feature: Feature, plasmid_size: int) -> Feature:
     if len(feature.locs) == 1:
         # Only one location -> no merge possible
         return feature
-    first_loc = None
-    last_loc = None
-    # Find total first location of the feature
-    for loc in feature.locs:
-        if first_loc is None or loc.first < first_loc.first:
-            first_loc = loc
-    # Find total last location of the feature
-    for loc in feature.locs:
-        if last_loc is None or loc.last > last_loc.last:
-            last_loc = loc
+    locs_list = list(feature.locs)
+    # Find total first and last location of the feature
+    first_loc = min(locs_list, key=lambda loc: loc.first)
+    last_loc = max(locs_list, key=lambda loc: loc.last)
     # If the first and last location meet at the periodic boundary of
     # the plasmid -> merge them
     if (
@@ -632,7 +642,7 @@ def _merge_over_periodic_boundary(feature, plasmid_size):
 separators = re.compile(r"\s|_|-")
 
 
-def _split_into_words(string):
+def _split_into_words(string: str) -> list[str]:
     match_indices = sorted([match.start() for match in separators.finditer(string)])
     current_index = 0
     words = []
@@ -648,7 +658,9 @@ def _split_into_words(string):
     return words
 
 
-def _default_feature_formatter(f):
+def _default_feature_formatter(
+    f: Feature,
+) -> tuple[bool, MplColor, MplColor, str | None]:
     """
     Returns
     -------
@@ -693,7 +705,7 @@ def _default_feature_formatter(f):
             return True, colors["dimgreen"], "black", f.qual.get("note")
 
         # Terminators
-        elif f.qual.get("regulatory_class") in "terminator":
+        elif f.qual.get("regulatory_class") == "terminator":
             return False, "firebrick", "white", f.qual.get("note")
 
         # RBS

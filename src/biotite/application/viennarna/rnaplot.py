@@ -2,17 +2,20 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application.viennarna"
 __author__ = "Tom David Müller"
 __all__ = ["RNAplotApp"]
 
 from enum import IntEnum
-from os import remove
+from os import PathLike, remove
 from tempfile import NamedTemporaryFile
 import numpy as np
 from biotite.application.application import AppState, requires_state
 from biotite.application.localapp import LocalApp, cleanup_tempfile
 from biotite.structure.dotbracket import dot_bracket as dot_bracket_
+from biotite.typing import C2, N, NDArray2
 
 
 class RNAplotApp(LocalApp):
@@ -62,24 +65,24 @@ class RNAplotApp(LocalApp):
         to the official *RNAplot* orientation.
         """
 
-        RADIAL = (0,)
-        NAVIEW = (1,)
-        CIRCULAR = (2,)
-        RNATURTLE = (3,)
+        RADIAL = 0
+        NAVIEW = 1
+        CIRCULAR = 2
+        RNATURTLE = 3
         RNAPUZZLER = 4
 
     def __init__(
         self,
-        dot_bracket=None,
-        base_pairs=None,
-        length=None,
-        layout_type=Layout.NAVIEW,
-        bin_path="RNAplot",
-    ):
+        dot_bracket: str | None = None,
+        base_pairs: NDArray2[N, C2, np.integer] | None = None,
+        length: int | None = None,
+        layout_type: Layout = Layout.NAVIEW,
+        bin_path: PathLike[str] | str = "RNAplot",
+    ) -> None:
         super().__init__(bin_path)
 
         if dot_bracket is not None:
-            self._dot_bracket = dot_bracket
+            self._dot_bracket: str = dot_bracket
         elif (base_pairs is not None) and (length is not None):
             self._dot_bracket = dot_bracket_(
                 base_pairs, length, max_pseudoknot_order=0
@@ -91,10 +94,10 @@ class RNAplotApp(LocalApp):
             )
 
         # Get the value of the enum type
-        self._layout_type = str(int(layout_type))
+        self._layout_type: str = str(int(layout_type))
         self._in_file = NamedTemporaryFile("w", suffix=".fold", delete=False)
 
-    def run(self):
+    def run(self) -> None:
         self._in_file.write("N" * len(self._dot_bracket) + "\n")
         self._in_file.write(self._dot_bracket)
         self._in_file.flush()
@@ -107,17 +110,17 @@ class RNAplotApp(LocalApp):
         )  # fmt: skip
         super().run()
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         super().evaluate()
         self._coordinates = np.loadtxt("rna.ss", usecols=(2, 3))
 
-    def clean_up(self):
+    def clean_up(self) -> None:
         super().clean_up()
         cleanup_tempfile(self._in_file)
         remove("rna.ss")
 
     @requires_state(AppState.CREATED)
-    def set_layout_type(self, layout_type):
+    def set_layout_type(self, layout_type: Layout) -> None:
         """
         Adjust the layout type for the plot according to the *RNAplot*
         documentation.
@@ -130,7 +133,7 @@ class RNAplotApp(LocalApp):
         self._layout_type = str(layout_type)
 
     @requires_state(AppState.JOINED)
-    def get_coordinates(self):
+    def get_coordinates(self) -> NDArray2[N, C2, np.floating]:
         """
         Get coordinates for a 2D representation of the input structure.
 
@@ -158,12 +161,12 @@ class RNAplotApp(LocalApp):
 
     @staticmethod
     def compute_coordinates(
-        dot_bracket=None,
-        base_pairs=None,
-        length=None,
-        layout_type=Layout.NAVIEW,
-        bin_path="RNAplot",
-    ):
+        dot_bracket: str | None = None,
+        base_pairs: NDArray2[N, C2, np.integer] | None = None,
+        length: int | None = None,
+        layout_type: Layout = Layout.NAVIEW,
+        bin_path: PathLike[str] | str = "RNAplot",
+    ) -> NDArray2[N, C2, np.floating]:
         """
         Get coordinates for a 2D representation of any unknotted RNA
         structure using *ViennaRNA's* *RNAplot*.

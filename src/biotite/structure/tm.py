@@ -15,16 +15,21 @@ __all__ = [
 ]
 
 import itertools
+from typing import Any, Literal
 import numpy as np
 from biotite.sequence.align.alignment import get_codes, remove_gaps
 from biotite.sequence.align.matrix import SubstitutionMatrix
 from biotite.sequence.align.pairwise import align_optimal
 from biotite.sequence.seqtypes import PurePositionalSequence
+from biotite.sequence.sequence import Sequence
+from biotite.structure.atoms import AtomArray
 from biotite.structure.filter import filter_amino_acids
 from biotite.structure.geometry import distance
 from biotite.structure.residues import get_residue_count
 from biotite.structure.superimpose import superimpose
+from biotite.structure.transform import AffineTransformation
 from biotite.structure.util import coord_for_atom_name_per_residue
+from biotite.typing import C2, XYZ, K, M, N, NDArray1, NDArray2
 
 # Minimum value for d0
 # This is not part of the explanation in the paper, but it is implemented in TM-align
@@ -38,8 +43,13 @@ _SCORE_SCALING = 100
 
 
 def tm_score(
-    reference, subject, reference_indices, subject_indices, reference_length="shorter"
-):
+    reference: AtomArray[Any],
+    subject: AtomArray[Any],
+    reference_indices: NDArray1[Any, np.integer],
+    subject_indices: NDArray1[Any, np.integer],
+    reference_length: Literal["shorter", "longer", "reference", "subject"]
+    | int = "shorter",
+) -> float:
     """
     Compute the *TM*-score for the given protein structures. :footcite:`Zhang2004`
 
@@ -108,13 +118,19 @@ def tm_score(
 
 
 def superimpose_structural_homologs(
-    fixed,
-    mobile,
-    structural_alphabet="3di",
-    substitution_matrix=None,
-    max_iterations=float("inf"),
-    reference_length="shorter",
-):
+    fixed: AtomArray[Any],
+    mobile: AtomArray[N],
+    structural_alphabet: Literal["3di", "pb"] = "3di",
+    substitution_matrix: SubstitutionMatrix | None = None,
+    max_iterations: int | float = float("inf"),
+    reference_length: Literal["shorter", "longer", "reference", "subject"]
+    | int = "shorter",
+) -> tuple[
+    AtomArray[N],
+    AffineTransformation[int],
+    NDArray1[K, np.integer],
+    NDArray1[K, np.integer],
+]:
     """
     Superimpose two remotely homologous protein structures.
 
@@ -290,7 +306,7 @@ def superimpose_structural_homologs(
     return transform.apply(mobile), transform, fixed_anchors, mobile_anchors
 
 
-def _concatenate_sequences(sequences):
+def _concatenate_sequences(sequences: Any) -> Any:
     """
     Concatenate the sequences into a single sequence.
 
@@ -309,12 +325,12 @@ def _concatenate_sequences(sequences):
 
 
 def _filter_by_anchors(
-    fixed_ca_coord,
-    mobile_ca_coord,
-    anchors,
-    superimposed_ca_coord=None,
-    reference_length=None,
-):
+    fixed_ca_coord: NDArray2[N, XYZ, np.floating],
+    mobile_ca_coord: NDArray2[N, XYZ, np.floating],
+    anchors: NDArray2[K, C2, np.integer],
+    superimposed_ca_coord: NDArray2[M, XYZ, np.floating] | None = None,
+    reference_length: int | None = None,
+) -> tuple[NDArray2[K, XYZ, np.floating], NDArray2[K, XYZ, np.floating]]:
     """
     Filter the coordinates by the anchor indices.
 
@@ -350,7 +366,11 @@ def _filter_by_anchors(
     return anchor_fixed_coord, anchor_mobile_coord
 
 
-def _find_anchors_structure_based(fixed_seq, mobile_seq, substitution_matrix):
+def _find_anchors_structure_based(
+    fixed_seq: Sequence,
+    mobile_seq: Sequence,
+    substitution_matrix: SubstitutionMatrix,
+) -> NDArray2[K, N, np.integer]:
     alignment = align_optimal(
         fixed_seq,
         mobile_seq,
@@ -366,17 +386,17 @@ def _find_anchors_structure_based(fixed_seq, mobile_seq, substitution_matrix):
     score_matrix = substitution_matrix.score_matrix()
     anchor_mask = score_matrix[alignment_codes[0], alignment_codes[1]] > 0
     anchors = alignment.trace[anchor_mask]
-    return anchors
+    return anchors  # pyright: ignore[reportReturnType]
 
 
 def _find_anchors_hybrid(
-    fixed_seq,
-    mobile_seq,
-    fixed_ca_coord,
-    mobile_ca_coord,
-    substitution_matrix,
-    reference_length,
-):
+    fixed_seq: Sequence,
+    mobile_seq: Sequence,
+    fixed_ca_coord: NDArray2[N, XYZ, np.floating],
+    mobile_ca_coord: NDArray2[N, XYZ, np.floating],
+    substitution_matrix: SubstitutionMatrix,
+    reference_length: int,
+) -> NDArray2[K, N, np.integer]:
     # Bring substitution scores into the range of pairwise TM scores
     scale_factor = _get_median_match_score(substitution_matrix)
     # Create positional substitution matrix to be able to add the TM-score to it:
@@ -414,10 +434,14 @@ def _find_anchors_hybrid(
     )[0]
     alignment = remove_gaps(alignment)
     anchors = alignment.trace
-    return anchors
+    return anchors  # pyright: ignore[reportReturnType]
 
 
-def _find_anchors_tm_based(fixed_ca_coord, mobile_ca_coord, reference_length):
+def _find_anchors_tm_based(
+    fixed_ca_coord: NDArray2[N, XYZ, np.floating],
+    mobile_ca_coord: NDArray2[N, XYZ, np.floating],
+    reference_length: int,
+) -> NDArray2[K, N, np.integer]:
     # The substitution matrix is positional -> Any positional sequence suffices
     fixed_seq = PurePositionalSequence(len(fixed_ca_coord))
     mobile_seq = PurePositionalSequence(len(mobile_ca_coord))
@@ -434,16 +458,16 @@ def _find_anchors_tm_based(fixed_ca_coord, mobile_ca_coord, reference_length):
         fixed_seq,
         mobile_seq,
         matrix,
-        (gap_penalty, 0),
+        (int(gap_penalty), 0),
         terminal_penalty=False,
         max_number=1,
     )[0]
     alignment = remove_gaps(alignment)
     anchors = alignment.trace
-    return anchors
+    return anchors  # pyright: ignore[reportReturnType]
 
 
-def _get_median_match_score(substitution_matrix):
+def _get_median_match_score(substitution_matrix: SubstitutionMatrix) -> int:
     """
     Get the median score of two symbols matching.
 
@@ -465,10 +489,14 @@ def _get_median_match_score(substitution_matrix):
     Furthermore, this ensures that the return value is an integer, which is required
     for using it as gap penalty.
     """
-    return np.median(np.diagonal(substitution_matrix.score_matrix()))
+    return int(np.median(np.diagonal(substitution_matrix.score_matrix())))
 
 
-def _mask_by_d0_threshold(fixed_ca_coord, mobile_ca_coord, reference_length):
+def _mask_by_d0_threshold(
+    fixed_ca_coord: NDArray2[N, XYZ, np.floating],
+    mobile_ca_coord: NDArray2[N, XYZ, np.floating],
+    reference_length: int,
+) -> NDArray1[N, np.bool_] | np.bool_:
     """
     Mask every pairwise distance below the :math:`d_0` threshold.
 
@@ -492,7 +520,11 @@ def _mask_by_d0_threshold(fixed_ca_coord, mobile_ca_coord, reference_length):
     return mask
 
 
-def _pairwise_tm_score(reference_coord, subject_coord, reference_length):
+def _pairwise_tm_score(
+    reference_coord: NDArray2[M, XYZ, np.floating],
+    subject_coord: NDArray2[N, XYZ, np.floating],
+    reference_length: int,
+) -> NDArray2[M, N, np.floating]:
     """
     Compute the TM score for the Cartesian product of two coordinate arrays.
 
@@ -512,10 +544,12 @@ def _pairwise_tm_score(reference_coord, subject_coord, reference_length):
         reference_coord[:, np.newaxis, :],
         subject_coord[np.newaxis, :, :],
     )
-    return _tm_score(distance_matrix, reference_length)
+    return _tm_score(distance_matrix, reference_length)  # pyright: ignore[reportReturnType]
 
 
-def _tm_score(distance, reference_length):
+def _tm_score(
+    distance: float | np.floating | np.ndarray, reference_length: int
+) -> float | np.floating | np.ndarray:
     """
     Compute the TM score for the given distances.
 
@@ -534,7 +568,7 @@ def _tm_score(distance, reference_length):
     return 1 / (1 + (distance / _d0(reference_length)) ** 2)
 
 
-def _d0(reference_length):
+def _d0(reference_length: int) -> float:
     """
     Compute the :math:`d_0` threshold.
 
@@ -557,7 +591,11 @@ def _d0(reference_length):
     )
 
 
-def _get_reference_length(user_parameter, reference_length, subject_length):
+def _get_reference_length(
+    user_parameter: Literal["shorter", "longer", "reference", "subject"] | int,
+    reference_length: int,
+    subject_length: int,
+) -> int:
     """
     Get the reference length to normalize the TM-score and compute :math:`d_0`.
 

@@ -4,13 +4,15 @@
 
 __name__ = "biotite.structure.io.pdb"
 __author__ = "Patrick Kunzmann, Daniel Bauer, Claude J. Rogers"
-__all__ = ["PDBFile"]
+__all__ = ["PDBFile", "SpaceGroupInfo"]
 
 
 import copy
 import itertools
 import warnings
-from collections import namedtuple
+from collections.abc import Iterable
+from os import PathLike
+from typing import IO, Any, Literal, NamedTuple, Self, overload
 import numpy as np
 import biotite.structure as struc
 from biotite.file import InvalidFileError
@@ -18,7 +20,7 @@ from biotite.rust.structure.io.pdb import PDBFile as RustPDBFile
 from biotite.rust.structure.io.pdb import (
     max_hybrid36_number,
 )
-from biotite.structure.atoms import repeat
+from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
 from biotite.structure.bonds import BondList
 from biotite.structure.connect import connect_via_residue_names
 from biotite.structure.error import BadStructureError
@@ -28,6 +30,7 @@ from biotite.structure.filter import (
 from biotite.structure.info.bonds import bonds_in_residue
 from biotite.structure.io.util import number_of_integer_digits
 from biotite.structure.util import matrix_rotate
+from biotite.typing import XYZ, M, N, NDArray1, NDArray2, NDArray3
 
 _PDB_MAX_ATOMS = 99999
 _PDB_MAX_RESIDUES = 9999
@@ -35,6 +38,22 @@ _PDB_MAX_RESIDUES = 9999
 # slice objects for readability
 _SPACE = slice(55, 66)
 _Z = slice(66, 70)
+
+
+class SpaceGroupInfo(NamedTuple):
+    """
+    Information about the space group of a crystal structure.
+
+    Attributes
+    ----------
+    space_group : str
+        The Hermann-Mauguin space group designation.
+    z_val : int
+        The Z value, i.e. the number of polymeric chains in the unit cell.
+    """
+
+    space_group: str
+    z_val: int
 
 
 class PDBFile(RustPDBFile):
@@ -68,9 +87,58 @@ class PDBFile(RustPDBFile):
     >>> file.write(os.path.join(path_to_directory, "1l2y_mod.pdb"))
     """
 
+    # Redeclare methods implemented in Rust to attach Python type annotations
+
+    @classmethod
+    def read(cls, file: str | PathLike[str] | IO[str]) -> Self:
+        return super().read(file)
+
+    def write(self, file: str | PathLike[str] | IO[str]) -> None:
+        super().write(file)
+
+    def get_model_count(self) -> int:
+        return super().get_model_count()
+
+    def get_remark(self, number: int) -> list[str] | None:
+        return super().get_remark(number)
+
+    @overload
+    def get_coord(self, model: int) -> NDArray2[N, XYZ, np.floating]: ...
+    @overload
+    def get_coord(self, model: None = None) -> NDArray3[M, N, XYZ, np.floating]: ...
+    def get_coord(self, model: int | None = None) -> np.ndarray:
+        return super().get_coord(model)
+
+    @overload
+    def get_b_factor(self, model: int) -> NDArray1[N, np.floating]: ...
+    @overload
+    def get_b_factor(self, model: None = None) -> NDArray2[M, N, np.floating]: ...
+    def get_b_factor(self, model: int | None = None) -> np.ndarray:
+        return super().get_b_factor(model)
+
+    @overload
     def get_structure(
-        self, model=None, altloc="first", extra_fields=None, include_bonds=False
-    ):
+        self,
+        model: int,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        extra_fields: Iterable[str] | None = None,
+        include_bonds: bool = False,
+    ) -> AtomArray[Any]: ...
+    @overload
+    def get_structure(
+        self,
+        model: None = None,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        extra_fields: Iterable[str] | None = None,
+        include_bonds: bool = False,
+    ) -> AtomArrayStack[Any, Any]: ...
+    def get_structure(
+        self,
+        model: int | None = None,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        extra_fields: Iterable[str] | None = None,
+        include_bonds: bool = False,
+    ) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
         atoms = super().get_structure(model, altloc, extra_fields, include_bonds)
 
         # Replace empty strings for elements with guessed types
@@ -99,17 +167,22 @@ class PDBFile(RustPDBFile):
 
         return atoms
 
-    def set_structure(self, atoms, hybrid36=False):
+    def set_structure(
+        self,
+        atoms: AtomArray[N] | AtomArrayStack[M, N],
+        hybrid36: bool = False,
+    ) -> None:
         _check_pdb_compatibility(atoms, hybrid36)
 
         # PDB files only contains ``CONECT`` records for bonds between non-water hetero
         # residues and inter-residue bonds
         # -> Preprocess `AtomArray` to remove those bonds
         if atoms.bonds is not None:
+            original_bonds = atoms.bonds
             # We only replace the BondList -> shallow copy is enough
             atoms = copy.copy(atoms)
             hetero_indices = np.where(atoms.hetero & ~filter_solvent(atoms))[0]
-            bond_array = atoms.bonds.as_array()
+            bond_array = original_bonds.as_array()
             bond_array = bond_array[
                 np.isin(bond_array[:, 0], hetero_indices)
                 | np.isin(bond_array[:, 1], hetero_indices)
@@ -120,21 +193,18 @@ class PDBFile(RustPDBFile):
 
         super().set_structure(atoms, hybrid36)
 
-    def get_space_group(self):
+    def get_space_group(self) -> SpaceGroupInfo:
         """
         Extract the space group and Z value from the CRYST1 record.
 
         Returns
         -------
-        space_group : str
-            The extracted space group.
-        z_val : int
-            The extracted Z value.
+        info : SpaceGroupInfo
+            The extracted space group and Z value.
         """
-        # Initialize the namedtuple
-        SpaceGroupInfo = namedtuple("SpaceGroupInfo", ["space_group", "z_val"])
-
         # CRYST1 is a one-time record so we can extract it directly
+        space_group: str | None = None
+        z_val: int | None = None
         for line in self.lines:
             if line.startswith("CRYST1"):
                 try:
@@ -147,15 +217,17 @@ class PDBFile(RustPDBFile):
                         "File does not contain valid space group and/or Z values"
                     )
                 break
+        if space_group is None or z_val is None:
+            raise InvalidFileError("File does not contain a 'CRYST1' record")
         return SpaceGroupInfo(space_group=space_group, z_val=z_val)
 
-    def set_space_group(self, info):
+    def set_space_group(self, info: SpaceGroupInfo) -> None:
         """
         Update the CRYST1 record with the provided space group and Z value.
 
         Parameters
         ----------
-        info : tuple(str, int) or SpaceGroupInfo
+        info : SpaceGroupInfo
             Contains the space group and Z-value.
         """
         for i, line in enumerate(self.lines):
@@ -177,7 +249,7 @@ class PDBFile(RustPDBFile):
                     )
                 break
 
-    def list_assemblies(self):
+    def list_assemblies(self) -> list[str]:
         """
         List the biological assemblies that are available for the
         structure in the given file.
@@ -206,14 +278,33 @@ class PDBFile(RustPDBFile):
             )
         return [assembly_id.strip() for assembly_id in remark_lines[0][12:].split(",")]
 
+    @overload
     def get_assembly(
         self,
-        assembly_id=None,
-        model=None,
-        altloc="first",
-        extra_fields=[],
-        include_bonds=False,
-    ):
+        assembly_id: str | None = None,
+        *,
+        model: int,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        extra_fields: Iterable[str] = [],
+        include_bonds: bool = False,
+    ) -> AtomArray[Any]: ...
+    @overload
+    def get_assembly(
+        self,
+        assembly_id: str | None = None,
+        model: None = None,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        extra_fields: Iterable[str] = [],
+        include_bonds: bool = False,
+    ) -> AtomArrayStack[Any, Any]: ...
+    def get_assembly(
+        self,
+        assembly_id: str | None = None,
+        model: int | None = None,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        extra_fields: Iterable[str] = [],
+        include_bonds: bool = False,
+    ) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
         """
         Build the given biological assembly.
 
@@ -299,6 +390,7 @@ class PDBFile(RustPDBFile):
         # Get lines corresponding to selected assembly ID
         assembly_start_i = None
         assembly_stop_i = None
+        i = 0
         for i, line in enumerate(remark_lines):
             if line.startswith("BIOMOLECULE"):
                 current_assembly_id = line[12:].strip()
@@ -374,13 +466,35 @@ class PDBFile(RustPDBFile):
             if assembly is None:
                 assembly = sub_assembly
             else:
-                assembly += sub_assembly
+                assembly += sub_assembly  # pyright: ignore[reportOperatorIssue]
 
+        if assembly is None:
+            raise InvalidFileError("Invalid remark 350")
         return assembly
 
+    @overload
     def get_unit_cell(
-        self, model=None, altloc="first", extra_fields=[], include_bonds=False
-    ):
+        self,
+        model: int,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        extra_fields: Iterable[str] = [],
+        include_bonds: bool = False,
+    ) -> AtomArray[Any]: ...
+    @overload
+    def get_unit_cell(
+        self,
+        model: None = None,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        extra_fields: Iterable[str] = [],
+        include_bonds: bool = False,
+    ) -> AtomArrayStack[Any, Any]: ...
+    def get_unit_cell(
+        self,
+        model: int | None = None,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        extra_fields: Iterable[str] = [],
+        include_bonds: bool = False,
+    ) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
         """
         Build a structure model containing all symmetric copies
         of the structure within a single unit cell, given by the space
@@ -465,9 +579,29 @@ class PDBFile(RustPDBFile):
         rotations, translations = _parse_transformations(transform_lines)
         return _apply_transformations(structure, rotations, translations)
 
+    @overload
     def get_symmetry_mates(
-        self, model=None, altloc="first", extra_fields=[], include_bonds=False
-    ):
+        self,
+        model: int,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        extra_fields: Iterable[str] = [],
+        include_bonds: bool = False,
+    ) -> AtomArray[Any]: ...
+    @overload
+    def get_symmetry_mates(
+        self,
+        model: None = None,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        extra_fields: Iterable[str] = [],
+        include_bonds: bool = False,
+    ) -> AtomArrayStack[Any, Any]: ...
+    def get_symmetry_mates(
+        self,
+        model: int | None = None,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        extra_fields: Iterable[str] = [],
+        include_bonds: bool = False,
+    ) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
         """
         Build a structure model containing all symmetric copies
         of the structure within a single unit cell, given by the space
@@ -543,7 +677,9 @@ class PDBFile(RustPDBFile):
         return self.get_unit_cell(model, altloc, extra_fields, include_bonds)
 
 
-def _parse_transformations(lines):
+def _parse_transformations(
+    lines: list[str],
+) -> tuple[NDArray3[Any, XYZ, XYZ, np.floating], NDArray2[Any, XYZ, np.floating]]:
     """
     Parse the rotation and translation transformations from
     *REMARK* 290 or 350.
@@ -575,34 +711,46 @@ def _parse_transformations(lines):
             transformation_i += 1
             component_i = 0
 
-    return rotations, translations
+    return rotations, translations  # pyright: ignore[reportReturnType]
 
 
-def _apply_transformations(structure, rotations, translations):
+@overload
+def _apply_transformations(
+    structure: AtomArray[N],
+    rotations: NDArray3[Any, XYZ, XYZ, np.floating],
+    translations: NDArray2[Any, XYZ, np.floating],
+) -> AtomArray[Any]: ...
+@overload
+def _apply_transformations(
+    structure: AtomArrayStack[M, N],
+    rotations: NDArray3[Any, XYZ, XYZ, np.floating],
+    translations: NDArray2[Any, XYZ, np.floating],
+) -> AtomArrayStack[M, Any]: ...
+def _apply_transformations(
+    structure: AtomArray[N] | AtomArrayStack[M, N],
+    rotations: NDArray3[Any, XYZ, XYZ, np.floating],
+    translations: NDArray2[Any, XYZ, np.floating],
+) -> AtomArray[Any] | AtomArrayStack[M, Any]:
     """
     Get subassembly by applying the given transformations to the input
     structure containing affected chains.
     """
     # Additional first dimension for 'structure.repeat()'
-    assembly_coord = np.zeros((len(rotations),) + structure.coord.shape)
-
-    # Apply corresponding transformation for each copy in the assembly
+    assembly_coord = np.zeros((len(rotations), *structure.coord.shape))
     for i, (rotation, translation) in enumerate(zip(rotations, translations)):
-        coord = structure.coord
-        # Rotate
-        coord = matrix_rotate(coord, rotation)
-        # Translate
+        coord = matrix_rotate(structure.coord, rotation)
         coord += translation
         assembly_coord[i] = coord
-
-    assembly = repeat(structure, assembly_coord)
+    assembly = repeat(structure, assembly_coord)  # pyright: ignore[reportCallIssue, reportArgumentType]
     assembly.set_annotation(
         "sym_id", np.repeat(np.arange(len(rotations)), structure.array_length())
     )
     return assembly
 
 
-def _check_pdb_compatibility(array, hybrid36):
+def _check_pdb_compatibility(
+    array: AtomArray[Any] | AtomArrayStack[Any, Any], hybrid36: bool
+) -> None:
     annot_categories = array.get_annotation_categories()
 
     if hybrid36:

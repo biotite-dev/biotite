@@ -4,17 +4,21 @@ __all__ = []
 import gzip
 import logging
 from collections import defaultdict
+from collections.abc import Iterable
 from io import StringIO
 from pathlib import Path
 import numpy as np
 import requests
 from biotite.structure.io.pdbx import *
+from biotite.typing import K, NDArray1
 
 OUTPUT_CCD = Path(__file__).parent / "structure" / "info" / "components.bcif"
 CCD_URL = "https://files.wwpdb.org/pub/pdb/data/monomers/components.cif.gz"
 
 
-def concatenate_ccd(categories=None):
+def concatenate_ccd(
+    categories: Iterable[str] | None = None,
+) -> "BinaryCIFFile":  # noqa: F405
     """
     Create the CCD in BinaryCIF format with each category contains the
     data of all blocks.
@@ -50,7 +54,10 @@ def concatenate_ccd(categories=None):
     return compressed_file
 
 
-def _concatenate_blocks_into_category(pdbx_file, category_name):
+def _concatenate_blocks_into_category(
+    pdbx_file: "CIFFile",  # noqa: F405
+    category_name: str,
+) -> "BinaryCIFCategory":  # noqa: F405
     """
     Concatenate the given category from all blocks into a single
     category.
@@ -107,7 +114,10 @@ def _concatenate_blocks_into_category(pdbx_file, category_name):
     return BinaryCIFCategory(bcif_columns)
 
 
-def _list_all_column_names(pdbx_file, category_name):
+def _list_all_column_names(
+    pdbx_file: "CIFFile",  # noqa: F405
+    category_name: str,
+) -> list[str]:
     """
     Get all columns that exist in any block for a given category.
 
@@ -130,7 +140,7 @@ def _list_all_column_names(pdbx_file, category_name):
     return sorted(columns_names)
 
 
-def _list_all_category_names(pdbx_file):
+def _list_all_category_names(pdbx_file: "CIFFile") -> list[str]:  # noqa: F405
     """
     Get all categories that exist in any block.
 
@@ -150,7 +160,9 @@ def _list_all_category_names(pdbx_file):
     return sorted(category_names)
 
 
-def _into_fitting_type(string_array, mask):
+def _into_fitting_type(
+    string_array: NDArray1[K, np.str_], mask: NDArray1[K, np.uint8]
+) -> NDArray1[K, np.generic]:
     """
     Try to find a numeric type for a string ndarray, if possible.
 
@@ -182,10 +194,10 @@ def _into_fitting_type(string_array, mask):
             pass
     array = np.zeros(string_array.shape, dtype=values.dtype)
     array[mask] = values
-    return array
+    return array  # pyright: ignore[reportReturnType]
 
 
-def main():
+def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
     OUTPUT_CCD.parent.mkdir(parents=True, exist_ok=True)
 

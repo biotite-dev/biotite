@@ -2,15 +2,19 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application.dssp"
 __author__ = "Patrick Kunzmann"
 __all__ = ["DsspApp"]
 
+from os import PathLike
 from subprocess import SubprocessError
 from tempfile import NamedTemporaryFile
 import numpy as np
 from biotite.application.application import AppState, requires_state
 from biotite.application.localapp import LocalApp, cleanup_tempfile, get_version
+from biotite.structure.atoms import AtomArray
 from biotite.structure.error import BadStructureError
 from biotite.structure.filter import filter_amino_acids
 from biotite.structure.io.pdbx.cif import CIFCategory, CIFColumn, CIFFile
@@ -18,6 +22,7 @@ from biotite.structure.io.pdbx.component import MaskValue
 from biotite.structure.io.pdbx.convert import set_structure
 from biotite.structure.repair import create_continuous_res_ids
 from biotite.structure.residues import get_residue_starts
+from biotite.typing import K, N, NDArray1
 
 
 class DsspApp(LocalApp):
@@ -58,7 +63,9 @@ class DsspApp(LocalApp):
      'P' 'C']
     """
 
-    def __init__(self, atom_array, bin_path="mkdssp"):
+    def __init__(
+        self, atom_array: AtomArray[N], bin_path: str | PathLike[str] = "mkdssp"
+    ) -> None:
         super().__init__(bin_path)
 
         if not np.all(filter_amino_acids(atom_array)):
@@ -94,7 +101,7 @@ class DsspApp(LocalApp):
         self._in_file = NamedTemporaryFile("w", suffix=".cif", delete=False)
         self._out_file = NamedTemporaryFile("r", suffix=".dssp", delete=False)
 
-    def run(self):
+    def run(self) -> None:
         in_file = CIFFile()
         set_structure(in_file, self._array)
         in_file.block["pdbx_poly_seq_scheme"] = _create_pdbx_poly_seq_scheme(
@@ -108,7 +115,7 @@ class DsspApp(LocalApp):
             self.set_arguments(["-i", self._in_file.name, "-o", self._out_file.name])
         super().run()
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         super().evaluate()
         lines = self._out_file.read().split("\n")
         # Index where SSE records start
@@ -128,13 +135,13 @@ class DsspApp(LocalApp):
             self._sse[i] = line[16]
         self._sse[self._sse == " "] = "C"
 
-    def clean_up(self):
+    def clean_up(self) -> None:
         super().clean_up()
         cleanup_tempfile(self._in_file)
         cleanup_tempfile(self._out_file)
 
     @requires_state(AppState.JOINED)
-    def get_sse(self):
+    def get_sse(self) -> NDArray1[K, np.str_]:
         """
         Get the resulting secondary structure assignment.
 
@@ -144,10 +151,12 @@ class DsspApp(LocalApp):
             An array containing DSSP secondary structure symbols
             corresponding to the residues in the input atom array.
         """
-        return self._sse
+        return self._sse  # pyright: ignore[reportReturnType]
 
     @staticmethod
-    def annotate_sse(atom_array, bin_path="mkdssp"):
+    def annotate_sse(
+        atom_array: AtomArray[N], bin_path: str | PathLike[str] = "mkdssp"
+    ) -> NDArray1[K, np.str_]:
         """
         Perform a secondary structure assignment to an atom array.
 
@@ -173,7 +182,9 @@ class DsspApp(LocalApp):
         return app.get_sse()
 
 
-def _create_pdbx_poly_seq_scheme(atom_array, entity_ids):
+def _create_pdbx_poly_seq_scheme(
+    atom_array: AtomArray[N], entity_ids: NDArray1[N, np.str_]
+) -> CIFCategory:
     """
     Create the ``pdbx_poly_seq_scheme`` category, as required by DSSP.
 

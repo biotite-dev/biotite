@@ -9,7 +9,7 @@ __all__ = ["all_residues", "full_name", "link_type", "one_letter_code"]
 from biotite.structure.info.ccd import get_ccd, get_from_ccd
 
 
-def all_residues():
+def all_residues() -> list[str]:
     """
     Get a list of all residues/compound names in the PDB
     *Chemical Component Dictionary* (CCD).
@@ -22,7 +22,7 @@ def all_residues():
     return get_ccd()["chem_comp"]["id"].as_array().tolist()
 
 
-def full_name(res_name):
+def full_name(res_name: str) -> str | None:
     """
     Get the full name of a residue/compound from the up to 3-letter
     residue name, based on the PDB chemical components dictionary.
@@ -48,10 +48,10 @@ def full_name(res_name):
     column = get_from_ccd("chem_comp", res_name.upper(), "name")
     if column is None:
         return None
-    return column.as_item()
+    return str(column.as_item())
 
 
-def link_type(res_name):
+def link_type(res_name: str) -> str | None:
     """
     Get the linking type of a residue/compound,
     based on the PDB chemical components dictionary.
@@ -81,10 +81,10 @@ def link_type(res_name):
     column = get_from_ccd("chem_comp", res_name.upper(), "type")
     if column is None:
         return None
-    return column.as_item()
+    return str(column.as_item())
 
 
-def one_letter_code(res_name):
+def one_letter_code(res_name: str) -> str | None:
     """
     Get the one-letter code of a residue/compound,
     based on the PDB chemical components dictionary.
@@ -134,4 +134,4 @@ def one_letter_code(res_name):
     if column.mask is not None:
         # Value is masked, i.e. inapplicable or missing
         return None
-    return column.as_item()
+    return str(column.as_item())

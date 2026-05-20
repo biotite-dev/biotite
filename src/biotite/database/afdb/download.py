@@ -8,10 +8,15 @@ __all__ = ["fetch"]
 
 import io
 import re
+from collections.abc import Iterable
+from os import PathLike
 from pathlib import Path
+from typing import Literal, overload
 from xml.etree import ElementTree
 import requests
 from biotite.database.error import RequestError
+
+_AfdbFormat = Literal["pdb", "pdbx", "cif", "mmcif", "bcif", "fasta"]
 
 _METADATA_URL = "https://alphafold.com/api/prediction"
 _BINARY_FORMATS = ["bcif"]
@@ -24,7 +29,45 @@ _UNIPROT_PATTERN = (
 )
 
 
-def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
+@overload
+def fetch(
+    ids: str,
+    format: _AfdbFormat,
+    target_path: str | PathLike[str],
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> str: ...
+@overload
+def fetch(
+    ids: str,
+    format: _AfdbFormat,
+    target_path: None = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> io.StringIO | io.BytesIO: ...
+@overload
+def fetch(
+    ids: Iterable[str],
+    format: _AfdbFormat,
+    target_path: str | PathLike[str],
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> list[str]: ...
+@overload
+def fetch(
+    ids: Iterable[str],
+    format: _AfdbFormat,
+    target_path: None = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> list[io.StringIO | io.BytesIO]: ...
+def fetch(
+    ids: str | Iterable[str],
+    format: _AfdbFormat,
+    target_path: str | PathLike[str] | None = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> str | io.StringIO | io.BytesIO | list[str] | list[io.StringIO | io.BytesIO]:
     """
     Download predicted protein structures from the AlphaFold DB.
 
@@ -78,9 +121,10 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
     # If only a single ID is present,
     # put it into a single element list
     if isinstance(ids, str):
-        ids = [ids]
+        id_list = [ids]
         single_element = True
     else:
+        id_list = list(ids)
         single_element = False
     if target_path is not None:
         target_path = Path(target_path)
@@ -88,10 +132,10 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
 
     files = []
     session = requests.Session()
-    for i, id in enumerate(ids):
+    for i, id in enumerate(id_list):
         # Verbose output
         if verbose:
-            print(f"Fetching file {i + 1:d} / {len(ids):d} ({id})...", end="\r")
+            print(f"Fetching file {i + 1:d} / {len(id_list):d} ({id})...", end="\r")
         # Fetch file from database
         if target_path is not None:
             file = target_path / f"{id}.{format}"
@@ -108,13 +152,13 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
 
             if file is None:
                 if format in _BINARY_FORMATS:
-                    file = io.BytesIO(content)
+                    file = io.BytesIO(content)  # pyright: ignore[reportArgumentType]
                 else:
-                    file = io.StringIO(content)
+                    file = io.StringIO(content)  # pyright: ignore[reportArgumentType]
             else:
                 mode = "wb+" if format in _BINARY_FORMATS else "w+"
                 with open(file, mode) as f:
-                    f.write(content)
+                    f.write(content)  # pyright: ignore[reportArgumentType]
 
         files.append(file)
     if verbose:
@@ -129,7 +173,7 @@ def fetch(ids, format, target_path=None, overwrite=False, verbose=False):
         return files
 
 
-def _get_file_url(session, id, format):
+def _get_file_url(session: requests.Session, id: str, format: _AfdbFormat) -> str:
     """
     Get the actual file URL for the given ID from the ``prediction`` API endpoint.
 
@@ -158,7 +202,7 @@ def _get_file_url(session, id, format):
     return metadata[0][f"{format}Url"]
 
 
-def _extract_id(id):
+def _extract_id(id: str) -> str:
     """
     Extract a AFDB compatible UniProt ID from the given qualifier.
     This may comprise
@@ -182,7 +226,7 @@ def _extract_id(id):
     return match.group("id")
 
 
-def _assert_valid_file(response, id):
+def _assert_valid_file(response: requests.Response, id: str) -> None:
     """
     Checks whether the response is an actual structure file
     or the response a *404* error due to invalid UniProt ID.
@@ -192,9 +236,11 @@ def _assert_valid_file(response, id):
     try:
         root = ElementTree.fromstring(response.text)
         if root.tag == "Error":
-            raise RequestError(
-                f"Error while fetching '{id}': {root.find('Message').text}"
+            message_element = root.find("Message")
+            message_text = (
+                message_element.text if message_element is not None else "Unknown error"
             )
+            raise RequestError(f"Error while fetching '{id}': {message_text}")
     except ElementTree.ParseError:
         # This is not XML -> the response is probably a valid file
         pass

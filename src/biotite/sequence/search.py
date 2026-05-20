@@ -7,9 +7,13 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["find_subsequence", "find_symbol", "find_symbol_first", "find_symbol_last"]
 
 import numpy as np
+from biotite.sequence.sequence import Sequence
+from biotite.typing import K, NDArray1, S
 
 
-def find_subsequence(sequence, query):
+def find_subsequence(
+    sequence: Sequence[S], query: Sequence[S]
+) -> NDArray1[K, np.integer]:
     """
     Find a subsequence in a sequence.
 
@@ -51,7 +55,7 @@ def find_subsequence(sequence, query):
     return np.array(match_indices)
 
 
-def find_symbol(sequence, symbol):
+def find_symbol(sequence: Sequence[S], symbol: S) -> NDArray1[K, np.integer]:
     """
     Find a symbol in a sequence.
 
@@ -71,7 +75,7 @@ def find_symbol(sequence, symbol):
     return np.where(sequence.code == code)[0]
 
 
-def find_symbol_first(sequence, symbol):
+def find_symbol_first(sequence: Sequence[S], symbol: S) -> int:
     """
     Find first occurrence of a symbol in a sequence.
 
@@ -91,10 +95,10 @@ def find_symbol_first(sequence, symbol):
     match_i = find_symbol(sequence, symbol)
     if len(match_i) == 0:
         return -1
-    return np.min(match_i)
+    return int(np.min(match_i))
 
 
-def find_symbol_last(sequence, symbol):
+def find_symbol_last(sequence: Sequence[S], symbol: S) -> int:
     """
     Find last occurrence of a symbol in a sequence.
 
@@ -114,4 +118,4 @@ def find_symbol_last(sequence, symbol):
     match_i = find_symbol(sequence, symbol)
     if len(match_i) == 0:
         return -1
-    return np.max(match_i)
+    return int(np.max(match_i))

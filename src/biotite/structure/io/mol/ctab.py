@@ -14,12 +14,15 @@ __all__ = ["read_structure_from_ctab", "write_structure_to_ctab"]
 import itertools
 import shlex
 import warnings
+from collections.abc import Iterable
+from typing import Any, Literal
 import numpy as np
 from biotite.file import InvalidFileError
 from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.bonds import BondList, BondType
 from biotite.structure.error import BadStructureError
 from biotite.structure.io.util import number_of_integer_digits
+from biotite.typing import N
 
 BOND_TYPE_MAPPING = {
     1: BondType.SINGLE,
@@ -41,7 +44,7 @@ V2000_COMPATIBILITY_LINE = "  0  0  0  0  0  0  0  0  0  0999 V3000"
 N_CHARGES_PER_LINE = 8
 
 
-def read_structure_from_ctab(ctab_lines):
+def read_structure_from_ctab(ctab_lines: list[str]) -> AtomArray[Any]:
     """
     Parse a *MDL* connection table (Ctab) to obtain an
     :class:`AtomArray`.
@@ -78,7 +81,11 @@ def read_structure_from_ctab(ctab_lines):
             raise InvalidFileError(f"Unknown CTAB version '{unkown_version}'")
 
 
-def write_structure_to_ctab(atoms, default_bond_type=BondType.ANY, version=None):
+def write_structure_to_ctab(
+    atoms: AtomArray[N],
+    default_bond_type: BondType = BondType.ANY,
+    version: Literal["V2000", "V3000"] | None = None,
+) -> list[str]:
     """
     Convert an :class:`AtomArray` into a
     *MDL* connection table (Ctab).
@@ -143,7 +150,7 @@ def write_structure_to_ctab(atoms, default_bond_type=BondType.ANY, version=None)
             raise ValueError(f"Unknown CTAB version '{unkown_version}'")
 
 
-def _read_structure_from_ctab_v2000(ctab_lines):
+def _read_structure_from_ctab_v2000(ctab_lines: list[str]) -> AtomArray[Any]:
     n_atoms, n_bonds = _get_counts_v2000(ctab_lines[0])
     atom_lines = ctab_lines[1 : 1 + n_atoms]
     bond_lines = ctab_lines[1 + n_atoms : 1 + n_atoms + n_bonds]
@@ -176,7 +183,7 @@ def _read_structure_from_ctab_v2000(ctab_lines):
         # Remove 'M  CHGnn8' prefix
         line = line[9:]
         # The lines contains atom index and charge alternatingly
-        for atom_i_str, charge_str in _batched(line.split(), 2):
+        for atom_i_str, charge_str in itertools.batched(line.split(), 2):
             atom_index = int(atom_i_str) - 1
             charge = int(charge_str)
             atoms.charge[atom_index] = charge
@@ -198,7 +205,7 @@ def _read_structure_from_ctab_v2000(ctab_lines):
     return atoms
 
 
-def _read_structure_from_ctab_v3000(ctab_lines):
+def _read_structure_from_ctab_v3000(ctab_lines: list[str]) -> AtomArray[Any]:
     v30_lines = [line[6:].strip() for line in ctab_lines if line.startswith("M  V30")]
 
     atom_lines = _get_block_v3000(v30_lines, "ATOM")
@@ -250,20 +257,20 @@ def _read_structure_from_ctab_v3000(ctab_lines):
     return atoms
 
 
-def _get_version(counts_line):
+def _get_version(counts_line: str) -> str:
     return counts_line[33:39].strip()
 
 
-def _is_v2000_compatible(n_atoms, n_bonds):
+def _is_v2000_compatible(n_atoms: int, n_bonds: int) -> bool:
     # The format uses a maximum of 3 digits for the atom and bond count
     return n_atoms < 1000 and n_bonds < 1000
 
 
-def _get_counts_v2000(counts_line):
+def _get_counts_v2000(counts_line: str) -> tuple[int, int]:
     return int(counts_line[0:3]), int(counts_line[3:6])
 
 
-def _get_block_v3000(v30_lines, block_name):
+def _get_block_v3000(v30_lines: list[str], block_name: str) -> list[str]:
     block_lines = []
     in_block = False
     for line in v30_lines:
@@ -279,7 +286,7 @@ def _get_block_v3000(v30_lines, block_name):
     return block_lines
 
 
-def create_property_dict_v3000(property_strings):
+def create_property_dict_v3000(property_strings: Iterable[str]) -> dict[str, str]:
     properties = {}
     for prop in property_strings:
         key, value = prop.split("=")
@@ -287,14 +294,19 @@ def create_property_dict_v3000(property_strings):
     return properties
 
 
-def _write_structure_to_ctab_v2000(atoms, default_bond_type):
+def _write_structure_to_ctab_v2000(
+    atoms: AtomArray[N], default_bond_type: BondType
+) -> list[str]:
+    if atoms.bonds is None:
+        raise BadStructureError("The structure has no associated BondList")
+    bonds = atoms.bonds
     try:
         charge = atoms.charge
     except AttributeError:
         charge = np.zeros(atoms.array_length(), dtype=int)
 
     counts_line = (
-        f"{atoms.array_length():>3d}{atoms.bonds.get_bond_count():>3d}"
+        f"{atoms.array_length():>3d}{bonds.get_bond_count():>3d}"
         "  0     0  0  0  0  0  0  1 V2000"
     )
 
@@ -323,14 +335,14 @@ def _write_structure_to_ctab_v2000(atoms, default_bond_type):
         f"{BOND_TYPE_MAPPING_REV.get(bond_type, default_bond_value):>3d}"
         + f"{0:>3d}"
         * 4
-        for i, j, bond_type in atoms.bonds.as_array()
+        for i, j, bond_type in bonds.as_array()
     ]
 
     # V2000 files introduce charge annotations in the property block
     # They define the charge literally (without mapping)
     charge_lines = []
     # Each `M  CHG` line can contain up to 8 charges
-    for batch in _batched(
+    for batch in itertools.batched(
         [(atom_i, c) for atom_i, c in enumerate(charge) if c != 0], N_CHARGES_PER_LINE
     ):
         charge_lines.append(
@@ -341,13 +353,18 @@ def _write_structure_to_ctab_v2000(atoms, default_bond_type):
     return [counts_line] + atom_lines + bond_lines + charge_lines + ["M  END"]
 
 
-def _write_structure_to_ctab_v3000(atoms, default_bond_type):
+def _write_structure_to_ctab_v3000(
+    atoms: AtomArray[N], default_bond_type: BondType
+) -> list[str]:
+    if atoms.bonds is None:
+        raise BadStructureError("The structure has no associated BondList")
+    bonds = atoms.bonds
     try:
         charges = atoms.charge
     except AttributeError:
         charges = np.zeros(atoms.array_length(), dtype=int)
 
-    counts_line = f"COUNTS {atoms.array_length()} {atoms.bonds.get_bond_count()} 0 0 0"
+    counts_line = f"COUNTS {atoms.array_length()} {bonds.get_bond_count()} 0 0 0"
 
     for i, coord_name in enumerate(["x", "y", "z"]):
         n_coord_digits = number_of_integer_digits(atoms.coord[:, i])
@@ -374,7 +391,7 @@ def _write_structure_to_ctab_v3000(atoms, default_bond_type):
         f" {BOND_TYPE_MAPPING_REV.get(bond_type, default_bond_value)}"
         f" {i + 1}"
         f" {j + 1}"
-        for k, (i, j, bond_type) in enumerate(atoms.bonds.as_array())
+        for k, (i, j, bond_type) in enumerate(bonds.as_array())
     ]
 
     lines = (
@@ -393,28 +410,15 @@ def _write_structure_to_ctab_v3000(atoms, default_bond_type):
     return [V2000_COMPATIBILITY_LINE] + lines + ["M  END"]
 
 
-def _to_property(charge):
+def _to_property(charge: int) -> str:
     if charge == 0:
         return ""
     else:
         return f"CHG={charge}"
 
 
-def _quote(string):
+def _quote(string: str) -> str:
     if " " in string or len(string) == 0:
         return f'"{string}"'
     else:
         return string
-
-
-def _batched(iterable, n):
-    """
-    Equivalent to :func:`itertools.batched()`.
-
-    However, :func:`itertools.batched()` is available since Python 3.12.
-    This function can be removed when the minimum supported Python
-    version is 3.12.
-    """
-    iterator = iter(iterable)
-    while batch := tuple(itertools.islice(iterator, n)):
-        yield batch

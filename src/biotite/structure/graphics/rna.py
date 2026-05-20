@@ -7,35 +7,39 @@ __author__ = "Tom David Müller"
 __all__ = ["plot_nucleotide_secondary_structure"]
 
 import shutil
+from collections.abc import Iterable, Sequence
 from itertools import repeat
+from typing import Any
 import numpy as np
+from matplotlib.axes import Axes
 from biotite.application.viennarna import RNAplotApp
 from biotite.structure import pseudoknots
+from biotite.typing import C2, K, MplColor, NDArray1, NDArray2
 
 
 def plot_nucleotide_secondary_structure(
-    axes,
-    base_labels,
-    base_pairs,
-    length,
-    layout_type=RNAplotApp.Layout.NAVIEW,
-    draw_pseudoknots=True,
-    pseudoknot_order=None,
-    angle=0,
-    bond_linewidth=1,
-    bond_linestyle=None,
-    bond_color="black",
-    backbone_linewidth=1,
-    backbone_linestyle="solid",
-    backbone_color="grey",
-    base_text=None,
-    base_box=None,
-    annotation_positions=None,
-    annotation_offset=8.5,
-    annotation_text=None,
-    border=0.03,
-    bin_path="RNAplot",
-):
+    axes: Axes,
+    base_labels: Iterable[str],
+    base_pairs: NDArray2[K, C2, np.integer],
+    length: int,
+    layout_type: RNAplotApp.Layout = RNAplotApp.Layout.NAVIEW,
+    draw_pseudoknots: bool = True,
+    pseudoknot_order: NDArray1[K, np.integer] | None = None,
+    angle: float = 0,
+    bond_linewidth: float | Iterable[float] = 1,
+    bond_linestyle: str | Iterable[str] | None = None,
+    bond_color: Sequence[MplColor] | MplColor = "black",
+    backbone_linewidth: float = 1,
+    backbone_linestyle: str = "solid",
+    backbone_color: MplColor = "grey",
+    base_text: dict[str, Any] | Iterable[dict[str, Any]] | None = None,
+    base_box: dict[str, Any] | Iterable[dict[str, Any]] | None = None,
+    annotation_positions: Iterable[int] | None = None,
+    annotation_offset: float = 8.5,
+    annotation_text: dict[str, Any] | Iterable[dict[str, Any]] | None = None,
+    border: float = 0.03,
+    bin_path: str = "RNAplot",
+) -> None:
     """
     Generate 2D plots of nucleic acid secondary structures using the
     interface to *RNAplot*, which is part of the *ViennaRNA* software
@@ -52,7 +56,7 @@ def plot_nucleotide_secondary_structure(
         A *Matplotlib* axes, that is used as plotting area.
     base_labels : iterable
         The labels denoting the type of each base.
-    base_pairs : ndarray, shape=(n,2)
+    base_pairs : ndarray, shape=(n,2), dtype=int
         Each row corresponds to the positions of the bases in the
         sequence. The positions are counted from zero.
     length : int
@@ -61,7 +65,7 @@ def plot_nucleotide_secondary_structure(
         The layout type according to the *RNAplot* documentation.
     draw_pseudoknots : bool, optional
         Whether pseudoknotted bonds should be drawn.
-    pseudoknot_order : iterable, optional
+    pseudoknot_order : ndarray, shape=(k,), dtype=int, optional
         The pseudoknot order of each pair in the input `base_pairs`.
         If no pseudoknot order is given, a solution determined by
         :func:`biotite.structure.pseudoknots` is picked at random.
@@ -138,16 +142,18 @@ def plot_nucleotide_secondary_structure(
         bond_linewidth = np.full(base_pairs.shape[0], bond_linewidth)
 
     # If `bond_color` is not an array, extrapolate
-    if not isinstance(bond_color, np.ndarray):
-        bond_color = np.full(base_pairs.shape[0], bond_color)
+    if isinstance(bond_color, str) or not isinstance(bond_color, Sequence):
+        bond_color = [bond_color] * base_pairs.shape[0]
 
     # Set the default properties of the Matplotlib `bbox` surrounding
     # the base labels
+    base_box_iter: Iterable[dict[str, Any]]
     if base_box is None:
-        base_box = np.full(length, {"pad": 0, "color": "white"})
-    # if `base_box` is a dictionary, extrapolate
+        base_box_iter = np.full(length, {"pad": 0, "color": "white"})
     elif isinstance(base_box, dict):
-        base_box = np.full(length, base_box)
+        base_box_iter = np.full(length, base_box)
+    else:
+        base_box_iter = base_box
 
     # By default pseudoknotted bonds are denoted as dashed lines, while
     # unknotted bonds are denoted as solid lines
@@ -167,10 +173,13 @@ def plot_nucleotide_secondary_structure(
         bond_linestyle[pseudoknot_order != 0] = "None"
 
     # Set the default properties of the base labels
+    base_text_iter: Iterable[dict[str, Any]]
     if base_text is None:
-        base_text = np.full(length, {"size": "small"})
+        base_text_iter = np.full(length, {"size": "small"})
     elif isinstance(base_text, dict):
-        base_text = np.full(length, base_text)
+        base_text_iter = np.full(length, base_text)
+    else:
+        base_text_iter = base_text
 
     # If no specific annotation positions are given, annotate every
     # second base pair
@@ -178,10 +187,13 @@ def plot_nucleotide_secondary_structure(
         annotation_positions = range(0, length, 2)
 
     # Set the default font properties of the base annotations
+    annotation_text_iter: Iterable[dict[str, Any]]
     if annotation_text is None:
-        annotation_text = repeat({"size": "small"})
+        annotation_text_iter = repeat({"size": "small"})
     elif isinstance(annotation_text, dict):
-        annotation_text = repeat(annotation_text)
+        annotation_text_iter = repeat(annotation_text)  # pyright: ignore[reportAssignmentType]
+    else:
+        annotation_text_iter = annotation_text
 
     # Get coordinates for secondary structure plot
     coordinates = RNAplotApp.compute_coordinates(
@@ -217,10 +229,12 @@ def plot_nucleotide_secondary_structure(
 
     # Adjust display
     axes.set_xlim(
-        np.min(coordinates[:, 0]) - buffer, np.max(coordinates[:, 0]) + buffer
+        float(np.min(coordinates[:, 0]) - buffer),
+        float(np.max(coordinates[:, 0]) + buffer),
     )
     axes.set_ylim(
-        np.min(coordinates[:, 1]) - buffer, np.max(coordinates[:, 1]) + buffer
+        float(np.min(coordinates[:, 1]) - buffer),
+        float(np.max(coordinates[:, 1]) + buffer),
     )
     axes.set_aspect(aspect="equal")
 
@@ -234,7 +248,9 @@ def plot_nucleotide_secondary_structure(
     )
 
     # Draw base labels
-    for coords, label, box, text in zip(coordinates, base_labels, base_box, base_text):
+    for coords, label, box, text in zip(
+        coordinates, base_labels, base_box_iter, base_text_iter
+    ):
         t = axes.text(
             x=coords[0], y=coords[1], s=label, ha="center", va="center", **text
         )
@@ -251,7 +267,7 @@ def plot_nucleotide_secondary_structure(
         axes.plot(x, y, color=color, linestyle=style, linewidth=width)
 
     # Draw annotations
-    for i, text in zip(annotation_positions, annotation_text):
+    for i, text in zip(annotation_positions, annotation_text_iter):
         if (i > 0) and ((i + 1) < length):
             # Get the average of the direction vectors to the next and
             # previous base
@@ -295,4 +311,4 @@ def plot_nucleotide_secondary_structure(
         # The annotations are offset in the direction of the
         # perpendicular vector
         x, y = coordinates[i] + (annotation_offset * vector)
-        axes.text(x=x, y=y, s=i + 1, ha="center", va="center", **text)
+        axes.text(x=x, y=y, s=str(i + 1), ha="center", va="center", **text)

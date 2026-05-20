@@ -2,13 +2,23 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 
 import numbers
 import textwrap
-from collections.abc import Sequence
+from collections.abc import Callable, Iterator
+from collections.abc import Sequence as SequenceABC
+from typing import TYPE_CHECKING, Any, Literal
 import numpy as np
+from biotite.sequence.alphabet import Alphabet
+from biotite.sequence.sequence import Sequence
+from biotite.typing import K, M, N, NDArray2
+
+if TYPE_CHECKING:
+    from biotite.sequence.align.matrix import SubstitutionMatrix
 
 __all__ = [
     "Alignment",
@@ -94,13 +104,22 @@ class Alignment(object):
      [3]]
     """
 
-    def __init__(self, sequences, trace, score=None):
+    def __init__(
+        self,
+        sequences: list[Sequence],
+        trace: NDArray2[K, N, np.integer],
+        score: int | None = None,
+    ) -> None:
         self.sequences = sequences.copy()
         self.trace = trace
         self.score = score
 
     @staticmethod
-    def from_strings(sequence_strings, sequence_factory, gap_character="-"):
+    def from_strings(
+        sequence_strings: SequenceABC[str],
+        sequence_factory: Callable[[str], Sequence],
+        gap_character: str = "-",
+    ) -> Alignment:
         """
         Create an :class:`Alignment` from strings that represent aligned sequences.
 
@@ -150,7 +169,9 @@ class Alignment(object):
         )
 
     @staticmethod
-    def trace_from_strings(sequence_strings, gap_character="-"):
+    def trace_from_strings(
+        sequence_strings: SequenceABC[str], gap_character: str = "-"
+    ) -> NDArray2[K, N, np.integer]:
         """
         Create a trace from strings that represent aligned sequences.
 
@@ -190,16 +211,16 @@ class Alignment(object):
             not_gap_mask = byte_array != ord(gap_character)
             trace[not_gap_mask, i] = np.arange(np.count_nonzero(not_gap_mask))
 
-        return trace
+        return trace  # pyright: ignore[reportReturnType]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent Alignment a string for debugging."""
         return (
             f"Alignment([{', '.join([seq.__repr__() for seq in self.sequences])}], "
             f"np.{np.array_repr(self.trace)}, score={self.score})"
         )
 
-    def _gapped_str(self, seq_index):
+    def _gapped_str(self, seq_index: int) -> str:
         seq_str = ""
         for i in range(len(self.trace)):
             j = self.trace[i][seq_index]
@@ -209,7 +230,7 @@ class Alignment(object):
                 seq_str += "-"
         return seq_str
 
-    def get_gapped_sequences(self):
+    def get_gapped_sequences(self) -> list[str]:
         """
         Get a the string representation of the gapped sequences.
 
@@ -221,7 +242,7 @@ class Alignment(object):
         """
         return [self._gapped_str(i) for i in range(len(self.sequences))]
 
-    def __str__(self):
+    def __str__(self) -> str:
         # Check if any of the sequences
         # has an non-single letter alphabet
         all_single_letter = True
@@ -245,12 +266,13 @@ class Alignment(object):
         else:
             return super().__str__()
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: Any) -> Alignment:
         if isinstance(index, tuple):
-            if len(index) > 2:
-                raise IndexError("Only 1D or 2D indices are allowed")
-            if isinstance(index[0], numbers.Integral) or isinstance(
-                index[0], numbers.Integral
+            if len(index) != 2:
+                raise IndexError("Only 2D indices are allowed")
+            column_index, seq_index = index
+            if isinstance(column_index, numbers.Integral) or isinstance(
+                seq_index, numbers.Integral
             ):
                 raise IndexError(
                     "Integers are invalid indices for alignments, "
@@ -258,20 +280,20 @@ class Alignment(object):
                     "selected"
                 )
             return Alignment(
-                Alignment._index_sequences(self.sequences, index[1]),
+                Alignment._index_sequences(self.sequences, seq_index),
                 self.trace[index],
                 self.score,
             )
         else:
             return Alignment(self.sequences, self.trace[index], self.score)
 
-    def __iter__(self):
-        raise TypeError("'Alignment' object is not iterable")
+    def __iter__(self) -> Iterator[Any]:
+        raise NotImplementedError("'Alignment' object is not iterable")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.trace)
 
-    def __eq__(self, item):
+    def __eq__(self, item: object) -> bool:
         if not isinstance(item, Alignment):
             return False
         if self.sequences != item.sequences:
@@ -283,7 +305,7 @@ class Alignment(object):
         return True
 
     @staticmethod
-    def _index_sequences(sequences, index):
+    def _index_sequences(sequences: list[Sequence], index: Any) -> list[Sequence]:
         if isinstance(index, (list, tuple)) or (
             isinstance(index, np.ndarray) and index.dtype != bool
         ):
@@ -296,7 +318,7 @@ class Alignment(object):
             raise IndexError(f"Invalid alignment index type '{type(index).__name__}'")
 
 
-def get_codes(alignment):
+def get_codes(alignment: Alignment) -> NDArray2[N, M, np.integer]:
     """
     Get the sequence codes of the sequences in the alignment.
 
@@ -344,10 +366,10 @@ def get_codes(alignment):
             trace[:, i] != -1, sequences[i].code[trace[:, i]], np.int64(-1)
         )
 
-    return np.stack(codes)
+    return codes  # pyright: ignore[reportReturnType]
 
 
-def get_symbols(alignment):
+def get_symbols(alignment: Alignment) -> list[list[Any]]:
     """
     Similar to :func:`get_codes()`, but contains the decoded symbols
     instead of codes.
@@ -394,7 +416,10 @@ def get_symbols(alignment):
     return symbols
 
 
-def get_sequence_identity(alignment, mode="not_terminal"):
+def get_sequence_identity(
+    alignment: Alignment,
+    mode: Literal["all", "not_terminal", "shortest"] = "not_terminal",
+) -> float:
     """
     Calculate the sequence identity for an alignment.
 
@@ -457,7 +482,10 @@ def get_sequence_identity(alignment, mode="not_terminal"):
     return matches / length
 
 
-def get_pairwise_sequence_identity(alignment, mode="not_terminal"):
+def get_pairwise_sequence_identity(
+    alignment: Alignment,
+    mode: Literal["all", "not_terminal", "shortest"] = "not_terminal",
+) -> NDArray2[N, N, np.floating]:
     """
     Calculate the pairwise sequence identity for an alignment.
 
@@ -532,7 +560,12 @@ def get_pairwise_sequence_identity(alignment, mode="not_terminal"):
     return matches / length
 
 
-def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
+def score(
+    alignment: Alignment,
+    matrix: SubstitutionMatrix,
+    gap_penalty: int | tuple[int, int] = -10,
+    terminal_penalty: bool = True,
+) -> int:
     """
     Calculate the similarity score of an alignment.
 
@@ -561,10 +594,10 @@ def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
         The similarity score.
     """
     codes = get_codes(alignment)
-    matrix = matrix.score_matrix()
+    score_matrix = matrix.score_matrix()
 
     # Sum similarity scores (without gaps)
-    score = 0
+    score: int = 0
     # Iterate over all positions
     for pos in range(codes.shape[1]):
         column = codes[:, pos]
@@ -577,15 +610,17 @@ def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
                 code_j = column[j]
                 # Ignore gaps
                 if code_i != -1 and code_j != -1:
-                    score += matrix[code_i, code_j]
+                    score += int(score_matrix[code_i, code_j])
 
     # Sum gap penalties
-    if isinstance(gap_penalty, numbers.Real):
-        gap_open = gap_penalty
-        gap_ext = gap_penalty
-    elif isinstance(gap_penalty, Sequence):
+    gap_open: int
+    gap_ext: int
+    if isinstance(gap_penalty, SequenceABC):
         gap_open = gap_penalty[0]
         gap_ext = gap_penalty[1]
+    elif isinstance(gap_penalty, numbers.Integral):
+        gap_open = int(gap_penalty)
+        gap_ext = int(gap_penalty)
     else:
         raise TypeError("Gap penalty must be either integer or tuple")
     # Iterate over all sequences
@@ -609,7 +644,7 @@ def score(alignment, matrix, gap_penalty=-10, terminal_penalty=True):
     return score
 
 
-def find_terminal_gaps(alignment):
+def find_terminal_gaps(alignment: Alignment) -> tuple[int, int]:
     """
     Find the slice indices that would remove terminal gaps from an
     alignment.
@@ -670,7 +705,7 @@ def find_terminal_gaps(alignment):
     return np.max(firsts).item(), np.min(lasts).item() + 1
 
 
-def remove_terminal_gaps(alignment):
+def remove_terminal_gaps(alignment: Alignment) -> Alignment:
     """
     Remove terminal gaps from an alignment.
 
@@ -727,7 +762,7 @@ def remove_terminal_gaps(alignment):
     return alignment[start:stop]
 
 
-def remove_gaps(alignment):
+def remove_gaps(alignment: Alignment) -> Alignment:
     """
     Remove all gap columns from an alignment.
 
@@ -749,7 +784,7 @@ def remove_gaps(alignment):
     return alignment[non_gap_mask]
 
 
-def _is_single_letter(alphabet):
+def _is_single_letter(alphabet: Alphabet) -> bool:
     """
     More relaxed version of :func:`biotite.sequence.alphabet.is_letter_alphabet()`:
     It is sufficient that only only the string representation of each symbol is only

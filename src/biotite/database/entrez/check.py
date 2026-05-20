@@ -7,6 +7,7 @@ __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
 __all__ = ["check_for_errors"]
 
 import json
+import requests
 from biotite.database.error import RequestError
 
 # Taken from https://github.com/kblin/ncbi-entrez-error-messages
@@ -26,7 +27,7 @@ _error_messages = [
 ]
 
 
-def check_for_errors(response):
+def check_for_errors(response: requests.Response) -> None:
     """
     Check for common error messages in NCBI Entrez database responses.
 

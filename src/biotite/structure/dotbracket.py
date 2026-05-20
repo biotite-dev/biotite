@@ -12,9 +12,11 @@ __author__ = "Tom David Müller"
 __all__ = ["dot_bracket_from_structure", "dot_bracket", "base_pairs_from_dot_bracket"]
 
 import numpy as np
+from biotite.structure.atoms import AtomArray
 from biotite.structure.basepairs import base_pairs
 from biotite.structure.pseudoknots import pseudoknots
 from biotite.structure.residues import get_residue_count, get_residue_positions
+from biotite.typing import C2, K, N, NDArray1, NDArray2
 
 _OPENING_BRACKETS = "([{<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 _OPENING_BRACKETS_BYTES = _OPENING_BRACKETS.encode()
@@ -23,8 +25,10 @@ _CLOSING_BRACKETS_BYTES = _CLOSING_BRACKETS.encode()
 
 
 def dot_bracket_from_structure(
-    nucleic_acid_strand, scores=None, max_pseudoknot_order=None
-):
+    nucleic_acid_strand: AtomArray[N],
+    scores: NDArray1[K, np.integer] | None = None,
+    max_pseudoknot_order: int | None = None,
+) -> list[str]:
     """
     Represent a nucleic-acid-strand in dot-bracket-letter-notation
     (DBL-notation). :footcite:`Antczak2018`
@@ -57,17 +61,27 @@ def dot_bracket_from_structure(
 
     .. footbibliography::
     """
-    basepairs = base_pairs(nucleic_acid_strand)
-    if len(basepairs) == 0:
+    base_pair_indices = base_pairs(nucleic_acid_strand)
+    if len(base_pair_indices) == 0:
         return [""]
-    basepairs = get_residue_positions(nucleic_acid_strand, basepairs)
+    residue_positions = get_residue_positions(
+        nucleic_acid_strand, base_pair_indices.ravel()
+    )
     length = get_residue_count(nucleic_acid_strand)
     return dot_bracket(
-        basepairs, length, scores=scores, max_pseudoknot_order=max_pseudoknot_order
+        residue_positions.reshape(base_pair_indices.shape),  # pyright: ignore[reportArgumentType]
+        length,
+        scores=scores,
+        max_pseudoknot_order=max_pseudoknot_order,
     )
 
 
-def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
+def dot_bracket(
+    basepairs: NDArray2[K, C2, np.integer],
+    length: int,
+    scores: NDArray1[K, np.integer] | None = None,
+    max_pseudoknot_order: int | None = None,
+) -> list[str]:
     """
     Represent a nucleic acid strand in dot-bracket-letter-notation
     (DBL-notation). :footcite:`Antczak2018`
@@ -140,7 +154,9 @@ def dot_bracket(basepairs, length, scores=None, max_pseudoknot_order=None):
     return [notation.decode() for notation in notations]
 
 
-def base_pairs_from_dot_bracket(dot_bracket_notation):
+def base_pairs_from_dot_bracket(
+    dot_bracket_notation: str,
+) -> NDArray2[K, C2, np.integer]:
     """
     Extract the base pairs from a nucleic-acid-strand in
     dot-bracket-letter-notation (DBL-notation). :footcite:`Antczak2018`

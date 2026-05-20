@@ -10,11 +10,24 @@ __name__ = "biotite.structure"
 __author__ = "Daniel Bauer"
 __all__ = ["density"]
 
+from collections.abc import Sequence
+from typing import Any
 import numpy as np
-from biotite.structure.atoms import coord
+from biotite.structure.atoms import Coord, MultiCoord, coord
+from biotite.typing import M, N, NDArray1, NDArray2, NDArray3
 
 
-def density(atoms, selection=None, delta=1.0, bins=None, density=False, weights=None):
+def density(
+    atoms: Coord[N] | MultiCoord[M, N],
+    selection: NDArray1[N, np.bool_] | None = None,
+    delta: float = 1.0,
+    bins: int | Sequence[np.ndarray] | str | None = None,
+    density: bool = False,
+    weights: NDArray1[N, np.floating] | NDArray2[M, N, np.floating] | None = None,
+) -> tuple[
+    NDArray3[Any, Any, Any, np.floating],
+    Sequence[NDArray1[Any, np.floating]],
+]:
     r"""
     Compute the density of the selected atoms.
 
@@ -59,7 +72,7 @@ def density(atoms, selection=None, delta=1.0, bins=None, density=False, weights=
 
     Returns
     -------
-    H : ndarray, dtype=float
+    hist : ndarray, dtype=float
         The threedimensional histogram of the selected atoms.
         The histogram takes the atoms in all models into account.
         The length of the histogram depends on `atoms` coordinates and
@@ -105,5 +118,4 @@ def density(atoms, selection=None, delta=1.0, bins=None, density=False, weights=
         weights = weights.reshape(coords.shape[0])
 
     # Calculate the histogram
-    hist = np.histogramdd(coords, bins=bins, density=density, weights=weights)
-    return hist
+    return np.histogramdd(coords, bins=bins, density=density, weights=weights)  # pyright: ignore[reportReturnType]

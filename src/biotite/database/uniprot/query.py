@@ -7,6 +7,7 @@ __author__ = "Maximilian Greil"
 __all__ = ["Query", "SimpleQuery", "CompositeQuery", "search"]
 
 import abc
+from typing import Literal
 import requests
 from biotite.database.uniprot.check import assert_valid_response
 
@@ -19,20 +20,20 @@ class Query(metaclass=abc.ABCMeta):
     for the UniProt search service.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @abc.abstractmethod
-    def __str__(self):
+    def __str__(self) -> str:
         pass
 
-    def __or__(self, operand):
+    def __or__(self, operand: "Query") -> "CompositeQuery":
         return CompositeQuery("OR", self, operand)
 
-    def __and__(self, operand):
+    def __and__(self, operand: "Query") -> "CompositeQuery":
         return CompositeQuery("AND", self, operand)
 
-    def __xor__(self, operand):
+    def __xor__(self, operand: "Query") -> "CompositeQuery":
         return CompositeQuery("NOT", self, operand)
 
 
@@ -56,17 +57,22 @@ class CompositeQuery(Query):
         The queries to be combined.
     """
 
-    def __init__(self, operator, query1, query2):
+    def __init__(
+        self,
+        operator: Literal["AND", "OR", "NOT"],
+        query1: Query,
+        query2: Query,
+    ) -> None:
         super().__init__()
         self._op = operator
         self._q1 = query1
         self._q2 = query2
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "{:} {:} {:}".format(str(self._q1), self._op, str(self._q2))
 
 
-def _check_brackets(term):
+def _check_brackets(term: str) -> bool:
     """
     Check if term contains correct number of round brackets and square brackets.
 
@@ -231,7 +237,7 @@ class SimpleQuery(Query):
         "cc_webresource",
     ]
 
-    def __init__(self, field, term):
+    def __init__(self, field: str, term: str) -> None:
         super().__init__()
         if field not in SimpleQuery._fields:
             raise ValueError(f"Unknown field identifier '{field}'")
@@ -247,11 +253,11 @@ class SimpleQuery(Query):
         self._field = field
         self._term = term
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self._field}:{self._term}"
 
 
-def search(query, number=500):
+def search(query: Query, number: int = 500) -> list[str]:
     """
     Get all UniProt IDs that meet the given query requirements,
     via the UniProt search service.

@@ -13,7 +13,7 @@ from enum import IntEnum
 from biotite.rust.structure import BondList, bond_type_members
 
 
-def _without_aromaticity(self):
+def _without_aromaticity(self: "BondType") -> "BondType":
     """
     Get the non-aromatic counterpart of this bond type.
 
@@ -65,3 +65,7 @@ This enum type represents the type of a chemical bond.
 - ``AROMATIC`` - Aromatic bond without specification of the formal bond
 """
 BondType.without_aromaticity = _without_aromaticity
+
+# Allow `BondList[N]` subscript at runtime
+# (the Rust class does not natively support `__class_getitem__`)
+BondList.__class_getitem__ = classmethod(lambda cls, params: cls)

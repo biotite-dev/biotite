@@ -8,9 +8,13 @@ __all__ = ["TrajectoryFile"]
 
 import abc
 import itertools
+from collections.abc import Iterable, Iterator
+from os import PathLike
+from typing import Any, Self, overload
 import numpy as np
 from biotite.file import File
 from biotite.structure.atoms import AtomArray, AtomArrayStack, from_template
+from biotite.typing import XYZ, M, N, NDArray1, NDArray2, NDArray3
 
 
 class TrajectoryFile(File, metaclass=abc.ABCMeta):
@@ -32,17 +36,26 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
     respective array, if the array is modified.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._coord = None
-        self._time = None
-        self._box = None
-        self._model_count = None
+        # Stored shapes: `_coord` (m, n, 3), `_box` (m, 3, 3), `_time` (m,).
+        # The TypeVars `M`/`N`/`XYZ` only bind inside generic functions, so
+        # instance attributes use `Any` for every axis.
+        self._coord: NDArray3[Any, Any, Any, np.floating] | None = None
+        self._time: NDArray1[Any, np.floating] | None = None
+        self._box: NDArray3[Any, Any, Any, np.floating] | None = None
+        self._model_count: int | None = None
 
     @classmethod
     def read(
-        cls, file_name, start=None, stop=None, step=None, atom_i=None, chunk_size=None
-    ):
+        cls,
+        file_name: str | PathLike[str],
+        start: int | None = None,
+        stop: int | None = None,
+        step: int | None = None,
+        atom_i: NDArray1[Any, np.integer] | None = None,
+        chunk_size: int | None = None,
+    ) -> Self:
         """
         Read a trajectory file.
 
@@ -143,10 +156,59 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
 
         return file
 
+    @overload
     @classmethod
     def read_iter(
-        cls, file_name, start=None, stop=None, step=None, atom_i=None, stack_size=None
-    ):
+        cls,
+        file_name: str | PathLike[str],
+        start: int | None = None,
+        stop: int | None = None,
+        step: int | None = None,
+        atom_i: NDArray1[Any, np.integer] | None = None,
+        stack_size: None = None,
+    ) -> Iterator[
+        tuple[
+            NDArray2[Any, XYZ, np.floating],
+            NDArray2[XYZ, XYZ, np.floating] | None,
+            float | None,
+        ]
+    ]: ...
+    @overload
+    @classmethod
+    def read_iter(
+        cls,
+        file_name: str | PathLike[str],
+        start: int | None = None,
+        stop: int | None = None,
+        step: int | None = None,
+        atom_i: NDArray1[Any, np.integer] | None = None,
+        *,
+        stack_size: int,
+    ) -> Iterator[
+        tuple[
+            NDArray3[Any, Any, XYZ, np.floating],
+            NDArray3[Any, XYZ, XYZ, np.floating] | None,
+            NDArray1[Any, np.floating] | None,
+        ]
+    ]: ...
+    @classmethod
+    def read_iter(
+        cls,
+        file_name: str | PathLike[str],
+        start: int | None = None,
+        stop: int | None = None,
+        step: int | None = None,
+        atom_i: NDArray1[Any, np.integer] | None = None,
+        stack_size: int | None = None,
+    ) -> Iterator[
+        tuple[
+            NDArray2[Any, XYZ, np.floating] | NDArray3[Any, Any, XYZ, np.floating],
+            NDArray2[XYZ, XYZ, np.floating]
+            | NDArray3[Any, XYZ, XYZ, np.floating]
+            | None,
+            float | NDArray1[Any, np.floating] | None,
+        ]
+    ]:
         """
         Create an iterator over each frame of the given trajectory file
         in the selected range.
@@ -224,7 +286,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 remaining_frames = n_frames
                 while remaining_frames is None or remaining_frames > 0:
                     result = f.read(1, stride=step, atom_indices=atom_i)
-                    if len(result[0]) == 0:
+                    # `biotraj.read()` always returns a tuple whose first
+                    # element is the coord ndarray
+                    if len(result[0]) == 0:  # pyright: ignore[reportArgumentType]
                         # Empty array was read
                         # -> no frames left -> stop iteration
                         break
@@ -248,7 +312,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                         else stack_size
                     )
                     result = f.read(n_frames, stride=step, atom_indices=atom_i)
-                    if len(result[0]) == 0:
+                    if len(result[0]) == 0:  # pyright: ignore[reportArgumentType]
                         # Empty array was read
                         # -> no frames left -> stop iteration
                         break
@@ -257,17 +321,42 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                     if remaining_frames is not None:
                         remaining_frames -= stack_size
 
+    @overload
     @classmethod
     def read_iter_structure(
         cls,
-        file_name,
-        template,
-        start=None,
-        stop=None,
-        step=None,
-        atom_i=None,
-        stack_size=None,
-    ):
+        file_name: str | PathLike[str],
+        template: AtomArray[N] | AtomArrayStack[M, N],
+        start: int | None = None,
+        stop: int | None = None,
+        step: int | None = None,
+        atom_i: NDArray1[Any, np.integer] | None = None,
+        stack_size: None = None,
+    ) -> Iterator[AtomArray[Any]]: ...
+    @overload
+    @classmethod
+    def read_iter_structure(
+        cls,
+        file_name: str | PathLike[str],
+        template: AtomArray[N] | AtomArrayStack[M, N],
+        start: int | None = None,
+        stop: int | None = None,
+        step: int | None = None,
+        atom_i: NDArray1[Any, np.integer] | None = None,
+        *,
+        stack_size: int,
+    ) -> Iterator[AtomArrayStack[Any, Any]]: ...
+    @classmethod
+    def read_iter_structure(
+        cls,
+        file_name: str | PathLike[str],
+        template: AtomArray[N] | AtomArrayStack[M, N],
+        start: int | None = None,
+        stop: int | None = None,
+        step: int | None = None,
+        atom_i: NDArray1[Any, np.integer] | None = None,
+        stack_size: int | None = None,
+    ) -> Iterator[AtomArray[Any] | AtomArrayStack[Any, Any]]:
         """
         Create an iterator over each frame of the given trajectory file
         in the selected range.
@@ -340,18 +429,19 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 f"not '{type(template).__name__}'"
             )
 
-        for coord, box, _ in cls.read_iter(
-            file_name, start, stop, step, atom_i, stack_size
-        ):
-            if stack_size is None:
+        if stack_size is None:
+            for coord, box, _ in cls.read_iter(file_name, start, stop, step, atom_i):
                 frame = template.copy()
                 frame.coord = coord
                 frame.box = box
                 yield frame
-            else:
+        else:
+            for coord, box, _ in cls.read_iter(
+                file_name, start, stop, step, atom_i, stack_size=stack_size
+            ):
                 yield from_template(template, coord, box)
 
-    def write(self, file_name):
+    def write(self, file_name: str | PathLike[str]) -> None:
         """
         Write the content into a trajectory file.
 
@@ -367,7 +457,13 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             f.write(**param)
 
     @classmethod
-    def write_iter(cls, file_name, coord, box=None, time=None):
+    def write_iter(
+        cls,
+        file_name: str | PathLike[str],
+        coord: Iterable[NDArray2[N, XYZ, np.floating]],
+        box: Iterable[NDArray2[XYZ, XYZ, np.floating] | None] | None = None,
+        time: Iterable[float | None] | None = None,
+    ) -> None:
         """
         Iterate over the given `coord` and write each item into
         the file specified by `file_name`.
@@ -417,7 +513,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 param = cls.prepare_write_values(c, b, t)
                 f.write(**param)
 
-    def get_coord(self):
+    def get_coord(self) -> NDArray3[Any, N, XYZ, np.floating] | None:
         """
         Extract only the atom coordinates from the trajectory file.
 
@@ -428,7 +524,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         return self._coord
 
-    def get_time(self):
+    def get_time(self) -> NDArray1[Any, np.floating] | None:
         """
         Get the simlation time in *ps* values for each frame.
 
@@ -440,7 +536,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         return self._time
 
-    def get_box(self):
+    def get_box(self) -> NDArray3[Any, XYZ, XYZ, np.floating] | None:
         """
         Get the box vectors for each frame.
 
@@ -452,7 +548,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         return self._box
 
-    def set_coord(self, coord):
+    def set_coord(self, coord: NDArray3[Any, N, XYZ, np.floating]) -> None:
         """
         Set the atom coordinates in the trajectory file.
 
@@ -464,7 +560,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         self._check_model_count(coord)
         self._coord = coord
 
-    def set_time(self, time):
+    def set_time(self, time: NDArray1[Any, np.floating] | None) -> None:
         """
         Set the simulation time of each frame in the trajectory file.
 
@@ -476,7 +572,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         self._check_model_count(time)
         self._time = time
 
-    def set_box(self, box):
+    def set_box(self, box: NDArray3[Any, XYZ, XYZ, np.floating] | None) -> None:
         """
         Set the periodic box vectors of each frame in the trajectory
         file.
@@ -489,7 +585,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         self._check_model_count(box)
         self._box = box
 
-    def get_structure(self, template):
+    def get_structure(
+        self, template: AtomArray[N] | AtomArrayStack[M, N]
+    ) -> AtomArrayStack[Any, N]:
         """
         Convert the trajectory file content into an
         :class:`AtomArrayStack`.
@@ -513,9 +611,16 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
             but the coordinates and the simulation boxes from the
             trajectory file.
         """
-        return from_template(template, self.get_coord(), self.get_box())
+        coord = self.get_coord()
+        if coord is None:
+            raise ValueError("No coordinates have been read from the trajectory file")
+        return from_template(template, coord, self.get_box())
 
-    def set_structure(self, structure, time=None):
+    def set_structure(
+        self,
+        structure: AtomArray[N] | AtomArrayStack[M, N],
+        time: NDArray1[Any, np.floating] | None = None,
+    ) -> None:
         """
         Write an atom array (stack) into the trajectory file object.
 
@@ -529,19 +634,21 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         time : ndarray, dtype=float, shape=(n,), optional
             The simulation time for each frame in `structure`.
         """
-        coord = structure.coord
-        box = structure.box
-        if coord.ndim == 2:
-            coord = coord[np.newaxis, :, :]
-        if box is not None and box.ndim == 2:
-            box = box[np.newaxis, :, :]
+        # Promote a single-model `AtomArray` to a 3-D stack-shaped array,
+        # so the rest of the trajectory machinery can treat it uniformly.
+        if isinstance(structure, AtomArray):
+            coord = structure.coord[np.newaxis, :, :]
+            box = structure.box[np.newaxis, :, :] if structure.box is not None else None
+        else:
+            coord = structure.coord
+            box = structure.box
         self.set_coord(coord)
         if box is not None:
-            self.set_box(box)
+            self.set_box(box)  # pyright: ignore[reportArgumentType]
         if time is not None:
             self.set_time(time)
 
-    def copy(self):
+    def copy(self) -> Self:
         """
         This operation is not implemented for trajectory files.
 
@@ -553,7 +660,9 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def traj_type(cls):
+    def traj_type(
+        cls,
+    ) -> type:
         """
         The ``biotraj`` files class to be used.
 
@@ -568,7 +677,13 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def process_read_values(cls, read_values):
+    def process_read_values(
+        cls, read_values: Any
+    ) -> tuple[
+        NDArray3[Any, Any, XYZ, np.floating],
+        NDArray3[Any, XYZ, XYZ, np.floating] | None,
+        NDArray1[Any, np.floating] | None,
+    ]:
         """
         Convert the return value of the `read()` method of the
         respective :class:`biotraj.TrajectoryFile` into coordinates,
@@ -595,7 +710,12 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def prepare_write_values(cls, coord, box, time):
+    def prepare_write_values(
+        cls,
+        coord: NDArray3[Any, Any, XYZ, np.floating] | None,
+        box: NDArray3[Any, XYZ, XYZ, np.floating] | None,
+        time: NDArray1[Any, np.floating] | None,
+    ) -> dict[str, Any]:
         """
         Convert the `coord`, `box` and `time` attribute into a
         dictionary that is given as *kwargs* to the respective
@@ -620,7 +740,13 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         """
         pass
 
-    def _check_model_count(self, array):
+    def _check_model_count(
+        self,
+        array: NDArray3[Any, Any, XYZ, np.floating]
+        | NDArray3[Any, XYZ, XYZ, np.floating]
+        | NDArray1[Any, np.floating]
+        | None,
+    ) -> None:
         """
         Check if the amount of models in the given array is equal to
         the amount of models in the file.
@@ -640,7 +766,14 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
                 )
 
     @staticmethod
-    def _read_chunk_wise(file, n_frames, step, atom_i, chunk_size, discard=False):
+    def _read_chunk_wise(
+        file: Any,
+        n_frames: int | None,
+        step: int | None,
+        atom_i: NDArray1[Any, np.integer] | None,
+        chunk_size: int,
+        discard: bool = False,
+    ) -> tuple[np.ndarray | None, ...] | None:
         """
         Similar to :func:`read()`, just for chunk-wise reading of the
         trajectory.
@@ -681,7 +814,7 @@ class TrajectoryFile(File, metaclass=abc.ABCMeta):
         if not discard:
             # Assemble the chunks into contiguous arrays
             # for each value (coord, box, time)
-            result = [None] * len(chunks[0])
+            result: list[np.ndarray | None] = [None] * len(chunks[0])
             # Iterate over all values in the result tuple
             # and concatenate the corresponding value from each chunk,
             # if the value is not None

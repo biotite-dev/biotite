@@ -14,13 +14,21 @@ import abc
 from importlib.resources import files as resource_files
 import numpy
 import numpy.ma
+import numpy.typing as npt
 from biotite.structure.alphabet.layers import CentroidLayer, Model
 from biotite.structure.alphabet.unkerasify import load_kerasify
+from biotite.typing import XYZ, K, NDArray2
 
 
 class _BaseEncoder(abc.ABC):
     @abc.abstractmethod
-    def encode(self, ca, cb, n, c):
+    def encode(
+        self,
+        ca: NDArray2[K, XYZ, numpy.floating],
+        cb: NDArray2[K, XYZ, numpy.floating],
+        n: NDArray2[K, XYZ, numpy.floating],
+        c: NDArray2[K, XYZ, numpy.floating],
+    ) -> numpy.ndarray:
         """
         Encode the given atom coordinates to a different representation.
 
@@ -33,7 +41,7 @@ class _BaseEncoder(abc.ABC):
 
         Returns
         -------
-        encoded : MaskedArray, shape=(n, m), dtype=float
+        encoded : ndarray, shape=(n, m), dtype=float
             The encoded representation.
         """
         raise NotImplementedError
@@ -71,37 +79,42 @@ class VirtualCenterEncoder(_BaseEncoder):
     def __init__(
         self,
         *,
-        distance_alpha_beta=_DISTANCE_ALPHA_BETA,
-        distance_alpha_v=2.0,
-        theta=270.0,
-        tau=0.0,
-    ):
+        distance_alpha_beta: float = _DISTANCE_ALPHA_BETA,
+        distance_alpha_v: float = 2.0,
+        theta: float = 270.0,
+        tau: float = 0.0,
+    ) -> None:
         self.theta = theta
         self.tau = tau
         self.distance_alpha_v = distance_alpha_v
         self.distance_alpha_beta = distance_alpha_beta
 
     @property
-    def theta(self):
-        return numpy.rad2deg(self._theta)
+    def theta(self) -> float:
+        return float(numpy.rad2deg(self._theta))
 
     @theta.setter
-    def theta(self, theta):
+    def theta(self, theta: float) -> None:
         self._theta = numpy.deg2rad(theta)
         self._cos_theta = numpy.cos(self._theta)
         self._sin_theta = numpy.sin(self._theta)
 
     @property
-    def tau(self):
-        return numpy.rad2deg(self._tau)
+    def tau(self) -> float:
+        return float(numpy.rad2deg(self._tau))
 
     @tau.setter
-    def tau(self, tau):
+    def tau(self, tau: float) -> None:
         self._tau = numpy.deg2rad(tau)
         self._cos_tau = numpy.cos(self._tau)
         self._sin_tau = numpy.sin(self._tau)
 
-    def _compute_virtual_center(self, ca, cb, n):
+    def _compute_virtual_center(
+        self,
+        ca: NDArray2[K, XYZ, numpy.floating],
+        cb: NDArray2[K, XYZ, numpy.floating],
+        n: NDArray2[K, XYZ, numpy.floating],
+    ) -> NDArray2[K, XYZ, numpy.floating]:
         assert ca.shape == n.shape
         assert ca.shape == cb.shape
         v = cb - ca
@@ -126,7 +139,12 @@ class VirtualCenterEncoder(_BaseEncoder):
         v += ca
         return v
 
-    def _approximate_cb_position(self, ca, n, c):
+    def _approximate_cb_position(
+        self,
+        ca: NDArray2[K, XYZ, numpy.floating],
+        n: NDArray2[K, XYZ, numpy.floating],
+        c: NDArray2[K, XYZ, numpy.floating],
+    ) -> NDArray2[K, XYZ, numpy.floating]:
         """
         Approximate the position of ``CB`` from the backbone atoms.
         """
@@ -146,7 +164,12 @@ class VirtualCenterEncoder(_BaseEncoder):
         out += ca
         return out
 
-    def _create_nan_mask(self, ca, n, c):
+    def _create_nan_mask(
+        self,
+        ca: NDArray2[K, XYZ, numpy.floating],
+        n: NDArray2[K, XYZ, numpy.floating],
+        c: NDArray2[K, XYZ, numpy.floating],
+    ) -> NDArray2[K, XYZ, numpy.bool_]:
         """
         Mask any column which contains at least one *NaN* value.
         """
@@ -155,7 +178,13 @@ class VirtualCenterEncoder(_BaseEncoder):
         mask_c = numpy.isnan(c).max(axis=1)
         return (mask_ca | mask_n | mask_c).repeat(3).reshape(-1, 3)
 
-    def encode(self, ca, cb, n, c):
+    def encode(
+        self,
+        ca: NDArray2[K, XYZ, numpy.floating],
+        cb: NDArray2[K, XYZ, numpy.floating],
+        n: NDArray2[K, XYZ, numpy.floating],
+        c: NDArray2[K, XYZ, numpy.floating],
+    ) -> numpy.ma.MaskedArray:
         ca = numpy.asarray(ca)
         cb = numpy.asarray(cb)
         n = numpy.asarray(n)
@@ -192,13 +221,13 @@ class PartnerIndexEncoder(_BaseEncoder):
     residue is extracted for each position.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.vc_encoder = VirtualCenterEncoder()
 
     def _find_residue_partners(
         self,
-        x,
-    ):
+        x: numpy.ma.MaskedArray,
+    ) -> numpy.ndarray:
         # compute pairwise squared distance matrix
         r = numpy.sum(x * x, axis=-1).reshape(-1, 1)
         r[0] = r[-1] = numpy.nan
@@ -208,7 +237,13 @@ class PartnerIndexEncoder(_BaseEncoder):
         # get the closest non-masked residue
         return numpy.nan_to_num(D, copy=False, nan=numpy.inf).argmin(axis=1)
 
-    def encode(self, ca, cb, n, c):
+    def encode(
+        self,
+        ca: NDArray2[K, XYZ, numpy.floating],
+        cb: NDArray2[K, XYZ, numpy.floating],
+        n: NDArray2[K, XYZ, numpy.floating],
+        c: NDArray2[K, XYZ, numpy.floating],
+    ) -> numpy.ndarray:
         # encode backbone atoms to virtual center
         vc = self.vc_encoder.encode(ca, cb, n, c)
         # find closest neighbor for each residue
@@ -220,11 +255,16 @@ class FeatureEncoder(_BaseEncoder):
     An encoder for converting a protein structure to structural descriptors.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.partner_index_encoder = PartnerIndexEncoder()
         self.vc_encoder = self.partner_index_encoder.vc_encoder
 
-    def _calc_conformation_descriptors(self, ca, partner_index, dtype=numpy.float32):
+    def _calc_conformation_descriptors(
+        self,
+        ca: NDArray2[K, XYZ, numpy.floating],
+        partner_index: numpy.ndarray,
+        dtype: npt.DTypeLike = numpy.float32,
+    ) -> numpy.ndarray:
         # build arrays of indices to use for vectorized angles
         i = numpy.arange(1, ca.shape[-2] - 1)
         j = partner_index[i]
@@ -247,7 +287,11 @@ class FeatureEncoder(_BaseEncoder):
         desc[i, 9] = numpy.copysign(numpy.log(numpy.abs(j - i) + 1), j - i)
         return desc
 
-    def _create_descriptor_mask(self, mask, partner_index):
+    def _create_descriptor_mask(
+        self,
+        mask: numpy.ndarray,
+        partner_index: numpy.ndarray,
+    ) -> numpy.ndarray:
         i = numpy.arange(1, mask.shape[0] - 1)
         j = partner_index[i]
         out = numpy.zeros((mask.shape[0], 10), dtype=numpy.bool_)
@@ -257,7 +301,13 @@ class FeatureEncoder(_BaseEncoder):
         out[0] = out[-1] = True
         return out
 
-    def encode(self, ca, cb, n, c):
+    def encode(
+        self,
+        ca: NDArray2[K, XYZ, numpy.floating],
+        cb: NDArray2[K, XYZ, numpy.floating],
+        n: NDArray2[K, XYZ, numpy.floating],
+        c: NDArray2[K, XYZ, numpy.floating],
+    ) -> numpy.ma.MaskedArray:
         # encode backbone atoms to virtual center
         vc = self.vc_encoder.encode(ca, cb, n, c)
         # find closest neighbor for each residue
@@ -265,7 +315,9 @@ class FeatureEncoder(_BaseEncoder):
         # build position features from residue angles
         descriptors = self._calc_conformation_descriptors(ca, partner_index)
         # create mask
-        mask = self._create_descriptor_mask(vc.mask[:, 0], partner_index)
+        mask = self._create_descriptor_mask(
+            numpy.ma.getmaskarray(vc)[:, 0], partner_index
+        )
         return numpy.ma.masked_array(
             descriptors,
             mask=mask,
@@ -304,7 +356,7 @@ class Encoder(_BaseEncoder):
         ]
     )
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.feature_encoder = FeatureEncoder()
         layers = load_kerasify(
             resource_files(__package__).joinpath("encoder_weights_3di.kerasify")
@@ -313,20 +365,20 @@ class Encoder(_BaseEncoder):
 
     def encode(
         self,
-        ca,
-        cb,
-        n,
-        c,
-    ):
+        ca: NDArray2[K, XYZ, numpy.floating],
+        cb: NDArray2[K, XYZ, numpy.floating],
+        n: NDArray2[K, XYZ, numpy.floating],
+        c: NDArray2[K, XYZ, numpy.floating],
+    ) -> numpy.ma.MaskedArray:
         descriptors = self.feature_encoder.encode(ca, cb, n, c)
         states = self.vae_encoder(descriptors.data)
         return numpy.ma.masked_array(
             states,
-            mask=descriptors.mask[:, 0],
+            mask=numpy.ma.getmaskarray(descriptors)[:, 0],
             fill_value=self._INVALID_STATE,
         )
 
 
-def _normalize(x, *, inplace=False):
+def _normalize(x: numpy.ndarray, *, inplace: bool = False) -> numpy.ndarray:
     norm = numpy.linalg.norm(x, axis=-1).reshape(*x.shape[:-1], 1)
     return numpy.divide(x, norm, out=x if inplace else None, where=norm != 0)

@@ -8,6 +8,7 @@ __all__ = ["mass"]
 
 import json
 from pathlib import Path
+from typing import Any
 from biotite.structure.atoms import Atom, AtomArray, AtomArrayStack
 from biotite.structure.info.ccd import get_from_ccd
 
@@ -16,7 +17,10 @@ ATOM_MASSES_FILE = Path(__file__).parent / "atom_masses.json"
 _atom_masses = None
 
 
-def mass(item, is_residue=None):
+def mass(
+    item: str | Atom | AtomArray[Any] | AtomArrayStack[Any, Any],
+    is_residue: bool | None = None,
+) -> float:
     """
     Calculate the mass for the given object.
     :footcite:`Meija2016`
@@ -46,8 +50,13 @@ def mass(item, is_residue=None):
 
     Returns
     -------
-    mass : float or None
-        The mass of the given object in *u*. None if the mass is unknown.
+    mass : float
+        The mass of the given object in *u*.
+
+    Raises
+    ------
+    KeyError
+        If the mass is unknown for some residue name.
 
     References
     ----------
@@ -114,8 +123,13 @@ def mass(item, is_residue=None):
     return result_mass
 
 
-def _mass_for_residue(res_name):
+def _mass_for_residue(res_name: str) -> float:
+    # Imported here to avoid circular import
+    from biotite.structure.io.pdbx.component import MaskValue
+
     column = get_from_ccd("chem_comp", res_name.upper(), "formula_weight")
     if column is None:
         raise KeyError(f"Residue '{res_name}' is not known")
-    return column.as_item()
+    if column.mask is not None and column.mask.array.item() != MaskValue.PRESENT:
+        raise KeyError(f"Residue '{res_name}' has no known molecular weight")
+    return float(column.as_item())
