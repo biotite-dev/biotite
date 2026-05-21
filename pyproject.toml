@@ -41,8 +41,15 @@ repository = "https://github.com/biotite-dev/biotite"
 documentation = "https://www.biotite-python.org"
 
 [tool.ruff.lint]
-# pyflakes, pycodestyle isort and varibale naming
-select = ["F", "E", "W", "I", "TID", "N"]
+select = [
+    "F",    # Pyflakes (undefined names, unused imports, etc.)
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "I",    # isort (import ordering)
+    "TID",  # flake8-tidy-imports (no relative imports)
+    "N",    # pep8-naming (variable/function/class naming conventions)
+    "ANN2", # missing return type annotations (`pyright` `reportMissingParameterType` only checks for missing parameter type annotations)
+]
 ignore = [
     # In docstrings long lines are often intentional
     # Most other ocassions are caught by the ruff formatter
@@ -64,6 +71,12 @@ ignore = [
 "doc/examples/**/*_pymol.py" = ["F821"]
 # Due to 'Table' class used as parametrized argument in test functions
 "benchmarks/sequence/align/benchmark_kmers.py" = ["N803"]
+# Annotation enforcement is reserved for the library source code
+# tests, benchmarks and documentation scripts are exempt
+"setup.py" = ["ANN2"]
+"tests/**/*.py" = ["ANN2"]
+"benchmarks/**/*.py" = ["ANN2"]
+"doc/**/*.py" = ["ANN2"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
@@ -132,7 +145,16 @@ filterwarnings = [
 ]
 
 [tool.pyright]
-exclude = ["*"]
+include = ["src/biotite"]
+exclude = [
+    # `bonds.py` defines `BondType` dynamically as an `IntEnum` from Rust enum members
+    # This is overridden by theP `bonds.pyi` stub
+    "src/biotite/structure/bonds.py",
+]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+# Force every parameter to carry an explicit annotation.
+reportMissingParameterType = "error"
 
 [tool.pixi.workspace]
 channels = ["conda-forge", "bioconda"]
@@ -189,7 +211,6 @@ beartype = "*"
 [tool.pixi.feature.muscle5.dependencies]
 muscle = "5.*"
 
-# Minimal dependencies for static type checking and linting
 [tool.pixi.feature.lint.dependencies]
 # Python style/type checkers
 ruff = "==0.9.7"
@@ -199,7 +220,6 @@ taplo = "==0.9.3"
 # Rust toolchain including `rustfmt` and `clippy`
 rust = "==1.95"
 
-# Additional dependencies for building the documentation
 [tool.pixi.feature.doc.dependencies]
 pydata-sphinx-theme = "0.15.*"
 matplotlib = ">=3.3"
@@ -223,8 +243,8 @@ default = { features = ["test", "interface", "application", "doc", "lint"] }
 test = { features = ["test", "interface", "application"] }
 test-muscle5 = { features = ["muscle5", "test"] }
 doc = { features = ["doc", "interface", "application"] }
-# As `pyright` is ideally is run in the context of the runtime dependencies,
-# the 'default' dependencies are also included
+# `pyright` is ideally is run in the context of the runtime dependencies
+# -> Add interfaced packages as well
 lint = { features = ["lint", "interface"] }
 
 # Editable install — re-runs only when a Cython or Rust source file changes
@@ -269,7 +289,8 @@ description = "Run the test suite"
 # 'Private' tasks used by the 'lint' and 'format' tasks.
 _ruff-check = { cmd = "ruff check", default-environment = "lint" }
 _ruff-format-check = { cmd = "ruff format --diff", default-environment = "lint" }
-_pyright = { cmd = "pyright", default-environment = "lint" }
+# `pyright` complains if it does not see Biotite's extension modules
+_pyright = { cmd = "pyright", depends-on = ["_pip-install-editable"], default-environment = "lint" }
 _numpydoc = { cmd = "numpydoc lint src/biotite/**/*.py", default-environment = "lint" }
 _cargo-fmt-check = { cmd = "cargo fmt --check", default-environment = "lint" }
 _cargo-clippy = { cmd = "cargo clippy -- -Dwarnings", default-environment = "lint" }

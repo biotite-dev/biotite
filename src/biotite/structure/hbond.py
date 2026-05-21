@@ -16,9 +16,10 @@ from typing import Any, Literal, cast, overload
 import numpy as np
 from biotite.rust.structure import CellList
 from biotite.structure.atoms import AtomArray, AtomArrayStack, stack
+from biotite.structure.bonds import BondList
 from biotite.structure.filter import filter_heavy
 from biotite.structure.geometry import angle, distance
-from biotite.typing import C3, K, M, N, NDArray1, NDArray2
+from biotite.typing import C3, XYZ, K, M, N, NDArray1, NDArray2, NDArray3
 
 
 @overload
@@ -285,15 +286,15 @@ def hbond(
 
 
 def _hbond(
-    atoms,
-    donor_mask,
-    acceptor_mask,
-    donor_element_mask,
-    acceptor_element_mask,
-    cutoff_dist,
-    cutoff_angle,
-    box,
-):
+    atoms: AtomArrayStack[M, N],
+    donor_mask: NDArray1[N, np.bool_],
+    acceptor_mask: NDArray1[N, np.bool_],
+    donor_element_mask: NDArray1[N, np.bool_],
+    acceptor_element_mask: NDArray1[N, np.bool_],
+    cutoff_dist: float,
+    cutoff_angle: float,
+    box: NDArray3[M, XYZ, XYZ, np.floating] | None,
+) -> tuple[NDArray2[K, C3, np.integer], NDArray2[M, K, np.bool_]]:
     # Filter donor/acceptor elements
     donor_mask &= donor_element_mask
     acceptor_mask &= acceptor_element_mask
@@ -316,7 +317,7 @@ def _hbond(
     if len(donor_h_i) == 0 or len(acceptor_i) == 0:
         # Return empty triplets and mask
         return (
-            np.zeros((0, 3), dtype=int),
+            np.zeros((0, 3), dtype=int),  # pyright: ignore[reportReturnType]
             np.zeros((atoms.stack_depth(), 0), dtype=bool),
         )
 
@@ -365,7 +366,11 @@ def _hbond(
     return triplets, hbond_mask
 
 
-def _get_bonded_h(array, donor_mask, bonds):
+def _get_bonded_h(
+    array: AtomArray[N],
+    donor_mask: NDArray1[N, np.bool_],
+    bonds: BondList[N],
+) -> tuple[NDArray1[N, np.bool_], NDArray1[N, np.integer]]:
     """
     Helper function to find indices of associated hydrogens in atoms for
     all donors in atoms[donor_mask].
@@ -388,10 +393,17 @@ def _get_bonded_h(array, donor_mask, bonds):
         donor_hydrogen_mask[bonded_indices] = True
         associated_donor_indices[bonded_indices] = donor_i
 
-    return donor_hydrogen_mask, associated_donor_indices
+    return (
+        donor_hydrogen_mask,
+        associated_donor_indices,
+    )  # pyright: ignore[reportReturnType]
 
 
-def _get_bonded_h_via_distance(array, donor_mask, box):
+def _get_bonded_h_via_distance(
+    array: AtomArray[N],
+    donor_mask: NDArray1[N, np.bool_],
+    box: NDArray2[XYZ, XYZ, np.floating] | None,
+) -> tuple[NDArray1[N, np.bool_], NDArray1[N, np.integer]]:
     """
     Helper function to find indices of associated hydrogens in atoms for
     all donors in atoms[donor_mask].
@@ -416,10 +428,20 @@ def _get_bonded_h_via_distance(array, donor_mask, box):
             associated_donor_indices[i] = donor_i
             donor_hydrogen_mask[i] = True
 
-    return donor_hydrogen_mask, associated_donor_indices
+    return (
+        donor_hydrogen_mask,
+        associated_donor_indices,
+    )  # pyright: ignore[reportReturnType]
 
 
-def _is_hbond(donor, donor_h, acceptor, box, cutoff_dist, cutoff_angle):
+def _is_hbond(
+    donor: NDArray3[M, N, XYZ, np.floating],
+    donor_h: NDArray3[M, N, XYZ, np.floating],
+    acceptor: NDArray3[M, N, XYZ, np.floating],
+    box: (NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating] | None),
+    cutoff_dist: float,
+    cutoff_angle: float,
+) -> NDArray2[M, N, np.bool_]:
     """
     Filter triplets that meet distance and angle condition.
     """

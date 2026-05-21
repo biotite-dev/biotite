@@ -239,7 +239,7 @@ def find_stacking_interactions(
 
     ## Condition 3: The ring centroids are not shifted too much
     ## (in terms of normal-centroid angle)
-    # `ring_centroids[indices[:, …]]` is 2D, so `displacement()` returns 2D
+    # `ring_centroids` is 2D, so `displacement()` returns 2D
     diff = cast(
         "NDArray2[Any, Any, np.floating]",
         displacement(ring_centroids[indices[:, 0]], ring_centroids[indices[:, 1]]),
@@ -383,7 +383,7 @@ def find_pi_cation_interactions(
     indices = indices[is_interacting]
 
     ## Condition 2: Angle between ring normal and centroid-cation vector
-    # `ring_centroids[…]` and `cation_coords[…]` are 2D, so `displacement()` returns 2D
+    # `ring_centroids` and `cation_coords` are 2D, so `displacement()` returns 2D
     diff = cast(
         "NDArray2[Any, Any, np.floating]",
         displacement(ring_centroids[indices[:, 0]], cation_coords[indices[:, 1]]),

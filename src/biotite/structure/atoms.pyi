@@ -50,7 +50,6 @@ class _AtomArrayBase(Copyable):
     def set_annotation(self, category: str, array: np.ndarray) -> None: ...
     def get_annotation_categories(self) -> list[str]: ...
 
-
 class AtomArrayStack(_AtomArrayBase, Generic[M, N]):
     # --- Mandatory annotation categories ---
     chain_id: NDArray1[N, np.str_]
@@ -70,7 +69,7 @@ class AtomArrayStack(_AtomArrayBase, Generic[M, N]):
     # --- Misc ---
     coord: NDArray3[M, N, int, np.floating]
     bonds: BondList[N] | None
-    box: NDArray2[int, int, np.floating] | NDArray3[M, int, int, np.floating] | None
+    box: NDArray3[M, int, int, np.floating] | None
 
     def __init__(self, depth: int, length: int) -> None: ...
     def array_length(self) -> N: ...
@@ -104,7 +103,6 @@ class AtomArrayStack(_AtomArrayBase, Generic[M, N]):
     def __iter__(self) -> Iterator[AtomArray[N]]: ...
     def __add__(self, other: AtomArrayStack[M, int]) -> AtomArrayStack[M, int]: ...
     def __copy_create__(self) -> AtomArrayStack[M, N]: ...
-
 
 class AtomArray(_AtomArrayBase, Generic[N]):
     # --- Mandatory annotation categories ---
@@ -151,7 +149,6 @@ class AtomArray(_AtomArrayBase, Generic[N]):
     def __add__(self, other: AtomArray[int]) -> AtomArray[int]: ...
     def __copy_create__(self) -> AtomArray[N]: ...
 
-
 class Atom(Copyable):
     # --- Mandatory annotation categories ---
     chain_id: str
@@ -181,7 +178,6 @@ class Atom(Copyable):
     def __ne__(self, item: object) -> bool: ...
     def __copy_create__(self) -> Atom: ...
 
-
 # Re-declared because the `.pyi` shadows the `.py`; the runtime values
 # still live in `atoms.py` and are what `beartype` resolves at call
 # time.
@@ -201,16 +197,13 @@ MultiCoord = TypeAliasType(
 )
 
 def array(atoms: Iterable[Atom]) -> AtomArray[int]: ...
-
 def stack(arrays: Iterable[AtomArray[N]]) -> AtomArrayStack[int, N]: ...
-
 @overload
 def concatenate(atoms: Iterable[AtomArray[Any]]) -> AtomArray[int]: ...
 @overload
 def concatenate(
     atoms: Iterable[AtomArrayStack[M, Any]],
 ) -> AtomArrayStack[M, int]: ...
-
 @overload
 def repeat(
     atoms: AtomArray[N],
@@ -235,12 +228,10 @@ def from_template(
         NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating] | None
     ) = ...,
 ) -> AtomArrayStack[M, N]: ...
-
 @overload
 def coord(item: SingleCoord) -> NDArray1[XYZ, np.floating]: ...
 @overload
 def coord(item: Coord[N]) -> NDArray2[N, XYZ, np.floating]: ...
 @overload
 def coord(item: MultiCoord[M, N]) -> NDArray3[M, N, XYZ, np.floating]: ...
-
 def set_print_limits(max_models: int = ..., max_atoms: int = ...) -> None: ...

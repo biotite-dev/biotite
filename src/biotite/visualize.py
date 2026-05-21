@@ -13,9 +13,13 @@ __all__ = ["colors", "plot_scaled_text", "set_font_size_in_coord", "AdaptiveFanc
 
 import warnings
 from collections import OrderedDict
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 import numpy as np
 from numpy.linalg import norm
+from biotite.typing import MplColor
+
+if TYPE_CHECKING:
+    from matplotlib.text import Text
 
 _FONT_PROPERTY_KEYS = ["family", "style", "variant", "weight", "stretch", "size"]
 
@@ -144,7 +148,7 @@ def plot_scaled_text(
 
 
 def set_font_size_in_coord(
-    text: Any,
+    text: "Text",
     width: float | None = None,
     height: float | None = None,
     mode: Literal["proportional", "unlocked", "maximum", "minimum"] = "unlocked",
@@ -198,17 +202,33 @@ def set_font_size_in_coord(
     This behavior is not equal for all initial font sizes (in 'pt'),
     the boundaries for an initial size of 1 'pt' seem to be most exact.
     """
+    from matplotlib.backend_bases import GraphicsContextBase, RendererBase
+    from matplotlib.path import Path
     from matplotlib.patheffects import AbstractPathEffect
-    from matplotlib.transforms import Affine2D, Bbox
+    from matplotlib.text import Text
+    from matplotlib.transforms import Affine2D, Bbox, Transform
 
     class TextScaler(AbstractPathEffect):
-        def __init__(self, text, width, height, mode):
+        def __init__(
+            self,
+            text: Text,
+            width: float | None,
+            height: float | None,
+            mode: Literal["proportional", "unlocked", "maximum", "minimum"],
+        ) -> None:
             self._text = text
             self._mode = mode
             self._width = width
             self._height = height
 
-        def draw_path(self, renderer, gc, tpath, affine, rgbFace=None):  # noqa: N803
+        def draw_path(
+            self,
+            renderer: RendererBase,
+            gc: GraphicsContextBase,
+            tpath: Path,
+            affine: Transform,
+            rgbFace: MplColor | None = None,  # noqa: N803
+        ) -> None:
             ax = self._text.axes
             try:
                 renderer = ax.get_figure().canvas.get_renderer()
