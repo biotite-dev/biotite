@@ -12,7 +12,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["annotate_sse"]
 
 import numpy as np
-from biotite.structure.celllist import CellList
+from biotite.rust.structure import CellList
 from biotite.structure.filter import filter_amino_acids
 from biotite.structure.geometry import angle, dihedral, distance
 from biotite.structure.integrity import check_res_id_continuity

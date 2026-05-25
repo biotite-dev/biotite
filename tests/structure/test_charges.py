@@ -6,6 +6,7 @@ import warnings
 import numpy as np
 import pytest
 from biotite.structure import Atom, BondList, array, partial_charges
+from biotite.structure.info import residue
 
 # Test the partial charge of carbon in the molecules given in table
 # 3 of the Gasteiger-Marsili publication
@@ -364,14 +365,14 @@ def test_correct_output_ions():
 
 def test_correct_output_charged_aa():
     """
-    Identification of hybridisation state is primarily performed via the
+    Identification of hybridization state is primarily performed via the
     bond type; if the bond type is BondType.ANY, it is resorted to the
     amount of binding partners of the respective atom, which can lead to
     an erroneous identification if the respective atom possesses a
     formal charge due to one additional binding partner or the loss of
     one binding partner. As an example, oxygen of an hydroxyl group has
     an formal charge of -1 if it loses the hydrogen, but still has the
-    same hybridisation state. Identification via the amount of binding
+    same hybridization state. Identification via the amount of binding
     partners would be wrong.
 
     Therefore, the aim of this test is to verify that a molecule, in our
@@ -385,16 +386,16 @@ def test_correct_output_charged_aa():
     Precisely, in the case of the negatively charged oxygen atom in the
     carboxyl group, a lower electronegativity value and therefore a
     lower partial charge is expected in case of correct identification
-    of the hybridisation state via the bond type than in case of an
+    of the hybridization state via the bond type than in case of an
     erroneous identification via the amount of binding partners (cf.
     equation 2 for electronegativity and parameters listed in table 1 of
     the respective publication of Gasteiger and Marsili). The case of
     the positively charged nitrogen in the amino group, a correct
-    identification of the hybridisation state via the amount of binding
+    identification of the hybridization state via the amount of binding
     partners is possible as an amount of four binding partners is
-    unambiguous, i. e. only represents the sp3 hybridisation. Hence,
+    unambiguous, i. e. only represents the sp3 hybridization. Hence,
     it is verified whether both ways of the identification of the
-    hybridisation state deliver approximately the same result (small
+    hybridization state deliver approximately the same result (small
     deviation arises from the difference in the parameters for the
     oxygen atom of the hydroxyl group in the carboxyl group that
     propagates to the amino group).
@@ -456,7 +457,7 @@ def test_correct_output_charged_aa():
     )
 
     part_charges_with_btype = partial_charges(glycine_with_btype)
-    with pytest.warns(UserWarning, match="Each atom's bond type is 0"):
+    with pytest.warns(UserWarning, match="Each atom's bond type is undefined"):
         part_charges_without_btype = partial_charges(glycine_without_btype)
 
     # Nitrogen of the amino group has the index 0
@@ -471,3 +472,22 @@ def test_correct_output_charged_aa():
     # Assert that difference between the two values is significant
     difference_oxyg_charges = abs(oxyg_charge_with_btype - oxyg_charge_without_btype)
     assert difference_oxyg_charges > 3e-2
+
+
+def test_consistency_with_legacy():
+    """
+    Verify that the current *Rust* implementation of :func:`partial_charges()` produces
+    the same results as the
+    legacy *Cython* implementation for a sample molecule.
+    Use a molecule without aromatic bonds, for the test, as electronegativity
+    parametrization changed in the current implementation.
+    """
+    expected_charges = np.array([
+        0.26, -0.26, -0.33,  0.03, -0.04, -0.05, -0.04,  0.02, -0.15,  0.01,
+        0.04, -0.24,  0.27, -0.26, -0.24,  0.04,  0.22,  0.04,  0.04,  0.03,
+        0.03,  0.03,  0.03,  0.03,  0.03,  0.04,  0.04,  0.04,  0.05,  0.13,
+        0.13,  0.05,
+    ], dtype=np.float32)  # fmt: skip
+    btn = residue("BTN")
+    charges = partial_charges(btn)
+    np.testing.assert_allclose(charges, expected_charges, atol=1e-2)

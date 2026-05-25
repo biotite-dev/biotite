@@ -38,6 +38,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: 1.95.0
+        override: true
+        components: rustfmt, clippy
     - uses: actions/setup-python@v5
       with:
         python-version: "3.12"
@@ -50,6 +55,10 @@ jobs:
       run: ruff check
     - name: Check docstring formatting
       run: numpydoc lint src/biotite/**/*.py
+    - name: Check Rust formatting
+      run: cargo fmt --check
+    - name: Check Rust lints
+      run: cargo clippy -- -Dwarnings
 
 
   build-internal:
@@ -121,7 +130,7 @@ jobs:
           echo "include=$MATRIX" | tee -a $GITHUB_OUTPUT
         env:
           CIBW_ARCHS_LINUX: "x86_64 aarch64"
-          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_ARCHS_MACOS: "arm64"
           CIBW_ARCHS_WINDOWS: "x86 AMD64"
           # Skip musllinux because it takes too long to compile on GHA
           # since it is emulated. (6+ hours)

@@ -13,7 +13,8 @@ __all__ = ["get_molecule_indices", "get_molecule_masks", "molecule_iter"]
 
 import numpy as np
 from biotite.structure.atoms import AtomArray, AtomArrayStack
-from biotite.structure.bonds import BondList, find_connected
+from biotite.structure.bonds import BondList
+from biotite.structure.connect import find_connected
 
 
 def get_molecule_indices(array):

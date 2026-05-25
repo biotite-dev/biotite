@@ -184,8 +184,6 @@ def test_box(array, stack, array_box, stack_box):
     with pytest.raises(ValueError):
         array.box = stack_box
     with pytest.raises(ValueError):
-        stack.box = array_box
-    with pytest.raises(ValueError):
         array.box = np.array([42])
     with pytest.raises(ValueError):
         stack.box = np.array([42])

@@ -81,6 +81,22 @@ Substitute the installation with the following commands instead:
    $ pip install -e .
    $ python -m biotite.setup_ccd
 
+
+Build configuration
+^^^^^^^^^^^^^^^^^^^
+
+The following environment variables can be used to configure the compilation process:
+
+   - ``BIOTITE_OMIT_RUST`` - If set, skip building Rust extensions.
+   - ``BIOTITE_OMIT_CYTHON`` - If set, skip building Cython extensions.
+
+During development these can be useful for disabling compilation of untouched modules
+to reduce the build time.
+
+.. code-block:: console
+
+   $ BIOTITE_OMIT_RUST=1 pip install -e .
+
 Common issues and solutions
 ---------------------------
 

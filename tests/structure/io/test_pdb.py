@@ -7,6 +7,7 @@ import itertools
 import sys
 import warnings
 from os.path import join, splitext
+from pathlib import Path
 from tempfile import TemporaryFile
 import numpy as np
 import pytest
@@ -14,8 +15,12 @@ from pytest import approx
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
-import biotite.structure.io.pdb.hybrid36 as hybrid36
 import biotite.structure.io.pdbx as pdbx
+from biotite.rust.structure.io.pdb import (
+    decode_hybrid36,
+    encode_hybrid36,
+    max_hybrid36_number,
+)
 from tests.util import data_dir
 
 
@@ -116,11 +121,13 @@ def test_space_group(path):
     assert cryst1 == cryst2, "Space group mismatch after writing and reading."
 
 
+@pytest.mark.parametrize("model", [None, 1, -1])
 @pytest.mark.parametrize(
-    "path, model",
-    itertools.product(glob.glob(join(data_dir("structure"), "*.pdb")), [None, 1, -1]),
+    "path",
+    Path(data_dir("structure")).glob("*.pdb"),
+    ids=lambda p: p.stem,
 )
-def test_pdbx_consistency(path, model):
+def test_pdbx_consistency(model, path):
     bcif_path = splitext(path)[0] + ".bcif"
     pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
     try:
@@ -150,17 +157,19 @@ def test_pdbx_consistency(path, model):
         if model is None:
             ref_atoms = ref_atoms[0]
             test_atoms = test_atoms[0]
-        test_bond_set = set([tuple(e) for e in test_atoms.bonds.as_array()])
-        ref_bond_set = set([tuple(e) for e in ref_atoms.bonds.as_array()])
+        test_bond_set = test_atoms.bonds.as_set()
+        ref_bond_set = ref_atoms.bonds.as_set()
         print("Additional bonds in test_atoms:", file=sys.stderr)
-        for i, j, _ in test_bond_set - ref_bond_set:
+        for i, j, bt in test_bond_set - ref_bond_set:
             print(test_atoms[i], file=sys.stderr)
             print(test_atoms[j], file=sys.stderr)
+            print("Bond type:", struc.BondType(bt).name, file=sys.stderr)
             print(file=sys.stderr)
         print("Additional bonds in ref_atoms:", file=sys.stderr)
-        for i, j, _ in ref_bond_set - test_bond_set:
+        for i, j, bt in ref_bond_set - test_bond_set:
             print(ref_atoms[i], file=sys.stderr)
             print(ref_atoms[j], file=sys.stderr)
+            print("Bond type:", struc.BondType(bt).name, file=sys.stderr)
             print(file=sys.stderr)
         raise
     for category in ref_atoms.get_annotation_categories():
@@ -403,7 +412,7 @@ LENGTHS = [3, 4, 5]
         list(
             itertools.chain(
                 *[
-                    np.random.randint(0, hybrid36.max_hybrid36_number(length), N)
+                    np.random.randint(0, max_hybrid36_number(length), N)
                     for length in LENGTHS
                 ]
             )
@@ -416,14 +425,14 @@ def test_hybrid36_codec(number, length):
     Test whether hybrid-36 encoding and subsequent decoding restores the
     same number.
     """
-    string = hybrid36.encode_hybrid36(number, length)
-    test_number = hybrid36.decode_hybrid36(string)
+    string = encode_hybrid36(number, length)
+    test_number = decode_hybrid36(string)
     assert test_number == number
 
 
 def test_max_hybrid36_number():
-    assert hybrid36.max_hybrid36_number(4) == 2436111
-    assert hybrid36.max_hybrid36_number(5) == 87440031
+    assert max_hybrid36_number(4) == 2436111
+    assert max_hybrid36_number(5) == 87440031
 
 
 @pytest.mark.parametrize("hybrid36", [False, True])

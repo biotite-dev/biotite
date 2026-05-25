@@ -24,9 +24,18 @@ def benchmark_cell_list_creation(atoms):
     struc.CellList(atoms, 5.0)
 
 
+@pytest.mark.parametrize(
+    "result_format",
+    [
+        struc.CellList.Result.MAPPING,
+        struc.CellList.Result.MASK,
+        struc.CellList.Result.PAIRS,
+    ],
+    ids=lambda format: str(format).split(".")[-1],
+)
 @pytest.mark.benchmark
-def benchmark_cell_list_compute_contacts(cell_list, atoms):
+def benchmark_cell_list_compute_contacts(cell_list, atoms, result_format):
     """
     Find all contacts in a structure using an existing cell list.
     """
-    cell_list.get_atoms(atoms.coord, 5.0)
+    cell_list.get_atoms(atoms.coord, 5.0, result_format=result_format)

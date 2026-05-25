@@ -1,0 +1,24 @@
+[package]
+name = "biotite_rust"
+version = "0.0.0"
+edition = "2018"
+
+[dependencies]
+numpy = "0.27"
+ndarray = "0.17"
+num-traits = "0.2"
+smallvec = "1"
+itertools = "0.14"
+
+[dependencies.pyo3]
+version = "0.27"
+features = ["extension-module"]
+
+[lib]
+name = "rust"
+crate-type = ["cdylib"]
+path = "src/rust/lib.rs"
+
+# Enable optimizations in dev mode for better performance during development
+[profile.dev]
+opt-level = 3

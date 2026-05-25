@@ -37,6 +37,8 @@ def test_conversion_from_biotite(res_name):
     Run this on randomly selected molecules from the CCD.
     """
     ref_atoms = info.residue(res_name, allow_missing_coord=True)
+    if np.any(ref_atoms.element == "X"):
+        pytest.skip("Molecule contains an atom with unknown element")
 
     mol = rdkit_interface.to_mol(ref_atoms)
     test_atoms = rdkit_interface.from_mol(mol, add_hydrogen=False)

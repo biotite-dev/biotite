@@ -21,8 +21,8 @@ __all__ = [
 import warnings
 from enum import IntEnum
 import numpy as np
+from biotite.rust.structure import CellList
 from biotite.structure.atoms import Atom, array
-from biotite.structure.celllist import CellList
 from biotite.structure.compare import rmsd
 from biotite.structure.error import (
     BadStructureError,
@@ -292,9 +292,9 @@ class Edge(IntEnum):
     This enum type represents the interacting edge for a given base.
     """
 
-    INVALID = (0,)
-    WATSON_CRICK = (1,)
-    HOOGSTEEN = (2,)
+    INVALID = 0
+    WATSON_CRICK = 1
+    HOOGSTEEN = 2
     SUGAR = 3
 
 
@@ -305,8 +305,8 @@ class GlycosidicBond(IntEnum):
     """
 
     INVALID = 0
-    CIS = (1,)
-    TRANS = (2,)
+    CIS = 1
+    TRANS = 2
 
 
 def base_pairs_edge(atom_array, base_pairs):

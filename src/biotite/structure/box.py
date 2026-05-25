@@ -453,7 +453,7 @@ def move_inside_box(coord, box):
 
     Parameters
     ----------
-    coord : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+    coord : ndarray, dtype=float, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The coordinates for one or multiple models.
     box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
         The box(es) for one or multiple models.
@@ -462,7 +462,7 @@ def move_inside_box(coord, box):
 
     Returns
     -------
-    moved_coord : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+    moved_coord : ndarray, dtype=float, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The moved coordinates.
         Has the same shape is the input `coord`.
 
@@ -619,7 +619,7 @@ def coord_to_fraction(coord, box):
 
     Parameters
     ----------
-    coord : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+    coord : ndarray, dtype=float, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The coordinates for one or multiple models.
     box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
         The box(es) for one or multiple models.
@@ -628,7 +628,7 @@ def coord_to_fraction(coord, box):
 
     Returns
     -------
-    fraction : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+    fraction : ndarray, dtype=float, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The fractions of the box vectors.
 
     See Also
@@ -666,7 +666,7 @@ def fraction_to_coord(fraction, box):
 
     Parameters
     ----------
-    fraction : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+    fraction : ndarray, dtype=float, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The fractions of the box vectors for one or multiple models.
     box : ndarray, dtype=float, shape=(3,3) or shape=(m,3,3)
         The box(es) for one or multiple models.
@@ -675,7 +675,7 @@ def fraction_to_coord(fraction, box):
 
     Returns
     -------
-    coord : ndarray, dtype=float, shape=(n,3) or shape=(m,n,3)
+    coord : ndarray, dtype=float, shape=(3,) or shape=(n,3) or shape=(m,n,3)
         The coordinates.
 
     See Also

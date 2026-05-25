@@ -29,7 +29,7 @@ from biotite.structure.atoms import (
     concatenate,
     repeat,
 )
-from biotite.structure.bonds import BondList, BondType, connect_via_residue_names
+from biotite.structure.bonds import BondList, BondType
 from biotite.structure.box import (
     coord_to_fraction,
     fraction_to_coord,
@@ -37,6 +37,7 @@ from biotite.structure.box import (
     unitcell_from_vectors,
     vectors_from_unitcell,
 )
+from biotite.structure.connect import connect_via_residue_names
 from biotite.structure.error import BadStructureError
 from biotite.structure.filter import _canonical_aa_list as canonical_aa_list
 from biotite.structure.filter import (

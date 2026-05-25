@@ -15,7 +15,7 @@ __all__ = [
 import string
 from numbers import Integral
 import numpy as np
-from biotite.sequence.codec import decode_to_chars, encode_chars, map_sequence_code
+from biotite.rust.sequence import AlphabetCodec
 
 
 class Alphabet(object):
@@ -319,6 +319,7 @@ class LetterAlphabet(Alphabet):
         self._symbols = np.frombuffer(
             np.array(self._symbols, dtype="|S1"), dtype=np.ubyte
         )
+        self._codec = AlphabetCodec(self._symbols)
 
     def __repr__(self):
         """Represent LetterAlphabet as a string for debugging."""
@@ -378,7 +379,7 @@ class LetterAlphabet(Alphabet):
             symbols = np.frombuffer(
                 np.array(list(symbols), dtype="|S1"), dtype=np.ubyte
             )
-        return encode_chars(alphabet=self._symbols, symbols=symbols)
+        return self._codec.encode(symbols)
 
     def decode_multiple(self, code, as_bytes=False):
         """
@@ -403,7 +404,7 @@ class LetterAlphabet(Alphabet):
         if not isinstance(code, np.ndarray):
             code = np.array(code, dtype=np.uint8)
         code = code.astype(np.uint8, copy=False)
-        symbols = decode_to_chars(alphabet=self._symbols, code=code)
+        symbols = self._codec.decode(code)
         # Symbols must be convverted from 'np.ubyte' to '|S1'
         symbols = np.frombuffer(symbols, dtype="|S1")
         if not as_bytes:
@@ -497,9 +498,7 @@ class AlphabetMapper(object):
         ):
             code = np.array(code, dtype=np.uint64)
         if self._necessary_mapping:
-            mapped_code = np.empty(len(code), dtype=self._mapper.dtype)
-            map_sequence_code(self._mapper, code, mapped_code)
-            return mapped_code
+            return self._mapper[code]
         else:
             return code
 

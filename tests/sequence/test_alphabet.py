@@ -3,6 +3,7 @@
 # information.
 
 import itertools
+import pickle
 import numpy as np
 import pytest
 import biotite.sequence as seq
@@ -206,4 +207,21 @@ def test_common_alphabet_no_common():
             [seq.NucleotideSequence.alphabet_unamb, seq.ProteinSequence.alphabet]
         )
         is None
+    )
+
+
+def test_pickle(alphabet_symbols):
+    """
+    Check that a :class:`LetterAlphabet` survives a pickle round-trip unchanged.
+
+    This needs to be tested as the :class:`LetterAlphabet` contains a
+    :class:`AlphabetCodec` instance implemented in Rust
+    """
+    alph = seq.LetterAlphabet(alphabet_symbols)
+    restored = pickle.loads(pickle.dumps(alph))
+    code = alph.encode_multiple("ABF")
+
+    assert restored.encode_multiple("ABF").tolist() == code.tolist()
+    assert (
+        restored.decode_multiple(code).tolist() == alph.decode_multiple(code).tolist()
     )
