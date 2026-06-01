@@ -33,18 +33,36 @@ version of *Biotite*.
 Requirements
 ------------
 
-Development of *Biotite* requires a few packages in addition to the ones
-specified in
-`pyproject.toml <http://raw.githubusercontent.com/biotite-dev/biotite/master/pyproject.toml>`_.
-The full list is provided in
+For development of *Biotite* we recommend using the `Pixi <https://pixi.prefix.dev>`_
+environment specified in the ``pyproject.toml``.
+
+.. code-block:: console
+
+   $ pixi run install
+   $ pixi shell
+
+The most common workflows are exposed as tasks (run ``pixi task list``
+to see all of them), for example:
+
+.. code-block:: console
+
+   $ pixi run test
+   $ pixi run lint
+   $ pixi run format
+   $ pixi run doc
+
+Conda setup
+^^^^^^^^^^^
+
+If ``conda``/``mamba`` is preferred, the required packages are mirrored in the
 `environment.yml <http://raw.githubusercontent.com/biotite-dev/biotite/master/environment.yml>`_.
-If you use the `Conda <https://docs.conda.io>`_ package manager, you can simply
-create a environment with all required dependencies by running
 
 .. code-block:: console
 
    $ conda env create -f environment.yml
    $ conda activate biotite-dev
+
+Note that the `conda` setup is considered deprecated and may be removed in the future.
 
 Contributing examples
 ---------------------

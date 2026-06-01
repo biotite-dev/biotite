@@ -35,10 +35,13 @@ dynamic = ["version"]
 test = [
   "pytest",
   "pytest-codspeed",
+  "beartype",
 ]
 lint = [
   "ruff == 0.9.7",
   "numpydoc == 1.8.0",
+  "pyright == 1.1.409",
+  "taplo == 0.9.3",
 ]
 
 [project.urls]
@@ -151,6 +154,201 @@ filterwarnings = [
   "ignore:The 'netCDF4' Python package is not installed.",
   "ignore:Input structure has no associated 'BondList'",
 ]
+
+[tool.pyright]
+exclude = ["*"]
+
+[tool.pixi.workspace]
+channels = ["conda-forge", "bioconda"]
+# Restricted to unix because bioconda packages have no Windows builds
+platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
+requires-pixi = ">=0.40"
+
+[tool.pixi.dependencies]
+python = "3.12.*"
+# Runtime
+biotraj = ">=1.0,<2.0"
+msgpack-python = ">=0.5.6"
+networkx = ">=2.0"
+numpy = ">=2.2"  # 2.2 introduces more struct typing stubs
+packaging = ">=24.0"
+requests = ">=2.12"
+# Build
+python-build = "*"
+cython = ">=3.0"
+pip = ">=10.0"
+rust = ">=1.95"
+setuptools = "*"
+setuptools_scm = "*"
+setuptools-rust = "*"
+wheel = ">=0.30"
+
+[tool.pixi.feature.interface.dependencies]
+pymol-open-source = ">=2"
+ipython = "<8.29"
+ffmpeg = "*"
+imagemagick = "*"
+openmm = ">=8"
+matplotlib = ">=3.3"
+
+[tool.pixi.feature.interface.pypi-dependencies]
+rdkit = ">=2024.09.1"
+
+[tool.pixi.feature.application.dependencies]
+vina = "*"
+clustalo = "*"
+dssp = "4.*"
+libcifpp = "*"
+mafft = "*"
+sra-tools = "3.*"
+tantan = "*"
+viennarna = ">=2.5.0"
+muscle = "3.*"
+
+[tool.pixi.feature.test.dependencies]
+pytest = ">=7.0"
+pytest-codspeed = ">=2.0"
+beartype = "*"
+
+[tool.pixi.feature.muscle5.dependencies]
+muscle = "5.*"
+
+# Minimal dependencies for static type checking and linting
+[tool.pixi.feature.lint.dependencies]
+# Python style/type checkers
+ruff = "==0.9.7"
+numpydoc = "==1.8.0"
+pyright = "==1.1.409"
+taplo = "==0.9.3"
+# Rust toolchain including `rustfmt` and `clippy`
+rust = "==1.95"
+
+# Additional dependencies for building the documentation
+[tool.pixi.feature.doc.dependencies]
+pydata-sphinx-theme = "0.15.*"
+matplotlib = ">=3.3"
+ipython = "<8.29"
+jupyter-sphinx = ">=0.5.3"
+sphinx = ">=7.0"
+sphinxcontrib-bibtex = ">=2.3"
+sphinx-copybutton = ">=0.5"
+sphinx-design = ">=0.5"
+sphinx-gallery = "==0.18.0"
+sphinx-notfound-page = ">=1.0"
+numpydoc = "==1.8.0"
+# Extra packages used in the example gallery
+pandas = ">=1.5.2"
+pydot = ">=1.4"
+scikit-learn = ">=0.18"
+scipy = ">=1.8.0"
+
+[tool.pixi.environments]
+default = { features = ["test", "interface", "application", "doc", "lint"] }
+test = { features = ["test", "interface", "application"] }
+test-muscle5 = { features = ["muscle5", "test"] }
+doc = { features = ["doc", "interface", "application"] }
+# As `pyright` is ideally is run in the context of the runtime dependencies,
+# the 'default' dependencies are also included
+lint = { features = ["lint", "interface"] }
+
+# Editable install — re-runs only when a Cython or Rust source file changes
+[tool.pixi.tasks._pip-install-editable]
+cmd = "python -m pip install -e ."
+# Editable install only need to re-run when a Cython or Rust source file changes
+inputs = [
+    "src/**/*.pyx",
+    "src/**/*.pxd",
+    "src/**/*.rs",
+    "Cargo.toml",
+    "pyproject.toml",
+]
+
+[tool.pixi.tasks._current-date]
+# Writes the current ISO year-month into a marker file
+cmd = "date +%Y-%m > .date"
+
+[tool.pixi.tasks._setup-ccd]
+cmd = "python -m biotite.setup_ccd"
+depends-on = ["_pip-install-editable", "_current-date"]
+# Cached: only re-runs once per month
+inputs = [".date"]
+outputs = ["src/biotite/structure/info/components.bcif"]
+
+[tool.pixi.tasks.install]
+cmd = "true"
+depends-on = ["_pip-install-editable", "_setup-ccd"]
+description = "Install Biotite in editable mode"
+
+[tool.pixi.tasks.build-wheel]
+cmd = "python -m build --wheel"
+depends-on = ["_setup-ccd"]
+description = "Build a wheel distribution"
+
+[tool.pixi.tasks.build-sdist]
+cmd = "python -m build --sdist"
+depends-on = ["_setup-ccd"]
+description = "Build a source distribution"
+
+[tool.pixi.feature.test.tasks.test]
+cmd = "pytest"
+depends-on = ["install"]
+default-environment = "test"
+description = "Run the test suite"
+
+[tool.pixi.feature.lint.tasks]
+# 'Private' tasks used by the 'lint' and 'format' tasks.
+_ruff-check = { cmd = "ruff check", default-environment = "lint" }
+_ruff-format-check = { cmd = "ruff format --diff", default-environment = "lint" }
+_pyright = { cmd = "pyright", default-environment = "lint" }
+_numpydoc = { cmd = "numpydoc lint src/biotite/**/*.py", default-environment = "lint" }
+_cargo-fmt-check = { cmd = "cargo fmt --check", default-environment = "lint" }
+_cargo-clippy = { cmd = "cargo clippy -- -Dwarnings", default-environment = "lint" }
+_taplo-check = { cmd = "taplo format --check", default-environment = "lint" }
+_ruff-format = { cmd = "ruff format", default-environment = "lint" }
+_ruff-fix = { cmd = "ruff check --fix", default-environment = "lint" }
+_taplo-fmt = { cmd = "taplo format", default-environment = "lint" }
+_rust-fmt = { cmd = "cargo fmt", default-environment = "lint" }
+_rust-clippy = { cmd = "cargo clippy --fix --allow-dirty", default-environment = "lint" }
+
+# A no-op `cmd = "true"` is required because pixi 0.69 only accepts the
+# `default-environment` key on tasks that have a `cmd` field.
+[tool.pixi.feature.lint.tasks.lint]
+cmd = "true"
+depends-on = [
+    "_ruff-check",
+    "_ruff-format-check",
+    "_pyright",
+    "_numpydoc",
+    "_taplo-check",
+    "_cargo-fmt-check",
+    "_cargo-clippy",
+]
+default-environment = "lint"
+description = "Check code style and type annotations"
+
+[tool.pixi.feature.lint.tasks.format]
+cmd = "true"
+depends-on = [
+    "_ruff-format",
+    "_ruff-fix",
+    "_taplo-fmt",
+    "_rust-fmt",
+    "_rust-clippy",
+]
+default-environment = "lint"
+description = "Apply automatic code style fixes"
+
+[tool.pixi.feature.doc.tasks.doc]
+cmd = "sphinx-build -a -D plot_gallery=0 doc build/doc"
+depends-on = ["install"]
+default-environment = "doc"
+description = "Build documentation without the example gallery"
+
+[tool.pixi.feature.doc.tasks.doc-full]
+cmd = "sphinx-build -a doc build/doc"
+depends-on = ["install"]
+default-environment = "doc"
+description = "Build documentation including the example gallery"
 
 [tool.setuptools_scm]
 version_file = "src/biotite/version.py"

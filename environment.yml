@@ -12,6 +12,7 @@ dependencies:
   # Package building
   - cython >=3.0
   - pip >=10.0
+  - rust >=1.95
   - setuptools
   - setuptools_scm
   - setuptools-rust
@@ -20,17 +21,20 @@ dependencies:
   - biotraj >=1.0,<2.0
   - msgpack-python >=0.5.6
   - networkx >=2.0
-  - numpy >=2.0
+  - numpy >=2.2
   - packaging >=24.0
   - requests >=2.12
   # Testing
   - pytest >=7.0
   - pytest-codspeed >=2.0
+  - beartype
   # Code style, keep in sync with the versions in pyproject.toml
   - ruff =0.9.7
   - numpydoc =1.8.0
+  - pyright =1.1.409
+  - taplo =0.9.3
   # Interfaced software in biotite.application (can also be installed separately)
-  - autodock-vina
+  - vina
   - clustalo
   - dssp =4
   - libcifpp  # Makes sure that the used version of libcifpp contains this fix: https://github.com/bioconda/bioconda-recipes/pull/57869

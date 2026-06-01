@@ -15,11 +15,17 @@ Therefore, the documentation is based on *reStructuredText* files.
 The line length of these ``*.rst`` files is also limited to 79 characters
 where reasonable.
 
-To build the documentation, run from the root directory of the repository:
+To build the documentation, run from the root directory of the repository
 
 .. code-block:: console
 
     $ sphinx-build doc build/doc
+
+or in a ``pixi``-managed environment
+
+.. code-block:: console
+
+    $ pixi run doc-full
 
 Documentation structure
 -----------------------
@@ -78,6 +84,12 @@ To build the documentation without the gallery and the tutorial, run
 .. code-block:: console
 
     $ sphinx-build -D plot_gallery=0 doc build/doc
+
+or, equivalently,
+
+.. code-block:: console
+
+    $ pixi run doc
 
 You may also ask the *Biotite* maintainers to run the example script and check
 the generated page, if building the gallery on your device is not possible.

@@ -7,29 +7,17 @@ While developing a new feature or fixing a bug, it is handy to run a test
 script against the code you are working on.
 To ensure that the imported package ``biotite`` points to the code you are
 working on, you may want to install the local repository clone in *editable*
-mode:
+mode via
 
 .. code-block:: console
 
     $ pip install -e .
 
-If you are writing or using an extension module in *Cython*, consider using
-`pyximport <https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#compiling-with-pyximport>`_
-at the beginning of the script you use for testing.
+or
 
-.. code-block:: python
+.. code-block:: console
 
-    import numpy as np
-    import pyximport
-    pyximport.install(
-        build_in_temp=False,
-        setup_args={"include_dirs":np.get_include()},
-        language_level=3
-    )
-
-To enforce the recompilation of the changed *Cython* module, delete the
-respective compiled module (``.dll`` or ``.so``) from the ``src/`` directory,
-if already existing.
+    $ pixi run install
 
 Unit tests
 ----------
@@ -43,6 +31,12 @@ run the tests:
 
    $ pip install -e ".[test]"
    $ pytest
+
+In a Pixi-managed environment this is equivalent to
+
+.. code-block:: console
+
+   $ pixi run test
 
 Benchmarks
 ----------
