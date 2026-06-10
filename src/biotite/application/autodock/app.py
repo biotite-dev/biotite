@@ -77,6 +77,7 @@ class VinaApp(LocalApp):
         self._size = copy.deepcopy(size)
         self._is_flexible = flexible is not None
         self._seed = None
+        self._cpu = None
         self._exhaustiveness = None
         self._number = None
         self._energy_range = None
@@ -108,6 +109,19 @@ class VinaApp(LocalApp):
             The seed for the random number generator.
         """
         self._seed = seed
+
+    @requires_state(AppState.CREATED)
+    def set_cpu(self, cpu):
+        """
+        Set the number of CPUs *Vina* uses for docking.
+
+        Parameters
+        ----------
+        cpu : int or None
+            The number of CPUs to use.
+            If ``None``, all available CPUs are used.
+        """
+        self._cpu = cpu
 
     @requires_state(AppState.CREATED)
     def set_exhaustiveness(self, exhaustiveness):
@@ -246,6 +260,8 @@ class VinaApp(LocalApp):
         ]
         if self._seed is not None:
             arguments.extend(["--seed", str(self._seed)])
+        if self._cpu is not None:
+            arguments.extend(["--cpu", str(self._cpu)])
         if self._exhaustiveness is not None:
             arguments.extend(["--exhaustiveness", str(self._exhaustiveness)])
         if self._number is not None:

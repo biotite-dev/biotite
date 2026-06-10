@@ -65,7 +65,22 @@ To make code changes ready for a pull request, simply run
    $ ruff format
    $ ruff check --fix
 
-and fix the remaining linter complaints.
+for *Python* code and
+
+.. code-block:: console
+
+   $ cargo fmt
+   $ cargo clippy --fix --allow-dirty
+
+for *Rust* code, and fix the remaining linter complaints.
+
+Equivalently, run
+
+.. code-block:: console
+
+   $ pixi run format
+
+in a *Pixi* setup.
 
 Dependencies
 ------------

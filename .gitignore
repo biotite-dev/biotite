@@ -56,6 +56,12 @@ htmlcov
 # Ignore potential directory created during install
 biotite.egg-info
 
+# Pixi environments
+.pixi/*
+
+# Marker file used by the `_current-date` pixi task
+/.date
+
 # Ignore IntelliJ IDEA directory and project files
 .idea
 *.iml

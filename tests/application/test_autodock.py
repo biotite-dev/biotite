@@ -21,6 +21,8 @@ def test_docking(flexible):
     The output binding pose should be very similar to the pose in the
     PDB structure.
     """
+    MAX_DEVIATION = 1.7
+
     # A structure of a straptavidin-biotin complex
     pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("application"), "2rtg.bcif"))
     structure = pdbx.get_structure(
@@ -49,6 +51,9 @@ def test_docking(flexible):
         flexible=flexible_mask,
     )
     app.set_seed(0)
+    # Single-threaded execution is required for fully reproducible
+    # results — even with a fixed seed, parallel Vina is not deterministic
+    app.set_cpu(1)
     app.start()
     app.join()
 
@@ -81,11 +86,11 @@ def test_docking(flexible):
         test_receptor_coord = test_receptor_coord[not_nan_mask]
         # Check if it least one atom is preserved
         assert test_receptor_coord.shape[1] > 0
-        # The flexible residues should have a maximum deviation of 1.0 Å
-        # from the original conformation
-        # NOTE: Currently 1.0 Å is sufficient in local testing,
-        # but not in the CI (1.6 Å)
-        assert np.max(struc.distance(test_receptor_coord, ref_receptor_coord)) < 1.7
+        # The flexible residues should only have a small deviation from the original
+        assert (
+            np.max(struc.distance(test_receptor_coord, ref_receptor_coord))
+            < MAX_DEVIATION
+        )
     else:
         ref_receptor_coord = receptor.coord
         for model_coord in test_receptor_coord:

@@ -1,0 +1,13 @@
+# Taplo formatter configuration.  Documented at
+# https://taplo.tamasfe.dev/configuration/formatter-options.html.
+
+include = ["**/*.toml"]
+exclude = ["**/.pixi/**", "**/dist/**"]
+
+[formatting]
+# Match the 4-space indent used in the [project] block.
+indent_string = "    "
+column_width = 120
+# Defaults that we explicitly rely on (do not change without thought):
+# `reorder_arrays = false` — critical, channel order matters for the pixi solve
+# `reorder_keys = false`   — preserve manually chosen key order
