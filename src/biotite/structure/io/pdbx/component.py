@@ -12,9 +12,12 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["MaskValue"]
 
 from abc import ABCMeta, abstractmethod
-from collections.abc import MutableMapping
+from collections.abc import Iterator, MutableMapping
 from enum import IntEnum
+from typing import Any, Generic, Self, TypeVar
 from biotite.file import DeserializationError, SerializationError
+
+_V = TypeVar("_V")
 
 
 class MaskValue(IntEnum):
@@ -41,7 +44,7 @@ class _Component(metaclass=ABCMeta):
     """
 
     @staticmethod
-    def subcomponent_class():
+    def subcomponent_class() -> type | None:
         """
         Get the class of the components that are stored in this component.
 
@@ -56,7 +59,7 @@ class _Component(metaclass=ABCMeta):
         return None
 
     @staticmethod
-    def supercomponent_class():
+    def supercomponent_class() -> type | None:
         """
         Get the class of the component that contains this component.
 
@@ -70,9 +73,9 @@ class _Component(metaclass=ABCMeta):
         """
         return None
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def deserialize(content):
+    def deserialize(cls, content: str | dict) -> Self:
         """
         Create this component by deserializing the given content.
 
@@ -89,7 +92,7 @@ class _Component(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def serialize(self):
+    def serialize(self) -> str | dict:
         """
         Convert this component into a Python object that can be written
         to a file.
@@ -106,11 +109,13 @@ class _Component(metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.serialize())
 
 
-class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
+class _HierarchicalContainer(
+    _Component, MutableMapping[str, _V], Generic[_V], metaclass=ABCMeta
+):
     """
     A container for hierarchical data in BinaryCIF files.
     For example, the file contains multiple blocks, each block contains
@@ -128,25 +133,32 @@ class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
         By default no initial elements are added.
     """
 
-    def __init__(self, elements=None):
+    def __init__(self, elements: dict[str, Any] | None = None) -> None:
         if elements is None:
             elements = {}
+        subclass = self.subcomponent_class()
+        if subclass is None:
+            raise RuntimeError(
+                f"{type(self).__name__} does not declare a subcomponent class"
+            )
         for element in elements.values():
-            if not isinstance(element, (dict, self.subcomponent_class())):
+            if not isinstance(element, (dict, subclass)):
                 raise TypeError(
-                    f"Expected '{self.subcomponent_class().__name__}', "
+                    f"Expected '{subclass.__name__}', "
                     f"but got '{type(element).__name__}'"
                 )
         self._elements = elements
 
     @staticmethod
-    def _deserialize_elements(content, take_key_from):
+    def _deserialize_elements(
+        content: list[dict], take_key_from: str
+    ) -> dict[str, dict]:
         """
         Lazily deserialize the elements of this container.
 
         Parameters
         ----------
-        content : dict
+        content : list of dict
             The serialized content describing the elements for this
             container.
         take_key_from : str
@@ -155,7 +167,7 @@ class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
 
         Returns
         -------
-        elements : dict
+        elements : dict of str -> dict
             The elements that should be stored in this container.
             This return value can be given to the constructor.
         """
@@ -167,7 +179,7 @@ class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
             elements[key] = serialized_element
         return elements
 
-    def _serialize_elements(self, store_key_in=None):
+    def _serialize_elements(self, store_key_in: str | None = None) -> list[dict]:
         """
         Serialize the elements that are stored in this container.
 
@@ -181,10 +193,20 @@ class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
             serialized element.
             This is basically the reverse operation of `take_key_from` in
             :meth:`_deserialize_elements()`.
+
+        Returns
+        -------
+        serialized_elements : list of dict
+            The serialized elements.
         """
+        subclass = self.subcomponent_class()
+        if subclass is None:
+            raise RuntimeError(
+                f"{type(self).__name__} does not declare a subcomponent class"
+            )
         serialized_elements = []
         for key, element in self._elements.items():
-            if isinstance(element, self.subcomponent_class()):
+            if isinstance(element, subclass):
                 try:
                     serialized_element = element.serialize()
                 except Exception:
@@ -197,50 +219,59 @@ class _HierarchicalContainer(_Component, MutableMapping, metaclass=ABCMeta):
                 serialized_elements.append(serialized_element)
         return serialized_elements
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> _V:
         element = self._elements[key]
-        if not isinstance(element, self.subcomponent_class()):
+        subclass = self.subcomponent_class()
+        if subclass is None:
+            raise RuntimeError(
+                f"{type(self).__name__} does not declare a subcomponent class"
+            )
+        if not isinstance(element, subclass):
             # Element is stored in serialized form
             # -> must be deserialized first
             try:
-                element = self.subcomponent_class().deserialize(element)
+                element = subclass.deserialize(element)
             except Exception:
                 raise DeserializationError(f"Failed to deserialize element '{key}'")
             # Update container with deserialized object
             self._elements[key] = element
         return element
 
-    def __setitem__(self, key, element):
-        if isinstance(element, self.subcomponent_class()):
+    def __setitem__(self, key: str, element: _V) -> None:
+        subclass = self.subcomponent_class()
+        if subclass is None:
+            raise RuntimeError(
+                f"{type(self).__name__} does not declare a subcomponent class"
+            )
+        if isinstance(element, subclass):
             pass
         elif isinstance(element, _HierarchicalContainer):
             # A common mistake may be to use the wrong container type
             raise TypeError(
-                f"Expected '{self.subcomponent_class().__name__}', "
-                f"but got '{type(element).__name__}'"
+                f"Expected '{subclass.__name__}', but got '{type(element).__name__}'"
             )
         else:
             try:
-                element = self.subcomponent_class().deserialize(element)
+                element = subclass.deserialize(element)
             except Exception:
                 raise DeserializationError("Failed to deserialize given value")
         self._elements[key] = element
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         del self._elements[key]
 
     # Implement `__contains__()` explicitly,
     # because the mixin method unnecessarily deserializes the value, if available
-    def __contains__(self, key):
+    def __contains__(self, key: object) -> bool:
         return key in self._elements
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._elements)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._elements)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         if set(self.keys()) != set(other.keys()):

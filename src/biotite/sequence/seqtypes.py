@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann", "Thomas Nevolianis"
 __all__ = [
@@ -12,7 +14,10 @@ __all__ = [
     "PurePositionalSequence",
 ]
 
+from collections.abc import Iterable
+from collections.abc import Sequence as SequenceABC
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeVar, overload
 import numpy as np
 from biotite.sequence.alphabet import (
     Alphabet,
@@ -22,8 +27,13 @@ from biotite.sequence.alphabet import (
 )
 from biotite.sequence.sequence import Sequence
 
+if TYPE_CHECKING:
+    from biotite.sequence.codon import CodonTable
 
-class GeneralSequence(Sequence):
+_T = TypeVar("_T")
+
+
+class GeneralSequence(Sequence[Any]):
     """
     This class allows the creation of a sequence with custom
     :class:`Alphabet` without the need to subclass :class:`Sequence`.
@@ -39,24 +49,26 @@ class GeneralSequence(Sequence):
         By default the sequence is empty.
     """
 
-    def __init__(self, alphabet, sequence=()):
+    def __init__(
+        self, alphabet: Alphabet[Any], sequence: SequenceABC[Any] = ()
+    ) -> None:
         self._alphabet = alphabet
         super().__init__(sequence)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent GeneralSequence as a string for debugging."""
         return (
             f"GeneralSequence(Alphabet({self._alphabet}), "
             f"[{', '.join([repr(symbol) for symbol in self.symbols])}])"
         )
 
-    def __copy_create__(self):
-        return GeneralSequence(self._alphabet)
+    def __copy_create__(self) -> Self:
+        return type(self)(self._alphabet)
 
-    def get_alphabet(self):
+    def get_alphabet(self) -> Alphabet[Any]:
         return self._alphabet
 
-    def as_type(self, sequence):
+    def as_type(self, sequence: Sequence[Any]) -> Sequence[Any]:
         """
         Convert the :class:`GeneralSequence` into a sequence of another
         :class:`Sequence` type.
@@ -92,7 +104,7 @@ class GeneralSequence(Sequence):
         return sequence
 
 
-class NucleotideSequence(Sequence):
+class NucleotideSequence(Sequence[str]):
     """
     Representation of a nucleotide sequence (DNA or RNA).
 
@@ -115,8 +127,8 @@ class NucleotideSequence(Sequence):
         is used.
     """
 
-    alphabet_unamb = LetterAlphabet(["A", "C", "G", "T"])
-    alphabet_amb = LetterAlphabet(
+    alphabet_unamb: LetterAlphabet = LetterAlphabet(["A", "C", "G", "T"])
+    alphabet_amb: LetterAlphabet = LetterAlphabet(
         ["A", "C", "G", "T", "R", "Y", "W", "S", "M", "K", "H", "B", "V", "D", "N"]
     )
 
@@ -144,7 +156,11 @@ class NucleotideSequence(Sequence):
     _compl_alphabet_unamb = LetterAlphabet(_compl_symbols)
     _compl_mapper = AlphabetMapper(_compl_alphabet_unamb, alphabet_amb)
 
-    def __init__(self, sequence=[], ambiguous=None):
+    def __init__(
+        self,
+        sequence: Iterable[str] | str = [],
+        ambiguous: bool | None = None,
+    ) -> None:
         if isinstance(sequence, str):
             sequence = sequence.upper()
         else:
@@ -165,7 +181,7 @@ class NucleotideSequence(Sequence):
         super().__init__()
         self.code = seq_code
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent NucleotideSequence as a string for debugging."""
         if self._alphabet == NucleotideSequence.alphabet_amb:
             ambiguous = True
@@ -173,17 +189,17 @@ class NucleotideSequence(Sequence):
             ambiguous = False
         return f'NucleotideSequence("{"".join(self.symbols)}", ambiguous={ambiguous})'
 
-    def __copy_create__(self):
+    def __copy_create__(self) -> Self:
         if self._alphabet == NucleotideSequence.alphabet_amb:
-            seq_copy = NucleotideSequence(ambiguous=True)
+            seq_copy = type(self)(ambiguous=True)
         else:
-            seq_copy = NucleotideSequence(ambiguous=False)
+            seq_copy = type(self)(ambiguous=False)
         return seq_copy
 
-    def get_alphabet(self):
+    def get_alphabet(self) -> LetterAlphabet:
         return self._alphabet
 
-    def complement(self):
+    def complement(self) -> Self:
         """
         Get the complement nucleotide sequence.
 
@@ -207,9 +223,30 @@ class NucleotideSequence(Sequence):
         # alphabet, the sequence code is mapped from the complementary
         # alphabet into the original alphabet
         compl_code = NucleotideSequence._compl_mapper[self.code]
+        if isinstance(compl_code, int):
+            raise TypeError("Unexpected scalar result for sequence code mapping")
         return self.copy(compl_code)
 
-    def translate(self, complete=False, codon_table=None, met_start=False):
+    @overload
+    def translate(
+        self,
+        complete: Literal[True],
+        codon_table: CodonTable | None = None,
+        met_start: bool = False,
+    ) -> ProteinSequence: ...
+    @overload
+    def translate(
+        self,
+        complete: Literal[False] = False,
+        codon_table: CodonTable | None = None,
+        met_start: bool = False,
+    ) -> tuple[list[ProteinSequence], list[tuple[int, int]]]: ...
+    def translate(
+        self,
+        complete: bool = False,
+        codon_table: CodonTable | None = None,
+        met_start: bool = False,
+    ) -> ProteinSequence | tuple[list[ProteinSequence], list[tuple[int, int]]]:
         """
         Translate the nucleotide sequence into a protein sequence.
 
@@ -332,7 +369,7 @@ class NucleotideSequence(Sequence):
             return protein_seqs, pos
 
     @staticmethod
-    def unambiguous_alphabet():
+    def unambiguous_alphabet() -> LetterAlphabet:
         """
         Get the unambiguous nucleotide alphabet containing the symbols
         ``A``,  ``C``,  ``G`` and  ``T``.
@@ -345,7 +382,7 @@ class NucleotideSequence(Sequence):
         return NucleotideSequence.alphabet_unamb
 
     @staticmethod
-    def ambiguous_alphabet():
+    def ambiguous_alphabet() -> LetterAlphabet:
         """
         Get the ambiguous nucleotide alphabet containing the symbols
         ``A``,  ``C``,  ``G`` and  ``T`` and symbols describing
@@ -359,7 +396,7 @@ class NucleotideSequence(Sequence):
         return NucleotideSequence.alphabet_amb
 
 
-class ProteinSequence(Sequence):
+class ProteinSequence(Sequence[str]):
     """
     Representation of a protein sequence.
 
@@ -385,7 +422,7 @@ class ProteinSequence(Sequence):
 
     _codon_table = None
 
-    alphabet = LetterAlphabet(
+    alphabet: LetterAlphabet = LetterAlphabet(
         [
             "A",
             "C",
@@ -508,7 +545,7 @@ class ProteinSequence(Sequence):
     _dict_3to1["SEC"] = "C"
     _dict_3to1["MSE"] = "M"
 
-    def __init__(self, sequence=()):
+    def __init__(self, sequence: Iterable[str] = ()) -> None:
         dict_3to1 = ProteinSequence._dict_3to1
         # Convert 3-letter codes to single letter codes,
         # if list contains 3-letter codes
@@ -518,14 +555,14 @@ class ProteinSequence(Sequence):
         ]
         super().__init__(sequence)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent ProteinSequence as a string for debugging."""
         return f'ProteinSequence("{"".join(self.symbols)}")'
 
-    def get_alphabet(self):
+    def get_alphabet(self) -> LetterAlphabet:
         return ProteinSequence.alphabet
 
-    def remove_stops(self):
+    def remove_stops(self) -> Self:
         """
         Remove *stop signals* from the sequence.
 
@@ -541,7 +578,7 @@ class ProteinSequence(Sequence):
         return no_stop
 
     @staticmethod
-    def convert_letter_3to1(symbol):
+    def convert_letter_3to1(symbol: str) -> str:
         """
         Convert a 3-letter to a 1-letter amino acid representation.
 
@@ -558,7 +595,7 @@ class ProteinSequence(Sequence):
         return ProteinSequence._dict_3to1[symbol.upper()]
 
     @staticmethod
-    def convert_letter_1to3(symbol):
+    def convert_letter_1to3(symbol: str) -> str:
         """
         Convert a 1-letter to a 3-letter amino acid representation.
 
@@ -574,7 +611,7 @@ class ProteinSequence(Sequence):
         """
         return ProteinSequence._dict_1to3[symbol.upper()]
 
-    def get_molecular_weight(self, monoisotopic=False):
+    def get_molecular_weight(self, monoisotopic: bool = False) -> float:
         """
         Calculate the molecular weight of this protein.
 
@@ -606,7 +643,7 @@ class ProteinSequence(Sequence):
         return weight
 
 
-class PositionalSequence(Sequence):
+class PositionalSequence(Sequence[Any]):
     """
     A sequence where each symbol is associated with a position.
 
@@ -623,7 +660,7 @@ class PositionalSequence(Sequence):
     """
 
     @dataclass(frozen=True)
-    class Symbol:
+    class Symbol(Generic[_T]):
         """
         Combination of a symbol and its position in a sequence.
 
@@ -644,31 +681,32 @@ class PositionalSequence(Sequence):
             The sequence type containing :class:`PositionalSymbol` objects.
         """
 
-        original_alphabet: ...
-        original_code: ...
-        position: ...
-        symbol: ... = field(init=False)
+        original_alphabet: Alphabet[_T]
+        original_code: int
+        position: int
+        symbol: _T = field(init=False)
 
-        def __post_init__(self):
+        def __post_init__(self) -> None:
             sym = self.original_alphabet.decode(self.original_code)
-            super().__setattr__("symbol", sym)
+            # Frozen dataclass workaround
+            object.__setattr__(self, "symbol", sym)
 
-        def __str__(self):
+        def __str__(self) -> str:
             return str(self.symbol)
 
-    def __init__(self, original_sequence):
+    def __init__(self, original_sequence: Sequence[Any]) -> None:
         self._orig_alphabet = original_sequence.get_alphabet()
-        self._alphabet = Alphabet(
+        self._alphabet: Alphabet[PositionalSequence.Symbol] = Alphabet(
             [
                 PositionalSequence.Symbol(self._orig_alphabet, code, pos)
-                for pos, code in enumerate(original_sequence.code)
+                for pos, code in enumerate(original_sequence.code.tolist())
             ]
         )
         self.code = np.arange(
             len(original_sequence), dtype=Sequence.dtype(len(self._alphabet))
         )
 
-    def reconstruct(self):
+    def reconstruct(self) -> GeneralSequence:
         """
         Reconstruct the original sequence from the positional sequence.
 
@@ -684,17 +722,17 @@ class PositionalSequence(Sequence):
         original_sequence.code = np.array([sym.original_code for sym in self._alphabet])
         return original_sequence
 
-    def get_alphabet(self):
+    def get_alphabet(self) -> Alphabet[PositionalSequence.Symbol]:
         return self._alphabet
 
     def __str__(self) -> str:
         return "".join([str(sym) for sym in self.symbols])
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"PositionalSequence({self.reconstruct()!r})"
 
 
-class PurePositionalSequence(Sequence):
+class PurePositionalSequence(Sequence[int]):
     """
     An object of this class is a 'placeholder' sequence, where each symbol is the
     position in the sequence itself.
@@ -709,12 +747,12 @@ class PurePositionalSequence(Sequence):
         The length of the sequence.
     """
 
-    def __init__(self, length):
-        self._alphabet = Alphabet(range(length))
+    def __init__(self, length: int) -> None:
+        self._alphabet: Alphabet[int] = Alphabet(range(length))
         self.code = np.arange(length, dtype=Sequence.dtype(length))
 
-    def get_alphabet(self):
+    def get_alphabet(self) -> Alphabet[int]:
         return self._alphabet
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"PurePositionalSequence({len(self)})"

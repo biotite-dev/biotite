@@ -20,10 +20,8 @@ BOND_TYPES = {
     ("TRIP", "Y"): BondType.AROMATIC_TRIPLE,
 }
 
-_intra_bonds = {}
 
-
-def bond_type(res_name, atom_name1, atom_name2):
+def bond_type(res_name: str, atom_name1: str, atom_name2: str) -> BondType | None:
     """
     Get the :class:`BondType` for two atoms of the same residue, based
     on the PDB chemical components dictionary.
@@ -58,20 +56,14 @@ def bond_type(res_name, atom_name1, atom_name2):
     None
     """
     bonds_for_residue = bonds_in_residue(res_name)
-    if bonds_for_residue is None:
-        return None
     # Try both atom orders
-    bond_type_int = bonds_for_residue.get(
+    return bonds_for_residue.get(
         (atom_name1, atom_name2), bonds_for_residue.get((atom_name2, atom_name1))
     )
-    if bond_type_int is not None:
-        return BondType(bond_type_int)
-    else:
-        return None
 
 
-@functools.cache
-def bonds_in_residue(res_name):
+@functools.lru_cache(maxsize=1000)
+def bonds_in_residue(res_name: str) -> dict[tuple[str, str], BondType]:
     """
     Get a dictionary containing all atoms inside a given residue
     that form a bond.
@@ -83,9 +75,9 @@ def bonds_in_residue(res_name):
 
     Returns
     -------
-    bonds : dict ((str, str) -> int)
+    bonds : dict ((str, str) -> BondType)
         A dictionary that maps tuples of two atom names to their
-        respective bond types (represented as integer).
+        respective bond types.
         Empty, if the residue is unknown to the
         chemical components dictionary.
 
@@ -130,20 +122,17 @@ def bonds_in_residue(res_name):
     H2  + N   -> SINGLE
     HXT + OXT -> SINGLE
     """
-    global _intra_bonds
-    if res_name not in _intra_bonds:
-        chem_comp_bond = get_from_ccd("chem_comp_bond", res_name)
-        if chem_comp_bond is None:
-            _intra_bonds[res_name] = {}
-        else:
-            bonds_for_residue = {}
-            for atom1, atom2, order, aromatic_flag in zip(
-                chem_comp_bond["atom_id_1"].as_array(),
-                chem_comp_bond["atom_id_2"].as_array(),
-                chem_comp_bond["value_order"].as_array(),
-                chem_comp_bond["pdbx_aromatic_flag"].as_array(),
-            ):
-                bond_type = BOND_TYPES[order, aromatic_flag]
-                bonds_for_residue[atom1.item(), atom2.item()] = bond_type
-            _intra_bonds[res_name] = bonds_for_residue
-    return _intra_bonds[res_name]
+    chem_comp_bond = get_from_ccd("chem_comp_bond", res_name)
+    if chem_comp_bond is None:
+        return {}
+    else:
+        bonds_for_residue = {}
+        for atom1, atom2, order, aromatic_flag in zip(
+            chem_comp_bond["atom_id_1"].as_array(),
+            chem_comp_bond["atom_id_2"].as_array(),
+            chem_comp_bond["value_order"].as_array(),
+            chem_comp_bond["pdbx_aromatic_flag"].as_array(),
+        ):
+            bond_type = BOND_TYPES[order, aromatic_flag]
+            bonds_for_residue[atom1.item(), atom2.item()] = bond_type
+        return bonds_for_residue

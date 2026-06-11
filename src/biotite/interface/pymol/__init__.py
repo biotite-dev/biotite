@@ -162,6 +162,7 @@ or ``pymol_interface.cmd`` at the required places in your code.
 __name__ = "biotite.interface.pymol"
 __author__ = "Patrick Kunzmann"
 
+from typing import Any
 from biotite.interface.version import require_package
 
 require_package("pymol")
@@ -184,18 +185,18 @@ from .startup import (
 
 # Make the PyMOL instance accessible via `biotite.interface.pymol.pymol`
 # analogous to a '@property' of a class, but on module level instead
-def __getattr__(name):
+def __getattr__(name: str) -> Any:
     from .startup import get_and_set_pymol_instance
 
     if name == "pymol":
         return get_and_set_pymol_instance()
     elif name == "cmd":
-        return __getattr__("pymol").cmd
+        return get_and_set_pymol_instance().cmd
     elif name in list(globals().keys()):
         return globals()["name"]
     else:
         raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 
-def __dir__():
+def __dir__() -> list[str]:
     return list(globals().keys()) + ["pymol", "cmd"]

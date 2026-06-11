@@ -2,6 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+# RDKit ships an incomplete set of type stubs
+# pyright: reportAttributeAccessIssue=false
+
+from __future__ import annotations
+
 __name__ = "biotite.interface.rdkit"
 __author__ = "Patrick Kunzmann, Simon Mathis"
 __all__ = ["to_mol", "from_mol"]
@@ -10,6 +15,8 @@ import copy
 import numbers
 import warnings
 from collections import defaultdict
+from collections.abc import Iterable, Sequence
+from typing import Any, Literal, cast, overload
 import numpy as np
 import rdkit.Chem.AllChem as Chem
 from rdkit.Chem import SanitizeFlags
@@ -68,12 +75,12 @@ _STANDARD_ANNOTATIONS = frozenset(
 # `Conformer.SetPositions()` was added in RDKit 2024.09.1
 @requires_version("rdkit", ">=2024.09.1")
 def to_mol(
-    atoms,
-    kekulize=False,
-    use_dative_bonds=False,
-    include_extra_annotations=(),
-    explicit_hydrogen=None,
-):
+    atoms: AtomArray[Any] | AtomArrayStack[Any, Any],
+    kekulize: bool = False,
+    use_dative_bonds: bool = False,
+    include_extra_annotations: Iterable[str] = (),
+    explicit_hydrogen: bool | None = None,
+) -> Chem.Mol:
     """
     Convert an :class:`.AtomArray` or :class:`.AtomArrayStack` into a
     :class:`rdkit.Chem.rdchem.Mol`.
@@ -248,8 +255,24 @@ def to_mol(
     return mol
 
 
+@overload
+def from_mol(
+    mol: Chem.Mol,
+    conformer_id: int,
+    add_hydrogen: bool | None = None,
+) -> AtomArray[Any]: ...
+@overload
+def from_mol(
+    mol: Chem.Mol,
+    conformer_id: Literal["2D", "3D"] | None = None,
+    add_hydrogen: bool | None = None,
+) -> AtomArrayStack[Any, Any]: ...
 @requires_version("rdkit", ">=2020")
-def from_mol(mol, conformer_id=None, add_hydrogen=None):
+def from_mol(
+    mol: Chem.Mol,
+    conformer_id: int | Literal["2D", "3D"] | None = None,
+    add_hydrogen: bool | None = None,
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
     Convert a :class:`rdkit.Chem.rdchem.Mol` into an :class:`.AtomArray` or
     :class:`.AtomArrayStack`.
@@ -331,7 +354,9 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
             Chem.SanitizeMol(mol, SanitizeFlags.SANITIZE_ADJUSTHS)
         mol = Chem.AddHs(mol, addCoords=False, addResidueInfo=False)
 
-    rdkit_atoms = mol.GetAtoms()
+    # `Mol.GetAtoms()` returns an `_ROAtomSeq` (sized & sequence-like) but the
+    # rdkit stub types it as the looser `Iterable[Atom]`.
+    rdkit_atoms = cast(Sequence[Chem.Atom], mol.GetAtoms())
     if rdkit_atoms is None:
         raise BadStructureError("Could not obtains atoms from Mol")
 
@@ -472,17 +497,17 @@ def from_mol(mol, conformer_id=None, add_hydrogen=None):
     return atoms
 
 
-def _has_explicit_hydrogen(mol):
+def _has_explicit_hydrogen(mol: Chem.Mol) -> bool:
     return mol.GetNumAtoms() > mol.GetNumHeavyAtoms()
 
 
-def _set_property(atom, annot_name, value):
+def _set_property(atom: Chem.Atom, annot_name: str, value: Any) -> None:
     if isinstance(value, bool):
         atom.SetBoolProp(annot_name, value)
     elif isinstance(value, numbers.Integral):
-        atom.SetIntProp(annot_name, value)
+        atom.SetIntProp(annot_name, int(value))
     elif isinstance(value, numbers.Real):
-        atom.SetDoubleProp(annot_name, value)
+        atom.SetDoubleProp(annot_name, float(value))
     elif isinstance(value, str):
         atom.SetProp(annot_name, value)
     else:

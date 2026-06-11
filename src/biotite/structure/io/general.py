@@ -12,12 +12,20 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["load_structure", "save_structure"]
 
 import datetime
-import io
 import os.path
-from biotite.structure.atoms import AtomArrayStack
+from os import PathLike
+from typing import TYPE_CHECKING, Any
+from biotite.structure.atoms import AtomArray, AtomArrayStack
+
+if TYPE_CHECKING:
+    from biotite.structure.io.mol import Header
 
 
-def load_structure(file_path, template=None, **kwargs):
+def load_structure(
+    file_path: str | PathLike[str],
+    template: AtomArray[Any] | AtomArrayStack[Any, Any] | str | None = None,
+    **kwargs: Any,
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
     Load an :class:`AtomArray` or class`AtomArrayStack` from a structure
     file without the need to manually instantiate a :class:`File`
@@ -57,7 +65,7 @@ def load_structure(file_path, template=None, **kwargs):
         `template` parameter.
     """
     # Optionally load template from file
-    if isinstance(template, (io.IOBase, str)):
+    if isinstance(template, str):
         template = load_structure(template)
 
     # We only need the suffix here
@@ -125,13 +133,17 @@ def load_structure(file_path, template=None, **kwargs):
                 traj_file_cls = DCDFile
             if suffix == ".netcdf":
                 traj_file_cls = NetCDFFile
-            file = traj_file_cls.read(file_path, **kwargs)
+            file = traj_file_cls.read(file_path, **kwargs)  # pyright: ignore[reportPossiblyUnboundVariable]
             return file.get_structure(template)
         case unknown_suffix:
             raise ValueError(f"Unknown file format '{unknown_suffix}'")
 
 
-def save_structure(file_path, array, **kwargs):
+def save_structure(
+    file_path: str | PathLike[str],
+    array: AtomArray[Any] | AtomArrayStack[Any, Any],
+    **kwargs: Any,
+) -> None:
     """
     Save an :class:`AtomArray` or class`AtomArrayStack` to a structure
     file without the need to manually instantiate a :class:`File`
@@ -167,6 +179,8 @@ def save_structure(file_path, array, **kwargs):
         case ".pdbqt":
             from biotite.structure.io.pdbqt import PDBQTFile
 
+            if isinstance(array, AtomArrayStack):
+                raise ValueError("PDBQT files do not support AtomArrayStack")
             file = PDBQTFile()
             file.set_structure(array, **kwargs)
             file.write(file_path)
@@ -191,6 +205,8 @@ def save_structure(file_path, array, **kwargs):
         case ".mol":
             from biotite.structure.io.mol import MOLFile
 
+            if isinstance(array, AtomArrayStack):
+                raise ValueError("MOL files do not support AtomArrayStack")
             file = MOLFile()
             file.set_structure(array, **kwargs)
             file.header = _mol_header()
@@ -198,6 +214,8 @@ def save_structure(file_path, array, **kwargs):
         case ".sdf" | ".sd":
             from biotite.structure.io.mol import SDFile, SDRecord, set_structure
 
+            if isinstance(array, AtomArrayStack):
+                raise ValueError("SDF files do not support AtomArrayStack")
             record = SDRecord()
             record.set_structure(array, **kwargs)
             record.header = _mol_header()
@@ -211,20 +229,24 @@ def save_structure(file_path, array, **kwargs):
 
             if suffix == ".trr":
                 traj_file_cls = TRRFile
-            if suffix == ".xtc":
+            elif suffix == ".xtc":
                 traj_file_cls = XTCFile
-            if suffix == ".dcd":
+            elif suffix == ".dcd":
                 traj_file_cls = DCDFile
-            if suffix == ".netcdf":
+            elif suffix == ".netcdf":
                 traj_file_cls = NetCDFFile
-            file = traj_file_cls()
+            # The outer `case` constrains `suffix` to one of the four above,
+            # so the chain is total — pyright cannot see this across nesting.
+            file = traj_file_cls()  # pyright: ignore[reportPossiblyUnboundVariable]
             file.set_structure(array, **kwargs)
             file.write(file_path)
         case unknown_suffix:
             raise ValueError(f"Unknown file format '{unknown_suffix}'")
 
 
-def _as_single_model_if_possible(atoms):
+def _as_single_model_if_possible(
+    atoms: AtomArray[Any] | AtomArrayStack[Any, Any],
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     if isinstance(atoms, AtomArrayStack) and atoms.stack_depth() == 1:
         # Stack containing only one model -> return as atom array
         return atoms[0]
@@ -232,7 +254,7 @@ def _as_single_model_if_possible(atoms):
         return atoms
 
 
-def _mol_header():
+def _mol_header() -> "Header":
     from biotite.structure.io.mol import Header
 
     return Header(

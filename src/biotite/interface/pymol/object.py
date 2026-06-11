@@ -1,20 +1,105 @@
+from __future__ import annotations
+
 __name__ = "biotite.interface.pymol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["PyMOLObject", "NonexistentObjectError", "ModifiedObjectError"]
 
 import numbers
+from collections.abc import Callable
 from enum import Enum
 from functools import wraps
+from typing import (
+    Any,
+    Concatenate,
+    Literal,
+    ParamSpec,
+    TypeAlias,
+    TypeVar,
+    overload,
+)
 import numpy as np
-import biotite.structure as struc
+from numpy.typing import ArrayLike
 from biotite.interface.pymol.convert import (
     from_model,
     to_model,
 )
-from biotite.interface.pymol.startup import get_and_set_pymol_instance
+from biotite.interface.pymol.startup import PyMOLInstance, get_and_set_pymol_instance
+from biotite.structure.atoms import AtomArray, AtomArrayStack, from_template
+from biotite.structure.filter import (
+    filter_first_altloc,
+    filter_highest_occupancy_altloc,
+)
+
+_Selection: TypeAlias = str | int | slice | ArrayLike | None
+_Representation: TypeAlias = Literal[
+    "lines",
+    "spheres",
+    "mesh",
+    "ribbon",
+    "cartoon",
+    "sticks",
+    "dots",
+    "surface",
+    "label",
+    "extent",
+    "nonbonded",
+    "nb_spheres",
+    "slice",
+    "cell",
+]
+_CartoonType: TypeAlias = Literal[
+    "automatic",
+    "skip",
+    "loop",
+    "rectangle",
+    "oval",
+    "tube",
+    "arrow",
+    "dumbbell",
+]
+_AtomSetting: TypeAlias = Literal[
+    "sphere_color",
+    "surface_color",
+    "mesh_color",
+    "label_color",
+    "dot_color",
+    "cartoon_color",
+    "ribbon_color",
+    "transparency",
+    "sphere_transparency",
+]
+_BondSetting: TypeAlias = Literal[
+    "valence",
+    "line_width",
+    "line_color",
+    "stick_radius",
+    "stick_color",
+    "stick_transparency",
+]
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
 
 
-def validate(method):
+class NonexistentObjectError(Exception):
+    """
+    Indicates that a *PyMOL* object with a given name does not exist.
+    """
+
+    pass
+
+
+class ModifiedObjectError(Exception):
+    """
+    Indicates that a atoms were added to or removed from the *PyMOL*
+    object after the corresponding :class:`PyMOLObject` was created.
+    """
+
+    pass
+
+
+def validate(
+    method: Callable[Concatenate[PyMOLObject, _P], _R],
+) -> Callable[Concatenate[PyMOLObject, _P], _R]:
     """
     Check if the object name still exists and if the atom count has
     been modified.
@@ -22,7 +107,7 @@ def validate(method):
     """
 
     @wraps(method)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self: PyMOLObject, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         self._check_existence()
         if self._type == PyMOLObject.Type.MOLECULE:
             new_atom_count = self._cmd.count_atoms(f"model {self._name}")
@@ -118,20 +203,25 @@ class PyMOLObject:
         VOLUME = "object:volume"
         SELECTION = "selection"
 
-    _object_counter = 0
-    _color_counter = 0
+    _object_counter: int = 0
+    _color_counter: int = 0
 
-    def __init__(self, name, pymol_instance=None, delete=True):
-        self._name = name
-        self._pymol = get_and_set_pymol_instance(pymol_instance)
-        self._delete = delete
-        self._cmd = self._pymol.cmd
-        self._type = PyMOLObject.Type(self._cmd.get_type(self._name))
+    def __init__(
+        self,
+        name: str,
+        pymol_instance: PyMOLInstance | None = None,
+        delete: bool = True,
+    ) -> None:
+        self._name: str = name
+        self._pymol: PyMOLInstance = get_and_set_pymol_instance(pymol_instance)
+        self._delete: bool = delete
+        self._cmd: Any = self._pymol.cmd
+        self._type: PyMOLObject.Type = PyMOLObject.Type(self._cmd.get_type(self._name))
         self._check_existence()
         if self._type == PyMOLObject.Type.MOLECULE:
-            self._atom_count = self._cmd.count_atoms(f"%{self._name}")
+            self._atom_count: int = self._cmd.count_atoms(f"%{self._name}")
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self._delete:
             try:
                 # Try to delete this object from PyMOL
@@ -142,8 +232,12 @@ class PyMOLObject:
 
     @staticmethod
     def from_structure(
-        atoms, name=None, pymol_instance=None, delete=True, delocalize_bonds=False
-    ):
+        atoms: AtomArray[Any] | AtomArrayStack[Any, Any],
+        name: str | None = None,
+        pymol_instance: PyMOLInstance | None = None,
+        delete: bool = True,
+        delocalize_bonds: bool = False,
+    ) -> PyMOLObject:
         """
         Create a :class:`PyMOLObject` from an :class:`AtomArray` or
         :class:`AtomArrayStack` and add it to the *PyMOL* session.
@@ -183,12 +277,13 @@ class PyMOLObject:
             name = f"biotite_{PyMOLObject._object_counter}"
             PyMOLObject._object_counter += 1
 
-        if isinstance(atoms, struc.AtomArray) or (
-            isinstance(atoms, struc.AtomArrayStack) and atoms.stack_depth == 1
-        ):
+        if isinstance(atoms, AtomArray):
             model = to_model(atoms, delocalize_bonds)
             cmd.load_model(model, name)
-        elif isinstance(atoms, struc.AtomArrayStack):
+        elif isinstance(atoms, AtomArrayStack) and atoms.stack_depth == 1:
+            model = to_model(atoms[0], delocalize_bonds)
+            cmd.load_model(model, name)
+        elif isinstance(atoms, AtomArrayStack):
             # Use first model as template
             model = to_model(atoms[0])
             cmd.load_model(model, name)
@@ -200,7 +295,26 @@ class PyMOLObject:
 
         return PyMOLObject(name, pymol_instance, delete)
 
-    def to_structure(self, state=None, altloc="first", include_bonds=False):
+    @overload
+    def to_structure(
+        self,
+        state: int,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        include_bonds: bool = False,
+    ) -> AtomArray[Any]: ...
+    @overload
+    def to_structure(
+        self,
+        state: None = None,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        include_bonds: bool = False,
+    ) -> AtomArrayStack[Any, Any]: ...
+    def to_structure(
+        self,
+        state: int | None = None,
+        altloc: Literal["first", "occupancy", "all"] = "first",
+        include_bonds: bool = False,
+    ) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
         """
         Convert this object into an :class:`AtomArray` or
         :class:`AtomArrayStack`.
@@ -253,26 +367,25 @@ class PyMOLObject:
                     raise ValueError("The models have different numbers of atoms")
                 coord.append(state_coord)
             coord = np.stack(coord)
-            structure = struc.from_template(template, coord)
+            structure = from_template(template, coord)
 
         else:
             model = self._cmd.get_model(self._name, state=state)
             structure = from_model(model, include_bonds)
 
         # Filter altloc IDs and return
+        altloc_id = structure.get_annotation("altloc_id")
         if altloc == "occupancy":
             structure = structure[
                 ...,
-                struc.filter_highest_occupancy_altloc(
-                    structure, structure.altloc_id, structure.occupancy
+                filter_highest_occupancy_altloc(
+                    structure, altloc_id, structure.occupancy
                 ),
             ]
             structure.del_annotation("altloc_id")
             return structure
         elif altloc == "first":
-            structure = structure[
-                ..., struc.filter_first_altloc(structure, structure.altloc_id)
-            ]
+            structure = structure[..., filter_first_altloc(structure, altloc_id)]
             structure.del_annotation("altloc_id")
             return structure
         elif altloc == "all":
@@ -281,14 +394,14 @@ class PyMOLObject:
             raise ValueError(f"'{altloc}' is not a valid 'altloc' option")
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def object_type(self):
+    def object_type(self) -> PyMOLObject.Type:
         return self._type
 
-    def exists(self):
+    def exists(self) -> bool:
         """
         Check whether the underlying *PyMOL* object still exists.
 
@@ -300,14 +413,14 @@ class PyMOLObject:
         """
         return self._name in self._cmd.get_names("all", enabled_only=False)
 
-    def _check_existence(self):
+    def _check_existence(self) -> None:
         if not self.exists():
             raise NonexistentObjectError(
                 f"A PyMOL object with the name {self._name} does not exist anymore"
             )
 
     @validate
-    def where(self, index):
+    def where(self, index: int | slice | ArrayLike) -> str:
         """
         Convert a *Biotite*-compatible atom selection index
         (integer, slice, boolean mask, index array) into a *PyMOL*
@@ -344,7 +457,10 @@ class PyMOLObject:
         else:
             # Convert any other index type into a boolean mask
             mask = np.zeros(self._atom_count, dtype=bool)
-            mask[index] = True
+            if isinstance(index, slice):
+                mask[index] = True
+            else:
+                mask[np.asarray(index)] = True
 
         # Indices where the mask changes from True to False
         # or from False to True
@@ -378,7 +494,7 @@ class PyMOLObject:
         else:
             return "none"
 
-    def _into_selection(self, selection, not_none=False):
+    def _into_selection(self, selection: _Selection, not_none: bool = False) -> str:
         """
         Turn a boolean mask into a *PyMOL* selection expression or
         restrict an selection expression to the current *PyMOL* object.
@@ -396,7 +512,7 @@ class PyMOLObject:
             return sel
 
     @validate
-    def alter(self, selection, expression):
+    def alter(self, selection: _Selection, expression: str) -> None:
         """
         Change atomic properties using an expression evaluated
         within a temporary namespace for each atom.
@@ -418,7 +534,7 @@ class PyMOLObject:
         self._cmd.alter(self._into_selection(selection), expression)
 
     @validate
-    def cartoon(self, type, selection=None):
+    def cartoon(self, type: _CartoonType, selection: _Selection = None) -> None:
         """
         Change the default cartoon representation for a selection
         of atoms.
@@ -451,7 +567,12 @@ class PyMOLObject:
         self._cmd.cartoon(type, self._into_selection(selection))
 
     @validate
-    def center(self, selection=None, state=None, origin=True):
+    def center(
+        self,
+        selection: _Selection = None,
+        state: int | None = None,
+        origin: bool = True,
+    ) -> None:
         """
         Translate the window, the clipping slab, and the
         origin to a point centered within the atom selection.
@@ -479,7 +600,13 @@ class PyMOLObject:
         self._cmd.center(self._into_selection(selection), state, int(origin))
 
     @validate
-    def clip(self, mode, distance, selection=None, state=None):
+    def clip(
+        self,
+        mode: Literal["near", "far", "move", "slab", "atoms"],
+        distance: float,
+        selection: _Selection = None,
+        state: int | None = None,
+    ) -> None:
         """
         Alter the positions of the near and far clipping planes.
 
@@ -514,7 +641,13 @@ class PyMOLObject:
         self._cmd.clip(mode, distance, self._into_selection(selection), state)
 
     @validate
-    def color(self, color, selection=None, representation=None):
+    def color(
+        self,
+        color: str | tuple[float, float, float],
+        selection: _Selection = None,
+        representation: Literal["sphere", "surface", "mesh", "dot", "cartoon", "ribbon"]
+        | None = None,
+    ) -> None:
         """
         Change the color of atoms.
 
@@ -544,16 +677,7 @@ class PyMOLObject:
         If an RGB color is given, the color is registered as a unique
         named color via the ``set_color()`` command.
         """
-        if not isinstance(color, str):
-            color_name = f"biotite_color_{PyMOLObject._color_counter}"
-            PyMOLObject._color_counter += 1
-            self._cmd.set_color(color_name, tuple(color))
-        else:
-            color_name = color
-            registered = [name for name, _ in self._cmd.get_color_indices()]
-            if color_name not in registered:
-                raise ValueError(f"Unknown color '{color_name}'")
-
+        color_name = self._create_named_color(color)
         if representation is None:
             self._cmd.color(color_name, self._into_selection(selection))
         else:
@@ -573,7 +697,11 @@ class PyMOLObject:
             )
 
     @validate
-    def surface_color(self, color, selection=None):
+    def surface_color(
+        self,
+        color: str | tuple[float, float, float],
+        selection: _Selection = None,
+    ) -> None:
         """
         Change the color of displayed surfaces.
 
@@ -598,11 +726,11 @@ class PyMOLObject:
         If an RGB color is given, the color is registered as a unique
         named color via the ``set_color()`` command.
         """
-        color_name = self._created_named_color(color)
+        color_name = self._create_named_color(color)
         self._cmd.set("surface_color", color_name, self._into_selection(selection))
 
     @validate
-    def desaturate(self, selection=None, a=0.5):
+    def desaturate(self, selection: _Selection = None, a: float = 0.5) -> None:
         """
         Desaturate the colors of the selected atoms.
 
@@ -624,7 +752,7 @@ class PyMOLObject:
         self._cmd.desaturate(self._into_selection(selection), a)
 
     @validate
-    def disable(self, selection=None):
+    def disable(self, selection: _Selection = None) -> None:
         """
         Turn off display of the selected atoms.
 
@@ -646,16 +774,16 @@ class PyMOLObject:
     @validate
     def distance(
         self,
-        name,
-        selection1,
-        selection2,
-        cutoff=None,
-        mode=None,
-        show_label=True,
-        width=None,
-        length=None,
-        gap=None,
-    ):
+        name: str,
+        selection1: _Selection,
+        selection2: _Selection,
+        cutoff: float | None = None,
+        mode: Literal[0, 1, 2, 3, 4] | None = None,
+        show_label: bool = True,
+        width: float | None = None,
+        length: float | None = None,
+        gap: float | None = None,
+    ) -> None:
         """
         Create a new distance object between two atom selections.
 
@@ -701,7 +829,7 @@ class PyMOLObject:
         )
 
     @validate
-    def dss(self, selection=None, state=None):
+    def dss(self, selection: _Selection = None, state: int | None = None) -> None:
         """
         Determine the secondary structure of the selected atoms.
 
@@ -726,7 +854,7 @@ class PyMOLObject:
         self._cmd.dss(self._into_selection(selection), state)
 
     @validate
-    def enable(self, selection=None):
+    def enable(self, selection: _Selection = None) -> None:
         """
         Turn on display of the selected atoms.
 
@@ -746,7 +874,9 @@ class PyMOLObject:
         self._cmd.enable(self._into_selection(selection))
 
     @validate
-    def hide(self, representation, selection=None):
+    def hide(
+        self, representation: _Representation, selection: _Selection = None
+    ) -> None:
         """
         Turn off an atom representation (e.g. sticks, spheres, etc.).
 
@@ -784,7 +914,7 @@ class PyMOLObject:
         self._cmd.hide(representation, self._into_selection(selection))
 
     @validate
-    def indicate(self, selection=None):
+    def indicate(self, selection: _Selection = None) -> None:
         """
         Show a visual representation of the selected atoms.
 
@@ -804,7 +934,7 @@ class PyMOLObject:
         self._cmd.indicate(self._into_selection(selection))
 
     @validate
-    def label(self, selection, text):
+    def label(self, selection: _Selection, text: str) -> None:
         """
         Label the selected atoms.
 
@@ -824,7 +954,7 @@ class PyMOLObject:
         self._cmd.label(self._into_selection(selection), f'"{text}"')
 
     @validate
-    def orient(self, selection=None, state=None):
+    def orient(self, selection: _Selection = None, state: int | None = None) -> None:
         """
         Align the principal components of the selected atoms with the
         *xyz* axes.
@@ -850,7 +980,7 @@ class PyMOLObject:
         self._cmd.orient(self._into_selection(selection, True), state)
 
     @validate
-    def origin(self, selection=None, state=None):
+    def origin(self, selection: _Selection = None, state: int | None = None) -> None:
         """
         Set the center of rotation about the selected atoms.
 
@@ -875,7 +1005,7 @@ class PyMOLObject:
         self._cmd.origin(selection=self._into_selection(selection), state=state)
 
     @validate
-    def select(self, name, selection=None):
+    def select(self, name: str, selection: _Selection = None) -> None:
         """
         Create a named selection object from the selected atoms.
 
@@ -897,7 +1027,13 @@ class PyMOLObject:
         self._cmd.select(name, self._into_selection(selection))
 
     @validate
-    def set(self, name, value, selection=None, state=None):
+    def set(
+        self,
+        name: _AtomSetting,
+        value: Any,
+        selection: _Selection = None,
+        state: int | None = None,
+    ) -> None:
         """
         Change per-atom settings.
 
@@ -938,7 +1074,14 @@ class PyMOLObject:
         self._cmd.set(name, value, self._into_selection(selection), state)
 
     @validate
-    def set_bond(self, name, value, selection1=None, selection2=None, state=None):
+    def set_bond(
+        self,
+        name: _BondSetting,
+        value: Any,
+        selection1: _Selection = None,
+        selection2: _Selection = None,
+        state: int | None = None,
+    ) -> None:
         """
         Change per-bond settings for all bonds which exist
         between two atom selections.
@@ -985,7 +1128,9 @@ class PyMOLObject:
         )
 
     @validate
-    def show(self, representation, selection=None):
+    def show(
+        self, representation: _Representation, selection: _Selection = None
+    ) -> None:
         """
         Turn on an atom representation (e.g. sticks, spheres, etc.).
 
@@ -1023,7 +1168,9 @@ class PyMOLObject:
         self._cmd.show(representation, self._into_selection(selection))
 
     @validate
-    def show_as(self, representation, selection=None):
+    def show_as(
+        self, representation: _Representation, selection: _Selection = None
+    ) -> None:
         """
         Turn on a representation (e.g. sticks, spheres, etc.) and hide
         all other representations.
@@ -1062,7 +1209,15 @@ class PyMOLObject:
         self._cmd.show_as(representation, self._into_selection(selection))
 
     @validate
-    def smooth(self, selection=None, passes=1, window=5, first=1, last=0, ends=False):
+    def smooth(
+        self,
+        selection: _Selection = None,
+        passes: int = 1,
+        window: int = 5,
+        first: int = 1,
+        last: int = 0,
+        ends: bool = False,
+    ) -> None:
         """
         Perform a moving average over the coordinate states.
 
@@ -1095,7 +1250,12 @@ class PyMOLObject:
     # TODO: def spectrum()
 
     @validate
-    def unset(self, name, selection=None, state=None):
+    def unset(
+        self,
+        name: _AtomSetting,
+        selection: _Selection = None,
+        state: int | None = None,
+    ) -> None:
         """
         Clear per-atom settings.
 
@@ -1134,7 +1294,13 @@ class PyMOLObject:
         self._cmd.unset(name, self._into_selection(selection), state)
 
     @validate
-    def unset_bond(self, name, selection1=None, selection2=None, state=None):
+    def unset_bond(
+        self,
+        name: _BondSetting,
+        selection1: _Selection = None,
+        selection2: _Selection = None,
+        state: int | None = None,
+    ) -> None:
         """
         Clear per-bond settings for all bonds which exist
         between two atom selections.
@@ -1178,7 +1344,13 @@ class PyMOLObject:
         )
 
     @validate
-    def zoom(self, selection=None, buffer=0.0, state=None, complete=False):
+    def zoom(
+        self,
+        selection: _Selection = None,
+        buffer: float = 0.0,
+        state: int | None = None,
+        complete: bool = False,
+    ) -> None:
         """
         Scale and translate the window and the origin to cover the
         selected atoms.
@@ -1210,19 +1382,18 @@ class PyMOLObject:
             self._into_selection(selection, True), buffer, state, int(complete)
         )
 
-
-class NonexistentObjectError(Exception):
-    """
-    Indicates that a *PyMOL* object with a given name does not exist.
-    """
-
-    pass
-
-
-class ModifiedObjectError(Exception):
-    """
-    Indicates that a atoms were added to or removed from the *PyMOL*
-    object after the corresponding :class:`PyMOLObject` was created.
-    """
-
-    pass
+    def _create_named_color(self, color: str | tuple[float, float, float]) -> str:
+        """
+        Register an RGB color tuple as a unique named color via
+        ``set_color()``, or validate that the given name already exists.
+        """
+        if not isinstance(color, str):
+            color_name = f"biotite_color_{PyMOLObject._color_counter}"
+            PyMOLObject._color_counter += 1
+            self._cmd.set_color(color_name, tuple(color))
+            return color_name
+        else:
+            registered = [name for name, _ in self._cmd.get_color_indices()]
+            if color not in registered:
+                raise ValueError(f"Unknown color '{color}'")
+            return color

@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_color_scheme", "list_color_scheme_names", "load_color_scheme"]
@@ -9,11 +11,14 @@ __all__ = ["get_color_scheme", "list_color_scheme_names", "load_color_scheme"]
 import glob
 import json
 import os
+from os import PathLike
 from os.path import dirname, join, realpath
+from typing import Any
 from biotite.sequence.alphabet import Alphabet
+from biotite.typing import MplColor
 
 
-def load_color_scheme(file_name):
+def load_color_scheme(file_name: PathLike[str] | str) -> dict[str, Any]:
     """
     Load a color scheme from a JSON file.
 
@@ -52,7 +57,11 @@ def load_color_scheme(file_name):
         return scheme
 
 
-def get_color_scheme(name, alphabet, default="#FFFFFF"):
+def get_color_scheme(
+    name: str,
+    alphabet: Alphabet,
+    default: MplColor = "#FFFFFF",
+) -> list[Any]:
     """
     Get a color scheme by name and alphabet.
 
@@ -107,7 +116,7 @@ def get_color_scheme(name, alphabet, default="#FFFFFF"):
     raise ValueError(f"Unknown scheme '{name}' for given alphabet")
 
 
-def list_color_scheme_names(alphabet, strict=False):
+def list_color_scheme_names(alphabet: Alphabet, strict: bool = False) -> list[str]:
     """
     Get a list of available color scheme names for a given alphabet.
 
@@ -144,7 +153,11 @@ for file_name in glob.glob(_scheme_dir + os.sep + "*.json"):
     _color_schemes.append(scheme)
 
 
-def _fit_color_scheme(alphabet, color_scheme, default_color):
+def _fit_color_scheme(
+    alphabet: Alphabet,
+    color_scheme: dict[str, Any],
+    default_color: MplColor,
+) -> list[Any]:
     """
     Fit a color scheme to the given alphabet.
 

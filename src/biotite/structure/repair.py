@@ -12,13 +12,19 @@ __all__ = ["create_continuous_res_ids", "infer_elements", "create_atom_names"]
 
 import warnings
 from collections import Counter
+from collections.abc import Sequence
+from typing import Any, overload
 import numpy as np
 from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.chains import get_chain_starts
 from biotite.structure.residues import get_residue_starts
+from biotite.typing import M, N, NDArray1
 
 
-def create_continuous_res_ids(atoms, restart_each_chain=True):
+def create_continuous_res_ids(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+    restart_each_chain: bool = True,
+) -> NDArray1[N, np.integer]:
     """
     Create an array of continuous residue IDs for a given structure.
 
@@ -62,7 +68,17 @@ def create_continuous_res_ids(atoms, restart_each_chain=True):
     return res_ids
 
 
-def infer_elements(atoms):
+@overload
+def infer_elements(
+    atoms: AtomArray[N] | AtomArrayStack[M, N] | NDArray1[N, np.str_],
+) -> NDArray1[N, np.str_]: ...
+@overload
+def infer_elements(
+    atoms: Sequence[str],
+) -> NDArray1[Any, np.str_]: ...
+def infer_elements(
+    atoms: AtomArray[N] | AtomArrayStack[M, N] | Sequence[str] | NDArray1[N, np.str_],
+) -> NDArray1[N, np.str_] | NDArray1[Any, np.str_]:
     """
     Infer the elements of atoms based on their atom name.
 
@@ -96,7 +112,9 @@ def infer_elements(atoms):
     return np.array([_guess_element(name) for name in atom_names])
 
 
-def create_atom_names(atoms):
+def create_atom_names(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.str_]:
     """
     Create atom names for a single residue based on elements.
 
@@ -153,7 +171,7 @@ def create_atom_names(atoms):
     for i, elem in enumerate(elements):
         element_counter[elem] += 1
         atom_names[i] = f"{elem}{element_counter[elem]}"
-    return atom_names
+    return atom_names  # pyright: ignore[reportReturnType]
 
 
 _elements = [
@@ -281,7 +299,7 @@ _elements = [
 ]
 
 
-def _guess_element(atom_name):
+def _guess_element(atom_name: str) -> str:
     # remove digits (1H -> H)
     elem = "".join([i for i in atom_name if not i.isdigit()])
     elem = elem.upper()

@@ -210,9 +210,10 @@ def test_rmsf_gmx(superimposed_models):
 
 
 @pytest.mark.parametrize(
-    "multi_model, as_coord", itertools.product([False, True], [False, True])
+    "multi_model, as_coord, exclude_same_residue",
+    itertools.product([False, True], [False, True], [False, True]),
 )
-def test_lddt_perfect(models, multi_model, as_coord):
+def test_lddt_perfect(models, multi_model, as_coord, exclude_same_residue):
     """
     Check if the lDDT of a structure with itself as reference is 1.0
     """
@@ -223,12 +224,7 @@ def test_lddt_perfect(models, multi_model, as_coord):
         subject = models[0]
 
     if as_coord:
-        reference = reference.coord
         subject = subject.coord
-        # Coordinates can only be used if 'exclude_same_residue' is False
-        exclude_same_residue = False
-    else:
-        exclude_same_residue = True
 
     lddt = struc.lddt(reference, subject, exclude_same_residue=exclude_same_residue)
 

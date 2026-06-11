@@ -2,19 +2,25 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application.autodock"
 __author__ = "Patrick Kunzmann"
 __all__ = ["VinaApp"]
 
 import copy
+from os import PathLike
 from tempfile import NamedTemporaryFile
+from typing import Any
 import numpy as np
 from biotite.application.application import AppState, requires_state
 from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.connect import find_connected
 from biotite.structure.error import BadStructureError
 from biotite.structure.io.pdbqt import PDBQTFile
 from biotite.structure.residues import get_residue_masks, get_residue_starts_for
+from biotite.typing import XYZ, K, M, N, NDArray1, NDArray3
 
 
 class VinaApp(LocalApp):
@@ -24,7 +30,7 @@ class VinaApp(LocalApp):
     Parameters
     ----------
     ligand : AtomArray
-        The structure of the receptor molecule.
+        The structure of the ligand molecule.
         Must have an associated :class:`BondList`.
         An associated ``charge`` annotation is recommended for proper
         calculation of partial charges.
@@ -63,7 +69,15 @@ class VinaApp(LocalApp):
     ... )
     """
 
-    def __init__(self, ligand, receptor, center, size, flexible=None, bin_path="vina"):
+    def __init__(
+        self,
+        ligand: AtomArray[Any],
+        receptor: AtomArray[N],
+        center: NDArray1[XYZ, np.floating],
+        size: NDArray1[XYZ, np.floating],
+        flexible: NDArray1[N, np.bool_] | None = None,
+        bin_path: PathLike[str] | str = "vina",
+    ) -> None:
         super().__init__(bin_path)
 
         if ligand.bonds is None:
@@ -71,18 +85,18 @@ class VinaApp(LocalApp):
         if receptor.bonds is None:
             raise ValueError("The receptor has no associated BondList")
 
-        self._ligand = ligand.copy()
-        self._receptor = receptor.copy()
-        self._center = copy.deepcopy(center)
-        self._size = copy.deepcopy(size)
-        self._is_flexible = flexible is not None
-        self._seed = None
-        self._cpu = None
-        self._exhaustiveness = None
-        self._number = None
-        self._energy_range = None
+        self._ligand: AtomArray[Any] = ligand.copy()
+        self._receptor: AtomArray[Any] = receptor.copy()
+        self._center: NDArray1[Any, np.floating] = copy.deepcopy(center)
+        self._size: NDArray1[Any, np.floating] = copy.deepcopy(size)
+        self._is_flexible: bool = flexible is not None
+        self._seed: int | None = None
+        self._cpu: int | None = None
+        self._exhaustiveness: int | None = None
+        self._number: int | None = None
+        self._energy_range: float | None = None
 
-        if self._is_flexible:
+        if flexible is not None:
             flexible_indices = np.where(flexible)[0]
             self._flex_res_starts = np.unique(
                 get_residue_starts_for(receptor, flexible_indices)
@@ -96,7 +110,7 @@ class VinaApp(LocalApp):
         self._out_file = NamedTemporaryFile("r", suffix=".pdbqt", delete=False)
 
     @requires_state(AppState.CREATED)
-    def set_seed(self, seed):
+    def set_seed(self, seed: int) -> None:
         """
         Fix the seed for the random number generator to get
         reproducible results.
@@ -111,20 +125,21 @@ class VinaApp(LocalApp):
         self._seed = seed
 
     @requires_state(AppState.CREATED)
-    def set_cpu(self, cpu):
+    def set_cpu(self, cpu: int) -> None:
         """
         Set the number of CPUs *Vina* uses for docking.
 
+        By default, all available CPUs are used.
+
         Parameters
         ----------
-        cpu : int or None
+        cpu : int
             The number of CPUs to use.
-            If ``None``, all available CPUs are used.
         """
         self._cpu = cpu
 
     @requires_state(AppState.CREATED)
-    def set_exhaustiveness(self, exhaustiveness):
+    def set_exhaustiveness(self, exhaustiveness: int) -> None:
         """
         Set the *exhaustiveness* parameter for *Vina*.
 
@@ -141,7 +156,7 @@ class VinaApp(LocalApp):
         self._exhaustiveness = exhaustiveness
 
     @requires_state(AppState.CREATED)
-    def set_max_number_of_models(self, number):
+    def set_max_number_of_models(self, number: int) -> None:
         """
         Set the maximum number of binding modes to generate.
 
@@ -157,7 +172,7 @@ class VinaApp(LocalApp):
         self._number = number
 
     @requires_state(AppState.CREATED)
-    def set_energy_range(self, energy_range):
+    def set_energy_range(self, energy_range: float) -> None:
         """
         Set the maximum energy range of the generated models.
 
@@ -172,7 +187,7 @@ class VinaApp(LocalApp):
         """
         self._energy_range = energy_range
 
-    def run(self):
+    def run(self) -> None:
         # Use different atom ID ranges for atoms in ligand and receptor
         # for unambiguous assignment, if the receptor contains flexible
         # residues
@@ -274,7 +289,7 @@ class VinaApp(LocalApp):
         self.set_arguments(arguments)
         super().run()
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         super().evaluate()
         out_file = PDBQTFile.read(self._out_file)
 
@@ -292,7 +307,7 @@ class VinaApp(LocalApp):
             [float(remark[12:].split()[0]) for remark in remarks]
         )
 
-    def clean_up(self):
+    def clean_up(self) -> None:
         super().clean_up()
         cleanup_tempfile(self._ligand_file)
         cleanup_tempfile(self._receptor_file)
@@ -300,7 +315,7 @@ class VinaApp(LocalApp):
         cleanup_tempfile(self._out_file)
 
     @requires_state(AppState.JOINED)
-    def get_energies(self):
+    def get_energies(self) -> NDArray1[K, np.floating]:
         """
         Get the predicted binding energy for each generated binding
         mode.
@@ -314,7 +329,7 @@ class VinaApp(LocalApp):
         return self._energies
 
     @requires_state(AppState.JOINED)
-    def get_ligand_models(self):
+    def get_ligand_models(self) -> AtomArrayStack[Any, Any]:
         """
         Get the ligand structure with the conformations for each
         generated binding mode.
@@ -337,7 +352,7 @@ class VinaApp(LocalApp):
         return self._ligand_models
 
     @requires_state(AppState.JOINED)
-    def get_ligand_coord(self):
+    def get_ligand_coord(self) -> NDArray3[M, N, XYZ, np.floating]:
         """
         Get the ligand coordinates for each generated binding mode.
 
@@ -355,10 +370,10 @@ class VinaApp(LocalApp):
             (self._n_models, self._ligand.array_length(), 3), np.nan, dtype=np.float32
         )
         coord[:, self._ligand_mask] = self._ligand_models.coord
-        return coord
+        return coord  # pyright: ignore[reportReturnType]
 
     @requires_state(AppState.JOINED)
-    def get_flexible_residue_models(self):
+    def get_flexible_residue_models(self) -> AtomArrayStack[Any, Any]:
         """
         Get the structure for the flexible side chains with the
         conformations for each generated binding mode.
@@ -384,7 +399,7 @@ class VinaApp(LocalApp):
         return self._flex_models
 
     @requires_state(AppState.JOINED)
-    def get_receptor_coord(self):
+    def get_receptor_coord(self) -> NDArray3[M, N, XYZ, np.floating]:
         """
         Get the get_receptor_coord coordinates for each generated
         binding mode.
@@ -417,7 +432,9 @@ class VinaApp(LocalApp):
             coord[:, self._receptor_mask] = self._flex_models.coord
         return coord
 
-    def _get_flexible_residue(self, residue_start):
+    def _get_flexible_residue(
+        self, residue_start: int
+    ) -> tuple[np.ndarray, np.ndarray, int]:
         residue_indices = np.where(
             get_residue_masks(self._receptor, [residue_start])[0]
         )[0]
@@ -433,6 +450,8 @@ class VinaApp(LocalApp):
 
         # Find the index of the atom connected to root on the flexible
         # side chain (CB)
+        if self._receptor.bonds is None:
+            raise ValueError("The receptor has no associated BondList")
         root_connect_indices, _ = self._receptor.bonds.get_bonds(root_index)
         connected_index = None
         try:
@@ -466,7 +485,14 @@ class VinaApp(LocalApp):
         return flex_mask, rigid_mask, root_index
 
     @staticmethod
-    def dock(ligand, receptor, center, size, flexible=None, bin_path="vina"):
+    def dock(
+        ligand: AtomArray[Any],
+        receptor: AtomArray[N],
+        center: NDArray1[XYZ, np.floating],
+        size: NDArray1[XYZ, np.floating],
+        flexible: NDArray1[N, np.bool_] | None = None,
+        bin_path: PathLike[str] | str = "vina",
+    ) -> tuple[NDArray3[M, N, XYZ, np.floating], NDArray1[K, np.floating]]:
         """
         Dock a ligand to a receptor molecule using *AutoDock Vina*.
 
@@ -476,7 +502,7 @@ class VinaApp(LocalApp):
         Parameters
         ----------
         ligand : AtomArray
-            The structure of the receptor molecule.
+            The structure of the ligand molecule.
             Must have an associated :class:`BondList`.
             An associated ``charge`` annotation is recommended for proper
             calculation of partial charges.

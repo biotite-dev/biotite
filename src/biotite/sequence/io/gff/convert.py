@@ -2,14 +2,17 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.io.gff"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_annotation", "set_annotation"]
 
 from biotite.sequence.annotation import Annotation, Feature, Location
+from biotite.sequence.io.gff.file import GFFFile
 
 
-def get_annotation(gff_file):
+def get_annotation(gff_file: GFFFile) -> Annotation:
     """
     Parse a GFF3 file into an :class:`Annotation`.
 
@@ -34,11 +37,13 @@ def get_annotation(gff_file):
         The extracted annotation.
     """
     annot = Annotation()
-    current_key = None
-    current_locs = None
-    current_qual = None
+    current_key: str | None = None
+    current_locs: list[Location] = []
+    current_qual: dict[str, str | None] = {}
     current_id = None
     for _, _, type, start, end, _, strand, _, attrib in gff_file:
+        if strand is None:
+            strand = Location.Strand.FORWARD
         id = attrib.get("ID")
         if id != current_id or id is None:
             # current_key is None, when there is no previous feature
@@ -49,7 +54,7 @@ def get_annotation(gff_file):
             # Track new feature
             current_key = type
             current_locs = [Location(start, end, strand)]
-            current_qual = attrib
+            current_qual = dict(attrib)
         else:
             current_locs.append(Location(start, end, strand))
         current_id = id
@@ -59,7 +64,13 @@ def get_annotation(gff_file):
     return annot
 
 
-def set_annotation(gff_file, annotation, seqid=None, source=None, is_stranded=True):
+def set_annotation(
+    gff_file: GFFFile,
+    annotation: Annotation,
+    seqid: str | None = None,
+    source: str | None = None,
+    is_stranded: bool = True,
+) -> None:
     """
     Write an :class:`Annotation` object into a GFF3 file.
 
@@ -79,7 +90,7 @@ def set_annotation(gff_file, annotation, seqid=None, source=None, is_stranded=Tr
         The content for the *source* column.
     is_stranded : bool, optional
         If true, the strand of each feature is taken into account.
-        Otherwise the *strand* column is filled with '``.``'.
+        Otherwise the *strand* column is filled with ``.``.
     """
     for feature in sorted(annotation):
         if len(feature.locs) > 1 and "ID" not in feature.qual:

@@ -19,12 +19,34 @@ __all__ = [
     "align_vectors",
 ]
 
+from typing import Any, Generic, TypeVar, overload
 import numpy as np
-from biotite.structure.atoms import Atom, AtomArray, AtomArrayStack, coord
+from biotite.structure.atoms import (
+    Atom,
+    AtomArray,
+    AtomArrayStack,
+    coord,
+)
 from biotite.structure.util import matrix_rotate, norm_vector, vector_dot
+from biotite.typing import XYZ, M, N, NDArray1, NDArray2, NDArray3
+
+# `apply()` accepts coordinates whose model count can be a broadcast 1
+# or match the transformation's `M`; we don't try to express that
+# constraint statically.
+_M = TypeVar("_M", bound=int)
+
+# For some transformation functions in this module
+# the concrete type of the input structure is preserved by the return.
+_AtomsLikeT = TypeVar(
+    "_AtomsLikeT",
+    Atom,
+    AtomArray,
+    AtomArrayStack,
+    np.ndarray,
+)
 
 
-class AffineTransformation:
+class AffineTransformation(Generic[M]):
     """
     An affine transformation, consisting of translations and a rotation.
 
@@ -47,12 +69,53 @@ class AffineTransformation:
         respectively.
     """
 
-    def __init__(self, center_translation, rotation, target_translation):
+    # Coordinate axes are concrete `int` rather than `XYZ` because the
+    # class is `Generic[M]` only; `XYZ` would be a free TypeVar here.
+    # Same pattern used for the annotation columns on `_AtomArrayBase`.
+    center_translation: NDArray2[M, int, np.floating]
+    rotation: NDArray3[M, int, int, np.floating]
+    target_translation: NDArray2[M, int, np.floating]
+
+    def __init__(
+        self,
+        center_translation: (
+            NDArray1[XYZ, np.floating] | NDArray2[M, XYZ, np.floating]
+        ),
+        rotation: (
+            NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating]
+        ),
+        target_translation: (
+            NDArray1[XYZ, np.floating] | NDArray2[M, XYZ, np.floating]
+        ),
+    ) -> None:
         self.center_translation = _expand_dims(center_translation, 2)
         self.rotation = _expand_dims(rotation, 3)
         self.target_translation = _expand_dims(target_translation, 2)
 
-    def apply(self, atoms):
+    @overload
+    def apply(self, atoms: AtomArray[N]) -> AtomArray[N]: ...
+    @overload
+    def apply(self, atoms: AtomArrayStack[_M, N]) -> AtomArrayStack[_M, N]: ...
+    @overload
+    def apply(
+        self, atoms: NDArray2[N, XYZ, np.floating]
+    ) -> NDArray2[N, XYZ, np.floating]: ...
+    @overload
+    def apply(
+        self, atoms: NDArray3[_M, N, XYZ, np.floating]
+    ) -> NDArray3[_M, N, XYZ, np.floating]: ...
+    def apply(
+        self,
+        atoms: AtomArray[N]
+        | AtomArrayStack[_M, N]
+        | NDArray2[N, XYZ, np.floating]
+        | NDArray3[_M, N, XYZ, np.floating],
+    ) -> (
+        AtomArray[N]
+        | AtomArrayStack[_M, N]
+        | NDArray2[N, XYZ, np.floating]
+        | NDArray3[_M, N, XYZ, np.floating]
+    ):
         """
         Apply this transformation on the given structure.
 
@@ -113,13 +176,13 @@ class AffineTransformation:
 
         superimposed_coord = superimposed_coord.reshape(original_shape)
         if isinstance(atoms, np.ndarray):
-            return superimposed_coord
+            return superimposed_coord  # pyright: ignore[reportReturnType]
         else:
             superimposed = atoms.copy()
-            superimposed.coord = superimposed_coord
+            superimposed.coord = superimposed_coord  # pyright: ignore[reportAttributeAccessIssue]
             return superimposed
 
-    def as_matrix(self):
+    def as_matrix(self) -> NDArray3[M, int, int, np.floating]:
         """
         Get the translations and rotation as a combined 4x4
         transformation matrix.
@@ -184,7 +247,7 @@ class AffineTransformation:
         target_translation_mat[:, :3, 3] = self.target_translation
         return target_translation_mat @ rotation_mat @ center_translation_mat
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, AffineTransformation):
             return False
         if not np.array_equal(self.center_translation, other.center_translation):
@@ -196,7 +259,7 @@ class AffineTransformation:
         return True
 
 
-def _expand_dims(array, n_dims):
+def _expand_dims(array: np.ndarray, n_dims: int) -> np.ndarray:
     """
     Expand the dimensions of an `ndarray` to a certain number of
     dimensions.
@@ -206,7 +269,7 @@ def _expand_dims(array, n_dims):
     return array
 
 
-def _3d_identity(m, n):
+def _3d_identity(m: int, n: int) -> NDArray3[int, int, int, np.floating]:
     """
     Create an array of *m* identity matrices of shape *(n, n)*
     """
@@ -216,7 +279,7 @@ def _3d_identity(m, n):
     return matrices
 
 
-def _reshape_to_3d(coord):
+def _reshape_to_3d(coord: np.ndarray) -> np.ndarray:
     """
     Reshape the coordinate array to 3D, if it is 2D.
     """
@@ -230,7 +293,7 @@ def _reshape_to_3d(coord):
         raise ValueError("Coordinates must be at most three-dimensional")
 
 
-def translate(atoms, vector):
+def translate(atoms: _AtomsLikeT, vector: Any) -> _AtomsLikeT:
     """
     Translate the given atoms or coordinates by a given vector.
 
@@ -257,7 +320,7 @@ def translate(atoms, vector):
     return _put_back(atoms, positions)
 
 
-def rotate(atoms, angles):
+def rotate(atoms: _AtomsLikeT, angles: Any) -> _AtomsLikeT:
     """
     Rotate the given atoms or coordinates about the *x*, *y* and *z*
     axes by given angles.
@@ -329,7 +392,7 @@ def rotate(atoms, angles):
     return _put_back(atoms, positions)
 
 
-def rotate_centered(atoms, angles):
+def rotate_centered(atoms: _AtomsLikeT, angles: Any) -> _AtomsLikeT:
     """
     Rotate the given atoms or coordinates about the *x*, *y* and *z*
     axes by given angles.
@@ -364,7 +427,7 @@ def rotate_centered(atoms, angles):
         return atoms.copy()
 
     # Rotation around centroid requires moving centroid to origin
-    center = coord(centroid(atoms))
+    center = coord(centroid(atoms))  # pyright: ignore[reportCallIssue, reportArgumentType]
     # 'centroid()' removes the second last dimesion
     # -> add dimension again to ensure correct translation
     center = center[..., np.newaxis, :]
@@ -374,7 +437,12 @@ def rotate_centered(atoms, angles):
     return translated_back
 
 
-def rotate_about_axis(atoms, axis, angle, support=None):
+def rotate_about_axis(
+    atoms: _AtomsLikeT,
+    axis: Any,
+    angle: float,
+    support: Any = None,
+) -> _AtomsLikeT:
     """
     Rotate the given atoms or coordinates about a given axis by a given
     angle.
@@ -457,15 +525,13 @@ def rotate_about_axis(atoms, axis, angle, support=None):
     )
 
     # For proper rotation reshape into a maximum of 2 dimensions
-    orig_ndim = positions.ndim
-    if orig_ndim > 2:
-        orig_shape = positions.shape
+    orig_shape = positions.shape
+    if positions.ndim > 2:
         positions = positions.reshape(-1, 3)
     # Apply rotation
     positions = np.dot(rot_matrix, positions.T).T
     # Reshape back into original shape
-    if orig_ndim > 2:
-        positions = positions.reshape(*orig_shape)
+    positions = positions.reshape(*orig_shape)
 
     if support is not None:
         # Transform coordinates back to original support vector position
@@ -474,7 +540,10 @@ def rotate_about_axis(atoms, axis, angle, support=None):
     return _put_back(atoms, positions)
 
 
-def orient_principal_components(atoms, order=None):
+def orient_principal_components(
+    atoms: _AtomsLikeT,
+    order: Any = None,
+) -> _AtomsLikeT:
     """
     Translate and rotate the atoms to be centered at the origin with
     the principal axes aligned to the Cartesian axes, as specified by
@@ -522,7 +591,8 @@ def orient_principal_components(atoms, order=None):
     coords = coord(atoms)
     if coords.ndim != 2:
         raise ValueError(f"Expected input shape of (n, 3), got {coords.shape}.")
-    row, col = coords.shape
+    # The `ndim != 2` guard above proves the shape is a 2-tuple
+    row, col = coords.shape  # pyright: ignore[reportAssignmentType]
     if (row < 3) or (col != 3):
         raise ValueError(
             f"Expected at least 3 entries, {row} given, and 3 dimensions, {col} given."
@@ -566,12 +636,12 @@ def orient_principal_components(atoms, order=None):
 
 
 def align_vectors(
-    atoms,
-    origin_direction,
-    target_direction,
-    origin_position=None,
-    target_position=None,
-):
+    atoms: _AtomsLikeT,
+    origin_direction: Any,
+    target_direction: Any,
+    origin_position: Any = None,
+    target_position: Any = None,
+) -> _AtomsLikeT:
     """
     Apply a transformation to atoms or coordinates, that would transfer
     a origin vector to a target vector.
@@ -712,7 +782,7 @@ def align_vectors(
     return _put_back(atoms, positions)
 
 
-def _put_back(input_atoms, transformed):
+def _put_back(input_atoms: _AtomsLikeT, transformed: np.ndarray) -> _AtomsLikeT:
     """
     Put the altered coordinates back into the :class:`Atom`,
     :class:`AtomArray` or :class:`AtomArrayStack`, if the input was one
@@ -723,10 +793,15 @@ def _put_back(input_atoms, transformed):
         moved_atoms.coord = transformed
         return moved_atoms
     else:
-        return transformed
+        # The `isinstance` above eliminates the non-ndarray branches
+        # -> Output type must be `ndarray`
+        return transformed  # pyright: ignore[reportReturnType]
 
 
-def _multi_matmul(matrices, vectors):
+def _multi_matmul(
+    matrices: NDArray3[M, XYZ, XYZ, np.floating],
+    vectors: NDArray3[M, N, XYZ, np.floating],
+) -> NDArray3[M, N, XYZ, np.floating]:
     """
     Calculate the matrix multiplication of m matrices
     with m x n vectors.

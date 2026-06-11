@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -12,7 +14,9 @@ __all__ = [
     "BinaryCIFData",
 ]
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from os import PathLike
+from typing import IO, Any, Self, TypeAlias
 import msgpack
 import numpy as np
 from biotite.file import File, SerializationError, is_binary, is_open_compatible
@@ -22,11 +26,17 @@ from biotite.structure.io.pdbx.component import (
     _HierarchicalContainer,
 )
 from biotite.structure.io.pdbx.encoding import (
+    Encoding,
     create_uncompressed_encoding,
     decode_stepwise,
     deserialize_encoding,
     encode_stepwise,
 )
+from biotite.typing import NDArray1
+
+# Used to indicate elements of a BCIF file that are not yet deserialized,
+# as deserialization is performed lazily
+_SerializedElement: TypeAlias = dict
 
 
 class BinaryCIFData(_Component):
@@ -87,7 +97,11 @@ class BinaryCIFData(_Component):
     16
     """
 
-    def __init__(self, array, encoding=None):
+    def __init__(
+        self,
+        array: NDArray1[Any, Any] | Sequence[Any] | int | float | str,
+        encoding: Sequence[Encoding] | None = None,
+    ) -> None:
         if not isinstance(array, (Sequence, np.ndarray)) or isinstance(array, str):
             array = [array]
         array = np.asarray(array)
@@ -101,37 +115,37 @@ class BinaryCIFData(_Component):
             self._encoding = list(encoding)
 
     @property
-    def array(self):
+    def array(self) -> NDArray1[Any, Any]:
         return self._array
 
     @property
-    def encoding(self):
+    def encoding(self) -> list[Encoding]:
         return self._encoding
 
     @staticmethod
-    def subcomponent_class():
+    def subcomponent_class() -> None:
         return None
 
     @staticmethod
-    def supercomponent_class():
+    def supercomponent_class() -> type[BinaryCIFColumn]:
         return BinaryCIFColumn
 
-    @staticmethod
-    def deserialize(content):
+    @classmethod
+    def deserialize(cls, content: dict) -> Self:
         encoding = [deserialize_encoding(enc) for enc in content["encoding"]]
-        return BinaryCIFData(decode_stepwise(content["data"], encoding), encoding)
+        return cls(decode_stepwise(content["data"], encoding), encoding)
 
-    def serialize(self):
+    def serialize(self) -> dict:
         serialized_data = encode_stepwise(self._array, self._encoding)
         if not isinstance(serialized_data, bytes):
             raise SerializationError("Final encoding must return 'bytes'")
         serialized_encoding = [enc.serialize() for enc in self._encoding]
         return {"data": serialized_data, "encoding": serialized_encoding}
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._array)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         if not np.array_equal(self._array, other._array):
@@ -187,7 +201,11 @@ class BinaryCIFColumn(_Component):
     ?
     """
 
-    def __init__(self, data, mask=None):
+    def __init__(
+        self,
+        data: BinaryCIFData | NDArray1[Any, Any] | Sequence[Any] | int | float | str,
+        mask: BinaryCIFData | NDArray1[Any, Any] | Sequence[int] | None = None,
+    ) -> None:
         if not isinstance(data, BinaryCIFData):
             data = BinaryCIFData(data)
         if mask is not None:
@@ -201,22 +219,22 @@ class BinaryCIFColumn(_Component):
         self._mask = mask
 
     @property
-    def data(self):
+    def data(self) -> BinaryCIFData:
         return self._data
 
     @property
-    def mask(self):
+    def mask(self) -> BinaryCIFData | None:
         return self._mask
 
     @staticmethod
-    def subcomponent_class():
+    def subcomponent_class() -> type[BinaryCIFData]:
         return BinaryCIFData
 
     @staticmethod
-    def supercomponent_class():
+    def supercomponent_class() -> type[BinaryCIFCategory]:
         return BinaryCIFCategory
 
-    def as_item(self):
+    def as_item(self) -> str | int | float:
         """
         Get the only item in the data of this column.
 
@@ -238,8 +256,14 @@ class BinaryCIFColumn(_Component):
             return "."
         elif mask == MaskValue.MISSING:
             return "?"
+        else:
+            raise RuntimeError(f"Unknown mask value: {mask}")
 
-    def as_array(self, dtype=None, masked_value=None):
+    def as_array(
+        self,
+        dtype: np.dtype | type | str | None = None,
+        masked_value: str | int | float | None = None,
+    ) -> NDArray1[Any, Any]:
         """
         Get the data of this column as an :class:`ndarray`.
 
@@ -302,25 +326,25 @@ class BinaryCIFColumn(_Component):
             array[present_mask] = self._data.array[present_mask].astype(dtype)
             return array
 
-    @staticmethod
-    def deserialize(content):
-        return BinaryCIFColumn(
+    @classmethod
+    def deserialize(cls, content: dict) -> Self:
+        return cls(
             BinaryCIFData.deserialize(content["data"]),
             BinaryCIFData.deserialize(content["mask"])
             if content["mask"] is not None
             else None,
         )
 
-    def serialize(self):
+    def serialize(self) -> dict:
         return {
             "data": self._data.serialize(),
             "mask": self._mask.serialize() if self._mask is not None else None,
         }
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         if self._data != other._data:
@@ -330,7 +354,7 @@ class BinaryCIFColumn(_Component):
         return True
 
 
-class BinaryCIFCategory(_HierarchicalContainer):
+class BinaryCIFCategory(_HierarchicalContainer["BinaryCIFColumn"]):
     """
     This class represents a category in a :class:`BinaryCIFBlock`.
 
@@ -370,7 +394,15 @@ class BinaryCIFCategory(_HierarchicalContainer):
     ['apple' 'banana']
     """
 
-    def __init__(self, columns=None, row_count=None):
+    def __init__(
+        self,
+        columns: dict[
+            str,
+            BinaryCIFColumn | NDArray1[Any, Any] | Sequence[Any] | _SerializedElement,
+        ]
+        | None = None,
+        row_count: int | None = None,
+    ) -> None:
         if columns is None:
             columns = {}
         else:
@@ -385,7 +417,7 @@ class BinaryCIFCategory(_HierarchicalContainer):
         super().__init__(columns)
 
     @property
-    def row_count(self):
+    def row_count(self) -> int:
         if self._row_count is None:
             # Row count is not determined yet
             # -> check the length of the first column
@@ -393,21 +425,21 @@ class BinaryCIFCategory(_HierarchicalContainer):
         return self._row_count
 
     @staticmethod
-    def subcomponent_class():
+    def subcomponent_class() -> type[BinaryCIFColumn]:
         return BinaryCIFColumn
 
     @staticmethod
-    def supercomponent_class():
+    def supercomponent_class() -> type[BinaryCIFBlock]:
         return BinaryCIFBlock
 
-    @staticmethod
-    def deserialize(content):
-        return BinaryCIFCategory(
-            BinaryCIFCategory._deserialize_elements(content["columns"], "name"),
+    @classmethod
+    def deserialize(cls, content: dict) -> Self:
+        return cls(
+            cls._deserialize_elements(content["columns"], "name"),  # pyright: ignore[reportArgumentType]
             content["rowCount"],
         )
 
-    def serialize(self):
+    def serialize(self) -> dict:
         if len(self) == 0:
             raise SerializationError("At least one column is required")
 
@@ -426,13 +458,17 @@ class BinaryCIFCategory(_HierarchicalContainer):
             "columns": self._serialize_elements("name"),
         }
 
-    def __setitem__(self, key, element):
+    def __setitem__(
+        self,
+        key: str,
+        element: BinaryCIFColumn | NDArray1[Any, Any] | Sequence[Any],
+    ) -> None:
         if not isinstance(element, (BinaryCIFColumn, dict)):
             element = BinaryCIFColumn(element)
         super().__setitem__(key, element)
 
 
-class BinaryCIFBlock(_HierarchicalContainer):
+class BinaryCIFBlock(_HierarchicalContainer["BinaryCIFCategory"]):
     """
     This class represents a block in a :class:`BinaryCIFFile`.
 
@@ -465,7 +501,10 @@ class BinaryCIFBlock(_HierarchicalContainer):
     [2 3]
     """
 
-    def __init__(self, categories=None):
+    def __init__(
+        self,
+        categories: dict[str, BinaryCIFCategory | _SerializedElement] | None = None,
+    ) -> None:
         if categories is None:
             categories = {}
         super().__init__(
@@ -474,55 +513,57 @@ class BinaryCIFBlock(_HierarchicalContainer):
         )
 
     @staticmethod
-    def subcomponent_class():
+    def subcomponent_class() -> type[BinaryCIFCategory]:
         return BinaryCIFCategory
 
     @staticmethod
-    def supercomponent_class():
+    def supercomponent_class() -> type[BinaryCIFFile]:
         return BinaryCIFFile
 
-    @staticmethod
-    def deserialize(content):
-        return BinaryCIFBlock(
+    @classmethod
+    def deserialize(cls, content: dict) -> Self:
+        return cls(
             {
                 # The superclass uses leading '_' in category names,
                 # but on the level of this class, the leading '_' is omitted
                 name.lstrip("_"): category
-                for name, category in BinaryCIFBlock._deserialize_elements(
+                for name, category in cls._deserialize_elements(
                     content["categories"], "name"
                 ).items()
-            }
+            }  # pyright: ignore[reportArgumentType]
         )
 
-    def serialize(self):
+    def serialize(self) -> dict:
         return {"categories": self._serialize_elements("name")}
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> BinaryCIFCategory:
         try:
             return super().__getitem__("_" + key)
         except KeyError:
             raise KeyError(key)
 
-    def __setitem__(self, key, element):
+    def __setitem__(self, key: str, element: BinaryCIFCategory) -> None:
         try:
             return super().__setitem__("_" + key, element)
         except KeyError:
             raise KeyError(key)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         try:
             return super().__delitem__("_" + key)
         except KeyError:
             raise KeyError(key)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return (key.lstrip("_") for key in super().__iter__())
 
-    def __contains__(self, key):
+    def __contains__(self, key: object) -> bool:
+        if not isinstance(key, str):
+            return False
         return super().__contains__("_" + key)
 
 
-class BinaryCIFFile(File, _HierarchicalContainer):
+class BinaryCIFFile(File, _HierarchicalContainer["BinaryCIFBlock"]):
     """
     This class represents a *BinaryCIF* file.
 
@@ -575,12 +616,15 @@ class BinaryCIFFile(File, _HierarchicalContainer):
     >>> file.write(os.path.join(path_to_directory, "some_file.bcif"))
     """
 
-    def __init__(self, blocks=None):
+    def __init__(
+        self,
+        blocks: dict[str, BinaryCIFBlock | _SerializedElement] | None = None,
+    ) -> None:
         File.__init__(self)
         _HierarchicalContainer.__init__(self, blocks)
 
     @property
-    def block(self):
+    def block(self) -> BinaryCIFBlock:
         if len(self) == 0:
             raise ValueError("There are no blocks in the file")
         elif len(self) > 1:
@@ -589,24 +633,24 @@ class BinaryCIFFile(File, _HierarchicalContainer):
             return self[next(iter(self))]
 
     @staticmethod
-    def subcomponent_class():
+    def subcomponent_class() -> type[BinaryCIFBlock]:
         return BinaryCIFBlock
 
     @staticmethod
-    def supercomponent_class():
+    def supercomponent_class() -> None:
         return None
 
-    @staticmethod
-    def deserialize(content):
-        return BinaryCIFFile(
-            BinaryCIFFile._deserialize_elements(content["dataBlocks"], "header")
+    @classmethod
+    def deserialize(cls, content: dict) -> Self:
+        return cls(
+            cls._deserialize_elements(content["dataBlocks"], "header")  # pyright: ignore[reportArgumentType]
         )
 
-    def serialize(self):
+    def serialize(self) -> dict:
         return {"dataBlocks": self._serialize_elements("header")}
 
     @classmethod
-    def read(cls, file):
+    def read(cls, file: PathLike[str] | str | IO[bytes]) -> BinaryCIFFile:
         """
         Read a *BinaryCIF* file.
 
@@ -635,7 +679,7 @@ class BinaryCIFFile(File, _HierarchicalContainer):
                 msgpack.unpackb(file.read(), use_list=True, raw=False)
             )
 
-    def write(self, file):
+    def write(self, file: PathLike[str] | str | IO[bytes]) -> None:
         """
         Write contents into a *BinaryCIF* file.
 
@@ -651,6 +695,8 @@ class BinaryCIFFile(File, _HierarchicalContainer):
         packed_bytes = msgpack.packb(
             serialized_content, use_bin_type=True, default=_encode_numpy
         )
+        if packed_bytes is None:
+            raise RuntimeError("MessagePack packer failed")
         if is_open_compatible(file):
             with open(file, "wb") as f:
                 f.write(packed_bytes)
@@ -660,7 +706,7 @@ class BinaryCIFFile(File, _HierarchicalContainer):
             file.write(packed_bytes)
 
 
-def _encode_numpy(item):
+def _encode_numpy(item: Any) -> Any:
     """
     Convert NumPy scalar types to native Python types,
     as *Msgpack* cannot handle NumPy types (e.g. float32).

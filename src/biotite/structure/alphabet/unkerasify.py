@@ -14,8 +14,11 @@ __all__ = ["load_kerasify"]
 
 import enum
 import functools
+import io
 import itertools
 import struct
+from os import PathLike
+from typing import Any
 import numpy as np
 from biotite.structure.alphabet.layers import DenseLayer, Layer
 
@@ -55,12 +58,12 @@ class KerasifyParser:
     is only using 3 dense layers.
     """
 
-    def __init__(self, file) -> None:
+    def __init__(self, file: io.BufferedIOBase) -> None:
         self.file = file
         self.buffer = bytearray(1024)
         (self.n_layers,) = self._get("I")
 
-    def read(self):
+    def read(self) -> Layer | None:
         if self.n_layers == 0:
             return None
 
@@ -85,7 +88,7 @@ class KerasifyParser:
         else:
             raise NotImplementedError(f"Unsupported layer type: {layer_type!r}")
 
-    def __iter__(self):
+    def __iter__(self) -> "KerasifyParser":
         return self
 
     def __next__(self) -> Layer:
@@ -101,16 +104,16 @@ class KerasifyParser:
                 itertools.islice(itertools.repeat(0), n - len(self.buffer))
             )
         v = memoryview(self.buffer)[:n]
-        self.file.readinto(v)  # type: ignore
+        self.file.readinto(v)
         return v
 
-    def _get(self, format: str):
+    def _get(self, format: str) -> tuple[Any, ...]:
         v = self._read(format)
         return struct.unpack(format, v)
 
 
 @functools.cache
-def load_kerasify(file_path):
+def load_kerasify(file_path: str | PathLike[str]) -> tuple[Layer, ...]:
     """
     Load the the model layers from a ``.kerasify`` file.
 

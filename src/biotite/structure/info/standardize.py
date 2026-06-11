@@ -7,13 +7,18 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["standardize_order"]
 
 import warnings
+from typing import Any
 import numpy as np
+from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.error import BadStructureError
 from biotite.structure.info.ccd import get_from_ccd
 from biotite.structure.residues import get_residue_starts
+from biotite.typing import K, M, N, NDArray1
 
 
-def standardize_order(atoms):
+def standardize_order(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.integer]:
     """
     Get an index array for an input :class:`AtomArray` or
     :class:`AtomArrayStack` that reorders the atoms for each residue
@@ -120,7 +125,7 @@ def standardize_order(atoms):
         start = starts[i]
         stop = starts[i + 1]
 
-        res_name = atoms.res_name[start]
+        res_name = atoms.res_name[start].item()
         chem_comp_atom = get_from_ccd("chem_comp_atom", res_name, "atom_id")
         if chem_comp_atom is None:
             # If the residue is not in the CCD, keep the current order
@@ -135,10 +140,13 @@ def standardize_order(atoms):
             _reorder(atoms.atom_name[start:stop], standard_atom_names) + start
         )
 
-    return reordered_indices
+    return reordered_indices  # pyright: ignore[reportReturnType]
 
 
-def _reorder(origin, target):
+def _reorder(
+    origin: NDArray1[K, np.str_],
+    target: NDArray1[Any, np.str_],
+) -> NDArray1[K, np.integer]:
     """
     Create indices to `origin`, that changes the order of `origin`,
     so that the order is the same as in `target`.

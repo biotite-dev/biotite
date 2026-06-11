@@ -17,12 +17,15 @@ __all__ = [
 
 
 from enum import IntEnum
+from typing import Any, cast
 import networkx as nx
 import numpy as np
+from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.bonds import BondType
 from biotite.structure.error import BadStructureError
 from biotite.structure.geometry import displacement
 from biotite.structure.util import norm_vector, vector_dot
+from biotite.typing import XYZ, M, N, NDArray1, NDArray2
 
 
 class PiStacking(IntEnum):
@@ -37,7 +40,9 @@ class PiStacking(IntEnum):
     PERPENDICULAR = 1
 
 
-def find_aromatic_rings(atoms):
+def find_aromatic_rings(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+) -> list[NDArray1[Any, np.integer]]:
     """
     Find (anti-)aromatic rings in a structure.
 
@@ -103,11 +108,11 @@ def find_aromatic_rings(atoms):
 
 
 def find_stacking_interactions(
-    atoms,
-    centroid_cutoff=6.5,
-    plane_angle_tol=np.deg2rad(30.0),
-    shift_angle_tol=np.deg2rad(30.0),
-):
+    atoms: AtomArray[N],
+    centroid_cutoff: float = 6.5,
+    plane_angle_tol: float = np.deg2rad(30.0),
+    shift_angle_tol: float = np.deg2rad(30.0),
+) -> list[tuple[NDArray1[Any, np.integer], NDArray1[Any, np.integer], "PiStacking"]]:
     """
     Find pi-stacking interactions between aromatic rings.
 
@@ -234,7 +239,11 @@ def find_stacking_interactions(
 
     ## Condition 3: The ring centroids are not shifted too much
     ## (in terms of normal-centroid angle)
-    diff = displacement(ring_centroids[indices[:, 0]], ring_centroids[indices[:, 1]])
+    # `ring_centroids` is 2D, so `displacement()` returns 2D
+    diff = cast(
+        "NDArray2[Any, Any, np.floating]",
+        displacement(ring_centroids[indices[:, 0]], ring_centroids[indices[:, 1]]),
+    )
     norm_vector(diff)
     angles = np.stack(
         [_minimum_angle(ring_normals[indices[:, i]], diff) for i in range(2)]
@@ -274,10 +283,10 @@ def find_stacking_interactions(
 
 
 def find_pi_cation_interactions(
-    atoms,
-    distance_cutoff=5.0,
-    angle_tol=np.deg2rad(30.0),
-):
+    atoms: AtomArray[N],
+    distance_cutoff: float = 5.0,
+    angle_tol: float = np.deg2rad(30.0),
+) -> list[tuple[Any, NDArray1[Any, np.integer]]]:
     """
     Find pi-cation interactions between aromatic rings and cations.
 
@@ -374,7 +383,11 @@ def find_pi_cation_interactions(
     indices = indices[is_interacting]
 
     ## Condition 2: Angle between ring normal and centroid-cation vector
-    diff = displacement(ring_centroids[indices[:, 0]], cation_coords[indices[:, 1]])
+    # `ring_centroids` and `cation_coords` are 2D, so `displacement()` returns 2D
+    diff = cast(
+        "NDArray2[Any, Any, np.floating]",
+        displacement(ring_centroids[indices[:, 0]], cation_coords[indices[:, 1]]),
+    )
     norm_vector(diff)
     angles = _minimum_angle(ring_normals[indices[:, 0]], diff)
     is_interacting = _is_within_tolerance(angles, 0, angle_tol)
@@ -384,7 +397,9 @@ def find_pi_cation_interactions(
     return [(rings[ring_i], cation_indices[cation_j]) for ring_i, cation_j in indices]
 
 
-def _get_ring_normal(ring_coord):
+def _get_ring_normal(
+    ring_coord: NDArray2[N, XYZ, np.floating],
+) -> NDArray1[XYZ, np.floating]:
     """
     Get the normal vector perpendicular to the ring plane.
 
@@ -406,7 +421,9 @@ def _get_ring_normal(ring_coord):
     return normal
 
 
-def _minimum_angle(v1, v2):
+def _minimum_angle(
+    v1: NDArray2[N, XYZ, np.floating], v2: NDArray2[N, XYZ, np.floating]
+) -> NDArray1[N, np.floating]:
     """
     Get the minimum angle between two vectors, i.e. the possible angle range is
     ``[0, pi/2]``.
@@ -431,7 +448,11 @@ def _minimum_angle(v1, v2):
     return np.arccos(np.minimum(np.abs(vector_dot(v1, v2)), 1.0))
 
 
-def _is_within_tolerance(angles, expected_angle, tolerance):
+def _is_within_tolerance(
+    angles: NDArray1[N, np.floating],
+    expected_angle: float,
+    tolerance: float,
+) -> NDArray1[N, np.bool_]:
     """
     Check if the angles are within a certain tolerance.
 

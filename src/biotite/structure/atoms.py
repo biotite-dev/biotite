@@ -2,6 +2,16 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+# The four pyright rules below are disabled file-wide because the
+# internal state of `_AtomArrayBase` (`_coord`, `_bonds`, `_box`) is
+# initialized to `None` in `__init__` and then populated by subclass
+# constructors.
+#
+# pyright: reportOptionalSubscript=false
+# pyright: reportOptionalMemberAccess=false
+# pyright: reportArgumentType=false
+# pyright: reportCallIssue=false
+
 """
 This module contains the main types of the ``structure`` subpackage:
 :class:`Atom`, :class:`AtomArray` and :class:`AtomArrayStack`.
@@ -13,6 +23,9 @@ __all__ = [
     "Atom",
     "AtomArray",
     "AtomArrayStack",
+    "SingleCoord",
+    "Coord",
+    "MultiCoord",
     "concatenate",
     "array",
     "stack",
@@ -25,10 +38,12 @@ __all__ = [
 import abc
 import numbers
 import textwrap
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from typing import Any, Generic, Self, TypeAliasType, overload
 import numpy as np
 from biotite.copyable import Copyable
 from biotite.structure.bonds import BondList
+from biotite.typing import XYZ, M, N, NDArray1, NDArray2, NDArray3, NDArray4
 
 
 class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
@@ -47,7 +62,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
     _max_models_printed = 10
     _max_atoms_printed = 1000
 
-    def __init__(self, length):
+    def __init__(self, length: int) -> None:
         """
         Create the annotation arrays
         """
@@ -64,7 +79,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         self.add_annotation("atom_name", dtype="U6")
         self.add_annotation("element", dtype="U2")
 
-    def array_length(self):
+    def array_length(self) -> int:
         """
         Get the length of the atom array.
 
@@ -80,7 +95,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def shape(self):
+    def shape(self) -> tuple[int, ...]:
         """
         Tuple of array dimensions.
 
@@ -91,9 +106,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         shape : tuple of int
             Shape of the object.
         """
-        return
+        raise NotImplementedError
 
-    def add_annotation(self, category, dtype):
+    def add_annotation(self, category: str, dtype: "np.dtype | type | str") -> None:
         """
         Add an annotation category, if not already existing.
 
@@ -130,7 +145,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 f"with dtype '{self._annot[str(category)].dtype}' into '{dtype}'"
             )
 
-    def del_annotation(self, category):
+    def del_annotation(self, category: str) -> None:
         """
         Removes an annotation category.
 
@@ -142,7 +157,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         if category in self._annot:
             del self._annot[str(category)]
 
-    def get_annotation(self, category):
+    def get_annotation(self, category: str) -> NDArray1[Any, Any]:
         """
         Return an annotation array.
 
@@ -160,7 +175,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             raise ValueError(f"Annotation category '{category}' is not existing")
         return self._annot[category]
 
-    def set_annotation(self, category, array):
+    def set_annotation(self, category: str, array: np.ndarray | Sequence[Any]) -> None:
         """
         Set an annotation array. If the annotation category does not
         exist yet, the category is created.
@@ -192,7 +207,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         else:
             self._annot[category] = array
 
-    def get_annotation_categories(self):
+    def get_annotation_categories(self) -> list[str]:
         """
         Return a list containing all annotation array categories.
 
@@ -203,7 +218,10 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         """
         return list(self._annot.keys())
 
-    def _subarray(self, index):
+    def _subarray(
+        self,
+        index: NDArray1[Any, np.integer] | NDArray1[Any, np.bool_] | slice,
+    ) -> Self:
         # Index is one dimensional (boolean mask, index array)
         new_coord = self._coord[..., index, :]
         new_length = new_coord.shape[-2]
@@ -215,6 +233,8 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         elif isinstance(self, AtomArrayStack):
             new_depth = new_coord.shape[-3]
             new_object = AtomArrayStack(new_depth, 0)
+        else:
+            raise TypeError(f"Unsupported type '{type(self).__name__}'")
         new_object._coord = new_coord
         if self._bonds is not None:
             new_object._bonds = self._bonds[index]
@@ -224,9 +244,11 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             new_object._annot[annotation] = self._annot[annotation].__getitem__(index)
         # Update the array length, since has currently length '0'
         new_object._array_length = new_length
-        return new_object
+        return new_object  # pyright: ignore[reportReturnType]
 
-    def _set_element(self, index, atom):
+    def _set_element(
+        self, index: int | NDArray1[Any, np.integer], atom: "Atom"
+    ) -> None:
         try:
             if isinstance(index, (numbers.Integral, np.ndarray)):
                 for name in self._annot:
@@ -237,7 +259,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         except KeyError:
             raise KeyError("The annotations of the 'Atom' are incompatible")
 
-    def _del_element(self, index):
+    def _del_element(self, index: int) -> None:
         if isinstance(index, numbers.Integral):
             for name in self._annot:
                 self._annot[name] = np.delete(self._annot[name], index, axis=0)
@@ -250,7 +272,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         else:
             raise TypeError(f"Index must be integer, not '{type(index).__name__}'")
 
-    def equal_annotations(self, item, equal_nan=True):
+    def equal_annotations(self, item: object, equal_nan: bool = True) -> bool:
         """
         Check, if this object shares equal annotation arrays with the
         given :class:`AtomArray` or :class:`AtomArrayStack`.
@@ -287,7 +309,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 return False
         return True
 
-    def equal_annotation_categories(self, item):
+    def equal_annotation_categories(self, item: "_AtomArrayBase") -> bool:
         """
         Check, if this object shares equal annotation array categories
         with the given :class:`AtomArray` or :class:`AtomArrayStack`.
@@ -304,7 +326,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         """
         return sorted(self._annot.keys()) == sorted(item._annot.keys())
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         """
         If the attribute is an annotation, the annotation is returned
         from the dictionary.
@@ -325,7 +347,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 f"'{type(self).__name__}' object has no attribute '{attr}'"
             )
 
-    def __setattr__(self, attr, value):
+    def __setattr__(self, attr: str, value: Any) -> None:
         """
         If the attribute is an annotation, the :attr:`value` is saved
         to the annotation in the dictionary.
@@ -399,8 +421,9 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         else:
             super().__setattr__(attr, value)
 
-    def __dir__(self):
-        attr = super().__dir__()
+    def __dir__(self) -> list[str]:
+        # __dir__() is typed as `Iterable[str]`, hence the explicit `list(...)`
+        attr = list(super().__dir__())
         attr.append("coord")
         attr.append("bonds")
         attr.append("box")
@@ -408,12 +431,14 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
             attr.append(name)
         return attr
 
-    def __eq__(self, item):
+    def __eq__(self, item: object) -> bool:
         """
         See Also
         --------
         equal_annotations
         """
+        if not isinstance(item, _AtomArrayBase):
+            return False
         if not self.equal_annotations(item):
             return False
         if self._bonds != item._bonds:
@@ -426,7 +451,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 return False
         return np.array_equal(self._coord, item._coord)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         The length of the annotation arrays.
 
@@ -437,15 +462,15 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         """
         return self._array_length
 
-    def __add__(self, array):
+    def __add__(self, array: Self) -> Self:
         return concatenate([self, array])
 
-    def __copy_fill__(self, clone):
+    def __copy_fill__(self, clone: Self) -> None:
         super().__copy_fill__(clone)
         self._copy_annotations(clone)
         clone._coord = np.copy(self._coord)
 
-    def _copy_annotations(self, clone):
+    def _copy_annotations(self, clone: Self) -> None:
         for name in self._annot:
             clone._annot[name] = np.copy(self._annot[name])
         if self._box is not None:
@@ -490,7 +515,9 @@ class Atom(Copyable):
     [1. 2. 3.]
     """
 
-    def __init__(self, coord, **kwargs):
+    def __init__(
+        self, coord: NDArray1[Any, np.floating] | Sequence[float], **kwargs: Any
+    ) -> None:
         self._annot = {}
         self._annot["chain_id"] = ""
         self._annot["res_id"] = 0
@@ -510,7 +537,7 @@ class Atom(Copyable):
             raise ValueError("Position must be ndarray with shape (3,)")
         self.coord = coord
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent Atom as a string for debugging."""
         # print out key-value pairs and format strings in quotation marks
         annot_parts = [
@@ -522,10 +549,10 @@ class Atom(Copyable):
         return f"Atom(np.{np.array_repr(self.coord)}, {annot})"
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[()]:
         return ()
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         if attr in super().__getattribute__("_annot"):
             return self._annot[attr]
         else:
@@ -533,7 +560,7 @@ class Atom(Copyable):
                 f"'{type(self).__name__}' object has no attribute '{attr}'"
             )
 
-    def __setattr__(self, attr, value):
+    def __setattr__(self, attr: str, value: Any) -> None:
         if attr == "_annot":
             super().__setattr__(attr, value)
         elif attr == "coord":
@@ -541,7 +568,7 @@ class Atom(Copyable):
         else:
             self._annot[attr] = value
 
-    def __str__(self):
+    def __str__(self) -> str:
         hetero = "HET" if self.hetero else ""
         return (
             f"{hetero:3} {self.chain_id:3} "
@@ -552,7 +579,7 @@ class Atom(Copyable):
             f"{self.coord[2]:8.3f}"
         )
 
-    def __eq__(self, item):
+    def __eq__(self, item: object) -> bool:
         if not isinstance(item, Atom):
             return False
         if not np.array_equal(self.coord, item.coord):
@@ -564,14 +591,14 @@ class Atom(Copyable):
                 return False
         return True
 
-    def __ne__(self, item):
+    def __ne__(self, item: object) -> bool:
         return not self == item
 
-    def __copy_create__(self):
+    def __copy_create__(self) -> "Atom":
         return Atom(self.coord, **self._annot)
 
 
-class AtomArray(_AtomArrayBase):
+class AtomArray(_AtomArrayBase, Generic[N]):
     """
     An array representation of a model consisting of multiple atoms.
 
@@ -651,6 +678,11 @@ class AtomArray(_AtomArrayBase):
     --------
     AtomArrayStack : Representation of multiple structure models.
 
+    Notes
+    -----
+    The type annotation of this class is generic in the number of atoms ``N`` in the
+    structure.
+
     Examples
     --------
     Creating an atom array from atoms:
@@ -688,14 +720,14 @@ class AtomArray(_AtomArrayBase):
     ['A' 'C' 'A']
     """
 
-    def __init__(self, length):
+    def __init__(self, length: int) -> None:
         super().__init__(length)
         if length is None:
             self._coord = None
         else:
             self._coord = np.full((length, 3), np.nan, dtype=np.float32)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent AtomArray as a string for debugging."""
         atoms = ""
         for i in range(0, min(self.array_length(), _AtomArrayBase._max_atoms_printed)):
@@ -704,8 +736,11 @@ class AtomArray(_AtomArrayBase):
             atoms = atoms + "\t...,\n"
         return f"array([\n{atoms}])"
 
+    def array_length(self) -> N:
+        return super().array_length()  # pyright: ignore[reportReturnType]
+
     @property
-    def shape(self):
+    def shape(self) -> tuple[N]:
         """
         Tuple of array dimensions.
 
@@ -721,7 +756,7 @@ class AtomArray(_AtomArrayBase):
         """
         return (self.array_length(),)
 
-    def get_atom(self, index):
+    def get_atom(self, index: int) -> Atom:
         """
         Obtain the atom instance of the array at the specified index.
 
@@ -742,7 +777,7 @@ class AtomArray(_AtomArrayBase):
             kwargs[name] = annotation[index]
         return Atom(coord=self._coord[index], kwargs=kwargs)
 
-    def __iter__(self):
+    def __iter__(self) -> "Iterator[Atom]":
         """
         Iterate through the array.
 
@@ -755,7 +790,7 @@ class AtomArray(_AtomArrayBase):
             yield self.get_atom(i)
             i += 1
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: Any) -> "Atom | AtomArray[Any]":
         """
         Obtain a subarray or the atom instance at the specified index.
 
@@ -781,9 +816,9 @@ class AtomArray(_AtomArrayBase):
             else:
                 raise IndexError("'AtomArray' does not accept multidimensional indices")
         else:
-            return self._subarray(index)
+            return self._subarray(index)  # pyright: ignore[reportReturnType]
 
-    def __setitem__(self, index, atom):
+    def __setitem__(self, index: int, atom: Atom) -> None:
         """
         Set the atom at the specified array position.
 
@@ -796,7 +831,7 @@ class AtomArray(_AtomArrayBase):
         """
         self._set_element(index, atom)
 
-    def __delitem__(self, index):
+    def __delitem__(self, index: int) -> None:
         """
         Deletes the atom at the specified array position.
 
@@ -807,7 +842,7 @@ class AtomArray(_AtomArrayBase):
         """
         self._del_element(index)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         The length of the array.
 
@@ -818,7 +853,7 @@ class AtomArray(_AtomArrayBase):
         """
         return self.array_length()
 
-    def __eq__(self, item):
+    def __eq__(self, item: object) -> bool:
         """
         Check if the array equals another :class:`AtomArray`.
 
@@ -839,24 +874,24 @@ class AtomArray(_AtomArrayBase):
             return False
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Get a string representation of the array.
 
         Each line contains the attributes of one atom.
         """
         string = "\n".join(
-            [str(atom) for atom in self[: _AtomArrayBase._max_atoms_printed]]
+            [str(atom) for atom in self[: _AtomArrayBase._max_atoms_printed]]  # pyright: ignore[reportGeneralTypeIssues]
         )
         if self.array_length() > _AtomArrayBase._max_atoms_printed:
             string += "\n\t..."
         return string
 
-    def __copy_create__(self):
+    def __copy_create__(self) -> "AtomArray[Any]":
         return AtomArray(self.array_length())
 
 
-class AtomArrayStack(_AtomArrayBase):
+class AtomArrayStack(_AtomArrayBase, Generic[M, N]):
     """
     A collection of multiple :class:`AtomArray` instances, where each
     atom array has equal annotation arrays.
@@ -918,6 +953,11 @@ class AtomArrayStack(_AtomArrayBase):
     --------
     AtomArray : Representation of a single structure model.
 
+    Notes
+    -----
+    The type annotation of this class is generic in the number of models (``M``) and
+    atoms (``N``) in the structure.
+
     Examples
     --------
     Creating an atom array stack from two arrays:
@@ -947,14 +987,14 @@ class AtomArrayStack(_AtomArrayBase):
       [6. 7. 8.]]]
     """
 
-    def __init__(self, depth, length):
+    def __init__(self, depth: int, length: int) -> None:
         super().__init__(length)
         if depth is None or length is None:
             self._coord = None
         else:
             self._coord = np.full((depth, length, 3), np.nan, dtype=np.float32)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent AtomArrayStack as a string for debugging."""
         arrays = ""
         for i in range(0, min(self.stack_depth(), _AtomArrayBase._max_models_printed)):
@@ -963,7 +1003,7 @@ class AtomArrayStack(_AtomArrayBase):
             arrays = arrays + "\t...,\n"
         return f"stack([\n{arrays}])"
 
-    def get_array(self, index):
+    def get_array(self, index: int) -> "AtomArray[Any]":
         """
         Obtain the atom array instance of the stack at the specified
         index.
@@ -991,7 +1031,7 @@ class AtomArrayStack(_AtomArrayBase):
 
         return array
 
-    def stack_depth(self):
+    def stack_depth(self) -> M:
         """
         Get the depth of the stack.
 
@@ -1003,10 +1043,13 @@ class AtomArrayStack(_AtomArrayBase):
         length : int
             Length of the array(s).
         """
-        return len(self)
+        return len(self)  # pyright: ignore[reportReturnType]
+
+    def array_length(self) -> N:
+        return super().array_length()  # pyright: ignore[reportReturnType]
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[M, N]:
         """
         Tuple of array dimensions.
 
@@ -1022,7 +1065,7 @@ class AtomArrayStack(_AtomArrayBase):
         """
         return self.stack_depth(), self.array_length()
 
-    def __iter__(self):
+    def __iter__(self) -> "Iterator[AtomArray[Any]]":
         """
         Iterate through the array.
 
@@ -1035,7 +1078,9 @@ class AtomArrayStack(_AtomArrayBase):
             yield self.get_array(i)
             i += 1
 
-    def __getitem__(self, index):
+    def __getitem__(
+        self, index: Any
+    ) -> "Atom | AtomArray[Any] | AtomArrayStack[Any, Any]":
         """
         Obtain the atom array instance or an substack at the specified
         index.
@@ -1086,7 +1131,7 @@ class AtomArrayStack(_AtomArrayBase):
                 new_stack._box = self._box[index]
             return new_stack
 
-    def __setitem__(self, index, array):
+    def __setitem__(self, index: int, array: "AtomArray[N]") -> None:
         """
         Set the atom array at the specified stack position.
 
@@ -1110,7 +1155,7 @@ class AtomArrayStack(_AtomArrayBase):
         else:
             raise TypeError(f"Index must be integer, not '{type(index).__name__}'")
 
-    def __delitem__(self, index):
+    def __delitem__(self, index: int) -> None:
         """
         Deletes the atom array at the specified stack position.
 
@@ -1124,7 +1169,7 @@ class AtomArrayStack(_AtomArrayBase):
         else:
             raise TypeError(f"Index must be integer, not '{type(index).__name__}'")
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         The depth of the stack, i.e. the amount of models.
 
@@ -1136,7 +1181,7 @@ class AtomArrayStack(_AtomArrayBase):
         # length is determined by length of coord attribute
         return self._coord.shape[0]
 
-    def __eq__(self, item):
+    def __eq__(self, item: object) -> bool:
         """
         Check if the array equals another :class:`AtomArray`
 
@@ -1157,7 +1202,7 @@ class AtomArrayStack(_AtomArrayBase):
             return False
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Get a string representation of the stack.
 
@@ -1173,11 +1218,28 @@ class AtomArrayStack(_AtomArrayBase):
             string += str(array) + "\n" + "\n"
         return string
 
-    def __copy_create__(self):
+    def __copy_create__(self) -> "AtomArrayStack[Any, Any]":
         return AtomArrayStack(self.stack_depth(), self.array_length())
 
 
-def array(atoms):
+# Aliases for either a structure or its coordinates
+SingleCoord = TypeAliasType(
+    "SingleCoord",
+    Atom | NDArray1[int, np.floating],
+)
+Coord = TypeAliasType(
+    "Coord",
+    AtomArray[N] | NDArray2[N, int, np.floating],
+    type_params=(N,),
+)
+MultiCoord = TypeAliasType(
+    "MultiCoord",
+    AtomArrayStack[M, N] | NDArray3[M, N, int, np.floating],
+    type_params=(M, N),
+)
+
+
+def array(atoms: Sequence[Atom]) -> AtomArray[Any]:
     """
     Create an :class:`AtomArray` from a list of :class:`Atom`.
 
@@ -1236,7 +1298,7 @@ def array(atoms):
     return array
 
 
-def stack(arrays):
+def stack(arrays: Sequence[AtomArray[N]]) -> AtomArrayStack[Any, N]:
     """
     Create an :class:`AtomArrayStack` from a list of :class:`AtomArray`.
 
@@ -1305,7 +1367,13 @@ def stack(arrays):
     return array_stack
 
 
-def concatenate(atoms):
+@overload
+def concatenate(atoms: Sequence[AtomArray[Any]]) -> AtomArray[Any]: ...
+@overload
+def concatenate(atoms: Sequence[AtomArrayStack[M, Any]]) -> AtomArrayStack[M, Any]: ...
+def concatenate(
+    atoms: Sequence[AtomArray[Any]] | Sequence[AtomArrayStack[M, Any]],
+) -> AtomArray[Any] | AtomArrayStack[M, Any]:
     """
     Concatenate multiple :class:`AtomArray` or :class:`AtomArrayStack` objects into
     a single :class:`AtomArray` or :class:`AtomArrayStack`, respectively.
@@ -1416,7 +1484,20 @@ def concatenate(atoms):
     return concat_atoms
 
 
-def repeat(atoms, coord):
+@overload
+def repeat(
+    atoms: AtomArray[N],
+    coord: NDArray3[Any, N, XYZ, np.floating],
+) -> AtomArray[Any]: ...
+@overload
+def repeat(
+    atoms: AtomArrayStack[M, N],
+    coord: NDArray4[Any, M, N, XYZ, np.floating],
+) -> AtomArrayStack[M, Any]: ...
+def repeat(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+    coord: NDArray3[Any, N, XYZ, np.floating] | NDArray4[Any, M, N, XYZ, np.floating],
+) -> AtomArray[Any] | AtomArrayStack[M, Any]:
     """
     Repeat atoms (:class:`AtomArray` or :class:`AtomArrayStack`)
     multiple times in the same model with different coordinates.
@@ -1510,7 +1591,11 @@ def repeat(atoms, coord):
     return repeated
 
 
-def from_template(template, coord, box=None):
+def from_template(
+    template: "AtomArray[N] | AtomArrayStack[Any, N]",
+    coord: NDArray3[M, N, XYZ, np.floating],
+    box: NDArray3[M, XYZ, XYZ, np.floating] | None = None,
+) -> "AtomArrayStack[M, N]":
     """
     Create an :class:`AtomArrayStack` using template atoms and given
     coordinates.
@@ -1556,7 +1641,22 @@ def from_template(template, coord, box=None):
     return new_stack
 
 
-def coord(item):
+@overload
+def coord(item: SingleCoord) -> NDArray1[XYZ, np.floating]: ...
+@overload
+def coord(item: Coord[N]) -> NDArray2[N, XYZ, np.floating]: ...
+@overload
+def coord(item: MultiCoord[M, N]) -> NDArray3[M, N, XYZ, np.floating]: ...
+@overload
+def coord(item: Sequence[Any]) -> np.ndarray: ...
+def coord(
+    item: SingleCoord | Coord[N] | MultiCoord[M, N] | Sequence[Any],
+) -> (
+    NDArray1[XYZ, np.floating]
+    | NDArray2[N, XYZ, np.floating]
+    | NDArray3[M, N, XYZ, np.floating]
+    | np.ndarray
+):
     """
     Get the atom coordinates of the given array.
 
@@ -1566,7 +1666,7 @@ def coord(item):
     containing the coordinates.
 
     Parameters
-    ----------
+    ----------∂
     item : Atom or AtomArray or AtomArrayStack or ndarray
         Returns the :attr:`coord` attribute, if `item` is an
         :class:`Atom`, :class:`AtomArray` or :class:`AtomArrayStack`.
@@ -1578,7 +1678,7 @@ def coord(item):
         Atom coordinates.
     """
 
-    if isinstance(item, (Atom, _AtomArrayBase)):
+    if isinstance(item, (Atom, AtomArray, AtomArrayStack)):
         return item.coord
     elif isinstance(item, np.ndarray):
         return item.astype(np.float32, copy=False)
@@ -1586,7 +1686,7 @@ def coord(item):
         return np.array(item, dtype=np.float32)
 
 
-def set_print_limits(max_models=10, max_atoms=1000):
+def set_print_limits(max_models: int = 10, max_atoms: int = 1000) -> None:
     """
     Set the maximum number of models and atoms to print in the ``str()`` and ``repr()``
     representations.

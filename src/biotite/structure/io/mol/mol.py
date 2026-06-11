@@ -6,13 +6,17 @@ __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["MOLFile"]
 
+from os import PathLike
+from typing import IO, Any, Literal
 from biotite.file import InvalidFileError, TextFile
+from biotite.structure.atoms import AtomArray
 from biotite.structure.bonds import BondType
 from biotite.structure.io.mol.ctab import (
     read_structure_from_ctab,
     write_structure_to_ctab,
 )
 from biotite.structure.io.mol.header import Header
+from biotite.typing import N
 
 # Number of header lines
 N_HEADER = 3
@@ -76,30 +80,30 @@ class MOLFile(TextFile):
                 0             H        -1.333   -0.030    4.784
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         # empty header lines
         self.lines = [""] * N_HEADER
-        self._header = None
+        self._header: Header | None = None
 
     @classmethod
-    def read(cls, file):
+    def read(cls, file: str | PathLike[str] | IO[str]) -> "MOLFile":
         mol_file = super().read(file)
         mol_file._header = None
         return mol_file
 
     @property
-    def header(self):
+    def header(self) -> Header:
         if self._header is None:
             self._header = Header.deserialize("\n".join(self.lines[0:3]) + "\n")
         return self._header
 
     @header.setter
-    def header(self, header):
+    def header(self, header: Header) -> None:
         self._header = header
         self.lines[0:3] = self._header.serialize().splitlines()
 
-    def get_structure(self):
+    def get_structure(self) -> AtomArray[Any]:
         """
         Get an :class:`AtomArray` from the MOL file.
 
@@ -116,7 +120,12 @@ class MOLFile(TextFile):
             raise InvalidFileError("File does not contain structure data")
         return read_structure_from_ctab(ctab_lines)
 
-    def set_structure(self, atoms, default_bond_type=BondType.ANY, version=None):
+    def set_structure(
+        self,
+        atoms: AtomArray[N],
+        default_bond_type: BondType = BondType.ANY,
+        version: Literal["V2000", "V3000"] | None = None,
+    ) -> None:
         """
         Set the :class:`AtomArray` for the file.
 
@@ -142,7 +151,7 @@ class MOLFile(TextFile):
         )
 
 
-def _get_ctab_lines(lines):
+def _get_ctab_lines(lines: list[str]) -> list[str]:
     for i, line in enumerate(lines):
         if line.startswith("M  END"):
             return lines[N_HEADER : i + 1]

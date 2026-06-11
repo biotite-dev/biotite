@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application.blast"
 __author__ = "Patrick Kunzmann"
 __all__ = ["BlastWebApp"]
@@ -12,6 +14,7 @@ import requests
 from biotite.application.application import AppState, requires_state
 from biotite.application.blast.alignment import BlastAlignment
 from biotite.application.webapp import WebApp
+from biotite.database.entrez.query import Query
 from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.io.fasta.convert import get_sequence
 from biotite.sequence.io.fasta.file import FastaFile
@@ -60,13 +63,13 @@ class BlastWebApp(WebApp):
 
     def __init__(
         self,
-        program,
-        query,
-        database="nr",
-        app_url=_ncbi_url,
-        obey_rules=True,
-        mail="padix.key@gmail.com",
-    ):
+        program: str,
+        query: Sequence | str,
+        database: str = "nr",
+        app_url: str = _ncbi_url,
+        obey_rules: bool = True,
+        mail: str = "padix.key@gmail.com",
+    ) -> None:
         super().__init__(app_url, obey_rules)
 
         # 'megablast' is somehow not working
@@ -74,7 +77,7 @@ class BlastWebApp(WebApp):
         # you are redirected onto the blast mainpage
         if program not in ["blastn", "blastp", "blastx", "tblastn", "tblastx"]:
             raise ValueError(f"'{program}' is not a valid BLAST program")
-        self._program = program
+        self._program: str = program
 
         requires_protein = program in ["blastp", "tblastn"]
         if isinstance(query, str) and query.endswith((".fa", ".fst", ".fasta")):
@@ -83,11 +86,11 @@ class BlastWebApp(WebApp):
             file = FastaFile.read(query)
             # Get first entry in file and take the sequence
             # (rather than header)
-            self._query = str(get_sequence(file))
+            self._query: str = str(get_sequence(file))
         elif isinstance(query, Sequence):
             self._query = str(query)
         else:
-            self._query = query
+            self._query = str(query)
 
         # Check for unsuitable symbols in query string
         if requires_protein:
@@ -98,27 +101,27 @@ class BlastWebApp(WebApp):
             if symbol.upper() not in ref_alphabet:
                 raise ValueError(f"Query sequence contains unsuitable symbol {symbol}")
 
-        self._database = database
+        self._database: str = database
 
-        self._gap_openining = None
-        self._gap_extension = None
-        self._word_size = None
+        self._gap_openining: float | None = None
+        self._gap_extension: float | None = None
+        self._word_size: int | None = None
 
-        self._expect_value = None
-        self._max_results = None
-        self._entrez_query = None
+        self._expect_value: float | None = None
+        self._max_results: int | None = None
+        self._entrez_query: str | None = None
 
-        self._reward = None
-        self._penalty = None
+        self._reward: int | None = None
+        self._penalty: int | None = None
 
-        self._matrix = None
-        self._threshold = None
+        self._matrix: str | None = None
+        self._threshold: int | None = None
 
-        self._mail = mail
-        self._rid = None
+        self._mail: str = mail
+        self._rid: str | None = None
 
     @requires_state(AppState.CREATED)
-    def set_entrez_query(self, query):
+    def set_entrez_query(self, query: Query) -> None:
         """
         Limit the size of the database.
         Only sequences that match the query are searched.
@@ -131,7 +134,7 @@ class BlastWebApp(WebApp):
         self._entrez_query = str(query)
 
     @requires_state(AppState.CREATED)
-    def set_max_results(self, number):
+    def set_max_results(self, number: int) -> None:
         """
         Limit the maximum number of results.
 
@@ -143,7 +146,7 @@ class BlastWebApp(WebApp):
         self._max_results = number
 
     @requires_state(AppState.CREATED)
-    def set_max_expect_value(self, value):
+    def set_max_expect_value(self, value: float) -> None:
         """
         Set the threshold expectation value (E-value).
         No alignments with an E-value above this threshold will be
@@ -161,7 +164,7 @@ class BlastWebApp(WebApp):
         self._expect_value = value
 
     @requires_state(AppState.CREATED)
-    def set_gap_penalty(self, opening, extension):
+    def set_gap_penalty(self, opening: float, extension: float) -> None:
         """
         Set the affine gap penalty for the alignment.
 
@@ -176,7 +179,7 @@ class BlastWebApp(WebApp):
         self._gap_extension = extension
 
     @requires_state(AppState.CREATED)
-    def set_word_size(self, size):
+    def set_word_size(self, size: int) -> None:
         """
         Set the word size for alignment seeds.
 
@@ -188,7 +191,7 @@ class BlastWebApp(WebApp):
         self._word_size = size
 
     @requires_state(AppState.CREATED)
-    def set_match_reward(self, reward):
+    def set_match_reward(self, reward: int) -> None:
         """
         Set the score of a symbol match in the alignment.
 
@@ -202,7 +205,7 @@ class BlastWebApp(WebApp):
         self._reward = reward
 
     @requires_state(AppState.CREATED)
-    def set_mismatch_penalty(self, penalty):
+    def set_mismatch_penalty(self, penalty: int) -> None:
         """
         Set the penalty of a symbol mismatch in the alignment.
 
@@ -216,7 +219,7 @@ class BlastWebApp(WebApp):
         self._penalty = penalty
 
     @requires_state(AppState.CREATED)
-    def set_substitution_matrix(self, matrix_name):
+    def set_substitution_matrix(self, matrix_name: str) -> None:
         """
         Set the penalty of a symbol mismatch in the alignment.
 
@@ -230,7 +233,7 @@ class BlastWebApp(WebApp):
         self._matrix = matrix_name.upper()
 
     @requires_state(AppState.CREATED)
-    def set_threshold(self, threshold):
+    def set_threshold(self, threshold: int) -> None:
         """
         Set the threshold neighboring score for initial words.
 
@@ -243,7 +246,7 @@ class BlastWebApp(WebApp):
         """
         self._threshold = threshold
 
-    def run(self):
+    def run(self) -> None:
         param_dict = {}
         param_dict["tool"] = "Biotite"
         param_dict["email"] = self._mail
@@ -284,7 +287,7 @@ class BlastWebApp(WebApp):
         info_dict = BlastWebApp._get_info(request.text)
         self._rid = info_dict["RID"]
 
-    def is_finished(self):
+    def is_finished(self) -> bool:
         data_dict = {"FORMAT_OBJECT": "SearchInfo", "RID": self._rid, "CMD": "Get"}
         request = requests.get(self.app_url(), params=data_dict)
         self._contact()
@@ -297,17 +300,17 @@ class BlastWebApp(WebApp):
             )
         return info_dict["Status"] == "READY"
 
-    def wait_interval(self):
+    def wait_interval(self) -> float:
         # NCBI requires a 3 second delay between server contacts
         return BlastWebApp._contact_delay
 
-    def clean_up(self):
+    def clean_up(self) -> None:
         param_dict = {}
         param_dict["CMD"] = "Delete"
         param_dict["RID"] = self._rid
         requests.get(self.app_url(), params=param_dict)
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         param_dict = {}
         param_dict["tool"] = "BiotiteClient"
         if self._mail is not None:
@@ -326,18 +329,20 @@ class BlastWebApp(WebApp):
         hit_xpath = "./BlastOutput_iterations/Iteration/Iteration_hits/Hit"
         hits = root.findall(hit_xpath)
         for hit in hits:
-            hit_definition = hit.find("Hit_def").text
-            hit_id = hit.find("Hit_accession").text
             hsp = hit.find(".Hit_hsps/Hsp")
-            score = int(hsp.find("Hsp_score").text)
-            e_value = float(hsp.find("Hsp_evalue").text)
-            query_begin = int(hsp.find("Hsp_query-from").text)
-            query_end = int(hsp.find("Hsp_query-to").text)
-            hit_begin = int(hsp.find("Hsp_hit-from").text)
-            hit_end = int(hsp.find("Hsp_hit-to").text)
+            if hsp is None:
+                raise ValueError("BLAST XML response misses required 'Hsp' element")
+            hit_definition = _xml_text(hit, "Hit_def")
+            hit_id = _xml_text(hit, "Hit_accession")
+            score = int(_xml_text(hsp, "Hsp_score"))
+            e_value = float(_xml_text(hsp, "Hsp_evalue"))
+            query_begin = int(_xml_text(hsp, "Hsp_query-from"))
+            query_end = int(_xml_text(hsp, "Hsp_query-to"))
+            hit_begin = int(_xml_text(hsp, "Hsp_hit-from"))
+            hit_end = int(_xml_text(hsp, "Hsp_hit-to"))
 
-            seq1_str = hsp.find("Hsp_qseq").text
-            seq2_str = hsp.find("Hsp_hseq").text
+            seq1_str = _xml_text(hsp, "Hsp_qseq")
+            seq2_str = _xml_text(hsp, "Hsp_hseq")
             base_alignment = Alignment.from_strings(
                 [seq1_str, seq2_str],
                 sequence_factory=(
@@ -362,7 +367,7 @@ class BlastWebApp(WebApp):
             self._alignments.append(alignment)
 
     @requires_state(AppState.JOINED)
-    def get_xml_response(self):
+    def get_xml_response(self) -> str:
         """
         Get the raw XML response.
 
@@ -374,7 +379,7 @@ class BlastWebApp(WebApp):
         return self._xml_response
 
     @requires_state(AppState.JOINED)
-    def get_alignments(self):
+    def get_alignments(self) -> list[BlastAlignment]:
         """
         Get the resulting local sequence alignments.
 
@@ -386,7 +391,7 @@ class BlastWebApp(WebApp):
         return self._alignments
 
     @staticmethod
-    def _get_info(text):
+    def _get_info(text: str) -> dict[str, str]:
         """
         Get the *QBlastInfo* block of the response HTML as dictionary
         """
@@ -405,7 +410,7 @@ class BlastWebApp(WebApp):
                 info_dict[pair[0].strip()] = pair[1].strip()
         return info_dict
 
-    def _contact(self):
+    def _contact(self) -> None:
         """
         Resets the time since the last server contact. Used for
         detecting server rule violation.
@@ -415,7 +420,7 @@ class BlastWebApp(WebApp):
             self.violate_rule("The server was contacted too often")
         BlastWebApp._last_contact = contact
 
-    def _request(self):
+    def _request(self) -> None:
         """
         Resets the time since the last new alignment request. Used for
         detecting server rule violation.
@@ -424,3 +429,14 @@ class BlastWebApp(WebApp):
         if (request - BlastWebApp._last_request) < BlastWebApp._request_delay:
             self.violate_rule("Too frequent BLAST requests")
         BlastWebApp._last_request = request
+
+
+def _xml_text(element: ElementTree.Element, child_tag: str) -> str:
+    """
+    Find ``child_tag`` under ``element`` and return its text content,
+    raising a clear error if either the child is missing or its body is empty.
+    """
+    child = element.find(child_tag)
+    if child is None or child.text is None:
+        raise ValueError(f"BLAST XML response misses required '{child_tag}' content")
+    return child.text

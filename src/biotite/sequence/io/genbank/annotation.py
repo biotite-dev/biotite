@@ -6,20 +6,26 @@
 Functions for converting an annotation from/to a GenBank file.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.io.genbank"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_annotation", "set_annotation"]
 
 import re
 import warnings
+from collections.abc import Iterable
 from biotite.file import InvalidFileError
 from biotite.sequence.annotation import Annotation, Feature, Location
+from biotite.sequence.io.genbank.file import GenBankFile
 
 _KEY_START = 5
 _QUAL_START = 21
 
 
-def get_annotation(gb_file, include_only=None):
+def get_annotation(
+    gb_file: GenBankFile, include_only: Iterable[str] | None = None
+) -> Annotation:
     """
     Get the sequence annotation from the *FEATURES* field of a
     GenBank file.
@@ -140,7 +146,7 @@ def get_annotation(gb_file, include_only=None):
     return annotation
 
 
-def _parse_locs(loc_str):
+def _parse_locs(loc_str: str) -> list[Location]:
     locs = []
     if loc_str.startswith(("join", "order")):
         str_list = loc_str[loc_str.index("(") + 1 : loc_str.rindex(")")].split(",")
@@ -158,7 +164,7 @@ def _parse_locs(loc_str):
     return locs
 
 
-def _parse_single_loc(loc_str):
+def _parse_single_loc(loc_str: str) -> Location:
     if ".." in loc_str:
         split_char = ".."
         defect = Location.Defect.NONE
@@ -198,19 +204,24 @@ def _parse_single_loc(loc_str):
     return Location(first, last, defect=defect)
 
 
-def _set_qual(qual_dict, key, val):
+def _set_qual(qual_dict: dict[str, str | None], key: str, val: str | None) -> None:
     """
     Set a mapping key to val in the dictionary.
     If the key already exists in the dictionary, append the value (str)
     to the existing value, separated by a line break.
     """
     if key in qual_dict:
-        qual_dict[key] += "\n" + val
+        existing = qual_dict[key]
+        if existing is None:
+            return
+        if val is None:
+            raise ValueError("Cannot append 'None' to qualifier")
+        qual_dict[key] = existing + "\n" + val
     else:
         qual_dict[key] = val
 
 
-def set_annotation(gb_file, annotation):
+def set_annotation(gb_file: GenBankFile, annotation: Annotation) -> None:
     """
     Set the *FEATURES* field of a GenBank file with an annotation.
 
@@ -240,13 +251,14 @@ def set_annotation(gb_file, annotation):
     gb_file.set_field("FEATURES", lines)
 
 
-def _convert_to_loc_string(locs):
+def _convert_to_loc_string(locs: Iterable[Location]) -> str:
     """
     Create GenBank comptabile location strings from a list of :class:`Location`
     objects.
     """
+    locs = list(locs)
     if len(locs) == 1:
-        loc = list(locs)[0]
+        loc = locs[0]
         loc_first_str = str(loc.first)
         loc_last_str = str(loc.last)
         if loc.defect & Location.Defect.BEYOND_LEFT:

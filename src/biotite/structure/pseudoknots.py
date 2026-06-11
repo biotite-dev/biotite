@@ -10,12 +10,19 @@ __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
 __all__ = ["pseudoknots"]
 
+from collections.abc import Callable, Iterable, Sequence
 from itertools import chain, product
+from typing import Any, cast
 import networkx as nx
 import numpy as np
+from biotite.typing import C2, K, NDArray1, NDArray2
 
 
-def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
+def pseudoknots(
+    base_pairs: NDArray2[K, C2, np.integer],
+    scores: NDArray1[K, np.integer] | None = None,
+    max_pseudoknot_order: int | None = None,
+) -> NDArray2[Any, K, np.integer]:
     """
     Identify the pseudoknot order for each base pair in a given set of
     base pairs.
@@ -117,7 +124,9 @@ def pseudoknots(base_pairs, scores=None, max_pseudoknot_order=None):
 
     # if no score array is given, each base pairs' score is one
     if scores is None:
-        scores = np.ones(len(base_pairs))
+        scores = cast(
+            "NDArray1[K, np.integer]", np.ones(len(base_pairs), dtype="int32")
+        )
 
     # Make sure `base_pairs` has the same length as the score array
     if len(base_pairs) != len(scores):
@@ -152,7 +161,12 @@ class _Region:
         The score for each base pair.
     """
 
-    def __init__(self, base_pairs, region_pairs, scores):
+    def __init__(
+        self,
+        base_pairs: NDArray2[K, C2, np.integer],
+        region_pairs: NDArray1[Any, np.integer],
+        scores: NDArray1[K, np.integer],
+    ) -> None:
         # The Start and Stop indices for each Region
         self.start = np.min(base_pairs[region_pairs])
         self.stop = np.max(base_pairs[region_pairs])
@@ -160,7 +174,7 @@ class _Region:
         self.region_pairs = region_pairs
         self.score = np.sum(scores[region_pairs])
 
-    def get_index_array(self):
+    def get_index_array(self) -> NDArray1[Any, np.integer]:
         """
         Return an index array with the positions of the region`s bases
         in the original base pair array.
@@ -172,7 +186,7 @@ class _Region:
         """
         return self.region_pairs
 
-    def __lt__(self, other):
+    def __lt__(self, other: "_Region") -> bool:
         """
         This comparison operator is required for :func:`np.unique()`. As
         only the difference between the regions is relevant and not any
@@ -192,7 +206,10 @@ class _Region:
         return id(self) < id(other)
 
 
-def _find_regions(base_pairs, scores):
+def _find_regions(
+    base_pairs: NDArray2[K, C2, np.integer],
+    scores: NDArray1[K, np.integer],
+) -> nx.Graph:
     """
     Find regions in a base pair array. A region is defined as a set of
     consecutively nested base pairs.
@@ -262,7 +279,7 @@ def _find_regions(base_pairs, scores):
     return _generate_graphical_representation(regions)
 
 
-def _generate_graphical_representation(regions):
+def _generate_graphical_representation(regions: set[_Region]) -> nx.Graph:
     """
     Find the conflicting regions and represent them graphically using
     the ``Graph`` class from ``Networkx``.
@@ -297,8 +314,7 @@ def _generate_graphical_representation(regions):
         if not start_stops[start]:
             continue
 
-        # Find the index of the stopping of the region in the region
-        # array
+        # Find the index of the stopping of the region in the region array
         stop = _get_first_occurrence_for(region_array[start + 1 :], region)
         stop += start + 1
 
@@ -331,7 +347,7 @@ def _generate_graphical_representation(regions):
     return region_graph
 
 
-def _get_first_occurrence_for(iterable, wanted_object):
+def _get_first_occurrence_for(iterable: Iterable[object], wanted_object: object) -> int:
     """
     Get the first occurrence of an object in an iterable.
 
@@ -350,9 +366,14 @@ def _get_first_occurrence_for(iterable, wanted_object):
     for i, value in enumerate(iterable):
         if value is wanted_object:
             return i
+    raise ValueError("Object not found in iterable")
 
 
-def _get_region_array_for(regions, content=(), dtype=()):
+def _get_region_array_for(
+    regions: set[_Region],
+    content: Sequence[Callable[[_Region], Sequence[Any]]] = (),
+    dtype: Sequence[str] = (),
+) -> tuple[np.ndarray, list[np.ndarray]]:
     """
     Get a :class:`ndarray` of region objects. Each object occurs twice,
     representing its start and end point. The regions positions in the
@@ -385,9 +406,9 @@ def _get_region_array_for(regions, content=(), dtype=()):
     index_array = np.empty(len(regions) * 2, dtype="int32")
 
     # Content array for custom return arrays
-    content_list = [None] * len(content)
-    for i in range(len(content)):
-        content_list[i] = np.empty(len(regions) * 2, dtype=dtype[i])
+    content_list: list[np.ndarray] = [
+        np.empty(len(regions) * 2, dtype=dtype[i]) for i in range(len(content))
+    ]
 
     # Fill the arrays
     for i, reg in enumerate(regions):
@@ -404,7 +425,7 @@ def _get_region_array_for(regions, content=(), dtype=()):
     # if no custom array content is given only return the ordered array
     # containing the regions
     if content == []:
-        return region_array
+        return region_array  # pyright: ignore[reportReturnType]
 
     # if custom content is given also return the ordered content
     for i in range(len(content_list)):
@@ -412,7 +433,7 @@ def _get_region_array_for(regions, content=(), dtype=()):
     return region_array, content_list
 
 
-def _remove_pseudoknots(regions):
+def _remove_pseudoknots(regions: set[_Region]) -> np.ndarray:
     """
     Get the optimal solutions according to the algorithm referenced in
     :func:`pseudoknots()`.
@@ -537,7 +558,12 @@ def _remove_pseudoknots(regions):
     return dp_matrix[0, -1]
 
 
-def _get_results(regions, results, max_pseudoknot_order, order=0):
+def _get_results(
+    regions: nx.Graph,
+    results: list[np.ndarray],
+    max_pseudoknot_order: int | None,
+    order: int = 0,
+) -> list[np.ndarray]:
     """
     Use the dynamic programming algorithm to get the pseudoknot order
     of a given set of regions. If there are remaining conflicts their

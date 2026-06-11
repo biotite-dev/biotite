@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_ccd", "set_ccd_path", "get_from_ccd"]
@@ -10,8 +12,17 @@ import functools
 import importlib
 import inspect
 import pkgutil
+from os import PathLike
 from pathlib import Path
+from typing import TYPE_CHECKING, overload
 import numpy as np
+
+if TYPE_CHECKING:
+    from biotite.structure.io.pdbx.bcif import (
+        BinaryCIFBlock,
+        BinaryCIFCategory,
+        BinaryCIFColumn,
+    )
 
 _CCD_FILE = Path(__file__).parent / "components.bcif"
 _SPECIAL_ID_COLUMN_NAMES = {
@@ -21,7 +32,7 @@ _DEFAULT_ID_COLUMN_NAME = "comp_id"
 
 
 @functools.cache
-def get_ccd():
+def get_ccd() -> "BinaryCIFBlock":
     """
     Get the internal subset of the PDB
     *Chemical Component Dictionary* (CCD).
@@ -56,7 +67,7 @@ def get_ccd():
         )
 
 
-def set_ccd_path(ccd_path):
+def set_ccd_path(ccd_path: str | PathLike[str]) -> None:
     """
     Replace the internal *Chemical Component Dictionary* (CCD) with a custom one.
 
@@ -90,8 +101,20 @@ def set_ccd_path(ccd_path):
                 function.cache_clear()
 
 
+@overload
+def get_from_ccd(
+    category_name: str, comp_id: str, column_name: None = None
+) -> "BinaryCIFCategory | None": ...
+@overload
+def get_from_ccd(
+    category_name: str, comp_id: str, column_name: str
+) -> "BinaryCIFColumn | None": ...
 @functools.cache
-def get_from_ccd(category_name, comp_id, column_name=None):
+def get_from_ccd(
+    category_name: str,
+    comp_id: str,
+    column_name: str | None = None,
+) -> "BinaryCIFCategory | BinaryCIFColumn | None":
     """
     Get the rows for the given residue in the given category from the
     internal subset of the PDB *Chemical Component Dictionary* (CCD).
@@ -136,7 +159,7 @@ def get_from_ccd(category_name, comp_id, column_name=None):
 
 
 @functools.cache
-def _residue_index(category_name):
+def _residue_index(category_name: str) -> dict[str, tuple[int, int]]:
     """
     Get the start and stop index for each component name in the given
     CCD category.
@@ -168,7 +191,9 @@ def _residue_index(category_name):
     return index
 
 
-def _filter_category(category, index):
+def _filter_category(
+    category: "BinaryCIFCategory", index: slice
+) -> "BinaryCIFCategory":
     """
     Reduce the category to the values for the given index.∂
     """
@@ -180,7 +205,7 @@ def _filter_category(category, index):
     )
 
 
-def _filter_column(column, index):
+def _filter_column(column: "BinaryCIFColumn", index: slice) -> "BinaryCIFColumn":
     """
     Reduce the column to the values for the given index.
     """
@@ -193,7 +218,7 @@ def _filter_column(column, index):
     return BinaryCIFColumn(
         BinaryCIFData(data_array),
         (
-            BinaryCIFData(mask_array)
+            BinaryCIFData(mask_array)  # pyright: ignore[reportArgumentType]
             if column.mask is not None and (mask_array != MaskValue.PRESENT).any()
             else None
         ),

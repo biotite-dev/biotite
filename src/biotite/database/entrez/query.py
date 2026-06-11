@@ -7,6 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["Query", "SimpleQuery", "CompositeQuery", "search"]
 
 import abc
+from typing import Literal
 from xml.etree import ElementTree
 import requests
 from biotite.database.entrez.check import check_for_errors
@@ -23,24 +24,24 @@ class Query(metaclass=abc.ABCMeta):
     for the NCBI Entrez search service.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @abc.abstractmethod
-    def __str__(self):
+    def __str__(self) -> str:
         pass
 
-    def __or__(self, operand):
+    def __or__(self, operand: "Query | str") -> "CompositeQuery":
         if not isinstance(operand, Query):
             operand = SimpleQuery(operand)
         return CompositeQuery("OR", self, operand)
 
-    def __and__(self, operand):
+    def __and__(self, operand: "Query | str") -> "CompositeQuery":
         if not isinstance(operand, Query):
             operand = SimpleQuery(operand)
         return CompositeQuery("AND", self, operand)
 
-    def __xor__(self, operand):
+    def __xor__(self, operand: "Query | str") -> "CompositeQuery":
         if not isinstance(operand, Query):
             operand = SimpleQuery(operand)
         return CompositeQuery("NOT", self, operand)
@@ -76,13 +77,18 @@ class CompositeQuery(Query):
     ("Escherichia coli"[Organism]) AND (90:100[Sequence Length])
     """
 
-    def __init__(self, operator, query1, query2):
+    def __init__(
+        self,
+        operator: Literal["AND", "OR", "NOT"],
+        query1: Query,
+        query2: Query,
+    ) -> None:
         super().__init__()
         self._op = operator
         self._q1 = query1
         self._q2 = query2
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "({:}) {:} ({:})".format(str(self._q1), self._op, self._q2)
 
 
@@ -177,7 +183,7 @@ class SimpleQuery(Query):
         "VOL",
     ]
 
-    def __init__(self, term, field=None):
+    def __init__(self, term: str, field: str | None = None) -> None:
         super().__init__()
         if field is not None:
             if field not in SimpleQuery._fields:
@@ -191,14 +197,14 @@ class SimpleQuery(Query):
         self._term = term
         self._field = field
 
-    def __str__(self):
+    def __str__(self) -> str:
         string = self._term
         if self._field is not None:
             string += f"[{self._field}]"
         return string
 
 
-def search(query, db_name, number=20):
+def search(query: Query, db_name: str, number: int = 20) -> list[str]:
     r"""
     Get all PDB IDs that meet the given query requirements,
     via the NCBI ESearch service.
@@ -259,5 +265,8 @@ def search(query, db_name, number=20):
             xml_response = xml_response[:100] + "..."
         raise RequestError(f"Invalid server response: {xml_response}")
     xpath = ".//IdList/Id"
-    uids = [element.text for element in root.findall(xpath)]
+    # `Element.text` is typed as `str | None`; NCBI's ESearch always populates
+    # `<Id>` elements with content, but filter defensively to honor the
+    # `list[str]` contract.
+    uids = [element.text for element in root.findall(xpath) if element.text is not None]
     return uids

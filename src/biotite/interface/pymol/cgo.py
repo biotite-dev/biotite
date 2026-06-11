@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __name__ = "biotite.interface.pymol"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -11,12 +13,21 @@ __all__ = [
 ]
 
 import itertools
+from collections.abc import Sequence
 from enum import IntEnum
+from typing import Any, TypeAlias
 import numpy as np
+from numpy.typing import ArrayLike
 from biotite.interface.pymol.object import PyMOLObject
-from biotite.interface.pymol.startup import get_and_set_pymol_instance
+from biotite.interface.pymol.startup import PyMOLInstance, get_and_set_pymol_instance
+from biotite.typing import NDArray1
 
-_object_counter = 0
+_CGODirective: TypeAlias = list[float | int | np.floating]
+# Iterable-and-len vector input; unlike numpy's ArrayLike this excludes scalars
+# so it can be unpacked with `*` to splat the elements into a CGO command list.
+_Vector: TypeAlias = Sequence[float] | NDArray1[Any, np.floating]
+
+_object_counter: int = 0
 
 
 class CGO(IntEnum):
@@ -58,7 +69,12 @@ class CGO(IntEnum):
     WIDTHSCALE = 11
 
 
-def draw_cgo(cgo_list, name=None, pymol_instance=None, delete=True):
+def draw_cgo(
+    cgo_list: Sequence[_CGODirective],
+    name: str | None = None,
+    pymol_instance: PyMOLInstance | None = None,
+    delete: bool = True,
+) -> PyMOLObject:
     """
     Draw geometric shapes using *Compiled Graphics Objects* (CGOs).
 
@@ -107,7 +123,13 @@ def draw_cgo(cgo_list, name=None, pymol_instance=None, delete=True):
     return PyMOLObject(name, pymol_instance, delete)
 
 
-def get_cylinder_cgo(start, end, radius, start_color, end_color):
+def get_cylinder_cgo(
+    start: _Vector,
+    end: _Vector,
+    radius: float,
+    start_color: _Vector,
+    end_color: _Vector,
+) -> _CGODirective:
     """
     Get the CGO for a cylinder.
 
@@ -136,8 +158,15 @@ def get_cylinder_cgo(start, end, radius, start_color, end_color):
 
 
 def get_cone_cgo(
-    start, end, start_radius, end_radius, start_color, end_color, start_cap, end_cap
-):
+    start: _Vector,
+    end: _Vector,
+    start_radius: float,
+    end_radius: float,
+    start_color: _Vector,
+    end_color: _Vector,
+    start_cap: bool,
+    end_cap: bool,
+) -> _CGODirective:
     """
     Get the CGO for a cone.
 
@@ -178,7 +207,7 @@ def get_cone_cgo(
     ]
 
 
-def get_sphere_cgo(pos, radius, color):
+def get_sphere_cgo(pos: _Vector, radius: float, color: _Vector) -> _CGODirective:
     """
     Get the CGO for a sphere.
 
@@ -203,7 +232,7 @@ def get_sphere_cgo(pos, radius, color):
     return [CGO.COLOR, *color, CGO.SPHERE, *pos, radius]
 
 
-def get_point_cgo(pos, color):
+def get_point_cgo(pos: ArrayLike, color: ArrayLike) -> _CGODirective:
     """
     Get the CGO for one or multiple points.
 
@@ -222,23 +251,23 @@ def get_point_cgo(pos, color):
     cgo : list of float
         The CGO representation.
     """
-    pos = np.atleast_2d(pos)
-    color = _arrayfy(color, len(pos), 2)
+    pos_array = np.atleast_2d(pos)
+    color_array = _arrayfy(color, len(pos_array), 2)
 
-    for p in pos:
+    for p in pos_array:
         _expect_length(p, "pos", 3)
-    for c in color:
+    for c in color_array:
         _expect_length(c, "color", 3)
         _check_color(c)
 
-    vertices = []
-    for p, c in zip(pos, color):
+    vertices: list[float] = []
+    for p, c in zip(pos_array, color_array):
         vertices += [CGO.COLOR, *c, CGO.VERTEX, *p]
 
-    return [CGO.BEGIN, CGO.POINTS] + vertices + [CGO.END]
+    return [CGO.BEGIN, CGO.POINTS, *vertices, CGO.END]
 
 
-def get_line_cgo(pos, color, width=1.0):
+def get_line_cgo(pos: ArrayLike, color: ArrayLike, width: float = 1.0) -> _CGODirective:
     """
     Get the CGO for a line following the given positions.
 
@@ -260,22 +289,25 @@ def get_line_cgo(pos, color, width=1.0):
     cgo : list of float
         The CGO representation.
     """
-    color = _arrayfy(color, len(pos), 2)
+    pos_array = np.atleast_2d(pos)
+    color_array = _arrayfy(color, len(pos_array), 2)
 
-    for p in pos:
+    for p in pos_array:
         _expect_length(p, "pos", 3)
-    for c in color:
+    for c in color_array:
         _expect_length(c, "color", 3)
         _check_color(c)
 
-    vertices = []
-    for p, c in zip(pos, color):
+    vertices: list[Any] = []
+    for p, c in zip(pos_array, color_array):
         vertices += [CGO.COLOR, *c, CGO.VERTEX, *p]
 
-    return [CGO.LINEWIDTH, width, CGO.BEGIN, CGO.LINE_STRIP] + vertices + [CGO.END]
+    return [CGO.LINEWIDTH, width, CGO.BEGIN, CGO.LINE_STRIP, *vertices, CGO.END]
 
 
-def get_multiline_cgo(start, end, color, width=1.0):
+def get_multiline_cgo(
+    start: ArrayLike, end: ArrayLike, color: ArrayLike, width: float = 1.0
+) -> _CGODirective:
     """
     Get the CGO for one or multiple straight lines drawn from given
     start to end positions.
@@ -298,42 +330,43 @@ def get_multiline_cgo(start, end, color, width=1.0):
     cgo : list of float
         The CGO representation.
     """
-    start = np.atleast_2d(start)
-    end = np.atleast_2d(end)
-    color = _arrayfy(color, len(start), 2)
+    start_array = np.atleast_2d(start)
+    end_array = np.atleast_2d(end)
+    color_array = _arrayfy(color, len(start_array), 2)
 
-    if len(start) != len(end):
+    if len(start_array) != len(end_array):
         raise IndexError(
-            f"{len(start)} start positions are given, but {len(end)} end positions"
+            f"{len(start_array)} start positions are given, "
+            f"but {len(end_array)} end positions"
         )
-    for p in start:
+    for p in start_array:
         _expect_length(p, "start", 3)
-    for p in end:
+    for p in end_array:
         _expect_length(p, "end", 3)
-    for c in color:
+    for c in color_array:
         _expect_length(c, "color", 3)
         _check_color(c)
 
-    vertices = []
-    for p1, p2, c in zip(start, end, color):
+    vertices: list[Any] = []
+    for p1, p2, c in zip(start_array, end_array, color_array):
         vertices += [CGO.COLOR, *c, CGO.VERTEX, *p1, CGO.VERTEX, *p2]
 
-    return [CGO.LINEWIDTH, width, CGO.BEGIN, CGO.LINES] + vertices + [CGO.END]
+    return [CGO.LINEWIDTH, width, CGO.BEGIN, CGO.LINES, *vertices, CGO.END]
 
 
-def _expect_length(values, name, length):
+def _expect_length(values: Any, name: str, length: int) -> None:
     if len(values) != length:
         raise IndexError(
             f"'{name}' has {len(values)} values, but {length} were expected"
         )
 
 
-def _check_color(color):
+def _check_color(color: _Vector) -> None:
     if np.any(color) < 0 or np.any(color) > 1:
         raise ValueError("Colors must be in range (0, 1)")
 
 
-def _arrayfy(value, length, min_dim):
+def _arrayfy(value: ArrayLike, length: int, min_dim: int) -> np.ndarray:
     """
     Expand value(s) to the given number of dimensions and repeat value
     `length` number of times if only a single value is given.

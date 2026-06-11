@@ -2,19 +2,24 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application.viennarna"
 __author__ = "Tom David Müller"
 __all__ = ["RNAalifoldApp"]
 
 import copy
+from os import PathLike
 from tempfile import NamedTemporaryFile
 import numpy as np
 from biotite.application.application import AppState, requires_state
 from biotite.application.localapp import LocalApp, cleanup_tempfile
 from biotite.application.viennarna.util import build_constraint_string
+from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.io.fasta import FastaFile, set_alignment
 from biotite.structure.bonds import BondList
 from biotite.structure.dotbracket import base_pairs_from_dot_bracket
+from biotite.typing import C2, N, NDArray1, NDArray2
 
 
 class RNAalifoldApp(LocalApp):
@@ -39,18 +44,23 @@ class RNAalifoldApp(LocalApp):
         Path of the *RNAalifold* binary.
     """
 
-    def __init__(self, alignment, temperature=37, bin_path="RNAalifold"):
+    def __init__(
+        self,
+        alignment: Alignment,
+        temperature: int = 37,
+        bin_path: PathLike[str] | str = "RNAalifold",
+    ) -> None:
         super().__init__(bin_path)
-        self._alignment = copy.deepcopy(alignment)
-        self._temperature = str(temperature)
-        self._constraints = None
-        self._enforce = None
+        self._alignment: Alignment = copy.deepcopy(alignment)
+        self._temperature: str = str(temperature)
+        self._constraints: str | None = None
+        self._enforce: bool | None = None
         self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
         self._constraints_file = NamedTemporaryFile(
             "w+", suffix=".constraints", delete=False
         )
 
-    def run(self):
+    def run(self) -> None:
         # Insert no line breaks
         # -> Extremely high value for characters per line
         fasta_file = FastaFile(chars_per_line=np.iinfo(np.int32).max)
@@ -79,12 +89,12 @@ class RNAalifoldApp(LocalApp):
         self.set_arguments(options + [self._in_file.name])
         super().run()
 
-    def clean_up(self):
+    def clean_up(self) -> None:
         super().clean_up()
         cleanup_tempfile(self._in_file)
         cleanup_tempfile(self._constraints_file)
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         super().evaluate()
         lines = self.get_stdout().splitlines()
         self._consensus = lines[0].strip()
@@ -99,7 +109,7 @@ class RNAalifoldApp(LocalApp):
         self._dotbracket = dotbracket
 
     @requires_state(AppState.CREATED)
-    def set_temperature(self, temperature):
+    def set_temperature(self, temperature: int) -> None:
         """
         Adjust the energy parameters according to a temperature in
         degrees Celsius.
@@ -114,13 +124,13 @@ class RNAalifoldApp(LocalApp):
     @requires_state(AppState.CREATED)
     def set_constraints(
         self,
-        pairs=None,
-        paired=None,
-        unpaired=None,
-        downstream=None,
-        upstream=None,
-        enforce=False,
-    ):
+        pairs: NDArray2[N, C2, np.integer] | None = None,
+        paired: NDArray1[N, np.integer | np.bool_] | None = None,
+        unpaired: NDArray1[N, np.integer | np.bool_] | None = None,
+        downstream: NDArray1[N, np.integer | np.bool_] | None = None,
+        upstream: NDArray1[N, np.integer | np.bool_] | None = None,
+        enforce: bool = False,
+    ) -> None:
         """
         Add constraints of known paired or unpaired bases to the folding
         algorithm.
@@ -157,7 +167,7 @@ class RNAalifoldApp(LocalApp):
         self._enforce = enforce
 
     @requires_state(AppState.JOINED)
-    def get_free_energy(self):
+    def get_free_energy(self) -> float:
         """
         Get the free energy (kcal/mol) of the suggested consensus
         secondary structure.
@@ -180,7 +190,7 @@ class RNAalifoldApp(LocalApp):
         return self._free_energy
 
     @requires_state(AppState.JOINED)
-    def get_covariance_energy(self):
+    def get_covariance_energy(self) -> float:
         """
         Get the energy of the artificial covariance term (kcal/mol) of
         the suggested consensus secondary structure.
@@ -203,7 +213,7 @@ class RNAalifoldApp(LocalApp):
         return self._covariance_energy
 
     @requires_state(AppState.JOINED)
-    def get_consensus_sequence_string(self):
+    def get_consensus_sequence_string(self) -> str:
         """
         Get the consensus sequence.
 
@@ -218,7 +228,7 @@ class RNAalifoldApp(LocalApp):
         return self._consensus
 
     @requires_state(AppState.JOINED)
-    def get_dot_bracket(self):
+    def get_dot_bracket(self) -> str:
         """
         Get the consensus secondary structure in dot bracket notation.
 
@@ -230,7 +240,9 @@ class RNAalifoldApp(LocalApp):
         return self._dotbracket
 
     @requires_state(AppState.JOINED)
-    def get_base_pairs(self, sequence_index=None):
+    def get_base_pairs(
+        self, sequence_index: int | None = None
+    ) -> NDArray2[N, C2, np.integer]:
         """
         Get the base pairs from the suggested secondary structure.
 
@@ -275,7 +287,9 @@ class RNAalifoldApp(LocalApp):
         return base_pairs
 
     @staticmethod
-    def compute_secondary_structure(alignment, bin_path="RNAalifold"):
+    def compute_secondary_structure(
+        alignment: Alignment, bin_path: PathLike[str] | str = "RNAalifold"
+    ) -> tuple[str, float, float]:
         """
         Predict the secondary structure of a ribonucleic acid sequence
         using *ViennaRNA's* *RNAalifold* software.

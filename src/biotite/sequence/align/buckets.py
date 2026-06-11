@@ -12,7 +12,7 @@ import numpy as np
 _primes = None
 
 
-def bucket_number(n_kmers, load_factor=0.8):
+def bucket_number(n_kmers: int, load_factor: float = 0.8) -> int:
     """
     Find an appropriate number of buckets for a :class:`BucketKmerTable`
     based on the number of elements (i.e. *k-mers*) that should be

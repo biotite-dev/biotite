@@ -2,15 +2,21 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application.mafft"
 __author__ = "Patrick Kunzmann"
 __all__ = ["MafftApp"]
 
 import os
 import re
-from biotite.application.application import AppState, requires_state
+from collections.abc import Sequence as SequenceABC
+from os import PathLike
+from biotite.application.application import AppState, AppStateError, requires_state
 from biotite.application.msaapp import MSAApp
+from biotite.sequence.align.matrix import SubstitutionMatrix
 from biotite.sequence.phylo.tree import Tree
+from biotite.sequence.sequence import Sequence
 
 _prefix_pattern = re.compile(r"\d*_")
 
@@ -46,12 +52,17 @@ class MafftApp(MSAApp):
     --IQLITE
     """
 
-    def __init__(self, sequences, bin_path="mafft", matrix=None):
+    def __init__(
+        self,
+        sequences: SequenceABC[Sequence],
+        bin_path: PathLike[str] | str = "mafft",
+        matrix: SubstitutionMatrix | None = None,
+    ) -> None:
         super().__init__(sequences, bin_path, matrix)
-        self._tree = None
-        self._out_tree_file_name = self.get_input_file_path() + ".tree"
+        self._tree: Tree | None = None
+        self._out_tree_file_name: str = self.get_input_file_path() + ".tree"
 
-    def run(self):
+    def run(self) -> None:
         args = [
             "--quiet",
             "--auto",
@@ -70,7 +81,7 @@ class MafftApp(MSAApp):
         self.set_arguments(args)
         super().run()
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         with open(self.get_output_file_path(), "w") as f:
             # MAFFT outputs alignment to stdout
             # -> write stdout to output file name
@@ -84,11 +95,12 @@ class MafftApp(MSAApp):
             newick = re.sub(_prefix_pattern, "", raw_newick)
             self._tree = Tree.from_newick(newick)
 
-    def clean_up(self):
+    def clean_up(self) -> None:
+        super().clean_up()
         os.remove(self._out_tree_file_name)
 
     @requires_state(AppState.JOINED)
-    def get_guide_tree(self):
+    def get_guide_tree(self) -> Tree:
         """
         Get the guide tree created for the progressive alignment.
 
@@ -97,20 +109,22 @@ class MafftApp(MSAApp):
         tree : Tree
             The guide tree.
         """
+        if self._tree is None:
+            raise AppStateError("Guide tree is not available")
         return self._tree
 
     @staticmethod
-    def supports_nucleotide():
+    def supports_nucleotide() -> bool:
         return True
 
     @staticmethod
-    def supports_protein():
+    def supports_protein() -> bool:
         return True
 
     @staticmethod
-    def supports_custom_nucleotide_matrix():
+    def supports_custom_nucleotide_matrix() -> bool:
         return True
 
     @staticmethod
-    def supports_custom_protein_matrix():
+    def supports_custom_protein_matrix() -> bool:
         return True

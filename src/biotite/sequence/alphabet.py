@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -13,12 +15,17 @@ __all__ = [
 ]
 
 import string
+import warnings
+from collections.abc import Iterable, Iterator
+from collections.abc import Sequence as SequenceABC
 from numbers import Integral
+from typing import Any, Generic
 import numpy as np
 from biotite.rust.sequence import AlphabetCodec
+from biotite.typing import K, NDArray1, S
 
 
-class Alphabet(object):
+class Alphabet(Generic[S]):
     """
     This class defines the allowed symbols for a :class:`Sequence` and
     handles the encoding/decoding between symbols and symbol codes.
@@ -54,6 +61,10 @@ class Alphabet(object):
         The symbols, that are allowed in this alphabet. The
         corresponding code for a symbol, is the index of that symbol
         in this list.
+
+    Notes
+    -----
+    The class is generic in the type of symbols stored in the alphabet.
 
     Examples
     --------
@@ -101,19 +112,19 @@ class Alphabet(object):
     False
     """
 
-    def __init__(self, symbols):
-        if len(symbols) == 0:
+    def __init__(self, symbols: Iterable[S]) -> None:
+        self._symbols: tuple[S, ...] = tuple(symbols)
+        if len(self._symbols) == 0:
             raise ValueError("Symbol list is empty")
-        self._symbols = tuple(symbols)
         self._symbol_dict = {}
-        for i, symbol in enumerate(symbols):
+        for i, symbol in enumerate(self._symbols):
             self._symbol_dict[symbol] = i
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent Alphabet as a string for debugging."""
         return f"Alphabet({self._symbols})"
 
-    def get_symbols(self):
+    def get_symbols(self) -> tuple[S, ...]:
         """
         Get the symbols in the alphabet.
 
@@ -124,7 +135,7 @@ class Alphabet(object):
         """
         return self._symbols
 
-    def extends(self, alphabet):
+    def extends(self, alphabet: Alphabet[Any]) -> bool:
         """
         Check, if this alphabet extends another alphabet.
 
@@ -145,7 +156,7 @@ class Alphabet(object):
         else:
             return alphabet.get_symbols() == self.get_symbols()[: len(alphabet)]
 
-    def encode(self, symbol):
+    def encode(self, symbol: S) -> int:
         """
         Use the alphabet to encode a symbol.
 
@@ -169,7 +180,7 @@ class Alphabet(object):
         except KeyError:
             raise AlphabetError(f"Symbol {repr(symbol)} is not in the alphabet")
 
-    def decode(self, code):
+    def decode(self, code: int) -> S:
         """
         Use the alphabet to decode a symbol code.
 
@@ -192,7 +203,11 @@ class Alphabet(object):
             raise AlphabetError(f"'{code:d}' is not a valid code")
         return self._symbols[code]
 
-    def encode_multiple(self, symbols, dtype=np.int64):
+    def encode_multiple(
+        self,
+        symbols: SequenceABC[S],
+        dtype: np.dtype | type | str = np.int64,
+    ) -> NDArray1[K, np.integer]:
         """
         Encode a list of symbols.
 
@@ -210,7 +225,9 @@ class Alphabet(object):
         """
         return np.array([self.encode(e) for e in symbols], dtype=dtype)
 
-    def decode_multiple(self, code):
+    def decode_multiple(
+        self, code: NDArray1[K, np.integer] | Iterable[int]
+    ) -> SequenceABC[S]:
         """
         Decode a sequence code into a list of symbols.
 
@@ -224,9 +241,12 @@ class Alphabet(object):
         symbols : list
             The decoded list of symbols.
         """
-        return [self.decode(c) for c in code]
+        if isinstance(code, np.ndarray):
+            return [self.decode(c) for c in code.tolist()]
+        else:
+            return [self.decode(c) for c in code]
 
-    def is_letter_alphabet(self):
+    def is_letter_alphabet(self) -> bool:
         """
         Check whether the symbols in this alphabet are single printable
         letters.
@@ -247,26 +267,26 @@ class Alphabet(object):
                 return False
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.get_symbols())
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.get_symbols())
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[S]:
         return self.get_symbols().__iter__()
 
-    def __contains__(self, symbol):
+    def __contains__(self, symbol: object) -> bool:
         return symbol in self.get_symbols()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         symbols = self.get_symbols()
         if isinstance(symbols, tuple):
             return hash(symbols)
         else:
             return hash(tuple(symbols))
 
-    def __eq__(self, item):
+    def __eq__(self, item: object) -> bool:
         if item is self:
             return True
         if not isinstance(item, Alphabet):
@@ -274,7 +294,7 @@ class Alphabet(object):
         return self.get_symbols() == item.get_symbols()
 
 
-class LetterAlphabet(Alphabet):
+class LetterAlphabet(Alphabet[str]):
     """
     :class:`LetterAlphabet` is a an :class:`Alphabet` subclass
     specialized for letter based alphabets, like DNA or protein
@@ -300,11 +320,12 @@ class LetterAlphabet(Alphabet):
         "ASCII"
     )
 
-    def __init__(self, symbols):
-        if len(symbols) == 0:
+    def __init__(self, symbols: Iterable[str | bytes] | str | bytes) -> None:
+        symbols_list = list(symbols)
+        if len(symbols_list) == 0:
             raise ValueError("Symbol list is empty")
-        self._symbols = []
-        for symbol in symbols:
+        symbols_bytes = []
+        for symbol in symbols_list:
             if not isinstance(symbol, (str, bytes)) or len(symbol) > 1:
                 raise ValueError(f"Symbol '{symbol}' is not a single letter")
             if isinstance(symbol, str):
@@ -313,32 +334,34 @@ class LetterAlphabet(Alphabet):
                 raise ValueError(
                     f"Symbol {repr(symbol)} is not printable or whitespace"
                 )
-            self._symbols.append(symbol)
+            symbols_bytes.append(symbol)
         # Direct 'astype' conversion is not allowed by numpy
         # -> frombuffer()
-        self._symbols = np.frombuffer(
-            np.array(self._symbols, dtype="|S1"), dtype=np.ubyte
+        self._symbols: NDArray1[Any, np.ubyte] = np.frombuffer(
+            np.array(symbols_bytes, dtype="|S1"), dtype=np.ubyte
         )
         self._codec = AlphabetCodec(self._symbols)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent LetterAlphabet as a string for debugging."""
         return f"LetterAlphabet({self.get_symbols()})"
 
-    def extends(self, alphabet):
+    def extends(self, alphabet: Alphabet[Any]) -> bool:
         if alphabet is self:
             return True
         elif isinstance(alphabet, LetterAlphabet):
             if len(alphabet._symbols) > len(self._symbols):
                 return False
-            return np.all(alphabet._symbols == self._symbols[: len(alphabet._symbols)])
+            return bool(
+                np.all(alphabet._symbols == self._symbols[: len(alphabet._symbols)])
+            )
         else:
             return super().extends(alphabet)
 
-    def get_symbols(self):
+    def get_symbols(self) -> tuple[str, ...]:
         return tuple([symbol.decode("ASCII") for symbol in self._symbols_as_bytes()])
 
-    def encode(self, symbol):
+    def encode(self, symbol: str | bytes) -> int:
         if not isinstance(symbol, (str, bytes)) or len(symbol) > 1:
             raise AlphabetError(f"Symbol '{symbol}' is not a single letter")
         indices = np.where(self._symbols == ord(symbol))[0]
@@ -346,12 +369,44 @@ class LetterAlphabet(Alphabet):
             raise AlphabetError(f"Symbol {repr(symbol)} is not in the alphabet")
         return indices[0].item()
 
-    def decode(self, code, as_bytes=False):
+    def decode(self, code: int, as_bytes: bool = False) -> str:
+        if as_bytes:
+            warnings.warn(
+                "'as_bytes' is deprecated, use 'decode_into_byte()' instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if code < 0 or code >= len(self._symbols):
             raise AlphabetError(f"'{code:d}' is not a valid code")
         return chr(self._symbols[code])
 
-    def encode_multiple(self, symbols, dtype=None):
+    def decode_into_byte(self, code: int) -> bytes:
+        """
+        Decode a code into a single-byte symbol.
+
+        Parameters
+        ----------
+        code : int
+            The code to decode.
+
+        Returns
+        -------
+        symbol : bytes
+            The decoded symbol as a single-byte object.
+        """
+        if code < 0 or code >= len(self._symbols):
+            raise AlphabetError(f"'{code:d}' is not a valid code")
+        return bytes([int(self._symbols[code])])
+
+    def encode_multiple(
+        self,
+        symbols: Iterable[str | bytes]
+        | str
+        | bytes
+        | NDArray1[K, np.character]
+        | NDArray1[K, np.unsignedinteger],
+        dtype: Any = None,
+    ) -> NDArray1[K, np.integer]:
         """
         Encode multiple symbols.
 
@@ -381,7 +436,11 @@ class LetterAlphabet(Alphabet):
             )
         return self._codec.encode(symbols)
 
-    def decode_multiple(self, code, as_bytes=False):
+    def decode_multiple(
+        self,
+        code: NDArray1[K, np.integer] | Iterable[int],
+        as_bytes: bool = False,
+    ) -> NDArray1[K, np.character]:
         """
         Decode a sequence code into a list of symbols.
 
@@ -391,6 +450,7 @@ class LetterAlphabet(Alphabet):
             The sequence code to decode.
             Works fastest if a :class:`ndarray` is provided.
         as_bytes : bool, optional
+            DEPRECATED: Use :meth:`decode_multiple_into_bytes()` instead.
             If true, the output array will contain `bytes`
             (dtype 'S1').
             Otherwise, the the output array will contain `str`
@@ -401,29 +461,64 @@ class LetterAlphabet(Alphabet):
         symbols : ndarray, dtype='U1' or dtype='S1'
             The decoded list of symbols.
         """
+        if as_bytes:
+            warnings.warn(
+                "'as_bytes' is deprecated, use 'decode_multiple_into_bytes()' instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            return self.decode_multiple_into_bytes(code)
         if not isinstance(code, np.ndarray):
             code = np.array(code, dtype=np.uint8)
         code = code.astype(np.uint8, copy=False)
         symbols = self._codec.decode(code)
         # Symbols must be convverted from 'np.ubyte' to '|S1'
         symbols = np.frombuffer(symbols, dtype="|S1")
-        if not as_bytes:
-            symbols = symbols.astype("U1")
-        return symbols
+        return symbols.astype("U1")
 
-    def is_letter_alphabet(self):
+    def decode_multiple_into_bytes(
+        self,
+        code: NDArray1[K, np.integer] | Iterable[int],
+    ) -> NDArray1[K, np.bytes_]:
+        """
+        Decode a sequence code into a single-byte symbol array.
+
+        This is a faster alternative to :meth:`decode_multiple()` when
+        single-byte symbols are desired, as it avoids the conversion to
+        Unicode characters.
+
+        Parameters
+        ----------
+        code : ndarray, dtype=uint8
+            The sequence code to decode.
+            Works fastest if a :class:`ndarray` is provided.
+
+        Returns
+        -------
+        symbols : ndarray, dtype='S1'
+            The decoded list of symbols.
+        """
+        if not isinstance(code, np.ndarray):
+            code = np.array(code, dtype=np.uint8)
+        code = code.astype(np.uint8, copy=False)
+        symbols = self._codec.decode(code)
+        return np.frombuffer(symbols, dtype="|S1")
+
+    def is_letter_alphabet(self) -> bool:
         return True
 
-    def __contains__(self, symbol):
+    def __contains__(self, symbol: object) -> bool:
         if not isinstance(symbol, (str, bytes)):
             return False
         return ord(symbol) in self._symbols
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._symbols)
 
-    def _symbols_as_bytes(self):
-        "Properly convert from dtype 'np.ubyte' to '|S1'"
+    def _symbols_as_bytes(self) -> NDArray1[Any, np.bytes_]:
+        """
+        Properly convert from dtype 'np.ubyte' to '|S1'
+        """
         return np.frombuffer(self._symbols, dtype="|S1")
 
 
@@ -471,7 +566,9 @@ class AlphabetMapper(object):
     GCCTAT
     """
 
-    def __init__(self, source_alphabet, target_alphabet):
+    def __init__(
+        self, source_alphabet: Alphabet[Any], target_alphabet: Alphabet[Any]
+    ) -> None:
         if target_alphabet.extends(source_alphabet):
             self._necessary_mapping = False
         else:
@@ -484,7 +581,9 @@ class AlphabetMapper(object):
                 new_code = target_alphabet.encode(symbol)
                 self._mapper[old_code] = new_code
 
-    def __getitem__(self, code):
+    def __getitem__(
+        self, code: int | NDArray1[K, np.integer]
+    ) -> int | NDArray1[K, np.integer]:
         if isinstance(code, Integral):
             if self._necessary_mapping:
                 return self._mapper[code]
@@ -503,7 +602,7 @@ class AlphabetMapper(object):
             return code
 
     @staticmethod
-    def _dtype(alphabet_size):
+    def _dtype(alphabet_size: int) -> type[np.unsignedinteger]:
         _size_uint8 = np.iinfo(np.uint8).max + 1
         _size_uint16 = np.iinfo(np.uint16).max + 1
         _size_uint32 = np.iinfo(np.uint32).max + 1
@@ -526,7 +625,9 @@ class AlphabetError(Exception):
     pass
 
 
-def common_alphabet(alphabets):
+def common_alphabet(
+    alphabets: Iterable[Alphabet[S]],
+) -> Alphabet[S] | None:
     """
     Determine the alphabet from a list of alphabets, that
     extends all alphabets.

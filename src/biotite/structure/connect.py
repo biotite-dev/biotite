@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -12,6 +14,8 @@ __all__ = [
 ]
 
 import itertools
+from collections.abc import Mapping
+from typing import Any
 import networkx as nx
 import numpy as np
 from biotite.rust.structure import (
@@ -26,8 +30,10 @@ from biotite.rust.structure import (
 from biotite.rust.structure import (
     find_connected,
 )
+from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.bonds import BondList, BondType
 from biotite.structure.error import BadStructureError
+from biotite.typing import K, N, NDArray1
 
 # fmt: off
 _DEFAULT_DISTANCE_RANGE = {
@@ -80,12 +86,12 @@ _DEFAULT_DISTANCE_RANGE = {
 
 
 def connect_via_distances(
-    atoms,
-    distance_range=None,
-    inter_residue=True,
-    default_bond_type=BondType.ANY,
-    periodic=False,
-):
+    atoms: AtomArray[N],
+    distance_range: Mapping[tuple[str, str], tuple[float, float]] | None = None,
+    inter_residue: bool = True,
+    default_bond_type: BondType = BondType.ANY,
+    periodic: bool = False,
+) -> BondList[N]:
     """
     connect_via_distances(atoms, distance_range=None, inter_residue=True,
                           default_bond_type=BondType.ANY, periodic=False)
@@ -199,8 +205,11 @@ def connect_via_distances(
 
 
 def _connect_via_distances_periodic(
-    atoms, residue_starts, dist_ranges, default_bond_type
-):
+    atoms: AtomArray[N],
+    residue_starts: NDArray1[K, np.integer],
+    dist_ranges: Mapping[tuple[str, str], tuple[float, float]],
+    default_bond_type: BondType,
+) -> BondList[N]:
     """
     Fallback for :func:`connect_via_distances` with periodic boundary conditions.
     Uses :func:`biotite.structure.geometry.distance` for periodic distance computation.
@@ -226,15 +235,20 @@ def _connect_via_distances_periodic(
                 )
                 if dist_range is None:
                     continue
-                dist = distances[atom_index1, atom_index2]
+                dist = distances[atom_index1, atom_index2]  # pyright: ignore[reportIndexIssue]
                 if dist_range[0] <= dist <= dist_range[1]:
                     bonds.append((start + atom_index1, start + atom_index2, bt_int))
 
     if bonds:
         return BondList(atoms.array_length(), np.stack(bonds, axis=0, dtype=np.int64))
+    return BondList(atoms.array_length())
 
 
-def connect_via_residue_names(atoms, inter_residue=True, custom_bond_dict=None):
+def connect_via_residue_names(
+    atoms: AtomArray[N] | AtomArrayStack[Any, N],
+    inter_residue: bool = True,
+    custom_bond_dict: Mapping[str, Mapping[tuple[str, str], BondType]] | None = None,
+) -> BondList[N]:
     """
     connect_via_residue_names(atoms, inter_residue=True, custom_bond_dict=None)
 
@@ -337,7 +351,7 @@ def connect_via_residue_names(atoms, inter_residue=True, custom_bond_dict=None):
         return bond_list
 
 
-def find_rotatable_bonds(bonds):
+def find_rotatable_bonds(bonds: BondList[N]) -> BondList[N]:
     """
     find_rotatable_bonds(bonds)
 
@@ -377,7 +391,7 @@ def find_rotatable_bonds(bonds):
     CZ OH
     """
     bond_graph = bonds.as_graph()
-    cycles = nx.algorithms.cycles.cycle_basis(bond_graph)
+    cycles = nx.algorithms.cycles.cycle_basis(bond_graph)  # pyright: ignore[reportAttributeAccessIssue]
 
     number_of_partners = np.count_nonzero(bonds.get_all_bonds()[0] != -1, axis=1)
 
@@ -409,7 +423,10 @@ def find_rotatable_bonds(bonds):
         return BondList(bonds.get_atom_count())
 
 
-def _connect_inter_residue(atoms, residue_starts):
+def _connect_inter_residue(
+    atoms: AtomArray[N] | AtomArrayStack[Any, N],
+    residue_starts: NDArray1[Any, np.integer],
+) -> BondList[N]:
     """
     Create a :class:`BondList` containing the bonds between adjacent
     amino acid or nucleotide residues.
@@ -444,7 +461,9 @@ def _connect_inter_residue(atoms, residue_starts):
     )
 
 
-def _bond_dict_to_list(bond_dict):
+def _bond_dict_to_list(
+    bond_dict: Mapping[tuple[str, str], BondType] | None,
+) -> list[tuple[str, str, BondType]] | None:
     """
     Convert the input bond dictionary in the form ``(name1, name2) -> bond_type`` into a
     list of tuples ``(index1, index2, bond_type)``.

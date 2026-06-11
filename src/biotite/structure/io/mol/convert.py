@@ -6,12 +6,18 @@ __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_structure", "set_structure"]
 
+from typing import Any, Literal, overload
+from biotite.structure.atoms import AtomArray
 from biotite.structure.bonds import BondType
 from biotite.structure.io.mol.mol import MOLFile
 from biotite.structure.io.mol.sdf import SDFile, SDRecord
+from biotite.typing import N
 
 
-def get_structure(mol_file, record_name=None):
+def get_structure(
+    mol_file: MOLFile | SDFile | SDRecord,
+    record_name: str | None = None,
+) -> AtomArray[Any]:
     """
     Get an :class:`AtomArray` from the MOL file.
 
@@ -35,13 +41,19 @@ def get_structure(mol_file, record_name=None):
         All other annotation categories, except ``element`` are
         empty.
     """
+    if not isinstance(mol_file, SDFile) and record_name is not None:
+        raise ValueError("Record names are only supported by SDF")
     record = _get_record(mol_file, record_name)
     return record.get_structure()
 
 
 def set_structure(
-    mol_file, atoms, default_bond_type=BondType.ANY, version=None, record_name=None
-):
+    mol_file: MOLFile | SDFile | SDRecord,
+    atoms: AtomArray[N],
+    default_bond_type: BondType = BondType.ANY,
+    version: Literal["V2000", "V3000"] | None = None,
+    record_name: str | None = None,
+) -> None:
     """
     Set the :class:`AtomArray` for the MOL file.
 
@@ -75,11 +87,25 @@ def set_structure(
         Default is the first record of the file.
         If the file is empty, a new record will be created.
     """
+    if not isinstance(mol_file, SDFile) and record_name is not None:
+        raise ValueError("Record names are only supported by SDF")
     record = _get_or_create_record(mol_file, record_name)
     record.set_structure(atoms, default_bond_type, version)
 
 
-def _get_record(file, record_name):
+@overload
+def _get_record(file: MOLFile, record_name: None) -> MOLFile: ...
+@overload
+def _get_record(file: SDRecord, record_name: None) -> SDRecord: ...
+@overload
+def _get_record(file: SDFile, record_name: str | None) -> SDRecord: ...
+@overload
+def _get_record(
+    file: MOLFile | SDFile | SDRecord, record_name: str | None
+) -> MOLFile | SDRecord: ...
+def _get_record(
+    file: MOLFile | SDFile | SDRecord, record_name: str | None
+) -> MOLFile | SDRecord:
     if isinstance(file, (MOLFile, SDRecord)):
         return file
     elif isinstance(file, SDFile):
@@ -92,21 +118,34 @@ def _get_record(file, record_name):
         raise TypeError(f"Unsupported file type '{type(file).__name__}'")
 
 
-def _get_or_create_record(file, record_name):
+@overload
+def _get_or_create_record(file: MOLFile, record_name: None) -> MOLFile: ...
+@overload
+def _get_or_create_record(file: SDFile, record_name: str | None) -> SDRecord: ...
+@overload
+def _get_or_create_record(
+    file: MOLFile | SDFile | SDRecord, record_name: str | None
+) -> MOLFile | SDRecord: ...
+def _get_or_create_record(
+    file: MOLFile | SDFile | SDRecord, record_name: str | None
+) -> MOLFile | SDRecord:
     if isinstance(file, (MOLFile, SDRecord)):
         return file
     elif isinstance(file, SDFile):
+        resolved_name: str
         if record_name is None:
             if len(file) > 0:
                 # Choose first record by default
-                record_name = next(iter(file.keys()))
+                resolved_name = next(iter(file.keys()))
             else:
                 # File is empty -> invent a new record name
-                record_name = "Molecule"
+                resolved_name = "Molecule"
+        else:
+            resolved_name = record_name
 
-        if record_name not in file:
+        if resolved_name not in file:
             record = SDRecord()
-            file[record_name] = record
-        return file[record_name]
+            file[resolved_name] = record
+        return file[resolved_name]
     else:
         raise TypeError(f"Unsupported file type '{type(file).__name__}'")

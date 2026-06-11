@@ -2,13 +2,19 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application.muscle"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Muscle5App"]
 
+from collections.abc import Sequence as SequenceABC
+from os import PathLike
 from biotite.application.application import AppState, VersionError, requires_state
 from biotite.application.localapp import get_version
 from biotite.application.msaapp import MSAApp
+from biotite.sequence.align.alignment import Alignment
+from biotite.sequence.sequence import Sequence
 
 
 class Muscle5App(MSAApp):
@@ -48,7 +54,11 @@ class Muscle5App(MSAApp):
     -I-QLITE
     """
 
-    def __init__(self, sequences, bin_path="muscle"):
+    def __init__(
+        self,
+        sequences: SequenceABC[Sequence],
+        bin_path: PathLike[str] | str = "muscle",
+    ) -> None:
         major_version = get_version(bin_path, "-version")[0]
         if major_version < 5:
             raise VersionError(
@@ -56,13 +66,15 @@ class Muscle5App(MSAApp):
             )
 
         super().__init__(sequences, bin_path)
-        self._mode = "align"
-        self._consiters = None
-        self._refineiters = None
-        self._n_threads = None
+        self._mode: str = "align"
+        self._consiters: int | None = None
+        self._refineiters: int | None = None
+        self._n_threads: int | None = None
 
     @requires_state(AppState.CREATED)
-    def set_iterations(self, consistency=None, refinement=None):
+    def set_iterations(
+        self, consistency: int | None = None, refinement: int | None = None
+    ) -> None:
         """
         Set the number of iterations for the alignment algorithm.
 
@@ -79,7 +91,7 @@ class Muscle5App(MSAApp):
             self._refineiters = refinement
 
     @requires_state(AppState.CREATED)
-    def set_thread_number(self, number):
+    def set_thread_number(self, number: int) -> None:
         """
         Set the number of threads for the alignment run.
 
@@ -91,13 +103,13 @@ class Muscle5App(MSAApp):
         self._n_threads = number
 
     @requires_state(AppState.CREATED)
-    def use_super5(self):
+    def use_super5(self) -> None:
         """
         Use the *Super5* algorithm for the alignment run.
         """
         self._mode = "super5"
 
-    def run(self):
+    def run(self) -> None:
         args = [
             f"-{self._mode}",
             self.get_input_file_path(),
@@ -117,27 +129,31 @@ class Muscle5App(MSAApp):
         self.set_arguments(args)
         super().run()
 
-    def clean_up(self):
+    def clean_up(self) -> None:
         super().clean_up()
 
     @staticmethod
-    def supports_nucleotide():
+    def supports_nucleotide() -> bool:
         return True
 
     @staticmethod
-    def supports_protein():
+    def supports_protein() -> bool:
         return True
 
     @staticmethod
-    def supports_custom_nucleotide_matrix():
+    def supports_custom_nucleotide_matrix() -> bool:
         return False
 
     @staticmethod
-    def supports_custom_protein_matrix():
+    def supports_custom_protein_matrix() -> bool:
         return False
 
     @classmethod
-    def align(cls, sequences, bin_path="muscle"):
+    def align(
+        cls,
+        sequences: SequenceABC[Sequence],
+        bin_path: PathLike[str] | str = "muscle",
+    ) -> Alignment:
         """
         Perform a multiple sequence alignment.
 

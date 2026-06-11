@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 __name__ = "biotite.interface.pymol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["draw_arrows", "draw_box"]
 
 import numpy as np
+from numpy.typing import ArrayLike
 from biotite.interface.pymol.cgo import (
     _arrayfy,
     draw_cgo,
@@ -10,20 +13,22 @@ from biotite.interface.pymol.cgo import (
     get_cylinder_cgo,
     get_multiline_cgo,
 )
+from biotite.interface.pymol.object import PyMOLObject
+from biotite.interface.pymol.startup import PyMOLInstance
 
 
 def draw_arrows(
-    start,
-    end,
-    radius=0.1,
-    head_radius=0.20,
-    head_length=0.5,
-    color=(0.5, 0.5, 0.5),
-    head_color=None,
-    name=None,
-    pymol_instance=None,
-    delete=True,
-):
+    start: ArrayLike,
+    end: ArrayLike,
+    radius: float | ArrayLike = 0.1,
+    head_radius: float | ArrayLike = 0.20,
+    head_length: float | ArrayLike = 0.5,
+    color: ArrayLike = (0.5, 0.5, 0.5),
+    head_color: ArrayLike | None = None,
+    name: str | None = None,
+    pymol_instance: PyMOLInstance | None = None,
+    delete: bool = True,
+) -> PyMOLObject:
     """
     Draw three-dimensional arrows using *Compiled Graphics Objects* (CGOs).
 
@@ -105,14 +110,14 @@ def draw_arrows(
 
 
 def draw_box(
-    box,
-    color=(0, 1, 0),
-    width=1.0,
-    origin=None,
-    name=None,
-    pymol_instance=None,
-    delete=True,
-):
+    box: ArrayLike,
+    color: ArrayLike = (0, 1, 0),
+    width: float = 1.0,
+    origin: ArrayLike | None = None,
+    name: str | None = None,
+    pymol_instance: PyMOLInstance | None = None,
+    delete: bool = True,
+) -> PyMOLObject:
     """
     Draw a box using *Compiled Graphics Objects* (CGOs).
 

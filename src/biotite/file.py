@@ -15,7 +15,9 @@ __all__ = [
 import abc
 import copy
 import io
+from collections.abc import Iterable, Iterator
 from os import PathLike
+from typing import IO, Any, Self, TypeGuard
 from biotite.copyable import Copyable
 
 
@@ -32,7 +34,7 @@ class File(Copyable, metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def read(cls, file):
+    def read(cls, file: str | PathLike[str] | IO[Any]) -> Self:
         """
         Parse a file (or file-like object).
 
@@ -51,7 +53,7 @@ class File(Copyable, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def write(self, file):
+    def write(self, file: str | PathLike[str] | IO[Any]) -> None:
         """
         Write the contents of this :class:`File` object into a file.
 
@@ -78,12 +80,14 @@ class TextFile(File, metaclass=abc.ABCMeta):
         PROTECTED: Do not modify from outside.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.lines = []
+        self.lines: list[str] = []
 
     @classmethod
-    def read(cls, file, *args, **kwargs):
+    def read(
+        cls, file: str | PathLike[str] | IO[str], *args: Any, **kwargs: Any
+    ) -> Self:
         # File name
         if is_open_compatible(file):
             with open(file, "r") as f:
@@ -98,7 +102,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
         return file_object
 
     @staticmethod
-    def read_iter(file):
+    def read_iter(file: str | PathLike[str] | IO[str]) -> Iterator[str]:
         """
         Create an iterator over each line of the given text file.
 
@@ -123,7 +127,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
                 raise TypeError("A file opened in 'text' mode is required")
             yield from file
 
-    def write(self, file):
+    def write(self, file: str | PathLike[str] | IO[str]) -> None:
         """
         Write the contents of this object into a file
         (or file-like object).
@@ -143,7 +147,7 @@ class TextFile(File, metaclass=abc.ABCMeta):
             file.write("\n".join(self.lines) + "\n")
 
     @staticmethod
-    def write_iter(file, lines):
+    def write_iter(file: str | PathLike[str] | IO[str], lines: Iterable[str]) -> None:
         """
         Iterate over the given `lines` of text and write each line into
         the specified `file`.
@@ -174,11 +178,11 @@ class TextFile(File, metaclass=abc.ABCMeta):
             for line in lines:
                 file.write(line + "\n")
 
-    def __copy_fill__(self, clone):
+    def __copy_fill__(self, clone: Self) -> None:
         super().__copy_fill__(clone)
         clone.lines = copy.copy(self.lines)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "\n".join(self.lines)
 
 
@@ -200,7 +204,7 @@ class DeserializationError(Exception):
     pass
 
 
-def wrap_string(text, width):
+def wrap_string(text: str, width: int) -> list[str]:
     """
     A much simpler and hence much more efficient version of
     `textwrap.wrap()`.
@@ -226,19 +230,19 @@ def wrap_string(text, width):
     return lines
 
 
-def is_binary(file):
+def is_binary(file: Any) -> TypeGuard[IO[bytes]]:
     if isinstance(file, io.BufferedIOBase):
         return True
     # for file wrappers, e.g. 'TemporaryFile'
     return hasattr(file, "file") and isinstance(file.file, io.BufferedIOBase)
 
 
-def is_text(file):
+def is_text(file: Any) -> TypeGuard[IO[str]]:
     if isinstance(file, io.TextIOBase):
         return True
     # for file wrappers, e.g. 'TemporaryFile'
     return hasattr(file, "file") and isinstance(file.file, io.TextIOBase)
 
 
-def is_open_compatible(file):
+def is_open_compatible(file: Any) -> TypeGuard[str | bytes | PathLike]:
     return isinstance(file, (str, bytes, PathLike))

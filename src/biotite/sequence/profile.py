@@ -2,16 +2,24 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
 import warnings
+from collections.abc import Sequence as SequenceABC
 from numbers import Integral
+from typing import TYPE_CHECKING, Any, Generic
 import numpy as np
 from biotite.sequence.align.alignment import get_codes
-from biotite.sequence.alphabet import LetterAlphabet
+from biotite.sequence.alphabet import Alphabet, LetterAlphabet
 from biotite.sequence.seqtypes import (
     GeneralSequence,
     NucleotideSequence,
     ProteinSequence,
 )
+from biotite.sequence.sequence import Sequence
+from biotite.typing import K, N, NDArray1, NDArray2, S
+
+if TYPE_CHECKING:
+    from biotite.sequence.align.alignment import Alignment
 
 __name__ = "biotite.sequence"
 __author__ = "Maximilian Greil"
@@ -23,7 +31,9 @@ _NUC_RNA_ALPH = LetterAlphabet(["A", "C", "G", "U"])
 _PROT_ALPH = ProteinSequence.alphabet
 
 
-def _determine_common_alphabet(alphabets):
+def _determine_common_alphabet(
+    alphabets: SequenceABC[Alphabet[S]],
+) -> Alphabet[S]:
     """
     Determine the common alphabet from a list of alphabets, that
     extends all alphabets.
@@ -40,7 +50,12 @@ def _determine_common_alphabet(alphabets):
     return common_alphabet
 
 
-def _codes_to_iupac(frequency, codes, maxes, row):
+def _codes_to_iupac(
+    frequency: NDArray1[K, np.integer],
+    codes: dict[tuple[int, ...], str],
+    maxes: np.integer,
+    row: int,
+) -> str:
     """
     Returns IUPAC code for a row of 'symbols' with none, one or
     multiple maximum positions.
@@ -55,7 +70,7 @@ def _codes_to_iupac(frequency, codes, maxes, row):
     return codes[key]
 
 
-class SequenceProfile(object):
+class SequenceProfile(Generic[S]):
     """
     A :class:`SequenceProfile` object stores information about a
     sequence profile of aligned sequences.
@@ -106,6 +121,11 @@ class SequenceProfile(object):
         Array which indicates the number of gaps at each position.
     alphabet : Alphabet, length=k
         Alphabet of sequences of sequence profile
+
+    Notes
+    -----
+    The type annotation of this class is generic in the type of the symbols stored in
+    the profile.
 
     Examples
     --------
@@ -165,7 +185,12 @@ class SequenceProfile(object):
      [0.000 1.000 0.000 0.000]]
     """
 
-    def __init__(self, symbols, gaps, alphabet):
+    def __init__(
+        self,
+        symbols: NDArray2[N, K, np.integer],
+        gaps: NDArray1[N, np.integer],
+        alphabet: Alphabet[S],
+    ) -> None:
         self._symbols = symbols
         self._gaps = gaps
         self._alphabet = alphabet
@@ -185,19 +210,19 @@ class SequenceProfile(object):
             )
 
     @property
-    def symbols(self):
-        return self._symbols
+    def symbols(self) -> NDArray2[N, K, np.integer]:
+        return self._symbols  # pyright: ignore[reportReturnType]
 
     @property
-    def gaps(self):
-        return self._gaps
+    def gaps(self) -> NDArray1[N, np.integer]:
+        return self._gaps  # pyright: ignore[reportReturnType]
 
     @property
-    def alphabet(self):
+    def alphabet(self) -> Alphabet[S]:
         return self._alphabet
 
     @symbols.setter
-    def symbols(self, new_symbols):
+    def symbols(self, new_symbols: NDArray2[N, K, np.integer]) -> None:
         if not new_symbols.shape == self.symbols.shape:
             raise ValueError(
                 f"New ndarray 'symbols' must be of same shape "
@@ -206,7 +231,7 @@ class SequenceProfile(object):
         self._symbols = new_symbols
 
     @gaps.setter
-    def gaps(self, new_gaps):
+    def gaps(self, new_gaps: NDArray1[N, np.integer]) -> None:
         if not new_gaps.shape == self.gaps.shape:
             raise ValueError(
                 f"New ndarray 'gaps' must be of same shape "
@@ -214,7 +239,7 @@ class SequenceProfile(object):
             )
         self._gaps = new_gaps
 
-    def __str__(self):
+    def __str__(self) -> str:
         # Add an additional row and column for the position and symbol indicators
         print_matrix = np.full(
             (self.symbols.shape[0] + 1, self.symbols.shape[1] + 1), "", dtype=object
@@ -230,13 +255,13 @@ class SequenceProfile(object):
             ]
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"SequenceProfile(np.{np.array_repr(self.symbols)}, "
             f"np.{np.array_repr(self.gaps)}, Alphabet({self.alphabet}))"
         )
 
-    def __eq__(self, item):
+    def __eq__(self, item: object) -> bool:
         if not isinstance(item, SequenceProfile):
             return False
         if not np.array_equal(self.symbols, item.symbols):
@@ -248,7 +273,9 @@ class SequenceProfile(object):
         return True
 
     @staticmethod
-    def from_alignment(alignment, alphabet=None):
+    def from_alignment(
+        alignment: Alignment, alphabet: Alphabet[S] | None = None
+    ) -> SequenceProfile[S]:
         """
         Get an object of :class:`SequenceProfile` from an object of
         :class:`Alignment`.
@@ -295,7 +322,7 @@ class SequenceProfile(object):
             gaps[i] = count[-1]
         return SequenceProfile(symbols, gaps, alphabet)
 
-    def to_consensus(self, as_general=False):
+    def to_consensus(self, as_general: bool = False) -> Sequence[S]:
         """
         Get the consensus sequence for this SequenceProfile object.
 
@@ -316,14 +343,14 @@ class SequenceProfile(object):
         if as_general:
             return self._general_to_consensus()
         elif self.alphabet == _NUC_DNA_ALPH:
-            return NucleotideSequence(self._dna_to_consensus())
+            return NucleotideSequence(self._dna_to_consensus())  # pyright: ignore[reportReturnType]
         elif self.alphabet == _NUC_RNA_ALPH:
-            return NucleotideSequence(self._rna_to_consensus())
+            return NucleotideSequence(self._rna_to_consensus())  # pyright: ignore[reportReturnType]
         elif self.alphabet == _PROT_ALPH:
-            return self._prot_to_consensus()
+            return self._prot_to_consensus()  # pyright: ignore[reportReturnType]
         return self._general_to_consensus()
 
-    def _dna_to_consensus(self):
+    def _dna_to_consensus(self) -> str:
         codes = {
             (0,): "A",
             (1,): "C",
@@ -347,7 +374,7 @@ class SequenceProfile(object):
             consensus += _codes_to_iupac(self.symbols[i, :], codes, maxes[i], i)
         return consensus
 
-    def _rna_to_consensus(self):
+    def _rna_to_consensus(self) -> str:
         codes = {
             (0,): "A",
             (1,): "C",
@@ -371,7 +398,7 @@ class SequenceProfile(object):
             consensus += _codes_to_iupac(self.symbols[i, :], codes, maxes[i], i)
         return consensus
 
-    def _prot_to_consensus(self):
+    def _prot_to_consensus(self) -> ProteinSequence:
         """
         In case there is more than one symbol with the same maximal
         occurrences, the alphabetically sorted first symbol will be
@@ -384,7 +411,7 @@ class SequenceProfile(object):
         )  # _PROT_ALPH[23] = 'X'
         return consensus
 
-    def _general_to_consensus(self):
+    def _general_to_consensus(self) -> GeneralSequence:
         """
         In case there is more than one symbol with the same maximal
         occurrences, the alphabetically sorted first symbol will be
@@ -397,7 +424,7 @@ class SequenceProfile(object):
         consensus.code = np.argmax(self.symbols, axis=1)
         return consensus
 
-    def probability_matrix(self, pseudocount=0):
+    def probability_matrix(self, pseudocount: int = 0) -> NDArray2[N, K, np.floating]:
         r"""
         Calculate the position probability matrix (PPM) based on
         'symbols' and the given pseudocount.
@@ -433,7 +460,11 @@ class SequenceProfile(object):
             np.sum(self.symbols, axis=1)[:, np.newaxis] + pseudocount
         )
 
-    def log_odds_matrix(self, background_frequencies=None, pseudocount=0):
+    def log_odds_matrix(
+        self,
+        background_frequencies: NDArray1[K, np.floating] | float | None = None,
+        pseudocount: int = 0,
+    ) -> NDArray2[N, K, np.floating]:
         r"""
         Calculate the position weight matrix (PWM) based on the
         position probability matrix (PPM) (with given pseudocount) and
@@ -474,7 +505,9 @@ class SequenceProfile(object):
             warnings.filterwarnings("ignore", category=RuntimeWarning)
             return np.log2(ppm / background_frequencies)
 
-    def sequence_probability(self, sequence, pseudocount=0):
+    def sequence_probability(
+        self, sequence: Sequence[S], pseudocount: int = 0
+    ) -> float:
         r"""
         Calculate probability of a sequence based on the
         position probability matrix (PPM).
@@ -507,9 +540,14 @@ class SequenceProfile(object):
                 f"Position probability matrix {ppm.shape} must be of same shape "
                 f"as 'symbols' {self.symbols.shape}"
             )
-        return np.prod(ppm[np.arange(len(sequence)), sequence.code])
+        return float(np.prod(ppm[np.arange(len(sequence)), sequence.code]))
 
-    def sequence_score(self, sequence, background_frequencies=None, pseudocount=0):
+    def sequence_score(
+        self,
+        sequence: Sequence[S],
+        background_frequencies: NDArray1[K, np.floating] | float | None = None,
+        pseudocount: int = 0,
+    ) -> float:
         """
         Calculate score of a sequence based on the
         position weight matrix (PWM).
@@ -549,13 +587,13 @@ class SequenceProfile(object):
                 f"Position weight matrix {pwm.shape} must be of same shape "
                 f"as 'symbols' {self.symbols.shape}"
             )
-        return np.sum(pwm[np.arange(len(sequence)), sequence.code])
+        return float(np.sum(pwm[np.arange(len(sequence)), sequence.code]))
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: Any) -> SequenceProfile:
         if isinstance(index, Integral):
             # Do not allow collapsing dimensions
             index = slice(index, index + 1)
         return SequenceProfile(self.symbols[index], self.gaps[index], self.alphabet)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.symbols)

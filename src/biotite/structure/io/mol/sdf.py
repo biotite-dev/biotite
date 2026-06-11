@@ -8,8 +8,10 @@ __all__ = ["SDFile", "SDRecord", "Metadata"]
 
 import re
 import warnings
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Iterator, Mapping, MutableMapping
 from dataclasses import dataclass
+from os import PathLike
+from typing import IO, Any, Literal, Self
 import numpy as np
 from biotite.file import (
     DeserializationError,
@@ -26,6 +28,7 @@ from biotite.structure.io.mol.ctab import (
     write_structure_to_ctab,
 )
 from biotite.structure.io.mol.header import Header
+from biotite.typing import N
 
 _N_HEADER = 3
 # Number of header lines
@@ -118,12 +121,12 @@ class Metadata(MutableMapping):
             "registry_external": re.compile(r"^\(([\w.-]*)\)$"),
         }
 
-        number: ... = None
-        name: ... = None
-        registry_internal: ... = None
-        registry_external: ... = None
+        number: int | None = None
+        name: str | None = None
+        registry_internal: int | None = None
+        registry_external: str | None = None
 
-        def __post_init__(self):
+        def __post_init__(self) -> None:
             if self.name is None and self.number is None:
                 raise ValueError("At least the field number or name must be set")
             if self.name is not None:
@@ -140,8 +143,8 @@ class Metadata(MutableMapping):
                     self, "registry_internal", int(self.registry_internal)
                 )
 
-        @staticmethod
-        def deserialize(text):
+        @classmethod
+        def deserialize(cls, text: str) -> Self:
             """
             Create a :class:`Metadata.Key` object by deserializing the given text
             content.
@@ -162,7 +165,7 @@ class Metadata(MutableMapping):
             for component in key_components:
                 # For each component in each the key,
                 # try to match it with each of the regexes
-                for attr_name, regex in Metadata.Key._COMPONENT_REGEX.items():
+                for attr_name, regex in cls._COMPONENT_REGEX.items():
                     pattern_match = regex.match(component)
                     if pattern_match is None:
                         # Try next pattern
@@ -177,9 +180,9 @@ class Metadata(MutableMapping):
                 else:
                     # There is no matching pattern
                     raise DeserializationError(f"Invalid key component '{component}'")
-            return Metadata.Key(**parsed_component_dict)
+            return cls(**parsed_component_dict)
 
-        def serialize(self):
+        def serialize(self) -> str:
             """
             Convert this object into text content.
 
@@ -199,18 +202,21 @@ class Metadata(MutableMapping):
                 key_string += f"({self.registry_external}) "
             return key_string
 
-        def __str__(self):
+        def __str__(self) -> str:
             return self.serialize()
 
-    def __init__(self, metadata=None):
+    def __init__(
+        self,
+        metadata: "Mapping[Metadata.Key | str, str] | None" = None,
+    ) -> None:
         if metadata is None:
             metadata = {}
-        self._metadata = {}
+        self._metadata: dict["Metadata.Key", str] = {}
         for key, value in metadata.items():
             self._metadata[_to_metadata_key(key)] = value
 
-    @staticmethod
-    def deserialize(text):
+    @classmethod
+    def deserialize(cls, text: str) -> Self:
         """
         Create a :class:`Metadata` objtect by deserializing the given text content.
 
@@ -245,9 +251,9 @@ class Metadata(MutableMapping):
                     current_value += "\n" + line
         # Add final pair
         _add_key_value_pair(metadata, current_key, current_value)
-        return Metadata(metadata)
+        return cls(metadata)
 
-    def serialize(self):
+    def serialize(self) -> str:
         """
         Convert this object into text content.
 
@@ -263,24 +269,24 @@ class Metadata(MutableMapping):
             text_blocks.append(value + "\n")
         return _join_with_terminal_newline(text_blocks)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: "Metadata.Key | str") -> str:
         return self._metadata[_to_metadata_key(key)]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: "Metadata.Key | str", value: str) -> None:
         if len(value) == 0:
             raise ValueError("Metadata value must not be empty")
         self._metadata[_to_metadata_key(key)] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: "Metadata.Key | str") -> None:
         del self._metadata[_to_metadata_key(key)]
 
-    def __iter__(self):
+    def __iter__(self) -> "Iterator[Metadata.Key]":
         return iter(self._metadata)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._metadata)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         if set(self.keys()) != set(other.keys()):
@@ -290,7 +296,7 @@ class Metadata(MutableMapping):
                 return False
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.serialize()
 
 
@@ -375,16 +381,21 @@ class SDRecord:
     <BLANKLINE>
     """
 
-    def __init__(self, header=None, ctab=None, metadata=None):
+    def __init__(
+        self,
+        header: Header | str | None = None,
+        ctab: str | None = None,
+        metadata: Metadata | Mapping[Metadata.Key | str, str] | str | None = None,
+    ) -> None:
         if header is None:
-            self._header = Header()
+            self._header: "Header | str" = Header()
         else:
             self._header = header
 
         self._ctab = ctab
 
         if metadata is None:
-            self._metadata = Metadata()
+            self._metadata: "Metadata | str" = Metadata()
         elif isinstance(metadata, Metadata):
             self._metadata = metadata
         elif isinstance(metadata, Mapping):
@@ -399,7 +410,7 @@ class SDRecord:
             )
 
     @property
-    def header(self):
+    def header(self) -> Header:
         if isinstance(self._header, str):
             try:
                 self._header = Header.deserialize(self._header)
@@ -408,25 +419,27 @@ class SDRecord:
         return self._header
 
     @header.setter
-    def header(self, header):
+    def header(self, header: Header) -> None:
         self._header = header
 
     @property
-    def ctab(self):
+    def ctab(self) -> str | None:
         # CTAB string cannot be changed directly -> no setter
         return self._ctab
 
     @property
-    def metadata(self):
+    def metadata(self) -> Metadata:
         if isinstance(self._metadata, str):
             try:
                 self._metadata = Metadata.deserialize(self._metadata)
             except Exception:
                 raise DeserializationError("Failed to deserialize metadata")
+        if not isinstance(self._metadata, Metadata):
+            raise TypeError("Metadata has invalid type")
         return self._metadata
 
     @metadata.setter
-    def metadata(self, metadata):
+    def metadata(self, metadata: "Metadata | Mapping[Metadata.Key | str, str]") -> None:
         if isinstance(metadata, Metadata):
             self._metadata = metadata
         elif isinstance(metadata, Mapping):
@@ -436,8 +449,8 @@ class SDRecord:
                 f"Expected 'Metadata' or Mapping, but got '{type(metadata).__name__}'"
             )
 
-    @staticmethod
-    def deserialize(text):
+    @classmethod
+    def deserialize(cls, text: str) -> Self:
         """
         Create an :class:`SDRecord` by deserializing the given text content.
 
@@ -457,9 +470,9 @@ class SDRecord:
         header = _join_with_terminal_newline(lines[:_N_HEADER])
         ctab = _join_with_terminal_newline(lines[_N_HEADER:ctab_end])
         metadata = _join_with_terminal_newline(lines[ctab_end:])
-        return SDRecord(header, ctab, metadata)
+        return cls(header, ctab, metadata)
 
-    def serialize(self):
+    def serialize(self) -> str:
         """
         Convert this object into text content.
 
@@ -485,7 +498,7 @@ class SDRecord:
 
         return header_string + ctab_string + metadata_string
 
-    def get_structure(self):
+    def get_structure(self) -> AtomArray[Any]:
         """
         Parse the structural data in the SD record.
 
@@ -497,12 +510,19 @@ class SDRecord:
             All other annotation categories, except ``element`` are
             empty.
         """
+        if self._ctab is None:
+            raise InvalidFileError("File does not contain structure data")
         ctab_lines = self._ctab.splitlines()
         if len(ctab_lines) == 0:
             raise InvalidFileError("File does not contain structure data")
         return read_structure_from_ctab(ctab_lines)
 
-    def set_structure(self, atoms, default_bond_type=BondType.ANY, version=None):
+    def set_structure(
+        self,
+        atoms: AtomArray[N],
+        default_bond_type: BondType = BondType.ANY,
+        version: Literal["V2000", "V3000"] | None = None,
+    ) -> None:
         """
         Set the structural data in the SD record.
 
@@ -527,7 +547,7 @@ class SDRecord:
             write_structure_to_ctab(atoms, default_bond_type, version)
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         if not self.header == other.header:
@@ -538,11 +558,11 @@ class SDRecord:
             return False
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.serialize()
 
 
-class SDFile(File, MutableMapping):
+class SDFile(File, MutableMapping[str, SDRecord]):
     """
     This class represents an SD file for storing small molecule
     structures.
@@ -730,8 +750,8 @@ class SDFile(File, MutableMapping):
     <BLANKLINE>
     """
 
-    def __init__(self, records=None):
-        self._records = {}
+    def __init__(self, records: Mapping[str, SDRecord] | None = None) -> None:
+        self._records: dict[str, SDRecord | str] = {}
         if records is not None:
             for mol_name, record in records.items():
                 if isinstance(record, SDRecord):
@@ -739,19 +759,19 @@ class SDFile(File, MutableMapping):
                 self._records[mol_name] = record
 
     @property
-    def lines(self):
+    def lines(self) -> list[str]:
         return self.serialize().splitlines()
 
     @property
-    def record(self):
+    def record(self) -> SDRecord:
         if len(self) == 0:
             raise ValueError("There are no records in the file")
         if len(self) > 1:
             raise ValueError("There are multiple records in the file")
         return self[next(iter(self))]
 
-    @staticmethod
-    def deserialize(text):
+    @classmethod
+    def deserialize(cls, text: str) -> Self:
         """
         Create an :class:`SDFile` by deserializing the given text content.
 
@@ -781,16 +801,16 @@ class SDFile(File, MutableMapping):
         # Records in the middle start directly after the delimiter
         record_starts = np.concatenate(([0], record_ends[:-1] + 1), dtype=int)
         record_names = [lines[start].strip() for start in record_starts]
-        return SDFile(
+        return cls(
             {
                 # Do not include the delimiter
                 # -> stop at end (instead of end + 1)
                 name: _join_with_terminal_newline(lines[start:end])
                 for name, start, end in zip(record_names, record_starts, record_ends)
-            }
+            }  # pyright: ignore[reportArgumentType]
         )
 
-    def serialize(self):
+    def serialize(self) -> str:
         """
         Convert this object into text content.
 
@@ -815,7 +835,7 @@ class SDFile(File, MutableMapping):
         return "".join(text_blocks)
 
     @classmethod
-    def read(cls, file):
+    def read(cls, file: PathLike[str] | str | IO[str]) -> Self:
         """
         Read a SD file.
 
@@ -839,9 +859,9 @@ class SDFile(File, MutableMapping):
             if not is_text(file):
                 raise TypeError("A file opened in 'text' mode is required")
             text = file.read()
-        return SDFile.deserialize(text)
+        return cls.deserialize(text)
 
-    def write(self, file):
+    def write(self, file: PathLike[str] | str | IO[str]) -> None:
         """
         Write the contents of this object into a SD file.
 
@@ -859,7 +879,7 @@ class SDFile(File, MutableMapping):
                 raise TypeError("A file opened in 'text' mode is required")
             file.write(self.serialize())
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> SDRecord:
         record = self._records[key]
         if isinstance(record, str):
             # Element is stored in serialized form
@@ -872,23 +892,23 @@ class SDFile(File, MutableMapping):
             self._records[key] = record
         return record
 
-    def __setitem__(self, key, record):
+    def __setitem__(self, key: str, record: SDRecord) -> None:
         if not isinstance(record, SDRecord):
             raise TypeError(f"Expected 'SDRecord', but got '{type(record).__name__}'")
         # The molecule name in the header is unique across the file
         record.header.mol_name = key
         self._records[key] = record
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         del self._records[key]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._records)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._records)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         if set(self.keys()) != set(other.keys()):
@@ -898,24 +918,24 @@ class SDFile(File, MutableMapping):
                 return False
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.serialize()
 
 
-def _join_with_terminal_newline(text_blocks):
+def _join_with_terminal_newline(text_blocks: list[str]) -> str:
     if len(text_blocks) == 0:
         return ""
     else:
         return "\n".join(text_blocks) + "\n"
 
 
-def _empty_ctab():
+def _empty_ctab() -> str:
     empty_atoms = AtomArray(0)
     empty_atoms.bonds = BondList(0)
     return _join_with_terminal_newline(write_structure_to_ctab(empty_atoms))
 
 
-def _to_metadata_key(key):
+def _to_metadata_key(key: Metadata.Key | str) -> Metadata.Key:
     if isinstance(key, Metadata.Key):
         return key
     elif isinstance(key, str):
@@ -926,14 +946,18 @@ def _to_metadata_key(key):
         )
 
 
-def _add_key_value_pair(metadata, key, value):
+def _add_key_value_pair(
+    metadata: dict[Metadata.Key, str],
+    key: Metadata.Key | None,
+    value: str | None,
+) -> None:
     if key is not None:
         if value is None:
             raise DeserializationError(f"No value found for metadata key {key}")
         metadata[key] = value
 
 
-def _get_ctab_stop(lines):
+def _get_ctab_stop(lines: list[str]) -> int:
     for i in range(_N_HEADER, len(lines)):
         if lines[i].startswith("M  END"):
             return i + 1

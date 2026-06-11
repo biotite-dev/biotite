@@ -2,17 +2,28 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
 __all__ = ["plot_sequence_logo"]
 
+from typing import Any
 import numpy as np
+from matplotlib.axes import Axes
 from biotite.sequence.alphabet import LetterAlphabet
 from biotite.sequence.graphics.colorschemes import get_color_scheme
+from biotite.sequence.profile import SequenceProfile
+from biotite.typing import MplColor
 from biotite.visualize import plot_scaled_text
 
 
-def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
+def plot_sequence_logo(
+    axes: Axes,
+    profile: SequenceProfile,
+    scheme: str | list[MplColor] | None = None,
+    **kwargs: Any,
+) -> None:
     """
     Create a sequence logo. :footcite:`Schneider1990`
 
@@ -90,7 +101,9 @@ def plot_sequence_logo(axes, profile, scheme=None, **kwargs):
     axes.set_ylim(0, max_entropy)
 
 
-def _get_entropy(profile):
+def _get_entropy(
+    profile: SequenceProfile,
+) -> tuple[np.ndarray, np.ndarray, float]:
     freq = profile.symbols
     freq = freq / np.sum(freq, axis=1)[:, np.newaxis]
     # 0 * log2(0) = 0 -> Convert NaN to 0

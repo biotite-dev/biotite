@@ -2,17 +2,20 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application"
 __author__ = "Patrick Kunzmann"
 __all__ = ["LocalApp"]
 
 import abc
-import copy
 import re
 import subprocess
-from os import chdir, getcwd, remove
+from collections.abc import Sequence
+from os import PathLike, chdir, getcwd, remove
 from pathlib import Path
 from subprocess import PIPE, Popen, SubprocessError, TimeoutExpired
+from typing import IO, Any
 from biotite.application.application import (
     Application,
     AppState,
@@ -35,18 +38,20 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         Path of the application represented by this class.
     """
 
-    def __init__(self, bin_path):
+    def __init__(self, bin_path: PathLike[str] | str) -> None:
         super().__init__()
-        self._bin_path = bin_path
-        self._arguments = []
-        self._options = []
-        self._exec_dir = getcwd()
-        self._process = None
-        self._command = None
-        self._stdin_file = None
+        self._bin_path: str = str(bin_path)
+        self._arguments: list[str] = []
+        self._options: list[str] = []
+        self._exec_dir: str = getcwd()
+        self._process: Popen[str] | None = None
+        self._command: list[str] | None = None
+        self._stdin_file: IO[Any] | None = None
+        self._stdout: str = ""
+        self._stderr: str = ""
 
     @requires_state(AppState.CREATED)
-    def set_arguments(self, arguments):
+    def set_arguments(self, arguments: Sequence[str]) -> None:
         """
         Set command line arguments for the application run.
 
@@ -57,10 +62,10 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         arguments : list of str
             A list of strings representing the command line options.
         """
-        self._arguments = copy.copy(arguments)
+        self._arguments = list(arguments)
 
     @requires_state(AppState.CREATED)
-    def set_stdin(self, file):
+    def set_stdin(self, file: IO[Any]) -> None:
         """
         Set a file as standard input for the application run.
 
@@ -76,7 +81,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         self._stdin_file = file
 
     @requires_state(AppState.CREATED)
-    def add_additional_options(self, options):
+    def add_additional_options(self, options: Sequence[str]) -> None:
         """
         Add additional options for the command line program.
         These options are put before the arguments automatically
@@ -127,7 +132,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
     @requires_state(
         AppState.RUNNING | AppState.CANCELLED | AppState.FINISHED | AppState.JOINED
     )
-    def get_command(self):
+    def get_command(self) -> str:
         """
         Get the executed command.
 
@@ -150,10 +155,12 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         >>> print(app.get_command())
         clustalo --in ...fa --out ...fa --force --output-order=tree-order --seqtype Protein --guidetree-out ...tree
         """
+        if self._command is None:
+            raise AppStateError("Application command is not set yet")
         return " ".join(self._command)
 
     @requires_state(AppState.CREATED)
-    def set_exec_dir(self, exec_dir):
+    def set_exec_dir(self, exec_dir: PathLike[str] | str) -> None:
         """
         Set the directory where the application should be executed.
         If not set, it will be executed in the working directory at the
@@ -166,10 +173,10 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         exec_dir : str
             The execution directory.
         """
-        self._exec_dir = exec_dir
+        self._exec_dir = str(exec_dir)
 
     @requires_state(AppState.RUNNING | AppState.FINISHED)
-    def get_process(self):
+    def get_process(self) -> Popen[str]:
         """
         Get the `Popen` instance.
 
@@ -180,10 +187,12 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         process : Popen
             The `Popen` instance.
         """
+        if self._process is None:
+            raise AppStateError("Process has not been started yet")
         return self._process
 
     @requires_state(AppState.FINISHED | AppState.JOINED)
-    def get_exit_code(self):
+    def get_exit_code(self) -> int:
         """
         Get the exit code of the process.
 
@@ -194,10 +203,12 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         code : int
             The exit code.
         """
+        if self._process is None:
+            raise AppStateError("Process has not been started yet")
         return self._process.returncode
 
     @requires_state(AppState.FINISHED | AppState.JOINED)
-    def get_stdout(self):
+    def get_stdout(self) -> str:
         """
         Get the STDOUT pipe content of the process.
 
@@ -211,7 +222,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         return self._stdout
 
     @requires_state(AppState.FINISHED | AppState.JOINED)
-    def get_stderr(self):
+    def get_stderr(self) -> str:
         """
         Get the STDERR pipe content of the process.
 
@@ -224,7 +235,7 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         """
         return self._stderr
 
-    def run(self):
+    def run(self) -> None:
         cwd = getcwd()
         chdir(self._exec_dir)
         self._command = [self._bin_path] + self._options + self._arguments
@@ -237,7 +248,9 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
         )
         chdir(cwd)
 
-    def is_finished(self):
+    def is_finished(self) -> bool:
+        if self._process is None:
+            raise AppStateError("Process has not been started yet")
         code = self._process.poll()
         if code is None:
             return False
@@ -246,10 +259,12 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
             return True
 
     @requires_state(AppState.RUNNING | AppState.FINISHED)
-    def join(self, timeout=None):
+    def join(self, timeout: float | None = None) -> None:
         # Override method as repetitive calls of 'is_finished()'
         # are not necessary as 'communicate()' already waits for the
         # finished application
+        if self._process is None:
+            raise AppStateError("Process has not been started yet")
         try:
             self._stdout, self._stderr = self._process.communicate(timeout=timeout)
         except TimeoutExpired:
@@ -268,11 +283,11 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
             self._state = AppState.JOINED
         self.clean_up()
 
-    def wait_interval(self):
+    def wait_interval(self) -> float:
         # Not used in this implementation of 'join()'
         raise NotImplementedError()
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         super().evaluate()
         # Check if applicaion terminated correctly
         exit_code = self.get_exit_code()
@@ -282,12 +297,12 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
                 f"'{self._bin_path}' returned with exit code {exit_code}: {err_msg}"
             )
 
-    def clean_up(self):
-        if self.get_app_state() == AppState.CANCELLED:
+    def clean_up(self) -> None:
+        if self.get_app_state() == AppState.CANCELLED and self._process is not None:
             self._process.kill()
 
 
-def cleanup_tempfile(temp_file):
+def cleanup_tempfile(temp_file: Any) -> None:
     """
     Close a :class:`NamedTemporaryFile` and delete it manually,
     if `delete` is set to ``False``.
@@ -311,7 +326,9 @@ def cleanup_tempfile(temp_file):
         pass
 
 
-def get_version(bin_path, version_option="--version"):
+def get_version(
+    bin_path: PathLike[str] | str, version_option: str = "--version"
+) -> tuple[int, int]:
     """
     Get the version of a locally installed application.
 

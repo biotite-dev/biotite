@@ -2,14 +2,19 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.io.fastq"
 __author__ = "Patrick Kunzmann"
 
 from collections import OrderedDict
-from collections.abc import MutableMapping
+from collections.abc import Iterable, Iterator, MutableMapping
 from numbers import Integral
+from os import PathLike
+from typing import IO, Literal, Self
 import numpy as np
 from biotite.file import InvalidFileError, TextFile, wrap_string
+from biotite.typing import K, NDArray1
 
 __all__ = ["FastqFile"]
 
@@ -23,7 +28,7 @@ _OFFSETS = {
 }
 
 
-class FastqFile(TextFile, MutableMapping):
+class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
     """
     This class represents a file in FASTQ format.
 
@@ -90,14 +95,25 @@ class FastqFile(TextFile, MutableMapping):
     >>> file.write(os.path.join(path_to_directory, "test.fastq"))
     """
 
-    def __init__(self, offset, chars_per_line=None):
+    def __init__(
+        self,
+        offset: int
+        | Literal["Sanger", "Solexa", "Illumina-1.3", "Illumina-1.5", "Illumina-1.8"],
+        chars_per_line: int | None = None,
+    ) -> None:
         super().__init__()
         self._chars_per_line = chars_per_line
-        self._entries = OrderedDict()
+        self._entries: OrderedDict[str, tuple[int, int, int, int]] = OrderedDict()
         self._offset = _convert_offset(offset)
 
     @classmethod
-    def read(cls, file, offset, chars_per_line=None):
+    def read(
+        cls,
+        file: PathLike[str] | str | IO[str],
+        offset: int
+        | Literal["Sanger", "Solexa", "Illumina-1.3", "Illumina-1.5", "Illumina-1.8"],
+        chars_per_line: int | None = None,
+    ) -> Self:
         """
         Read a FASTQ file.
 
@@ -123,17 +139,17 @@ class FastqFile(TextFile, MutableMapping):
         file_object : FastqFile
             The parsed file.
         """
-        file = super().read(file, offset, chars_per_line)
+        fastq_file = super().read(file, offset, chars_per_line)
         # Remove leading and trailing whitespace in all lines
-        file.lines = [line.strip() for line in file.lines]
+        fastq_file.lines = [line.strip() for line in fastq_file.lines]
         # Filter out empty lines
-        file.lines = [line for line in file.lines if len(line) != 0]
-        if len(file.lines) == 0:
+        fastq_file.lines = [line for line in fastq_file.lines if len(line) != 0]
+        if len(fastq_file.lines) == 0:
             raise InvalidFileError("File is empty")
-        file._find_entries()
-        return file
+        fastq_file._find_entries()
+        return fastq_file
 
-    def get_seq_string(self, identifier):
+    def get_seq_string(self, identifier: str) -> str:
         """
         Get the string representing the sequence for the specified
         identifier.
@@ -155,7 +171,7 @@ class FastqFile(TextFile, MutableMapping):
         seq_str = "".join(self.lines[seq_start:seq_stop])
         return seq_str
 
-    def get_quality(self, identifier):
+    def get_quality(self, identifier: str) -> NDArray1[K, np.integer]:
         """
         Get the quality scores for the specified identifier.
 
@@ -177,7 +193,7 @@ class FastqFile(TextFile, MutableMapping):
             "".join(self.lines[score_start:score_stop]), self._offset
         )
 
-    def __setitem__(self, identifier, item):
+    def __setitem__(self, identifier: str, item: tuple[str, np.ndarray]) -> None:
         sequence, scores = item
         if len(sequence) != len(scores):
             raise ValueError(
@@ -230,25 +246,25 @@ class FastqFile(TextFile, MutableMapping):
             )
             self.lines += new_lines
 
-    def __getitem__(self, identifier):
+    def __getitem__(self, identifier: str) -> tuple[str, np.ndarray]:
         return self.get_seq_string(identifier), self.get_quality(identifier)
 
-    def __delitem__(self, identifier):
+    def __delitem__(self, identifier: str) -> None:
         seq_start, seq_stop, score_start, score_stop = self._entries[identifier]
         del self.lines[seq_start - 1 : score_stop]
         del self._entries[identifier]
         self._find_entries()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._entries)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return self._entries.__iter__()
 
-    def __contains__(self, identifer):
+    def __contains__(self, identifer: object) -> bool:
         return identifer in self._entries
 
-    def _find_entries(self):
+    def _find_entries(self) -> None:
         self._entries = OrderedDict()
         in_sequence = False
         # Record if the parser is currently in a quality score section,
@@ -257,11 +273,11 @@ class FastqFile(TextFile, MutableMapping):
         in_scores = False
         seq_len = 0
         score_len = 0
-        seq_start_i = None
-        seq_stop_i = None
-        score_start_i = None
-        score_stop_i = None
-        identifier = None
+        seq_start_i: int = 0
+        seq_stop_i: int = 0
+        score_start_i: int = 0
+        score_stop_i: int = 0
+        identifier: str = ""
         for i, line in enumerate(self.lines):
             if not in_scores and not in_sequence and line[0] == "@":
                 # Identifier line
@@ -312,7 +328,11 @@ class FastqFile(TextFile, MutableMapping):
             raise InvalidFileError("The last entry in the file is incomplete")
 
     @staticmethod
-    def read_iter(file, offset):
+    def read_iter(
+        file: PathLike[str] | str | IO[str],
+        offset: int
+        | Literal["Sanger", "Solexa", "Illumina-1.3", "Illumina-1.5", "Illumina-1.8"],
+    ) -> Iterator[tuple[str, tuple[str, np.ndarray]]]:
         """
         Create an iterator over each sequence (and corresponding scores)
         of the given FASTQ file.
@@ -344,9 +364,9 @@ class FastqFile(TextFile, MutableMapping):
         """
         offset = _convert_offset(offset)
 
-        identifier = None
-        seq_str_list = []
-        score_str_list = []
+        identifier: str = "None"
+        seq_str_list: list[str] = []
+        score_str_list: list[str] = []
         in_sequence = False
         in_scores = False
         seq_len = 0
@@ -399,7 +419,13 @@ class FastqFile(TextFile, MutableMapping):
                 raise InvalidFileError("FASTQ file is invalid")
 
     @staticmethod
-    def write_iter(file, items, offset, chars_per_line=None):
+    def write_iter(
+        file: PathLike[str] | str | IO[str],
+        items: Iterable[tuple[str, tuple[str, np.ndarray]]],
+        offset: int
+        | Literal["Sanger", "Solexa", "Illumina-1.3", "Illumina-1.5", "Illumina-1.8"],
+        chars_per_line: int | None = None,
+    ) -> None:
         """
         Iterate over the given `items` and write each item into
         the specified `file`.
@@ -439,7 +465,7 @@ class FastqFile(TextFile, MutableMapping):
         """
         offset = _convert_offset(offset)
 
-        def line_generator():
+        def line_generator() -> Iterator[str]:
             for item in items:
                 identifier, (sequence, scores) = item
                 if len(sequence) != len(scores):
@@ -474,7 +500,7 @@ class FastqFile(TextFile, MutableMapping):
         TextFile.write_iter(file, line_generator())
 
 
-def _score_str_to_scores(score_str, offset):
+def _score_str_to_scores(score_str: str, offset: int) -> NDArray1[K, np.int8]:
     """
     Convert an ASCII string into actual score values.
     """
@@ -483,7 +509,7 @@ def _score_str_to_scores(score_str, offset):
     return scores
 
 
-def _scores_to_score_str(scores, offset):
+def _scores_to_score_str(scores: NDArray1[K, np.integer], offset: int) -> str:
     """
     Convert score values into an ASCII string.
     """
@@ -491,13 +517,13 @@ def _scores_to_score_str(scores, offset):
     return scores.astype(np.int8, copy=False).tobytes().decode("ascii")
 
 
-def _convert_offset(offset_val_or_string):
+def _convert_offset(offset_val_or_string: int | str) -> int:
     """
     If the given offset is a string return the corresponding numerical
     value.
     """
-    if isinstance(offset_val_or_string, Integral):
-        return offset_val_or_string
+    if isinstance(offset_val_or_string, (int, Integral)):
+        return int(offset_val_or_string)
     elif isinstance(offset_val_or_string, str):
         return _OFFSETS[offset_val_or_string]
     else:

@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.interface"
 __author__ = "Patrick Kunzmann"
 __all__ = ["VersionError", "requires_version"]
@@ -9,12 +11,18 @@ __all__ = ["VersionError", "requires_version"]
 
 import functools
 import importlib.metadata
+import importlib.util
+from collections.abc import Callable
+from typing import Any, ParamSpec, TypeVar
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
 # Stores the variant of interface functions
 # compatible with the respective installed package version
-_functions_for_version = {}
+_functions_for_version: dict[str, Callable[..., Any]] = {}
 
 
 class VersionError(Exception):
@@ -26,7 +34,7 @@ class VersionError(Exception):
     pass
 
 
-def require_package(package):
+def require_package(package: str) -> None:
     """
     Check if the given package is installed and raise an exception if not.
 
@@ -49,7 +57,9 @@ def require_package(package):
         raise ImportError(f"'{package}' is not installed")
 
 
-def requires_version(package, version_specifier):
+def requires_version(
+    package: str, version_specifier: str | list[str]
+) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """
     Declare a function variant that is compatible with a specific version range of the
     interfaced package.
@@ -65,9 +75,9 @@ def requires_version(package, version_specifier):
         comma-separated string.
     """
 
-    def decorator(function):
+    def decorator(function: Callable[_P, _R]) -> Callable[_P, _R]:
         @functools.wraps(function)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             function_for_version = _functions_for_version.get(function.__name__)
             if function_for_version is None:
                 raise VersionError(
@@ -79,7 +89,7 @@ def requires_version(package, version_specifier):
         if isinstance(version_specifier, str):
             specifier = SpecifierSet(version_specifier)
         else:
-            specifier = SpecifierSet.intersection(*version_specifier)
+            specifier = SpecifierSet(",".join(version_specifier))
         try:
             package_version = Version(importlib.metadata.version(package))
         except importlib.metadata.PackageNotFoundError:

@@ -7,17 +7,24 @@ This module provides utility for separating structures into single
 molecules.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = ["get_molecule_indices", "get_molecule_masks", "molecule_iter"]
 
+from collections.abc import Iterator
+from typing import Any, overload
 import numpy as np
 from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.bonds import BondList
 from biotite.structure.connect import find_connected
+from biotite.typing import M, N, NDArray1, NDArray2
 
 
-def get_molecule_indices(array):
+def get_molecule_indices(
+    array: AtomArray[N] | AtomArrayStack[M, N] | BondList[N],
+) -> list[NDArray1[Any, np.integer]]:
     """
     Get an index array for each molecule in the given structure.
 
@@ -130,7 +137,9 @@ def get_molecule_indices(array):
     return molecule_indices
 
 
-def get_molecule_masks(array):
+def get_molecule_masks(
+    array: AtomArray[N] | AtomArrayStack[M, N] | BondList[N],
+) -> NDArray2[Any, N, np.bool_]:
     """
     Get a boolean mask for each molecule in the given structure.
 
@@ -239,10 +248,18 @@ def get_molecule_masks(array):
     )
     for i in range(len(molecule_indices)):
         molecule_masks[i, molecule_indices[i]] = True
-    return molecule_masks
+    return molecule_masks  # pyright: ignore[reportReturnType]
 
 
-def molecule_iter(array):
+@overload
+def molecule_iter(array: AtomArray[N]) -> Iterator[AtomArray[Any]]: ...
+@overload
+def molecule_iter(
+    array: AtomArrayStack[M, N],
+) -> Iterator[AtomArrayStack[M, Any]]: ...
+def molecule_iter(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> Iterator[AtomArray[Any] | AtomArrayStack[M, Any]]:
     """
     Iterate over each molecule in a input structure.
 

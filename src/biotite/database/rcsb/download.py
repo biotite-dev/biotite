@@ -8,9 +8,13 @@ __all__ = ["fetch"]
 
 import io
 import os
+from collections.abc import Iterable
 from os.path import getsize, isfile, join
+from typing import Literal, overload
 import requests
 from biotite.database.error import RequestError
+
+_RcsbFormat = Literal["pdb", "pdbx", "cif", "mmcif", "bcif", "fasta"]
 
 _standard_url = "https://files.rcsb.org/download/"
 _bcif_url = "https://models.rcsb.org/"
@@ -27,9 +31,50 @@ _rcsb_error_msgs = [
 ]
 
 
+@overload
 def fetch(
-    pdb_ids, format, target_path=None, overwrite=False, verbose=False, gzip=False
-):
+    pdb_ids: str,
+    format: _RcsbFormat,
+    target_path: str,
+    overwrite: bool = False,
+    verbose: bool = False,
+    gzip: bool = False,
+) -> str: ...
+@overload
+def fetch(
+    pdb_ids: str,
+    format: _RcsbFormat,
+    target_path: None = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+    gzip: bool = False,
+) -> io.StringIO | io.BytesIO: ...
+@overload
+def fetch(
+    pdb_ids: Iterable[str],
+    format: _RcsbFormat,
+    target_path: str,
+    overwrite: bool = False,
+    verbose: bool = False,
+    gzip: bool = False,
+) -> list[str]: ...
+@overload
+def fetch(
+    pdb_ids: Iterable[str],
+    format: _RcsbFormat,
+    target_path: None = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+    gzip: bool = False,
+) -> list[io.StringIO | io.BytesIO]: ...
+def fetch(
+    pdb_ids: str | Iterable[str],
+    format: _RcsbFormat,
+    target_path: str | None = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+    gzip: bool = False,
+) -> str | io.StringIO | io.BytesIO | list[str] | list[io.StringIO | io.BytesIO]:
     """
     Download structure files (or sequence files) from the RCSB PDB in
     various formats.
@@ -94,9 +139,11 @@ def fetch(
     # If only a single PDB ID is present,
     # put it into a single element list
     if isinstance(pdb_ids, str):
-        pdb_ids = [pdb_ids]
+        id_list = [pdb_ids]
         single_element = True
     else:
+        # Materialize the iterable so it can be both iterated and counted
+        id_list = list(pdb_ids)
         single_element = False
     # Create the target folder, if not existing
     if target_path is not None and not os.path.isdir(target_path):
@@ -111,10 +158,10 @@ def fetch(
 
     files = []
     session = requests.Session()
-    for i, id in enumerate(pdb_ids):
+    for i, id in enumerate(id_list):
         # Verbose output
         if verbose:
-            print(f"Fetching file {i + 1:d} / {len(pdb_ids):d} ({id})...", end="\r")
+            print(f"Fetching file {i + 1:d} / {len(id_list):d} ({id})...", end="\r")
 
         # Fetch file from database
         if target_path is not None:
@@ -151,13 +198,13 @@ def fetch(
 
             if file is None:
                 if format in _binary_formats or gzip:
-                    file = io.BytesIO(content)
+                    file = io.BytesIO(content)  # pyright: ignore[reportArgumentType]
                 else:
-                    file = io.StringIO(content)
+                    file = io.StringIO(content)  # pyright: ignore[reportArgumentType]
             else:
                 mode = "wb+" if format in _binary_formats or gzip else "w+"
                 with open(file, mode) as f:
-                    f.write(content)
+                    f.write(content)  # pyright: ignore[reportArgumentType]
 
         files.append(file)
     if verbose:
@@ -169,7 +216,7 @@ def fetch(
         return files
 
 
-def _assert_valid_file(response, pdb_id):
+def _assert_valid_file(response: requests.Response, pdb_id: str) -> None:
     """
     Checks whether the response is an actual structure file
     or the response a *404* error due to invalid PDB ID.

@@ -2,24 +2,30 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
 __all__ = ["plot_dendrogram"]
 
+from typing import Any, Literal
 import numpy as np
+from matplotlib.axes import Axes
+from biotite.sequence.phylo.tree import Tree, TreeNode
+from biotite.typing import MplColor
 
 
 def plot_dendrogram(
-    axes,
-    tree,
-    orientation="left",
-    use_distances=True,
-    labels=None,
-    label_size=None,
-    color="black",
-    show_distance=True,
-    **kwargs,
-):
+    axes: Axes,
+    tree: Tree,
+    orientation: Literal["left", "right", "bottom", "top"] = "left",
+    use_distances: bool = True,
+    labels: list[str] | None = None,
+    label_size: float | None = None,
+    color: MplColor = "black",
+    show_distance: bool = True,
+    **kwargs: Any,
+) -> None:
     """
     Plot a dendrogram from a (phylogenetic) tree.
 
@@ -53,12 +59,12 @@ def plot_dendrogram(
     """
 
     indices = tree.root.get_indices()
-    leaf_dict = {indices[i]: i for i in indices}
+    leaf_dict: dict[int, int] = {int(indices[i]): int(i) for i in indices}
 
     # Required for setting the plot limits
     max_distance = 0
 
-    def _plot_node(node, distance):
+    def _plot_node(node: TreeNode, distance: float) -> float:
         """
         Draw the lines from the given node to its children.
 
@@ -81,6 +87,8 @@ def plot_dendrogram(
             max_distance = distance
         if node.is_leaf():
             # No children -> no line can be drawn
+            if node.index is None:
+                raise ValueError("Leaf node has no index")
             return leaf_dict[node.index]
         else:
             children = node.children
@@ -138,13 +146,14 @@ def plot_dendrogram(
 
     _plot_node(tree.root, 0)
 
+    sorted_labels: list[str]
     if labels is not None:
         # Sort labels using the order of indices in the tree
         # A list cannot be directly indexed with a list,
         # hence the conversion to a ndarray
-        labels = np.array(labels)[indices].tolist()
+        sorted_labels = np.array(labels)[indices].tolist()
     else:
-        labels = [str(i) for i in indices]
+        sorted_labels = [str(i) for i in indices]
     # The distance axis does not start at 0,
     # since the root line would not properly rendered
     # Hence the limit is set a to small fraction of the entire axis
@@ -154,7 +163,7 @@ def plot_dendrogram(
         axes.set_xlim(zero_limit, max_distance)
         axes.set_ylim(-1, len(indices))
         axes.set_yticks(np.arange(0, len(indices)))
-        axes.set_yticklabels(labels)
+        axes.set_yticklabels(sorted_labels)
         axes.yaxis.set_tick_params(
             left=False,
             right=False,
@@ -173,7 +182,7 @@ def plot_dendrogram(
         axes.set_xlim(max_distance, zero_limit)
         axes.set_ylim(-1, len(indices))
         axes.set_yticks(np.arange(0, len(indices)))
-        axes.set_yticklabels(labels)
+        axes.set_yticklabels(sorted_labels)
         axes.yaxis.set_tick_params(
             left=False,
             right=False,
@@ -192,7 +201,7 @@ def plot_dendrogram(
         axes.set_ylim(zero_limit, max_distance)
         axes.set_xlim(-1, len(indices))
         axes.set_xticks(np.arange(0, len(indices)))
-        axes.set_xticklabels(labels)
+        axes.set_xticklabels(sorted_labels)
         axes.xaxis.set_tick_params(
             bottom=False,
             top=False,
@@ -211,7 +220,7 @@ def plot_dendrogram(
         axes.set_ylim(max_distance, zero_limit)
         axes.set_xlim(-1, len(indices))
         axes.set_xticks(np.arange(0, len(indices)))
-        axes.set_xticklabels(labels)
+        axes.set_xticklabels(sorted_labels)
         axes.xaxis.set_tick_params(
             bottom=False,
             top=False,

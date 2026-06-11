@@ -2,13 +2,19 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 __all__ = ["EValueEstimator"]
 
+from typing import overload
 import numpy as np
+from biotite.sequence.align.matrix import SubstitutionMatrix
 from biotite.sequence.align.pairwise import align_optimal
+from biotite.sequence.alphabet import Alphabet
 from biotite.sequence.seqtypes import GeneralSequence
+from biotite.typing import K, NDArray1, S
 
 
 class EValueEstimator:
@@ -97,14 +103,19 @@ class EValueEstimator:
     E-value = 8.41e-01
     """
 
-    def __init__(self, lam, k):
+    def __init__(self, lam: float, k: float) -> None:
         self._lam = lam
         self._k = k
 
     @staticmethod
     def from_samples(
-        alphabet, matrix, gap_penalty, frequencies, sample_length=1000, sample_size=1000
-    ):
+        alphabet: Alphabet[S],
+        matrix: SubstitutionMatrix[S, S],
+        gap_penalty: int | tuple[int, int],
+        frequencies: NDArray1[K, np.floating],
+        sample_length: int = 1000,
+        sample_size: int = 1000,
+    ) -> EValueEstimator:
         r"""
         Create an :class:`EValueEstimator` with :math:`\lambda` and
         :math:`K` estimated via sampling alignments of random sequences
@@ -206,14 +217,33 @@ class EValueEstimator:
         return EValueEstimator(lam, k)
 
     @property
-    def lam(self):
+    def lam(self) -> float:
         return self._lam
 
     @property
-    def k(self):
+    def k(self) -> float:
         return self._k
 
-    def log_evalue(self, score, seq1_length, seq2_length):
+    @overload
+    def log_evalue(
+        self,
+        score: int,
+        seq1_length: int,
+        seq2_length: int,
+    ) -> float: ...
+    @overload
+    def log_evalue(
+        self,
+        score: NDArray1[K, np.integer],
+        seq1_length: NDArray1[K, np.integer],
+        seq2_length: NDArray1[K, np.integer],
+    ) -> NDArray1[K, np.floating]: ...
+    def log_evalue(
+        self,
+        score: int | NDArray1[K, np.integer],
+        seq1_length: int | NDArray1[K, np.integer],
+        seq2_length: int | NDArray1[K, np.integer],
+    ) -> float | NDArray1[K, np.floating]:
         r"""
         Calculate the decadic logarithm of the E-value for a given
         score.
@@ -246,7 +276,7 @@ class EValueEstimator:
 
         Returns
         -------
-        log_e : float
+        log_e : float or ndarray, dtype=float
             The decadic logarithm of the E-value.
 
         Notes
@@ -256,9 +286,10 @@ class EValueEstimator:
         homology cannot be accurately represented by a ``float``.
         """
         score = np.asarray(score)
-        seq1_length = np.asarray(seq1_length)
-        seq2_length = np.asarray(seq2_length)
-
-        return np.log10(
+        result = np.log10(
             self._k * seq1_length * seq2_length
         ) - self._lam * score / np.log(10)
+        try:
+            return result.item()
+        except ValueError:
+            return result

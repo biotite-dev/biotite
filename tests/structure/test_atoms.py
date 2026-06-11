@@ -233,10 +233,13 @@ def test_set_print_limits(array, stack):
     atom_string = str(array[0])
     atom_repr = repr(array[0])
     struc.set_print_limits(max_models=1, max_atoms=1)
-    assert str(array) == f"{atom_string}\n\t..."
-    assert str(stack) == f"Model 1\n{atom_string}\n\t...\n\n...\n\n"
-    assert repr(array) == f"array([\n\t{atom_repr},\n\t...,\n])"
-    assert (
-        repr(stack)
-        == f"stack([\n\tarray([\n\t\t{atom_repr},\n\t\t...,\n\t]),\n\t...,\n])"
-    )
+    try:
+        assert str(array) == f"{atom_string}\n\t..."
+        assert str(stack) == f"Model 1\n{atom_string}\n\t...\n\n...\n\n"
+        assert repr(array) == f"array([\n\t{atom_repr},\n\t...,\n])"
+        assert (
+            repr(stack)
+            == f"stack([\n\tarray([\n\t\t{atom_repr},\n\t\t...,\n\t]),\n\t...,\n])"
+        )
+    finally:
+        struc.set_print_limits()

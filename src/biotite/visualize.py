@@ -6,10 +6,20 @@ __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
 __all__ = ["colors", "plot_scaled_text", "set_font_size_in_coord", "AdaptiveFancyArrow"]
 
+# Matplotlib's typing stubs are tighter than its runtime API
+# pyright: reportOptionalOperand=false, reportOptionalMemberAccess=false
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false
+# pyright: reportRedeclaration=false
+
 import warnings
 from collections import OrderedDict
+from typing import TYPE_CHECKING, Any, Literal
 import numpy as np
 from numpy.linalg import norm
+from biotite.typing import MplColor
+
+if TYPE_CHECKING:
+    from matplotlib.text import Text
 
 _FONT_PROPERTY_KEYS = ["family", "style", "variant", "weight", "stretch", "size"]
 
@@ -32,8 +42,15 @@ colors = OrderedDict(
 
 
 def plot_scaled_text(
-    axes, text, x, y, width=None, height=None, mode="unlocked", **kwargs
-):
+    axes: Any,
+    text: str,
+    x: float,
+    y: float,
+    width: float | None = None,
+    height: float | None = None,
+    mode: Literal["proportional", "unlocked", "maximum", "minimum"] = "unlocked",
+    **kwargs: Any,
+) -> Any:
     """
     Create a :class:`matplotlib.textpath.TextPath`, whose text size is given in
     coordinates instead of font size.
@@ -130,7 +147,12 @@ def plot_scaled_text(
     return patch
 
 
-def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
+def set_font_size_in_coord(
+    text: "Text",
+    width: float | None = None,
+    height: float | None = None,
+    mode: Literal["proportional", "unlocked", "maximum", "minimum"] = "unlocked",
+) -> None:
     """
     Specifiy the font size of an existing `Text` object in coordinates
     of the object's reference coordiante system.
@@ -180,17 +202,33 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
     This behavior is not equal for all initial font sizes (in 'pt'),
     the boundaries for an initial size of 1 'pt' seem to be most exact.
     """
+    from matplotlib.backend_bases import GraphicsContextBase, RendererBase
+    from matplotlib.path import Path
     from matplotlib.patheffects import AbstractPathEffect
-    from matplotlib.transforms import Affine2D, Bbox
+    from matplotlib.text import Text
+    from matplotlib.transforms import Affine2D, Bbox, Transform
 
     class TextScaler(AbstractPathEffect):
-        def __init__(self, text, width, height, mode):
+        def __init__(
+            self,
+            text: Text,
+            width: float | None,
+            height: float | None,
+            mode: Literal["proportional", "unlocked", "maximum", "minimum"],
+        ) -> None:
             self._text = text
             self._mode = mode
             self._width = width
             self._height = height
 
-        def draw_path(self, renderer, gc, tpath, affine, rgbFace=None):  # noqa: N803
+        def draw_path(
+            self,
+            renderer: RendererBase,
+            gc: GraphicsContextBase,
+            tpath: Path,
+            affine: Transform,
+            rgbFace: MplColor | None = None,  # noqa: N803
+        ) -> None:
             ax = self._text.axes
             try:
                 renderer = ax.get_figure().canvas.get_renderer()
@@ -204,28 +242,36 @@ def set_font_size_in_coord(text, width=None, height=None, mode="unlocked"):
             bbox = text.get_window_extent(renderer)
             bbox = Bbox(ax.transData.inverted().transform(bbox))
 
-            if self._mode == "proportional":
-                if self._width is None:
-                    # Proportional scaling based on height
-                    scale_y = self._height / bbox.height
-                    scale_x = scale_y
-                elif self._height is None:
-                    # Proportional scaling based on width
+            match self._mode:
+                case "proportional":
+                    if self._width is None:
+                        # Proportional scaling based on height
+                        scale_y = self._height / bbox.height
+                        scale_x = scale_y
+                    elif self._height is None:
+                        # Proportional scaling based on width
+                        scale_x = self._width / bbox.width
+                        scale_y = scale_x
+                    else:
+                        raise ValueError(
+                            "Width or height are mutually exclusive "
+                            "in 'proportional' mode"
+                        )
+                case "unlocked":
                     scale_x = self._width / bbox.width
-                    scale_y = scale_x
-            elif self._mode == "unlocked":
-                scale_x = self._width / bbox.width
-                scale_y = self._height / bbox.height
-            elif self._mode == "minimum":
-                scale_x = self._width / bbox.width
-                scale_y = self._height / bbox.height
-                scale = max(scale_x, scale_y)
-                scale_x, scale_y = scale, scale
-            elif self._mode == "maximum":
-                scale_x = self._width / bbox.width
-                scale_y = self._height / bbox.height
-                scale = min(scale_x, scale_y)
-                scale_x, scale_y = scale, scale
+                    scale_y = self._height / bbox.height
+                case "minimum":
+                    scale_x = self._width / bbox.width
+                    scale_y = self._height / bbox.height
+                    scale = max(scale_x, scale_y)
+                    scale_x, scale_y = scale, scale
+                case "maximum":
+                    scale_x = self._width / bbox.width
+                    scale_y = self._height / bbox.height
+                    scale = min(scale_x, scale_y)
+                    scale_x, scale_y = scale, scale
+                case _:
+                    raise ValueError(f"Unknown mode '{self._mode}'")
 
             affine = Affine2D().scale(scale_x, scale_y) + affine
             renderer.draw_path(gc, tpath, affine, rgbFace)
@@ -285,17 +331,17 @@ try:
 
         def __init__(
             self,
-            x,
-            y,
-            dx,
-            dy,
-            tail_width,
-            head_width,
-            head_ratio,
-            draw_head=True,
-            shape="full",
-            **kwargs,
-        ):
+            x: float,
+            y: float,
+            dx: float,
+            dy: float,
+            tail_width: float,
+            head_width: float,
+            head_ratio: float,
+            draw_head: bool = True,
+            shape: str = "full",
+            **kwargs: Any,
+        ) -> None:
             self._x = x
             self._y = y
             self._dx = dx
@@ -321,7 +367,7 @@ try:
                 **kwargs,
             )
 
-        def draw(self, renderer):
+        def draw(self, renderer: Any) -> None:
             arrow_box = Bbox([(0, 0), (0, self._head_width)])
             arrow_box_display = self.axes.transData.transform_bbox(arrow_box)
             head_length_display = np.abs(arrow_box_display.height * self._head_ratio)
@@ -359,11 +405,11 @@ try:
         # Override to replace docstring
         # Removes warning:
         # unknown document: /tutorials/intermediate/constrainedlayout_guide
-        def get_in_layout(self):
+        def get_in_layout(self) -> bool:
             """ """
             return super().get_in_layout()
 
-        def set_in_layout(self, in_layout):
+        def set_in_layout(self, in_layout: bool) -> None:
             """ """
             return super().set_in_layout(in_layout)
 
@@ -371,5 +417,5 @@ except ImportError:
     # Dummy class that propagates a meaningful error,
     # i.e. that Matplotlib is not installed
     class AdaptiveFancyArrow:
-        def __init__(*args, **kwargs):
+        def __init__(*args: Any, **kwargs: Any) -> None:
             raise ModuleNotFoundError("No module named 'matplotlib'")

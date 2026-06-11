@@ -2,12 +2,16 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.io.gff"
 __author__ = "Patrick Kunzmann"
 __all__ = ["GFFFile"]
 
 import string
 import warnings
+from os import PathLike
+from typing import IO, Any, Self
 from urllib.parse import quote, unquote
 from biotite.file import InvalidFileError, TextFile
 from biotite.sequence.annotation import Location
@@ -120,19 +124,19 @@ class GFFFile(TextFile):
     SomeSeqID   Biotite CDS     1       99      .       +       0       ID=FeatureID;product=A protein
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         # Maps entry indices to line indices
-        self._entries = None
+        self._entries: list[int] = []
         # Stores the directives as (directive text, line index)-tuple
-        self._directives = None
+        self._directives: list[tuple[str, int]] = []
         # Stores whether the file has FASTA data
-        self._has_fasta = None
+        self._has_fasta: bool = False
         self._index_entries()
         self.append_directive("gff-version", "3")
 
     @classmethod
-    def read(cls, file):
+    def read(cls, file: PathLike[str] | str | IO[str]) -> Self:
         """
         Read a GFF3 file.
 
@@ -147,23 +151,23 @@ class GFFFile(TextFile):
         file_object : GFFFile
             The parsed file.
         """
-        file = super().read(file)
-        file._index_entries()
-        return file
+        gff_file = super().read(file)
+        gff_file._index_entries()
+        return gff_file
 
     def insert(
         self,
-        index,
-        seqid,
-        source,
-        type,
-        start,
-        end,
-        score,
-        strand,
-        phase,
-        attributes=None,
-    ):
+        index: int,
+        seqid: str | None,
+        source: str | None,
+        type: str,
+        start: int,
+        end: int,
+        score: float | None,
+        strand: Location.Strand | None,
+        phase: int | None,
+        attributes: dict[str, str | None] | None = None,
+    ) -> None:
         """
         Insert an entry at the given index.
 
@@ -205,8 +209,17 @@ class GFFFile(TextFile):
             self._index_entries()
 
     def append(
-        self, seqid, source, type, start, end, score, strand, phase, attributes=None
-    ):
+        self,
+        seqid: str | None,
+        source: str | None,
+        type: str,
+        start: int,
+        end: int,
+        score: float | None,
+        strand: Location.Strand | None,
+        phase: int | None,
+        attributes: dict[str, str | None] | None = None,
+    ) -> None:
         """
         Append an entry to the end of the file.
 
@@ -243,7 +256,7 @@ class GFFFile(TextFile):
         # Fast update of entry index by adding last line
         self._entries.append(len(self.lines) - 1)
 
-    def append_directive(self, directive, *args):
+    def append_directive(self, directive: str, *args: Any) -> None:
         """
         Append a directive line to the end of the file.
 
@@ -277,7 +290,7 @@ class GFFFile(TextFile):
         self._directives.append((directive_line[2:], len(self.lines)))
         self.lines.append(directive_line)
 
-    def directives(self):
+    def directives(self) -> list[tuple[str, int]]:
         """
         Get the directives in the file.
 
@@ -292,7 +305,21 @@ class GFFFile(TextFile):
         # Sort in line order
         return sorted(self._directives, key=lambda directive: directive[1])
 
-    def __setitem__(self, index, item):
+    def __setitem__(
+        self,
+        index: int,
+        item: tuple[
+            str,
+            str,
+            str,
+            int,
+            int,
+            float | None,
+            Location.Strand | None,
+            int | None,
+            dict[str, str | None] | None,
+        ],
+    ) -> None:
         seqid, source, type, start, end, score, strand, phase, attrib = item
         line = GFFFile._create_line(
             seqid, source, type, start, end, score, strand, phase, attrib
@@ -300,7 +327,19 @@ class GFFFile(TextFile):
         line_index = self._entries[index]
         self.lines[line_index] = line
 
-    def __getitem__(self, index):
+    def __getitem__(
+        self, index: int
+    ) -> tuple[
+        str,
+        str,
+        str,
+        int,
+        int,
+        float | None,
+        Location.Strand | None,
+        int | None,
+        dict[str, str],
+    ]:
         if (index >= 0 and index >= len(self)) or (index < 0 and -index > len(self)):
             raise IndexError(
                 f"Index {index} is out of range for GFFFile with {len(self)} entries"
@@ -330,15 +369,15 @@ class GFFFile(TextFile):
 
         return seqid, source, type, start, end, score, strand, phase, attrib
 
-    def __delitem__(self, index):
+    def __delitem__(self, index: int) -> None:
         line_index = self._entries[index]
         del self.lines[line_index]
         self._index_entries()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._entries)
 
-    def _index_entries(self):
+    def _index_entries(self) -> None:
         """
         Parse the file for comment and directive lines.
         Count these lines cumulatively, so that entry indices can be
@@ -347,7 +386,7 @@ class GFFFile(TextFile):
         """
         self._directives = []
         # Worst case allocation -> all lines contain actual entries
-        self._entries = [None] * len(self.lines)
+        entries: list[int] = [0] * len(self.lines)
         self._has_fasta = False
         entry_counter = 0
         for line_i, line in enumerate(self.lines):
@@ -373,13 +412,23 @@ class GFFFile(TextFile):
                         break
             else:
                 # Actual entry
-                self._entries[entry_counter] = line_i
+                entries[entry_counter] = line_i
                 entry_counter += 1
         # Trim to correct size
-        self._entries = self._entries[:entry_counter]
+        self._entries = entries[:entry_counter]
 
     @staticmethod
-    def _create_line(seqid, source, type, start, end, score, strand, phase, attributes):
+    def _create_line(
+        seqid: str | None,
+        source: str | None,
+        type: str,
+        start: int,
+        end: int,
+        score: float | None,
+        strand: Location.Strand | None,
+        phase: int | None,
+        attributes: dict[str, str | None] | None,
+    ) -> str:
         """
         Create a line for a newly created entry.
         """
@@ -397,18 +446,20 @@ class GFFFile(TextFile):
         if seqid[0] == ">":
             raise ValueError("'seqid' must not start with '>'")
 
-        score = str(score) if score is not None else "."
+        score_str = str(score) if score is not None else "."
         if strand == Location.Strand.FORWARD:
-            strand = "+"
+            strand_str = "+"
         elif strand == Location.Strand.REVERSE:
-            strand = "-"
+            strand_str = "-"
         else:
-            strand = "."
-        phase = str(phase) if phase is not None else "."
-        attributes = (
+            strand_str = "."
+        phase_str = str(phase) if phase is not None else "."
+        attributes_str = (
             ";".join(
                 [
-                    quote(key, safe=_NOT_QUOTED) + "=" + quote(val, safe=_NOT_QUOTED)
+                    quote(key, safe=_NOT_QUOTED)
+                    + "="
+                    + quote(val if val is not None else "", safe=_NOT_QUOTED)
                     for key, val in attributes.items()
                 ]
             )
@@ -423,15 +474,15 @@ class GFFFile(TextFile):
                 type,
                 str(start),
                 str(end),
-                str(score),
-                strand,
-                phase,
-                attributes,
+                score_str,
+                strand_str,
+                phase_str,
+                attributes_str,
             ]
         )
 
     @staticmethod
-    def _parse_attributes(attributes):
+    def _parse_attributes(attributes: str) -> dict[str, str]:
         """
         Parse the *attributes* string into a dictionary.
         """

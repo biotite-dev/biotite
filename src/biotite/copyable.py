@@ -7,6 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["Copyable"]
 
 import abc
+from typing import Self
 
 
 class Copyable(metaclass=abc.ABCMeta):
@@ -24,7 +25,7 @@ class Copyable(metaclass=abc.ABCMeta):
     superclasses.
     """
 
-    def copy(self):
+    def copy(self) -> Self:
         """
         Create a deep copy of this object.
 
@@ -37,7 +38,7 @@ class Copyable(metaclass=abc.ABCMeta):
         self.__copy_fill__(clone)
         return clone
 
-    def __copy_create__(self):
+    def __copy_create__(self) -> Self:
         """
         Instantiate a new object of this class.
 
@@ -57,7 +58,7 @@ class Copyable(metaclass=abc.ABCMeta):
         """
         return type(self)()
 
-    def __copy_fill__(self, clone):
+    def __copy_fill__(self, clone: Self) -> None:
         """
         Copy all necessary attributes to the new object.
 

@@ -6,6 +6,8 @@
 Functions for converting a sequence from/to a GenBank file.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.io.genbank"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -17,9 +19,12 @@ __all__ = [
 ]
 
 import re
+from collections.abc import Iterable
+from typing import Literal, overload
 from biotite.file import InvalidFileError
 from biotite.sequence.annotation import AnnotatedSequence
 from biotite.sequence.io.genbank.annotation import get_annotation, set_annotation
+from biotite.sequence.io.genbank.file import GenBankFile
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
 _SYMBOLS_PER_CHUNK = 10
@@ -27,7 +32,7 @@ _SEQ_CHUNKS_PER_LINE = 6
 _SYMBOLS_PER_LINE = _SYMBOLS_PER_CHUNK * _SEQ_CHUNKS_PER_LINE
 
 
-def get_raw_sequence(gb_file):
+def get_raw_sequence(gb_file: GenBankFile) -> str:
     """
     Get the raw sequence string from the *ORIGIN* field
     of a GenBank file.
@@ -52,7 +57,15 @@ def get_raw_sequence(gb_file):
     return _field_to_seq_string(lines)
 
 
-def get_sequence(gb_file, format="gb"):
+@overload
+def get_sequence(
+    gb_file: GenBankFile, format: Literal["gb"] = "gb"
+) -> NucleotideSequence: ...
+@overload
+def get_sequence(gb_file: GenBankFile, format: Literal["gp"]) -> ProteinSequence: ...
+def get_sequence(
+    gb_file: GenBankFile, format: Literal["gb", "gp"] = "gb"
+) -> NucleotideSequence | ProteinSequence:
     """
     Get the sequence from the *ORIGIN* field of a GenBank file.
 
@@ -73,7 +86,11 @@ def get_sequence(gb_file, format="gb"):
     return _convert_seq_str(get_raw_sequence(gb_file), format)
 
 
-def get_annotated_sequence(gb_file, format="gb", include_only=None):
+def get_annotated_sequence(
+    gb_file: GenBankFile,
+    format: Literal["gb", "gp"] = "gb",
+    include_only: Iterable[str] | None = None,
+) -> AnnotatedSequence:
     """
     Get an annotated sequence by combining the *ANNOTATION* and
     *ORIGIN* fields of a GenBank file.
@@ -105,7 +122,7 @@ def get_annotated_sequence(gb_file, format="gb", include_only=None):
     return AnnotatedSequence(annotation, sequence, sequence_start=seq_start)
 
 
-def _field_to_seq_string(origin_content):
+def _field_to_seq_string(origin_content: list[str]) -> str:
     seq_str = "".join(origin_content)
     # Remove numbers and emtpy spaces
     regex = re.compile("[0-9]| ")
@@ -113,7 +130,9 @@ def _field_to_seq_string(origin_content):
     return seq_str
 
 
-def _convert_seq_str(seq_str, format):
+def _convert_seq_str(
+    seq_str: str, format: Literal["gb", "gp"]
+) -> NucleotideSequence | ProteinSequence:
     if len(seq_str) == 0:
         raise InvalidFileError("The file's 'ORIGIN' field is empty")
     if format == "gb":
@@ -124,13 +143,17 @@ def _convert_seq_str(seq_str, format):
         raise ValueError(f"Unknown format '{format}'")
 
 
-def _get_seq_start(origin_content):
+def _get_seq_start(origin_content: list[str]) -> int:
     # Start of sequence is the sequence position indicator
     # at the beginning of the first line
     return int(origin_content[0].split()[0])
 
 
-def set_sequence(gb_file, sequence, sequence_start=1):
+def set_sequence(
+    gb_file: GenBankFile,
+    sequence: str | NucleotideSequence | ProteinSequence,
+    sequence_start: int = 1,
+) -> None:
     """
     Set the *ORIGIN* field of a GenBank file with a sequence.
 
@@ -157,7 +180,9 @@ def set_sequence(gb_file, sequence, sequence_start=1):
     gb_file.set_field("ORIGIN", lines)
 
 
-def set_annotated_sequence(gb_file, annot_sequence):
+def set_annotated_sequence(
+    gb_file: GenBankFile, annot_sequence: AnnotatedSequence
+) -> None:
     """
     Set the *FEATURES* and *ORIGIN* fields of a GenBank file with the
     annotation and sequence of an annotated sequence.
@@ -170,4 +195,7 @@ def set_annotated_sequence(gb_file, annot_sequence):
         The annotated sequence that is put into the GenBank file.
     """
     set_annotation(gb_file, annot_sequence.annotation)
-    set_sequence(gb_file, annot_sequence.sequence, annot_sequence.sequence_start)
+    sequence = annot_sequence.sequence
+    if not isinstance(sequence, (NucleotideSequence, ProteinSequence)):
+        raise TypeError("GenBank files require a NucleotideSequence or ProteinSequence")
+    set_sequence(gb_file, sequence, annot_sequence.sequence_start)

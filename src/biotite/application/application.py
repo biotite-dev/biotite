@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -15,8 +17,13 @@ __all__ = [
 
 import abc
 import time
+from collections.abc import Callable
 from enum import Flag, auto
 from functools import wraps
+from typing import ParamSpec, TypeVar
+
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
 
 
 class AppState(Flag):
@@ -31,7 +38,9 @@ class AppState(Flag):
     CANCELLED = auto()
 
 
-def requires_state(app_state):
+def requires_state(
+    app_state: AppState,
+) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """
     A decorator for methods of :class:`Application` subclasses that
     raises an :class:`AppStateError` in case the method is called, when
@@ -53,14 +62,16 @@ def requires_state(app_state):
     ...     pass
     """
 
-    def decorator(func):
+    def decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             # First parameter of method is always 'self'
             try:
                 instance = args[0]
             except IndexError:
                 raise TypeError("This method must be called from a class instance")
+            if not isinstance(instance, Application):
+                raise TypeError("This method must be an 'Application' method")
             if not instance._state & app_state:
                 raise AppStateError(
                     f"The application is in {instance.get_app_state()} state, "
@@ -115,21 +126,21 @@ class Application(metaclass=abc.ABCMeta):
     executed, while the application runs in the background.
     """
 
-    def __init__(self):
-        self._state = AppState.CREATED
+    def __init__(self) -> None:
+        self._state: AppState = AppState.CREATED
 
     @requires_state(AppState.CREATED)
-    def start(self):
+    def start(self) -> None:
         """
         Start the application run and set its state to *RUNNING*.
         This can only be done from the *CREATED* state.
         """
         self.run()
-        self._start_time = time.time()
+        self._start_time: float = time.time()
         self._state = AppState.RUNNING
 
     @requires_state(AppState.RUNNING | AppState.FINISHED)
-    def join(self, timeout=None):
+    def join(self, timeout: float | None = None) -> None:
         """
         Conclude the application run and set its state to *JOINED*.
         This can only be done from the *RUNNING* or *FINISHED* state.
@@ -174,14 +185,14 @@ class Application(metaclass=abc.ABCMeta):
         self.clean_up()
 
     @requires_state(AppState.RUNNING | AppState.FINISHED)
-    def cancel(self):
+    def cancel(self) -> None:
         """
         Cancel the application when in *RUNNING* or *FINISHED* state.
         """
         self._state = AppState.CANCELLED
         self.clean_up()
 
-    def get_app_state(self):
+    def get_app_state(self) -> AppState:
         """
         Get the current app state.
 
@@ -196,7 +207,7 @@ class Application(metaclass=abc.ABCMeta):
         return self._state
 
     @abc.abstractmethod
-    def run(self):
+    def run(self) -> None:
         """
         Commence the application run. Called in :func:`start()`.
 
@@ -205,7 +216,7 @@ class Application(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def is_finished(self):
+    def is_finished(self) -> bool:
         """
         Check if the application has finished.
 
@@ -219,7 +230,7 @@ class Application(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def wait_interval(self):
+    def wait_interval(self) -> float:
         """
         The time interval of :func:`is_finished()` calls in the joining
         process.
@@ -235,7 +246,7 @@ class Application(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def evaluate(self):
+    def evaluate(self) -> None:
         """
         Evaluate application results. Called in :func:`join()`.
 
@@ -243,7 +254,7 @@ class Application(metaclass=abc.ABCMeta):
         """
         pass
 
-    def clean_up(self):
+    def clean_up(self) -> None:
         """
         Do clean up work after the application terminates.
 

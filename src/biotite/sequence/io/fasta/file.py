@@ -2,16 +2,20 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.io.fasta"
 __author__ = "Patrick Kunzmann"
 __all__ = ["FastaFile"]
 
 from collections import OrderedDict
-from collections.abc import MutableMapping
+from collections.abc import Iterable, Iterator, MutableMapping
+from os import PathLike
+from typing import IO, Self
 from biotite.file import InvalidFileError, TextFile, wrap_string
 
 
-class FastaFile(TextFile, MutableMapping):
+class FastaFile(TextFile, MutableMapping[str, str]):
     """
     This class represents a file in FASTA format.
 
@@ -62,13 +66,15 @@ class FastaFile(TextFile, MutableMapping):
     >>> file.write(os.path.join(path_to_directory, "test.fasta"))
     """
 
-    def __init__(self, chars_per_line=80):
+    def __init__(self, chars_per_line: int = 80) -> None:
         super().__init__()
         self._chars_per_line = chars_per_line
-        self._entries = OrderedDict()
+        self._entries: OrderedDict[str, tuple[int, int]] = OrderedDict()
 
     @classmethod
-    def read(cls, file, chars_per_line=80):
+    def read(
+        cls, file: PathLike[str] | str | IO[str], chars_per_line: int = 80
+    ) -> Self:
         """
         Read a FASTA file.
 
@@ -88,17 +94,19 @@ class FastaFile(TextFile, MutableMapping):
         file_object : FastaFile
             The parsed file.
         """
-        file = super().read(file, chars_per_line)
+        fasta_file = super().read(file, chars_per_line)
         # Filter out empty and comment lines
-        file.lines = [
-            line for line in file.lines if len(line.strip()) != 0 and line[0] != ";"
+        fasta_file.lines = [
+            line
+            for line in fasta_file.lines
+            if len(line.strip()) != 0 and line[0] != ";"
         ]
-        if len(file.lines) == 0:
+        if len(fasta_file.lines) == 0:
             raise InvalidFileError("File is empty or contains only comments")
-        file._find_entries()
-        return file
+        fasta_file._find_entries()
+        return fasta_file
 
-    def __setitem__(self, header, seq_str):
+    def __setitem__(self, header: str, seq_str: str) -> None:
         if not isinstance(header, str):
             raise IndexError("'FastaFile' only supports header strings as keys")
         if not isinstance(seq_str, str):
@@ -120,7 +128,7 @@ class FastaFile(TextFile, MutableMapping):
             self._entries[header] = (len(self.lines), len(self.lines) + len(new_lines))
             self.lines += new_lines
 
-    def __getitem__(self, header):
+    def __getitem__(self, header: str) -> str:
         if not isinstance(header, str):
             raise IndexError("'FastaFile' only supports header strings as keys")
         start, stop = self._entries[header]
@@ -128,22 +136,22 @@ class FastaFile(TextFile, MutableMapping):
         seq_string = "".join([line.strip() for line in self.lines[start + 1 : stop]])
         return seq_string
 
-    def __delitem__(self, header):
+    def __delitem__(self, header: str) -> None:
         start, stop = self._entries[header]
         del self.lines[start:stop]
         del self._entries[header]
         self._find_entries()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._entries)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return self._entries.__iter__()
 
-    def __contains__(self, identifer):
+    def __contains__(self, identifer: object) -> bool:
         return identifer in self._entries
 
-    def _find_entries(self):
+    def _find_entries(self) -> None:
         if len(self.lines) > 0 and self.lines[0][0] != ">":
             raise InvalidFileError(
                 f"File starts with '{self.lines[0][0]}' instead of '>'"
@@ -169,7 +177,9 @@ class FastaFile(TextFile, MutableMapping):
             self._entries[header] = (start, stop)
 
     @staticmethod
-    def read_iter(file):
+    def read_iter(
+        file: PathLike[str] | str | IO[str],
+    ) -> Iterator[tuple[str, str]]:
         """
         Create an iterator over each sequence of the given FASTA file.
 
@@ -214,7 +224,11 @@ class FastaFile(TextFile, MutableMapping):
             yield header, "".join(seq_str_list)
 
     @staticmethod
-    def write_iter(file, items, chars_per_line=80):
+    def write_iter(
+        file: PathLike[str] | str | IO[str],
+        items: Iterable[tuple[str, str]],
+        chars_per_line: int = 80,
+    ) -> None:
         """
         Iterate over the given `items` and write each item into
         the specified `file`.
@@ -247,7 +261,7 @@ class FastaFile(TextFile, MutableMapping):
         unambiguous.
         """
 
-        def line_generator():
+        def line_generator() -> Iterator[str]:
             for item in items:
                 header, seq_str = item
                 if not isinstance(header, str):

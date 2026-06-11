@@ -2,8 +2,8 @@ __all__ = ["compress"]
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 
-import itertools
 import warnings
+from typing import Any, TypeVar
 import msgpack
 import numpy as np
 import biotite.structure.io.pdbx.bcif as bcif
@@ -11,14 +11,33 @@ from biotite.structure.io.pdbx.bcif import _encode_numpy as encode_numpy
 from biotite.structure.io.pdbx.encoding import (
     ByteArrayEncoding,
     DeltaEncoding,
+    Encoding,
     FixedPointEncoding,
     IntegerPackingEncoding,
     RunLengthEncoding,
     StringArrayEncoding,
 )
+from biotite.typing import NDArray1
+
+_BCIFContainer = TypeVar(
+    "_BCIFContainer",
+    bcif.BinaryCIFFile,
+    bcif.BinaryCIFBlock,
+    bcif.BinaryCIFCategory,
+    bcif.BinaryCIFColumn,
+    bcif.BinaryCIFData,
+)
+
+# Guard value to avoid infinite loop in case of unforeseen bugs
+_MAX_DECIMALS = 100
 
 
-def compress(data, float_tolerance=None, rtol=1e-6, atol=1e-4):
+def compress(
+    data: _BCIFContainer,
+    float_tolerance: float | None = None,
+    rtol: float = 1e-6,
+    atol: float = 1e-4,
+) -> _BCIFContainer:
     """
     Try to reduce the size of a *BinaryCIF* file (or block, category, etc.) by testing
     different data encodings for each data array and selecting the one, which results in
@@ -71,22 +90,23 @@ def compress(data, float_tolerance=None, rtol=1e-6, atol=1e-4):
             DeprecationWarning,
         )
 
-    match type(data):
-        case bcif.BinaryCIFFile:
-            return _compress_file(data, rtol, atol)
-        case bcif.BinaryCIFBlock:
-            return _compress_block(data, rtol, atol)
-        case bcif.BinaryCIFCategory:
-            return _compress_category(data, rtol, atol)
-        case bcif.BinaryCIFColumn:
-            return _compress_column(data, rtol, atol)
-        case bcif.BinaryCIFData:
-            return _compress_data(data, rtol, atol)
-        case _:
-            raise TypeError(f"Unsupported type {type(data).__name__}")
+    if isinstance(data, bcif.BinaryCIFFile):
+        return _compress_file(data, rtol, atol)
+    elif isinstance(data, bcif.BinaryCIFBlock):
+        return _compress_block(data, rtol, atol)
+    elif isinstance(data, bcif.BinaryCIFCategory):
+        return _compress_category(data, rtol, atol)
+    elif isinstance(data, bcif.BinaryCIFColumn):
+        return _compress_column(data, rtol, atol)
+    elif isinstance(data, bcif.BinaryCIFData):
+        return _compress_data(data, rtol, atol)
+    else:
+        raise TypeError(f"Unsupported type {type(data).__name__}")
 
 
-def _compress_file(bcif_file, rtol, atol):
+def _compress_file(
+    bcif_file: bcif.BinaryCIFFile, rtol: float, atol: float
+) -> bcif.BinaryCIFFile:
     compressed_file = bcif.BinaryCIFFile()
     for block_name, bcif_block in bcif_file.items():
         try:
@@ -97,7 +117,9 @@ def _compress_file(bcif_file, rtol, atol):
     return compressed_file
 
 
-def _compress_block(bcif_block, rtol, atol):
+def _compress_block(
+    bcif_block: bcif.BinaryCIFBlock, rtol: float, atol: float
+) -> bcif.BinaryCIFBlock:
     compressed_block = bcif.BinaryCIFBlock()
     for category_name, bcif_category in bcif_block.items():
         try:
@@ -108,7 +130,9 @@ def _compress_block(bcif_block, rtol, atol):
     return compressed_block
 
 
-def _compress_category(bcif_category, rtol, atol):
+def _compress_category(
+    bcif_category: bcif.BinaryCIFCategory, rtol: float, atol: float
+) -> bcif.BinaryCIFCategory:
     compressed_category = bcif.BinaryCIFCategory()
     for column_name, bcif_column in bcif_category.items():
         try:
@@ -119,7 +143,9 @@ def _compress_category(bcif_category, rtol, atol):
     return compressed_category
 
 
-def _compress_column(bcif_column, rtol, atol):
+def _compress_column(
+    bcif_column: bcif.BinaryCIFColumn, rtol: float, atol: float
+) -> bcif.BinaryCIFColumn:
     data = _compress_data(bcif_column.data, rtol, atol)
     if bcif_column.mask is not None:
         mask = _compress_data(bcif_column.mask, rtol, atol)
@@ -128,7 +154,9 @@ def _compress_column(bcif_column, rtol, atol):
     return bcif.BinaryCIFColumn(data, mask)
 
 
-def _compress_data(bcif_data, rtol, atol):
+def _compress_data(
+    bcif_data: bcif.BinaryCIFData, rtol: float, atol: float
+) -> bcif.BinaryCIFData:
     array = bcif_data.array
     if len(array) == 1:
         # No need to compress a single value -> Use default uncompressed encoding
@@ -139,8 +167,8 @@ def _compress_data(bcif_data, rtol, atol):
         encoding = StringArrayEncoding(data_encoding=[], offset_encoding=[])
         # Run encode to initialize the data and offset arrays
         indices = encoding.encode(array)
-        offsets = np.cumsum([0] + [len(s) for s in encoding.strings])
-        encoding.data_encoding = _find_best_integer_compression(indices)
+        offsets = np.cumsum([0] + [len(s) for s in encoding.strings])  # pyright: ignore[reportOptionalIterable]
+        encoding.data_encoding = _find_best_integer_compression(indices)  # pyright: ignore[reportArgumentType]
         encoding.offset_encoding = _find_best_integer_compression(offsets)
         return bcif.BinaryCIFData(array, [encoding])
 
@@ -159,7 +187,7 @@ def _compress_data(bcif_data, rtol, atol):
             # -> do not use integer encoding
             return bcif.BinaryCIFData(array, [ByteArrayEncoding()])
         else:
-            best_encoding = _find_best_integer_compression(integer_array)
+            best_encoding = _find_best_integer_compression(integer_array)  # pyright: ignore[reportArgumentType]
             compressed_data = bcif.BinaryCIFData(
                 array, [to_integer_encoding] + best_encoding
             )
@@ -181,13 +209,13 @@ def _compress_data(bcif_data, rtol, atol):
         raise TypeError(f"Unsupported data type {array.dtype}")
 
 
-def _find_best_integer_compression(array):
+def _find_best_integer_compression(array: NDArray1[Any, np.integer]) -> list[Encoding]:
     """
     Try different data encodings on an integer array and return the one that results in
     the smallest size.
     """
-    best_encoding_sequence = None
-    smallest_size = np.inf
+    best_encoding_sequence: list[Encoding] | None = None
+    smallest_size: float = float("inf")
 
     for use_delta in [False, True]:
         if use_delta:
@@ -211,7 +239,7 @@ def _find_best_integer_compression(array):
                     # Quickly check this heuristic
                     # to avoid computing an exploding packed data array
                     if (
-                        _estimate_packed_length(array_after_rle, packed_byte_count)
+                        _estimate_packed_length(array_after_rle, packed_byte_count)  # pyright: ignore[reportArgumentType]
                         >= array_after_rle.nbytes
                     ):
                         # Packing would not reduce the size
@@ -235,12 +263,14 @@ def _find_best_integer_compression(array):
                 }
                 size = _data_size_in_file(serialized_data)
                 if size < smallest_size:
-                    best_encoding_sequence = encodings
+                    best_encoding_sequence = list(encodings)
                     smallest_size = size
-    return best_encoding_sequence
+    return best_encoding_sequence  # pyright: ignore[reportReturnType]
 
 
-def _estimate_packed_length(array, packed_byte_count):
+def _estimate_packed_length(
+    array: NDArray1[Any, np.integer], packed_byte_count: int
+) -> int:
     """
     Estimate the length of an integer array after packing it with a given number of
     bytes.
@@ -260,10 +290,12 @@ def _estimate_packed_length(array, packed_byte_count):
     # Use int64 to avoid integer overflow in the following line
     max_val_per_element = np.int64(2 ** (8 * packed_byte_count))
     n_bytes_per_element = packed_byte_count * (np.abs(array // max_val_per_element) + 1)
-    return np.sum(n_bytes_per_element, dtype=np.int64)
+    return np.sum(n_bytes_per_element, dtype=np.int64).item()
 
 
-def _to_smallest_integer_type(array):
+def _to_smallest_integer_type(
+    array: NDArray1[Any, np.integer],
+) -> NDArray1[Any, np.integer]:
     """
     Convert an integer array to the smallest possible integer type, that is still able
     to represent all values in the array.
@@ -290,7 +322,7 @@ def _to_smallest_integer_type(array):
     raise ValueError("Array is out of bounds for all integer types")
 
 
-def _data_size_in_file(data):
+def _data_size_in_file(data: bcif.BinaryCIFData | dict[str, Any]) -> int:
     """
     Get the size of the data, it would have when written into a *BinaryCIF* file.
 
@@ -308,10 +340,14 @@ def _data_size_in_file(data):
     if isinstance(data, bcif.BinaryCIFData):
         data = data.serialize()
     bytes_in_file = msgpack.packb(data, use_bin_type=True, default=encode_numpy)
+    if bytes_in_file is None:
+        raise RuntimeError("MessagePack packer failed")
     return len(bytes_in_file)
 
 
-def _get_decimal_places(array, rtol, atol):
+def _get_decimal_places(
+    array: NDArray1[Any, np.floating], rtol: float, atol: float
+) -> int:
     """
     Get the number of decimal places in a floating point array.
 
@@ -332,15 +368,14 @@ def _get_decimal_places(array, rtol, atol):
         raise ValueError("At least one of 'rtol' and 'atol' must be greater than 0")
     # 0 would give NaN when rounding on decimals
     array = array[array != 0]
-    for decimals in itertools.count(start=min(0, -_order_magnitude(array))):
+    for decimals in range(min(0, -_order_magnitude(array)), _MAX_DECIMALS):
         error = np.abs(np.round(array, decimals) - array)
-        if decimals == 100:
-            raise
         if np.all((error < rtol * np.abs(array)) | (error < atol)):
             return decimals
+    raise ValueError("Could not determine decimal places within tolerance")
 
 
-def _order_magnitude(array):
+def _order_magnitude(array: NDArray1[Any, np.floating]) -> int:
     """
     Get the order of magnitude of floating point values.
 

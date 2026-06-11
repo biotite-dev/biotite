@@ -317,7 +317,8 @@
             "check_res_id_continuity",
             "check_backbone_continuity",
             "check_duplicate_atoms",
-            "check_linear_continuity"
+            "check_linear_continuity",
+            "check_in_box"
         ],
         "Repair" : [
             "create_continuous_res_ids",
@@ -394,6 +395,11 @@
             "find_stacking_interactions",
             "find_pi_cation_interactions",
             "PiStacking"
+        ],
+        "Type annotations" : [
+            "SingleCoord",
+            "Coord",
+            "MultiCoord"
         ]
     },
     "biotite.structure.info" : {

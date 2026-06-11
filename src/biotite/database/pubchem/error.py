@@ -7,7 +7,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["parse_error_details"]
 
 
-def parse_error_details(response_text):
+def parse_error_details(response_text: str) -> str:
     """
     Parse the ``Detail: ...`` or alternatively ``Message: ...`` part of
     an error response.

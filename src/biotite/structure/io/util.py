@@ -14,17 +14,19 @@ __all__ = [
     "convert_uint32_to_unicode",
 ]
 
+from typing import Any
 import numpy as np
+from biotite.typing import N, NDArray1, NDArray2
 
 
-def number_of_integer_digits(values):
+def number_of_integer_digits(values: NDArray1[Any, np.number]) -> int:
     """
     Get the maximum number of characters needed to represent the
     pre-decimal positions of the given numeric values.
 
     Parameters
     ----------
-    values : ndarray, dtype=float
+    values : ndarray, dtype=number
         The values to be checked.
 
     Returns
@@ -42,7 +44,9 @@ def number_of_integer_digits(values):
     return n_digits
 
 
-def convert_unicode_to_uint32(array):
+def convert_unicode_to_uint32(
+    array: NDArray1[N, np.str_],
+) -> NDArray2[N, Any, np.uint32]:
     """
     Convert a unicode string array into a 2D uint32 array.
 
@@ -65,10 +69,12 @@ def convert_unicode_to_uint32(array):
         raise TypeError("Expected unicode string array")
     length = array.shape[0]
     n_char = dtype.itemsize // 4
-    return np.frombuffer(array, dtype=np.uint32).reshape(length, n_char)
+    return np.frombuffer(array, dtype=np.uint32).reshape(length, n_char)  # pyright: ignore[reportReturnType]
 
 
-def convert_uint32_to_unicode(array):
+def convert_uint32_to_unicode(
+    array: NDArray2[N, Any, np.uint32],
+) -> NDArray1[N, np.str_]:
     """
     Convert a 2D uint32 array into a unicode string array.
 

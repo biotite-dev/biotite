@@ -2,16 +2,25 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.io.fasta"
 __author__ = "Patrick Kunzmann"
 
 import functools
 import warnings
 from collections import OrderedDict
+from typing import Any, TypeVar, overload
 import numpy as np
+from biotite.file import InvalidFileError
 from biotite.sequence.align.alignment import Alignment, get_codes
 from biotite.sequence.alphabet import AlphabetError, LetterAlphabet
+from biotite.sequence.io.fasta.file import FastaFile
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
+from biotite.sequence.sequence import Sequence
+from biotite.typing import K, NDArray1
+
+_S = TypeVar("_S", bound=Sequence[str])
 
 __all__ = [
     "get_sequence",
@@ -25,7 +34,24 @@ __all__ = [
 ]
 
 
-def get_sequence(fasta_file, header=None, seq_type=None):
+@overload
+def get_sequence(
+    fasta_file: FastaFile,
+    header: str | None = None,
+    *,
+    seq_type: type[_S],
+) -> _S: ...
+@overload
+def get_sequence(
+    fasta_file: FastaFile,
+    header: str | None = None,
+    seq_type: None = None,
+) -> Sequence[str]: ...
+def get_sequence(
+    fasta_file: FastaFile,
+    header: str | None = None,
+    seq_type: type[Sequence[str]] | None = None,
+) -> Sequence[str]:
     """
     Get a sequence from a :class:`FastaFile` instance.
 
@@ -63,18 +89,25 @@ def get_sequence(fasta_file, header=None, seq_type=None):
         seq_str = fasta_file[header]
     else:
         # Return first (and probably only) sequence of file
-        seq_str = None
-        for seq_str in fasta_file.values():
-            break
-        if seq_str is None:
-            raise ValueError("File does not contain any sequences")
+        try:
+            seq_str = next(iter(fasta_file.values()))
+        except StopIteration:
+            raise InvalidFileError("File does not contain any sequence")
     # Determine the sequence type:
     # If NucleotideSequence can be created it is a DNA sequence,
     # otherwise protein sequence
     return _convert_to_sequence(seq_str, seq_type)
 
 
-def get_sequences(fasta_file, seq_type=None):
+@overload
+def get_sequences(fasta_file: FastaFile, *, seq_type: type[_S]) -> dict[str, _S]: ...
+@overload
+def get_sequences(
+    fasta_file: FastaFile, seq_type: None = None
+) -> dict[str, Sequence[str]]: ...
+def get_sequences(
+    fasta_file: FastaFile, seq_type: type[Sequence[str]] | None = None
+) -> dict[str, Any]:
     """
     Get dictionary from a :class:`FastaFile` instance,
     where headers are keys and sequences are values.
@@ -113,7 +146,12 @@ def get_sequences(fasta_file, seq_type=None):
     return seq_dict
 
 
-def set_sequence(fasta_file, sequence, header=None, as_rna=False):
+def set_sequence(
+    fasta_file: FastaFile,
+    sequence: Sequence[str],
+    header: str | None = None,
+    as_rna: bool = False,
+) -> None:
     """
     Set a sequence in a :class:`FastaFile` instance.
 
@@ -140,7 +178,11 @@ def set_sequence(fasta_file, sequence, header=None, as_rna=False):
     fasta_file[header] = _convert_to_string(sequence, as_rna)
 
 
-def set_sequences(fasta_file, sequence_dict, as_rna=False):
+def set_sequences(
+    fasta_file: FastaFile,
+    sequence_dict: dict[str, Sequence[str]],
+    as_rna: bool = False,
+) -> None:
     """
     Set sequences in a :class:`FastaFile` instance from a dictionary.
 
@@ -165,7 +207,11 @@ def set_sequences(fasta_file, sequence_dict, as_rna=False):
         fasta_file[header] = _convert_to_string(sequence, as_rna)
 
 
-def get_alignment(fasta_file, additional_gap_chars=("_",), seq_type=None):
+def get_alignment(
+    fasta_file: FastaFile,
+    additional_gap_chars: tuple[str, ...] = ("_",),
+    seq_type: type[Sequence[str]] | None = None,
+) -> Alignment:
     """
     Get an alignment from a :class:`FastaFile` instance.
 
@@ -196,7 +242,9 @@ def get_alignment(fasta_file, additional_gap_chars=("_",), seq_type=None):
     )
 
 
-def set_alignment(fasta_file, alignment, seq_names):
+def set_alignment(
+    fasta_file: FastaFile, alignment: Alignment, seq_names: list[str]
+) -> None:
     """
     Fill a :class:`FastaFile` with gapped sequence strings from an alignment.
 
@@ -220,7 +268,9 @@ def set_alignment(fasta_file, alignment, seq_names):
         fasta_file[seq_names[i]] = gapped_seq_strings[i]
 
 
-def get_a3m_alignments(a3m_file, seq_type=None):
+def get_a3m_alignments(
+    a3m_file: FastaFile, seq_type: type[Sequence[str]] | None = None
+) -> list[Alignment]:
     """
     Get pairwise sequence alignments from an *A3M*-formatted FASTA file.
 
@@ -256,6 +306,8 @@ def get_a3m_alignments(a3m_file, seq_type=None):
         factory = _convert_to_protein
     else:
         factory = seq_type
+        if factory is None:
+            raise ValueError("Cannot determine sequence type")
 
     alignments = []
     for target_str in sequence_iterator:
@@ -282,7 +334,12 @@ def get_a3m_alignments(a3m_file, seq_type=None):
     return alignments
 
 
-def set_a3m_alignments(a3m_file, alignments, query_label, target_labels):
+def set_a3m_alignments(
+    a3m_file: FastaFile,
+    alignments: list[Alignment],
+    query_label: str,
+    target_labels: list[str],
+) -> None:
     """
     Fill a :class:`FastaFile` with *A3M*-formatted alignments.
 
@@ -322,18 +379,23 @@ def set_a3m_alignments(a3m_file, alignments, query_label, target_labels):
         a3m_string_array = np.zeros(len(query_code), dtype="S1")
         # Indicate gaps in the target sequence with '-'
         a3m_string_array[target_gaps] = "-"
+        alphabet = query.alphabet
+        if not isinstance(alphabet, LetterAlphabet):
+            raise ValueError("A3M requires a letter sequence")
         # Keep gaps in the query sequence as lower case letters
         a3m_string_array[query_gaps] = np.char.lower(
-            query.alphabet.decode_multiple(target_code[query_gaps], as_bytes=True)
+            query.alphabet.decode_multiple(target_code[query_gaps], as_bytes=True)  # pyright: ignore[reportCallIssue,reportArgumentType]
         )
         # Matches/mismatches are indicated with upper case letters
-        a3m_string_array[match_mask] = query.alphabet.decode_multiple(
-            target_code[match_mask], as_bytes=True
+        a3m_string_array[match_mask] = alphabet.decode_multiple_into_bytes(
+            target_code[match_mask]
         )
         a3m_file[name] = a3m_string_array.tobytes().decode("ASCII")
 
 
-def _convert_to_sequence(seq_str, seq_type=None):
+def _convert_to_sequence(
+    seq_str: str, seq_type: type[Sequence[str]] | None = None
+) -> Sequence[str]:
     # Set manually selected sequence type
     if seq_type is not None:
         # Do preprocessing as done without manual selection
@@ -372,14 +434,14 @@ def _convert_to_sequence(seq_str, seq_type=None):
         )
 
 
-def _convert_to_protein(seq_str):
+def _convert_to_protein(seq_str: str) -> ProteinSequence:
     """
     Replace selenocysteine with cysteine and pyrrolysine with lysine.
     """
     return ProteinSequence(seq_str.upper().replace("U", "C").replace("O", "K"))
 
 
-def _convert_to_nucleotide(seq_str):
+def _convert_to_nucleotide(seq_str: str) -> NucleotideSequence:
     """
     For nucleotides uracil is represented by thymine and there is only
     one letter for completely unknown nucleotides
@@ -387,7 +449,7 @@ def _convert_to_nucleotide(seq_str):
     return NucleotideSequence(seq_str.upper().replace("U", "T").replace("X", "N"))
 
 
-def _convert_to_string(sequence, as_rna):
+def _convert_to_string(sequence: Sequence[str], as_rna: bool) -> str:
     if not isinstance(sequence.get_alphabet(), LetterAlphabet):
         raise ValueError(
             "Only sequences using single letter alphabets can be stored in a FASTA file"
@@ -398,7 +460,7 @@ def _convert_to_string(sequence, as_rna):
         return str(sequence)
 
 
-def _as_global(alignment):
+def _as_global(alignment: Alignment) -> Alignment:
     """
     Convert a semi-global alignment into a global alignment.
 
@@ -425,7 +487,7 @@ def _as_global(alignment):
         # the alignment is not semi-global, but local
         raise ValueError("Alignment is local, but a semi-global alignment is required")
 
-    trace_parts = [trace]
+    trace_parts: list[np.ndarray] = [trace]
     if not (start_positions == 0).all():
         # We need to add a prefix to the alignment, which has gaps for all sequences
         # except for one
@@ -440,13 +502,14 @@ def _as_global(alignment):
     if not (end_positions == sequence_lengths).all():
         # The same needs to be done for the end of the alignment
         seq_index_with_missing_end = np.where(end_positions != sequence_lengths)[0][0]
-        end_position = end_positions[seq_index_with_missing_end]
+        end_position = end_positions[seq_index_with_missing_end].item()
         seq_length = sequence_lengths[seq_index_with_missing_end]
         trace_suffix = np.full(
             (seq_length - end_position - 1, trace.shape[1]), -1, dtype=int
         )
         trace_suffix[:, seq_index_with_missing_end] = np.arange(
-            end_position + 1, end_position + 1 + len(trace_suffix)
+            end_position + 1,
+            end_position + 1 + len(trace_suffix),
         )
         trace_parts.append(trace_suffix)
 
@@ -454,9 +517,13 @@ def _as_global(alignment):
     return Alignment(alignment.sequences, trace)
 
 
-def _is_lower(characters):
+def _is_lower(
+    characters: NDArray1[K, np.unsignedinteger],
+) -> NDArray1[K, np.bool_]:
     return (characters >= ord("a")) & (characters <= ord("z"))
 
 
-def _is_gap(characters):
+def _is_gap(
+    characters: NDArray1[K, np.unsignedinteger],
+) -> NDArray1[K, np.bool_]:
     return characters == ord("-")

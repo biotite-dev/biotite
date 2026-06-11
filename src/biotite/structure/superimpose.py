@@ -15,21 +15,58 @@ __all__ = [
 ]
 
 
+from typing import Any, cast, overload
 import numpy as np
 from biotite.sequence.align.alignment import get_codes, remove_gaps
 from biotite.sequence.align.matrix import SubstitutionMatrix
 from biotite.sequence.align.pairwise import align_optimal
 from biotite.sequence.alphabet import common_alphabet
 from biotite.sequence.seqtypes import ProteinSequence
-from biotite.structure.atoms import coord
+from biotite.structure.atoms import AtomArray, AtomArrayStack, Coord, MultiCoord, coord
 from biotite.structure.chains import chain_iter
 from biotite.structure.filter import filter_amino_acids, filter_nucleotides
 from biotite.structure.geometry import centroid, distance
 from biotite.structure.sequence import to_sequence
 from biotite.structure.transform import AffineTransformation
+from biotite.typing import (
+    C2,
+    XYZ,
+    K,
+    M,
+    N,
+    NDArray1,
+    NDArray2,
+    NDArray3,
+)
 
 
-def superimpose(fixed, mobile, atom_mask=None):
+@overload
+def superimpose(
+    fixed: Coord[N],
+    mobile: Coord[N],
+    atom_mask: NDArray1[N, np.bool_] | None = None,
+) -> tuple[Coord[N], AffineTransformation[int]]: ...
+
+
+@overload
+def superimpose(
+    fixed: MultiCoord[M, N],
+    mobile: MultiCoord[M, N],
+    atom_mask: NDArray1[N, np.bool_] | None = None,
+) -> tuple[
+    MultiCoord[M, N],
+    AffineTransformation[M],
+]: ...
+
+
+def superimpose(
+    fixed: (Coord[N] | MultiCoord[M, N]),
+    mobile: (Coord[N] | MultiCoord[M, N]),
+    atom_mask: NDArray1[N, np.bool_] | None = None,
+) -> tuple[
+    Coord[N] | MultiCoord[M, N],
+    AffineTransformation[M],
+]:
     """
     Superimpose structures onto each other, minimizing the RMSD between
     them.
@@ -145,13 +182,17 @@ def superimpose(fixed, mobile, atom_mask=None):
 
 
 def superimpose_without_outliers(
-    fixed,
-    mobile,
-    min_anchors=3,
-    max_iterations=10,
-    quantiles=(0.25, 0.75),
-    outlier_threshold=1.5,
-):
+    fixed: (Coord[N] | MultiCoord[M, N]),
+    mobile: (Coord[N] | MultiCoord[M, N]),
+    min_anchors: int = 3,
+    max_iterations: int = 10,
+    quantiles: tuple[float, float] = (0.25, 0.75),
+    outlier_threshold: float = 1.5,
+) -> tuple[
+    Coord[N] | MultiCoord[M, N],
+    AffineTransformation[M],
+    NDArray1[K, np.integer],
+]:
     r"""
     Superimpose structures onto a fixed structure, ignoring
     conformational outliers.
@@ -241,13 +282,14 @@ def superimpose_without_outliers(
         raise ValueError("Maximum number of iterations must be at least 1")
 
     # Ensure that the first quantile is smaller than the second one
-    quantiles = sorted(quantiles)
+    lower, higher = sorted(quantiles)
 
     fixed_coord = coord(fixed)
     mobile_coord = coord(mobile)
     # Before refinement, all anchors are included
     # 'inlier' is the opposite of 'outlier'
     updated_inlier_mask = np.ones(fixed_coord.shape[-2], dtype=bool)
+    inlier_mask = updated_inlier_mask
 
     for _ in range(max_iterations):
         # Run superimposition
@@ -264,7 +306,7 @@ def superimpose_without_outliers(
             # If multiple models are superimposed,
             # use the mean squared distance to determine outliers
             sq_dist = np.mean(sq_dist, axis=0)
-        lower_quantile, upper_quantile = np.quantile(sq_dist, quantiles)
+        lower_quantile, upper_quantile = np.quantile(sq_dist, (lower, higher))
         ipr = upper_quantile - lower_quantile
         updated_inlier_mask = inlier_mask.copy()
         # Squared distance was only calculated for the existing inliers
@@ -280,18 +322,24 @@ def superimpose_without_outliers(
             break
 
     anchor_indices = np.where(inlier_mask)[0]
+    transform = cast("AffineTransformation[M]", transform)
     return transform.apply(mobile), transform, anchor_indices
 
 
 def superimpose_homologs(
-    fixed,
-    mobile,
-    substitution_matrix=None,
-    gap_penalty=-10,
-    min_anchors=3,
-    terminal_penalty=False,
-    **kwargs,
-):
+    fixed: AtomArray[Any] | AtomArrayStack[M, Any],
+    mobile: AtomArray[N] | AtomArrayStack[M, N],
+    substitution_matrix: str | SubstitutionMatrix | None = None,
+    gap_penalty: int | tuple[int, int] = -10,
+    min_anchors: int = 3,
+    terminal_penalty: bool = False,
+    **kwargs: Any,
+) -> tuple[
+    AtomArray[N] | AtomArrayStack[M, N],
+    AffineTransformation[M],
+    NDArray1[K, np.integer],
+    NDArray1[K, np.integer],
+]:
     r"""
     Superimpose a protein or nucleotide structure onto another one,
     considering sequence differences and conformational outliers.
@@ -412,7 +460,9 @@ def superimpose_homologs(
     )
 
 
-def _reshape_to_3d(coord):
+def _reshape_to_3d(
+    coord: NDArray2[N, XYZ, np.floating] | NDArray3[M, N, XYZ, np.floating],
+) -> NDArray3[M, N, XYZ, np.floating]:
     """
     Reshape the coordinate array to 3D, if it is 2D.
     """
@@ -421,12 +471,16 @@ def _reshape_to_3d(coord):
     if coord.ndim == 2:
         return coord[np.newaxis, ...]
     elif coord.ndim == 3:
-        return coord
+        # `coord.ndim == 3` proves the union member is the 3D one
+        return coord  # pyright: ignore[reportReturnType]
     else:
         raise ValueError("Coordinates must be at most three-dimensional")
 
 
-def _get_rotation_matrices(fixed, mobile):
+def _get_rotation_matrices(
+    fixed: NDArray3[M, N, XYZ, np.floating],
+    mobile: NDArray3[M, N, XYZ, np.floating],
+) -> NDArray3[M, XYZ, XYZ, np.floating]:
     """
     Get the rotation matrices to superimpose the given mobile
     coordinates into the given fixed coordinates, minimizing the RMSD.
@@ -444,7 +498,9 @@ def _get_rotation_matrices(fixed, mobile):
     return matrices
 
 
-def _get_backbone_anchor_indices(atoms):
+def _get_backbone_anchor_indices(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[K, np.integer]:
     """
     Select one representative anchor atom for each amino acid and
     nucleotide and return their indices.
@@ -456,12 +512,12 @@ def _get_backbone_anchor_indices(atoms):
 
 
 def _find_matching_anchors(
-    fixed_anchor_atoms,
-    mobile_anchors_atoms,
-    substitution_matrix,
-    gap_penalty,
-    terminal_penalty,
-):
+    fixed_anchor_atoms: AtomArray[N] | AtomArrayStack[M, N],
+    mobile_anchors_atoms: AtomArray[N] | AtomArrayStack[M, N],
+    substitution_matrix: str | SubstitutionMatrix | None,
+    gap_penalty: int | tuple[int, int],
+    terminal_penalty: bool,
+) -> NDArray2[K, C2, np.integer]:
     """
     Find corresponding residues using pairwise sequence alignment.
     """

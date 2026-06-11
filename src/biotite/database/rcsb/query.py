@@ -25,11 +25,20 @@ __all__ = [
 import abc
 import copy
 import json
+from collections.abc import Iterable
 from datetime import datetime
+from typing import Any, Literal, overload
 import numpy as np
 import requests
 from biotite.database.error import RequestError
 from biotite.sequence.seqtypes import NucleotideSequence
+from biotite.sequence.sequence import Sequence
+
+_ReturnType = Literal[
+    "entry", "assembly", "polymer_entity", "non_polymer_entity", "polymer_instance"
+]
+_ContentType = Literal["experimental", "computational"]
+_Scope = Literal["protein", "dna", "rna"]
 
 _search_url = "https://search.rcsb.org/rcsbsearch/v2/query"
 _scope_to_target = {
@@ -47,7 +56,7 @@ class Query(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         """
         Get the query content, i.e. the data belonging to the
         ``'query'`` attribute in the RCSB search API.
@@ -62,10 +71,10 @@ class Query(metaclass=abc.ABCMeta):
         """
         pass
 
-    def __and__(self, query):
+    def __and__(self, query: "Query") -> "CompositeQuery":
         return CompositeQuery([self, query], "and")
 
-    def __or__(self, query):
+    def __or__(self, query: "Query") -> "CompositeQuery":
         return CompositeQuery([self, query], "or")
 
 
@@ -81,7 +90,7 @@ class SingleQuery(Query, metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         return {"parameters": {}}
 
 
@@ -103,13 +112,15 @@ class CompositeQuery(Query):
         The type of combination.
     """
 
-    def __init__(self, queries, operator):
+    def __init__(
+        self, queries: Iterable[Query], operator: Literal["or", "and"]
+    ) -> None:
         self._queries = queries
         if operator not in ("or", "and"):
             raise ValueError(f"Operator must be 'or' or 'and', not '{operator}'")
         self._operator = operator
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         """
         A dictionary representation of the query.
         This dictionary is the content of the ``'query'`` key in the
@@ -151,11 +162,11 @@ class BasicQuery(SingleQuery):
     ['1L2Y']
     """
 
-    def __init__(self, term):
+    def __init__(self, term: str) -> None:
         super().__init__()
         self._term = term
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         content = super().get_content()
         content["type"] = "terminal"
         content["service"] = "full_text"
@@ -223,9 +234,120 @@ class FieldQuery(SingleQuery):
     ['3NIR', '4JLJ', '5D8V', '7R0H']
     """
 
+    # Overloads expose the mutually exclusive operator keywords.
+    @overload
     def __init__(
-        self, field, molecular_definition=False, case_sensitive=False, **kwargs
-    ):
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+        *,
+        exact_match: str,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+        *,
+        contains_words: str,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+        *,
+        contains_phrase: str,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+        *,
+        greater: int | float | datetime,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+        *,
+        less: int | float | datetime,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+        *,
+        greater_or_equal: int | float | datetime,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+        *,
+        less_or_equal: int | float | datetime,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+        *,
+        equals: int | float | datetime,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+        *,
+        range: tuple[int, int] | tuple[float, float] | tuple[datetime, datetime],
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+        *,
+        range_closed: tuple[int, int] | tuple[float, float] | tuple[datetime, datetime],
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+        *,
+        is_in: tuple[str, ...] | list[str],
+    ) -> None: ...
+    def __init__(
+        self,
+        field: str,
+        molecular_definition: bool = False,
+        case_sensitive: bool = False,
+        **kwargs: Any,
+    ) -> None:
         super().__init__()
         self._negation = False
         self._field = field
@@ -269,19 +391,22 @@ class FieldQuery(SingleQuery):
                 for val in self._value
             ]
 
-        # Create dictionary for 'range' operator
+        # Create dictionary for 'range' / 'range_closed' operators
+        # Reaching these branches implies the operator kwarg was provided
+        # (len(kwargs) == 1 above), so `self._value` is the 2-tuple that was
+        # passed in. Pyright cannot follow that flow.
         if self._operator == "range":
             self._value = {
-                "from": self._value[0],
+                "from": self._value[0],  # pyright: ignore[reportOptionalSubscript]
                 "include_lower": False,
-                "to": self._value[1],
+                "to": self._value[1],  # pyright: ignore[reportOptionalSubscript]
                 "include_upper": False,
             }
         elif self._operator == "range_closed":
             self._value = {
-                "from": self._value[0],
+                "from": self._value[0],  # pyright: ignore[reportOptionalSubscript]
                 "include_lower": True,
-                "to": self._value[1],
+                "to": self._value[1],  # pyright: ignore[reportOptionalSubscript]
                 "include_upper": True,
             }
 
@@ -293,7 +418,7 @@ class FieldQuery(SingleQuery):
             # For backwards compatibility
             self._operator = "range"
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         content = super().get_content()
         content["type"] = "terminal"
         if self._mol_definition:
@@ -308,7 +433,7 @@ class FieldQuery(SingleQuery):
             content["parameters"]["value"] = self._value
         return content
 
-    def __invert__(self):
+    def __invert__(self) -> "FieldQuery":
         clone = copy.deepcopy(self)
         clone._negation = not clone._negation
         return clone
@@ -351,7 +476,13 @@ class SequenceQuery(SingleQuery):
     ['1L2Y', '2LDJ', '9G22', '9G2N', '9G2O', '9G31', '9G32', '9GDL', '9GDN', '9GDT', '9GDU', '9GE1']
     """
 
-    def __init__(self, sequence, scope, min_identity=0.0, max_expect_value=10000000.0):
+    def __init__(
+        self,
+        sequence: str | Sequence,
+        scope: _Scope,
+        min_identity: float = 0.0,
+        max_expect_value: float = 10000000.0,
+    ) -> None:
         super().__init__()
         self._target = _scope_to_target.get(scope.lower())
         if self._target is None:
@@ -365,7 +496,7 @@ class SequenceQuery(SingleQuery):
         self._min_identity = min_identity
         self._max_expect_value = max_expect_value
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         content = super().get_content()
         content["type"] = "terminal"
         content["service"] = "sequence"
@@ -400,13 +531,18 @@ class MotifQuery(SingleQuery):
     ... )
     """
 
-    def __init__(self, pattern, pattern_type, scope):
+    def __init__(
+        self,
+        pattern: str,
+        pattern_type: Literal["simple", "prosite", "regex"],
+        scope: _Scope,
+    ) -> None:
         super().__init__()
         self._pattern = pattern
         self._pattern_type = pattern_type
         self._target = _scope_to_target.get(scope.lower())
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         content = super().get_content()
         content["type"] = "terminal"
         content["service"] = "seqmotif"
@@ -444,7 +580,13 @@ class StructureQuery(SingleQuery):
     ['1CDB', '1GYA', '1QA9']
     """
 
-    def __init__(self, pdb_id, chain=None, assembly=None, strict=True):
+    def __init__(
+        self,
+        pdb_id: str,
+        chain: str | None = None,
+        assembly: str | None = None,
+        strict: bool = True,
+    ) -> None:
         super().__init__()
 
         if (chain is None and assembly is None) or (
@@ -458,7 +600,7 @@ class StructureQuery(SingleQuery):
 
         self._operator = "strict_shape_match" if strict else "relaxed_shape_match"
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         content = super().get_content()
         content["type"] = "terminal"
         content["service"] = "structure"
@@ -468,19 +610,19 @@ class StructureQuery(SingleQuery):
 
 
 class Sorting:
-    def __init__(self, field, descending=True):
+    def __init__(self, field: str, descending: bool = True) -> None:
         self._field = field
         self._descending = descending
 
     @property
-    def field(self):
+    def field(self) -> str:
         return self._field
 
     @property
-    def descending(self):
+    def descending(self) -> bool:
         return self._descending
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         """
         Get the sorting content, i.e. the data belonging to the
         ``'sort'`` and ``'ranking_criteria_type'`` attributes in the
@@ -518,7 +660,7 @@ class Grouping(metaclass=abc.ABCMeta):
         provided.
     """
 
-    def __init__(self, sort_by=None):
+    def __init__(self, sort_by: str | Sorting | None = None) -> None:
         if sort_by is None:
             self._sorting = None
         elif isinstance(sort_by, Sorting):
@@ -527,7 +669,7 @@ class Grouping(metaclass=abc.ABCMeta):
             self._sorting = Sorting(sort_by)
 
     @abc.abstractmethod
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         """
         Get the grouping content, i.e. the data belonging to the
         ``'group_by'`` attribute in the RCSB search API.
@@ -548,7 +690,7 @@ class Grouping(metaclass=abc.ABCMeta):
             return {}
 
     @abc.abstractmethod
-    def is_compatible_return_type(self, return_type):
+    def is_compatible_return_type(self, return_type: str) -> bool:
         """
         Check whether this :class:`Group` is compatible with the
         RCSB search API ``return_type``.
@@ -593,12 +735,12 @@ class DepositGrouping(Grouping):
         provided.
     """
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         content = super().get_content()
         content["aggregation_method"] = "matching_deposit_group_id"
         return content
 
-    def is_compatible_return_type(self, return_type):
+    def is_compatible_return_type(self, return_type: str) -> bool:
         return return_type == "entry"
 
 
@@ -632,7 +774,11 @@ class IdentityGrouping(Grouping):
         provided.
     """
 
-    def __init__(self, similarity_cutoff, sort_by=None):
+    def __init__(
+        self,
+        similarity_cutoff: Literal[100, 95, 90, 70, 50, 30],
+        sort_by: str | Sorting | None = None,
+    ) -> None:
         super().__init__(sort_by)
         if similarity_cutoff not in (100, 95, 90, 70, 50, 30):
             raise ValueError(
@@ -640,13 +786,13 @@ class IdentityGrouping(Grouping):
             )
         self._similarity_cutoff = similarity_cutoff
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         content = super().get_content()
         content["aggregation_method"] = "sequence_identity"
         content["similarity_cutoff"] = self._similarity_cutoff
         return content
 
-    def is_compatible_return_type(self, return_type):
+    def is_compatible_return_type(self, return_type: str) -> bool:
         return return_type == "polymer_entity"
 
 
@@ -673,16 +819,21 @@ class UniprotGrouping(Grouping):
         provided.
     """
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         content = super().get_content()
         content["aggregation_method"] = "matching_uniprot_accession"
         return content
 
-    def is_compatible_return_type(self, return_type):
+    def is_compatible_return_type(self, return_type: str) -> bool:
         return return_type == "polymer_entity"
 
 
-def count(query, return_type="entry", group_by=None, content_types=("experimental",)):
+def count(
+    query: Query,
+    return_type: _ReturnType = "entry",
+    group_by: "Grouping | None" = None,
+    content_types: Iterable[_ContentType] = ("experimental",),
+) -> int:
     """
     Count PDB entries that meet the given query requirements,
     via the RCSB search API.
@@ -760,15 +911,36 @@ def count(query, return_type="entry", group_by=None, content_types=("experimenta
             raise RequestError(f"Error {r.status_code}")
 
 
+@overload
 def search(
-    query,
-    return_type="entry",
-    range=None,
-    sort_by=None,
-    group_by=None,
-    return_groups=False,
-    content_types=("experimental",),
-):
+    query: Query,
+    return_type: _ReturnType = "entry",
+    range: tuple[int, int] | None = None,
+    sort_by: str | Sorting | None = None,
+    *,
+    group_by: Grouping,
+    return_groups: Literal[True],
+    content_types: Iterable[_ContentType] = ("experimental",),
+) -> dict[str, list[str]]: ...
+@overload
+def search(
+    query: Query,
+    return_type: _ReturnType = "entry",
+    range: tuple[int, int] | None = None,
+    sort_by: str | Sorting | None = None,
+    group_by: Grouping | None = None,
+    return_groups: bool = False,
+    content_types: Iterable[_ContentType] = ("experimental",),
+) -> list[str]: ...
+def search(
+    query: Query,
+    return_type: _ReturnType = "entry",
+    range: tuple[int, int] | None = None,
+    sort_by: str | Sorting | None = None,
+    group_by: Grouping | None = None,
+    return_groups: bool = False,
+    content_types: Iterable[_ContentType] = ("experimental",),
+) -> list[str] | dict[str, list[str]]:
     """
     Get all PDB IDs that meet the given query requirements,
     via the RCSB search API.
@@ -918,7 +1090,12 @@ def search(
             raise RequestError(f"Error {r.status_code}")
 
 
-def _initialize_query_dict(query, return_type, group_by, content_types):
+def _initialize_query_dict(
+    query: Query,
+    return_type: _ReturnType,
+    group_by: Grouping | None,
+    content_types: Iterable[_ContentType],
+) -> dict[str, Any]:
     """
     Initialize the request parameter dictionary with attributes that
     `count()` and `search()` have in common.
@@ -934,12 +1111,13 @@ def _initialize_query_dict(query, return_type, group_by, content_types):
 
     request_options = {}
 
-    if len(content_types) == 0:
+    content_type_list = list(content_types)
+    if len(content_type_list) == 0:
         raise ValueError("At least one content type must be specified")
-    for content_type in content_types:
+    for content_type in content_type_list:
         if content_type not in ("experimental", "computational"):
             raise ValueError(f"Unknown content type '{content_type}'")
-    request_options["results_content_type"] = content_types
+    request_options["results_content_type"] = content_type_list
 
     if group_by is not None:
         if not group_by.is_compatible_return_type(return_type):
@@ -956,7 +1134,7 @@ def _initialize_query_dict(query, return_type, group_by, content_types):
     return query_dict
 
 
-def _to_isoformat(object):
+def _to_isoformat(object: datetime) -> str:
     """
     Convert a datetime into the specific ISO 8601 format required by the RCSB.
     """

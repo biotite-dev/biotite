@@ -8,7 +8,9 @@ __all__ = ["fetch", "fetch_single_file"]
 
 import io
 import os
+from collections.abc import Iterable
 from os.path import getsize, isdir, isfile, join
+from typing import Literal, overload
 import requests
 from biotite.database.entrez.check import check_for_errors
 from biotite.database.entrez.dbnames import sanitize_database_name
@@ -16,17 +18,63 @@ from biotite.database.entrez.key import get_api_key
 
 _fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
+_EntrezRetMode = Literal["text", "xml", "json", "asn.1", "html"]
 
+
+@overload
 def fetch(
-    uids,
-    target_path,
-    suffix,
-    db_name,
-    ret_type,
-    ret_mode="text",
-    overwrite=False,
-    verbose=False,
-):
+    uids: str,
+    target_path: str,
+    suffix: str,
+    db_name: str,
+    ret_type: str,
+    ret_mode: _EntrezRetMode = "text",
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> str: ...
+@overload
+def fetch(
+    uids: str,
+    target_path: None,
+    suffix: str,
+    db_name: str,
+    ret_type: str,
+    ret_mode: _EntrezRetMode = "text",
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> io.StringIO | io.BytesIO: ...
+@overload
+def fetch(
+    uids: Iterable[str],
+    target_path: str,
+    suffix: str,
+    db_name: str,
+    ret_type: str,
+    ret_mode: _EntrezRetMode = "text",
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> list[str]: ...
+@overload
+def fetch(
+    uids: Iterable[str],
+    target_path: None,
+    suffix: str,
+    db_name: str,
+    ret_type: str,
+    ret_mode: _EntrezRetMode = "text",
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> list[io.StringIO | io.BytesIO]: ...
+def fetch(
+    uids: str | Iterable[str],
+    target_path: str | None,
+    suffix: str,
+    db_name: str,
+    ret_type: str,
+    ret_mode: _EntrezRetMode = "text",
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> str | io.StringIO | io.BytesIO | list[str] | list[io.StringIO | io.BytesIO]:
     """
     Download files from the NCBI Entrez database in various formats.
 
@@ -98,19 +146,21 @@ def fetch(
     # If only a single UID is present,
     # put it into a single element list
     if isinstance(uids, str):
-        uids = [uids]
+        uid_list = [uids]
         single_element = True
     else:
+        # Materialize the iterable so it can be both iterated and counted
+        uid_list = list(uids)
         single_element = False
     # Create the target folder, if not existing
     if target_path is not None and not isdir(target_path):
         os.makedirs(target_path)
     files = []
     session = requests.Session()
-    for i, id in enumerate(uids):
+    for i, id in enumerate(uid_list):
         # Verbose output
         if verbose:
-            print(f"Fetching file {i + 1:d} / {len(uids):d} ({id})...", end="\r")
+            print(f"Fetching file {i + 1:d} / {len(uid_list):d} ({id})...", end="\r")
         # Fetch file from database
         if target_path is not None:
             file = join(target_path, id + "." + suffix)
@@ -146,9 +196,32 @@ def fetch(
         return files
 
 
+@overload
 def fetch_single_file(
-    uids, file_name, db_name, ret_type, ret_mode="text", overwrite=False
-):
+    uids: Iterable[str],
+    file_name: str,
+    db_name: str,
+    ret_type: str,
+    ret_mode: _EntrezRetMode = "text",
+    overwrite: bool = False,
+) -> str: ...
+@overload
+def fetch_single_file(
+    uids: Iterable[str],
+    file_name: None,
+    db_name: str,
+    ret_type: str,
+    ret_mode: _EntrezRetMode = "text",
+    overwrite: bool = False,
+) -> io.StringIO: ...
+def fetch_single_file(
+    uids: Iterable[str],
+    file_name: str | None,
+    db_name: str,
+    ret_type: str,
+    ret_mode: _EntrezRetMode = "text",
+    overwrite: bool = False,
+) -> str | io.StringIO:
     """
     Almost the same as :func:`fetch()`, but the data for the given UIDs
     will be stored in a single file.

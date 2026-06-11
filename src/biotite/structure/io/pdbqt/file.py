@@ -7,6 +7,7 @@ __author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["PDBQTFile"]
 
 import warnings
+from typing import Any, Literal, TypeVar, overload
 import numpy as np
 from biotite.file import InvalidFileError, TextFile
 from biotite.structure.atoms import AtomArray, AtomArrayStack
@@ -14,6 +15,10 @@ from biotite.structure.bonds import BondList, BondType
 from biotite.structure.charges import partial_charges
 from biotite.structure.connect import find_connected, find_rotatable_bonds
 from biotite.structure.error import BadStructureError
+from biotite.typing import N, NDArray1, NDArray2
+
+_N = TypeVar("_N", bound=int)
+
 
 PARAMETRIZED_ELEMENTS = [
     "H",
@@ -105,7 +110,13 @@ class PDBQTFile(TextFile):
     >>> file.write(os.path.join(path_to_directory, "1l2y_mod.pdb"))
     """
 
-    def get_remarks(self, model=None):
+    @overload
+    def get_remarks(self, model: int) -> str: ...
+
+    @overload
+    def get_remarks(self, model: None = None) -> list[str]: ...
+
+    def get_remarks(self, model: int | None = None) -> str | list[str]:
         """
         Get the content of ``REMARKS`` lines.
 
@@ -180,7 +191,13 @@ class PDBQTFile(TextFile):
             # Do not include 'REMARK ' itself -> begin from pos 8
             return "\n".join([self.lines[i][7:] for i in remark_line_i])
 
-    def get_structure(self, model=None):
+    @overload
+    def get_structure(self, model: int) -> AtomArray[Any]: ...
+    @overload
+    def get_structure(self, model: None = None) -> AtomArrayStack[Any, Any]: ...
+    def get_structure(
+        self, model: int | None = None
+    ) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
         """
         Get an :class:`AtomArray` or :class:`AtomArrayStack` from the
         PDBQT file.
@@ -319,13 +336,13 @@ class PDBQTFile(TextFile):
 
     def set_structure(
         self,
-        atoms,
-        charges=None,
-        atom_types=None,
-        rotatable_bonds=None,
-        root=None,
-        include_torsdof=True,
-    ):
+        atoms: AtomArray[N],
+        charges: NDArray1[N, np.floating] | None = None,
+        atom_types: NDArray1[N, np.str_] | None = None,
+        rotatable_bonds: BondList | Literal["rigid", "all"] | None = None,
+        root: int | None = None,
+        include_torsdof: bool = True,
+    ) -> NDArray1[N, np.bool_]:
         """
         Write an :class:`AtomArray` into the PDBQT file.
 
@@ -388,11 +405,11 @@ class PDBQTFile(TextFile):
             warnings.warn(f"Residue IDs exceed {max_residues:,}")
         if np.isnan(atoms.coord).any():
             raise BadStructureError("Coordinates contain 'NaN' values")
-        if any([len(name) > 1 for name in atoms.chain_id]):
+        if any([len(name) > 1 for name in atoms.chain_id.tolist()]):
             raise BadStructureError("Some chain IDs exceed 1 character")
-        if any([len(name) > 3 for name in atoms.res_name]):
+        if any([len(name) > 3 for name in atoms.res_name.tolist()]):
             raise BadStructureError("Some residue names exceed 3 characters")
-        if any([len(name) > 4 for name in atoms.atom_name]):
+        if any([len(name) > 4 for name in atoms.atom_name.tolist()]):
             raise BadStructureError("Some atom names exceed 4 characters")
 
         if charges is None:
@@ -408,21 +425,23 @@ class PDBQTFile(TextFile):
         if atom_types is not None:
             types = atom_types[mask]
 
+        if atoms.bonds is None:
+            raise ValueError("The input atoms have no associated BondList")
         if rotatable_bonds is None:
             # No rotatable bonds -> the BondList contains no bonds
-            rotatable_bonds = BondList(atoms.bonds.get_atom_count())
+            rotatable_bonds_list = BondList(atoms.bonds.get_atom_count())
             use_root = False
         elif rotatable_bonds == "rigid":
-            rotatable_bonds = BondList(atoms.bonds.get_atom_count())
+            rotatable_bonds_list = BondList(atoms.bonds.get_atom_count())
             use_root = True
         elif rotatable_bonds == "all":
-            rotatable_bonds = find_rotatable_bonds(atoms.bonds)
+            rotatable_bonds_list = find_rotatable_bonds(atoms.bonds)
+            use_root = True
+        elif isinstance(rotatable_bonds, BondList):
+            rotatable_bonds_list = rotatable_bonds[mask]
             use_root = True
         else:
-            if rotatable_bonds.ndim != 2 or rotatable_bonds.shape[1] != 2:
-                raise ValueError("An (nx2) array is expected for rotatable bonds")
-            rotatable_bonds = BondList(len(mask), np.asarray(rotatable_bonds))[mask]
-            use_root = True
+            raise TypeError("Invalid type for 'rotatable_bonds'")
 
         if root is None:
             root_index = 0
@@ -442,11 +461,13 @@ class PDBQTFile(TextFile):
             # as they probably have been filtered out,
             # as the root is probably a terminal atom
             for atom, bond_type in zip(*atoms.bonds.get_bonds(root_index)):
-                rotatable_bonds.add_bond(root_index, atom, bond_type)
+                rotatable_bonds_list.add_bond(
+                    root_index, atom.item(), BondType(bond_type)
+                )
 
         # Break rotatable bonds
         # for simple branch determination in '_write_atoms()'
-        atoms.bonds.remove_bonds(rotatable_bonds)
+        atoms.bonds.remove_bonds(rotatable_bonds_list)
 
         hetero = ["HETATM" if e else "ATOM" for e in atoms.hetero]
         if "atom_id" in atoms.get_annotation_categories():
@@ -458,7 +479,7 @@ class PDBQTFile(TextFile):
 
         # Convert rotatable bonds into array for easier handling
         # The bond type is irrelevant from this point on
-        rotatable_bonds = rotatable_bonds.as_array()[:, :2]
+        rotatable_bonds_arr = rotatable_bonds_list.as_array()[:, :2]
 
         self.lines = []
         self._write_atoms(
@@ -470,29 +491,29 @@ class PDBQTFile(TextFile):
             occupancy,
             b_factor,
             root_index,
-            rotatable_bonds,
-            np.zeros(len(rotatable_bonds), dtype=bool),
+            rotatable_bonds_arr,
+            np.zeros(len(rotatable_bonds_arr), dtype=bool),
             use_root,
         )
         if include_torsdof:
-            self.lines.append(f"TORSDOF {len(rotatable_bonds)}")
+            self.lines.append(f"TORSDOF {len(rotatable_bonds_arr)}")
 
         return mask
 
     def _write_atoms(
         self,
-        atoms,
-        charges,
-        types,
-        atom_id,
-        hetero,
-        occupancy,
-        b_factor,
-        root_atom,
-        rotatable_bonds,
-        visited_rotatable_bonds,
-        is_root,
-    ):
+        atoms: AtomArray[Any],
+        charges: NDArray1[Any, np.floating],
+        types: NDArray1[Any, np.str_],
+        atom_id: NDArray1[Any, np.integer],
+        hetero: list[str],
+        occupancy: NDArray1[Any, np.floating],
+        b_factor: NDArray1[Any, np.floating],
+        root_atom: int,
+        rotatable_bonds: NDArray2[Any, Any, np.integer],
+        visited_rotatable_bonds: NDArray1[Any, np.bool_],
+        is_root: bool,
+    ) -> None:
         if len(rotatable_bonds) != 0:
             # Get the indices to atoms of this branch, i.e. a group of
             # atoms that are connected by non-rotatable bonds
@@ -579,13 +600,17 @@ class PDBQTFile(TextFile):
                 f"ENDBRANCH {atom_id[this_br_i]:>3d} {atom_id[new_br_i]:>3d}"
             )
 
-    def _get_model_length(self, model_start_i, atom_line_i):
+    def _get_model_length(
+        self,
+        model_start_i: NDArray1[Any, np.integer],
+        atom_line_i: NDArray1[Any, np.integer],
+    ) -> int:
         """
         Determine length of models and check that all models
         have equal length.
         """
         n_models = len(model_start_i)
-        length = None
+        length: int | None = None
         for model_i in range(len(model_start_i)):
             model_start = model_start_i[model_i]
             model_stop = (
@@ -593,8 +618,10 @@ class PDBQTFile(TextFile):
                 if model_i + 1 < n_models
                 else len(self.lines)
             )
-            model_length = np.count_nonzero(
-                (atom_line_i >= model_start) & (atom_line_i < model_stop)
+            model_length = int(
+                np.count_nonzero(
+                    (atom_line_i >= model_start) & (atom_line_i < model_stop)
+                )
             )
             if length is None:
                 length = model_length
@@ -603,10 +630,19 @@ class PDBQTFile(TextFile):
                     f"Model {model_i + 1} has {model_length} atoms, "
                     f"but model 1 has {length} atoms, must be equal"
                 )
+        if length is None:
+            raise InvalidFileError("File contains no MODEL records")
         return length
 
 
-def convert_atoms(atoms, charges):
+def convert_atoms(
+    atoms: AtomArray[_N], charges: NDArray1[_N, np.floating]
+) -> tuple[
+    AtomArray[N],
+    NDArray1[N, np.floating],
+    NDArray1[N, np.str_],
+    NDArray1[N, np.bool_],
+]:
     """
     Convert atoms into *AutoDock* compatible atoms.
 
@@ -619,18 +655,20 @@ def convert_atoms(atoms, charges):
 
     Returns
     -------
-    converted_atoms : AtomArray
+    converted_atoms : AtomArray, shape=(n,)
         The input `atoms`, but with deleted nonpolar hydrogen atoms.
-    charges : ndarray, dtype=float
+    charges : ndarray, shape=(n,), dtype=float
         The input `charges`, but with deleted entries for nonpolar
         hydrogen atoms.
-    atom_types : ndarray, dtype="U1"
+    atom_types : ndarray, shape=(n,), dtype="U1"
         The *AutoDock* atom types.
     mask : ndarray, shape=(n,), dtype=bool
         A boolean mask, that is ``False`` for each atom of the input
         ``atoms``, that was removed due to being a nonpolar hydrogen.
     """
     charges = charges.copy()
+    if atoms.bonds is None:
+        raise ValueError("The input atoms have no associated BondList")
     all_bonds, all_bond_types = atoms.bonds.get_all_bonds()
 
     atom_types = np.zeros(atoms.array_length(), dtype="U2")
@@ -681,4 +719,4 @@ def convert_atoms(atoms, charges):
             atom_types[i] = "H"
 
     mask = ~hydrogen_removal_mask
-    return atoms[mask], charges[mask], atom_types[mask], mask
+    return atoms[mask], charges[mask], atom_types[mask], mask  # pyright: ignore[reportReturnType]

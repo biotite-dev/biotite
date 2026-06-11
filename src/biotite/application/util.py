@@ -2,17 +2,19 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application"
 __author__ = "Patrick Kunzmann"
 __all__ = ["map_sequence", "map_matrix"]
 
-
 import numpy as np
 from biotite.sequence.align.matrix import SubstitutionMatrix
 from biotite.sequence.seqtypes import ProteinSequence
+from biotite.sequence.sequence import Sequence
 
 
-def map_sequence(sequence):
+def map_sequence(sequence: Sequence) -> ProteinSequence:
     """
     Map a sequence with an arbitrary alphabet into a
     :class:`ProteinSequence`, in order to support arbitrary sequence
@@ -44,7 +46,7 @@ def map_sequence(sequence):
     return mapped_sequence
 
 
-def map_matrix(matrix):
+def map_matrix(matrix: SubstitutionMatrix | None) -> SubstitutionMatrix:
     """
     Map a :class:`SubstitutionMatrix` with an arbitrary alphabet into a
     class:`SubstitutionMatrix` for protein sequences, in order to support

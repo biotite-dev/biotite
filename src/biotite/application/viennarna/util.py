@@ -2,22 +2,25 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application.viennarna"
 __author__ = "Patrick Kunzmann"
 __all__ = ["build_constraint_string"]
 
 import numpy as np
 from biotite.structure.pseudoknots import pseudoknots
+from biotite.typing import C2, N, NDArray1, NDArray2
 
 
 def build_constraint_string(
-    sequence_length,
-    pairs=None,
-    paired=None,
-    unpaired=None,
-    downstream=None,
-    upstream=None,
-):
+    sequence_length: int,
+    pairs: NDArray2[N, C2, np.integer] | None = None,
+    paired: NDArray1[N, np.integer | np.bool_] | None = None,
+    unpaired: NDArray1[N, np.integer | np.bool_] | None = None,
+    downstream: NDArray1[N, np.integer | np.bool_] | None = None,
+    upstream: NDArray1[N, np.integer | np.bool_] | None = None,
+) -> str:
     """
     Build a ViennaRNA constraint string.
 
@@ -61,7 +64,11 @@ def build_constraint_string(
     return "".join(constraints)
 
 
-def _set_constraints(constraints, index, character):
+def _set_constraints(
+    constraints: NDArray1[N, np.str_],
+    index: NDArray1[N, np.integer | np.bool_] | None,
+    character: str,
+) -> None:
     if index is None:
         return
 

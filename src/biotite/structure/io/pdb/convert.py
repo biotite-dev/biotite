@@ -20,9 +20,14 @@ __all__ = [
 ]
 
 import warnings
+from collections.abc import Iterable
+from typing import Any, Literal, overload
+from biotite.structure.atoms import AtomArray, AtomArrayStack
+from biotite.structure.io.pdb.file import PDBFile
+from biotite.typing import M, N
 
 
-def get_model_count(pdb_file):
+def get_model_count(pdb_file: PDBFile) -> int:
     """
     Get the number of models contained in a :class:`PDBFile`.
 
@@ -39,9 +44,29 @@ def get_model_count(pdb_file):
     return pdb_file.get_model_count()
 
 
+@overload
 def get_structure(
-    pdb_file, model=None, altloc="first", extra_fields=[], include_bonds=False
-):
+    pdb_file: PDBFile,
+    model: int,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] = [],
+    include_bonds: bool = False,
+) -> AtomArray[Any]: ...
+@overload
+def get_structure(
+    pdb_file: PDBFile,
+    model: None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] = [],
+    include_bonds: bool = False,
+) -> AtomArrayStack[Any, Any]: ...
+def get_structure(
+    pdb_file: PDBFile,
+    model: int | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] = [],
+    include_bonds: bool = False,
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
     Create an :class:`AtomArray` or :class:`AtomArrayStack` from a
     :class:`PDBFile`.
@@ -96,7 +121,11 @@ def get_structure(
     return pdb_file.get_structure(model, altloc, extra_fields, include_bonds)
 
 
-def set_structure(pdb_file, array, hybrid36=False):
+def set_structure(
+    pdb_file: PDBFile,
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    hybrid36: bool = False,
+) -> None:
     """
     Write an :class:`AtomArray` or :class:`AtomArrayStack` into a
     :class:`PDBFile`.
@@ -128,7 +157,7 @@ def set_structure(pdb_file, array, hybrid36=False):
     pdb_file.set_structure(array, hybrid36)
 
 
-def list_assemblies(pdb_file):
+def list_assemblies(pdb_file: PDBFile) -> list[str]:
     """
     List the biological assemblies that are available for the
     structure in the given file.
@@ -157,14 +186,33 @@ def list_assemblies(pdb_file):
     return pdb_file.list_assemblies()
 
 
+@overload
 def get_assembly(
-    pdb_file,
-    assembly_id=None,
-    model=None,
-    altloc="first",
-    extra_fields=[],
-    include_bonds=False,
-):
+    pdb_file: PDBFile,
+    assembly_id: str | None = None,
+    *,
+    model: int,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] = [],
+    include_bonds: bool = False,
+) -> AtomArray[Any]: ...
+@overload
+def get_assembly(
+    pdb_file: PDBFile,
+    assembly_id: str | None = None,
+    model: None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] = [],
+    include_bonds: bool = False,
+) -> AtomArrayStack[Any, Any]: ...
+def get_assembly(
+    pdb_file: PDBFile,
+    assembly_id: str | None = None,
+    model: int | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] = [],
+    include_bonds: bool = False,
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
     Build the given biological assembly.
 
@@ -236,13 +284,37 @@ def get_assembly(
     >>> assembly = get_assembly(file, model=1)
     """
     return pdb_file.get_assembly(
-        assembly_id, model, altloc, extra_fields, include_bonds
+        assembly_id,
+        model=model,
+        altloc=altloc,
+        extra_fields=extra_fields,
+        include_bonds=include_bonds,
     )
 
 
+@overload
 def get_unit_cell(
-    pdb_file, model=None, altloc="first", extra_fields=[], include_bonds=False
-):
+    pdb_file: PDBFile,
+    model: int,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] = [],
+    include_bonds: bool = False,
+) -> AtomArray[Any]: ...
+@overload
+def get_unit_cell(
+    pdb_file: PDBFile,
+    model: None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] = [],
+    include_bonds: bool = False,
+) -> AtomArrayStack[Any, Any]: ...
+def get_unit_cell(
+    pdb_file: PDBFile,
+    model: int | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] = [],
+    include_bonds: bool = False,
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
     Build a structure model containing all symmetric copies
     of the structure within a single unit cell, given by the space
@@ -314,9 +386,29 @@ def get_unit_cell(
     return pdb_file.get_unit_cell(model, altloc, extra_fields, include_bonds)
 
 
+@overload
 def get_symmetry_mates(
-    pdb_file, model=None, altloc="first", extra_fields=[], include_bonds=False
-):
+    pdb_file: PDBFile,
+    model: int,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] = [],
+    include_bonds: bool = False,
+) -> AtomArray[Any]: ...
+@overload
+def get_symmetry_mates(
+    pdb_file: PDBFile,
+    model: None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] = [],
+    include_bonds: bool = False,
+) -> AtomArrayStack[Any, Any]: ...
+def get_symmetry_mates(
+    pdb_file: PDBFile,
+    model: int | None = None,
+    altloc: Literal["first", "occupancy", "all"] = "first",
+    extra_fields: Iterable[str] = [],
+    include_bonds: bool = False,
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
     Build a structure model containing all symmetric copies
     of the structure within a single unit cell, given by the space

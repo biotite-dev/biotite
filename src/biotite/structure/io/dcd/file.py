@@ -6,10 +6,12 @@ __name__ = "biotite.structure.io.dcd"
 __author__ = "Patrick Kunzmann"
 __all__ = ["DCDFile"]
 
+from typing import Any
 import biotraj
 import numpy as np
 from biotite.structure.box import unitcell_from_vectors, vectors_from_unitcell
 from biotite.structure.io.trajfile import TrajectoryFile
+from biotite.typing import XYZ, M, NDArray1, NDArray3
 
 
 class DCDFile(TrajectoryFile):
@@ -18,11 +20,17 @@ class DCDFile(TrajectoryFile):
     """
 
     @classmethod
-    def traj_type(cls):
+    def traj_type(cls) -> type[biotraj.DCDTrajectoryFile]:
         return biotraj.DCDTrajectoryFile
 
     @classmethod
-    def process_read_values(cls, read_values):
+    def process_read_values(
+        cls, read_values: Any
+    ) -> tuple[
+        NDArray3[Any, Any, XYZ, np.floating],
+        NDArray3[Any, XYZ, XYZ, np.floating] | None,
+        NDArray1[Any, np.floating] | None,
+    ]:
         # .netcdf files use Angstrom
         coord = read_values[0]
         cell_lengths = read_values[1]
@@ -42,7 +50,12 @@ class DCDFile(TrajectoryFile):
         return coord, box, None
 
     @classmethod
-    def prepare_write_values(cls, coord, box, time):
+    def prepare_write_values(
+        cls,
+        coord: NDArray3[Any, Any, XYZ, np.floating] | None,
+        box: NDArray3[Any, XYZ, XYZ, np.floating] | None,
+        time: NDArray1[Any, np.floating] | None,
+    ) -> dict[str, Any]:
         xyz = coord.astype(np.float32, copy=False) if coord is not None else None
         if box is None:
             cell_lengths = None
@@ -60,7 +73,7 @@ class DCDFile(TrajectoryFile):
             "cell_angles": cell_angles,
         }
 
-    def set_time(self, time):
+    def set_time(self, time: NDArray1[M, np.floating] | None) -> None:
         if time is not None:
             raise NotImplementedError(
                 "This trajectory file does not support writing simulation time"

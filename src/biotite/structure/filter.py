@@ -29,8 +29,10 @@ __all__ = [
 
 
 import itertools
+from collections.abc import Iterable, Sequence
+from typing import Any
 import numpy as np
-from biotite.structure.atoms import AtomArrayStack
+from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.info.groups import (
     amino_acid_names,
     carbohydrate_names,
@@ -38,6 +40,7 @@ from biotite.structure.info.groups import (
     nucleotide_names,
 )
 from biotite.structure.residues import get_residue_count, get_residue_starts
+from biotite.typing import M, N, NDArray1
 
 _canonical_aa_list = [
     "ALA",
@@ -72,7 +75,9 @@ _peptide_backbone_atoms = ["N", "CA", "C"]
 _phosphate_backbone_atoms = ["P", "O5'", "C5'", "C4'", "C3'", "O3'"]
 
 
-def filter_monoatomic_ions(array):
+def filter_monoatomic_ions(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.bool_]:
     """
     Filter all atoms of an atom array, that are monoatomic ions
     (e.g. sodium or chloride ions).
@@ -91,7 +96,9 @@ def filter_monoatomic_ions(array):
     return np.isin(array.res_name, ion_names())
 
 
-def filter_heavy(array):
+def filter_heavy(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.bool_]:
     """
     Filter all non-hydrogen atoms of an atom array.
 
@@ -109,7 +116,9 @@ def filter_heavy(array):
     return (array.element != "H") & (array.element != "D")
 
 
-def filter_solvent(array):
+def filter_solvent(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.bool_]:
     """
     Filter all atoms of one array that are part of the solvent.
 
@@ -127,7 +136,9 @@ def filter_solvent(array):
     return np.isin(array.res_name, _solvent_list)
 
 
-def filter_canonical_nucleotides(array):
+def filter_canonical_nucleotides(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.bool_]:
     """
     Filter all atoms of one array that belong to canonical nucleotides.
 
@@ -145,7 +156,9 @@ def filter_canonical_nucleotides(array):
     return np.isin(array.res_name, _canonical_nucleotide_list)
 
 
-def filter_nucleotides(array):
+def filter_nucleotides(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.bool_]:
     """
     Filter all atoms of one array that belong to nucleotides.
 
@@ -175,7 +188,9 @@ def filter_nucleotides(array):
     return np.isin(array.res_name, nucleotide_names())
 
 
-def filter_canonical_amino_acids(array):
+def filter_canonical_amino_acids(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.bool_]:
     """
     Filter all atoms of one array that belong to canonical amino acid
     residues.
@@ -194,7 +209,9 @@ def filter_canonical_amino_acids(array):
     return np.isin(array.res_name, _canonical_aa_list)
 
 
-def filter_amino_acids(array):
+def filter_amino_acids(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.bool_]:
     """
     Filter all atoms of one array that belong to amino acid residues.
 
@@ -227,7 +244,9 @@ def filter_amino_acids(array):
     return np.isin(array.res_name, amino_acid_names())
 
 
-def filter_carbohydrates(array):
+def filter_carbohydrates(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.bool_]:
     """
     Filter all atoms of one array that belong to carbohydrates.
 
@@ -257,11 +276,16 @@ def filter_carbohydrates(array):
     return np.isin(array.res_name, carbohydrate_names())
 
 
-def _filter_atom_names(array, atom_names):
+def _filter_atom_names(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    atom_names: Sequence[str],
+) -> NDArray1[N, np.bool_]:
     return np.isin(array.atom_name, atom_names)
 
 
-def filter_peptide_backbone(array):
+def filter_peptide_backbone(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.bool_]:
     """
     Filter all peptide backbone atoms of one array.
 
@@ -284,7 +308,9 @@ def filter_peptide_backbone(array):
     )
 
 
-def filter_phosphate_backbone(array):
+def filter_phosphate_backbone(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+) -> NDArray1[N, np.bool_]:
     """
     Filter all phosphate backbone atoms of one array.
 
@@ -307,7 +333,11 @@ def filter_phosphate_backbone(array):
     )
 
 
-def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
+def filter_linear_bond_continuity(
+    array: AtomArray[N],
+    min_len: float = 1.2,
+    max_len: float = 1.8,
+) -> NDArray1[N, np.bool_]:
     """
     Filter for atoms such that their bond length with the next atom
     lies within the provided boundaries.
@@ -348,10 +378,10 @@ def filter_linear_bond_continuity(array, min_len=1.2, max_len=1.8):
     """
     dist = np.linalg.norm(np.diff(array.coord, axis=0), axis=1)
     mask = (dist >= min_len) & (dist <= max_len)
-    return np.append(mask, True)
+    return np.append(mask, True)  # pyright: ignore[reportReturnType]
 
 
-def _is_polymer(array, min_size, pol_type):
+def _is_polymer(array: AtomArray, min_size: int, pol_type: str) -> bool:
     if pol_type.startswith("p"):
         filt_fn = filter_amino_acids
     elif pol_type.startswith("n"):
@@ -365,7 +395,11 @@ def _is_polymer(array, min_size, pol_type):
     return get_residue_count(array[mask]) >= min_size
 
 
-def filter_polymer(array, min_size=2, pol_type="peptide"):
+def filter_polymer(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    min_size: int = 2,
+    pol_type: str = "peptide",
+) -> NDArray1[N, np.bool_]:
     """
     Filter for atoms that are a part of a consecutive standard macromolecular
     polymer entity.
@@ -399,10 +433,14 @@ def filter_polymer(array, min_size=2, pol_type="peptide"):
     ):
         segment = array[..., start:stop]
         mask[start:stop] = _is_polymer(segment, min_size, pol_type)
-    return mask
+    return mask  # pyright: ignore[reportReturnType]
 
 
-def filter_intersection(array, intersect, categories=None):
+def filter_intersection(
+    array: AtomArray[N] | AtomArrayStack[M, N],
+    intersect: AtomArray,
+    categories: Iterable[str] | None = None,
+) -> NDArray1[N, np.bool_]:
     """
     Filter all atoms of one array that exist also in another array.
 
@@ -466,7 +504,10 @@ def filter_intersection(array, intersect, categories=None):
     return np.isin(array_annotations, intersect_annotations)
 
 
-def filter_first_altloc(atoms, altloc_ids):
+def filter_first_altloc(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+    altloc_ids: NDArray1[N, np.str_],
+) -> NDArray1[N, np.bool_]:
     """
     Filter all atoms, that have the first *altloc* ID appearing in a
     residue.
@@ -535,7 +576,11 @@ def filter_first_altloc(atoms, altloc_ids):
     return altloc_filter
 
 
-def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
+def filter_highest_occupancy_altloc(
+    atoms: AtomArray[N] | AtomArrayStack[M, N],
+    altloc_ids: NDArray1[N, np.str_],
+    occupancies: NDArray1[N, np.floating],
+) -> NDArray1[N, np.bool_]:
     """
     For each residue, filter all atoms, that have the *altloc* ID
     with the highest occupancy for this residue.
@@ -623,13 +668,15 @@ def filter_highest_occupancy_altloc(atoms, altloc_ids, occupancies):
     return altloc_filter
 
 
-def _annotations_to_structured(atoms, structured_dtype):
+def _annotations_to_structured(
+    atoms: AtomArray[N] | AtomArrayStack[Any, N], structured_dtype: np.dtype
+) -> NDArray1[N, np.void]:
     """
     Convert atom annotations into a single structured `ndarray`.
 
     Parameters
     ----------
-    atoms : AtomArray, shape=(n,)
+    atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
         The annotation arrays are taken from this structure.
     structured_dtype : dtype
         The dtype of the structured array to be created.
@@ -645,4 +692,4 @@ def _annotations_to_structured(atoms, structured_dtype):
     structured = np.zeros(atoms.array_length(), dtype=structured_dtype)
     for field in structured_dtype.fields:
         structured[field] = atoms.get_annotation(field)
-    return structured
+    return structured  # pyright: ignore[reportReturnType]

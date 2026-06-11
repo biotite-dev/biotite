@@ -2,19 +2,23 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.io.clustal"
 __author__ = "haoyu"
 __all__ = ["ClustalFile"]
 
 import re
 from collections import OrderedDict
-from collections.abc import MutableMapping
+from collections.abc import Iterator, MutableMapping
+from os import PathLike
+from typing import IO, Self
 from biotite.file import InvalidFileError, TextFile
 
 _CONSENSUS_LINE = re.compile(r"[ *:.]+")
 
 
-class ClustalFile(TextFile, MutableMapping):
+class ClustalFile(TextFile, MutableMapping[str, str]):
     """
     This class represents a file in ClustalW format (``.aln``).
 
@@ -46,12 +50,12 @@ class ClustalFile(TextFile, MutableMapping):
     seq2 ADTRCGT---CGTRADRTCGRAGD
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._entries = OrderedDict()
+        self._entries: OrderedDict[str, str] = OrderedDict()
 
     @classmethod
-    def read(cls, file):
+    def read(cls, file: PathLike[str] | str | IO[str]) -> Self:
         """
         Read a ClustalW file.
 
@@ -66,13 +70,13 @@ class ClustalFile(TextFile, MutableMapping):
         file_object : ClustalFile
             The parsed file.
         """
-        file = super().read(file)
-        if len(file.lines) == 0:
+        clustal_file = super().read(file)
+        if len(clustal_file.lines) == 0:
             raise InvalidFileError("File is empty")
-        file._parse()
-        return file
+        clustal_file._parse()
+        return clustal_file
 
-    def _parse(self):
+    def _parse(self) -> None:
         """
         Parse the lines into sequence entries.
         """
@@ -108,7 +112,7 @@ class ClustalFile(TextFile, MutableMapping):
             else:
                 self._entries[name] = seq_segment
 
-    def __setitem__(self, name, seq_str):
+    def __setitem__(self, name: str, seq_str: str) -> None:
         if not isinstance(name, str):
             raise IndexError(
                 "'ClustalFile' only supports sequence name strings as keys"
@@ -118,27 +122,27 @@ class ClustalFile(TextFile, MutableMapping):
         self._entries[name] = seq_str
         self._rebuild_lines()
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> str:
         if not isinstance(name, str):
             raise IndexError(
                 "'ClustalFile' only supports sequence name strings as keys"
             )
         return self._entries[name]
 
-    def __delitem__(self, name):
+    def __delitem__(self, name: str) -> None:
         del self._entries[name]
         self._rebuild_lines()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._entries)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return self._entries.__iter__()
 
-    def __contains__(self, name):
+    def __contains__(self, name: object) -> bool:
         return name in self._entries
 
-    def _rebuild_lines(self, line_length=60):
+    def _rebuild_lines(self, line_length: int = 60) -> None:
         """
         Rebuild the text lines from the stored entries.
         """

@@ -2,16 +2,24 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.application.clustalo"
 __author__ = "Patrick Kunzmann"
 __all__ = ["ClustalOmegaApp"]
 
+from collections.abc import Sequence as SequenceABC
+from os import PathLike
 from tempfile import NamedTemporaryFile
+from typing import Any
 import numpy as np
-from biotite.application.application import AppState, requires_state
+from biotite.application.application import AppState, AppStateError, requires_state
 from biotite.application.localapp import cleanup_tempfile
 from biotite.application.msaapp import MSAApp
+from biotite.sequence.align.matrix import SubstitutionMatrix
 from biotite.sequence.phylo.tree import Tree
+from biotite.sequence.sequence import Sequence
+from biotite.typing import K, NDArray2
 
 
 class ClustalOmegaApp(MSAApp):
@@ -45,12 +53,17 @@ class ClustalOmegaApp(MSAApp):
     --IQLITE
     """
 
-    def __init__(self, sequences, bin_path="clustalo", matrix=None):
+    def __init__(
+        self,
+        sequences: SequenceABC[Sequence],
+        bin_path: PathLike[str] | str = "clustalo",
+        matrix: SubstitutionMatrix | None = None,
+    ) -> None:
         super().__init__(sequences, bin_path, None)
         self._seq_count = len(sequences)
-        self._mbed = True
-        self._dist_matrix = None
-        self._tree = None
+        self._mbed: bool = True
+        self._dist_matrix: NDArray2[Any, Any, np.floating] | None = None
+        self._tree: Tree | None = None
         self._in_dist_matrix_file = NamedTemporaryFile("w", suffix=".mat", delete=False)
         self._out_dist_matrix_file = NamedTemporaryFile(
             "r", suffix=".mat", delete=False
@@ -58,7 +71,7 @@ class ClustalOmegaApp(MSAApp):
         self._in_tree_file = NamedTemporaryFile("w", suffix=".tree", delete=False)
         self._out_tree_file = NamedTemporaryFile("r", suffix=".tree", delete=False)
 
-    def run(self):
+    def run(self) -> None:
         args = [
             "--in",
             self.get_input_file_path(),
@@ -106,7 +119,7 @@ class ClustalOmegaApp(MSAApp):
         self.set_arguments(args)
         super().run()
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         super().evaluate()
         if not self._mbed:
             self._dist_matrix = np.loadtxt(
@@ -123,7 +136,7 @@ class ClustalOmegaApp(MSAApp):
         if self._tree is None:
             self._tree = Tree.from_newick(self._out_tree_file.read().replace("\n", ""))
 
-    def clean_up(self):
+    def clean_up(self) -> None:
         super().clean_up()
         cleanup_tempfile(self._in_dist_matrix_file)
         cleanup_tempfile(self._out_dist_matrix_file)
@@ -131,7 +144,7 @@ class ClustalOmegaApp(MSAApp):
         cleanup_tempfile(self._out_tree_file)
 
     @requires_state(AppState.CREATED)
-    def full_matrix_calculation(self):
+    def full_matrix_calculation(self) -> None:
         """
         Use full distance matrix for guide-tree calculation, equivalent
         to the ``--full`` option.
@@ -142,7 +155,7 @@ class ClustalOmegaApp(MSAApp):
         self._mbed = False
 
     @requires_state(AppState.CREATED)
-    def set_distance_matrix(self, matrix):
+    def set_distance_matrix(self, matrix: NDArray2[K, K, np.floating]) -> None:
         """
         Set the pairwise sequence distances, the program should use to
         calculate the guide tree.
@@ -160,7 +173,7 @@ class ClustalOmegaApp(MSAApp):
         self._dist_matrix = matrix.astype(float, copy=False)
 
     @requires_state(AppState.JOINED)
-    def get_distance_matrix(self):
+    def get_distance_matrix(self) -> NDArray2[K, K, np.floating]:
         """
         Get the pairwise sequence distances the program used to
         calculate the guide tree.
@@ -174,10 +187,12 @@ class ClustalOmegaApp(MSAApp):
             raise ValueError(
                 "Getting the distance matrix requires 'full_matrix_calculation()'"
             )
-        return self._dist_matrix
+        if self._dist_matrix is None:
+            raise AppStateError("Distance matrix is not available")
+        return self._dist_matrix  # pyright: ignore[reportReturnType]
 
     @requires_state(AppState.CREATED)
-    def set_guide_tree(self, tree):
+    def set_guide_tree(self, tree: Tree) -> None:
         """
         Set the guide tree, the program should use for the
         progressive alignment.
@@ -195,7 +210,7 @@ class ClustalOmegaApp(MSAApp):
         self._tree = tree
 
     @requires_state(AppState.JOINED)
-    def get_guide_tree(self):
+    def get_guide_tree(self) -> Tree:
         """
         Get the guide tree created for the progressive alignment.
 
@@ -204,20 +219,22 @@ class ClustalOmegaApp(MSAApp):
         tree : Tree
             The guide tree.
         """
+        if self._tree is None:
+            raise AppStateError("Guide tree is not available")
         return self._tree
 
     @staticmethod
-    def supports_nucleotide():
+    def supports_nucleotide() -> bool:
         return True
 
     @staticmethod
-    def supports_protein():
+    def supports_protein() -> bool:
         return True
 
     @staticmethod
-    def supports_custom_nucleotide_matrix():
+    def supports_custom_nucleotide_matrix() -> bool:
         return False
 
     @staticmethod
-    def supports_custom_protein_matrix():
+    def supports_custom_protein_matrix() -> bool:
         return False
