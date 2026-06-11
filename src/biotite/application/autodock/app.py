@@ -114,7 +114,7 @@ class VinaApp(LocalApp):
         """
         Fix the seed for the random number generator to get
         reproducible results.
-∂
+
         By default, the seed is chosen randomly.
 
         Parameters
