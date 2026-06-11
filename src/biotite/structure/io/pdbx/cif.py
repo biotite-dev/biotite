@@ -480,6 +480,7 @@ class CIFCategory(_Component, MutableMapping):
         column_names = []
         i = 0
         for key_line in lines:
+            key_line = key_line.strip()
             if key_line[0] == "_":
                 # Key line
                 key = key_line.split(".")[1]
@@ -969,6 +970,7 @@ def _parse_category_name(line):
     If the line defines a category, return this name.
     Return ``None`` otherwise.
     """
+    line = line.strip()
     if line[0] != "_":
         return None
     else:
