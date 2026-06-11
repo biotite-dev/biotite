@@ -32,7 +32,7 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-codspeed", "beartype"]
+test = ["pytest", "pytest-codspeed"]
 lint = ["ruff == 0.9.7", "numpydoc == 1.8.0", "pyright == 1.1.409", "taplo == 0.9.3"]
 
 [project.urls]
@@ -206,7 +206,6 @@ muscle = "3.*"
 [tool.pixi.feature.test.dependencies]
 pytest = ">=7.0"
 pytest-codspeed = ">=2.0"
-beartype = "*"
 
 [tool.pixi.feature.muscle5.dependencies]
 muscle = "5.*"
