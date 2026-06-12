@@ -36,7 +36,7 @@ In a Pixi-managed environment this is equivalent to
 
 .. code-block:: console
 
-   $ pixi run test
+   $ pixi run -e test test
 
 Benchmarks
 ----------
