@@ -23,3 +23,6 @@ path = "src/rust/lib.rs"
 # Enable optimizations in dev mode for better performance during development
 [profile.dev]
 opt-level = 3
+
+[lints.rust]
+warnings = "deny"
