@@ -1132,6 +1132,10 @@ def _get_last_valid_index(alignment: Alignment, column_i: int, seq_i: int) -> in
     """
     Find the last trace value that belongs to a valid sequence index
     (no gap -> no -1) up to the specified column.
+
+    If the sequence has only terminal gaps up to (and including) the
+    given column, i.e. its first symbol has not occurred yet, ``-1`` is
+    returned.
     """
     index = -1
     index_found = False
@@ -1149,6 +1153,4 @@ def _get_last_valid_index(alignment: Alignment, column_i: int, seq_i: int) -> in
             if index != -1:
                 index_found = True
         column_i -= 1
-    if index == -1:
-        raise ValueError("No valid index found")
     return index
