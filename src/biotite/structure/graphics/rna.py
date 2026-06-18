@@ -141,8 +141,10 @@ def plot_nucleotide_secondary_structure(
     if isinstance(bond_linewidth, int) or isinstance(bond_linewidth, float):
         bond_linewidth = np.full(base_pairs.shape[0], bond_linewidth)
 
-    # If `bond_color` is not an array, extrapolate
-    if isinstance(bond_color, str) or not isinstance(bond_color, Sequence):
+    # If `bond_color` is a single color, extrapolate it to all bonds
+    if isinstance(bond_color, str) or not isinstance(
+        bond_color, (Sequence, np.ndarray)
+    ):
         bond_color = [bond_color] * base_pairs.shape[0]
 
     # Set the default properties of the Matplotlib `bbox` surrounding
