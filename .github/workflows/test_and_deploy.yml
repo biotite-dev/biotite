@@ -133,6 +133,11 @@ jobs:
         with:
           platforms: all
 
+      - name: Bundle third-party licenses
+        run: |
+          cargo install cargo-bundle-licenses
+          cargo bundle-licenses --format yaml --output THIRDPARTY.yml
+
       - name: Build & (optionally) test wheels
         # MAKE SURE THIS STAYS IN SYNC WITH THE UPPER pipx call to cibuildwheel
         uses: pypa/cibuildwheel@v3.3.0
@@ -157,6 +162,10 @@ jobs:
       with:
         name: ccd
         path: src/biotite/structure/info
+    - name: Bundle third-party licenses
+      run: |
+        cargo install cargo-bundle-licenses
+        cargo bundle-licenses --format yaml --output THIRDPARTY.yml
     - name: Build source distribution
       run: pipx run build --sdist
     - uses: actions/upload-artifact@v4

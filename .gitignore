@@ -29,6 +29,9 @@ htmlcov
 # Ignore version file created by hatch-vcs
 /src/biotite/version.py
 
+# Ignore third-party license file generated at build time by cargo-bundle-licenses
+/THIRDPARTY.yml
+
 # Ignore internal CCD
 /src/biotite/structure/info/components.bcif
 

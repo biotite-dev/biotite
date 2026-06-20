@@ -5,7 +5,7 @@ description = "A comprehensive library for computational molecular biology"
 readme = "README.rst"
 authors = [{ name = "The Biotite contributors" }]
 license = "BSD-3-Clause"
-license-files = ["LICENSE.rst"]
+license-files = ["LICENSE.rst", "THIRDPARTY.yml"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -173,6 +173,7 @@ packaging = ">=24.0"
 requests = ">=2.12"
 # Build
 python-build = "*"
+cargo-bundle-licenses = "*"
 cython = ">=3.0"
 pip = ">=10.0"
 rust = ">=1.95"
@@ -268,14 +269,20 @@ cmd = "true"
 depends-on = ["_pip-install-editable", "_setup-ccd"]
 description = "Install Biotite in editable mode"
 
+[tool.pixi.tasks._bundle-licenses]
+# Bundle the licenses of the Rust dependencies into a single file
+cmd = "cargo bundle-licenses --format yaml --output THIRDPARTY.yml"
+inputs = ["Cargo.toml", "Cargo.lock"]
+outputs = ["THIRDPARTY.yml"]
+
 [tool.pixi.tasks.build-wheel]
 cmd = "python -m build --wheel"
-depends-on = ["_setup-ccd"]
+depends-on = ["_setup-ccd", "_bundle-licenses"]
 description = "Build a wheel distribution"
 
 [tool.pixi.tasks.build-sdist]
 cmd = "python -m build --sdist"
-depends-on = ["_setup-ccd"]
+depends-on = ["_setup-ccd", "_bundle-licenses"]
 description = "Build a source distribution"
 
 [tool.pixi.feature.test.tasks.test]
