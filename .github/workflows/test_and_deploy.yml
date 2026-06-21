@@ -354,9 +354,10 @@ jobs:
     - name: List distributions to be uploaded
       run: ls dist
     - name: Upload to GitHub Releases
-      uses: softprops/action-gh-release@v2.0.5
+      uses: softprops/action-gh-release@v3.0.1
       if: github.event_name == 'release' && github.event.action == 'published'
       with:
+        tag_name: ${{ github.event.release.tag_name }}
         files: dist//*
     - name: Upload to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
@@ -376,9 +377,10 @@ jobs:
         name: ccd
         path: dist
     - name: Upload to GitHub Releases
-      uses: softprops/action-gh-release@v2.0.5
+      uses: softprops/action-gh-release@v3.0.1
       if: github.event_name == 'release' && github.event.action == 'published'
       with:
+        tag_name: ${{ github.event.release.tag_name }}
         files: dist//components.bcif
 
 
@@ -406,8 +408,9 @@ jobs:
       with:
         name: documentation
         path: dist
-    - uses: softprops/action-gh-release@v2.0.5
+    - uses: softprops/action-gh-release@v3.0.1
       with:
+        tag_name: ${{ github.event.release.tag_name }}
         files: dist/doc.zip
     - name: Unzip documentation
       run: unzip dist/doc.zip -d build
