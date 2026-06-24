@@ -46,6 +46,32 @@ def test_create_continuous_res_ids(multi_chain, restart_each_chain):
         assert test_res_ids.tolist() == (np.arange(len(test_res_ids)) + 1).tolist()
 
 
+@pytest.mark.parametrize("as_atom_array", [False, True])
+@pytest.mark.parametrize(
+    "elements,expected",
+    [
+        (["C", "C", "O"], ["C1", "C2", "O1"]),
+        # Single atoms are named after their element
+        (["CL"], ["CL"]),
+        ([], []),
+    ],
+)
+def test_create_atom_names(elements, expected, as_atom_array):
+    """
+    Check if atom names are correctly enumerated for both `AtomArray`
+    inputs and plain array-like inputs of elements.
+    """
+    if as_atom_array:
+        atoms = struc.AtomArray(len(elements))
+        atoms.element = np.array(elements, dtype="U6")
+        atoms.coord[:] = 0.0
+        input_value = atoms
+    else:
+        input_value = elements
+
+    assert struc.create_atom_names(input_value).tolist() == expected
+
+
 @pytest.mark.filterwarnings("ignore:Could not infer element")
 @pytest.mark.parametrize(
     "name,expected",
