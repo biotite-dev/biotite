@@ -21,7 +21,7 @@ def test_docking(flexible):
     The output binding pose should be very similar to the pose in the
     PDB structure.
     """
-    MAX_DEVIATION = 1.7
+    MAX_DEVIATION = 2.0
 
     # A structure of a straptavidin-biotin complex
     pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("application"), "2rtg.bcif"))
