@@ -113,7 +113,7 @@ def infer_elements(
 
 
 def create_atom_names(
-    atoms: AtomArray[N] | AtomArrayStack[M, N],
+    atoms: AtomArray[N] | AtomArrayStack[M, N] | Sequence[str] | NDArray1[N, np.str_],
 ) -> NDArray1[N, np.str_]:
     """
     Create atom names for a single residue based on elements.
@@ -160,9 +160,9 @@ def create_atom_names(
     if isinstance(atoms, (AtomArray, AtomArrayStack)):
         elements = atoms.element
     else:
-        elements = atoms
+        elements = np.asarray(atoms)
 
-    if atoms.array_length() == 1:
+    if len(elements) == 1:
         # For single atoms, the element is used as atom name
         return elements.astype("U6")
 
