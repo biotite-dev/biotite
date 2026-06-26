@@ -2,8 +2,6 @@ import os
 import shutil
 import sys
 import numpy as np
-from Cython.Build import cythonize
-from puccinialin import setup_rust
 from setuptools import setup
 from setuptools_rust import RustExtension
 
@@ -19,6 +17,9 @@ if _should_build_wheel():
     if not os.environ.get("BIOTITE_OMIT_RUST", False):
         if not shutil.which("cargo"):
             # Rust compiler is not installed -> Install it temporarily
+            # `puccinialin` is only required in this fallback case
+            from puccinialin import setup_rust
+
             extra_env = setup_rust()
             env = {**os.environ, **extra_env}
         else:
@@ -34,6 +35,8 @@ if _should_build_wheel():
         rust_extensions = None
 
     if not os.environ.get("BIOTITE_OMIT_CYTHON", False):
+        from Cython.Build import cythonize
+
         # Only build C files and compile them when building a wheel
         cython_extensions = cythonize(
             "src/**/*.pyx",

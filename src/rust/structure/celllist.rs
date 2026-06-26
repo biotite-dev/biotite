@@ -76,7 +76,7 @@ mod biotite {
 ///  [1 8]]
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Copy, PartialEq)]
-#[pyclass(module = "biotite.structure")]
+#[pyclass(module = "biotite.structure", from_py_object)]
 pub enum CellListResult {
     MAPPING,
     MASK,

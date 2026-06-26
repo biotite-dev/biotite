@@ -304,7 +304,7 @@ impl Bond {
 /// SINGLE bond between C4 and H4
 /// SINGLE bond between C5 and H5
 /// SINGLE bond between C6 and H6
-#[pyclass(module = "biotite.structure", subclass)]
+#[pyclass(module = "biotite.structure", subclass, skip_from_py_object)]
 #[derive(Clone)]
 pub struct BondList {
     atom_count: usize,
@@ -413,35 +413,11 @@ impl BondList {
     ///  [2 3]
     ///  [2 4]]
     #[staticmethod]
-    pub fn concatenate(bond_lists: Vec<BondList>) -> PyResult<BondList> {
-        if bond_lists.is_empty() {
-            return Ok(BondList {
-                atom_count: 0,
-                bonds: Vec::new(),
-            });
-        }
-
-        let total_bonds: usize = bond_lists.iter().map(|bl| bl.bonds.len()).sum();
-        let mut merged_bonds: Vec<Bond> = Vec::with_capacity(total_bonds);
-        let mut cum_atom_count: usize = 0;
-
-        for bond_list in &bond_lists {
-            for bond in &bond_list.bonds {
-                merged_bonds.push(Bond {
-                    // As bot atom indices are offset by the same amount,
-                    // the order of the atoms is guaranteed to be consistent
-                    atom1: bond.atom1 + cum_atom_count,
-                    atom2: bond.atom2 + cum_atom_count,
-                    bond_type: bond.bond_type,
-                });
-            }
-            cum_atom_count += bond_list.atom_count;
-        }
-
-        Ok(BondList {
-            atom_count: cum_atom_count,
-            bonds: merged_bonds,
-        })
+    pub fn concatenate(bond_lists: Vec<Bound<'_, BondList>>) -> BondList {
+        let guards: Vec<PyRef<'_, BondList>> =
+            bond_lists.iter().map(|bound| bound.borrow()).collect();
+        let refs: Vec<&BondList> = guards.iter().map(|guard| &**guard).collect();
+        BondList::concatenate_lists(&refs)
     }
 
     /// offset_indices(offset)
@@ -1112,7 +1088,7 @@ impl BondList {
     }
 
     pub fn __add__(&self, other: &BondList) -> BondList {
-        BondList::concatenate(vec![self.clone(), other.clone()]).unwrap()
+        BondList::concatenate_lists(&[self, other])
     }
 
     pub fn __getitem__<'py>(
@@ -1264,6 +1240,30 @@ impl BondList {
 impl BondList {
     pub fn get_bonds_ref(&self) -> &[Bond] {
         &self.bonds
+    }
+
+    /// Concatenate multiple bond lists into one, offsetting the atom indices of
+    /// each list by the cumulative atom count of the preceding lists.
+    fn concatenate_lists(bond_lists: &[&BondList]) -> BondList {
+        let total_bonds: usize = bond_lists.iter().map(|bl| bl.bonds.len()).sum();
+        let mut merged_bonds: Vec<Bond> = Vec::with_capacity(total_bonds);
+        let mut cum_atom_count: usize = 0;
+        for bond_list in bond_lists {
+            for bond in &bond_list.bonds {
+                merged_bonds.push(Bond {
+                    // As both atom indices are offset by the same amount,
+                    // the order of the atoms is guaranteed to be consistent
+                    atom1: bond.atom1 + cum_atom_count,
+                    atom2: bond.atom2 + cum_atom_count,
+                    bond_type: bond.bond_type,
+                });
+            }
+            cum_atom_count += bond_list.atom_count;
+        }
+        BondList {
+            atom_count: cum_atom_count,
+            bonds: merged_bonds,
+        }
     }
 
     /// Create an empty bond list for internal use from other Rust modules.

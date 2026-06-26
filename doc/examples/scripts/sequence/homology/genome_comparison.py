@@ -128,7 +128,7 @@ print("Number of double hits:", len(double_hits))
 
 ########################################################################
 # The next step is a local ungapped alignment at the positions of the
-# double hits using :func:`align_local_ungapped()`:
+# double hits using :class:`SeedExtension`:
 # For each hit, the alignment is extended into both directions from the
 # match until the similarity score drops more than a given threshold
 # below the maximum score found.
@@ -139,19 +139,17 @@ print("Number of double hits:", len(double_hits))
 # As a result, the ``score_only=True`` parameter increases the
 # performance drastically.
 
-
 X_DROP = 20
 ACCEPT_THRESHOLD = 100
 
 matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
+extension = align.SeedExtension(matrix, threshold=X_DROP)
 ungapped_scores = np.array(
     [
-        align.align_local_ungapped(
+        extension.align(
             chloroplast_seq,
             bacterium_seqs[strand],
-            matrix,
             seed=(i, j),
-            threshold=X_DROP,
             score_only=True,
         )
         for i, strand, j in double_hits

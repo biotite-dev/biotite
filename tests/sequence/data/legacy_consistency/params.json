@@ -1,0 +1,9317 @@
+{
+  "align_optimal_0_1_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_1_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_1_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_1_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_1_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_1_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_1_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_1_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_0_1_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -99,
+        101
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_1_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -99,
+        101
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_1_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -99,
+        101
+      ],
+      "local": true
+    }
+  },
+  "align_banded_0_1_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -99,
+        101
+      ],
+      "local": true
+    }
+  },
+  "align_local_0_1_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        671,
+        672
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_0_1_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      1
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        671,
+        672
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_0_2_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_2_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_2_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_2_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_2_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_2_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_2_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_2_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_0_2_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -101,
+        99
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_2_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -101,
+        99
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_2_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -101,
+        99
+      ],
+      "local": true
+    }
+  },
+  "align_banded_0_2_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -101,
+        99
+      ],
+      "local": true
+    }
+  },
+  "align_local_0_2_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        677,
+        676
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_0_2_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        677,
+        676
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_0_3_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_3_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_3_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_3_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_3_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_3_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_3_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_3_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_0_3_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -80,
+        120
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_3_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -80,
+        120
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_3_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -80,
+        120
+      ],
+      "local": true
+    }
+  },
+  "align_banded_0_3_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -80,
+        120
+      ],
+      "local": true
+    }
+  },
+  "align_local_0_3_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        677,
+        697
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_0_3_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        677,
+        697
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_0_4_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_4_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_4_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_4_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_4_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_4_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_4_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_4_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_0_4_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -96,
+        104
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_4_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -96,
+        104
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_4_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -96,
+        104
+      ],
+      "local": true
+    }
+  },
+  "align_banded_0_4_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -96,
+        104
+      ],
+      "local": true
+    }
+  },
+  "align_local_0_4_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        666,
+        670
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_0_4_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        666,
+        670
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_0_5_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_5_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_5_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_5_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_5_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_5_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_5_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_5_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_0_5_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -379,
+        -179
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_5_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -379,
+        -179
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_5_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -379,
+        -179
+      ],
+      "local": true
+    }
+  },
+  "align_banded_0_5_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -379,
+        -179
+      ],
+      "local": true
+    }
+  },
+  "align_local_0_5_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        785,
+        506
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_0_5_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        785,
+        506
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_0_6_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_6_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_6_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_6_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_6_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_6_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_6_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_6_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_0_6_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -359,
+        -159
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_6_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -359,
+        -159
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_6_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -359,
+        -159
+      ],
+      "local": true
+    }
+  },
+  "align_banded_0_6_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -359,
+        -159
+      ],
+      "local": true
+    }
+  },
+  "align_local_0_6_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        782,
+        523
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_0_6_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        782,
+        523
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_0_7_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_7_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_7_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_7_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_7_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_7_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_7_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_7_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_0_7_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -359,
+        -159
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_7_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -359,
+        -159
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_7_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -359,
+        -159
+      ],
+      "local": true
+    }
+  },
+  "align_banded_0_7_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -359,
+        -159
+      ],
+      "local": true
+    }
+  },
+  "align_local_0_7_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        792,
+        533
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_0_7_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        792,
+        533
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_0_8_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_8_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_8_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_8_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_8_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_8_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_8_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_8_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_0_8_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -359,
+        -159
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_8_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -359,
+        -159
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_8_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -359,
+        -159
+      ],
+      "local": true
+    }
+  },
+  "align_banded_0_8_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -359,
+        -159
+      ],
+      "local": true
+    }
+  },
+  "align_local_0_8_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        791,
+        532
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_0_8_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        791,
+        532
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_0_9_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_9_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_9_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_9_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_9_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_9_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_0_9_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_0_9_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_0_9_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -340,
+        -140
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_9_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -340,
+        -140
+      ],
+      "local": false
+    }
+  },
+  "align_banded_0_9_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -340,
+        -140
+      ],
+      "local": true
+    }
+  },
+  "align_banded_0_9_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -340,
+        -140
+      ],
+      "local": true
+    }
+  },
+  "align_local_0_9_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        789,
+        549
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_0_9_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      0,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        789,
+        549
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_1_2_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_2_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_2_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_2_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_2_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_2_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_2_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_2_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_1_2_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -102,
+        98
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_2_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -102,
+        98
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_2_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -102,
+        98
+      ],
+      "local": true
+    }
+  },
+  "align_banded_1_2_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -102,
+        98
+      ],
+      "local": true
+    }
+  },
+  "align_local_1_2_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        672,
+        670
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_1_2_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      2
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        672,
+        670
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_1_3_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_3_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_3_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_3_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_3_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_3_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_3_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_3_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_1_3_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -81,
+        119
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_3_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -81,
+        119
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_3_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -81,
+        119
+      ],
+      "local": true
+    }
+  },
+  "align_banded_1_3_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -81,
+        119
+      ],
+      "local": true
+    }
+  },
+  "align_local_1_3_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        672,
+        691
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_1_3_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        672,
+        691
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_1_4_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_4_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_4_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_4_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_4_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_4_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_4_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_4_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_1_4_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -97,
+        103
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_4_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -97,
+        103
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_4_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -97,
+        103
+      ],
+      "local": true
+    }
+  },
+  "align_banded_1_4_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -97,
+        103
+      ],
+      "local": true
+    }
+  },
+  "align_local_1_4_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        667,
+        670
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_1_4_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        667,
+        670
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_1_5_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_5_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_5_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_5_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_5_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_5_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_5_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_5_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_1_5_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -384,
+        -184
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_5_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -384,
+        -184
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_5_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -384,
+        -184
+      ],
+      "local": true
+    }
+  },
+  "align_banded_1_5_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -384,
+        -184
+      ],
+      "local": true
+    }
+  },
+  "align_local_1_5_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        787,
+        503
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_1_5_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        787,
+        503
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_1_6_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_6_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_6_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_6_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_6_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_6_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_6_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_6_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_1_6_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -366,
+        -166
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_6_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -366,
+        -166
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_6_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -366,
+        -166
+      ],
+      "local": true
+    }
+  },
+  "align_banded_1_6_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -366,
+        -166
+      ],
+      "local": true
+    }
+  },
+  "align_local_1_6_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        765,
+        499
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_1_6_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        765,
+        499
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_1_7_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_7_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_7_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_7_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_7_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_7_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_7_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_7_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_1_7_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -350,
+        -150
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_7_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -350,
+        -150
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_7_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -350,
+        -150
+      ],
+      "local": true
+    }
+  },
+  "align_banded_1_7_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -350,
+        -150
+      ],
+      "local": true
+    }
+  },
+  "align_local_1_7_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        770,
+        520
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_1_7_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        770,
+        520
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_1_8_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_8_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_8_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_8_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_8_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_8_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_8_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_8_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_1_8_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -350,
+        -150
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_8_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -350,
+        -150
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_8_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -350,
+        -150
+      ],
+      "local": true
+    }
+  },
+  "align_banded_1_8_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -350,
+        -150
+      ],
+      "local": true
+    }
+  },
+  "align_local_1_8_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        768,
+        518
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_1_8_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        768,
+        518
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_1_9_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_9_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_9_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_9_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_9_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_9_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_1_9_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_1_9_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_1_9_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -346,
+        -146
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_9_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -346,
+        -146
+      ],
+      "local": false
+    }
+  },
+  "align_banded_1_9_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -346,
+        -146
+      ],
+      "local": true
+    }
+  },
+  "align_banded_1_9_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -346,
+        -146
+      ],
+      "local": true
+    }
+  },
+  "align_local_1_9_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        784,
+        538
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_1_9_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      1,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        784,
+        538
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_2_3_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_3_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_3_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_3_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_3_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_3_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_3_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_3_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_2_3_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -79,
+        121
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_3_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -79,
+        121
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_3_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -79,
+        121
+      ],
+      "local": true
+    }
+  },
+  "align_banded_2_3_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -79,
+        121
+      ],
+      "local": true
+    }
+  },
+  "align_local_2_3_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        694,
+        715
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_2_3_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      3
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        694,
+        715
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_2_4_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_4_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_4_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_4_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_4_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_4_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_4_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_4_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_2_4_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -95,
+        105
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_4_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -95,
+        105
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_4_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -95,
+        105
+      ],
+      "local": true
+    }
+  },
+  "align_banded_2_4_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -95,
+        105
+      ],
+      "local": true
+    }
+  },
+  "align_local_2_4_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        664,
+        669
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_2_4_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        664,
+        669
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_2_5_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_5_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_5_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_5_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_5_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_5_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_5_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_5_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_2_5_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -380,
+        -180
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_5_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -380,
+        -180
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_5_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -380,
+        -180
+      ],
+      "local": true
+    }
+  },
+  "align_banded_2_5_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -380,
+        -180
+      ],
+      "local": true
+    }
+  },
+  "align_local_2_5_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        787,
+        507
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_2_5_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        787,
+        507
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_2_6_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_6_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_6_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_6_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_6_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_6_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_6_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_6_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_2_6_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -372,
+        -172
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_6_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -372,
+        -172
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_6_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -372,
+        -172
+      ],
+      "local": true
+    }
+  },
+  "align_banded_2_6_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -372,
+        -172
+      ],
+      "local": true
+    }
+  },
+  "align_local_2_6_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        778,
+        506
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_2_6_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        778,
+        506
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_2_7_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_7_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_7_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_7_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_7_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_7_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_7_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_7_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_2_7_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -359,
+        -159
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_7_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -359,
+        -159
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_7_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -359,
+        -159
+      ],
+      "local": true
+    }
+  },
+  "align_banded_2_7_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -359,
+        -159
+      ],
+      "local": true
+    }
+  },
+  "align_local_2_7_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        792,
+        533
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_2_7_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        792,
+        533
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_2_8_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_8_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_8_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_8_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_8_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_8_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_8_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_8_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_2_8_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -359,
+        -159
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_8_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -359,
+        -159
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_8_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -359,
+        -159
+      ],
+      "local": true
+    }
+  },
+  "align_banded_2_8_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -359,
+        -159
+      ],
+      "local": true
+    }
+  },
+  "align_local_2_8_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        793,
+        534
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_2_8_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        793,
+        534
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_2_9_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_9_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_9_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_9_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_9_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_9_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_2_9_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_2_9_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_2_9_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -358,
+        -158
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_9_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -358,
+        -158
+      ],
+      "local": false
+    }
+  },
+  "align_banded_2_9_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -358,
+        -158
+      ],
+      "local": true
+    }
+  },
+  "align_banded_2_9_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -358,
+        -158
+      ],
+      "local": true
+    }
+  },
+  "align_local_2_9_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        791,
+        533
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_2_9_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      2,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        791,
+        533
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_3_4_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_4_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_4_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_4_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_4_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_4_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_4_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_4_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_3_4_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -116,
+        84
+      ],
+      "local": false
+    }
+  },
+  "align_banded_3_4_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -116,
+        84
+      ],
+      "local": false
+    }
+  },
+  "align_banded_3_4_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -116,
+        84
+      ],
+      "local": true
+    }
+  },
+  "align_banded_3_4_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -116,
+        84
+      ],
+      "local": true
+    }
+  },
+  "align_local_3_4_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        685,
+        669
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_3_4_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      3,
+      4
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        685,
+        669
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_3_5_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_5_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_5_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_5_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_5_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_5_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_5_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_5_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_3_5_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -401,
+        -201
+      ],
+      "local": false
+    }
+  },
+  "align_banded_3_5_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -401,
+        -201
+      ],
+      "local": false
+    }
+  },
+  "align_banded_3_5_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -401,
+        -201
+      ],
+      "local": true
+    }
+  },
+  "align_banded_3_5_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -401,
+        -201
+      ],
+      "local": true
+    }
+  },
+  "align_local_3_5_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        811,
+        510
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_3_5_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      3,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        811,
+        510
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_3_6_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_6_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_6_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_6_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_6_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_6_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_6_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_6_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_3_6_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -393,
+        -193
+      ],
+      "local": false
+    }
+  },
+  "align_banded_3_6_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -393,
+        -193
+      ],
+      "local": false
+    }
+  },
+  "align_banded_3_6_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -393,
+        -193
+      ],
+      "local": true
+    }
+  },
+  "align_banded_3_6_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -393,
+        -193
+      ],
+      "local": true
+    }
+  },
+  "align_local_3_6_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        799,
+        506
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_3_6_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      3,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        799,
+        506
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_3_7_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_7_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_7_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_7_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_7_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_7_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_7_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_7_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_3_7_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -380,
+        -180
+      ],
+      "local": false
+    }
+  },
+  "align_banded_3_7_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -380,
+        -180
+      ],
+      "local": false
+    }
+  },
+  "align_banded_3_7_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -380,
+        -180
+      ],
+      "local": true
+    }
+  },
+  "align_banded_3_7_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -380,
+        -180
+      ],
+      "local": true
+    }
+  },
+  "align_local_3_7_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        810,
+        530
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_3_7_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      3,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        810,
+        530
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_3_8_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_8_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_8_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_8_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_8_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_8_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_8_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_8_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_3_8_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -380,
+        -180
+      ],
+      "local": false
+    }
+  },
+  "align_banded_3_8_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -380,
+        -180
+      ],
+      "local": false
+    }
+  },
+  "align_banded_3_8_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -380,
+        -180
+      ],
+      "local": true
+    }
+  },
+  "align_banded_3_8_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -380,
+        -180
+      ],
+      "local": true
+    }
+  },
+  "align_local_3_8_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        811,
+        531
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_3_8_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      3,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        811,
+        531
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_3_9_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_9_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_9_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_9_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_9_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_9_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_3_9_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_3_9_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_3_9_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -379,
+        -179
+      ],
+      "local": false
+    }
+  },
+  "align_banded_3_9_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -379,
+        -179
+      ],
+      "local": false
+    }
+  },
+  "align_banded_3_9_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -379,
+        -179
+      ],
+      "local": true
+    }
+  },
+  "align_banded_3_9_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -379,
+        -179
+      ],
+      "local": true
+    }
+  },
+  "align_local_3_9_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        813,
+        534
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_3_9_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      3,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        813,
+        534
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_4_5_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_5_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_5_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_5_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_5_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_5_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_5_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_5_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_4_5_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -386,
+        -186
+      ],
+      "local": false
+    }
+  },
+  "align_banded_4_5_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -386,
+        -186
+      ],
+      "local": false
+    }
+  },
+  "align_banded_4_5_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -386,
+        -186
+      ],
+      "local": true
+    }
+  },
+  "align_banded_4_5_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -386,
+        -186
+      ],
+      "local": true
+    }
+  },
+  "align_local_4_5_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        778,
+        492
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_4_5_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      4,
+      5
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        778,
+        492
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_4_6_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_6_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_6_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_6_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_6_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_6_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_6_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_6_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_4_6_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -362,
+        -162
+      ],
+      "local": false
+    }
+  },
+  "align_banded_4_6_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -362,
+        -162
+      ],
+      "local": false
+    }
+  },
+  "align_banded_4_6_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -362,
+        -162
+      ],
+      "local": true
+    }
+  },
+  "align_banded_4_6_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -362,
+        -162
+      ],
+      "local": true
+    }
+  },
+  "align_local_4_6_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        770,
+        508
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_4_6_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      4,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        770,
+        508
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_4_7_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_7_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_7_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_7_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_7_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_7_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_7_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_7_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_4_7_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -361,
+        -161
+      ],
+      "local": false
+    }
+  },
+  "align_banded_4_7_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -361,
+        -161
+      ],
+      "local": false
+    }
+  },
+  "align_banded_4_7_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -361,
+        -161
+      ],
+      "local": true
+    }
+  },
+  "align_banded_4_7_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -361,
+        -161
+      ],
+      "local": true
+    }
+  },
+  "align_local_4_7_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        785,
+        524
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_4_7_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      4,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        785,
+        524
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_4_8_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_8_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_8_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_8_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_8_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_8_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_8_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_8_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_4_8_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -361,
+        -161
+      ],
+      "local": false
+    }
+  },
+  "align_banded_4_8_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -361,
+        -161
+      ],
+      "local": false
+    }
+  },
+  "align_banded_4_8_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -361,
+        -161
+      ],
+      "local": true
+    }
+  },
+  "align_banded_4_8_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -361,
+        -161
+      ],
+      "local": true
+    }
+  },
+  "align_local_4_8_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        785,
+        524
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_4_8_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      4,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        785,
+        524
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_4_9_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_9_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_9_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_9_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_9_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_9_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_4_9_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_4_9_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_4_9_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -355,
+        -155
+      ],
+      "local": false
+    }
+  },
+  "align_banded_4_9_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -355,
+        -155
+      ],
+      "local": false
+    }
+  },
+  "align_banded_4_9_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -355,
+        -155
+      ],
+      "local": true
+    }
+  },
+  "align_banded_4_9_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -355,
+        -155
+      ],
+      "local": true
+    }
+  },
+  "align_local_4_9_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        770,
+        515
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_4_9_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      4,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        770,
+        515
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_5_6_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_6_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_6_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_5_6_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_5_6_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_6_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_6_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_5_6_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_5_6_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -76,
+        124
+      ],
+      "local": false
+    }
+  },
+  "align_banded_5_6_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -76,
+        124
+      ],
+      "local": false
+    }
+  },
+  "align_banded_5_6_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -76,
+        124
+      ],
+      "local": true
+    }
+  },
+  "align_banded_5_6_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -76,
+        124
+      ],
+      "local": true
+    }
+  },
+  "align_local_5_6_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        505,
+        529
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_5_6_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      5,
+      6
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        505,
+        529
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_5_7_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_7_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_7_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_5_7_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_5_7_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_7_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_7_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_5_7_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_5_7_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -67,
+        133
+      ],
+      "local": false
+    }
+  },
+  "align_banded_5_7_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -67,
+        133
+      ],
+      "local": false
+    }
+  },
+  "align_banded_5_7_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -67,
+        133
+      ],
+      "local": true
+    }
+  },
+  "align_banded_5_7_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -67,
+        133
+      ],
+      "local": true
+    }
+  },
+  "align_local_5_7_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        513,
+        546
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_5_7_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      5,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        513,
+        546
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_5_8_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_8_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_8_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_5_8_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_5_8_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_8_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_8_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_5_8_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_5_8_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -67,
+        133
+      ],
+      "local": false
+    }
+  },
+  "align_banded_5_8_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -67,
+        133
+      ],
+      "local": false
+    }
+  },
+  "align_banded_5_8_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -67,
+        133
+      ],
+      "local": true
+    }
+  },
+  "align_banded_5_8_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -67,
+        133
+      ],
+      "local": true
+    }
+  },
+  "align_local_5_8_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        513,
+        546
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_5_8_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      5,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        513,
+        546
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_5_9_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_9_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_9_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_5_9_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_5_9_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_9_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_5_9_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_5_9_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_5_9_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -58,
+        142
+      ],
+      "local": false
+    }
+  },
+  "align_banded_5_9_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -58,
+        142
+      ],
+      "local": false
+    }
+  },
+  "align_banded_5_9_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -58,
+        142
+      ],
+      "local": true
+    }
+  },
+  "align_banded_5_9_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -58,
+        142
+      ],
+      "local": true
+    }
+  },
+  "align_local_5_9_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        520,
+        562
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_5_9_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      5,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        520,
+        562
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_6_7_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_6_7_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_6_7_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_6_7_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_6_7_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_6_7_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_6_7_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_6_7_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_6_7_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -92,
+        108
+      ],
+      "local": false
+    }
+  },
+  "align_banded_6_7_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -92,
+        108
+      ],
+      "local": false
+    }
+  },
+  "align_banded_6_7_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -92,
+        108
+      ],
+      "local": true
+    }
+  },
+  "align_banded_6_7_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -92,
+        108
+      ],
+      "local": true
+    }
+  },
+  "align_local_6_7_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        526,
+        534
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_6_7_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      6,
+      7
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        526,
+        534
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_6_8_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_6_8_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_6_8_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_6_8_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_6_8_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_6_8_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_6_8_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_6_8_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_6_8_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -92,
+        108
+      ],
+      "local": false
+    }
+  },
+  "align_banded_6_8_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -92,
+        108
+      ],
+      "local": false
+    }
+  },
+  "align_banded_6_8_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -92,
+        108
+      ],
+      "local": true
+    }
+  },
+  "align_banded_6_8_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -92,
+        108
+      ],
+      "local": true
+    }
+  },
+  "align_local_6_8_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        526,
+        534
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_6_8_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      6,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        526,
+        534
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_6_9_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_6_9_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_6_9_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_6_9_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_6_9_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_6_9_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_6_9_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_6_9_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_6_9_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -88,
+        112
+      ],
+      "local": false
+    }
+  },
+  "align_banded_6_9_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -88,
+        112
+      ],
+      "local": false
+    }
+  },
+  "align_banded_6_9_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -88,
+        112
+      ],
+      "local": true
+    }
+  },
+  "align_banded_6_9_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -88,
+        112
+      ],
+      "local": true
+    }
+  },
+  "align_local_6_9_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        536,
+        548
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_6_9_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      6,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        536,
+        548
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_7_8_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_7_8_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_7_8_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_7_8_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_7_8_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_7_8_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_7_8_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_7_8_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_7_8_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -100,
+        100
+      ],
+      "local": false
+    }
+  },
+  "align_banded_7_8_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -100,
+        100
+      ],
+      "local": false
+    }
+  },
+  "align_banded_7_8_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -100,
+        100
+      ],
+      "local": true
+    }
+  },
+  "align_banded_7_8_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -100,
+        100
+      ],
+      "local": true
+    }
+  },
+  "align_local_7_8_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        541,
+        541
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_7_8_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      7,
+      8
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        541,
+        541
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_7_9_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_7_9_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_7_9_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_7_9_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_7_9_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_7_9_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_7_9_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_7_9_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_7_9_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -90,
+        110
+      ],
+      "local": false
+    }
+  },
+  "align_banded_7_9_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -90,
+        110
+      ],
+      "local": false
+    }
+  },
+  "align_banded_7_9_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -90,
+        110
+      ],
+      "local": true
+    }
+  },
+  "align_banded_7_9_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -90,
+        110
+      ],
+      "local": true
+    }
+  },
+  "align_local_7_9_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        547,
+        557
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_7_9_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      7,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        547,
+        557
+      ],
+      "threshold": 100
+    }
+  },
+  "align_optimal_8_9_global_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_8_9_global_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_8_9_global_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_8_9_global_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": false,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_8_9_local_affine.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_8_9_local_linear.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": false
+    }
+  },
+  "align_optimal_8_9_local_affine_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_optimal_8_9_local_linear_terminal.fasta": {
+    "method": "align_optimal",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "local": true,
+      "terminal_penalty": true
+    }
+  },
+  "align_banded_8_9_global_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -90,
+        110
+      ],
+      "local": false
+    }
+  },
+  "align_banded_8_9_global_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -90,
+        110
+      ],
+      "local": false
+    }
+  },
+  "align_banded_8_9_local_affine.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "band": [
+        -90,
+        110
+      ],
+      "local": true
+    }
+  },
+  "align_banded_8_9_local_linear.fasta": {
+    "method": "align_banded",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "band": [
+        -90,
+        110
+      ],
+      "local": true
+    }
+  },
+  "align_local_8_9_affine.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": [
+        -10,
+        -1
+      ],
+      "seed": [
+        548,
+        558
+      ],
+      "threshold": 100
+    }
+  },
+  "align_local_8_9_linear.fasta": {
+    "method": "align_local_gapped",
+    "seq_indices": [
+      8,
+      9
+    ],
+    "params": {
+      "gap_penalty": -10,
+      "seed": [
+        548,
+        558
+      ],
+      "threshold": 100
+    }
+  }
+}

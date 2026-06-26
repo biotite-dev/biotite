@@ -151,6 +151,7 @@
         "Aligners" : [
             "align_ungapped",
             "align_optimal",
+            "SeedExtension",
             "align_local_ungapped",
             "align_local_gapped",
             "align_banded",

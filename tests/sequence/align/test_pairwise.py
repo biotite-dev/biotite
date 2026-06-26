@@ -169,48 +169,6 @@ def test_affine_gap_penalty(local, term, gap_penalty, seed):
 
 
 @pytest.mark.parametrize(
-    "local, term, gap_penalty, seq_indices",
-    itertools.product(
-        [True, False],
-        [True, False],
-        [-10, (-10, -1)],
-        [(i, j) for i in range(10) for j in range(i + 1)],
-    ),
-)
-def test_align_optimal_symmetry(sequences, local, term, gap_penalty, seq_indices):
-    """
-    Alignments should be indifferent about which sequence comes first.
-    """
-    matrix = align.SubstitutionMatrix.std_protein_matrix()
-    index1, index2 = seq_indices
-    seq1 = sequences[index1]
-    seq2 = sequences[index2]
-    alignment1 = align.align_optimal(
-        seq1,
-        seq2,
-        matrix,
-        gap_penalty=gap_penalty,
-        terminal_penalty=term,
-        local=local,
-        max_number=1,
-    )[0]
-    # Swap the sequences
-    alignment2 = align.align_optimal(
-        seq2,
-        seq1,
-        matrix,
-        gap_penalty=gap_penalty,
-        terminal_penalty=term,
-        local=local,
-        max_number=1,
-    )[0]
-    # Comparing all traces of both alignments to each other
-    # would be unfeasible
-    # Instead the scores are compared
-    assert alignment1.score == alignment2.score
-
-
-@pytest.mark.parametrize(
     "gap_penalty, term, seq_indices",
     itertools.product(
         [-10, (-10, -1)],
@@ -218,10 +176,14 @@ def test_align_optimal_symmetry(sequences, local, term, gap_penalty, seq_indices
         [(i, j) for i in range(10) for j in range(i + 1)],
     ),
 )
-def test_scoring(sequences, gap_penalty, term, seq_indices):
+def test_scoring_terminal_penalty(sequences, gap_penalty, term, seq_indices):
     """
     The result of the :func:`score()` function should be equal to the
     score calculated in :func:`align_optimal()`.
+
+    The general score consistency is already covered by the common
+    :func:`test_align.test_scoring`; this variant additionally exercises
+    ``terminal_penalty``, which only :func:`align_optimal()` supports.
     """
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     index1, index2 = seq_indices
