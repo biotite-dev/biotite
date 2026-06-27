@@ -1577,8 +1577,6 @@ impl KmerTable {
         self.0.k
     }
 
-    /// from_sequences(k, sequences, ref_ids=None, ignore_masks=None, alphabet=None, spacing=None)
-    ///
     /// Create a :class:`KmerTable` by storing the positions of all
     /// overlapping *k-mers* from the input `sequences`.
     ///
@@ -1683,8 +1681,6 @@ impl KmerTable {
         )?))
     }
 
-    /// from_kmers(kmer_alphabet, kmers, ref_ids=None, masks=None)
-    ///
     /// Create a :class:`KmerTable` by storing the positions of all
     /// input *k-mers*.
     ///
@@ -1760,8 +1756,6 @@ impl KmerTable {
         )?))
     }
 
-    /// from_kmer_selection(kmer_alphabet, positions, kmers, ref_ids=None)
-    ///
     /// Create a :class:`KmerTable` by storing the positions of a
     /// filtered subset of input *k-mers*.
     ///
@@ -1857,8 +1851,6 @@ impl KmerTable {
         )?))
     }
 
-    /// from_tables(tables)
-    ///
     /// Create a :class:`KmerTable` by merging the *k-mer* positions
     /// from existing `tables`.
     ///
@@ -1896,8 +1888,6 @@ impl KmerTable {
         Ok(KmerTable(GenericKmerTable::from_tables(py, &refs)?))
     }
 
-    /// from_positions(kmer_alphabet, kmer_positions)
-    ///
     /// Create a :class:`KmerTable` from *k-mer* reference IDs and
     /// positions.
     /// This constructor is especially useful for restoring a table
@@ -1954,8 +1944,6 @@ impl KmerTable {
         )?))
     }
 
-    /// match_table(table, similarity_rule=None)
-    ///
     /// Find matches between the *k-mers* in this table with the
     /// *k-mers* in another `table`.
     ///
@@ -2028,8 +2016,6 @@ impl KmerTable {
         self.0.match_table(py, &table.0, similarity_rule.as_ref())
     }
 
-    /// match(sequence, similarity_rule=None, ignore_mask=None)
-    ///
     /// Find matches between the *k-mers* in this table with all
     /// overlapping *k-mers* in the given `sequence`.
     /// *k* is determined by the table.
@@ -2099,8 +2085,6 @@ impl KmerTable {
         )
     }
 
-    /// match_kmer_selection(positions, kmers)
-    ///
     /// Find matches between the *k-mers* in this table with the given
     /// *k-mer* selection.
     ///
@@ -2136,8 +2120,6 @@ impl KmerTable {
         self.0.match_kmer_selection(py, &positions, &kmers)
     }
 
-    /// count(kmers=None)
-    ///
     /// Count the number of occurences for each *k-mer* in the table.
     ///
     /// Parameters
@@ -2423,8 +2405,6 @@ impl BucketKmerTable {
         self.0.n_slots
     }
 
-    /// from_sequences(k, sequences, ref_ids=None, ignore_masks=None, alphabet=None, spacing=None, n_buckets=None)
-    ///
     /// Create a :class:`BucketKmerTable` by storing the positions of
     /// all overlapping *k-mers* from the input `sequences`.
     ///
@@ -2506,8 +2486,6 @@ impl BucketKmerTable {
         )?))
     }
 
-    /// from_kmers(kmer_alphabet, kmers, ref_ids=None, masks=None, n_buckets=None)
-    ///
     /// Create a :class:`BucketKmerTable` by storing the positions of
     /// all input *k-mers*.
     ///
@@ -2575,8 +2553,6 @@ impl BucketKmerTable {
         )?))
     }
 
-    /// from_kmer_selection(kmer_alphabet, positions, kmers, ref_ids=None, n_buckets=None)
-    ///
     /// Create a :class:`BucketKmerTable` by storing the positions of a
     /// filtered subset of input *k-mers*.
     ///
@@ -2624,8 +2600,6 @@ impl BucketKmerTable {
         )?))
     }
 
-    /// from_tables(tables)
-    ///
     /// Create a :class:`BucketKmerTable` by merging the *k-mer*
     /// positions from existing `tables`.
     ///
@@ -2647,8 +2621,6 @@ impl BucketKmerTable {
         Ok(BucketKmerTable(GenericKmerTable::from_tables(py, &refs)?))
     }
 
-    /// match_table(table, similarity_rule=None)
-    ///
     /// Find matches between the *k-mers* in this table with the
     /// *k-mers* in another `table`.
     ///
@@ -2683,8 +2655,6 @@ impl BucketKmerTable {
         self.0.match_table(py, &table.0, similarity_rule.as_ref())
     }
 
-    /// match(sequence, similarity_rule=None, ignore_mask=None)
-    ///
     /// Find matches between the *k-mers* in this table with all
     /// overlapping *k-mers* in the given `sequence`.
     ///
@@ -2725,8 +2695,6 @@ impl BucketKmerTable {
         )
     }
 
-    /// match_kmer_selection(positions, kmers)
-    ///
     /// Find matches between the *k-mers* in this table with the given
     /// *k-mer* selection.
     ///
@@ -2751,8 +2719,6 @@ impl BucketKmerTable {
         self.0.match_kmer_selection(py, &positions, &kmers)
     }
 
-    /// count(kmers)
-    ///
     /// Count the number of occurences for each given *k-mer* in the
     /// table.
     ///

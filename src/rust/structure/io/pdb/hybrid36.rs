@@ -118,7 +118,6 @@ pub fn decode_hybrid36(hybrid36: &str) -> PyResult<i64> {
     }
 }
 
-/// max_hybrid36_number(length)
 /// --
 ///
 /// Give the maximum integer value that can be represented by a
