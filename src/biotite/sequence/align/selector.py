@@ -2,27 +2,112 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
-__all__ = ["MinimizerSelector", "SyncmerSelector", "CachedSyncmerSelector",
-           "MincodeSelector"]
+__all__ = [
+    "Selector",
+    "MinimizerSelector",
+    "SyncmerSelector",
+    "CachedSyncmerSelector",
+    "MincodeSelector",
+]
 
-cimport cython
-cimport numpy as np
-
+import abc
+from typing import Generic
 import numpy as np
-from .kmeralphabet import KmerAlphabet
+from biotite.rust.sequence.align import minimize as rust_minimize
+from biotite.sequence.align.kmeralphabet import KmerAlphabet
+from biotite.sequence.align.permutation import Permutation
+from biotite.sequence.alphabet import Alphabet
+from biotite.sequence.sequence import Sequence
+from biotite.typing import M, N, NDArray1, S
 
 
-ctypedef np.int64_t int64
-ctypedef np.uint32_t uint32
+class Selector(Generic[S], metaclass=abc.ABCMeta):
+    """
+    Abstract base class for all *k-mer* subset selectors.
+
+    A selector reduces the number of *k-mers* obtained from a sequence by
+    choosing a representative subset, while still ensuring that the same
+    *k-mers* are selected from similar sequences.
+    The criterion for selecting a *k-mer* depends on the concrete subclass.
+
+    Parameters
+    ----------
+    permutation : Permutation
+        If set, the *k-mer* order is permuted, i.e. the selection is based on
+        the ordering of the sort keys from :class:`Permutation.permute()`,
+        instead of the standard order of the :class:`KmerAlphabet`.
+
+    Attributes
+    ----------
+    permutation : Permutation
+        The permutation.
+    """
+
+    def __init__(self, permutation: Permutation | None = None) -> None:
+        self._permutation = permutation
+
+    @property
+    def permutation(self) -> Permutation | None:
+        return self._permutation
+
+    @abc.abstractmethod
+    def select(
+        self, sequence: Sequence[S], alphabet_check: bool = True
+    ) -> tuple[NDArray1[M, np.uint32], NDArray1[M, np.int64]]:
+        """
+        select(sequence, alphabet_check=True)
+
+        Obtain all overlapping *k-mers* from a sequence and select a subset
+        of them.
+
+        Parameters
+        ----------
+        sequence : Sequence
+            The sequence to select the *k-mers* from.
+            Must be compatible with the selector's *k-mer* alphabet.
+        alphabet_check : bool, optional
+            If set to false, the compatibility between the alphabet of the
+            sequence and the alphabet of the selector is not checked to gain
+            additional performance.
+
+        Returns
+        -------
+        indices : ndarray, dtype=np.uint32
+            The sequence indices where the selected *k-mers* start.
+        kmers : ndarray, dtype=np.int64
+            The corresponding *k-mer* codes of the selected *k-mers*.
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def select_from_kmers(
+        self, kmers: NDArray1[N, np.int64]
+    ) -> tuple[NDArray1[M, np.uint32], NDArray1[M, np.int64]]:
+        """
+        select_from_kmers(kmers)
+
+        Select a subset of the given *k-mers*.
+
+        Parameters
+        ----------
+        kmers : ndarray, dtype=np.int64
+            The *k-mer* codes to select a subset from.
+
+        Returns
+        -------
+        indices : ndarray, dtype=np.uint32
+            The indices in the input *k-mer* array of the selected *k-mers*.
+        kmers : ndarray, dtype=np.int64
+            The corresponding *k-mer* codes of the selected *k-mers*.
+        """
+        raise NotImplementedError
 
 
-# Obtained from 'np.iinfo(np.int64).max'
-cdef int64 MAX_INT_64 = 9223372036854775807
-
-
-class MinimizerSelector:
+class MinimizerSelector(Selector[S]):
     """
     MinimizerSelector(kmer_alphabet, window, permutation=None)
 
@@ -114,59 +199,29 @@ class MinimizerSelector:
     ['EQV', 'ENC']
     """
 
-    def __init__(self, kmer_alphabet, window, permutation=None):
+    def __init__(
+        self,
+        kmer_alphabet: KmerAlphabet[S],
+        window: int,
+        permutation: Permutation | None = None,
+    ) -> None:
+        super().__init__(permutation)
         if window < 2:
             raise ValueError("Window size must be at least 2")
         self._window = window
         self._kmer_alph = kmer_alphabet
-        self._permutation = permutation
-
 
     @property
-    def kmer_alphabet(self):
+    def kmer_alphabet(self) -> KmerAlphabet[S]:
         return self._kmer_alph
 
     @property
-    def window(self):
+    def window(self) -> int:
         return self._window
 
-    @property
-    def permutation(self):
-        return self._permutation
-
-
-    def select(self, sequence, bint alphabet_check=True):
-        """
-        select(sequence, alphabet_check=True)
-
-        Obtain all overlapping *k-mers* from a sequence and select
-        the minimizers from them.
-
-        Parameters
-        ----------
-        sequence : Sequence
-            The sequence to find the minimizers in.
-            Must be compatible with the given `kmer_alphabet`
-        alphabet_check: bool, optional
-            If set to false, the compatibility between the alphabet
-            of the sequence and the alphabet of the
-            :class:`MinimizerSelector`
-            is not checked to gain additional performance.
-
-        Returns
-        -------
-        minimizer_indices : ndarray, dtype=np.uint32
-            The sequence indices where the minimizer *k-mers* start.
-        minimizers : ndarray, dtype=np.int64
-            The *k-mers* that are the selected minimizers, returned as
-            *k-mer* code.
-
-        Notes
-        -----
-        Duplicate minimizers are omitted, i.e. if two windows have the
-        same minimizer position, the return values contain this
-        minimizer only once.
-        """
+    def select(
+        self, sequence: Sequence[S], alphabet_check: bool = True
+    ) -> tuple[NDArray1[M, np.uint32], NDArray1[M, np.int64]]:
         if alphabet_check:
             if not self._kmer_alph.base_alphabet.extends(sequence.alphabet):
                 raise ValueError(
@@ -175,35 +230,9 @@ class MinimizerSelector:
         kmers = self._kmer_alph.create_kmers(sequence.code)
         return self.select_from_kmers(kmers)
 
-
-    def select_from_kmers(self, kmers):
-        """
-        select_from_kmers(kmers)
-
-        Select minimizers for the given overlapping *k-mers*.
-
-        Parameters
-        ----------
-        kmers : ndarray, dtype=np.int64
-            The *k-mer* codes representing the sequence to find the
-            minimizers in.
-            The *k-mer* codes correspond to the *k-mers* encoded by the
-            given `kmer_alphabet`.
-
-        Returns
-        -------
-        minimizer_indices : ndarray, dtype=np.uint32
-            The indices in the input *k-mer* sequence where a minimizer
-            appears.
-        minimizers : ndarray, dtype=np.int64
-            The corresponding *k-mers* codes of the minimizers.
-
-        Notes
-        -----
-        Duplicate minimizers are omitted, i.e. if two windows have the
-        same minimizer position, the return values contain this
-        minimizer only once.
-        """
+    def select_from_kmers(
+        self, kmers: NDArray1[N, np.int64]
+    ) -> tuple[NDArray1[M, np.uint32], NDArray1[M, np.int64]]:
         if self._permutation is None:
             ordering = kmers
         else:
@@ -215,18 +244,16 @@ class MinimizerSelector:
                 )
 
         if len(kmers) < self._window:
-            raise ValueError(
-                "The number of k-mers is smaller than the window size"
-            )
-        return _minimize(
+            raise ValueError("The number of k-mers is smaller than the window size")
+        return rust_minimize(
             kmers.astype(np.int64, copy=False),
             ordering.astype(np.int64, copy=False),
             self._window,
-            include_duplicates=False
+            False,
         )
 
 
-class SyncmerSelector:
+class SyncmerSelector(Selector[S]):
     """
     SyncmerSelector(alphabet, k, s, permutation=None, offset=(0,))
 
@@ -328,7 +355,15 @@ class SyncmerSelector:
       TGACA
     """
 
-    def __init__(self, alphabet, k, s, permutation=None, offset=(0,)):
+    def __init__(
+        self,
+        alphabet: Alphabet[S],
+        k: int,
+        s: int,
+        permutation: Permutation | None = None,
+        offset: tuple[int, ...] = (0,),
+    ) -> None:
+        super().__init__(permutation)
         if not s < k:
             raise ValueError("s must be smaller than k")
         self._window = k - s + 1
@@ -336,70 +371,35 @@ class SyncmerSelector:
         self._kmer_alph = KmerAlphabet(alphabet, k)
         self._smer_alph = KmerAlphabet(alphabet, s)
 
-        self._permutation = permutation
-
         self._offset = np.asarray(offset, dtype=np.int64)
         # Wrap around negative indices
         self._offset = np.where(
-            self._offset < 0,
-            self._window + self._offset,
-            self._offset
+            self._offset < 0, self._window + self._offset, self._offset
         )
         if (self._offset >= self._window).any() or (self._offset < 0).any():
-            raise IndexError(
-                f"Offset is out of window range"
-            )
+            raise IndexError("Offset is out of window range")
         if len(np.unique(self._offset)) != len(self._offset):
             raise ValueError("Offset must contain unique values")
 
-
     @property
-    def alphabet(self):
+    def alphabet(self) -> Alphabet[S]:
         return self._alphabet
 
     @property
-    def kmer_alphabet(self):
+    def kmer_alphabet(self) -> KmerAlphabet[S]:
         return self._kmer_alph
 
     @property
-    def smer_alphabet(self):
+    def smer_alphabet(self) -> KmerAlphabet[S]:
         return self._smer_alph
 
-    @property
-    def permutation(self):
-        return self._permutation
-
-
-    def select(self, sequence, bint alphabet_check=True):
-        """
-        select(sequence, alphabet_check=True)
-
-        Obtain all overlapping *k-mers* from a sequence and select
-        the syncmers from them.
-
-        Parameters
-        ----------
-        sequence : Sequence
-            The sequence to find the syncmers in.
-            Must be compatible with the given `kmer_alphabet`
-        alphabet_check: bool, optional
-            If set to false, the compatibility between the alphabet
-            of the sequence and the alphabet of the
-            :class:`SyncmerSelector`
-            is not checked to gain additional performance.
-
-        Returns
-        -------
-        syncmer_indices : ndarray, dtype=np.uint32
-            The sequence indices where the syncmers start.
-        syncmers : ndarray, dtype=np.int64
-            The corresponding *k-mer* codes of the syncmers.
-        """
+    def select(
+        self, sequence: Sequence[S], alphabet_check: bool = True
+    ) -> tuple[NDArray1[M, np.uint32], NDArray1[M, np.int64]]:
         if alphabet_check:
             if not self._alphabet.extends(sequence.alphabet):
                 raise ValueError(
-                    "The sequence's alphabet does not fit "
-                    "the selector's alphabet"
+                    "The sequence's alphabet does not fit the selector's alphabet"
                 )
         kmers = self._kmer_alph.create_kmers(sequence.code)
         smers = self._smer_alph.create_kmers(sequence.code)
@@ -414,12 +414,12 @@ class SyncmerSelector:
                     f"sort keys for {len(smers)} s-mers"
                 )
 
-        # The aboslute position of the minimum s-mer for each k-mer
-        min_pos, _ = _minimize(
-            smers,
+        # The absolute position of the minimum s-mer for each k-mer
+        min_pos, _ = rust_minimize(
+            smers.astype(np.int64, copy=False),
             ordering.astype(np.int64, copy=False),
             self._window,
-            include_duplicates=True
+            True,
         )
         # The position of the minimum s-mer relative to the start
         # of the k-mer
@@ -427,42 +427,12 @@ class SyncmerSelector:
         syncmer_pos = self._filter_syncmer_pos(relative_min_pos)
         return syncmer_pos, kmers[syncmer_pos]
 
-
-    def select_from_kmers(self, kmers):
-        """
-        select_from_kmers(kmers)
-
-        Select syncmers for the given *k-mers*.
-
-        The *k-mers* are not required to overlap.
-
-        Parameters
-        ----------
-        kmers : ndarray, dtype=np.int64
-            The *k-mer* codes to select the syncmers from.
-
-        Returns
-        -------
-        syncmer_indices : ndarray, dtype=np.uint32
-            The sequence indices where the syncmers start.
-        syncmers : ndarray, dtype=np.int64
-            The corresponding *k-mer* codes of the syncmers.
-
-        Notes
-        -----
-        Since for *s-mer* creation, the *k-mers* need to be converted
-        back to symbol codes again and since the input *k-mers* are not
-        required to overlap, calling :meth:`select()` is much faster.
-        However, :meth:`select()` is only available for
-        :class:`Sequence` objects.
-        """
-        cdef int64 i
-
+    def select_from_kmers(
+        self, kmers: NDArray1[N, np.int64]
+    ) -> tuple[NDArray1[M, np.uint32], NDArray1[M, np.int64]]:
         symbol_codes_for_each_kmer = self._kmer_alph.split(kmers)
 
-        cdef int64[:] min_pos = np.zeros(
-            len(symbol_codes_for_each_kmer), dtype=np.int64
-        )
+        min_pos = np.zeros(len(symbol_codes_for_each_kmer), dtype=np.int64)
         for i in range(symbol_codes_for_each_kmer.shape[0]):
             smers = self._smer_alph.create_kmers(symbol_codes_for_each_kmer[i])
             if self._permutation is None:
@@ -479,26 +449,24 @@ class SyncmerSelector:
         syncmer_pos = self._filter_syncmer_pos(min_pos)
         return syncmer_pos, kmers[syncmer_pos]
 
-
-    def _filter_syncmer_pos(self, min_pos):
+    def _filter_syncmer_pos(
+        self, min_pos: NDArray1[N, np.int64]
+    ) -> NDArray1[M, np.uint32]:
         """
         Get indices of *k-mers* that are syncmers, based on `min_pos`,
         the position of the minimum *s-mer* in each *k-mer*.
         Syncmers are k-mers whose the minimum s-mer is at (one of)
         the given offet position(s).
         """
-        syncmer_mask = None
+        syncmer_mask = np.zeros(len(min_pos), dtype=bool)
         for offset in self._offset:
             # For the usual number of offsets, this 'loop'-appoach is
             # faster than np.isin()
-            if syncmer_mask is None:
-                syncmer_mask = min_pos == offset
-            else:
-                syncmer_mask |= min_pos == offset
-        return np.where(syncmer_mask)[0]
+            syncmer_mask |= min_pos == offset
+        return np.where(syncmer_mask)[0].astype(np.uint32)
 
 
-class CachedSyncmerSelector(SyncmerSelector):
+class CachedSyncmerSelector(SyncmerSelector[S]):
     """
     CachedSyncmerSelector(alphabet, k, s, permutation=None, offset=(0,))
 
@@ -583,7 +551,14 @@ class CachedSyncmerSelector(SyncmerSelector):
     ['GGCAA', 'AAGTG', 'AGTGA', 'GTGAC']
     """
 
-    def __init__(self, alphabet, k, s, permutation=None, offset=(0,)):
+    def __init__(
+        self,
+        alphabet: Alphabet[S],
+        k: int,
+        s: int,
+        permutation: Permutation | None = None,
+        offset: tuple[int, ...] = (0,),
+    ) -> None:
         super().__init__(alphabet, k, s, permutation, offset)
         # Check for all possible *k-mers*, whether they are syncmers
         all_kmers = np.arange(len(self.kmer_alphabet))
@@ -592,67 +567,25 @@ class CachedSyncmerSelector(SyncmerSelector):
         self._syncmer_mask = np.zeros(len(self.kmer_alphabet), dtype=bool)
         self._syncmer_mask[syncmer_indices] = True
 
-
-    def select(self, sequence, bint alphabet_check=True):
-        """
-        select(sequence, alphabet_check=True)
-
-        Obtain all overlapping *k-mers* from a sequence and select
-        the syncmers from them.
-
-        Parameters
-        ----------
-        sequence : Sequence
-            The sequence to find the syncmers in.
-            Must be compatible with the given `kmer_alphabet`
-        alphabet_check: bool, optional
-            If set to false, the compatibility between the alphabet
-            of the sequence and the alphabet of the
-            :class:`CachedSyncmerSelector`
-            is not checked to gain additional performance.
-
-        Returns
-        -------
-        syncmer_indices : ndarray, dtype=np.uint32
-            The sequence indices where the syncmers start.
-        syncmers : ndarray, dtype=np.int64
-            The corresponding *k-mer* codes of the syncmers.
-        """
+    def select(
+        self, sequence: Sequence[S], alphabet_check: bool = True
+    ) -> tuple[NDArray1[M, np.uint32], NDArray1[M, np.int64]]:
         if alphabet_check:
             if not self.alphabet.extends(sequence.alphabet):
                 raise ValueError(
-                    "The sequence's alphabet does not fit "
-                    "the selector's alphabet"
+                    "The sequence's alphabet does not fit the selector's alphabet"
                 )
         kmers = self.kmer_alphabet.create_kmers(sequence.code)
         return self.select_from_kmers(kmers)
 
-
-    def select_from_kmers(self, kmers):
-        """
-        select_from_kmers(kmers)
-
-        Select syncmers for the given *k-mers*.
-
-        The *k-mers* are not required to overlap.
-
-        Parameters
-        ----------
-        kmers : ndarray, dtype=np.int64
-            The *k-mer* codes to select the syncmers from.
-
-        Returns
-        -------
-        syncmer_indices : ndarray, dtype=np.uint32
-            The sequence indices where the syncmers start.
-        syncmers : ndarray, dtype=np.int64
-            The corresponding *k-mer* codes of the syncmers.
-        """
-        syncmer_pos = np.where(self._syncmer_mask[kmers])[0]
+    def select_from_kmers(
+        self, kmers: NDArray1[N, np.int64]
+    ) -> tuple[NDArray1[M, np.uint32], NDArray1[M, np.int64]]:
+        syncmer_pos = np.where(self._syncmer_mask[kmers])[0].astype(np.uint32)
         return syncmer_pos, kmers[syncmer_pos]
 
 
-class MincodeSelector:
+class MincodeSelector(Selector[S]):
     r"""
     MincodeSelector(self, kmer_alphabet, compression, permutation=None)
 
@@ -718,14 +651,17 @@ class MincodeSelector:
     ['AG', 'CT', 'GA', 'TC']
     """
 
-    def __init__(self, kmer_alphabet, compression, permutation=None):
+    def __init__(
+        self,
+        kmer_alphabet: KmerAlphabet[S],
+        compression: float,
+        permutation: Permutation | None = None,
+    ) -> None:
+        super().__init__(permutation)
         if compression < 1:
-            raise ValueError(
-                "Compression factor must be equal to or larger than 1"
-            )
+            raise ValueError("Compression factor must be equal to or larger than 1")
         self._compression = compression
         self._kmer_alph = kmer_alphabet
-        self._permutation = permutation
         if permutation is None:
             permutation_offset = 0
             permutation_range = len(kmer_alphabet)
@@ -734,49 +670,21 @@ class MincodeSelector:
             permutation_range = permutation.max - permutation.min + 1
         self._threshold = permutation_offset + permutation_range / compression
 
-
     @property
-    def kmer_alphabet(self):
+    def kmer_alphabet(self) -> KmerAlphabet[S]:
         return self._kmer_alph
 
     @property
-    def compression(self):
+    def compression(self) -> float:
         return self._compression
 
     @property
-    def threshold(self):
+    def threshold(self) -> float:
         return self._threshold
 
-    @property
-    def permutation(self):
-        return self._permutation
-
-
-    def select(self, sequence, bint alphabet_check=True):
-        """
-        select(sequence, alphabet_check=True)
-
-        Obtain all overlapping *k-mers* from a sequence and select
-        the *Mincode k-mers* from them.
-
-        Parameters
-        ----------
-        sequence : Sequence
-            The sequence to find the *Mincode k-mers* in.
-            Must be compatible with the given `kmer_alphabet`
-        alphabet_check: bool, optional
-            If set to false, the compatibility between the alphabet
-            of the sequence and the alphabet of the
-            :class:`MincodeSelector`
-            is not checked to gain additional performance.
-
-        Returns
-        -------
-        mincode_indices : ndarray, dtype=np.uint32
-            The sequence indices where the *Mincode k-mers* start.
-        mincode : ndarray, dtype=np.int64
-            The corresponding *Mincode k-mer* codes.
-        """
+    def select(
+        self, sequence: Sequence[S], alphabet_check: bool = True
+    ) -> tuple[NDArray1[M, np.uint32], NDArray1[M, np.int64]]:
         if alphabet_check:
             if not self._kmer_alph.base_alphabet.extends(sequence.alphabet):
                 raise ValueError(
@@ -785,27 +693,9 @@ class MincodeSelector:
         kmers = self._kmer_alph.create_kmers(sequence.code)
         return self.select_from_kmers(kmers)
 
-
-    def select_from_kmers(self, kmers):
-        """
-        select_from_kmers(kmers)
-
-        Select *Mincode k-mers*.
-
-        The given *k-mers* are not required to overlap.
-
-        Parameters
-        ----------
-        kmers : ndarray, dtype=np.int64
-            The *k-mer* codes to select the *Mincode k-mers* from.
-
-        Returns
-        -------
-        mincode_indices : ndarray, dtype=np.uint32
-            The sequence indices where the *Mincode k-mers* start.
-        mincode : ndarray, dtype=np.int64
-            The corresponding *Mincode k-mer* codes.
-        """
+    def select_from_kmers(
+        self, kmers: NDArray1[N, np.int64]
+    ) -> tuple[NDArray1[M, np.uint32], NDArray1[M, np.int64]]:
         if self._permutation is None:
             ordering = kmers
         else:
@@ -816,139 +706,5 @@ class MincodeSelector:
                     f"sort keys for {len(kmers)} k-mers"
                 )
 
-        mincode_pos = ordering < self._threshold
+        mincode_pos = np.where(ordering < self._threshold)[0].astype(np.uint32)
         return mincode_pos, kmers[mincode_pos]
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def _minimize(int64[:] kmers, int64[:] ordering, uint32 window,
-              bint include_duplicates):
-    """
-    Implementation of the algorithm originally devised by
-    Marcel van Herk.
-
-    In this implementation the frame is chosen differently:
-    For a position 'x' the frame ranges from 'x' to 'x + window-1'
-    instead of 'x - (window-1)/2' to 'x + (window-1)/2'.
-    """
-    cdef uint32 seq_i
-
-    cdef uint32 n_windows = kmers.shape[0] - (window - 1)
-    # Pessimistic array allocation size
-    # -> Expect that every window has a new minimizer
-    cdef uint32[:] mininizer_pos = np.empty(n_windows, dtype=np.uint32)
-    cdef int64[:] minimizers = np.empty(n_windows, dtype=np.int64)
-    # Counts the actual number of minimiers for later trimming
-    cdef uint32 n_minimizers = 0
-
-    # Variables for the position of the previous cumulative minimum
-    # Assign an value that can never occur for the start,
-    # as in the beginning there is no previous value
-    cdef uint32 prev_argcummin = kmers.shape[0]
-    # Variables for the position of the current cumulative minimum
-    cdef uint32 combined_argcummin, forward_argcummin, reverse_argcummin
-    # Variables for the current cumulative minimum
-    cdef int64 combined_cummin, forward_cummin, reverse_cummin
-    # Variables for cumulative minima at all positions
-    cdef uint32[:] forward_argcummins = _chunk_wise_forward_argcummin(
-        ordering, window
-    )
-    cdef uint32[:] reverse_argcummins = _chunk_wise_reverse_argcummin(
-        ordering, window
-    )
-
-    for seq_i in range(n_windows):
-        forward_argcummin = forward_argcummins[seq_i + window - 1]
-        reverse_argcummin = reverse_argcummins[seq_i]
-        forward_cummin = ordering[forward_argcummin]
-        reverse_cummin = ordering[reverse_argcummin]
-
-        # At ties the leftmost position is taken,
-        # which stems from the reverse pass
-        if forward_cummin < reverse_cummin:
-            combined_argcummin = forward_argcummin
-        else:
-            combined_argcummin = reverse_argcummin
-
-        # If the same minimizer position was observed before, the
-        # duplicate is simply ignored, if 'include_duplicates' is false
-        if include_duplicates or combined_argcummin != prev_argcummin:
-            # Append minimizer to return value
-            mininizer_pos[n_minimizers] = combined_argcummin
-            minimizers[n_minimizers] = kmers[combined_argcummin]
-            n_minimizers += 1
-            prev_argcummin = combined_argcummin
-
-    return (
-        np.asarray(mininizer_pos)[:n_minimizers],
-        np.asarray(minimizers)[:n_minimizers]
-    )
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
-cdef _chunk_wise_forward_argcummin(int64[:] values, uint32 chunk_size):
-    """
-    Argument of the cumulative minimum.
-    """
-    cdef uint32 seq_i
-
-    cdef uint32 current_min_i = 0
-    cdef int64 current_min, current_val
-    cdef uint32[:] min_pos = np.empty(values.shape[0], dtype=np.uint32)
-
-    # Any actual value will be smaller than this placeholder
-    current_min = MAX_INT_64
-    for seq_i in range(values.shape[0]):
-        if seq_i % chunk_size == 0:
-            # New chunk begins
-            current_min = MAX_INT_64
-        current_val = values[seq_i]
-        if current_val < current_min:
-            current_min_i = seq_i
-            current_min = current_val
-        min_pos[seq_i] = current_min_i
-
-    return min_pos
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
-cdef _chunk_wise_reverse_argcummin(int64[:] values, uint32 chunk_size):
-    """
-    The same as above but starting from the other end and iterating
-    backwards.
-    Separation into two functions leads to code duplication.
-    However, single implementation with reversed `values` as input
-    has some disadvantages:
-
-    - Indices must be transformed so that they point to the
-      non-reversed `values`
-    - There are issues in selecting the leftmost argument
-    - An offset is necessary to ensure alignment of chunks with forward
-      pass
-
-    Hence, a separate 'reverse' variant of the function was implemented.
-    """
-    cdef uint32 seq_i
-
-    cdef uint32 current_min_i = 0
-    cdef int64 current_min, current_val
-    cdef uint32[:] min_pos = np.empty(values.shape[0], dtype=np.uint32)
-
-    current_min = MAX_INT_64
-    for seq_i in reversed(range(values.shape[0])):
-        # The chunk beginning is a small difference to forward
-        # implementation, as it begins on the left of the chunk border
-        if seq_i % chunk_size == chunk_size - 1:
-            current_min = MAX_INT_64
-        current_val = values[seq_i]
-        # The '<=' is a small difference to forward implementation
-        # to enure the loftmost argument is selected
-        if current_val <= current_min:
-            current_min_i = seq_i
-            current_min = current_val
-        min_pos[seq_i] = current_min_i
-
-    return min_pos
