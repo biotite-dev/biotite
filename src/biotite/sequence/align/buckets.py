@@ -6,10 +6,13 @@ __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 __all__ = ["bucket_number"]
 
-from os.path import dirname, join, realpath
+import functools
+from pathlib import Path
+from typing import Any
 import numpy as np
+from biotite.typing import NDArray1
 
-_primes = None
+_PRIMES_PATH = Path(__file__).parent / "primes.txt"
 
 
 def bucket_number(n_kmers: int, load_factor: float = 0.8) -> int:
@@ -53,19 +56,22 @@ def bucket_number(n_kmers: int, load_factor: float = 0.8) -> int:
     Hence, all *k-mers* with the same suffix would be stored in the same
     bin.
     """
-    global _primes
-    if _primes is None:
-        with open(join(dirname(realpath(__file__)), "primes.txt")) as file:
-            _primes = np.array(
-                [
-                    int(line)
-                    for line in file.read().splitlines()
-                    if len(line) != 0 and line[0] != "#"
-                ]
-            )
-
+    primes = _get_primes()
     number = int(n_kmers / load_factor)
-    index = np.searchsorted(_primes, number, side="left")
-    if index == len(_primes):
+    index = np.searchsorted(primes, number, side="left")
+    if index == len(primes):
         raise ValueError("Number of buckets too large")
-    return _primes[index]
+    return primes[index]
+
+
+@functools.cache
+def _get_primes() -> NDArray1[Any, np.integer]:
+    with open(_PRIMES_PATH) as file:
+        _primes = np.array(
+            [
+                int(line)
+                for line in file.read().splitlines()
+                if len(line) != 0 and line[0] != "#"
+            ]
+        )
+    return _primes

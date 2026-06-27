@@ -296,8 +296,6 @@ impl<T: Clone + Default> IndexMut<[isize; 3]> for CellGrid<T> {
     }
 }
 
-/// __init__(atom_array, cell_size, periodic=False, box=None, selection=None)
-///
 /// This class enables the efficient search of atoms in vicinity of a
 /// defined location.
 ///
