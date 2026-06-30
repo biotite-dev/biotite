@@ -92,8 +92,6 @@ impl PDBFile {
         Ok(PyArray1::from_iter(py, self.atom_line_i.iter().map(|x| *x as i64)).to_owned())
     }
 
-    /// read(file)
-    ///
     /// Read a PDB file.
     ///
     /// Parameters
@@ -153,8 +151,6 @@ impl PDBFile {
         Ok(())
     }
 
-    /// get_remark(self, number)
-    ///
     /// Get the lines containing the *REMARK* records with the given
     /// `number`.
     ///
@@ -215,8 +211,6 @@ impl PDBFile {
         }
     }
 
-    /// get_model_count(self)
-    ///
     /// Get the number of models contained in the PDB file.
     ///
     /// Returns
@@ -227,8 +221,6 @@ impl PDBFile {
         self.model_start_i.len()
     }
 
-    /// get_coord(self, model=None)
-    ///
     /// Get only the coordinates from the PDB file.
     ///
     /// Parameters
@@ -339,8 +331,6 @@ impl PDBFile {
         }
     }
 
-    /// get_b_factor(self, model=None)
-    ///
     /// Get only the B-factors from the PDB file.
     ///
     /// Parameters
@@ -701,8 +691,6 @@ impl PDBFile {
         Ok(atoms)
     }
 
-    /// set_structure(self, atoms, hybrid36=False)
-    ///
     /// Set the :class:`AtomArray` or :class:`AtomArrayStack` for the
     /// file.
     ///

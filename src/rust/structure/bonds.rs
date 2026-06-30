@@ -148,8 +148,6 @@ impl Bond {
     }
 }
 
-/// __init__(atom_count, bonds=None)
-///
 /// A bond list stores indices of atoms
 /// (usually of an :class:`AtomArray` or :class:`AtomArrayStack`)
 /// that form chemical bonds together with the type (or order) of the
@@ -420,8 +418,6 @@ impl BondList {
         BondList::concatenate_lists(&refs)
     }
 
-    /// offset_indices(offset)
-    ///
     /// Increase all atom indices in the :class:`BondList` by the given
     /// offset.
     ///
@@ -459,8 +455,6 @@ impl BondList {
         Ok(())
     }
 
-    /// as_array()
-    ///
     /// Obtain a copy of the internal :class:`ndarray`.
     ///
     /// Returns
@@ -520,8 +514,6 @@ impl BondList {
         Ok(set)
     }
 
-    /// as_graph()
-    ///
     /// Obtain a graph representation of the :class:`BondList`.
     ///
     /// Returns
@@ -623,8 +615,6 @@ impl BondList {
         }
     }
 
-    /// convert_bond_type(original_bond_type, new_bond_type)
-    ///
     /// Convert all occurences of a given bond type into another bond type.
     ///
     /// Parameters
@@ -681,8 +671,6 @@ impl BondList {
         self.bonds.len()
     }
 
-    /// get_bonds(atom_index)
-    ///
     /// Obtain the indices of the atoms bonded to the atom with the
     /// given index as well as the corresponding bond types.
     ///
@@ -963,8 +951,6 @@ impl BondList {
         Ok(())
     }
 
-    /// remove_bond(atom_index1, atom_index2)
-    ///
     /// Remove a bond from the :class:`BondList`.
     ///
     /// If the bond is not existent in the :class:`BondList`, nothing happens.
@@ -979,8 +965,6 @@ impl BondList {
         Ok(())
     }
 
-    /// remove_bonds_to(self, atom_index)
-    ///
     /// Remove all bonds from the :class:`BondList` where the given atom
     /// is involved.
     ///
@@ -995,8 +979,6 @@ impl BondList {
         Ok(())
     }
 
-    /// remove_bonds(bond_list)
-    ///
     /// Remove multiple bonds from the :class:`BondList`.
     ///
     /// All bonds present in `bond_list` are removed from this instance.
@@ -1015,8 +997,6 @@ impl BondList {
             .retain(|bond| !bonds_to_remove.contains(&(bond.atom1, bond.atom2)));
     }
 
-    /// merge(bond_list)
-    ///
     /// Merge another :class:`BondList` with this instance into a new
     /// object.
     /// If a bond appears in both :class:`BondList`'s, the

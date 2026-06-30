@@ -254,8 +254,6 @@ pub fn connect_inter_residue<'py>(
     Ok(bond_list)
 }
 
-/// find_connected(bond_list, root, as_mask=False)
-///
 /// Get indices to all atoms that are directly or indirectly connected
 /// to the root atom indicated by the given index.
 ///
