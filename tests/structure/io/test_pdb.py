@@ -603,3 +603,19 @@ def test_hetatm_intra_residue_bonds():
     actual_bonds = structure.bonds.as_array()
 
     np.testing.assert_array_equal(actual_bonds, expected_bonds)
+
+
+def test_multiple_atom_array():
+    """
+    Setting the structure with an :class:`AtomArrayStack` and with an equivalent list of
+    :class:`AtomArray` objects should result in the same file.
+    """
+    stack = pdb.PDBFile.read(join(data_dir("structure"), "1l2y.pdb")).get_structure()
+
+    ref_file = pdb.PDBFile()
+    ref_file.set_structure(stack)
+
+    test_file = pdb.PDBFile()
+    test_file.set_structure(list(stack))
+
+    assert test_file.lines == ref_file.lines

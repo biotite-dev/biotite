@@ -1,10 +1,7 @@
 //! Low-level PDB file parsing and writing.
 
 use num_traits::{Float, FloatConst};
-use numpy::ndarray::Axis;
-use numpy::ndarray::{
-    Array, Array1, Array2, ArrayView1, ArrayView3, ArrayViewD, ArrayViewMut1, Ix3,
-};
+use numpy::ndarray::{Array, Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1, Ix2};
 use numpy::PyArrayMethods;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyArrayDyn, PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::exceptions;
@@ -702,10 +699,13 @@ impl PDBFile {
     ///
     /// Parameters
     /// ----------
-    /// array : AtomArray or AtomArrayStack
-    ///     The array or stack to be saved into this file. If a stack
-    ///     is given, each array in the stack is saved as separate
-    ///     model.
+    /// atoms : AtomArray or AtomArrayStack or list of AtomArray
+    ///     The structure to be written.
+    ///     If a stack is given, each model in the stack is written as a
+    ///     separate model.
+    ///     If a list of :class:`AtomArray` is given, each array is written
+    ///     as a separate model, which - unlike a stack - may contain
+    ///     different atoms.
     /// hybrid36 : bool, optional
     ///     Defines wether the file should be written in hybrid-36
     ///     format.
@@ -721,159 +721,39 @@ impl PDBFile {
         atoms: Bound<'_, PyAny>,
         hybrid36: bool,
     ) -> PyResult<()> {
-        // Write the CRYST1 record if box is present
-        let box_vectors = atoms.getattr("box")?;
+        let atom_array_class = py.import("biotite.structure")?.getattr("AtomArray")?;
+        let models: Vec<Bound<'_, PyAny>> = if atoms.is_instance(&atom_array_class)? {
+            vec![atoms]
+        } else {
+            atoms.try_iter()?.collect::<PyResult<Vec<_>>>()?
+        };
+        if models.is_empty() {
+            return Err(biotite::BadStructureError::new_err(
+                "Structure must not be empty",
+            ));
+        }
+        let is_multi_model = models.len() > 1;
+
+        // Write the CRYST1 record from the first model's box, as a PDB file
+        // can store only a single box for all models
+        let box_vectors = models[0].getattr("box")?;
         if !box_vectors.is_none() {
-            // For AtomArrayStack, the box is 3D - use first model's box
-            let box_ndim: usize = box_vectors.getattr("ndim")?.extract()?;
-            let box_to_write = match box_ndim {
-                3 => box_vectors.get_item(0)?,
-                2 => box_vectors,
-                _ => Err(biotite::BadStructureError::new_err(
-                    "Invalid box dimensions",
-                ))?,
-            };
-            self.write_box(py, box_to_write)?;
+            self.write_cryst_record(py, box_vectors)?;
         }
 
-        // Create a binding first to avoid borrowing a dropped array
-        let coord_array = atoms
-            .getattr("coord")?
-            .extract::<Bound<'_, PyArrayDyn<f32>>>()?
-            .readonly();
-        let coord: ArrayViewD<f32> = coord_array.as_array();
-        let coord: ArrayView3<f32> = match coord.ndim() {
-            2 => coord.insert_axis(Axis(0)),
-            3 => coord,
-            _ => Err(biotite::BadStructureError::new_err(
-                "Invalid dimensions of coordinates",
-            ))?,
-        }
-        .into_dimensionality::<Ix3>()
-        .unwrap();
-        let is_multi_model = coord.shape()[0] > 1;
-
-        let chain_id = get_annotation_as_strings(&atoms, "chain_id")?;
-        let res_id_numpy = get_annotation_as_type(&atoms, "res_id", "int64")?.readonly();
-        let res_id: ArrayView1<i64> = res_id_numpy.as_array();
-        let ins_code = get_annotation_as_strings(&atoms, "ins_code")?;
-        let res_name = get_annotation_as_strings(&atoms, "res_name")?;
-        let hetero_numpy = get_annotation_as_type(&atoms, "hetero", "bool")?.readonly();
-        let hetero: ArrayView1<bool> = hetero_numpy.as_array();
-        let atom_name = get_annotation_as_strings(&atoms, "atom_name")?;
-        let element = get_annotation_as_strings(&atoms, "element")?;
-
-        let atom_id_numpy: Option<PyReadonlyArray1<i64>> = if atoms.hasattr("atom_id")? {
-            Some(get_annotation_as_type(&atoms, "atom_id", "int64")?.readonly())
-        } else {
-            None
-        };
-        let atom_id = atom_id_numpy.as_ref().map(|arr| arr.as_array());
-        let b_factor_numpy: Option<PyReadonlyArray1<f64>> = if atoms.hasattr("b_factor")? {
-            Some(get_annotation_as_type(&atoms, "b_factor", "float64")?.readonly())
-        } else {
-            None
-        };
-        let b_factor = b_factor_numpy.as_ref().map(|arr| arr.as_array());
-        let occupancy_numpy: Option<PyReadonlyArray1<f64>> = if atoms.hasattr("occupancy")? {
-            Some(get_annotation_as_type(&atoms, "occupancy", "float64")?.readonly())
-        } else {
-            None
-        };
-        let occupancy = occupancy_numpy.as_ref().map(|arr| arr.as_array());
-        let charge_numpy: Option<PyReadonlyArray1<i64>> = if atoms.hasattr("charge")? {
-            Some(get_annotation_as_type(&atoms, "charge", "int64")?.readonly())
-        } else {
-            None
-        };
-        let charge = charge_numpy.as_ref().map(|arr| arr.as_array());
-
-        // These will contain the ATOM records for each atom
-        // These are reused in every model by adding the coordinates to the string
-        // This procedure aims to increase the performance is repetitive formatting is omitted
-        let mut prefix: Vec<String> = Vec::new();
-        let mut suffix: Vec<String> = Vec::new();
-
-        for i in 0..coord.shape()[1] {
-            let element_i = &element[i];
-            let atom_name_i = &atom_name[i];
-
-            let raw_atom_id_i = atom_id.as_ref().map_or((i + 1) as i64, |arr| arr[i]);
-            let atom_id_i = if hybrid36 {
-                encode_hybrid36(raw_atom_id_i, 5)?
-            } else {
-                truncate_id(raw_atom_id_i, 99999).to_string()
-            };
-
-            let res_id_i = if hybrid36 {
-                encode_hybrid36(res_id[i], 4)?
-            } else {
-                truncate_id(res_id[i], 9999).to_string()
-            };
-
-            prefix.push(format!(
-                "{:6}{:>5} {:4} {:>3} {:1}{:>4}{:1}   ",
-                if hetero[i] { "HETATM" } else { "ATOM" },
-                atom_id_i,
-                if element_i.len() == 1 && atom_name_i.len() < 4 {
-                    format!(" {}", atom_name_i)
-                } else {
-                    atom_name_i.to_string()
-                },
-                res_name[i],
-                chain_id[i],
-                res_id_i,
-                ins_code[i],
-            ));
-
-            suffix.push(format!(
-                "{:>6.2}{:>6.2}          {:>2}{}",
-                occupancy.as_ref().map_or(1f64, |arr| arr[i]),
-                b_factor.as_ref().map_or(0f64, |arr| arr[i]),
-                element_i,
-                charge.as_ref().map_or(String::from("  "), |arr| {
-                    let c = arr[i];
-                    match c.cmp(&0) {
-                        Ordering::Greater => format!("{:1}+", c),
-                        Ordering::Less => format!("{:1}-", -c),
-                        Ordering::Equal => String::from("  "),
-                    }
-                }),
-            ));
-        }
-
-        for model_i in 0..coord.shape()[0] {
+        for (model_i, model) in models.iter().enumerate() {
             if is_multi_model {
                 self.lines.push(format!("MODEL {:>8}", model_i + 1));
             }
-            for atom_i in 0..coord.shape()[1] {
-                let coord_string = format!(
-                    "{:>8.3}{:>8.3}{:>8.3}",
-                    coord[[model_i, atom_i, 0]],
-                    coord[[model_i, atom_i, 1]],
-                    coord[[model_i, atom_i, 2]],
-                );
-                self.lines
-                    .push(prefix[atom_i].clone() + &coord_string + &suffix[atom_i]);
-            }
+            self.write_atom_records(model, hybrid36)?;
             if is_multi_model {
                 self.lines.push(String::from("ENDMDL"));
             }
         }
 
-        // Write CONECT records if bonds are present
-        let bonds = atoms.getattr("bonds")?;
-        if !bonds.is_none() {
-            // Bond type is unused since PDB does not support bond orders
-            let (bonds_array, _bond_types): (PyReadonlyArray2<'_, i32>, PyReadonlyArray2<'_, i8>) =
-                bonds.call_method0("get_all_bonds")?.extract()?;
-            let atom_id_for_bonds: Bound<'_, PyArray1<i64>> = match &atom_id_numpy {
-                Some(arr) => arr.as_array().to_owned().into_pyarray(py),
-                // If atom_id annotation is not present, generate sequential IDs
-                None => PyArray1::from_iter(py, (1..=coord.shape()[1] as i64).collect::<Vec<_>>()),
-            };
-            self.write_bonds(bonds_array, atom_id_for_bonds.readonly())?;
-        }
+        // The CONECT records are taken from the first model, as a PDB file
+        // can store only a single connectivity for all models
+        self.write_conect_records(py, &models[0])?;
 
         self._index_models_and_atoms();
         Ok(())
@@ -1083,7 +963,11 @@ impl PDBFile {
     }
 
     /// Write the `CRYST1` record to this [`PDBFile`] based on the given box vectors.
-    fn write_box(&mut self, py: Python<'_>, box_vectors: Bound<'_, PyAny>) -> PyResult<()> {
+    fn write_cryst_record(
+        &mut self,
+        py: Python<'_>,
+        box_vectors: Bound<'_, PyAny>,
+    ) -> PyResult<()> {
         let struc = PyModule::import(py, "biotite.structure")?;
         let (len_a, len_b, len_c, alpha, beta, gamma): (f64, f64, f64, f64, f64, f64) = struc
             .getattr("unitcell_from_vectors")?
@@ -1101,19 +985,30 @@ impl PDBFile {
         Ok(())
     }
 
-    /// Write `CONECT` records to this [`PDBFile`] based on the given `bonds`
-    /// array containing indices pointing to bonded atoms in the `AtomArray`.
-    /// The `atom_id` annotation array is required to map the atom IDs in `CONECT` records
-    /// to atom indices.
-    fn write_bonds<'py>(
-        &mut self,
-        bonds: PyReadonlyArray2<'py, i32>,
-        atom_id: PyReadonlyArray1<'py, i64>,
-    ) -> PyResult<()> {
-        let bonds = bonds.as_array();
-        let atom_id = atom_id.as_array();
+    /// Write the ``CONECT`` records for the bonds of the given model, if any.
+    ///
+    /// The `atom_id` annotation is used to map the atom indices in the bonds
+    /// to the atom IDs in the ``CONECT`` records; if it is not present,
+    /// sequential IDs are generated.
+    fn write_conect_records(&mut self, py: Python<'_>, model: &Bound<'_, PyAny>) -> PyResult<()> {
+        let bonds = model.getattr("bonds")?;
+        if bonds.is_none() {
+            return Ok(());
+        }
+        // Bond type is unused since PDB does not support bond orders
+        let (bonds_array, _bond_types): (PyReadonlyArray2<'_, i32>, PyReadonlyArray2<'_, i8>) =
+            bonds.call_method0("get_all_bonds")?.extract()?;
+        let atom_id_array: Bound<'_, PyArray1<i64>> = if model.hasattr("atom_id")? {
+            get_annotation_as_type(model, "atom_id", "int64")?
+        } else {
+            // If the atom_id annotation is not present, generate sequential IDs
+            let n_atoms: usize = model.call_method0("array_length")?.extract()?;
+            PyArray1::from_iter(py, 1..=n_atoms as i64)
+        };
+        let atom_id_array = atom_id_array.readonly();
+        let atom_id = atom_id_array.as_array();
 
-        for (center_i, bonded_indices) in bonds.outer_iter().enumerate() {
+        for (center_i, bonded_indices) in bonds_array.as_array().outer_iter().enumerate() {
             let mut n_added: usize = 0;
             let mut line: String = String::new();
             for bonded_i in bonded_indices.iter() {
@@ -1146,6 +1041,105 @@ impl PDBFile {
             if n_added > 0 {
                 self.lines.push(format!("{:<80}", line));
             }
+        }
+        Ok(())
+    }
+
+    /// Write the ``ATOM``/``HETATM`` records for a single `AtomArray` model.
+    /// The ``MODEL``/``ENDMDL`` records are written by the caller.
+    fn write_atom_records(&mut self, model: &Bound<'_, PyAny>, hybrid36: bool) -> PyResult<()> {
+        let chain_id = get_annotation_as_strings(model, "chain_id")?;
+        let res_id_numpy = get_annotation_as_type(model, "res_id", "int64")?.readonly();
+        let res_id: ArrayView1<i64> = res_id_numpy.as_array();
+        let ins_code = get_annotation_as_strings(model, "ins_code")?;
+        let res_name = get_annotation_as_strings(model, "res_name")?;
+        let hetero_numpy = get_annotation_as_type(model, "hetero", "bool")?.readonly();
+        let hetero: ArrayView1<bool> = hetero_numpy.as_array();
+        let atom_name = get_annotation_as_strings(model, "atom_name")?;
+        let element = get_annotation_as_strings(model, "element")?;
+
+        let atom_id_numpy: Option<PyReadonlyArray1<i64>> = if model.hasattr("atom_id")? {
+            Some(get_annotation_as_type(model, "atom_id", "int64")?.readonly())
+        } else {
+            None
+        };
+        let atom_id = atom_id_numpy.as_ref().map(|arr| arr.as_array());
+        let b_factor_numpy: Option<PyReadonlyArray1<f64>> = if model.hasattr("b_factor")? {
+            Some(get_annotation_as_type(model, "b_factor", "float64")?.readonly())
+        } else {
+            None
+        };
+        let b_factor = b_factor_numpy.as_ref().map(|arr| arr.as_array());
+        let occupancy_numpy: Option<PyReadonlyArray1<f64>> = if model.hasattr("occupancy")? {
+            Some(get_annotation_as_type(model, "occupancy", "float64")?.readonly())
+        } else {
+            None
+        };
+        let occupancy = occupancy_numpy.as_ref().map(|arr| arr.as_array());
+        let charge_numpy: Option<PyReadonlyArray1<i64>> = if model.hasattr("charge")? {
+            Some(get_annotation_as_type(model, "charge", "int64")?.readonly())
+        } else {
+            None
+        };
+        let charge = charge_numpy.as_ref().map(|arr| arr.as_array());
+
+        // Create a binding first to avoid borrowing a dropped array
+        let coord_array = model
+            .getattr("coord")?
+            .extract::<Bound<'_, PyArrayDyn<f32>>>()?
+            .readonly();
+        let coord: ArrayView2<f32> = coord_array
+            .as_array()
+            .into_dimensionality::<Ix2>()
+            .map_err(|_| {
+                biotite::BadStructureError::new_err("Invalid dimensions of coordinates")
+            })?;
+
+        for i in 0..coord.shape()[0] {
+            let element_i = &element[i];
+            let atom_name_i = &atom_name[i];
+
+            let raw_atom_id_i = atom_id.as_ref().map_or((i + 1) as i64, |arr| arr[i]);
+            let atom_id_i = if hybrid36 {
+                encode_hybrid36(raw_atom_id_i, 5)?
+            } else {
+                truncate_id(raw_atom_id_i, 99999).to_string()
+            };
+
+            let res_id_i = if hybrid36 {
+                encode_hybrid36(res_id[i], 4)?
+            } else {
+                truncate_id(res_id[i], 9999).to_string()
+            };
+
+            self.lines.push(format!(
+                "{:6}{:>5} {:4} {:>3} {:1}{:>4}{:1}   {:>8.3}{:>8.3}{:>8.3}{:>6.2}{:>6.2}          {:>2}{}",
+                if hetero[i] { "HETATM" } else { "ATOM" },
+                atom_id_i,
+                if element_i.len() == 1 && atom_name_i.len() < 4 {
+                    format!(" {}", atom_name_i)
+                } else {
+                    atom_name_i.to_string()
+                },
+                res_name[i],
+                chain_id[i],
+                res_id_i,
+                ins_code[i],
+                coord[[i, 0]],
+                coord[[i, 1]],
+                coord[[i, 2]],
+                occupancy.as_ref().map_or(1f64, |arr| arr[i]),
+                b_factor.as_ref().map_or(0f64, |arr| arr[i]),
+                element_i,
+                charge.as_ref().map_or(String::from("  "), |arr| {
+                    let c = arr[i];
+                    match c.cmp(&0) {
+                        Ordering::Greater => format!("{:1}+", c),
+                        Ordering::Less => format!("{:1}-", -c),
+                        Ordering::Equal => String::from("  "),
+                    }
+                }),
+            ));
         }
         Ok(())
     }

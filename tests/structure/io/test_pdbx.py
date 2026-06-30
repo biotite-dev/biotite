@@ -1188,3 +1188,27 @@ def test_get_structure_missing_ins_code(format):
 
     assert atoms.array_length() > 0
     assert np.all(atoms.ins_code == "")
+
+
+@pytest.mark.parametrize("format", ["cif", "bcif"])
+def test_multiple_atom_array(format):
+    """
+    Setting the structure with an :class:`AtomArrayStack` and with an equivalent list of
+    :class:`AtomArray` objects should result in an equivalent output file.
+    """
+    base_path = join(data_dir("structure"), "1gya")
+    if format == "cif":
+        File = pdbx.CIFFile
+    else:
+        File = pdbx.BinaryCIFFile
+    stack = pdbx.get_structure(File.read(f"{base_path}.{format}"), include_bonds=True)
+
+    ref_file = File()
+    pdbx.set_structure(ref_file, stack)
+
+    test_file = File()
+    pdbx.set_structure(test_file, list(stack))
+
+    assert pdbx.get_structure(test_file, include_bonds=True) == pdbx.get_structure(
+        ref_file, include_bonds=True
+    )

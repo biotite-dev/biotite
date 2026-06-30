@@ -169,29 +169,21 @@ class PDBFile(RustPDBFile):
 
     def set_structure(
         self,
-        atoms: AtomArray[N] | AtomArrayStack[M, N],
+        atoms: AtomArray[N] | AtomArrayStack[M, N] | Iterable[AtomArray[N]],
         hybrid36: bool = False,
     ) -> None:
-        _check_pdb_compatibility(atoms, hybrid36)
-
-        # PDB files only contains ``CONECT`` records for bonds between non-water hetero
-        # residues and inter-residue bonds
-        # -> Preprocess `AtomArray` to remove those bonds
-        if atoms.bonds is not None:
-            original_bonds = atoms.bonds
-            # We only replace the BondList -> shallow copy is enough
-            atoms = copy.copy(atoms)
-            hetero_indices = np.where(atoms.hetero & ~filter_solvent(atoms))[0]
-            bond_array = original_bonds.as_array()
-            bond_array = bond_array[
-                np.isin(bond_array[:, 0], hetero_indices)
-                | np.isin(bond_array[:, 1], hetero_indices)
-                | (atoms.res_id[bond_array[:, 0]] != atoms.res_id[bond_array[:, 1]])
-                | (atoms.chain_id[bond_array[:, 0]] != atoms.chain_id[bond_array[:, 1]])
-            ]
-            atoms.bonds = BondList(atoms.array_length(), bond_array)
-
-        super().set_structure(atoms, hybrid36)
+        if isinstance(atoms, (AtomArray, AtomArrayStack)):
+            # A single `AtomArray` is written as a single model
+            _check_pdb_compatibility(atoms, hybrid36)
+            atoms = _remove_non_conect_bonds(atoms)
+            super().set_structure(atoms, hybrid36)
+        elif isinstance(atoms, Iterable):
+            models = [_remove_non_conect_bonds(model) for model in atoms]
+            if len(models) == 0:
+                raise BadStructureError("Structure must not be empty")
+            for model in models:
+                _check_pdb_compatibility(model, hybrid36)
+            super().set_structure(models, hybrid36)
 
     def get_space_group(self) -> SpaceGroupInfo:
         """
@@ -746,6 +738,34 @@ def _apply_transformations(
         "sym_id", np.repeat(np.arange(len(rotations)), structure.array_length())
     )
     return assembly
+
+
+def _remove_non_conect_bonds(
+    atoms: AtomArray[Any] | AtomArrayStack[Any, Any],
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
+    """
+    Remove all bonds that are not written as ``CONECT`` records.
+
+    PDB files only contain ``CONECT`` records for bonds between non-water
+    hetero residues and for inter-residue bonds.
+    If `atoms` has no associated :class:`BondList`, it is returned
+    unchanged.
+    """
+    if atoms.bonds is None:
+        return atoms
+    original_bonds = atoms.bonds
+    # We only replace the BondList -> shallow copy is enough
+    atoms = copy.copy(atoms)
+    hetero_indices = np.where(atoms.hetero & ~filter_solvent(atoms))[0]
+    bond_array = original_bonds.as_array()
+    bond_array = bond_array[
+        np.isin(bond_array[:, 0], hetero_indices)
+        | np.isin(bond_array[:, 1], hetero_indices)
+        | (atoms.res_id[bond_array[:, 0]] != atoms.res_id[bond_array[:, 1]])
+        | (atoms.chain_id[bond_array[:, 0]] != atoms.chain_id[bond_array[:, 1]])
+    ]
+    atoms.bonds = BondList(atoms.array_length(), bond_array)
+    return atoms
 
 
 def _check_pdb_compatibility(

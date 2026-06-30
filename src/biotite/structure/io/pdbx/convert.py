@@ -966,7 +966,7 @@ def _get_chem_comp_bond_type(bond_type: BondType) -> tuple[str, str]:
 
 def set_structure(
     pdbx_file: _PDBxFile,
-    array: AtomArray[N] | AtomArrayStack[M, N],
+    array: AtomArray[N] | AtomArrayStack[M, N] | Iterable[AtomArray[N]],  # pyright: ignore[reportRedeclaration]
     data_block: str | None = None,
     include_bonds: bool = False,
     extra_fields: Iterable[str] = [],
@@ -988,9 +988,10 @@ def set_structure(
     ----------
     pdbx_file : CIFFile or CIFBlock or BinaryCIFFile or BinaryCIFBlock
         The file object.
-    array : AtomArray or AtomArrayStack
-        The structure to be written. If a stack is given, each array in
-        the stack will be in a separate model.
+    array : AtomArray or AtomArrayStack or iterable of AtomArray
+        The structure to be written.
+        If a stack or an iterable of :class:`AtomArray` is given, multiple models will
+        be written.
     data_block : str, optional
         The name of the data block.
         Default is the first (and most times only) data block of the
@@ -1026,6 +1027,21 @@ def set_structure(
             "intra-residue are always written, if available",
             DeprecationWarning,
         )
+
+    if not isinstance(array, (AtomArray, AtomArrayStack)):
+        # An iterable of `AtomArray` objects represents multiple models that -
+        # unlike an `AtomArrayStack` - may contain different atoms in each model
+        # -> concatenate them into a single flat `AtomArray` and store the model
+        # membership in the `pdbx_PDB_model_num` annotation, which is written below
+        models: list[AtomArray[Any]] = list(array)
+        if len(models) == 0:
+            raise BadStructureError("Structure must not be empty")
+        model_num = np.repeat(
+            np.arange(1, len(models) + 1, dtype=np.int32),
+            [model.array_length() for model in models],
+        )
+        array: AtomArray[Any] = concatenate(models)
+        array.set_annotation("pdbx_PDB_model_num", model_num)
 
     _check_non_empty(array)
 
@@ -1127,7 +1143,16 @@ def set_structure(
         atom_site["Cartn_x"] = np.copy(np.ravel(array.coord[..., 0]))
         atom_site["Cartn_y"] = np.copy(np.ravel(array.coord[..., 1]))
         atom_site["Cartn_z"] = np.copy(np.ravel(array.coord[..., 2]))
-        atom_site["pdbx_PDB_model_num"] = np.ones(array.array_length(), dtype=np.int32)
+        # An iterable of `AtomArray` was concatenated into a single flat `AtomArray`,
+        # whose `pdbx_PDB_model_num` annotation stores the model membership
+        if "pdbx_PDB_model_num" in annot_categories:
+            atom_site["pdbx_PDB_model_num"] = np.copy(
+                array.get_annotation("pdbx_PDB_model_num")
+            )
+        else:
+            atom_site["pdbx_PDB_model_num"] = np.ones(
+                array.array_length(), dtype=np.int32
+            )
     # In case of multiple models repeat annotations
     # and use model specific coordinates
     else:
