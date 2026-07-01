@@ -3,9 +3,6 @@
 # information.
 
 import datetime
-import glob
-import itertools
-from os.path import join, splitext
 from tempfile import TemporaryFile
 import numpy as np
 import pytest
@@ -21,17 +18,17 @@ from tests.util import data_dir
 def list_v2000_sdf_files():
     return [
         path
-        for path in glob.glob(join(data_dir("structure"), "molecules", "*.sdf"))
-        if "v3000" not in path
+        for path in sorted((data_dir("structure") / "molecules").glob("*.sdf"))
+        if "v3000" not in path.name
     ]
 
 
 def list_v3000_sdf_files():
-    return glob.glob(join(data_dir("structure"), "molecules", "*v3000.sdf"))
+    return sorted((data_dir("structure") / "molecules").glob("*v3000.sdf"))
 
 
 def list_cif_files():
-    return glob.glob(join(data_dir("structure"), "molecules", "*.cif"))
+    return sorted((data_dir("structure") / "molecules").glob("*.cif"))
 
 
 def toy_atom_array(n_atoms):
@@ -74,16 +71,11 @@ def test_header_conversion():
     assert test_header == ref_header
 
 
-@pytest.mark.parametrize(
-    "FileClass, path, version, omit_charge, use_charge_property",
-    itertools.product(
-        [mol.MOLFile, mol.SDFile],
-        list_v2000_sdf_files(),
-        ["V2000", "V3000"],
-        [False, True],
-        [False, True],
-    ),
-)
+@pytest.mark.parametrize("FileClass", [mol.MOLFile, mol.SDFile])
+@pytest.mark.parametrize("path", list_v2000_sdf_files(), ids=lambda path: path.name)
+@pytest.mark.parametrize("version", ["V2000", "V3000"])
+@pytest.mark.parametrize("omit_charge", [False, True])
+@pytest.mark.parametrize("use_charge_property", [False, True])
 def test_structure_conversion_from_file(
     FileClass,  # noqa: N803
     path,
@@ -126,21 +118,19 @@ def test_structure_conversion_from_file(
     assert test_atoms == ref_atoms
 
 
+@pytest.mark.parametrize("FileClass", [mol.MOLFile, mol.SDFile])
 @pytest.mark.parametrize(
-    "FileClass, component_name, version, omit_charge, use_charge_property",
-    itertools.product(
-        [mol.MOLFile, mol.SDFile],
-        [
-            "ALA",  # Alanine
-            "BNZ",  # Benzene (has aromatic bonds)
-            "3P8",  # Methylammonium ion (has charge)
-            "MCH",  # Trichloromethane (has element with multiple letters)
-        ],
-        ["V2000", "V3000"],
-        [False, True],
-        [False, True],
-    ),
+    "component_name",
+    [
+        "ALA",  # Alanine
+        "BNZ",  # Benzene (has aromatic bonds)
+        "3P8",  # Methylammonium ion (has charge)
+        "MCH",  # Trichloromethane (has element with multiple letters)
+    ],
 )
+@pytest.mark.parametrize("version", ["V2000", "V3000"])
+@pytest.mark.parametrize("omit_charge", [False, True])
+@pytest.mark.parametrize("use_charge_property", [False, True])
 def test_structure_conversion_to_file(
     FileClass,  # noqa: N803
     component_name,
@@ -183,8 +173,11 @@ def test_structure_conversion_to_file(
     [
         file
         for file in list_v2000_sdf_files() + list_v3000_sdf_files()
-        if file.split(".")[0] + ".cif" in list_cif_files()
+        # The base name is the part before the first '.', i.e. without the
+        # '.sdf' and optional '.v3000' suffix
+        if file.with_name(file.name.split(".")[0] + ".cif") in list_cif_files()
     ],
+    ids=lambda path: path.name,
 )
 def test_pdbx_consistency(path):
     """
@@ -192,7 +185,7 @@ def test_pdbx_consistency(path):
     structure read in PDBx format.
     """
     # Remove '.sdf' and optional '.v3000' suffix
-    cif_path = splitext(splitext(path)[0])[0] + ".cif"
+    cif_path = path.with_name(path.name.split(".")[0] + ".cif")
 
     pdbx_file = pdbx.CIFFile.read(cif_path)
     ref_atoms = pdbx.get_component(pdbx_file)
@@ -213,8 +206,9 @@ def test_pdbx_consistency(path):
 
 
 @pytest.mark.parametrize(
-    "v2000_path, v3000_path",
+    ["v2000_path", "v3000_path"],
     zip(sorted(list_v2000_sdf_files()), sorted(list_v3000_sdf_files())),
+    ids=lambda path: path.name,
 )
 def test_version_consistency(v2000_path, v3000_path):
     """
@@ -238,7 +232,7 @@ def test_multi_record_files():
 
     ref_atom_arrays = [
         mol.SDFile.read(
-            join(data_dir("structure"), "molecules", f"{res_name}.sdf")
+            data_dir("structure") / "molecules" / f"{res_name}.sdf"
         ).record.get_structure()
         for res_name in RES_NAMES
     ]
@@ -263,7 +257,7 @@ def test_metadata_parsing():
     """
     Check if metadata is parsed correctly based on a known example.
     """
-    sdf_file = mol.SDFile.read(join(data_dir("structure"), "molecules", "13136.sdf"))
+    sdf_file = mol.SDFile.read(data_dir("structure") / "molecules" / "13136.sdf")
     metadata = sdf_file.record.metadata
 
     assert metadata["PUBCHEM_COMPOUND_CID"] == "13136"
@@ -291,7 +285,7 @@ def test_metadata_conversion():
 
 
 @pytest.mark.parametrize(
-    "key_string, ref_key_attributes",
+    ["key_string", "ref_key_attributes"],
     [
         # Cases from Dalby1992
         ("> <MELTING.POINT>", (None, "MELTING.POINT", None, None)),
@@ -316,7 +310,7 @@ def test_metadata_key_parsing(key_string, ref_key_attributes):
     assert test_key == ref_key
 
 
-@pytest.mark.parametrize("path", list_v2000_sdf_files())
+@pytest.mark.parametrize("path", list_v2000_sdf_files(), ids=lambda path: path.name)
 def test_structure_bond_type_fallback(path):
     """
     Check if a bond with a type not supported by MOL files will be translated

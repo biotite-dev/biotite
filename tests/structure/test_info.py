@@ -2,15 +2,12 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.info as strucinfo
 import biotite.structure.io.pdbx as pdbx
 from biotite.structure.info.ccd import _CCD_FILE as INTERNAL_CCD_FILE
-from biotite.structure.io import load_structure
 from tests.util import cannot_import, data_dir
 
 
@@ -33,7 +30,7 @@ def fake_ccd_path(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "function, included, excluded",
+    ["function", "included", "excluded"],
     [
         (strucinfo.amino_acid_names, ["ALA", "ARG", "ASN", "ASP"], ["HOH"]),
         (strucinfo.nucleotide_names, ["A", "C", "G", "U"], ["HOH", "ALA"]),
@@ -59,7 +56,9 @@ def test_mass():
     Test whether the mass of a residue is the same as the sum of the
     masses of its contained atoms.
     """
-    array = load_structure(join(data_dir("structure"), "1l2y.bcif"))[0]
+    array = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
+    )[0]
     _, res_names = struc.get_residues(array)
     water_mass = strucinfo.mass("H") * 2 + strucinfo.mass("O")
     # Mass of water must be subtracted
@@ -86,7 +85,9 @@ def test_protor_radii():
     glycosylation.
     This means, that none of the resulting radii should be the None.
     """
-    array = load_structure(join(data_dir("structure"), "1gya.bcif"))
+    array = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1gya.bcif")
+    )
     array = array[..., struc.filter_heavy(array)]
     array = array[..., struc.filter_amino_acids(array)]
     for res_name, atom_name in zip(array.res_name, array.atom_name):
@@ -121,7 +122,7 @@ def test_link_type():
 
 
 @pytest.mark.parametrize(
-    "residues, should_have_one_letter, exception_ratio",
+    ["residues", "should_have_one_letter", "exception_ratio"],
     [
         pytest.param(strucinfo.amino_acid_names(), True, 0.5, id="amino_acid_names"),
         pytest.param(strucinfo.nucleotide_names(), True, 0.4, id="nucleotide_names"),
@@ -200,11 +201,12 @@ def test_ion_names_in_periodic_table():
             )
 
 
-@pytest.mark.parametrize(
-    "multi_model, seed", itertools.product([False, True], range(10))
-)
+@pytest.mark.parametrize("multi_model", [False, True])
+@pytest.mark.parametrize("seed", range(10))
 def test_standardize_order(multi_model, seed):
-    original = load_structure(join(data_dir("structure"), "1l2y.bcif"))
+    original = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
+    )
     if not multi_model:
         original = original[0]
     # The box is not preserved when concatenating atom arrays later
@@ -212,14 +214,14 @@ def test_standardize_order(multi_model, seed):
     original.box = None
 
     # Randomly reorder the atoms in each residue
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     if multi_model:
         reordered = struc.AtomArrayStack(original.stack_depth(), 0)
     else:
         reordered = struc.AtomArray(0)
     for residue in struc.residue_iter(original):
         bound = residue.array_length()
-        indices = np.random.choice(np.arange(bound), bound, replace=False)
+        indices = rng.choice(np.arange(bound), bound, replace=False)
         reordered += residue[..., indices]
 
     # Restore the original PDB standard order
@@ -246,7 +248,7 @@ def test_set_ccd_path(fake_ccd_path):
 
 
 @pytest.mark.parametrize(
-    "res_name, allow_missing_coord",
+    ["res_name", "allow_missing_coord"],
     [
         ("ALA", False),
         ("A1IQW", True),

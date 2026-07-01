@@ -110,7 +110,7 @@ def rdf(
     ignore the counts for the density for each oxygen to itself.
 
     >>> from os.path import join
-    >>> waterbox = load_structure(join(path_to_structures, "waterbox.gro"))
+    >>> waterbox = load_structure(join(path_to_structure_data, "waterbox.gro"))
     >>> oxygens = waterbox[:, waterbox.atom_name == 'OW']
     >>> bins, g_r = rdf(oxygens, oxygens, bins=49, interval=(0.2, 10), periodic=True)
 

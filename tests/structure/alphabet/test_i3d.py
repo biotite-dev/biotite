@@ -1,5 +1,4 @@
 import re
-from pathlib import Path
 import numpy as np
 import pytest
 import biotite.sequence.io.fasta as fasta
@@ -15,7 +14,7 @@ def _get_ref_3di_sequence(pdb_id, chain_id):
     PDB ID and chain ID.
     """
     ref_3di_file = fasta.FastaFile.read(
-        Path(data_dir("structure")) / "alphabet" / "i3d.fasta"
+        data_dir("structure") / "alphabet" / "i3d.fasta"
     )
     for header, seq_string in ref_3di_file.items():
         # The first model of a structure is also the first sequence to appear
@@ -31,7 +30,9 @@ def _get_ref_3di_sequence(pdb_id, chain_id):
 
 
 @pytest.mark.parametrize(
-    "path", Path(data_dir("structure")).glob("*.bcif"), ids=lambda path: path.stem
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.bcif")),
+    ids=lambda path: path.name,
 )
 def test_to_3di(path):
     """
@@ -80,7 +81,9 @@ def test_missing_residues():
     MAX_MISMATCH_PERCENTAGE = 0.1
     UNDEFINED_SYMBOL = strucalph.I3DSequence.undefined_symbol
 
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / f"{PDB_ID}.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(
+        data_dir("structure") / "pdb" / f"{PDB_ID}.bcif"
+    )
     atoms = pdbx.get_structure(pdbx_file, model=1)
     atoms = atoms[struc.filter_amino_acids(atoms)]
 

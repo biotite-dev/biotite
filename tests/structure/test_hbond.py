@@ -2,20 +2,20 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
 import json
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
+import biotite.structure.io.gro as gro
 import biotite.structure.io.pdbx as pdbx
-from biotite.structure.io import load_structure
 from tests.util import data_dir
 
 
 @pytest.fixture()
 def stack(request):
-    stack = load_structure(join(data_dir("structure"), "1l2y.bcif"))
+    stack = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
+    )
     if request.param:
         # Use connect_via_distances, since 1l2y has invalidly bonded
         # N-terminal hydrogen atoms
@@ -23,21 +23,22 @@ def stack(request):
     return stack
 
 
-@pytest.mark.parametrize(
-    "pdb_id, use_all_models, use_bond_list",
-    itertools.product(["1l2y", "1gya", "1igy"], [False, True], [False, True]),
-)
+@pytest.mark.parametrize("pdb_id", ["1l2y", "1gya", "1igy"])
+@pytest.mark.parametrize("use_all_models", [False, True])
+@pytest.mark.parametrize("use_bond_list", [False, True])
 def test_hbond_consistency(pdb_id, use_all_models, use_bond_list):
     """
     Compare hydrogen bond detection with MDTraj.
     """
     # Load precomputed hydrogen bond triplets from MDTraj
-    with open(join(data_dir("structure"), "misc", "hbond.json")) as file:
+    with open(data_dir("structure") / "misc" / "hbond.json") as file:
         ref_data = json.load(file)
     key = "single_model" if not use_all_models else "all_models"
     ref_triplets = ref_data[pdb_id][key]
 
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), pdb_id + ".bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(
+        data_dir("structure") / "pdb" / f"{pdb_id}.bcif"
+    )
     model = None if use_all_models else 1
     atoms = pdbx.get_structure(pdbx_file, model=model)
 
@@ -170,7 +171,7 @@ def test_hbond_periodicity(translation_vector):
     Then the position of the periodic boundary is changed and it is
     expected that all hydrogen bonds are still the same
     """
-    stack = load_structure(join(data_dir("structure"), "waterbox.gro"))
+    stack = gro.GROFile.read(data_dir("structure") / "waterbox.gro").get_structure()
     array = stack[0]
     ref_hbonds = struc.hbond(array, periodic=True)
     # Put H-bond triplets into as stack for faster comparison with

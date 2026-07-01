@@ -30,7 +30,7 @@ def sequences():
 
 
 @pytest.mark.parametrize(
-    "app_cls, exp_ali, exp_order",
+    ["app_cls", "exp_ali", "exp_order"],
     [
         (
             MuscleApp,
@@ -103,7 +103,7 @@ def test_large_sequence_number(app_cls):
 
     # Create random sequence
     sequence = seq.ProteinSequence()
-    sequence.code = np.random.randint(20, size=SEQ_LENGTH)
+    sequence.code = np.random.default_rng().integers(20, size=SEQ_LENGTH)
     # Use identical sequences
     sequences = [sequence] * SEQ_NUMBER
 

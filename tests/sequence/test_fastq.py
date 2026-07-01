@@ -2,11 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import glob
 import io
-import itertools
-import os
-import os.path
 from tempfile import TemporaryFile
 import numpy as np
 import pytest
@@ -17,7 +13,7 @@ from tests.util import data_dir
 
 @pytest.mark.parametrize("chars_per_line", [None, 80])
 def test_access(chars_per_line):
-    path = os.path.join(data_dir("sequence"), "random.fastq")
+    path = data_dir("sequence") / "random.fastq"
     file = fastq.FastqFile.read(path, offset=33, chars_per_line=chars_per_line)
     assert len(file) == 20
     assert list(file.keys()) == [f"Read:{i + 1:02d}" for i in range(20)]
@@ -37,7 +33,7 @@ def test_access(chars_per_line):
 
 @pytest.mark.parametrize("chars_per_line", [None, 80])
 def test_conversion(chars_per_line):
-    path = os.path.join(data_dir("sequence"), "random.fastq")
+    path = data_dir("sequence") / "random.fastq"
     fasta_file = fastq.FastqFile.read(path, offset=33, chars_per_line=chars_per_line)
     ref_content = dict(fasta_file.items())
 
@@ -70,7 +66,9 @@ def test_rna_conversion():
 
 
 @pytest.mark.parametrize(
-    "file_name", glob.glob(os.path.join(data_dir("sequence"), "*.fastq"))
+    "file_name",
+    sorted(data_dir("sequence").glob("*.fastq")),
+    ids=lambda path: path.name,
 )
 def test_read_iter(file_name):
     ref_dict = dict(fastq.FastqFile.read(file_name, offset="Sanger").items())
@@ -85,10 +83,9 @@ def test_read_iter(file_name):
         assert (test_sc == ref_sc).all()
 
 
-@pytest.mark.parametrize(
-    "offset, chars_per_line, n_sequences",
-    itertools.product([33, 42, "Solexa"], [None, 80], [1, 10]),
-)
+@pytest.mark.parametrize("offset", [33, 42, "Solexa"])
+@pytest.mark.parametrize("chars_per_line", [None, 80])
+@pytest.mark.parametrize("n_sequences", [1, 10])
 def test_write_iter(offset, chars_per_line, n_sequences):
     """
     Test whether :class:`FastqFile.write()` and
@@ -99,18 +96,16 @@ def test_write_iter(offset, chars_per_line, n_sequences):
     SCORE_RANGE = (10, 60)
 
     # Generate random sequences and scores
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
     sequences = []
     scores = []
     for i in range(n_sequences):
-        seq_length = np.random.randint(*LENGTH_RANGE)
-        code = np.random.randint(
-            len(seq.NucleotideSequence.alphabet_unamb), size=seq_length
-        )
+        seq_length = rng.integers(*LENGTH_RANGE)
+        code = rng.integers(len(seq.NucleotideSequence.alphabet_unamb), size=seq_length)
         sequence = seq.NucleotideSequence()
         sequence.code = code
         sequences.append(sequence)
-        score = np.random.randint(*SCORE_RANGE, size=seq_length)
+        score = rng.integers(*SCORE_RANGE, size=seq_length)
         scores.append(score)
 
     fastq_file = fastq.FastqFile(offset, chars_per_line)

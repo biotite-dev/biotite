@@ -2,8 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import glob
-from os.path import join
 from tempfile import TemporaryFile
 import pytest
 import biotite.sequence as seq
@@ -13,8 +11,9 @@ from tests.util import data_dir
 
 @pytest.mark.parametrize(
     "path",
-    glob.glob(join(data_dir("sequence"), "*.gb"))
-    + glob.glob(join(data_dir("sequence"), "[!multifile]*.gp")),
+    sorted(data_dir("sequence").glob("*.gb"))
+    + sorted(data_dir("sequence").glob("[!multifile]*.gp")),
+    ids=lambda path: path.name,
 )
 def test_contiguous_field_pos(path):
     """
@@ -51,8 +50,9 @@ def test_file_access():
 
 @pytest.mark.parametrize(
     "path",
-    glob.glob(join(data_dir("sequence"), "*.gb"))
-    + glob.glob(join(data_dir("sequence"), "[!multifile]*.gp")),
+    sorted(data_dir("sequence").glob("*.gb"))
+    + sorted(data_dir("sequence").glob("[!multifile]*.gp")),
+    ids=lambda path: path.name,
 )
 def test_conversion_lowlevel(path):
     """
@@ -77,8 +77,9 @@ def test_conversion_lowlevel(path):
 
 @pytest.mark.parametrize(
     "path",
-    glob.glob(join(data_dir("sequence"), "*.gb"))
-    + glob.glob(join(data_dir("sequence"), "[!multifile]*.gp")),
+    sorted(data_dir("sequence").glob("*.gb"))
+    + sorted(data_dir("sequence").glob("[!multifile]*.gp")),
+    ids=lambda path: path.name,
 )
 def test_conversion_highlevel(path):
     """
@@ -86,7 +87,7 @@ def test_conversion_highlevel(path):
     the locus, annotation and sequence from GenBank file and write
     these properties to a file, without data changing.
     """
-    suffix = path[-2:]
+    suffix = path.suffix[1:]
     gb_file = gb.GenBankFile.read(path)
     ref_locus = gb.get_locus(gb_file)
     ref_annot_seq = gb.get_annotated_sequence(gb_file, format=suffix)
@@ -113,7 +114,7 @@ def test_genbank_utility_gb():
     Check whether the high-level utility functions return the expected
     content of a known GenBank file.
     """
-    gb_file = gb.GenBankFile.read(join(data_dir("sequence"), "ec_bl21.gb"))
+    gb_file = gb.GenBankFile.read(data_dir("sequence") / "ec_bl21.gb")
     assert gb.get_locus(gb_file) == (
         "CP001509",
         4558953,
@@ -154,7 +155,7 @@ def test_genbank_utility_gp():
     Check whether the high-level utility functions return the expected
     content of a known GenPept file.
     """
-    gp_file = gb.GenBankFile.read(join(data_dir("sequence"), "bt_lysozyme.gp"))
+    gp_file = gb.GenBankFile.read(data_dir("sequence") / "bt_lysozyme.gp")
     # [print(e) for e in gp_file._field_pos]
     assert gb.get_locus(gp_file) == ("AAC37312", 147, None, False, "MAM", "27-APR-1993")
     assert gb.get_definition(gp_file) == "lysozyme [Bos taurus]."
@@ -185,13 +186,13 @@ def test_genbank_utility_gp():
 
 
 def test_multi_file():
-    multi_file = gb.MultiFile.read(join(data_dir("sequence"), "multifile.gp"))
+    multi_file = gb.MultiFile.read(data_dir("sequence") / "multifile.gp")
     accessions = [gb.get_accession(f) for f in multi_file]
     assert accessions == ["1L2Y_A", "3O5R_A", "5UGO_A"]
 
 
 @pytest.mark.parametrize(
-    "locus_content, expected_result",
+    ["locus_content", "expected_result"],
     [
         (
             "AJ311647LOOOOOOOOOOOOOOOOOOOOOOOOOONGID                1224 bp    DNA     linear   VRT 14-NOV-2006",

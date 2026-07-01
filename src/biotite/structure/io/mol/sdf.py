@@ -591,7 +591,7 @@ class SDFile(File, MutableMapping[str, SDRecord]):
     Read a SD file and parse the molecular structure:
 
     >>> import os.path
-    >>> file = SDFile.read(os.path.join(path_to_structures, "molecules", "TYR.sdf"))
+    >>> file = SDFile.read(os.path.join(path_to_structure_data, "molecules", "TYR.sdf"))
     >>> molecule = file.record.get_structure()
     >>> print(molecule)
             0             N         1.320    0.952    1.428

@@ -3,7 +3,6 @@
 # information.
 
 import pickle
-from pathlib import Path
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -13,7 +12,7 @@ from tests.util import data_dir
 
 @pytest.fixture
 def atoms():
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1l2y.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     atoms = pdbx.get_structure(pdbx_file, model=1)
     atoms = atoms[struc.filter_heavy(atoms)]
     return atoms
@@ -60,8 +59,8 @@ def test_adjacency_matrix(atoms, cell_size, threshold, periodic, use_selection):
         atoms.box = np.diag(np.max(atoms.coord, axis=-2) - np.min(atoms.coord, axis=-2))
 
     if use_selection:
-        np.random.seed(0)
-        selection = np.random.choice((False, True), atoms.array_length())
+        rng = np.random.default_rng(0)
+        selection = rng.choice((False, True), atoms.array_length())
     else:
         selection = None
 

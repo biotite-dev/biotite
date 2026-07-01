@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -24,7 +23,7 @@ def test_docking(flexible):
     MAX_DEVIATION = 2.0
 
     # A structure of a straptavidin-biotin complex
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("application"), "2rtg.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("application") / "2rtg.bcif")
     structure = pdbx.get_structure(
         pdbx_file, model=1, extra_fields=["charge"], include_bonds=True
     )

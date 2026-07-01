@@ -27,7 +27,7 @@ def test_matrices(db_entry):
 
 
 @pytest.mark.parametrize(
-    "matrix_name, alphabet",
+    ["matrix_name", "alphabet"],
     [
         ("3Di", strucalph.I3DSequence.alphabet),
     ],
@@ -82,13 +82,13 @@ def test_as_positional(seed):
     """
     MAX_SEQ_LENGTH = 10
 
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     sequences = []
     for _ in range(2):
-        seq_length = np.random.randint(1, MAX_SEQ_LENGTH)
+        seq_length = rng.integers(1, MAX_SEQ_LENGTH)
         sequence = seq.ProteinSequence()
-        sequence.code = np.random.randint(0, len(sequence.alphabet), size=seq_length)
+        sequence.code = rng.integers(0, len(sequence.alphabet), size=seq_length)
         sequences.append(sequence)
     pos_matrix, *pos_sequences = matrix.as_positional(*sequences)
 

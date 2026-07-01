@@ -2,9 +2,10 @@ import argparse
 import shutil
 import subprocess
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 import biotite
 import biotite.database.rcsb as rcsb
-import biotite.structure.io as strucio
+import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
 from biotite.database import RequestError
 
@@ -20,7 +21,7 @@ def create(pdb_id, directory, include_gro):
     # Create *.gro files using GROMACS
     if include_gro:
         try:
-            pdbx_file = pdbx.BinaryCIFFile.read(directory / pdb_id + ".bcif")
+            pdbx_file = pdbx.BinaryCIFFile.read(directory / f"{pdb_id}.bcif")
             atoms = pdbx.get_structure(pdbx_file)
         except biotite.InvalidFileError:
             # Structure probably contains multiple models with different
@@ -29,20 +30,24 @@ def create(pdb_id, directory, include_gro):
             # -> Skip writing GRO file
             return
         # Clean PDB file -> remove inscodes and altlocs
-        cleaned_file_name = biotite.temp_file("pdb")
-        strucio.save_structure(cleaned_file_name, atoms)
+        cleaned_file_name = NamedTemporaryFile("w", suffix=".pdb", delete=False)
+        pdb_file = pdb.PDBFile()
+        pdb_file.set_structure(atoms)
+        pdb_file.write(cleaned_file_name.name)
+        cleaned_file_name.close()
         # Run GROMACS for file conversion
         subprocess.run(
             [
                 "gmxeditconf",
                 "-f",
-                cleaned_file_name,
+                cleaned_file_name.name,
                 "-o",
-                str(directory / pdb_id + ".gro"),
+                str(directory / f"{pdb_id}.gro"),
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
+        Path(cleaned_file_name.name).unlink()
 
 
 if __name__ == "__main__":
@@ -75,6 +80,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 if __name__ == "__main__":
+    # This script resides in the same 'pdb' directory as the created files
     data_dir = Path(__file__).parent
     include_gro = shutil.which("gmx") is not None
     with open(data_dir / "ids.txt", "r") as file:

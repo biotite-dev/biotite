@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
 import pickle
 import numpy as np
 import pytest
@@ -26,7 +25,7 @@ def alphabet_symbols():
 
 
 @pytest.mark.parametrize(
-    "symbols, exp_code, use_letter_alphabet",
+    ["symbols", "exp_code", "use_letter_alphabet"],
     zip(
         list(test_cases.keys()) * 2,
         list(test_cases.values()) * 2,
@@ -46,7 +45,7 @@ def test_encoding(alphabet_symbols, symbols, exp_code, use_letter_alphabet):
 
 
 @pytest.mark.parametrize(
-    "exp_symbols, code, use_letter_alphabet",
+    ["exp_symbols", "code", "use_letter_alphabet"],
     zip(
         list(test_cases.keys()) * 2,
         list(test_cases.values()) * 2,
@@ -66,10 +65,8 @@ def test_decoding(alphabet_symbols, exp_symbols, code, use_letter_alphabet):
         assert list(alph.decode_multiple(code)) == list(exp_symbols)
 
 
-@pytest.mark.parametrize(
-    "use_letter_alphabet, is_single_val",
-    itertools.product([False, True], [False, True]),
-)
+@pytest.mark.parametrize("use_letter_alphabet", [False, True])
+@pytest.mark.parametrize("is_single_val", [False, True])
 def test_error(alphabet_symbols, use_letter_alphabet, is_single_val):
     if use_letter_alphabet:
         alph = seq.LetterAlphabet(alphabet_symbols)
@@ -145,7 +142,7 @@ def test_contains(alphabet_symbols, use_letter_alphabet):
 
 
 @pytest.mark.parametrize(
-    "source_alph_symbols, target_alph_symbols",
+    ["source_alph_symbols", "target_alph_symbols"],
     [
         ("A", "AB"),
         (["foo", "bar"], ["bar", "foo", 42]),
@@ -161,8 +158,8 @@ def test_alphabet_mapper(source_alph_symbols, target_alph_symbols):
     mapper = seq.AlphabetMapper(source_alph, target_alph)
 
     ref_sequence = seq.GeneralSequence(source_alph)
-    np.random.seed(0)
-    ref_sequence.code = np.random.randint(len(source_alph), size=CODE_LENGTH, dtype=int)
+    rng = np.random.default_rng(0)
+    ref_sequence.code = rng.integers(len(source_alph), size=CODE_LENGTH, dtype=int)
 
     test_sequence = seq.GeneralSequence(target_alph)
     test_sequence.code = mapper[ref_sequence.code]
@@ -171,7 +168,7 @@ def test_alphabet_mapper(source_alph_symbols, target_alph_symbols):
 
 
 @pytest.mark.parametrize(
-    "alphabets, common_alph",
+    ["alphabets", "common_alph"],
     [
         (
             [

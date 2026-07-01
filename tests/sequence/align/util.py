@@ -5,7 +5,6 @@
 import io
 import json
 import tarfile
-from os.path import join
 from tests.util import data_dir
 
 
@@ -23,12 +22,12 @@ def legacy_alignments():
     # if a Cython module is not compiled yet
     import biotite.sequence.io.fasta as fasta
 
-    base_dir = join(data_dir("sequence"), "legacy_consistency")
-    with open(join(base_dir, "params.json")) as file:
+    base_dir = data_dir("sequence") / "legacy_consistency"
+    with open(base_dir / "params.json") as file:
         params = json.load(file)
 
     pairs = []
-    with tarfile.open(join(base_dir, "legacy_alignments.tar.gz"), "r:gz") as tar:
+    with tarfile.open(base_dir / "legacy_alignments.tar.gz", "r:gz") as tar:
         for file_name in sorted(params):
             entry = params[file_name]
             with io.TextIOWrapper(

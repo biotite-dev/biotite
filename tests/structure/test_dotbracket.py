@@ -2,11 +2,10 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
 
@@ -15,7 +14,9 @@ def nuc_sample_array():
     """
     Sample structure.
     """
-    nuc_sample_array = strucio.load_structure(join(data_dir("structure"), "4p5j.cif"))
+    nuc_sample_array = pdbx.get_structure(
+        pdbx.CIFFile.read(data_dir("structure") / "pdb" / "4p5j.cif"), model=1
+    )
     return nuc_sample_array[struc.filter_nucleotides(nuc_sample_array)]
 
 

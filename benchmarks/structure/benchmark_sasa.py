@@ -1,4 +1,3 @@
-from pathlib import Path
 import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
@@ -10,7 +9,7 @@ def atoms():
     """
     A structure that includes hydrogen atoms.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1gya.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1gya.bcif")
     return pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
 
 

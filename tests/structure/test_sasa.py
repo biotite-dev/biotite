@@ -3,7 +3,6 @@
 # information.
 
 import json
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -18,11 +17,11 @@ def test_sasa_consistency(pdb_id):
     Check that SASA computation for a single model reproduces results from MDTraj.
     """
     # Load precomputed hydrogen bond triplets from MDTraj
-    with open(join(data_dir("structure"), "misc", "sasa.json")) as file:
+    with open(data_dir("structure") / "misc" / "sasa.json") as file:
         ref_data = json.load(file)
     ref_sasa = np.array(ref_data[pdb_id])
 
-    file = pdb.PDBFile.read(join(data_dir("structure"), pdb_id + ".pdb"))
+    file = pdb.PDBFile.read(data_dir("structure") / "pdb" / f"{pdb_id}.pdb")
     array = file.get_structure(model=1)
     test_sasa = struc.sasa(array, vdw_radii="Single", point_number=5000)
 
@@ -40,7 +39,7 @@ def test_sasa_consistency(pdb_id):
 def test_coarse_grained(pdb_id):
     # Multi atom SASA (ProtOr), compare with single atom SASA
     # on residue level
-    file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), pdb_id + ".bcif"))
+    file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / f"{pdb_id}.bcif")
     array = pdbx.get_structure(file, model=1)
     array = array[struc.filter_amino_acids(array)]
     sasa = struc.apply_residue_wise(

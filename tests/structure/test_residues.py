@@ -2,17 +2,18 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
 
 @pytest.fixture
 def array():
-    return strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))[0]
+    return pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
+    )[0]
 
 
 def test_apply_residue_wise(array):
@@ -28,8 +29,8 @@ def test_spread_residue_wise(array):
 
 def test_get_residue_masks(array):
     SAMPLE_SIZE = 100
-    np.random.seed(0)
-    indices = np.random.randint(0, array.array_length(), SAMPLE_SIZE)
+    rng = np.random.default_rng(0)
+    indices = rng.integers(0, array.array_length(), SAMPLE_SIZE)
     masks = struc.get_residue_masks(array, indices)
     for index, mask in zip(indices, masks):
         ref_mask = array.res_id == array.res_id[index]
@@ -38,8 +39,8 @@ def test_get_residue_masks(array):
 
 def test_get_residue_starts_for(array):
     SAMPLE_SIZE = 100
-    np.random.seed(0)
-    indices = np.random.randint(0, array.array_length(), SAMPLE_SIZE)
+    rng = np.random.default_rng(0)
+    indices = rng.integers(0, array.array_length(), SAMPLE_SIZE)
     ref_starts = np.array(
         [np.where(mask)[0][0] for mask in struc.get_residue_masks(array, indices)]
     )

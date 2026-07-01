@@ -1,4 +1,3 @@
-from pathlib import Path
 import pytest
 import biotite.structure.info as info
 import biotite.structure.io.pdb as pdb
@@ -15,7 +14,7 @@ def load_ccd():
 
 @pytest.fixture(scope="module")
 def pdb_file_path():
-    return Path(data_dir("structure")) / "1aki.pdb"
+    return data_dir("structure") / "pdb" / "1aki.pdb"
 
 
 @pytest.fixture(scope="module")

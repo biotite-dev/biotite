@@ -4,12 +4,10 @@
 
 import itertools
 import warnings
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-from biotite.structure.io import load_structure
 from tests.util import data_dir
 
 SAMPLE_CELLS = [
@@ -31,7 +29,7 @@ SAMPLE_COORD = [
 
 
 @pytest.mark.parametrize(
-    "name, number",
+    ["name", "number"],
     [("P 1", 1), ("P 21 21 21", 19), ("I 41/a 2/c 2/d", 142), ("I a -3 d", 230)],
 )
 def test_space_group_correct_index(name, number):
@@ -47,7 +45,7 @@ def test_space_group_correct_index(name, number):
 
 
 @pytest.mark.parametrize(
-    "space_group, rotations, translations",
+    ["space_group", "rotations", "translations"],
     # Omit the trivial identity transformation, as they appear in every space group
     [
         (
@@ -169,9 +167,9 @@ def test_volume():
 
 
 @pytest.mark.parametrize(
-    "len_a, len_b, len_c, alpha, beta, gamma, x, y,z",
-    [box + coord for box, coord in itertools.product(SAMPLE_CELLS, SAMPLE_COORD)],
+    ["len_a", "len_b", "len_c", "alpha", "beta", "gamma"], SAMPLE_CELLS
 )
+@pytest.mark.parametrize(["x", "y", "z"], SAMPLE_COORD)
 def test_move_into_box(len_a, len_b, len_c, alpha, beta, gamma, x, y, z):
     box = struc.vectors_from_unitcell(
         len_a, len_b, len_c, np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
@@ -184,9 +182,9 @@ def test_move_into_box(len_a, len_b, len_c, alpha, beta, gamma, x, y, z):
 
 
 @pytest.mark.parametrize(
-    "len_a, len_b, len_c, alpha, beta, gamma, x, y,z",
-    [box + coord for box, coord in itertools.product(SAMPLE_CELLS, SAMPLE_COORD)],
+    ["len_a", "len_b", "len_c", "alpha", "beta", "gamma"], SAMPLE_CELLS
 )
+@pytest.mark.parametrize(["x", "y", "z"], SAMPLE_COORD)
 def test_conversion_to_fraction(len_a, len_b, len_c, alpha, beta, gamma, x, y, z):
     box = struc.vectors_from_unitcell(
         len_a, len_b, len_c, np.deg2rad(alpha), np.deg2rad(beta), np.deg2rad(gamma)
@@ -210,7 +208,8 @@ def test_conversion_to_fraction(len_a, len_b, len_c, alpha, beta, gamma, x, y, z
 def test_repeat_box(multi_model):
     model = None if multi_model else 1
     array = pdbx.get_structure(
-        pdbx.BinaryCIFFile.read(join(data_dir("structure"), "3o5r.bcif")), model=model
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "3o5r.bcif"),
+        model=model,
     )
     repeat_array, _ = struc.repeat_box(array)
     assert repeat_array.array_length() == array.array_length() * 27
@@ -224,9 +223,11 @@ def test_remove_pbc_unsegmented(multi_model):
     when the structure is entirely in the box.
     """
     model = None if multi_model else 1
-    ref_array = load_structure(
-        join(data_dir("structure"), "3o5r.bcif"), model=model, include_bonds=True
-    )
+    bcif_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "3o5r.bcif")
+    ref_array = pdbx.get_structure(bcif_file, model=model, include_bonds=True)
+    if isinstance(ref_array, struc.AtomArrayStack) and ref_array.stack_depth() == 1:
+        # `load_structure()` collapses a single-model stack to an AtomArray
+        ref_array = ref_array[0]
     # Center structure in box
     centroid = struc.centroid(ref_array)
     box_center = np.diag(ref_array.box) / 2
@@ -237,9 +238,8 @@ def test_remove_pbc_unsegmented(multi_model):
     assert np.allclose(ref_array.coord, test_array.coord)
 
 
-@pytest.mark.parametrize(
-    "multi_model, seed", itertools.product([False, True], range(10))
-)
+@pytest.mark.parametrize("multi_model", [False, True])
+@pytest.mark.parametrize("seed", range(10))
 def test_remove_pbc_restore(multi_model, seed):
     BUFFER = 5
 
@@ -259,7 +259,10 @@ def test_remove_pbc_restore(multi_model, seed):
             matrix_pbc = np.stack([m[1] for m in matrices])
         return matrix, matrix_pbc
 
-    stack = load_structure(join(data_dir("structure"), "1l2y.bcif"), include_bonds=True)
+    stack = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif"),
+        include_bonds=True,
+    )
 
     # Only consider a single molecule
     # -> remove all other atoms (in this case some unbound hydrogen)
@@ -282,10 +285,10 @@ def test_remove_pbc_restore(multi_model, seed):
     ref_matrix, ref_matrix_pbc = get_distance_matrices(array)
 
     ## Segment protein
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     size = (array.stack_depth(), 3) if isinstance(array, struc.AtomArrayStack) else 3
     translation_vector = np.sum(
-        np.random.uniform(-5, 5, size)[:, np.newaxis] * array.box, axis=-2
+        rng.uniform(-5, 5, size)[:, np.newaxis] * array.box, axis=-2
     )[..., np.newaxis, :]
     # Move atoms over periodic boundary...
     array = struc.translate(array, translation_vector)
@@ -316,7 +319,9 @@ def test_remove_pbc_selection(multi_model):
     This test makes no assertions, it only test whether an exception
     occurs, when the `selection` parameter is given in `remove_pbc()`.
     """
-    array = load_structure(join(data_dir("structure"), "3o5r.bcif"))
+    array = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "3o5r.bcif"), model=1
+    )
     if multi_model:
         array = struc.stack([array, array])
 

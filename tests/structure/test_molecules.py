@@ -26,15 +26,15 @@ def array():
     ]
     N_MOLECULES = 20
 
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
 
     atom_array = struc.AtomArray(0)
-    for i, mol_name in enumerate(np.random.choice(MOL_NAMES, N_MOLECULES)):
+    for i, mol_name in enumerate(rng.choice(MOL_NAMES, N_MOLECULES)):
         molecule = info.residue(mol_name)
         molecule.res_id[:] = i + 1
         atom_array += molecule
 
-    reordered_indices = np.random.choice(
+    reordered_indices = rng.choice(
         np.arange(atom_array.array_length()), atom_array.array_length(), replace=False
     )
     atom_array = atom_array[reordered_indices]
@@ -43,7 +43,7 @@ def array():
 
 
 @pytest.mark.parametrize(
-    "as_stack, as_bonds", [(False, False), (True, False), (False, True)]
+    ["as_stack", "as_bonds"], [(False, False), (True, False), (False, True)]
 )
 def test_get_molecule_indices(array, as_stack, as_bonds):
     """
@@ -74,7 +74,7 @@ def test_get_molecule_indices(array, as_stack, as_bonds):
 
 
 @pytest.mark.parametrize(
-    "as_stack, as_bonds", [(False, False), (True, False), (False, True)]
+    ["as_stack", "as_bonds"], [(False, False), (True, False), (False, True)]
 )
 def test_get_molecule_masks(array, as_stack, as_bonds):
     """

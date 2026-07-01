@@ -1,4 +1,3 @@
-from pathlib import Path
 import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
@@ -7,7 +6,7 @@ from tests.util import data_dir
 
 @pytest.fixture(scope="module")
 def atoms():
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1gya.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1gya.bcif")
     return pdbx.get_structure(pdbx_file)
 
 

@@ -7,8 +7,7 @@ N = 20
 
 @pytest.fixture(scope="module")
 def distances():
-    np.random.seed(0)
-    rand = np.random.rand(N, N).astype(np.float32)
+    rand = np.random.default_rng(0).random((N, N)).astype(np.float32)
     distances = (rand + rand.T) / 2
     np.fill_diagonal(distances, 0)
     return distances

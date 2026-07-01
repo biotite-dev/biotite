@@ -13,9 +13,8 @@ KMER_ALPHABET = align.KmerAlphabet(ALPHABET, K)
 
 @pytest.fixture(scope="module")
 def sequence():
-    np.random.seed(0)
     s = seq.NucleotideSequence()
-    s.code = np.random.randint(len(ALPHABET), size=SEQ_LENGTH)
+    s.code = np.random.default_rng(0).integers(len(ALPHABET), size=SEQ_LENGTH)
     return s
 
 

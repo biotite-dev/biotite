@@ -2,11 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io as strucio
 import biotite.structure.io.pdbx as pdbx
 from biotite.application.dssp import DsspApp
 from tests.util import data_dir, is_not_installed
@@ -26,7 +24,8 @@ def test_annotation(pdb_id):
     Check if the DSSP annotation has the correct length and reasonable values.
     """
     atoms = pdbx.get_structure(
-        pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{pdb_id}.bcif")), model=1
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / f"{pdb_id}.bcif"),
+        model=1,
     )
     atoms = atoms[struc.filter_amino_acids(atoms)]
     sse = DsspApp.annotate_sse(atoms)
@@ -42,7 +41,9 @@ def test_invalid_structure():
     Check if an exception is raised, if the input structure contains non-amino-acid
     residues.
     """
-    array = strucio.load_structure(join(data_dir("structure"), "5ugo.bcif"))
+    array = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "5ugo.bcif"), model=1
+    )
     # Get DNA chain -> Invalid for DSSP
     chain = array[array.chain_id == "T"]
     with pytest.raises(struc.BadStructureError):

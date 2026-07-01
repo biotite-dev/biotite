@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -12,7 +11,7 @@ from tests.util import data_dir
 
 @pytest.fixture
 def sample_array():
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     return pdbx.get_structure(pdbx_file, model=1)
 
 

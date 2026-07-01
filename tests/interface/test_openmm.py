@@ -1,4 +1,3 @@
-from os.path import join
 import numpy as np
 import openmm
 import openmm.app as app
@@ -13,7 +12,7 @@ from tests.util import data_dir
 @pytest.fixture
 def test_path():
     # Use a structure with hydrogen atoms
-    return join(data_dir("structure"), "1l2y.cif")
+    return data_dir("structure") / "pdb" / "1l2y.cif"
 
 
 @pytest.mark.parametrize("multi_state", [False, True])
@@ -68,7 +67,7 @@ def test_system_consistency(test_path):
     :class:`System` directly read via OpenMM.
     Forces and constraints are not tested, as they are not set by :func:`to_system()`.
     """
-    topology = app.PDBxFile(test_path).topology
+    topology = app.PDBxFile(str(test_path)).topology
     force_field = app.ForceField("amber14-all.xml")
     ref_system = force_field.createSystem(topology)
 
@@ -127,7 +126,7 @@ def test_topology_consistency(test_path):
     ref_atoms.del_annotation("label_asym_id")
     ref_atoms.bonds = struc.connect_via_residue_names(ref_atoms)
 
-    topology = app.PDBxFile(test_path).topology
+    topology = app.PDBxFile(str(test_path)).topology
     test_atoms = openmm_interface.from_topology(topology)
 
     # OpenMM does not parse bond types for all bonds when parsing CIF files

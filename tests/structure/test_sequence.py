@@ -2,8 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import glob
-from os.path import join
 import numpy as np
 import pytest
 import biotite.sequence.align as align
@@ -12,13 +10,17 @@ import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir("structure"), "*.bcif")))
+@pytest.mark.parametrize(
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.bcif")),
+    ids=lambda path: path.name,
+)
 def test_pdbx_sequence_consistency(path):
     """
     Check if sequences created with :func:`to_sequence()` are equal to
     the ones already stored in the PDBx file.
     """
-    if "4gxy" in path:
+    if "4gxy" in path.name:
         pytest.skip(
             "Edge case: contains 'GTP' which has one-letter code, "
             "but is a 'NON-POLYMER' in the CCD"

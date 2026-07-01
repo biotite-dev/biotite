@@ -1,14 +1,12 @@
 import json
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure.io.gro as gro
 from biotite.structure.box import vectors_from_unitcell
-from biotite.structure.io import load_structure
 from biotite.structure.rdf import rdf
 from tests.util import data_dir
 
-TEST_FILE = join(data_dir("structure"), "waterbox.gro")
+TEST_FILE = data_dir("structure") / "waterbox.gro"
 
 
 def test_rdf_consistency():
@@ -19,7 +17,7 @@ def test_rdf_consistency():
     N_BINS = 100
 
     # Load precomputed RDF from MDTraj
-    with open(join(data_dir("structure"), "misc", "rdf.json")) as file:
+    with open(data_dir("structure") / "misc" / "rdf.json") as file:
         ref_data = json.load(file)
     ref_bins = ref_data["bins"]
     ref_g_r = ref_data["g_r"]
@@ -40,7 +38,7 @@ def test_rdf_bins():
     """
     Test if RDF produce correct bin ranges.
     """
-    stack = load_structure(TEST_FILE)
+    stack = gro.GROFile.read(TEST_FILE).get_structure()
     center = stack[:, 0]
     num_bins = 44
     bin_range = (0, 11.7)
@@ -54,7 +52,7 @@ def test_rdf_with_selection():
     """
     Test if the selection argument of rdf function works as expected.
     """
-    stack = load_structure(TEST_FILE)
+    stack = gro.GROFile.read(TEST_FILE).get_structure()
 
     # calculate oxygen RDF for water with and without a selection
     oxygen = stack[:, stack.atom_name == "OW"]
@@ -86,7 +84,7 @@ def test_rdf_atom_argument():
     """
     Test if the first argument allows using AtomArrayStack.
     """
-    stack = load_structure(TEST_FILE)
+    stack = gro.GROFile.read(TEST_FILE).get_structure()
 
     # calculate oxygen RDF for water with and without a selection
     oxygen = stack[:, stack.atom_name == "OW"]
@@ -106,7 +104,7 @@ def test_rdf_multiple_center():
     """
     Test if the first argument allows using multiple centers.
     """
-    stack = load_structure(TEST_FILE)
+    stack = gro.GROFile.read(TEST_FILE).get_structure()
 
     # calculate oxygen RDF for water with and without a selection
     oxygen = stack[:, stack.atom_name == "OW"]
@@ -146,7 +144,7 @@ def test_rdf_box():
     """
     Test correct use of simulation boxes.
     """
-    stack = load_structure(TEST_FILE)
+    stack = gro.GROFile.read(TEST_FILE).get_structure()
     box = vectors_from_unitcell(1, 1, 1, 90, 90, 90)
     box_stack = np.repeat(box[np.newaxis, :, :], len(stack), axis=0)
 
@@ -176,7 +174,7 @@ def test_rdf_normalized():
     Assert that the RDF tail is normalized to 1.
     """
     test_file = TEST_FILE
-    stack = load_structure(test_file)
+    stack = gro.GROFile.read(test_file).get_structure()
 
     # calculate oxygen RDF for water
     oxygen = stack[:, stack.atom_name == "OW"]

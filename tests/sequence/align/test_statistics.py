@@ -44,7 +44,7 @@ BACKGROUND = (
 
 
 @pytest.mark.parametrize(
-    "matrix_name, gap_penalty, ref_lam, ref_k",
+    ["matrix_name", "gap_penalty", "ref_lam", "ref_k"],
     [
         ("BLOSUM62", (-10000, -10000), 0.318, 0.130),
         ("BLOSUM62", (-12, -2), 0.300, 0.090),

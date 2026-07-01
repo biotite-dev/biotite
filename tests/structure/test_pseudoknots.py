@@ -3,11 +3,10 @@
 # information.
 
 import json
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
 
@@ -16,7 +15,9 @@ def nuc_sample_array():
     """
     Sample structure for pseudoknot detection.
     """
-    return strucio.load_structure(join(data_dir("structure"), "4p5j.cif"))
+    return pdbx.get_structure(
+        pdbx.CIFFile.read(data_dir("structure") / "pdb" / "4p5j.cif"), model=1
+    )
 
 
 def test_pseudoknots(nuc_sample_array):
@@ -63,13 +64,11 @@ def load_test(name):
     Load sample base pair arrays and reference solutions from file.
     """
     # Base pairs as numpy array (input for `pseudoknots()`)
-    with open(
-        join(data_dir("structure"), "pseudoknots", f"{name}_knotted.json"), "r"
-    ) as f:
+    with open(data_dir("structure") / "pseudoknots" / f"{name}_knotted.json", "r") as f:
         basepairs = np.array(json.load(f))
     # List of solutions (set of tuples)
     with open(
-        join(data_dir("structure"), "pseudoknots", f"{name}_unknotted.json"), "rb"
+        data_dir("structure") / "pseudoknots" / f"{name}_unknotted.json", "rb"
     ) as f:
         solutions = json.load(f)
     for i, solution in enumerate(solutions):
@@ -122,9 +121,9 @@ def test_pseudoknot_orders(seed):
     pairs.
     """
     # Generate Random set of basepairs
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     bases = range(100)
-    basepairs = np.random.choice(bases, size=(20, 2), replace=False)
+    basepairs = rng.choice(bases, size=(20, 2), replace=False)
 
     # Get pseudoknot order for each basepair
     solutions = struc.pseudoknots(basepairs)

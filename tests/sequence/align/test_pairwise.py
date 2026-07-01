@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
 import numpy as np
 import pytest
 import biotite.application.muscle as muscle
@@ -51,7 +50,7 @@ align_cases = [
 
 
 @pytest.mark.parametrize(
-    "local, term, gap_penalty, input1, input2, expect", align_cases
+    ["local", "term", "gap_penalty", "input1", "input2", "expect"], align_cases
 )
 def test_align_optimal_simple(local, term, gap_penalty, input1, input2, expect):
     """
@@ -76,11 +75,11 @@ def test_align_optimal_simple(local, term, gap_penalty, input1, input2, expect):
 @pytest.mark.skipif(is_not_installed("muscle"), reason="MUSCLE is not installed")
 # Ignore warning about MUSCLE writing no second guide tree
 @pytest.mark.filterwarnings("ignore")
+@pytest.mark.parametrize("gap_penalty", [-10, (-10, -1)])
 @pytest.mark.parametrize(
-    "gap_penalty, seq_indices",
-    itertools.product(
-        [-10, (-10, -1)], [(i, j) for i in range(10) for j in range(i + 1)]
-    ),
+    "seq_indices",
+    [(i, j) for i in range(10) for j in range(i + 1)],
+    ids=lambda indices: f"{indices[0]}-{indices[1]}",
 )
 def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
     """
@@ -121,10 +120,10 @@ def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
         raise
 
 
-@pytest.mark.parametrize(
-    "local, term, gap_penalty, seed",
-    itertools.product([True, False], [True, False], [-5, -8, -10, -15], range(10)),
-)
+@pytest.mark.parametrize("local", [True, False])
+@pytest.mark.parametrize("term", [True, False])
+@pytest.mark.parametrize("gap_penalty", [-5, -8, -10, -15])
+@pytest.mark.parametrize("seed", range(10))
 def test_affine_gap_penalty(local, term, gap_penalty, seed):
     """
     Expect the same alignment results for a linear gap penalty and an
@@ -133,12 +132,12 @@ def test_affine_gap_penalty(local, term, gap_penalty, seed):
     LENGTH_RANGE = (10, 100)
     MAX_NUMBER = 1000
 
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     sequences = []
     for _ in range(2):
         sequence = seq.NucleotideSequence()
-        length = np.random.randint(*LENGTH_RANGE)
-        sequence.code = np.random.randint(len(sequence.alphabet), size=length)
+        length = rng.integers(*LENGTH_RANGE)
+        sequence.code = rng.integers(len(sequence.alphabet), size=length)
         sequences.append(sequence)
 
     matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
@@ -168,13 +167,12 @@ def test_affine_gap_penalty(local, term, gap_penalty, seed):
                 raise
 
 
+@pytest.mark.parametrize("gap_penalty", [-10, (-10, -1)])
+@pytest.mark.parametrize("term", [False, True])
 @pytest.mark.parametrize(
-    "gap_penalty, term, seq_indices",
-    itertools.product(
-        [-10, (-10, -1)],
-        [False, True],
-        [(i, j) for i in range(10) for j in range(i + 1)],
-    ),
+    "seq_indices",
+    [(i, j) for i in range(10) for j in range(i + 1)],
+    ids=lambda indices: f"{indices[0]}-{indices[1]}",
 )
 def test_scoring_terminal_penalty(sequences, gap_penalty, term, seq_indices):
     """

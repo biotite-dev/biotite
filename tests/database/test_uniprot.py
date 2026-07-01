@@ -2,8 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
-import tempfile
 import pytest
 import biotite.database.uniprot as uniprot
 import biotite.sequence.io.fasta as fasta
@@ -14,9 +12,9 @@ UNIPROT_URL = "https://www.uniprot.org/"
 
 
 @pytest.mark.skipif(cannot_connect_to(UNIPROT_URL), reason="UniProt is not available")
-@pytest.mark.parametrize("as_file_like", itertools.product([False, True]))
-def test_fetch(as_file_like):
-    path = None if as_file_like else tempfile.gettempdir()
+@pytest.mark.parametrize("as_file_like", [False, True])
+def test_fetch(as_file_like, tmp_path):
+    path = None if as_file_like else tmp_path
 
     # UniProtKB
     file = uniprot.fetch("P12345", "fasta", path, overwrite=True)
@@ -39,9 +37,9 @@ def test_fetch(as_file_like):
 
 @pytest.mark.skipif(cannot_connect_to(UNIPROT_URL), reason="UniProt is not available")
 @pytest.mark.parametrize("format", ["fasta", "gff", "txt", "xml", "rdf", "tab"])
-def test_fetch_invalid(format):
+def test_fetch_invalid(format, tmp_path):
     with pytest.raises(RequestError):
-        uniprot.fetch("xxxx", format, tempfile.gettempdir(), overwrite=True)
+        uniprot.fetch("xxxx", format, tmp_path, overwrite=True)
 
 
 @pytest.mark.skipif(cannot_connect_to(UNIPROT_URL), reason="UniProt is not available")

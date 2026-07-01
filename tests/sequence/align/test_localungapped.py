@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
 import numpy as np
 import pytest
 import biotite.sequence as seq
@@ -11,67 +10,61 @@ from biotite.sequence.seqtypes import ProteinSequence
 
 
 @pytest.mark.parametrize(
-    "seq_type, seq1, seq2, seed, threshold, ref_range1, ref_range2,"
-    "direction, score_only, uint8_code",
-    [list(itertools.chain(*e)) for e in itertools.product(
-        [
-            (
-                seq.NucleotideSequence,  # seq_type
-                "TTTAAAAAAATTTTT",       # seq1
-                "CCCCCAAAAAAACCC",       # seq1
-                (5, 7),                  # seed
-                0,                       # threshold
-                (3, 10),                 # ref_range1
-                (5, 12),                 # ref_range2
-            ),
-            (
-                seq.NucleotideSequence,
-                "TTTAAAAAAATTTTT",
-                "CCCCCAAAAAAACCC",
-                (3, 5),
-                100,
-                (3, 10),
-                (5, 12),
-            ),
-            # Mismatch should lead to alignment termination
-            (
-                seq.ProteinSequence,
-                "NLYIQWLKDGGPSSGRPPPS",
-                  "YIQWLKDGGPSLGRPPPS",
-                (8, 6),
-                0,
-                (2, 13),
-                (0, 11),
-            ),
-            # Mismatch should not terminate alignment
-            (
-                seq.ProteinSequence,
-                "NLYIQWLKDGGPSSGRPPPS",
-                  "YIQWLKDGGPSLGRPPPS",
-                (8, 6),
-                2,
-                (2, 20),
-                (0, 18),
-            ),
-            # Mismatch should terminate alignment
-            (
-                seq.ProteinSequence,
-                "NLYIQWLKDGGPSSGRPPPS",
-                  "YIQWLKDWWPSSGRPPPS",
-                (6, 4),
-                3,
-                (2, 9),
-                (0, 7),
-            ),
-        ],
-
-        [["both"], ["upstream"], ["downstream"]],  # direction
-
-        [[False], [True]],  # score_only
-
-        [[False], [True]],  # uint8_code
-    )]
+    ["seq_type", "seq1", "seq2", "seed", "threshold", "ref_range1", "ref_range2"],
+    [
+        (
+            seq.NucleotideSequence,  # seq_type
+            "TTTAAAAAAATTTTT",       # seq1
+            "CCCCCAAAAAAACCC",       # seq2
+            (5, 7),                  # seed
+            0,                       # threshold
+            (3, 10),                 # ref_range1
+            (5, 12),                 # ref_range2
+        ),
+        (
+            seq.NucleotideSequence,
+            "TTTAAAAAAATTTTT",
+            "CCCCCAAAAAAACCC",
+            (3, 5),
+            100,
+            (3, 10),
+            (5, 12),
+        ),
+        # Mismatch should lead to alignment termination
+        (
+            seq.ProteinSequence,
+            "NLYIQWLKDGGPSSGRPPPS",
+              "YIQWLKDGGPSLGRPPPS",
+            (8, 6),
+            0,
+            (2, 13),
+            (0, 11),
+        ),
+        # Mismatch should not terminate alignment
+        (
+            seq.ProteinSequence,
+            "NLYIQWLKDGGPSSGRPPPS",
+              "YIQWLKDGGPSLGRPPPS",
+            (8, 6),
+            2,
+            (2, 20),
+            (0, 18),
+        ),
+        # Mismatch should terminate alignment
+        (
+            seq.ProteinSequence,
+            "NLYIQWLKDGGPSSGRPPPS",
+              "YIQWLKDWWPSSGRPPPS",
+            (6, 4),
+            3,
+            (2, 9),
+            (0, 7),
+        ),
+    ],
 )  # fmt: skip
+@pytest.mark.parametrize("direction", ["both", "upstream", "downstream"])
+@pytest.mark.parametrize("score_only", [False, True])
+@pytest.mark.parametrize("uint8_code", [False, True])
 def test_simple_alignments(
     seq_type,
     seq1,
@@ -124,9 +117,8 @@ def test_simple_alignments(
         assert test_result == ref_alignment
 
 
-@pytest.mark.parametrize(
-    "seed, uint8_code", itertools.product(range(100), [False, True])
-)
+@pytest.mark.parametrize("seed", range(100))
+@pytest.mark.parametrize("uint8_code", [False, True])
 def test_random_alignment(seed, uint8_code):
     """
     Create two randomized sequences and place a conserved region into
@@ -144,12 +136,12 @@ def test_random_alignment(seed, uint8_code):
     MUTATION_PROB = 0.1
     THRESHOLD = 100
 
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
 
     # Create conserved regions
     conserved1 = ProteinSequence()
-    conserved_len = np.random.randint(MIN_CONSERVED_SIZE, MAX_CONSERVED_SIZE + 1)
-    conserved1.code = np.random.randint(
+    conserved_len = rng.integers(MIN_CONSERVED_SIZE, MAX_CONSERVED_SIZE + 1)
+    conserved1.code = rng.integers(
         # Do not include stop symbol for aesthetic reasons -> -1
         len(conserved1.alphabet) - 1,
         size=conserved_len,
@@ -158,10 +150,10 @@ def test_random_alignment(seed, uint8_code):
     # The second conserved regions is equal to the first one,
     # except a few point mutations
     conserved2.code = conserved1.code.copy()
-    mutation_mask = np.random.choice(
+    mutation_mask = rng.choice(
         [False, True], size=conserved_len, p=[1 - MUTATION_PROB, MUTATION_PROB]
     )
-    conserved2.code[mutation_mask] = np.random.randint(
+    conserved2.code[mutation_mask] = rng.integers(
         len(conserved2.alphabet) - 1, size=np.count_nonzero(mutation_mask)
     )
     # Flank the conserved regions with equal termini to ensure
@@ -174,15 +166,15 @@ def test_random_alignment(seed, uint8_code):
     seq2 = ProteinSequence()
     offset = []
     for sequence, conserved in zip((seq1, seq2), (conserved1, conserved2)):
-        sequence.code = np.random.randint(
-            len(sequence.alphabet) - 1, size=np.random.randint(MIN_SIZE, MAX_SIZE + 1)
+        sequence.code = rng.integers(
+            len(sequence.alphabet) - 1, size=rng.integers(MIN_SIZE, MAX_SIZE + 1)
         )
         # Place conserved region randomly within the sequence
-        conserved_pos = np.random.randint(0, len(sequence) - len(conserved))
+        conserved_pos = rng.integers(0, len(sequence) - len(conserved))
         sequence.code[conserved_pos : conserved_pos + len(conserved)] = conserved.code
         offset.append(conserved_pos)
     # The seed is placed somewhere in the conserved region
-    seed = np.array(offset) + np.random.randint(len(conserved))
+    seed = np.array(offset) + rng.integers(len(conserved))
 
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     if not uint8_code:

@@ -9,9 +9,8 @@ K = 3
 
 @pytest.fixture(scope="module")
 def sequence():
-    np.random.seed(0)
     sequence = seq.ProteinSequence()
-    sequence.code = np.random.randint(
+    sequence.code = np.random.default_rng(0).integers(
         len(seq.ProteinSequence.alphabet), size=SEQ_LENGTH
     )
     return sequence

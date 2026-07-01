@@ -1,4 +1,3 @@
-from pathlib import Path
 import pytest
 import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
@@ -8,7 +7,7 @@ PDB_ID = "1aki"
 
 @pytest.fixture
 def pdbx_file():
-    return pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / f"{PDB_ID}.bcif")
+    return pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / f"{PDB_ID}.bcif")
 
 
 @pytest.fixture
@@ -24,7 +23,9 @@ def deserialized_data(pdbx_file):
 
 @pytest.fixture
 def atoms():
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / f"{PDB_ID}.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(
+        data_dir("structure") / "pdb" / f"{PDB_ID}.bcif"
+    )
     return pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
 
 
@@ -34,7 +35,7 @@ def benchmark_deserialize_pdbx(format):
     """
     Deserialize all categories of a CIF or BinaryCIF file.
     """
-    path = Path(data_dir("structure")) / f"{PDB_ID}.{format}"
+    path = data_dir("structure") / "pdb" / f"{PDB_ID}.{format}"
     if format == "cif":
         pdbx_file = pdbx.CIFFile.read(path)
     else:
@@ -76,7 +77,7 @@ def benchmark_get_structure(format, include_bonds):
     """
     Parse a structure from a CIF or BinaryCIF file.
     """
-    path = Path(data_dir("structure")) / f"{PDB_ID}.{format}"
+    path = data_dir("structure") / "pdb" / f"{PDB_ID}.{format}"
     if format == "cif":
         pdbx_file = pdbx.CIFFile.read(path)
     else:
@@ -112,7 +113,7 @@ def benchmark_get_assembly():
     Use BinaryCIF to focus on the performance of the assembly operations, rather than
     file parsing.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1f2n.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1f2n.bcif")
     pdbx.get_assembly(pdbx_file, model=1)
 
 

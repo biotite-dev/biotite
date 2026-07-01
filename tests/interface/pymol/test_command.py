@@ -1,4 +1,3 @@
-from os.path import join
 import pytest
 import biotite.interface.pymol as pymol_interface
 import biotite.structure.io.pdbx as pdbx
@@ -6,7 +5,7 @@ from tests.util import data_dir
 
 
 def _get_mask():
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     structure = pdbx.get_structure(pdbx_file)
     return structure.res_id < 10
 
@@ -15,7 +14,7 @@ MASK = _get_mask()
 
 
 @pytest.mark.parametrize(
-    "command_name, kwargs",
+    ["command_name", "kwargs"],
     [
         (
             "alter",
@@ -167,7 +166,7 @@ MASK = _get_mask()
     ],
 )
 def test_command(command_name, kwargs):
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     structure = pdbx.get_structure(pdbx_file, include_bonds=True)
     pymol_obj = pymol_interface.PyMOLObject.from_structure(structure)
     command = getattr(pymol_interface.PyMOLObject, command_name)

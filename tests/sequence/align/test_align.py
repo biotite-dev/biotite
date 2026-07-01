@@ -232,7 +232,7 @@ def test_comparison_to_optimal_alignment(sequences, param):
 
 
 @pytest.mark.parametrize(
-    "param, ref_alignment",
+    ["param", "ref_alignment"],
     _LEGACY_ALIGNMENTS,
     ids=_IDS,
 )

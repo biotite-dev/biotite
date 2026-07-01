@@ -225,7 +225,7 @@ acetonitrile.charge = np.array([0] * mol_length)
 
 # For this purpose, parametrization via pytest is performed
 @pytest.mark.parametrize(
-    "molecule, expected_results",
+    ["molecule", "expected_results"],
     [
         (methane, (-0.078,)),
         (ethane, (-0.068, -0.068)),

@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 from tempfile import TemporaryFile
 import pytest
 import biotite.sequence as seq
@@ -19,7 +18,7 @@ def test_conversion_lowlevel(path):
     Test whether the low-level GFF3 interface can properly read
     a GenBank file and write a file, without data changing.
     """
-    gff_file = gff.GFFFile.read(join(data_dir("sequence"), path))
+    gff_file = gff.GFFFile.read(data_dir("sequence") / path)
     ref_entries = [entry for entry in gff_file]
 
     gff_file = gff.GFFFile()
@@ -46,7 +45,7 @@ def test_conversion_highlevel(path):
     The 'phase' is tested additionally, since it is not part of a
     `Feature` object.
     """
-    gff_file = gff.GFFFile.read(join(data_dir("sequence"), path))
+    gff_file = gff.GFFFile.read(data_dir("sequence") / path)
     ref_annot = gff.get_annotation(gff_file)
     ref_phases = []
     for _, _, type, _, _, _, _, phase, _ in gff_file:
@@ -79,10 +78,10 @@ def test_genbank_consistency(path):
     Test whether the same annotation (if reasonable) can be read from a
     GFF3 file and a GenBank file.
     """
-    gb_file = gb.GenBankFile.read(join(data_dir("sequence"), path))
+    gb_file = gb.GenBankFile.read(data_dir("sequence") / path)
     ref_annot = gb.get_annotation(gb_file)
 
-    gff_file = gff.GFFFile.read(join(data_dir("sequence"), path[:-3] + ".gff3"))
+    gff_file = gff.GFFFile.read((data_dir("sequence") / path).with_suffix(".gff3"))
     test_annot = gff.get_annotation(gff_file)
 
     # Remove qualifiers, since they will be different
@@ -134,7 +133,7 @@ def test_entry_indexing():
     test file with multiple directives, including '##FASTA'.
     """
     with pytest.warns(UserWarning):
-        file = gff.GFFFile.read(join(data_dir("sequence"), "indexing_test.gff3"))
+        file = gff.GFFFile.read(data_dir("sequence") / "indexing_test.gff3")
     assert file._directives == [
         ("directive 1", 1),
         ("directive 2", 2),
@@ -149,7 +148,7 @@ def test_percent_encoding():
     Test whether percent encoding is working correctly based on an
     artificial test file.
     """
-    file = gff.GFFFile.read(join(data_dir("sequence"), "percent_test.gff3"))
+    file = gff.GFFFile.read(data_dir("sequence") / "percent_test.gff3")
     seqid, source, type, start, end, score, strand, phase, attrib = file[0]
     assert seqid == "123,456"
     assert source == "ääh"

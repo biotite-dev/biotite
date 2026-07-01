@@ -13,13 +13,13 @@ def kmer_alphabet():
     return align.KmerAlphabet(seq.ProteinSequence.alphabet, 3)
 
 
-np.random.seed(0)
 N = 10
+_rng = np.random.default_rng(0)
 
 
 @pytest.mark.parametrize(
-    "ref_kmer, threshold",
-    zip(np.random.randint(10000, size=N), np.random.randint(-5, 15, size=N)),
+    ["ref_kmer", "threshold"],
+    zip(_rng.integers(10000, size=N), _rng.integers(-5, 15, size=N)),
 )
 def test_score_threshold_rule(kmer_alphabet, ref_kmer, threshold):
     """

@@ -181,7 +181,7 @@ def find_stacking_interactions(
 
     >>> from os.path import join
     >>> dna_helix = load_structure(
-    ...     join(path_to_structures, "base_pairs", "1qxb.cif"), include_bonds=True
+    ...     join(path_to_structure_data, "base_pairs", "1qxb.cif"), include_bonds=True
     ... )
     >>> interactions = find_stacking_interactions(dna_helix)
     >>> for ring_atom_indices_1, ring_atom_indices_2, stacking_type in interactions:

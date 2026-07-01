@@ -1,4 +1,3 @@
-from pathlib import Path
 import numpy as np
 import pytest
 import biotite.sequence.io.fasta as fasta
@@ -14,7 +13,7 @@ def reference_sequence():
     Get the reference Protein Blocks sequence for the alphabet example structure.
     """
     _, seq_string = next(
-        fasta.FastaFile.read_iter(Path(data_dir("structure")) / "alphabet" / "pb.fasta")
+        fasta.FastaFile.read_iter(data_dir("structure") / "alphabet" / "pb.fasta")
     )
     return strucalph.ProteinBlocksSequence(seq_string)
 
@@ -22,7 +21,7 @@ def reference_sequence():
 @pytest.fixture
 def reference_chain():
     pdbx_file = pdbx.BinaryCIFFile.read(
-        Path(data_dir("structure")) / "alphabet" / "1ay7.bcif"
+        data_dir("structure") / "alphabet" / "1ay7.bcif"
     )
     atoms = pdbx.get_structure(pdbx_file, model=1)
     atoms = atoms[struc.filter_amino_acids(atoms)]

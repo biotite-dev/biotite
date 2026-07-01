@@ -31,7 +31,7 @@ These can be extracted as :class:`ndarray` with the
     temp_xtc_file = NamedTemporaryFile("wb", suffix=".xtc", delete=False)
     response = requests.get(
         "https://raw.githubusercontent.com/biotite-dev/biotite/master/"
-        "tests/structure/data/1l2y.xtc"
+        "tests/structure/data/pdb/1l2y.xtc"
     )
     temp_xtc_file.write(response.content)
 

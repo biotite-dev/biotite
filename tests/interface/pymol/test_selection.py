@@ -1,4 +1,3 @@
-from os.path import join
 import numpy as np
 import pytest
 import biotite.interface.pymol as pymol_interface
@@ -15,15 +14,15 @@ def test_select(random_seed):
     boolean mask.
     Use the B factor as indicator for masked atoms.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     array = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
 
     # Use B factor as indicator if the selection was correctly applied
     array.set_annotation("b_factor", np.zeros(array.array_length()))
     pymol_object = pymol_interface.PyMOLObject.from_structure(array)
 
-    np.random.seed(random_seed)
-    ref_mask = np.random.choice([False, True], array.array_length())
+    rng = np.random.default_rng(random_seed)
+    ref_mask = rng.choice([False, True], array.array_length())
 
     # The method that is actually tested
     test_selection = pymol_object.where(ref_mask)
