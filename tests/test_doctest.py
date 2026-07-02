@@ -164,6 +164,19 @@ TEST_PARAMETERS = [
         ),
     ),
     pytest.param(
+        "biotite.application_v2.viennarna",
+        [
+            "biotite.sequence",
+            "biotite.sequence.align",
+            "biotite.structure",
+            "biotite.structure.io.pdbx",
+        ],
+        marks=pytest.mark.skipif(
+            is_not_installed("RNAfold") | is_not_installed("RNAplot"),
+            reason="Software is not installed",
+        ),
+    ),
+    pytest.param(
         "biotite.application.dssp",
         ["biotite.structure"],
         marks=pytest.mark.skipif(

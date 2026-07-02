@@ -19,6 +19,30 @@
         ]
     },
 
+    "biotite.application_v2.viennarna" : {
+        "Application interfaces" : [
+            "FoldApp",
+            "SuboptApp",
+            "PKplexApp",
+            "LfoldApp",
+            "CofoldApp",
+            "MultifoldApp",
+            "DuplexApp",
+            "PlexApp",
+            "AlifoldApp",
+            "LalifoldApp",
+            "AliduplexApp",
+            "EvalApp",
+            "PlotApp"
+        ],
+        "Result classes" : [
+            "FoldedRNA",
+            "CofoldedRNA",
+            "FoldedAlignment",
+            "CofoldedAlignment"
+        ]
+    },
+
     "biotite.interface.pymol" : {
         "Launching and resetting": [
             "launch_pymol",
