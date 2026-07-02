@@ -598,7 +598,7 @@ class Atom(Copyable):
         return Atom(self.coord, **self._annot)
 
 
-class AtomArray(_AtomArrayBase, Generic[N]):
+class AtomArray(_AtomArrayBase, Sequence["Atom"], Generic[N]):
     """
     An array representation of a model consisting of multiple atoms.
 
@@ -891,7 +891,7 @@ class AtomArray(_AtomArrayBase, Generic[N]):
         return AtomArray(self.array_length())
 
 
-class AtomArrayStack(_AtomArrayBase, Generic[M, N]):
+class AtomArrayStack(_AtomArrayBase, Sequence["AtomArray"], Generic[M, N]):
     """
     A collection of multiple :class:`AtomArray` instances, where each
     atom array has equal annotation arrays.

@@ -123,7 +123,7 @@ def get_structure(
 
 def set_structure(
     pdb_file: PDBFile,
-    array: AtomArray[N] | AtomArrayStack[M, N],
+    array: AtomArray[N] | AtomArrayStack[M, N] | Iterable[AtomArray[N]],
     hybrid36: bool = False,
 ) -> None:
     """
@@ -142,9 +142,10 @@ def set_structure(
     ----------
     pdb_file : PDBFile
         The file object.
-    array : AtomArray or AtomArrayStack
-        The structure to be written. If a stack is given, each array in
-        the stack will be in a separate model.
+    array : AtomArray or AtomArrayStack or iterable of AtomArray
+        The structure to be written.
+        If a stack or an iterable of :class:`AtomArray` is given, multiple models will
+        be written.
     hybrid36 : boolean, optional
         Defines whether the file should be written in hybrid-36 format.
 
