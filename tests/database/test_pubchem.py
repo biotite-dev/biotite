@@ -3,9 +3,7 @@
 # information.
 
 import functools
-import itertools
 import re
-import tempfile
 import numpy as np
 import pytest
 import biotite.database.pubchem as pubchem
@@ -42,17 +40,16 @@ def accept_busy_pubchem(func):
 
 
 @pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="Pubchem is not available")
-@pytest.mark.parametrize(
-    "format, as_file_like", itertools.product(["sdf", "png"], [False, True])
-)
+@pytest.mark.parametrize("format", ["sdf", "png"])
+@pytest.mark.parametrize("as_file_like", [False, True])
 @accept_busy_pubchem
-def test_fetch(format, as_file_like):
+def test_fetch(format, as_file_like, tmp_path):
     """
     Check download of a record in binary and text form.
     """
     CID = 2244
 
-    path = None if as_file_like else tempfile.gettempdir()
+    path = None if as_file_like else tmp_path
     file_path_or_obj = pubchem.fetch(CID, format, path, overwrite=True)
     if format == "sdf":
         mol_file = mol.MOLFile.read(file_path_or_obj)
@@ -97,7 +94,7 @@ def test_fetch_invalid():
 
 @pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
 @pytest.mark.parametrize(
-    "query, ref_ids",
+    ["query", "ref_ids"],
     [
         (pubchem.NameQuery("Alanine"), [5950]),
         (pubchem.SmilesQuery("CCCC"), [7843]),
@@ -135,11 +132,10 @@ def test_search_formula():
 
 
 @pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
+@pytest.mark.parametrize("cid", [2244])
+@pytest.mark.parametrize("from_atoms", [False, True])
 @pytest.mark.parametrize(
-    "cid, from_atoms, query_type",
-    itertools.product(
-        [2244], [False, True], [pubchem.SuperstructureQuery, pubchem.SubstructureQuery]
-    ),
+    "query_type", [pubchem.SuperstructureQuery, pubchem.SubstructureQuery]
 )
 @accept_busy_pubchem
 def test_search_super_and_substructure(cid, from_atoms, query_type):
@@ -180,9 +176,8 @@ def test_search_super_and_substructure(cid, from_atoms, query_type):
 
 
 @pytest.mark.skipif(cannot_connect_to(PUBCHEM_URL), reason="PubChem is not available")
-@pytest.mark.parametrize(
-    "conformation_based, from_atoms", itertools.product([False, True], [False, True])
-)
+@pytest.mark.parametrize("conformation_based", [False, True])
+@pytest.mark.parametrize("from_atoms", [False, True])
 @accept_busy_pubchem
 def test_search_similarity(conformation_based, from_atoms):
     """

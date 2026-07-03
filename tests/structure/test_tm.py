@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -27,7 +26,7 @@ def test_tm_score_perfect(reference_length):
 
     Test different reference lengths here as well.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1l2y.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     atoms = pdbx.get_structure(pdbx_file, model=1)
     ca_indices = np.where(atoms.atom_name == "CA")[0]
 
@@ -42,10 +41,12 @@ def test_tm_score_consistency(pdb_id):
     To decouple TM-score calculation from :func:`superimpose_structural_homologs()`,
     the TM-score is calculated for two models of the same length.
     """
-    with open(Path(data_dir("structure")) / "tm" / "tm_scores.json", "r") as file:
+    with open(data_dir("structure") / "tm" / "tm_scores.json", "r") as file:
         ref_tm_scores = json.load(file)[pdb_id]
 
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / f"{pdb_id}.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(
+        data_dir("structure") / "pdb" / f"{pdb_id}.bcif"
+    )
     atoms = pdbx.get_structure(pdbx_file)
     atoms = atoms[:, struc.filter_amino_acids(atoms)]
     reference = atoms[0]
@@ -73,7 +74,7 @@ def test_superimpose_identical(without_tm_gap_penalty, seed, structural_alphabet
     """
     P_CONSERVATION = 0.8
 
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1aki.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1aki.bcif")
     atoms = pdbx.get_structure(pdbx_file, model=1)
     atoms = atoms[struc.filter_amino_acids(atoms)]
 
@@ -115,7 +116,7 @@ def test_superimpose_identical(without_tm_gap_penalty, seed, structural_alphabet
 
 
 @pytest.mark.parametrize(
-    "fixed_pdb_id, mobile_pdb_id, ref_tm_score",
+    ["fixed_pdb_id", "mobile_pdb_id", "ref_tm_score"],
     [
         ("1p4k", "4osx", 0.87),
         ("3lsj", "3rd3", 0.78),
@@ -142,10 +143,10 @@ def test_superimpose_consistency(fixed_pdb_id, mobile_pdb_id, ref_tm_score):
     SCORE_TOLERANCE = 0.05
 
     fixed = _get_peptide_assembly(
-        Path(data_dir("structure")) / "homologs" / f"{fixed_pdb_id}.bcif"
+        data_dir("structure") / "homologs" / f"{fixed_pdb_id}.bcif"
     )
     mobile = _get_peptide_assembly(
-        Path(data_dir("structure")) / "homologs" / f"{mobile_pdb_id}.bcif"
+        data_dir("structure") / "homologs" / f"{mobile_pdb_id}.bcif"
     )
 
     super, _, fix_indices, mob_indices = struc.superimpose_structural_homologs(
@@ -167,7 +168,7 @@ def test_short_structure():
 
     before.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1l2y.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     atoms = pdbx.get_structure(pdbx_file, model=1)
     atoms = atoms[atoms.res_id < 15]
 

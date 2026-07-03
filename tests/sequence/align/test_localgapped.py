@@ -2,23 +2,17 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
 import numpy as np
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
 
 
-@pytest.mark.parametrize(
-    "gap_penalty, seed, threshold, direction, score_only",
-    itertools.product(
-        [-10, (-10, -1)],
-        [(0, 0), (11, 11), (20, 19), (30, 29)],
-        [20, 100, 500],
-        ["both", "upstream", "downstream"],
-        [False, True],
-    ),
-)
+@pytest.mark.parametrize("gap_penalty", [-10, (-10, -1)])
+@pytest.mark.parametrize("seed", [(0, 0), (11, 11), (20, 19), (30, 29)])
+@pytest.mark.parametrize("threshold", [20, 100, 500])
+@pytest.mark.parametrize("direction", ["both", "upstream", "downstream"])
+@pytest.mark.parametrize("score_only", [False, True])
 def test_simple_alignment(gap_penalty, seed, threshold, direction, score_only):
     """
     Test `align_local_gapped()` by comparing the output to
@@ -59,15 +53,10 @@ def test_simple_alignment(gap_penalty, seed, threshold, direction, score_only):
             assert alignment in ref_alignments
 
 
-@pytest.mark.parametrize(
-    "gap_penalty, direction, score_only, should_raise",
-    itertools.product(
-        [-10, (-10, -1)],
-        ["both", "upstream", "downstream"],
-        [False, True],
-        [False, True],
-    ),
-)
+@pytest.mark.parametrize("gap_penalty", [-10, (-10, -1)])
+@pytest.mark.parametrize("direction", ["both", "upstream", "downstream"])
+@pytest.mark.parametrize("score_only", [False, True])
+@pytest.mark.parametrize("should_raise", [False, True])
 def test_max_table_size(gap_penalty, direction, score_only, should_raise):
     """
     Check if the `max_table_size` parameter in `align_local_gapped()`
@@ -83,9 +72,9 @@ def test_max_table_size(gap_penalty, direction, score_only, should_raise):
 
     # Align a long random sequence to itself,
     # effectively resulting in a global alignment
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
     seq1 = seq.NucleotideSequence()
-    seq1.code = np.random.randint(len(seq1.alphabet), size=10000)
+    seq1.code = rng.integers(len(seq1.alphabet), size=10000)
 
     matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
     # Local alignment starts in the center of the sequences

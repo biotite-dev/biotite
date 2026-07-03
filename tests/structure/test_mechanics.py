@@ -1,12 +1,13 @@
-from os.path import join
 import pytest
 import biotite.structure as struc
-import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
 
 def test_gyration_radius():
-    stack = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))
+    stack = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
+    )
     radii = struc.gyration_radius(stack)
     # Compare with results from MDTraj
     exp_radii = [

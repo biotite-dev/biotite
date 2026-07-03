@@ -2,8 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -42,7 +40,7 @@ def models():
     """
     Get a short multi-model structure
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     return pdbx.get_structure(pdbx_file)
 
 
@@ -209,10 +207,9 @@ def test_rmsf_gmx(superimposed_models):
     assert np.allclose(rmsf, rmsf_gmx, atol=1e-02)
 
 
-@pytest.mark.parametrize(
-    "multi_model, as_coord, exclude_same_residue",
-    itertools.product([False, True], [False, True], [False, True]),
-)
+@pytest.mark.parametrize("multi_model", [False, True])
+@pytest.mark.parametrize("as_coord", [False, True])
+@pytest.mark.parametrize("exclude_same_residue", [False, True])
 def test_lddt_perfect(models, multi_model, as_coord, exclude_same_residue):
     """
     Check if the lDDT of a structure with itself as reference is 1.0
@@ -285,10 +282,8 @@ def test_lddt_custom_aggregation(models, multi_model):
     assert test_lddt[..., 0].tolist() == ref_lddt.tolist()
 
 
-@pytest.mark.parametrize(
-    "multi_model, aggregation",
-    itertools.product([False, True], ["chain", "residue", "atom"]),
-)
+@pytest.mark.parametrize("multi_model", [False, True])
+@pytest.mark.parametrize("aggregation", ["chain", "residue", "atom"])
 def test_lddt_aggregation_levels(models, multi_model, aggregation):
     """
     Check if the predefined aggregation levels :func:`lddt()` return the expected shape.
@@ -435,7 +430,7 @@ def test_custom_lddt_symmetric(models):
 
 
 @pytest.mark.parametrize(
-    "what_is_nan, ref_lddt",
+    ["what_is_nan", "ref_lddt"],
     [
         # No reference coordinates (except one atom)
         # -> set of reference contacts is empty

@@ -2,19 +2,15 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import glob
-import itertools
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
 
-@pytest.mark.parametrize(
-    "seed, multi_model", itertools.product(range(10), [False, True])
-)
+@pytest.mark.parametrize("seed", range(10))
+@pytest.mark.parametrize("multi_model", [False, True])
 def test_restoration(seed, multi_model):
     """
     Check if randomly relocated coordinates can be restored to their
@@ -23,15 +19,15 @@ def test_restoration(seed, multi_model):
     N_MODELS = 10
     N_COORD = 100
 
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     if multi_model:
-        ref_coord = np.random.rand(N_MODELS, N_COORD, 3)
+        ref_coord = rng.random((N_MODELS, N_COORD, 3))
     else:
-        ref_coord = np.random.rand(N_COORD, 3)
-    ref_coord = _transform_random_affine(ref_coord)
+        ref_coord = rng.random((N_COORD, 3))
+    ref_coord = _transform_random_affine(ref_coord, rng)
 
     # Try to restore original coordinates after random relocation
-    test_coord = _transform_random_affine(ref_coord)
+    test_coord = _transform_random_affine(ref_coord, rng)
     test_coord, _ = struc.superimpose(ref_coord, test_coord)
 
     assert test_coord.flatten().tolist() == pytest.approx(
@@ -50,8 +46,8 @@ def test_rotation_matrix():
     # A rotation matrix that rotates 90 degrees around the z-axis
     ref_rotation = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
 
-    np.random.seed(0)
-    original_coord = np.random.rand(N_COORD, 3)
+    rng = np.random.default_rng(0)
+    original_coord = rng.random((N_COORD, 3))
     # Rotate about 90 degrees around z-axis
     rotated_coord = struc.rotate(original_coord, angles=(0, 0, np.pi / 2))
     _, transform = struc.superimpose(rotated_coord, original_coord)
@@ -63,9 +59,11 @@ def test_rotation_matrix():
 
 
 @pytest.mark.parametrize(
-    "path, coord_only",
-    itertools.product(glob.glob(join(data_dir("structure"), "*.bcif")), [False, True]),
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.bcif")),
+    ids=lambda path: path.name,
 )
+@pytest.mark.parametrize("coord_only", [False, True])
 def test_superimposition_array(path, coord_only):
     """
     Take a structure and rotate and translate a copy of it, so that they
@@ -73,7 +71,7 @@ def test_superimposition_array(path, coord_only):
     Then superimpose these structure onto each other and expect an
     almost perfect match.
     """
-    fixed = strucio.load_structure(path, model=1)
+    fixed = pdbx.get_structure(pdbx.BinaryCIFFile.read(path), model=1)
 
     mobile = fixed.copy()
     mobile = struc.rotate(mobile, (1, 2, 3))
@@ -103,8 +101,8 @@ def test_superimposition_stack(ca_only):
     (optimally) superimposed onto each other.
     Then superimpose and expect an improved RMSD.
     """
-    path = join(data_dir("structure"), "1l2y.bcif")
-    stack = strucio.load_structure(path)
+    path = data_dir("structure") / "pdb" / "1l2y.bcif"
+    stack = pdbx.get_structure(pdbx.BinaryCIFFile.read(path))
     fixed = stack[0]
     mobile = stack[1:]
     if ca_only:
@@ -133,14 +131,14 @@ def test_masked_superimposition(seed):
     Since two atoms can be superimposed perfectly, the distance between
     the atom in both models should be 0.
     """
-    path = join(data_dir("structure"), "1l2y.bcif")
-    fixed = strucio.load_structure(path, model=1)
-    mobile = strucio.load_structure(path, model=2)
+    path = data_dir("structure") / "pdb" / "1l2y.bcif"
+    fixed = pdbx.get_structure(pdbx.BinaryCIFFile.read(path), model=1)
+    mobile = pdbx.get_structure(pdbx.BinaryCIFFile.read(path), model=2)
 
     # Create random mask for a single atom
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     mask = np.full(fixed.array_length(), False)
-    mask[np.random.randint(fixed.array_length())] = True
+    mask[rng.integers(fixed.array_length())] = True
 
     # The distance between the atom in both models should not be
     # already 0 prior to superimposition
@@ -155,17 +153,16 @@ def test_masked_superimposition(seed):
     struc.distance(fixed[mask], fitted[mask])[0] == pytest.approx(0, abs=5e-4)
 
 
-@pytest.mark.parametrize(
-    "single_model, single_atom", itertools.product([False, True], [False, True])
-)
+@pytest.mark.parametrize("single_model", [False, True])
+@pytest.mark.parametrize("single_atom", [False, True])
 def test_input_shapes(single_model, single_atom):
     """
     Test whether :func:`superimpose()` infers the correct output shape,
     even if the input :class:`AtomArrayStack` contains only a single
     model or a single atom.
     """
-    path = join(data_dir("structure"), "1l2y.bcif")
-    stack = strucio.load_structure(path)
+    path = data_dir("structure") / "pdb" / "1l2y.bcif"
+    stack = pdbx.get_structure(pdbx.BinaryCIFFile.read(path))
     fixed = stack[0]
 
     mobile = stack
@@ -194,16 +191,16 @@ def test_outlier_detection(seed):
     NOISE = 0.1
     OUTLIER_MAGNITUDE = 100
 
-    np.random.seed(seed)
-    fixed_coord = np.random.rand(N_COORD, 3)
+    rng = np.random.default_rng(seed)
+    fixed_coord = rng.random((N_COORD, 3))
     # Add a little bit of noise
-    mobile_coord = fixed_coord + np.random.rand(N_COORD, 3) * NOISE
+    mobile_coord = fixed_coord + rng.random((N_COORD, 3)) * NOISE
     # Make some coordinates outliers
-    ref_outlier_mask = np.random.choice(
+    ref_outlier_mask = rng.choice(
         [False, True], size=N_COORD, p=[1 - P_OUTLIERS, P_OUTLIERS]
     )
     mobile_coord[ref_outlier_mask] += OUTLIER_MAGNITUDE
-    mobile_coord = _transform_random_affine(mobile_coord)
+    mobile_coord = _transform_random_affine(mobile_coord, rng)
 
     superimposed_coord, _, anchors = struc.superimpose_without_outliers(
         # Increase the threshold a bit,
@@ -225,16 +222,15 @@ def test_outlier_detection(seed):
     )
 
 
-@pytest.mark.parametrize(
-    "multi_model, coord_only", itertools.product([False, True], [False, True])
-)
+@pytest.mark.parametrize("multi_model", [False, True])
+@pytest.mark.parametrize("coord_only", [False, True])
 def test_superimpose_without_outliers_inputs(multi_model, coord_only):
     """
     Ensure that :meth:`superimpose_without_outliers()` is able to handle
     single models, multiple models and pure coordinates.
     """
-    path = join(data_dir("structure"), "1l2y.bcif")
-    atoms = strucio.load_structure(path)
+    path = data_dir("structure") / "pdb" / "1l2y.bcif"
+    atoms = pdbx.get_structure(pdbx.BinaryCIFFile.read(path))
     if not multi_model:
         atoms = atoms[0]
     if coord_only:
@@ -256,7 +252,7 @@ def test_superimpose_without_outliers_inputs(multi_model, coord_only):
 
 
 @pytest.mark.parametrize(
-    "pdb_id, chain_id, as_stack",
+    ["pdb_id", "chain_id", "as_stack"],
     [
         ("1aki", "A", False),  # is a protein
         ("1aki", "A", True),
@@ -274,17 +270,17 @@ def test_superimpose_homologs(pdb_id, chain_id, as_stack):
     RMSD should be 0.
     """
     P_CONSERVATION = 0.9
-    path = join(data_dir("structure"), f"{pdb_id}.bcif")
-    atoms = strucio.load_structure(path)
+    path = data_dir("structure") / "pdb" / f"{pdb_id}.bcif"
+    atoms = pdbx.get_structure(pdbx.BinaryCIFFile.read(path), model=1)
     atoms = atoms[atoms.chain_id == chain_id]
     if as_stack:
         atoms = struc.stack([atoms])
 
     # Delete random residues
-    np.random.seed(0)
-    fixed_atoms = _delete_random_residues(atoms, P_CONSERVATION)
-    mobile_atoms = _delete_random_residues(atoms, P_CONSERVATION)
-    mobile_atoms.coord = _transform_random_affine(mobile_atoms.coord)
+    rng = np.random.default_rng(0)
+    fixed_atoms = _delete_random_residues(atoms, P_CONSERVATION, rng)
+    mobile_atoms = _delete_random_residues(atoms, P_CONSERVATION, rng)
+    mobile_atoms.coord = _transform_random_affine(mobile_atoms.coord, rng)
 
     super_atoms, _, fix_anchors, mob_anchors = struc.superimpose_homologs(
         fixed_atoms, mobile_atoms
@@ -304,15 +300,15 @@ def test_superimpose_homologs(pdb_id, chain_id, as_stack):
     ) == pytest.approx(0, abs=1e-3)
 
 
-def _transform_random_affine(coord):
-    coord = struc.translate(coord, np.random.rand(3))
-    coord = struc.rotate(coord, np.random.uniform(low=0, high=2 * np.pi, size=3))
+def _transform_random_affine(coord, rng):
+    coord = struc.translate(coord, rng.random(3))
+    coord = struc.rotate(coord, rng.uniform(low=0, high=2 * np.pi, size=3))
     return coord
 
 
-def _delete_random_residues(atoms, p_conservation):
+def _delete_random_residues(atoms, p_conservation, rng):
     residue_starts = struc.get_residue_starts(atoms)
-    conserved_residue_starts = np.random.choice(
+    conserved_residue_starts = rng.choice(
         residue_starts, size=int(p_conservation * len(residue_starts)), replace=False
     )
     conservation_mask = np.any(

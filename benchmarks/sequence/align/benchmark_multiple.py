@@ -1,4 +1,3 @@
-from pathlib import Path
 import pytest
 import biotite.sequence.align as align
 import biotite.sequence.io.fasta as fasta
@@ -7,7 +6,7 @@ from tests.util import data_dir
 
 @pytest.fixture(scope="module")
 def sequences():
-    fasta_file = fasta.FastaFile.read(Path(data_dir("sequence")) / "cas9.fasta")
+    fasta_file = fasta.FastaFile.read(data_dir("sequence") / "cas9.fasta")
     return list(fasta.get_sequences(fasta_file).values())
 
 

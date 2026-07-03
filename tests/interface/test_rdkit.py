@@ -1,5 +1,4 @@
 import itertools
-from pathlib import Path
 import numpy as np
 import pytest
 import rdkit.Chem.AllChem as Chem
@@ -18,7 +17,7 @@ def _released_ccd_residues():
 
 
 def _load_smiles():
-    with open(Path(data_dir("interface")) / "smiles.txt") as file:
+    with open(data_dir("interface") / "smiles.txt") as file:
         return file.read().splitlines()
 
 

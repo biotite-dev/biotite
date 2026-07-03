@@ -2,9 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import glob
 import warnings
-from os.path import join
 from tempfile import TemporaryFile
 import numpy as np
 import pytest
@@ -18,10 +16,11 @@ from tests.util import data_dir
     "path",
     [
         path
-        for path in glob.glob(join(data_dir("structure"), "*.bcif"))
+        for path in sorted((data_dir("structure") / "pdb").glob("*.bcif"))
         # Skip this PDB ID as it contains 5-character residue names
-        if "7gsa" not in path
+        if "7gsa" not in path.name
     ],
+    ids=lambda path: path.name,
 )
 def test_array_conversion(path):
     pdbx_file = pdbx.BinaryCIFFile.read(path)

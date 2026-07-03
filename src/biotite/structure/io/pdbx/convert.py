@@ -1498,7 +1498,7 @@ def get_component(
 
     >>> import os.path
     >>> file = CIFFile.read(
-    ...     os.path.join(path_to_structures, "molecules", "TYR.cif")
+    ...     os.path.join(path_to_structure_data, "molecules", "TYR.cif")
     ... )
     >>> comp = get_component(file)
     >>> print(comp)

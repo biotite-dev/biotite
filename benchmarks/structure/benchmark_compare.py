@@ -1,5 +1,3 @@
-import itertools
-from pathlib import Path
 import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
@@ -9,17 +7,15 @@ from tests.util import data_dir
 
 @pytest.fixture(scope="module")
 def atoms():
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1gya.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1gya.bcif")
     atoms = pdbx.get_structure(pdbx_file)
     # Reduce the number of atoms to speed up the benchmark
     return atoms[..., filter_heavy(atoms)]
 
 
 @pytest.mark.benchmark
-@pytest.mark.parametrize(
-    "multi_model, aggregation",
-    itertools.product([False, True], ["all", "chain", "residue", "atom"]),
-)
+@pytest.mark.parametrize("multi_model", [False, True])
+@pytest.mark.parametrize("aggregation", ["all", "chain", "residue", "atom"])
 def benchmark_lddt(atoms, multi_model, aggregation):
     """
     Compute lDDT on different aggregation levels.

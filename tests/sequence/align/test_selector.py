@@ -2,17 +2,16 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
 import numpy as np
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
 
 
-@pytest.mark.parametrize(
-    "seed, window, from_sequence, use_permutation",
-    itertools.product(range(20), [2, 5, 10, 25], [False, True], [False, True]),
-)
+@pytest.mark.parametrize("seed", range(20))
+@pytest.mark.parametrize("window", [2, 5, 10, 25])
+@pytest.mark.parametrize("from_sequence", [False, True])
+@pytest.mark.parametrize("use_permutation", [False, True])
 def test_minimizer(seed, window, from_sequence, use_permutation):
     """
     Compare the fast minimizer identification algorithm against
@@ -22,8 +21,8 @@ def test_minimizer(seed, window, from_sequence, use_permutation):
     LENGTH = 1000
 
     sequence = seq.NucleotideSequence(ambiguous=False)
-    np.random.seed(seed)
-    sequence.code = np.random.randint(len(sequence.alphabet), size=LENGTH)
+    rng = np.random.default_rng(seed)
+    sequence.code = rng.integers(len(sequence.alphabet), size=LENGTH)
     kmer_alph = align.KmerAlphabet(sequence.alphabet, K)
     kmers = kmer_alph.create_kmers(sequence.code)
 
@@ -54,18 +53,16 @@ def test_minimizer(seed, window, from_sequence, use_permutation):
     assert test_minimizers.tolist() == ref_minimizers.tolist()
 
 
+@pytest.mark.parametrize("seed", range(20))
+@pytest.mark.parametrize("s", [2, 3, 5, 7])
 @pytest.mark.parametrize(
-    "seed, s, offset, from_sequence, use_permutation",
-    itertools.product(
-        range(20),
-        [2, 3, 5, 7],
-        [(0,), (0, 1, 2), (0, -1), (-2, -1)],
-        [False, True],
-        [False, True],
-    ),
+    "offset",
+    [(0,), (0, 1, 2), (0, -1), (-2, -1)],
     # Print tuples in name of test
-    ids=lambda x: str(x).replace(" ", "") if isinstance(x, tuple) else None,
+    ids=lambda offset: str(offset).replace(" ", ""),
 )
+@pytest.mark.parametrize("from_sequence", [False, True])
+@pytest.mark.parametrize("use_permutation", [False, True])
 def test_syncmer(seed, s, offset, from_sequence, use_permutation):
     """
     Compare the fast syncmer identification algorithm against
@@ -76,8 +73,8 @@ def test_syncmer(seed, s, offset, from_sequence, use_permutation):
 
     sequence = seq.NucleotideSequence(ambiguous=False)
     alphabet = sequence.alphabet
-    np.random.seed(seed)
-    sequence.code = np.random.randint(len(alphabet), size=LENGTH)
+    rng = np.random.default_rng(seed)
+    sequence.code = rng.integers(len(alphabet), size=LENGTH)
 
     kmers = align.KmerAlphabet(alphabet, K).create_kmers(sequence.code)
     smers = align.KmerAlphabet(alphabet, s).create_kmers(sequence.code)
@@ -128,8 +125,8 @@ def test_cached_syncmer():
     LENGTH = 1000
 
     sequence = seq.NucleotideSequence(ambiguous=False)
-    np.random.seed(0)
-    sequence.code = np.random.randint(len(sequence.alphabet), size=LENGTH)
+    rng = np.random.default_rng(0)
+    sequence.code = rng.integers(len(sequence.alphabet), size=LENGTH)
 
     syncmer_selector = align.SyncmerSelector(sequence.alphabet, K, S)
     ref_syncmer_pos, ref_syncmers = syncmer_selector.select(sequence)
@@ -142,7 +139,7 @@ def test_cached_syncmer():
 
 
 @pytest.mark.parametrize(
-    "offset, exception_type",
+    ["offset", "exception_type"],
     [
         # Duplicate values
         ((1, 1), ValueError),
@@ -180,7 +177,6 @@ def test_mincode(use_permutation):
     COMPRESSION = 4
 
     kmer_alph = align.KmerAlphabet(seq.NucleotideSequence.alphabet_unamb, K)
-    np.random.seed(0)
     kmers = np.arange(len(kmer_alph), dtype=np.int64)
 
     if use_permutation:

@@ -2,43 +2,53 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
 
 @pytest.fixture
 def canonical_sample_protein():
-    return strucio.load_structure(join(data_dir("structure"), "3o5r.bcif"))
+    return pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "3o5r.bcif"), model=1
+    )
 
 
 @pytest.fixture
 def sample_protein():
-    return strucio.load_structure(join(data_dir("structure"), "5eil.bcif"))
+    return pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "5eil.bcif"), model=1
+    )
 
 
 @pytest.fixture
 def canonical_sample_nucleotide():
-    return strucio.load_structure(join(data_dir("structure"), "5ugo.bcif"))
+    return pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "5ugo.bcif"), model=1
+    )
 
 
 @pytest.fixture
 def sample_nucleotide():
-    return strucio.load_structure(join(data_dir("structure"), "4p5j.bcif"))
+    return pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "4p5j.bcif"), model=1
+    )
 
 
 @pytest.fixture
 def sample_carbohydrate():
-    return strucio.load_structure(join(data_dir("structure"), "2d0f.bcif"))
+    return pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "2d0f.bcif"), model=1
+    )
 
 
 @pytest.fixture
 def all_atloc_structure():
-    return strucio.load_structure(
-        join(data_dir("structure"), "1o1z.bcif"),
+    return pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1o1z.bcif"),
+        model=1,
         extra_fields=["occupancy"],
         altloc="all",
     )

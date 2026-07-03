@@ -3,9 +3,7 @@
 # information.
 
 import gzip
-import tempfile
 from datetime import date
-from os.path import join
 import numpy as np
 import pytest
 import biotite.database.rcsb as rcsb
@@ -25,7 +23,7 @@ TC5B_TERM = "Miniprotein Construct TC5b"
 
 @pytest.mark.parametrize("as_file_like", [False, True])
 @pytest.mark.parametrize(
-    "format, extended_id, use_gzip",
+    ["format", "extended_id", "use_gzip"],
     [
         pytest.param("pdb", False, False),
         pytest.param("pdb", False, True),
@@ -41,7 +39,7 @@ TC5B_TERM = "Miniprotein Construct TC5b"
         pytest.param("fasta", False, False),
     ],
 )
-def test_fetch(format, as_file_like, extended_id, use_gzip):
+def test_fetch(format, as_file_like, extended_id, use_gzip, tmp_path):
     HANDLE_CHAR = {
         "pdb": "t",
         "cif": "t",
@@ -51,7 +49,7 @@ def test_fetch(format, as_file_like, extended_id, use_gzip):
     PDB_ID = "1aki"
 
     pdb_id = PDB_ID if not extended_id else "pdb_0000" + PDB_ID
-    path = None if as_file_like else tempfile.gettempdir()
+    path = None if as_file_like else tmp_path
     file_path_or_obj = rcsb.fetch(pdb_id, format, path, overwrite=True, gzip=use_gzip)
 
     if use_gzip:
@@ -74,9 +72,9 @@ def test_fetch(format, as_file_like, extended_id, use_gzip):
 
 @pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 @pytest.mark.parametrize("format", ["pdb", "cif", "bcif", "fasta"])
-def test_fetch_invalid(format):
+def test_fetch_invalid(format, tmp_path):
     with pytest.raises(RequestError):
-        rcsb.fetch("xxxx", format, tempfile.gettempdir(), overwrite=True)
+        rcsb.fetch("xxxx", format, tmp_path, overwrite=True)
 
 
 def test_search_basic():
@@ -86,7 +84,7 @@ def test_search_basic():
 
 
 @pytest.mark.parametrize(
-    "field, molecular_definition, params, ref_ids",
+    ["field", "molecular_definition", "params", "ref_ids"],
     [
         (
             "pdbx_serial_crystallography_sample_delivery_injection.preparation",
@@ -178,7 +176,7 @@ def test_search_field(field, molecular_definition, params, ref_ids):
 @pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 def test_search_sequence():
     IDENTIY_CUTOFF = 0.9
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     ref_sequence = pdbx.get_sequence(pdbx_file)["A"]
     query = rcsb.SequenceQuery(ref_sequence, "protein", min_identity=IDENTIY_CUTOFF)
     test_ids = rcsb.search(query)
@@ -196,7 +194,7 @@ def test_search_sequence():
 
 
 @pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
-@pytest.mark.parametrize("chain, assembly", [("A", None), (None, "1")])
+@pytest.mark.parametrize(["chain", "assembly"], [("A", None), (None, "1")])
 def test_search_structure(chain, assembly):
     query = rcsb.StructureQuery("1L2Y", chain=chain, assembly=assembly)
     test_ids = rcsb.search(query)
@@ -228,7 +226,7 @@ def test_search_composite():
 
 
 @pytest.mark.parametrize(
-    "return_type, expected",
+    ["return_type", "expected"],
     [
         ("entry",              ["1L2Y"]  ),
         ("assembly",           ["1L2Y-1"]),
@@ -254,8 +252,8 @@ def test_search_range(seed):
     ref_entries = rcsb.search(query)
     assert len(ref_entries) == count
 
-    np.random.seed(seed)
-    range = sorted(np.random.choice(count, 2, replace=False))
+    rng = np.random.default_rng(seed)
+    range = sorted(rng.choice(count, 2, replace=False))
     if range[1] - range[0] > 10000:
         # pagination only supports up to 10000 entries
         # (https://search.rcsb.org/#pagination)
@@ -325,7 +323,7 @@ def test_search_content_types():
 
 @pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")
 @pytest.mark.parametrize(
-    "grouping, resolution_threshold, return_type, ref_groups",
+    ["grouping", "resolution_threshold", "return_type", "ref_groups"],
     [
         (
             rcsb.IdentityGrouping(
@@ -417,7 +415,7 @@ def test_search_empty():
 
 
 @pytest.mark.parametrize(
-    "field, params",
+    ["field", "params"],
     [("invalid.field", {"exact_match": "Some Value"}), ("exptl.method", {"less": 5})],
 )
 @pytest.mark.skipif(cannot_connect_to(RCSB_URL), reason="RCSB PDB is not available")

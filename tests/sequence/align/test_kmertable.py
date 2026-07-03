@@ -3,7 +3,6 @@
 # information.
 
 import functools
-import itertools
 import pickle
 import string
 import numpy as np
@@ -64,19 +63,17 @@ def random_sequences(request, k, alphabet):
     return sequences
 
 
+@pytest.mark.parametrize("spacing", [None, "10111011011", "1001111010101"])
 @pytest.mark.parametrize(
-    "spacing, table_class",
-    itertools.product(
-        [None, "10111011011", "1001111010101"],
-        [
-            align.KmerTable,
-            # Choose number of buckets, so that there is one test case
-            # with less buckets than number of possible kmers ...
-            FixedBucketKmerTable(1000),
-            # ... and one test case with more buckets (perfect hashing)
-            FixedBucketKmerTable(1000000),
-        ],
-    ),
+    "table_class",
+    [
+        align.KmerTable,
+        # Choose number of buckets, so that there is one test case
+        # with less buckets than number of possible kmers ...
+        FixedBucketKmerTable(1000),
+        # ... and one test case with more buckets (perfect hashing)
+        FixedBucketKmerTable(1000000),
+    ],
     ids=idfn,
 )
 def test_from_sequences(k, random_sequences, spacing, table_class):
@@ -197,13 +194,11 @@ def test_from_positions(k, random_sequences):
 
 
 @pytest.mark.parametrize(
-    "table_class, use_similarity_rule",
-    itertools.product(
-        [align.KmerTable, FixedBucketKmerTable(1000), FixedBucketKmerTable(10000000)],
-        [False, True],
-    ),
+    "table_class",
+    [align.KmerTable, FixedBucketKmerTable(1000), FixedBucketKmerTable(10000000)],
     ids=idfn,
 )
+@pytest.mark.parametrize("use_similarity_rule", [False, True])
 def test_match_table(table_class, use_similarity_rule):
     """
     Test the :meth:`match_table()` method based on a known example.
@@ -253,13 +248,11 @@ def test_match_table(table_class, use_similarity_rule):
 
 
 @pytest.mark.parametrize(
-    "table_class, use_similarity_rule",
-    itertools.product(
-        [align.KmerTable, FixedBucketKmerTable(1000), FixedBucketKmerTable(1000000)],
-        [False, True],
-    ),
+    "table_class",
+    [align.KmerTable, FixedBucketKmerTable(1000), FixedBucketKmerTable(1000000)],
     ids=idfn,
 )
+@pytest.mark.parametrize("use_similarity_rule", [False, True])
 def test_match(k, random_sequences, table_class, use_similarity_rule):
     """
     Test the :meth:`match()` method compared to a manual,
@@ -324,13 +317,11 @@ def test_match_kmer_selection(k, random_sequences, table_class):
 
 
 @pytest.mark.parametrize(
-    "table_class, use_mask",
-    itertools.product(
-        [align.KmerTable, FixedBucketKmerTable(1000), FixedBucketKmerTable(1000000)],
-        [False, True],
-    ),
+    "table_class",
+    [align.KmerTable, FixedBucketKmerTable(1000), FixedBucketKmerTable(1000000)],
     ids=idfn,
 )
+@pytest.mark.parametrize("use_mask", [False, True])
 def test_match_equivalence(k, random_sequences, table_class, use_mask):
     """
     Check if both, the :meth:`match()` and meth:`match_table()`
@@ -374,7 +365,7 @@ def test_match_equivalence(k, random_sequences, table_class, use_mask):
 
 
 @pytest.mark.parametrize(
-    "k, input_mask, ref_output_mask",
+    ["k", "input_mask", "ref_output_mask"],
     [
         (
             3,
@@ -413,7 +404,7 @@ def test_masking(k, input_mask, ref_output_mask):
 
 
 @pytest.mark.parametrize(
-    "table_class, selected_kmers",
+    ["table_class", "selected_kmers"],
     [
         (align.KmerTable, False),
         (align.KmerTable, True),
@@ -484,10 +475,8 @@ def test_pickle(k, random_sequences, table_class):
     assert test_table == ref_table
 
 
-@pytest.mark.parametrize(
-    "n_kmers, load_factor",
-    itertools.product([1_000, 100_000, 10_000_000, 1_000_000_000], [0.2, 1.0, 2.0]),
-)
+@pytest.mark.parametrize("n_kmers", [1_000, 100_000, 10_000_000, 1_000_000_000])
+@pytest.mark.parametrize("load_factor", [0.2, 1.0, 2.0])
 def test_bucket_number(n_kmers, load_factor):
     """
     Check if the number of buckets is always maximum five percent larger

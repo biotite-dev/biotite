@@ -2,16 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import glob
-import itertools
 import sys
 import warnings
-from os.path import join, splitext
-from pathlib import Path
 from tempfile import TemporaryFile
 import numpy as np
 import pytest
-from pytest import approx
 import biotite
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
@@ -25,7 +20,7 @@ from tests.util import data_dir
 
 
 def test_get_model_count():
-    pdb_file = pdb.PDBFile.read(join(data_dir("structure"), "1l2y.pdb"))
+    pdb_file = pdb.PDBFile.read(data_dir("structure") / "pdb" / "1l2y.pdb")
     # Test also the thin wrapper around the method
     # 'get_model_count()'
     test_model_count = pdb.get_model_count(pdb_file)
@@ -34,14 +29,13 @@ def test_get_model_count():
 
 
 @pytest.mark.parametrize(
-    "path, model, hybrid36, include_bonds",
-    itertools.product(
-        glob.glob(join(data_dir("structure"), "*.pdb")),
-        [None, 1, -1],
-        [False, True],
-        [False, True],
-    ),
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.pdb")),
+    ids=lambda path: path.name,
 )
+@pytest.mark.parametrize("model", [None, 1, -1])
+@pytest.mark.parametrize("hybrid36", [False, True])
+@pytest.mark.parametrize("include_bonds", [False, True])
 def test_array_conversion(path, model, hybrid36, include_bonds):
     pdb_file = pdb.PDBFile.read(path)
     # Test also the thin wrapper around the methods
@@ -84,7 +78,8 @@ def test_array_conversion(path, model, hybrid36, include_bonds):
 
 @pytest.mark.parametrize(
     "path",
-    glob.glob(join(data_dir("structure"), "*.pdb")),
+    sorted((data_dir("structure") / "pdb").glob("*.pdb")),
+    ids=lambda path: path.name,
 )
 def test_space_group(path):
     """
@@ -124,11 +119,11 @@ def test_space_group(path):
 @pytest.mark.parametrize("model", [None, 1, -1])
 @pytest.mark.parametrize(
     "path",
-    Path(data_dir("structure")).glob("*.pdb"),
-    ids=lambda p: p.stem,
+    sorted((data_dir("structure") / "pdb").glob("*.pdb")),
+    ids=lambda path: path.name,
 )
 def test_pdbx_consistency(model, path):
-    bcif_path = splitext(path)[0] + ".bcif"
+    bcif_path = path.with_suffix(".bcif")
     pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
     try:
         ref_atoms = pdbx.get_structure(pdbx_file, model=model, include_bonds=True)
@@ -181,9 +176,11 @@ def test_pdbx_consistency(model, path):
 
 
 @pytest.mark.parametrize(
-    "path, model",
-    itertools.product(glob.glob(join(data_dir("structure"), "*.pdb")), [None, 1]),
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.pdb")),
+    ids=lambda path: path.name,
 )
+@pytest.mark.parametrize("model", [None, 1])
 def test_pdbx_consistency_assembly(path, model):
     """
     Check whether :func:`get_assembly()` gives the same result for the
@@ -201,7 +198,7 @@ def test_pdbx_consistency_assembly(path, model):
         else:
             raise
 
-    bcif_path = splitext(path)[0] + ".bcif"
+    bcif_path = path.with_suffix(".bcif")
     pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
     ref_assembly = pdbx.get_assembly(pdbx_file, model=model)
 
@@ -210,14 +207,14 @@ def test_pdbx_consistency_assembly(path, model):
             test_assembly.get_annotation(category).tolist()
             == ref_assembly.get_annotation(category).tolist()
         )
-    assert test_assembly.coord.flatten().tolist() == approx(
+    assert test_assembly.coord.flatten().tolist() == pytest.approx(
         ref_assembly.coord.flatten().tolist(), abs=1e-3
     )
 
 
 @pytest.mark.parametrize("hybrid36", [False, True])
 def test_extra_fields(hybrid36):
-    path = join(data_dir("structure"), "1l2y.pdb")
+    path = data_dir("structure") / "pdb" / "1l2y.pdb"
     pdb_file = pdb.PDBFile.read(path)
     stack1 = pdb_file.get_structure(
         extra_fields=["atom_id", "b_factor", "occupancy", "charge"]
@@ -240,8 +237,8 @@ def test_extra_fields(hybrid36):
 
     assert stack1.ins_code.tolist() == stack2.ins_code.tolist()
     assert stack1.atom_id.tolist() == stack2.atom_id.tolist()
-    assert stack1.b_factor.tolist() == approx(stack2.b_factor.tolist())
-    assert stack1.occupancy.tolist() == approx(stack2.occupancy.tolist())
+    assert stack1.b_factor.tolist() == pytest.approx(stack2.b_factor.tolist())
+    assert stack1.occupancy.tolist() == pytest.approx(stack2.occupancy.tolist())
     assert stack1.charge.tolist() == stack2.charge.tolist()
     assert stack1 == stack2
 
@@ -249,7 +246,7 @@ def test_extra_fields(hybrid36):
 @pytest.mark.filterwarnings("ignore")
 def test_inferred_elements():
     # Read valid pdb file
-    path = join(data_dir("structure"), "1l2y.pdb")
+    path = data_dir("structure") / "pdb" / "1l2y.pdb"
     pdb_file = pdb.PDBFile.read(path)
     stack = pdb_file.get_structure()
 
@@ -273,9 +270,11 @@ def test_inferred_elements():
 
 
 @pytest.mark.parametrize(
-    "path, model",
-    itertools.product(glob.glob(join(data_dir("structure"), "*.pdb")), [None, 1, -1]),
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.pdb")),
+    ids=lambda path: path.name,
 )
+@pytest.mark.parametrize("model", [None, 1, -1])
 def test_box_shape(path, model):
     pdb_file = pdb.PDBFile.read(path)
     try:
@@ -297,14 +296,16 @@ def test_box_shape(path, model):
 
 
 def test_box_parsing():
-    path = join(data_dir("structure"), "1igy.pdb")
+    path = data_dir("structure") / "pdb" / "1igy.pdb"
     pdb_file = pdb.PDBFile.read(path)
     a = pdb_file.get_structure()
     expected_box = np.array(
         [[[66.65, 0.00, 0.00], [0.00, 190.66, 0.00], [-24.59, 0.00, 68.84]]]
     )
 
-    assert expected_box.flatten().tolist() == approx(a.box.flatten().tolist(), abs=1e-2)
+    assert expected_box.flatten().tolist() == pytest.approx(
+        a.box.flatten().tolist(), abs=1e-2
+    )
 
 
 def test_id_overflow():
@@ -363,7 +364,7 @@ def test_id_overflow():
 def test_get_coord(model):
     # Choose a structure without inscodes and altlocs
     # to avoid atom filtering in reference atom array (stack)
-    path = join(data_dir("structure"), "1l2y.pdb")
+    path = data_dir("structure") / "pdb" / "1l2y.pdb"
     pdb_file = pdb.PDBFile.read(path)
 
     ref_coord = pdb_file.get_structure(model=model).coord
@@ -378,7 +379,7 @@ def test_get_coord(model):
 def test_get_b_factor(model):
     # Choose a structure without inscodes and altlocs
     # to avoid atom filtering in reference atom array (stack)
-    path = join(data_dir("structure"), "1l2y.pdb")
+    path = data_dir("structure") / "pdb" / "1l2y.pdb"
     pdb_file = pdb.PDBFile.read(path)
 
     if model is None:
@@ -401,24 +402,18 @@ def test_get_b_factor(model):
     assert (test_b_factor == ref_b_factor).all()
 
 
-np.random.seed(0)
 N = 200
 LENGTHS = [3, 4, 5]
+_rng = np.random.default_rng(0)
 
 
 @pytest.mark.parametrize(
-    "number, length",
-    zip(
-        list(
-            itertools.chain(
-                *[
-                    np.random.randint(0, max_hybrid36_number(length), N)
-                    for length in LENGTHS
-                ]
-            )
-        ),
-        list(itertools.chain(*[[length] * N for length in LENGTHS])),
-    ),
+    ["number", "length"],
+    [
+        (number, length)
+        for length in LENGTHS
+        for number in _rng.integers(0, max_hybrid36_number(length), N)
+    ],
 )
 def test_hybrid36_codec(number, length):
     """
@@ -451,9 +446,8 @@ def test_bond_records(hybrid36):
     # Omit time consuming element guessing
     atoms.element[:] = "NA"
 
-    np.random.seed(0)
     # Create random bonds four times the number of atoms
-    bond_array = np.random.randint(n_atoms, size=(4 * n_atoms, 2))
+    bond_array = np.random.default_rng(0).integers(n_atoms, size=(4 * n_atoms, 2))
     # Remove bonds of atoms to themselves
     bond_array = bond_array[bond_array[:, 0] != bond_array[:, 1]]
     ref_bonds = struc.BondList(n_atoms, bond_array)
@@ -473,7 +467,7 @@ def test_bond_parsing():
     :func:`connect_via_residue_names()`.
     """
     # Choose a structure with CONECT records to test these as well
-    path = join(data_dir("structure"), "3o5r.pdb")
+    path = data_dir("structure") / "pdb" / "3o5r.pdb"
     pdb_file = pdb.PDBFile.read(path)
     atoms = pdb.get_structure(pdb_file, model=1, include_bonds=True)
 
@@ -494,7 +488,7 @@ def test_get_unit_cell(model):
     INVERSION_AXES = [(0, 0, 0), (0, 0, 1), (0, 1, 0), (1, 0, 0)]
     TRANSLATION_AXES = [(0, 0, 0), (1, 0, 1), (0, 1, 1), (1, 1, 0)]
 
-    path = join(data_dir("structure"), "1aki.pdb")
+    path = data_dir("structure") / "pdb" / "1aki.pdb"
     pdb_file = pdb.PDBFile.read(path)
     original_structure = pdb_file.get_structure(model=model)
     if model is None:
@@ -525,13 +519,13 @@ def test_get_unit_cell(model):
                 chain.get_annotation(category).tolist()
                 == original_structure.get_annotation(category).tolist()
             )
-        assert chain.coord.flatten().tolist() == approx(
+        assert chain.coord.flatten().tolist() == pytest.approx(
             original_structure.coord.flatten().tolist(), abs=1e-3
         )
 
 
 @pytest.mark.parametrize(
-    "annotation, value, warning_only",
+    ["annotation", "value", "warning_only"],
     [
         ("coord", -1000, False),
         ("coord", 10000, False),
@@ -596,7 +590,7 @@ def test_hetatm_intra_residue_bonds():
         ],
         dtype=np.uint32,
     )
-    path = join(data_dir("structure"), "edge_cases", "hetatm.pdb")
+    path = data_dir("structure") / "edge_cases" / "hetatm.pdb"
 
     pdb_file = pdb.PDBFile.read(path)
     structure = pdb.get_structure(pdb_file, model=1, include_bonds=True)
@@ -610,7 +604,7 @@ def test_multiple_atom_array():
     Setting the structure with an :class:`AtomArrayStack` and with an equivalent list of
     :class:`AtomArray` objects should result in the same file.
     """
-    stack = pdb.PDBFile.read(join(data_dir("structure"), "1l2y.pdb")).get_structure()
+    stack = pdb.PDBFile.read(data_dir("structure") / "pdb" / "1l2y.pdb").get_structure()
 
     ref_file = pdb.PDBFile()
     ref_file.set_structure(stack)

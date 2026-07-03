@@ -7,10 +7,10 @@ __author__ = "Patrick Kunzmann"
 import doctest
 import tempfile
 from importlib import import_module
-from os.path import join
+from pathlib import Path
 import numpy as np
 import pytest
-import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 from tests.util import cannot_connect_to, cannot_import, is_not_installed
 
 NCBI_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/"
@@ -193,7 +193,7 @@ TEST_PARAMETERS = [
 
 
 @pytest.mark.parametrize(
-    "package_name, context_package_names",
+    ["package_name", "context_package_names"],
     TEST_PARAMETERS,
     ids=[param.values[0] for param in TEST_PARAMETERS],
 )
@@ -213,13 +213,15 @@ def test_doctest(package_name, context_package_names):
 
     # Add fixed names for certain paths
     globs["path_to_directory"] = tempfile.gettempdir()
-    globs["path_to_structures"] = join(".", "tests", "structure", "data")
-    globs["path_to_sequences"] = join(".", "tests", "sequence", "data")
+    globs["path_to_structure_data"] = Path(".") / "tests" / "structure" / "data"
+    globs["path_to_structures"] = globs["path_to_structure_data"] / "pdb"
+    globs["path_to_sequences"] = Path(".") / "tests" / "sequence" / "data"
     # Add frequently used modules
     globs["np"] = np
     # Add frequently used objects
-    atoms = strucio.load_structure(
-        join(".", "tests", "structure", "data", "1l2y.bcif"), include_bonds=True
+    atoms = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(globs["path_to_structures"] / "1l2y.bcif"),
+        include_bonds=True,
     )
     globs["atom_array_stack"] = atoms
     globs["atom_array"] = globs["atom_array_stack"][0]

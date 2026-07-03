@@ -1,6 +1,4 @@
-import itertools
 from enum import IntEnum
-from pathlib import Path
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -15,14 +13,13 @@ def riboswitch_structure():
     Get a nucleotide structure with a complex fold, to include a variety of aromatic
     ring interactions.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "4gxy.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "4gxy.bcif")
     atoms = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
     atoms = atoms[struc.filter_nucleotides(atoms)]
 
     # The CCD does not flag the 6-cycles in nucleobases as aromatic -> correct this
     aromatic_atom_names = [
-        element + str(number)
-        for element, number in itertools.product(["C", "N"], range(1, 10))
+        f"{element}{number}" for element in ("C", "N") for number in range(1, 10)
     ]
     bond_array = atoms.bonds.as_array()
     # Convert single and double bonds between those atoms into aromatic bonds
@@ -36,7 +33,7 @@ def riboswitch_structure():
 
 
 @pytest.mark.parametrize(
-    "res_name, ref_ring_members",
+    ["res_name", "ref_ring_members"],
     [
         # No aromatic rings at all
         ("ALA", []),
@@ -92,7 +89,7 @@ def test_find_known_aromatic_rings(res_name, ref_ring_members):
 
 
 @pytest.mark.parametrize(
-    "stacking_type, included_interactions, excluded_interactions",
+    ["stacking_type", "included_interactions", "excluded_interactions"],
     [
         (
             struc.PiStacking.PARALLEL,
@@ -196,7 +193,7 @@ def test_find_pi_cation_interactions():
     Uses PDB 3wip known to have pi-cation interactions between tryptophan/tyrosine
     residues and acetylcholine (ACH) ligand.
     """
-    pdbx_file = pdbx.CIFFile.read(Path(data_dir("structure")) / "3wip.cif")
+    pdbx_file = pdbx.CIFFile.read(data_dir("structure") / "pdb" / "3wip.cif")
     atoms = pdbx.get_structure(
         pdbx_file, model=1, include_bonds=True, extra_fields=["charge"]
     )

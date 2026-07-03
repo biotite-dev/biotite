@@ -3,8 +3,6 @@
 # information.
 
 import io
-import os
-import os.path
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.io.clustal as clustal
@@ -13,7 +11,7 @@ from tests.util import data_dir
 
 def test_access_low_level():
     """Test reading a ClustalW file and accessing sequences by name."""
-    path = os.path.join(data_dir("sequence"), "clustal.aln")
+    path = data_dir("sequence") / "clustal.aln"
     file = clustal.ClustalFile.read(path)
     assert file["seq1"] == "ADTRCGTARDCGTR-DRTCGRAGD"
     assert file["seq2"] == "ADTRCGT---CGTRADRTCGRAGD"
@@ -23,7 +21,7 @@ def test_access_low_level():
 
 def test_access_multi_block():
     """Test reading a ClustalW file with multiple blocks."""
-    path = os.path.join(data_dir("sequence"), "clustal_multi.aln")
+    path = data_dir("sequence") / "clustal_multi.aln"
     file = clustal.ClustalFile.read(path)
     assert file["seq1"] == ("ADTRCGTARDCGTR-DRTCGRAGDADTRCGTARDCGTR-DRTCGRAGD")
     assert file["seq2"] == ("ADTRCGT---CGTRADRTCGRAGDADTRCGT---CGTRADRTCGRAGD")
@@ -45,7 +43,7 @@ def test_dict_interface():
 
 def test_alignment_conversion():
     """Test conversion between ClustalFile and Alignment object."""
-    path = os.path.join(data_dir("sequence"), "clustal.aln")
+    path = data_dir("sequence") / "clustal.aln"
     file = clustal.ClustalFile.read(path)
     alignment = clustal.get_alignment(file)
     assert str(alignment) == (
@@ -57,7 +55,7 @@ def test_alignment_conversion():
 
 def test_round_trip():
     """Test writing an alignment and reading it back."""
-    path = os.path.join(data_dir("sequence"), "clustal.aln")
+    path = data_dir("sequence") / "clustal.aln"
     file = clustal.ClustalFile.read(path)
     alignment = clustal.get_alignment(file)
 
@@ -71,7 +69,7 @@ def test_round_trip():
 def test_write_read_round_trip():
     """Test that writing to a file and reading back yields the same
     alignment."""
-    path = os.path.join(data_dir("sequence"), "clustal.aln")
+    path = data_dir("sequence") / "clustal.aln"
     file = clustal.ClustalFile.read(path)
     alignment = clustal.get_alignment(file)
 
@@ -90,7 +88,7 @@ def test_write_read_round_trip():
 
 def test_name_count_mismatch():
     """Test that mismatched name count raises ValueError."""
-    path = os.path.join(data_dir("sequence"), "clustal.aln")
+    path = data_dir("sequence") / "clustal.aln"
     file = clustal.ClustalFile.read(path)
     alignment = clustal.get_alignment(file)
 
@@ -102,7 +100,7 @@ def test_name_count_mismatch():
 @pytest.mark.parametrize("seq_type", (None, seq.ProteinSequence))
 def test_seq_type(seq_type):
     """Test explicit sequence type parameter."""
-    path = os.path.join(data_dir("sequence"), "clustal.aln")
+    path = data_dir("sequence") / "clustal.aln"
     file = clustal.ClustalFile.read(path)
     alignment = clustal.get_alignment(file, seq_type=seq_type)
     # Should produce a valid alignment regardless of type

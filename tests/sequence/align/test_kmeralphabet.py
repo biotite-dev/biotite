@@ -20,18 +20,18 @@ def spaced_kmer_alphabet():
     return align.KmerAlphabet(seq.ProteinSequence.alphabet, K, spacing=[0, 1, 2])
 
 
-np.random.seed(0)
 N = 10
 L = 30
+_rng = np.random.default_rng(0)
 
 
 @pytest.mark.parametrize(
     "ref_split_kmer_code",
     # Test for single instances as input
-    list(np.random.randint(len(seq.ProteinSequence.alphabet), size=(N, K)))
+    list(_rng.integers(len(seq.ProteinSequence.alphabet), size=(N, K)))
     +
     # Test for multiple instances as input
-    list(np.random.randint(len(seq.ProteinSequence.alphabet), size=(N, L, K))),
+    list(_rng.integers(len(seq.ProteinSequence.alphabet), size=(N, L, K))),
 )
 def test_fuse_and_split(kmer_alphabet, ref_split_kmer_code):
     """
@@ -44,12 +44,12 @@ def test_fuse_and_split(kmer_alphabet, ref_split_kmer_code):
     assert test_split_kmer_code.tolist() == ref_split_kmer_code.tolist()
 
 
-np.random.seed(0)
 N = 10
 
 
 @pytest.mark.parametrize(
-    "split_kmer_code", np.random.randint(len(seq.ProteinSequence.alphabet), size=(N, K))
+    "split_kmer_code",
+    np.random.default_rng(0).integers(len(seq.ProteinSequence.alphabet), size=(N, K)),
 )
 def test_encode_and_decode(kmer_alphabet, split_kmer_code):
     """
@@ -71,10 +71,9 @@ def test_create_continuous_kmers(kmer_alphabet):
     :meth:`fuse()`, which rely on two different implementations.
     The input sequence code is randomly created.
     """
-    np.random.seed(0)
     LENGTH = 100
 
-    seq_code = np.random.randint(
+    seq_code = np.random.default_rng(0).integers(
         len(seq.ProteinSequence.alphabet), size=LENGTH, dtype=np.uint8
     )
 
@@ -101,10 +100,10 @@ def test_create_spaced_kmers(kmer_alphabet, spaced_kmer_alphabet, seed):
     """
     MIN_LENGTH = 10
     MAX_LENGTH = 1000
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     sequence = seq.ProteinSequence()
-    sequence.code = np.random.randint(
-        len(sequence.alphabet), size=np.random.randint(MIN_LENGTH, MAX_LENGTH)
+    sequence.code = rng.integers(
+        len(sequence.alphabet), size=rng.integers(MIN_LENGTH, MAX_LENGTH)
     )
 
     ref_kmers = kmer_alphabet.create_kmers(sequence.code)

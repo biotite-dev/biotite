@@ -2,16 +2,11 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import glob
-import itertools
 import warnings
 from io import BytesIO
-from os.path import join, splitext
-from pathlib import Path
 import msgpack
 import numpy as np
 import pytest
-from pytest import approx
 import biotite
 import biotite.sequence as seq
 import biotite.structure as struc
@@ -28,34 +23,32 @@ def test_get_model_count(format):
     Check of :func:`get_model_count()`gives the same number of models
     as :func:`get_structure()`.
     """
-    base_path = join(data_dir("structure"), "1l2y")
+    base_path = data_dir("structure") / "pdb" / "1l2y"
     if format == "cif":
-        pdbx_file = pdbx.CIFFile.read(base_path + ".cif")
+        pdbx_file = pdbx.CIFFile.read(base_path.with_suffix(".cif"))
     else:
-        pdbx_file = pdbx.BinaryCIFFile.read(base_path + ".bcif")
+        pdbx_file = pdbx.BinaryCIFFile.read(base_path.with_suffix(".bcif"))
     test_model_count = pdbx.get_model_count(pdbx_file)
     ref_model_count = pdbx.get_structure(pdbx_file).stack_depth()
     assert test_model_count == ref_model_count
 
 
 @pytest.mark.parametrize(
-    "string, looped",
-    itertools.product(
-        [
-            "",
-            " ",
-            "  ",
-            "te  xt",
-            "'",
-            '"',
-            "te\nxt",
-            "\t",
-            """single"anddouble"marks""",
-            """single' and double" marks with whitespace""",
-        ],
-        [False, True],
-    ),
+    "string",
+    [
+        "",
+        " ",
+        "  ",
+        "te  xt",
+        "'",
+        '"',
+        "te\nxt",
+        "\t",
+        """single"anddouble"marks""",
+        """single' and double" marks with whitespace""",
+    ],
 )
+@pytest.mark.parametrize("looped", [False, True])
 def test_escape(string, looped):
     """
     Test whether values that need to be escaped are properly escaped.
@@ -75,7 +68,7 @@ def test_escape(string, looped):
 
 
 @pytest.mark.parametrize(
-    "cif_line, expected_fields",
+    ["cif_line", "expected_fields"],
     [
         ["'' 'embed'quote' ", ["", "embed'quote"]],
         ['2 "embed"quote" "\t\n"', ["2", 'embed"quote', "\t\n"]],
@@ -93,10 +86,12 @@ def test_split_one_line(cif_line, expected_fields):
 @pytest.mark.parametrize("find_matches_by_dict", [False, True])
 @pytest.mark.parametrize("model", [None, 1, -1])
 @pytest.mark.parametrize(
-    "path", Path(data_dir("structure")).glob("*.cif"), ids=lambda p: p.stem
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.cif")),
+    ids=lambda path: path.name,
 )
 @pytest.mark.parametrize("format", ["cif", "bcif"])
-def test_conversion(monkeypatch, tmpdir, format, path, model, find_matches_by_dict):
+def test_conversion(monkeypatch, tmp_path, format, path, model, find_matches_by_dict):
     """
     Test serializing and deserializing a structure from a file
     restores the same structure.
@@ -107,12 +102,11 @@ def test_conversion(monkeypatch, tmpdir, format, path, model, find_matches_by_di
         # Lower the threshold to 0 to force usage of `_find_matches_by_dict()`
         monkeypatch.setattr(pdbx.convert, "FIND_MATCHES_SWITCH_THRESHOLD", 0)
 
-    base_path = splitext(path)[0]
     if format == "cif":
-        data_path = base_path + ".cif"
+        data_path = path.with_suffix(".cif")
         File = pdbx.CIFFile
     else:
-        data_path = base_path + ".bcif"
+        data_path = path.with_suffix(".bcif")
         File = pdbx.BinaryCIFFile
 
     pdbx_file = File.read(data_path)
@@ -129,7 +123,7 @@ def test_conversion(monkeypatch, tmpdir, format, path, model, find_matches_by_di
 
     pdbx_file = File()
     pdbx.set_structure(pdbx_file, ref_atoms)
-    file_path = join(tmpdir, f"test.{format}")
+    file_path = tmp_path / f"test.{format}"
     pdbx_file.write(file_path)
 
     pdbx_file = File.read(file_path)
@@ -163,7 +157,9 @@ def test_filter_altloc(pdb_id):
     """
     Check if the different ``altloc`` options give the expected results.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{pdb_id}.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(
+        data_dir("structure") / "pdb" / f"{pdb_id}.bcif"
+    )
     atoms = {}
     for altloc in ["first", "occupancy", "all"]:
         atoms[altloc] = pdbx.get_structure(pdbx_file, model=1, altloc=altloc)
@@ -194,9 +190,7 @@ def test_filter_altloc_edge_case(altloc):
     Expect that only one altloc ID is selected for the same residue, even if that
     residue in some altloc has a different residue name.
     """
-    pdbx_file = pdbx.CIFFile.read(
-        join(data_dir("structure"), "edge_cases", "altloc.cif")
-    )
+    pdbx_file = pdbx.CIFFile.read(data_dir("structure") / "edge_cases" / "altloc.cif")
     test_atoms = pdbx.get_structure(pdbx_file, model=1, altloc=altloc)
     ref_atoms = pdbx.get_structure(pdbx_file, model=1, altloc="all")
 
@@ -221,7 +215,7 @@ def test_bonds_from_ccd(format):
     bonds, such as disulfide bridges or glycosylations, as those bonds would require
     explicit bond information.
     """
-    path = join(data_dir("structure"), f"1l2y.{format}")
+    path = data_dir("structure") / "pdb" / f"1l2y.{format}"
     File = pdbx.CIFFile if format == "cif" else pdbx.BinaryCIFFile
 
     pdbx_file = File.read(path)
@@ -239,7 +233,7 @@ def test_metal_coordination_bonds():
     Test if metal coordination bonds are properly written and read,
     based on an known example.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1crr.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1crr.bcif")
     atoms = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
 
     bond_array = atoms.bonds.as_array()
@@ -272,7 +266,7 @@ def test_bond_sparsity():
     This tests a previous bug, where duplicate intra-residue bonds were written
     (https://github.com/biotite-dev/biotite/issues/652).
     """
-    path = join(data_dir("structure"), "1l2y.bcif")
+    path = data_dir("structure") / "pdb" / "1l2y.bcif"
     ref_pdbx_file = pdbx.BinaryCIFFile.read(path)
     ref_bond_number = ref_pdbx_file.block["chem_comp_bond"].row_count
 
@@ -285,10 +279,10 @@ def test_bond_sparsity():
 
 
 @pytest.mark.parametrize("format", ["cif", "bcif"])
-def test_extra_fields(tmpdir, format):
+def test_extra_fields(tmp_path, format):
     EXTRA_FIELDS = ["atom_id", "b_factor", "occupancy", "charge", "entity_id"]
 
-    path = join(data_dir("structure"), f"1l2y.{format}")
+    path = data_dir("structure") / "pdb" / f"1l2y.{format}"
     if format == "cif":
         File = pdbx.CIFFile
     else:
@@ -299,7 +293,7 @@ def test_extra_fields(tmpdir, format):
 
     pdbx_file = File()
     pdbx.set_structure(pdbx_file, ref_atoms, data_block="test")
-    file_path = join(tmpdir, "test")
+    file_path = tmp_path / "test"
     pdbx_file.write(file_path)
 
     pdbx_file = File.read(path)
@@ -307,8 +301,8 @@ def test_extra_fields(tmpdir, format):
 
     assert test_atoms.ins_code.tolist() == ref_atoms.ins_code.tolist()
     assert test_atoms.atom_id.tolist() == ref_atoms.atom_id.tolist()
-    assert test_atoms.b_factor.tolist() == approx(ref_atoms.b_factor.tolist())
-    assert test_atoms.occupancy.tolist() == approx(ref_atoms.occupancy.tolist())
+    assert test_atoms.b_factor.tolist() == pytest.approx(ref_atoms.b_factor.tolist())
+    assert test_atoms.occupancy.tolist() == pytest.approx(ref_atoms.occupancy.tolist())
     assert test_atoms.charge.tolist() == ref_atoms.charge.tolist()
     assert test_atoms.entity_id.tolist() == ref_atoms.entity_id.tolist()
     assert test_atoms == ref_atoms
@@ -324,7 +318,7 @@ def test_hetero_residue_borders():
     The created residue IDs are manually checked, based on the CIF file, representing
     this edge case.
     """
-    path = join(data_dir("structure"), "edge_cases", "res_ids.cif")
+    path = data_dir("structure") / "edge_cases" / "res_ids.cif"
     pdbx_file = pdbx.CIFFile.read(path)
     # The issue does not exist for author fields, hence they represent the reference
     ref_atoms = pdbx.get_structure(pdbx_file, model=1, use_author_fields=True)
@@ -354,7 +348,7 @@ def test_dynamic_dtype():
     """
     CHAIN_ID = "LONG_ID"
 
-    path = join(data_dir("structure"), "1l2y.bcif")
+    path = data_dir("structure") / "pdb" / "1l2y.bcif"
     pdbx_file = pdbx.BinaryCIFFile.read(path)
     category = pdbx_file.block["atom_site"]
     category["label_asym_id"] = np.full(len(category["label_asym_id"]), CHAIN_ID)
@@ -365,7 +359,7 @@ def test_dynamic_dtype():
 
 
 @pytest.mark.parametrize("format", ["cif", "bcif"])
-def test_any_bonds(tmpdir, format):
+def test_any_bonds(tmp_path, format):
     """
     Check if ``BondType.ANY`` bonds can be written and read from a PDBx
     file, i.e. the ``chem_comp_bond`` and ``struct_conn`` categories.
@@ -392,7 +386,7 @@ def test_any_bonds(tmpdir, format):
 
     pdbx_file = File()
     pdbx.set_structure(pdbx_file, atoms)
-    file_path = join(tmpdir, f"test.{format}")
+    file_path = tmp_path / f"test.{format}"
     pdbx_file.write(file_path)
 
     pdbx_file = File.read(file_path)
@@ -459,7 +453,7 @@ def test_list_assemblies(format):
     Test the :func:`list_assemblies()` function based on a known
     example.
     """
-    path = join(data_dir("structure"), f"1f2n.{format}")
+    path = data_dir("structure") / "pdb" / f"1f2n.{format}"
     if format == "cif":
         File = pdbx.CIFFile
     else:
@@ -478,10 +472,9 @@ def test_list_assemblies(format):
     }
 
 
-@pytest.mark.parametrize(
-    "format, pdb_id, model",
-    itertools.product(["cif", "bcif"], ["1f2n", "5zng"], [None, 1, -1]),
-)
+@pytest.mark.parametrize("format", ["cif", "bcif"])
+@pytest.mark.parametrize("pdb_id", ["1f2n", "5zng"])
+@pytest.mark.parametrize("model", [None, 1, -1])
 def test_assembly_chain_count(format, pdb_id, model):
     """
     Test whether the :func:`get_assembly()` function produces the same
@@ -490,7 +483,7 @@ def test_assembly_chain_count(format, pdb_id, model):
     Furthermore, check if the number of atoms in the entire assembly
     is a multiple of the numbers of atoms in a monomer.
     """
-    path = join(data_dir("structure"), f"{pdb_id}.{format}")
+    path = data_dir("structure") / "pdb" / f"{pdb_id}.{format}"
     if format == "cif":
         File = pdbx.CIFFile
     else:
@@ -531,7 +524,7 @@ def test_assembly_chain_count(format, pdb_id, model):
 
 
 @pytest.mark.parametrize(
-    "pdb_id, assembly_id, symmetric_unit_count",
+    ["pdb_id", "assembly_id", "symmetric_unit_count"],
     [
         # Single operation
         ("5zng", "1", 1),
@@ -552,7 +545,9 @@ def test_assembly_sym_id(pdb_id, assembly_id, symmetric_unit_count):
     Check if the :func:`get_assembly()` function returns the correct
     number of symmetry IDs for a known example.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{pdb_id}.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(
+        data_dir("structure") / "pdb" / f"{pdb_id}.bcif"
+    )
     assembly = pdbx.get_assembly(
         pdbx_file, assembly_id=assembly_id, use_author_fields=False
     )
@@ -571,7 +566,7 @@ def test_unit_cell_trivial(model, center):
     The 'P 1' space group has no symmetries.
     Hence the unit cell from this space group should be the same as the asymmetric unit.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     # Give the structure the 'P 1' space group
     pdbx_file.block["symmetry"] = pdbx.BinaryCIFCategory(
         {"space_group_name_H-M": "P 1"}
@@ -600,13 +595,15 @@ def test_unit_cell_trivial(model, center):
             unit_cell.get_annotation(category).tolist()
             == asymmetric_unit.get_annotation(category).tolist()
         )
-    assert unit_cell.coord.flatten().tolist() == approx(
+    assert unit_cell.coord.flatten().tolist() == pytest.approx(
         asymmetric_unit.coord.flatten().tolist()
     )
 
 
 @pytest.mark.parametrize(
-    "pdb_path", Path(data_dir("structure")).glob("*.pdb"), ids=lambda p: p.stem
+    "pdb_path",
+    sorted((data_dir("structure") / "pdb").glob("*.pdb")),
+    ids=lambda path: path.name,
 )
 def test_unit_cell_pdb_consistency(pdb_path):
     """
@@ -647,12 +644,12 @@ def test_unit_cell_pdb_consistency(pdb_path):
 
 
 @pytest.mark.parametrize(
-    "path, use_ideal_coord",
-    itertools.product(
-        glob.glob(join(data_dir("structure"), "molecules", "*.cif")), [False, True]
-    ),
+    "path",
+    sorted((data_dir("structure") / "molecules").glob("*.cif")),
+    ids=lambda path: path.name,
 )
-def test_component_conversion(tmpdir, path, use_ideal_coord):
+@pytest.mark.parametrize("use_ideal_coord", [False, True])
+def test_component_conversion(tmp_path, path, use_ideal_coord):
     """
     After reading a component from a CIF file, writing the component
     back to a new file and reading it again should give the same
@@ -663,7 +660,7 @@ def test_component_conversion(tmpdir, path, use_ideal_coord):
 
     cif_file = pdbx.CIFFile()
     pdbx.set_component(cif_file, ref_atoms, data_block="test")
-    file_path = join(tmpdir, "test")
+    file_path = tmp_path / "test"
     cif_file.write(file_path)
 
     cif_file = pdbx.CIFFile.read(path)
@@ -683,9 +680,9 @@ def test_get_sequence(format):
     else:
         File = pdbx.BinaryCIFFile
 
-    pdbx_file = File.read(join(data_dir("structure"), f"5ugo.{format}"))
+    pdbx_file = File.read(data_dir("structure") / "pdb" / f"5ugo.{format}")
     sequences_1 = pdbx.get_sequence(pdbx_file)
-    pdbx_file = File.read(join(data_dir("structure"), f"4gxy.{format}"))
+    pdbx_file = File.read(data_dir("structure") / "pdb" / f"4gxy.{format}")
     sequences_2 = pdbx.get_sequence(pdbx_file)
     assert str(sequences_1["T"]) == "CCGACGGCGCATCAGC"
     assert type(sequences_1["T"]) is seq.NucleotideSequence
@@ -742,13 +739,17 @@ def test_get_sse():
     for sheet_range in SHEET_RANGES:
         ref_sse[sheet_range[0] - 1 : sheet_range[1]] = "b"
 
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1aki.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1aki.bcif")
     test_sse = pdbx.get_sse(pdbx_file)["A"]
 
     assert test_sse.tolist() == ref_sse.tolist()
 
 
-@pytest.mark.parametrize("path", glob.glob(join(data_dir("structure"), "*.bcif")))
+@pytest.mark.parametrize(
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.bcif")),
+    ids=lambda path: path.name,
+)
 def test_get_sse_length(path):
     """
     If `match_model` is set in :func:`get_sse()`, the length of the returned array
@@ -785,7 +786,9 @@ def test_bcif_encoding():
         ]
     }
 
-    bcif_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), f"{PDB_ID}.bcif"))
+    bcif_file = pdbx.BinaryCIFFile.read(
+        data_dir("structure") / "pdb" / f"{PDB_ID}.bcif"
+    )
     for category_name, category in bcif_file[PDB_ID.upper()].items():
         for column_name in category.keys():
             try:
@@ -827,14 +830,14 @@ def test_bcif_quantization_encoding():
     MAX = 42
     NUM_STEPS = 100
 
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
     ref_data = np.linspace(MIN, MAX, NUM_STEPS)
-    np.random.shuffle(ref_data)
+    rng.shuffle(ref_data)
 
     encoding = pdbx.IntervalQuantizationEncoding(MIN, MAX, NUM_STEPS)
     test_data = encoding.decode(encoding.encode(ref_data))
 
-    assert test_data.tolist() == approx(ref_data.tolist())
+    assert test_data.tolist() == pytest.approx(ref_data.tolist())
 
 
 def test_bcif_cif_consistency():
@@ -849,9 +852,9 @@ def test_bcif_cif_consistency():
     ]
     PDB_ID = "1aki"
 
-    base_path = join(data_dir("structure"), PDB_ID)
-    cif_file = pdbx.CIFFile.read(base_path + ".cif")
-    bcif_file = pdbx.BinaryCIFFile.read(base_path + ".bcif")
+    base_path = data_dir("structure") / "pdb" / PDB_ID
+    cif_file = pdbx.CIFFile.read(base_path.with_suffix(".cif"))
+    bcif_file = pdbx.BinaryCIFFile.read(base_path.with_suffix(".bcif"))
 
     cif_block = cif_file.block
     bcif_block = bcif_file.block
@@ -900,7 +903,7 @@ def test_bcif_cif_consistency():
 
 
 @pytest.mark.parametrize(
-    "format, create_new_encoding",
+    ["format", "create_new_encoding"],
     [
         ("cif", None),
         ("bcif", False),
@@ -917,7 +920,7 @@ def test_serialization_consistency(format, create_new_encoding):
     """
     PDB_ID = "1aki"
 
-    path = join(data_dir("structure"), f"{PDB_ID}.{format}")
+    path = data_dir("structure") / "pdb" / f"{PDB_ID}.{format}"
     if format == "cif":
         file = pdbx.CIFFile.read(path)
     elif format == "bcif":
@@ -940,10 +943,9 @@ def test_serialization_consistency(format, create_new_encoding):
             raise Exception(f"Comparison failed for '{category_name}.{key}'")
 
 
-@pytest.mark.parametrize(
-    "format, level", itertools.product(["cif", "bcif"], ["block", "category", "column"])
-)
-def test_editing(tmpdir, format, level):
+@pytest.mark.parametrize("format", ["cif", "bcif"])
+@pytest.mark.parametrize("level", ["block", "category", "column"])
+def test_editing(tmp_path, format, level):
     """
     Check if editing an existing PDBx file works, by checking if replacing some
     category/block/column with a copy of itself does not affect the content.
@@ -957,9 +959,9 @@ def test_editing(tmpdir, format, level):
     category = Category({"foo_col": column, "bar_col": column, "baz_col": column})
     block = Block({"foo_cat": category, "bar_cat": category, "baz_cat": category})
     ref_pdbx_file = File({"foo_block": block, "bar_block": block, "baz_block": block})
-    ref_pdbx_file.write(join(tmpdir, f"original.{format}"))
+    ref_pdbx_file.write(tmp_path / f"original.{format}")
 
-    pdbx_file = File.read(join(tmpdir, f"original.{format}"))
+    pdbx_file = File.read(tmp_path / f"original.{format}")
     if level == "block":
         # Replace block in the mid,
         # to check if the block before and after remain the same
@@ -970,9 +972,9 @@ def test_editing(tmpdir, format, level):
         pdbx_file["bar_block"]["bar_cat"]["bar_col"] = pdbx_file["bar_block"][
             "bar_cat"
         ]["bar_col"]
-    pdbx_file.write(join(tmpdir, f"edited.{format}"))
+    pdbx_file.write(tmp_path / f"edited.{format}")
 
-    test_pdbx_file = File.read(join(tmpdir, f"edited.{format}"))
+    test_pdbx_file = File.read(tmp_path / f"edited.{format}")
     # As the content should not have changed, the serialized files should be identical
     assert test_pdbx_file.serialize() == ref_pdbx_file.serialize()
 
@@ -984,7 +986,7 @@ def test_compress_data():
     """
     PDB_ID = "1aki"
 
-    path = join(data_dir("structure"), f"{PDB_ID}.bcif")
+    path = data_dir("structure") / "pdb" / f"{PDB_ID}.bcif"
     bcif_file = pdbx.BinaryCIFFile.read(path)
     for category_name, category in bcif_file.block.items():
         for column_name, column in category.items():
@@ -1024,7 +1026,8 @@ def test_compress_data():
 
 @pytest.mark.parametrize(
     "path",
-    glob.glob(join(data_dir("structure"), "*.bcif")),
+    sorted((data_dir("structure") / "pdb").glob("*.bcif")),
+    ids=lambda path: path.name,
 )
 def test_compress_file(path):
     """
@@ -1101,7 +1104,7 @@ def test_extreme_float_compression(value):
 
 
 @pytest.mark.parametrize(
-    "number, ref_decimals",
+    ["number", "ref_decimals"],
     [
         (1.0, 0),
         (1.23, 2),
@@ -1145,12 +1148,12 @@ def _file_size(bcif_file):
     return len(written_file.read())
 
 
-def test_writing_and_reading_extra_fields(tmpdir):
+def test_writing_and_reading_extra_fields(tmp_path):
     """
     Check if writing and reading extra fields works.
     """
     # Set up a custom atom array with an additional annotation
-    cif_file = pdbx.CIFFile.read(join(data_dir("structure"), "5ugo.cif"))
+    cif_file = pdbx.CIFFile.read(data_dir("structure") / "pdb" / "5ugo.cif")
     atoms = pdbx.get_structure(cif_file)
     custom_annotation = np.arange(atoms.array_length())
     atoms.set_annotation("my_custom_annotation", custom_annotation)
@@ -1158,11 +1161,11 @@ def test_writing_and_reading_extra_fields(tmpdir):
     # Write to file
     new_cif_file = pdbx.CIFFile()
     pdbx.set_structure(new_cif_file, atoms, extra_fields=["my_custom_annotation"])
-    new_cif_file.write(join(tmpdir, "test.cif"))
+    new_cif_file.write(tmp_path / "test.cif")
 
     # Read again
     atoms = pdbx.get_structure(
-        pdbx.CIFFile.read(join(tmpdir, "test.cif")),
+        pdbx.CIFFile.read(tmp_path / "test.cif"),
         extra_fields=["my_custom_annotation"],
     )
     assert "my_custom_annotation" in atoms.get_annotation_categories()
@@ -1177,11 +1180,11 @@ def test_get_structure_missing_ins_code(format):
     :func:`get_structure()` should handle a missing ``pdbx_PDB_ins_code``
     column gracefully, since it is optional in the PDBx dictionary.
     """
-    base_path = join(data_dir("structure"), "1l2y")
+    base_path = data_dir("structure") / "pdb" / "1l2y"
     if format == "cif":
-        pdbx_file = pdbx.CIFFile.read(base_path + ".cif")
+        pdbx_file = pdbx.CIFFile.read(base_path.with_suffix(".cif"))
     else:
-        pdbx_file = pdbx.BinaryCIFFile.read(base_path + ".bcif")
+        pdbx_file = pdbx.BinaryCIFFile.read(base_path.with_suffix(".bcif"))
 
     del pdbx_file.block["atom_site"]["pdbx_PDB_ins_code"]
     atoms = pdbx.get_structure(pdbx_file, model=1)
@@ -1196,7 +1199,7 @@ def test_multiple_atom_array(format):
     Setting the structure with an :class:`AtomArrayStack` and with an equivalent list of
     :class:`AtomArray` objects should result in an equivalent output file.
     """
-    base_path = join(data_dir("structure"), "1gya")
+    base_path = data_dir("structure") / "pdb" / "1gya"
     if format == "cif":
         File = pdbx.CIFFile
     else:

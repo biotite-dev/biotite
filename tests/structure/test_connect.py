@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -20,13 +19,12 @@ def test_find_connected(seed, as_mask):
     An exception are water molecules, which have the same chain ID, albeit not being
     bonded to each other.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1k6p.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1k6p.bcif")
     atoms = pdbx.get_structure(
         pdbx_file, model=1, include_bonds=True, use_author_fields=False
     )
     atoms = atoms[~struc.filter_solvent(atoms)]
 
-    np.random.seed(seed)
     rng = np.random.default_rng(seed)
     root = rng.integers(atoms.array_length())
     chain_id = atoms.chain_id[root]
@@ -40,7 +38,7 @@ def test_find_connected(seed, as_mask):
 
 
 @pytest.mark.parametrize(
-    "res_name, expected_bonds",
+    ["res_name", "expected_bonds"],
     [
         # Easy ligand visualization at:
         # https://www.rcsb.org/ligand/<ABC>
@@ -88,13 +86,14 @@ def test_find_rotatable_bonds(res_name, expected_bonds):
 
 
 @pytest.mark.parametrize(
-    "cif_path, expected_bond_indices",
+    ["cif_path", "expected_bond_indices"],
     [
         (
-            join(data_dir("structure"), "3o5r.cif"),
+            data_dir("structure") / "pdb" / "3o5r.cif",
             [252, 257],  # Carbonyl carbon and subsequent backbone nitrogen
         )
     ],
+    ids=["3o5r.cif"],
 )
 def test_canonical_bonds_with_altloc_occupancy(cif_path, expected_bond_indices):
     """
@@ -122,7 +121,7 @@ def test_method_consistency(periodic):
     THRESHOLD_PERCENTAGE = 0.99
 
     # Structure with peptide, nucleotide, small molecules and water
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "5ugo.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "5ugo.bcif")
     atoms = pdbx.get_structure(pdbx_file, model=1)
     if periodic:
         # Add large dummy box to test parameter

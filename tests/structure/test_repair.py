@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -12,7 +11,7 @@ from tests.util import data_dir
 
 @pytest.fixture
 def single_chain():
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     return pdbx.get_structure(pdbx_file, model=1)
 
 
@@ -48,7 +47,7 @@ def test_create_continuous_res_ids(multi_chain, restart_each_chain):
 
 @pytest.mark.parametrize("as_atom_array", [False, True])
 @pytest.mark.parametrize(
-    "elements,expected",
+    ["elements", "expected"],
     [
         (["C", "C", "O"], ["C1", "C2", "O1"]),
         # Single atoms are named after their element
@@ -74,7 +73,7 @@ def test_create_atom_names(elements, expected, as_atom_array):
 
 @pytest.mark.filterwarnings("ignore:Could not infer element")
 @pytest.mark.parametrize(
-    "name,expected",
+    ["name", "expected"],
     [
         ("CA", "C"),
         ("C", "C"),

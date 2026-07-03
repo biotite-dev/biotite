@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import biotite.sequence as seq
 import biotite.sequence.io.genbank as gb
 from biotite.sequence import AnnotatedSequence, Annotation, Feature, Location
@@ -98,6 +97,6 @@ def test_annotated_sequence():
 
 
 def test_reverse_complement():
-    gb_file = gb.GenBankFile.read(join(data_dir("sequence"), "ec_bl21.gb"))
+    gb_file = gb.GenBankFile.read(data_dir("sequence") / "ec_bl21.gb")
     annot_seq = gb.get_annotated_sequence(gb_file)
     assert annot_seq == annot_seq.reverse_complement().reverse_complement()

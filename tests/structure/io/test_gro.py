@@ -2,13 +2,9 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import glob
-import itertools
-from os.path import join, splitext
 from tempfile import TemporaryFile
 import numpy as np
 import pytest
-from pytest import approx
 import biotite
 import biotite.structure.io.gro as gro
 import biotite.structure.io.pdb as pdb
@@ -17,16 +13,18 @@ from tests.util import data_dir
 
 
 def test_get_model_count():
-    gro_file = gro.GROFile.read(join(data_dir("structure"), "1l2y.gro"))
+    gro_file = gro.GROFile.read(data_dir("structure") / "pdb" / "1l2y.gro")
     test_model_count = gro_file.get_model_count()
     ref_model_count = gro_file.get_structure().stack_depth()
     assert test_model_count == ref_model_count
 
 
 @pytest.mark.parametrize(
-    "path, model",
-    itertools.product(glob.glob(join(data_dir("structure"), "*.gro")), [None, 1, -1]),
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.gro")),
+    ids=lambda path: path.name,
 )
+@pytest.mark.parametrize("model", [None, 1, -1])
 def test_array_conversion(path, model):
     gro_file = gro.GROFile.read(path)
     array1 = gro_file.get_structure(model=model)
@@ -45,10 +43,12 @@ def test_array_conversion(path, model):
 
 
 @pytest.mark.parametrize(
-    "path", glob.glob(join(data_dir("structure"), "[!(waterbox)]*.gro"))
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.gro")),
+    ids=lambda path: path.name,
 )
 def test_pdb_consistency(path):
-    pdb_path = splitext(path)[0] + ".pdb"
+    pdb_path = path.with_suffix(".pdb")
     pdb_file = pdb.PDBFile.read(pdb_path)
     a1 = pdb_file.get_structure(model=1)
     gro_file = gro.GROFile.read(path)
@@ -62,13 +62,17 @@ def test_pdb_consistency(path):
         )
 
     # Mind rounding errors when converting pdb to gro (A -> nm)
-    assert a1.coord.flatten().tolist() == approx(a2.coord.flatten().tolist(), abs=1e-2)
+    assert a1.coord.flatten().tolist() == pytest.approx(
+        a2.coord.flatten().tolist(), abs=1e-2
+    )
 
 
 @pytest.mark.parametrize(
-    "path, model",
-    itertools.product(glob.glob(join(data_dir("structure"), "*.pdb")), [None, 1, -1]),
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.pdb")),
+    ids=lambda path: path.name,
 )
+@pytest.mark.parametrize("model", [None, 1, -1])
 def test_pdb_to_gro(path, model):
     """
     Converting stacks between formats should not change data
@@ -106,7 +110,9 @@ def test_pdb_to_gro(path, model):
         )
 
     # Mind rounding errors when converting pdb to gro (A -> nm)
-    assert a1.coord.flatten().tolist() == approx(a2.coord.flatten().tolist(), abs=1e-2)
+    assert a1.coord.flatten().tolist() == pytest.approx(
+        a2.coord.flatten().tolist(), abs=1e-2
+    )
 
 
 def test_gro_id_overflow():
@@ -167,7 +173,7 @@ def test_multiple_atom_array():
     Setting the structure with an :class:`AtomArrayStack` and with an equivalent list of
     :class:`AtomArray` objects should result in the same file.
     """
-    stack = gro.GROFile.read(join(data_dir("structure"), "1l2y.gro")).get_structure()
+    stack = gro.GROFile.read(data_dir("structure") / "pdb" / "1l2y.gro").get_structure()
 
     ref_file = gro.GROFile()
     ref_file.set_structure(stack)

@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-from os.path import join
 import numpy as np
 import pytest
 import biotite
@@ -16,14 +15,14 @@ def distances():
     # "Dendrogram of the BLOSUM62 matrix"
     # with the small modification M[i,j] += i+j
     # to reduce ambiguity in the tree construction.
-    return np.loadtxt(join(data_dir("sequence"), "distances.txt"), dtype=int)
+    return np.loadtxt(data_dir("sequence") / "distances.txt", dtype=int)
 
 
 @pytest.fixture
 def upgma_newick():
     # Newick notation of the tree created from 'distances.txt',
     # created via DendroUPGMA
-    with open(join(data_dir("sequence"), "newick_upgma.txt"), "r") as file:
+    with open(data_dir("sequence") / "newick_upgma.txt", "r") as file:
         newick = file.read().strip()
     return newick
 
@@ -194,7 +193,7 @@ def test_immutability():
 
 
 @pytest.mark.parametrize(
-    "newick, labels, error",
+    ["newick", "labels", "error"],
     [
         # Reference index out of range
         ("((1,0),4),2);", None, biotite.InvalidFileError),
@@ -279,7 +278,7 @@ def test_newick_rounding():
 
 
 @pytest.mark.parametrize(
-    "newick_in, exp_newick_out",
+    ["newick_in", "exp_newick_out"],
     [
         ("(0:1.0, 1:2.0);", "(0:1.0,1:2.0):0.0;"),
         ("(0:1.0, 1:2.0, 2:3.0);", "((0:1.0,1:2.0):0.0,2:3.0):0.0;"),

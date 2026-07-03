@@ -2,17 +2,15 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
 import numpy as np
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
 
 
-@pytest.mark.parametrize(
-    "gap_penalty, local, band_width",
-    itertools.product([-10, (-10, -1)], [False, True], [2, 5, 20, 100]),
-)
+@pytest.mark.parametrize("gap_penalty", [-10, (-10, -1)])
+@pytest.mark.parametrize("local", [False, True])
+@pytest.mark.parametrize("band_width", [2, 5, 20, 100])
 def test_simple_alignment(gap_penalty, local, band_width):
     """
     Test `align_banded()` by comparing the output to `align_optimal()`.
@@ -45,10 +43,9 @@ def test_simple_alignment(gap_penalty, local, band_width):
         assert alignment in ref_alignments
 
 
-@pytest.mark.parametrize(
-    "length, excerpt_length, seed",
-    itertools.product([1_000, 1_000_000], [50, 500], range(10)),
-)
+@pytest.mark.parametrize("length", [1_000, 1_000_000])
+@pytest.mark.parametrize("excerpt_length", [50, 500])
+@pytest.mark.parametrize("seed", range(10))
 def test_large_sequence_mapping(length, excerpt_length, seed):
     """
     Test whether an excerpt of a very large sequence is aligned to that
@@ -56,14 +53,14 @@ def test_large_sequence_mapping(length, excerpt_length, seed):
     """
     BAND_WIDTH = 100
 
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
 
     sequence = seq.NucleotideSequence()
-    sequence.code = np.random.randint(len(sequence.alphabet), size=length)
-    excerpt_pos = np.random.randint(len(sequence) - excerpt_length)
+    sequence.code = rng.integers(len(sequence.alphabet), size=length)
+    excerpt_pos = rng.integers(len(sequence) - excerpt_length)
     excerpt = sequence[excerpt_pos : excerpt_pos + excerpt_length]
 
-    diagonal = np.random.randint(excerpt_pos - BAND_WIDTH, excerpt_pos + BAND_WIDTH)
+    diagonal = rng.integers(excerpt_pos - BAND_WIDTH, excerpt_pos + BAND_WIDTH)
     band = (diagonal - BAND_WIDTH, diagonal + BAND_WIDTH)
 
     matrix = align.SubstitutionMatrix.std_nucleotide_matrix()

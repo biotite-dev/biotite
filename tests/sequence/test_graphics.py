@@ -2,8 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import glob
-from os.path import abspath, dirname, join
+from pathlib import Path
 import pytest
 import biotite.sequence as seq
 import biotite.structure.alphabet as struc_alph
@@ -13,9 +12,8 @@ from tests.util import cannot_import
 @pytest.mark.skipif(cannot_import("matplotlib"), reason="Matplotlib is not installed")
 @pytest.mark.parametrize(
     "scheme_path",
-    glob.glob(
-        join(dirname(abspath(seq.__file__)), "graphics", "color_schemes", "*.json")
-    ),
+    sorted((Path(seq.__file__).parent / "graphics" / "color_schemes").glob("*.json")),
+    ids=lambda path: path.name,
 )
 def test_load_color_scheme(scheme_path):
     from matplotlib.colors import to_rgb

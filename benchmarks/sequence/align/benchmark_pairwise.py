@@ -1,5 +1,4 @@
 from functools import partial
-from pathlib import Path
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.align as align
@@ -11,7 +10,7 @@ GAP_PENALTY = (-10, -1)
 
 @pytest.fixture(scope="module")
 def sequences():
-    fasta_file = fasta.FastaFile.read(Path(data_dir("sequence")) / "cas9.fasta")
+    fasta_file = fasta.FastaFile.read(data_dir("sequence") / "cas9.fasta")
     return [seq.ProteinSequence(s) for s in fasta_file.values()]
 
 

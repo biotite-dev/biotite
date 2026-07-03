@@ -3,11 +3,10 @@
 # information.
 
 import json
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io as strucio
+import biotite.structure.io.pdbx as pdbx
 
 # For ``base_pairs_edge()`` differences to a reference can be ambiguous
 # as the number hydrogen bonds between two different edges can be equal.
@@ -29,7 +28,9 @@ def reversed_iterator(iter):
 
 @pytest.fixture
 def nuc_sample_array():
-    return strucio.load_structure(join(data_dir("structure"), "base_pairs", "1qxb.cif"))
+    return pdbx.get_structure(
+        pdbx.CIFFile.read(data_dir("structure") / "base_pairs" / "1qxb.cif"), model=1
+    )
 
 
 @pytest.fixture
@@ -152,11 +153,11 @@ def test_base_pairs_reordered(nuc_sample_array, seed):
     """
     # Randomly reorder the atoms in each residue
     nuc_sample_array_reordered = struc.AtomArray(0)
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
 
     for res in struc.residue_iter(nuc_sample_array):
         bound = res.array_length()
-        indices = np.random.choice(np.arange(bound), bound, replace=False)
+        indices = rng.choice(np.arange(bound), bound, replace=False)
         nuc_sample_array_reordered += res[..., indices]
 
     assert np.all(
@@ -204,12 +205,13 @@ def get_reference(pdb_id, suffix):
     Gets a reference structure and a related json array depending on
     a specified JSON-suffix and PDB ID.
     """
-    structure = strucio.load_structure(
-        join(data_dir("structure"), "base_pairs", f"{pdb_id}.cif")
+    structure = pdbx.get_structure(
+        pdbx.CIFFile.read(data_dir("structure") / "base_pairs" / f"{pdb_id}.cif"),
+        model=1,
     )
 
     with open(
-        join(data_dir("structure"), "base_pairs", f"{pdb_id}_{suffix}.json"), "r"
+        data_dir("structure") / "base_pairs" / f"{pdb_id}_{suffix}.json", "r"
     ) as file:
         reference = np.array(json.load(file))
 
@@ -311,8 +313,8 @@ def test_base_stacking():
     helix.
     """
     # Load the test structure (1BNA) - a DNA-double-helix
-    helix = strucio.load_structure(
-        join(data_dir("structure"), "base_pairs", "1bna.cif")
+    helix = pdbx.get_structure(
+        pdbx.CIFFile.read(data_dir("structure") / "base_pairs" / "1bna.cif"), model=1
     )
 
     residue_starts = struc.get_residue_starts(helix)

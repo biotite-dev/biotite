@@ -1,4 +1,3 @@
-from pathlib import Path
 import pytest
 import biotite.structure.alphabet as strucalph
 import biotite.structure.io.pdbx as pdbx
@@ -9,7 +8,9 @@ PDB_ID = "1aki"
 
 @pytest.fixture(scope="module")
 def atoms():
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / f"{PDB_ID}.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(
+        data_dir("structure") / "pdb" / f"{PDB_ID}.bcif"
+    )
     return pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
 
 

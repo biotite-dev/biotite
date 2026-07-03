@@ -4,7 +4,7 @@
 
 import importlib
 import pkgutil
-from os.path import dirname, join
+from pathlib import Path
 import pytest
 from tests.util import cannot_import
 
@@ -15,7 +15,7 @@ def find_all_modules(package_name, src_dir):
     (Sub-)Packages are not considered as modules.
     """
     module_names = []
-    for _, module_name, is_package in pkgutil.iter_modules([src_dir]):
+    for _, module_name, is_package in pkgutil.iter_modules([str(src_dir)]):
         if module_name == "setup_ccd":
             # This script is not intended to be imported
             continue
@@ -25,7 +25,7 @@ def find_all_modules(package_name, src_dir):
         full_module_name = f"{package_name}.{module_name}"
         if is_package:
             module_names.extend(
-                find_all_modules(full_module_name, join(src_dir, module_name))
+                find_all_modules(full_module_name, src_dir / module_name)
             )
         else:
             module_names.append(full_module_name)
@@ -38,7 +38,7 @@ def find_all_modules(package_name, src_dir):
 )
 @pytest.mark.parametrize(
     "module_name",
-    find_all_modules("biotite", join(dirname(dirname(__file__)), "src", "biotite")),
+    find_all_modules("biotite", Path(__file__).parent.parent / "src" / "biotite"),
 )
 def test_module_name(module_name):
     """

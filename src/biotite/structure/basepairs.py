@@ -372,7 +372,7 @@ def base_pairs_edge(
 
     >>> from os.path import join
     >>> dna_helix = load_structure(
-    ...     join(path_to_structures, "base_pairs", "1qxb.cif")
+    ...     join(path_to_structure_data, "base_pairs", "1qxb.cif")
     ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> interacting_edges = base_pairs_edge(dna_helix, basepairs)
@@ -541,7 +541,7 @@ def base_pairs_glycosidic_bond(
 
     >>> from os.path import join
     >>> dna_helix = load_structure(
-    ...     join(path_to_structures, "base_pairs", "1qxb.cif")
+    ...     join(path_to_structure_data, "base_pairs", "1qxb.cif")
     ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> orientations = base_pairs_glycosidic_bond(dna_helix, basepairs)
@@ -684,7 +684,7 @@ def base_stacking(
 
     >>> from os.path import join
     >>> dna_helix = load_structure(
-    ...     join(path_to_structures, "base_pairs", "1bna.pdb")
+    ...     join(path_to_structure_data, "base_pairs", "1bna.pdb")
     ... )
     >>> stacking_interactions = base_stacking(dna_helix)
     >>> print(dna_helix[stacking_interactions].res_id)
@@ -866,7 +866,7 @@ def base_pairs(
 
     >>> from os.path import join
     >>> dna_helix = load_structure(
-    ...     join(path_to_structures, "base_pairs", "1qxb.cif")
+    ...     join(path_to_structure_data, "base_pairs", "1qxb.cif")
     ... )
     >>> basepairs = base_pairs(dna_helix)
     >>> print(dna_helix[basepairs].res_name)

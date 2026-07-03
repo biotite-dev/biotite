@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import os.path
 import pytest
 import biotite.application.blast as blast
 import biotite.sequence as seq
@@ -83,7 +82,7 @@ def test_tblastn():
 
 
 def test_file_input():
-    path = os.path.join(data_dir("sequence"), "prot.fasta")
+    path = data_dir("sequence") / "prot.fasta"
     blast.BlastWebApp("blastp", path, obey_rules=False)
 
 
@@ -119,9 +118,7 @@ def test_invalid_input():
 @pytest.mark.skipif(cannot_connect_to(BLAST_URL), reason="NCBI BLAST is not available")
 def test_hit_with_selenocysteine():
     # Sequence is taken from issue #344
-    query = seqio.load_sequence(
-        os.path.join(data_dir("sequence"), "selenocysteine.fasta")
-    )
+    query = seqio.load_sequence(data_dir("sequence") / "selenocysteine.fasta")
 
     # Expect hit containing selenocysteine when searching Swiss-Prot
     blast_app = blast.BlastWebApp("blastp", query, "swissprot")

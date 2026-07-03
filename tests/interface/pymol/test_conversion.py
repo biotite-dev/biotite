@@ -1,4 +1,3 @@
-from os.path import join
 import numpy as np
 import pytest
 import biotite.interface.pymol as pymol_interface
@@ -23,7 +22,7 @@ from tests.util import data_dir
 )
 def path(request):
     pdb_id = request.param
-    return join(data_dir("structure"), f"{pdb_id}.cif")
+    return str(data_dir("structure") / "pdb" / f"{pdb_id}.cif")
 
 
 @pytest.mark.parametrize("state", [1, None])

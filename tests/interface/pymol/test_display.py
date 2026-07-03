@@ -1,4 +1,3 @@
-from os.path import join
 import pytest
 import biotite.interface.pymol as pymol_interface
 import biotite.structure.io.pdbx as pdbx
@@ -10,7 +9,7 @@ from tests.util import data_dir, is_not_installed
     reason="Rendering software is not installed",
 )
 @pytest.mark.parametrize(
-    "function_name, kwargs",
+    ["function_name", "kwargs"],
     [
         ("show", {"use_ray": False}),
         ("show", {"use_ray": True}),
@@ -22,7 +21,7 @@ def test_display(function_name, kwargs):
     """
     Simply check if the :func:`show()` and :func:`play()` function creates image data.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     structure = pdbx.get_structure(pdbx_file, include_bonds=True)
     _ = pymol_interface.PyMOLObject.from_structure(structure)
     pymol_interface.cmd.mset()

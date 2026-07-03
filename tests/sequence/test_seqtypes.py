@@ -31,7 +31,7 @@ def test_stop_removal():
 
 
 @pytest.mark.parametrize(
-    "dna_str, protein_str", [("CACATAGCATGA", "HIA*"), ("ATGTAGCTA", "M*L")]
+    ["dna_str", "protein_str"], [("CACATAGCATGA", "HIA*"), ("ATGTAGCTA", "M*L")]
 )
 def test_full_translation(dna_str, protein_str):
     dna = seq.NucleotideSequence(dna_str)
@@ -40,7 +40,7 @@ def test_full_translation(dna_str, protein_str):
 
 
 @pytest.mark.parametrize(
-    "dna_str, protein_str_list",
+    ["dna_str", "protein_str_list"],
     [
         ("CA", []),
         ("GAATGCACTGAGATGCAATAG", ["MH*", "MQ*"]),
@@ -79,7 +79,7 @@ def test_letter_conversion():
 
 
 @pytest.mark.parametrize(
-    "monoisotopic, expected_mol_weight_protein",
+    ["monoisotopic", "expected_mol_weight_protein"],
     # Reference values taken from https://web.expasy.org/compute_pi/
     [(True, 2231.06), (False, 2232.56)],
 )
@@ -100,11 +100,9 @@ def test_positional_sequence():
     """
     SEQ_LENGTH = 100
 
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
     orig_sequence = seq.ProteinSequence()
-    orig_sequence.code = np.random.randint(
-        0, len(orig_sequence.alphabet), size=SEQ_LENGTH
-    )
+    orig_sequence.code = rng.integers(0, len(orig_sequence.alphabet), size=SEQ_LENGTH)
     positional_sequence = seq.PositionalSequence(orig_sequence)
 
     assert str(positional_sequence) == str(orig_sequence)

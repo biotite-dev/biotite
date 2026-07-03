@@ -4,11 +4,9 @@
 
 import itertools
 import pickle
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
-import biotite.structure.io as strucio
 import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
@@ -17,10 +15,10 @@ def generate_random_bond_list(atom_count, bond_count, seed=0):
     """
     Generate a random :class:`BondList`.
     """
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     # Create random bonds between atoms of
     # a potential atom array of length ATOM_COUNT
-    bonds = np.random.randint(atom_count, size=(bond_count, 3))
+    bonds = rng.integers(atom_count, size=(bond_count, 3))
     # Clip bond types to allowed BondType values
     bonds[:, 2] %= len(struc.BondType)
     # Remove bonds of atoms to itself
@@ -292,7 +290,7 @@ def test_get_all_bonds_typical():
 
     The bonds are taken from a real structure, so no atom exceeds 4 bonds per atom.
     """
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     atoms = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
 
     bonds, bond_types = atoms.bonds.get_all_bonds()
@@ -399,7 +397,7 @@ def test_sorted_array_indexing():
     # Create a sorted array of random indices for the BondList
     # Indices may not occur multiple times -> 'replace=False'
     index_array = np.sort(
-        np.random.choice(np.arange(ATOM_COUNT), INDEX_SIZE, replace=False)
+        np.random.default_rng().choice(np.arange(ATOM_COUNT), INDEX_SIZE, replace=False)
     )
     test_bonds = bonds[index_array]
 
@@ -428,8 +426,9 @@ def test_unsorted_array_indexing():
     # instead of an atom array
     integers = np.arange(ATOM_COUNT)
 
+    rng = np.random.default_rng()
     # Create random bonds between the reference integers
-    bonds = np.random.randint(ATOM_COUNT, size=(BOND_COUNT, 2))
+    bonds = rng.integers(ATOM_COUNT, size=(BOND_COUNT, 2))
     # Remove bonds of elements to itself
     bonds = bonds[bonds[:, 0] != bonds[:, 1]]
     assert len(bonds) > 0
@@ -437,7 +436,7 @@ def test_unsorted_array_indexing():
 
     # Create an unsorted array of random indices for the BondList
     # Indices should be unsorted -> 'replace=False'
-    unsorted_index = np.random.choice(np.arange(ATOM_COUNT), INDEX_SIZE, replace=False)
+    unsorted_index = rng.choice(np.arange(ATOM_COUNT), INDEX_SIZE, replace=False)
     test_bonds = bonds[unsorted_index]
 
     # Create a sorted variant of the index array
@@ -482,7 +481,9 @@ def test_atom_array_consistency():
     The boolean mask is constructed in a way that all bonded atoms are
     masked.
     """
-    array = strucio.load_structure(join(data_dir("structure"), "1l2y.bcif"))[0]
+    array = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif"), model=1
+    )
     ca = array[array.atom_name == "CA"]
     # Just for testing, does not reflect real bonds
     bond_list = struc.BondList(

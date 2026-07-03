@@ -6,11 +6,11 @@ import importlib
 import shutil
 import urllib.error
 import urllib.request
-from os.path import dirname, join, realpath
+from pathlib import Path
 
 
 def data_dir(subdir):
-    return join(dirname(realpath(__file__)), subdir, "data")
+    return Path(__file__).resolve().parent / subdir / "data"
 
 
 ### Functions for conditional test skips ###

@@ -29,10 +29,8 @@ def test_random_permutation_modulo():
     LCG_M = int(2**64)
     SEQ_LENGTH = 10_000
 
-    np.random.seed(0)
-    kmers = np.random.randint(
-        np.iinfo(np.int64).max + 1, size=SEQ_LENGTH, dtype=np.int64
-    )
+    rng = np.random.default_rng(0)
+    kmers = rng.integers(np.iinfo(np.int64).max + 1, size=SEQ_LENGTH, dtype=np.int64)
 
     ref_order = [(LCG_A * kmer.item() + LCG_C) % LCG_M for kmer in kmers]
 
@@ -72,12 +70,12 @@ def test_random_permutation_randomness():
 def test_frequency_permutation():
     K = 5
     kmer_alphabet = align.KmerAlphabet(seq.NucleotideSequence.alphabet_unamb, K)
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
     # Generate a random count order for each k-mer
     # Use 'np.arange()' to generate a unique order,
     # but also use step != 1 to make the count != order
     counts = np.arange(2 * len(kmer_alphabet), step=2)
-    np.random.shuffle(counts)
+    rng.shuffle(counts)
     kmer_table = align.KmerTable.from_positions(
         kmer_alphabet,
         # The actual k-mer positions are dummy values,
@@ -94,7 +92,7 @@ def test_frequency_permutation():
 
 
 @pytest.mark.parametrize(
-    "kmer_range, permutation",
+    ["kmer_range", "permutation"],
     [
         (np.iinfo(np.int64).max, align.RandomPermutation()),
         (int(4**5), _create_frequency_permutation(5)),
@@ -111,8 +109,8 @@ def test_min_max(kmer_range, permutation):
     TOLERANCE = 0.001
     N_KMERS = 100_000
 
-    np.random.seed(0)
-    kmers = np.random.randint(kmer_range, size=N_KMERS, dtype=np.int64)
+    rng = np.random.default_rng(0)
+    kmers = rng.integers(kmer_range, size=N_KMERS, dtype=np.int64)
     order = permutation.permute(kmers)
 
     assert permutation.max > permutation.min

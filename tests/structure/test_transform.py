@@ -2,8 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import itertools
-from os.path import join
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -13,15 +11,12 @@ from tests.util import data_dir
 
 
 @pytest.fixture(
-    params=itertools.product(
-        [1, 2, 3],  # ndim
-        [False, True],  # as_coord
-    )
+    params=[(ndim, as_coord) for ndim in (1, 2, 3) for as_coord in (False, True)]
 )
 def input_atoms(request):
     ndim, as_coord = request.param
 
-    pdbx_file = pdbx.BinaryCIFFile.read(join(data_dir("structure"), "1l2y.bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     atoms = pdbx.get_structure(pdbx_file)
 
     if ndim == 2:
@@ -46,14 +41,14 @@ def test_transform_as_matrix():
     N_MODELS = 10
     N_COORD = 100
 
-    np.random.seed(0)
-    orig_coord = np.random.rand(N_MODELS, N_COORD, 3)
+    rng = np.random.default_rng(0)
+    orig_coord = rng.random((N_MODELS, N_COORD, 3))
     transform = struc.AffineTransformation(
-        center_translation=np.random.rand(N_MODELS, 3),
+        center_translation=rng.random((N_MODELS, 3)),
         # This is not really a rotation matrix,
         # but the same maths apply
-        rotation=np.random.rand(N_MODELS, 3, 3),
-        target_translation=np.random.rand(N_MODELS, 3),
+        rotation=rng.random((N_MODELS, 3, 3)),
+        target_translation=rng.random((N_MODELS, 3)),
     )
 
     ref_coord = transform.apply(orig_coord)
@@ -82,8 +77,8 @@ def test_translate(input_atoms, ndim, as_list, random_seed):
         # as input coordinates/atoms
         return
 
-    np.random.seed(random_seed)
-    vectors = np.random.rand(*struc.coord(input_atoms).shape[-ndim:])
+    rng = np.random.default_rng(random_seed)
+    vectors = rng.random(struc.coord(input_atoms).shape[-ndim:])
     vectors *= 10
     neg_vectors = -vectors
     if as_list:
@@ -107,9 +102,9 @@ def test_rotate(input_atoms, as_list, axis, random_seed, centered):
     Rotate and rotate back and check if the coordinates are still
     the same.
     """
-    np.random.seed(random_seed)
+    rng = np.random.default_rng(random_seed)
     angles = np.zeros(3)
-    angles[axis] = np.random.rand() * 2 * np.pi
+    angles[axis] = rng.random() * 2 * np.pi
     neg_angles = -angles
     if as_list:
         angles = angles.tolist()
@@ -177,10 +172,10 @@ def test_rotate_measure(axis, random_seed):
     Rotate and measure resulting angle that should be equal to the input
     angle.
     """
-    np.random.seed(random_seed)
+    rng = np.random.default_rng(random_seed)
     # Maximum rotation is only 180 degrees,
     # as with higher angles the measured angle would decrease again
-    ref_angle = np.random.rand() * np.pi
+    ref_angle = rng.random() * np.pi
     angles = np.zeros(3)
     angles[axis] = ref_angle
 
@@ -205,11 +200,11 @@ def test_rotate_about_axis(input_atoms, as_list, use_support, random_seed):
     Rotate and rotate back and check if the coordinates are still
     the same.
     """
-    np.random.seed(random_seed)
-    axis = np.random.rand(3)
-    angle = np.random.rand()
+    rng = np.random.default_rng(random_seed)
+    axis = rng.random(3)
+    angle = rng.random()
     neg_angle = -angle
-    support = np.random.rand(3) if use_support else None
+    support = rng.random(3) if use_support else None
     if as_list:
         axis = axis.tolist()
         support = support.tolist() if support is not None else None
@@ -229,8 +224,8 @@ def test_rotate_about_axis_consistency(input_atoms, axis, random_seed):
     Compare the outcome of :func:`rotate_about_axis()` with
     :func:`rotate()`.
     """
-    np.random.seed(random_seed)
-    angle = np.random.rand() * 2 * np.pi
+    rng = np.random.default_rng(random_seed)
+    angle = rng.random() * 2 * np.pi
 
     angles = np.zeros(3)
     angles[axis] = angle
@@ -238,7 +233,7 @@ def test_rotate_about_axis_consistency(input_atoms, axis, random_seed):
 
     rot_axis = np.zeros(3)
     # Length of axis should be irrelevant
-    rot_axis[axis] = np.random.rand()
+    rot_axis[axis] = rng.random()
     test_rotated = struc.rotate_about_axis(
         input_atoms,
         rot_axis,
@@ -257,9 +252,9 @@ def test_rotate_about_axis_360(input_atoms, random_seed, use_support):
     Rotate by 360 degrees around an arbitrary axis and expect that the
     coordinates have not changed.
     """
-    np.random.seed(random_seed)
-    axis = np.random.rand(3)
-    support = np.random.rand(3) if use_support else None
+    rng = np.random.default_rng(random_seed)
+    axis = rng.random(3)
+    support = rng.random(3) if use_support else None
 
     rotated = struc.rotate_about_axis(input_atoms, axis, 2 * np.pi, support)
 
@@ -318,12 +313,12 @@ def test_align_vectors(input_atoms, as_list, use_support, random_seed):
     Align, swap alignment vectors and align again.
     Expect that the original coordinates have been restored.
     """
-    np.random.seed(random_seed)
-    source_direction = np.random.rand(3)
-    target_direction = np.random.rand(3)
+    rng = np.random.default_rng(random_seed)
+    source_direction = rng.random(3)
+    target_direction = rng.random(3)
     if use_support:
-        source_position = np.random.rand(3)
-        target_position = np.random.rand(3)
+        source_position = rng.random(3)
+        target_position = rng.random(3)
     else:
         source_position = None
         target_position = None
@@ -359,16 +354,16 @@ def test_align_vectors_non_vector_inputs(input_atoms):
     """
     Ensure input vectors to ``struct.align_vectors`` have the correct shape.
     """
-    source_direction = np.random.rand(2, 3)
-    target_direction = np.random.rand(2, 3)
+    source_direction = np.random.default_rng().random((2, 3))
+    target_direction = np.random.default_rng().random((2, 3))
     with pytest.raises(ValueError):
         struc.align_vectors(
             input_atoms,
             source_direction,
             target_direction,
         )
-    source_direction = np.random.rand(4)
-    target_direction = np.random.rand(4)
+    source_direction = np.random.default_rng().random(4)
+    target_direction = np.random.default_rng().random(4)
     with pytest.raises(ValueError):
         struc.align_vectors(
             input_atoms,

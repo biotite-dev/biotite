@@ -11,7 +11,7 @@ from biotite.interface.pymol import (
 
 
 @pytest.mark.parametrize(
-    "cgo_func, param",
+    ["cgo_func", "param"],
     [
         (get_cylinder_cgo, [(0, 0, 0), (1, 1, 1), 5, (1, 1, 1), (1, 1, 1)]),
         (get_cone_cgo, [(0, 0, 0), (1, 1, 1), 5, 10, (1, 1, 1), (1, 1, 1), True, True]),
@@ -52,7 +52,7 @@ def test_draw_multiple_cgo():
 
 
 @pytest.mark.parametrize(
-    "cgo_func, param",
+    ["cgo_func", "param"],
     [
         (get_cylinder_cgo, [(0, 0, 0), (1, 1, 1), 5, (1, 1), (1, 1, 1)]),
         (get_cylinder_cgo, [(0, 0, 0), (1, 1, 1), 5, (1, 1, 1), (1, 1, 1, 0)]),

@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import tempfile
 import pytest
 import biotite.database.afdb as afdb
 import biotite.database.rcsb as rcsb
@@ -20,12 +19,12 @@ AFDB_URL = "https://alphafold.ebi.ac.uk/"
     "entry_id", ["P12345", "AF-P12345-F1", "AF-P12345F1", "AF_AFP12345F1"]
 )
 @pytest.mark.parametrize("format", ["pdb", "cif", "bcif"])
-def test_fetch(as_file_like, entry_id, format):
+def test_fetch(as_file_like, entry_id, format, tmp_path):
     """
     Check if files in different formats can be downloaded by being able to parse them.
     Also ensure that the downloaded file refers to the given input ID
     """
-    path = None if as_file_like else tempfile.gettempdir()
+    path = None if as_file_like else tmp_path
     try:
         file_path_or_obj = afdb.fetch(entry_id, format, path, overwrite=True)
     except RequestError:
@@ -72,12 +71,12 @@ def test_fetch_cross_id():
 
 
 @pytest.mark.skipif(cannot_connect_to(AFDB_URL), reason="AlphaFold DB is not available")
-def test_fetch_multiple():
+def test_fetch_multiple(tmp_path):
     """
     Check if multiple files can be downloaded by being able to parse them.
     """
     ids = ["P12345", "Q8K9I1"]
-    files = afdb.fetch(ids, "cif", tempfile.gettempdir(), overwrite=True)
+    files = afdb.fetch(ids, "cif", tmp_path, overwrite=True)
     for file in files:
         assert "citation_author" in pdbx.CIFFile.read(file).block
 

@@ -3,7 +3,6 @@
 # information.
 
 import itertools
-from pathlib import Path
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -17,7 +16,7 @@ from tests.util import data_dir
 
 @pytest.mark.parametrize("format", ["trr", "xtc", "dcd", "netcdf"])
 def test_array_conversion(format, tmp_path):
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1l2y.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     template = pdbx.get_structure(pdbx_file, model=1)
     # Add fake box
     template.box = np.diag([1, 2, 3])
@@ -29,7 +28,7 @@ def test_array_conversion(format, tmp_path):
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
-    traj_file = traj_file_cls.read(Path(data_dir("structure")) / f"1l2y.{format}")
+    traj_file = traj_file_cls.read(data_dir("structure") / "pdb" / f"1l2y.{format}")
     ref_array = traj_file.get_structure(template)
 
     traj_file = traj_file_cls()
@@ -45,16 +44,11 @@ def test_array_conversion(format, tmp_path):
     assert ref_array.coord == pytest.approx(array.coord, abs=1e-2)
 
 
-@pytest.mark.parametrize(
-    "format, start, stop, step, chunk_size",
-    itertools.product(
-        ["trr", "xtc", "dcd", "netcdf"],
-        [None, 2],
-        [None, 17],
-        [None, 2],
-        [None, 3],
-    ),
-)
+@pytest.mark.parametrize("format", ["trr", "xtc", "dcd", "netcdf"])
+@pytest.mark.parametrize("start", [None, 2])
+@pytest.mark.parametrize("stop", [None, 17])
+@pytest.mark.parametrize("step", [None, 2])
+@pytest.mark.parametrize("chunk_size", [None, 3])
 def test_bcif_consistency(format, start, stop, step, chunk_size):
     if format == "netcdf" and stop is not None and step is not None:
         # Currently, there is an inconsistency in biotraj's
@@ -63,7 +57,7 @@ def test_bcif_consistency(format, start, stop, step, chunk_size):
         # is dependent on the 'stride' parameter
         return
 
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1l2y.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     ref_traj = pdbx.get_structure(pdbx_file)
     ref_traj = ref_traj[slice(start, stop, step)]
 
@@ -78,7 +72,7 @@ def test_bcif_consistency(format, start, stop, step, chunk_size):
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
     traj_file = traj_file_cls.read(
-        Path(data_dir("structure")) / f"1l2y.{format}",
+        data_dir("structure") / "pdb" / f"1l2y.{format}",
         start,
         stop,
         step,
@@ -105,16 +99,11 @@ def test_bcif_consistency(format, start, stop, step, chunk_size):
     assert test_traj.coord == pytest.approx(ref_traj.coord, abs=1e-2)
 
 
-@pytest.mark.parametrize(
-    "format, start, stop, step, stack_size",
-    itertools.product(
-        ["trr", "xtc", "dcd", "netcdf"],
-        [None, 2],
-        [None, 17],
-        [None, 2],
-        [None, 2, 3],
-    ),
-)
+@pytest.mark.parametrize("format", ["trr", "xtc", "dcd", "netcdf"])
+@pytest.mark.parametrize("start", [None, 2])
+@pytest.mark.parametrize("stop", [None, 17])
+@pytest.mark.parametrize("step", [None, 2])
+@pytest.mark.parametrize("stack_size", [None, 2, 3])
 def test_read_iter(format, start, stop, step, stack_size):
     """
     Compare aggregated yields of :func:`read_iter()` with the values
@@ -135,7 +124,7 @@ def test_read_iter(format, start, stop, step, stack_size):
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
-    input_path = Path(data_dir("structure")) / f"1l2y.{format}"
+    input_path = data_dir("structure") / "pdb" / f"1l2y.{format}"
 
     traj_file = traj_file_cls.read(input_path, start, stop, step)
     ref_coord = traj_file.get_coord()
@@ -175,16 +164,11 @@ def test_read_iter(format, start, stop, step, stack_size):
         assert test_time.tolist() == ref_time.tolist()
 
 
-@pytest.mark.parametrize(
-    "format, start, stop, step, stack_size",
-    itertools.product(
-        ["trr", "xtc", "dcd", "netcdf"],
-        [None, 2],
-        [None, 17],
-        [None, 2],
-        [None, 2, 3],
-    ),
-)
+@pytest.mark.parametrize("format", ["trr", "xtc", "dcd", "netcdf"])
+@pytest.mark.parametrize("start", [None, 2])
+@pytest.mark.parametrize("stop", [None, 17])
+@pytest.mark.parametrize("step", [None, 2])
+@pytest.mark.parametrize("stack_size", [None, 2, 3])
 def test_read_iter_structure(format, start, stop, step, stack_size):
     """
     Compare aggregated yields of :func:`read_iter_structure()` with the
@@ -198,7 +182,7 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
         # is dependent on the 'stride' parameter
         return
 
-    pdbx_file = pdbx.BinaryCIFFile.read(Path(data_dir("structure")) / "1l2y.bcif")
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif")
     template = pdbx.get_structure(pdbx_file)
 
     if format == "trr":
@@ -209,7 +193,7 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
         traj_file_cls = dcd.DCDFile
     if format == "netcdf":
         traj_file_cls = netcdf.NetCDFFile
-    input_path = Path(data_dir("structure")) / f"1l2y.{format}"
+    input_path = data_dir("structure") / "pdb" / f"1l2y.{format}"
 
     traj_file = traj_file_cls.read(input_path, start, stop, step)
     ref_traj = traj_file.get_structure(template)
@@ -231,16 +215,11 @@ def test_read_iter_structure(format, start, stop, step, stack_size):
     assert test_traj == ref_traj
 
 
-@pytest.mark.parametrize(
-    "format, n_models, n_atoms, include_box, include_time",
-    itertools.product(
-        ["trr", "xtc", "dcd", "netcdf"],
-        [1, 100],
-        [1, 1000],
-        [False, True],
-        [False, True],
-    ),
-)
+@pytest.mark.parametrize("format", ["trr", "xtc", "dcd", "netcdf"])
+@pytest.mark.parametrize("n_models", [1, 100])
+@pytest.mark.parametrize("n_atoms", [1, 1000])
+@pytest.mark.parametrize("include_box", [False, True])
+@pytest.mark.parametrize("include_time", [False, True])
 def test_write_iter(format, n_models, n_atoms, include_box, include_time, tmp_path):
     """
     Expect that `write_iter()` and `write()` create files with equal content.
@@ -257,10 +236,10 @@ def test_write_iter(format, n_models, n_atoms, include_box, include_time, tmp_pa
         traj_file_cls = netcdf.NetCDFFile
 
     # Generate random coordinate dataset content
-    np.random.seed(0)
-    coord = np.random.rand(n_models, n_atoms, 3) * 100
-    box = np.random.rand(n_models, 3, 3) * 100 if include_box else None
-    time = np.random.rand(n_models) * 10 if include_time else None
+    rng = np.random.default_rng(0)
+    coord = rng.random((n_models, n_atoms, 3)) * 100
+    box = rng.random((n_models, 3, 3)) * 100 if include_box else None
+    time = rng.random(n_models) * 10 if include_time else None
 
     ref_file = tmp_path / f"ref.{format}"
     traj_file = traj_file_cls()

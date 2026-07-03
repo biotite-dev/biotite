@@ -2,11 +2,7 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import glob
 import io
-import itertools
-import os
-import os.path
 import numpy as np
 import pytest
 import biotite.sequence as seq
@@ -15,7 +11,7 @@ from tests.util import data_dir
 
 
 def test_access_low_level():
-    path = os.path.join(data_dir("sequence"), "nuc.fasta")
+    path = data_dir("sequence") / "nuc.fasta"
     file = fasta.FastaFile.read(path)
     assert file["dna sequence"] == "ACGCTACGT"
     assert file["another dna sequence"] == "A"
@@ -41,7 +37,7 @@ def test_access_low_level():
 
 @pytest.mark.parametrize("seq_type", (None, seq.NucleotideSequence))
 def test_access_high_level(seq_type):
-    path = os.path.join(data_dir("sequence"), "nuc.fasta")
+    path = data_dir("sequence") / "nuc.fasta"
     file = fasta.FastaFile.read(path)
     sequences = fasta.get_sequences(file, seq_type=seq_type)
     assert sequences == {
@@ -57,7 +53,7 @@ def test_access_high_level(seq_type):
     "seq_type", (None, seq.NucleotideSequence, seq.ProteinSequence)
 )
 def test_sequence_conversion_ambiguous(seq_type):
-    path = os.path.join(data_dir("sequence"), "nuc.fasta")
+    path = data_dir("sequence") / "nuc.fasta"
     file = fasta.FastaFile.read(path)
     sequence = "ACGCTACGT"
 
@@ -94,7 +90,7 @@ def test_sequence_conversion_ambiguous(seq_type):
     "seq_type", (None, seq.NucleotideSequence, seq.ProteinSequence)
 )
 def test_sequence_conversion_protein(seq_type):
-    path = os.path.join(data_dir("sequence"), "prot.fasta")
+    path = data_dir("sequence") / "prot.fasta"
     file4 = fasta.FastaFile.read(path)
 
     if seq_type != seq.NucleotideSequence:
@@ -113,7 +109,7 @@ def test_sequence_conversion_protein(seq_type):
     "seq_type", (None, seq.NucleotideSequence, seq.ProteinSequence)
 )
 def test_sequence_conversion_invalid(seq_type):
-    path = os.path.join(data_dir("sequence"), "invalid.fasta")
+    path = data_dir("sequence") / "invalid.fasta"
     file = fasta.FastaFile.read(path)
     with pytest.raises(ValueError):
         seq.NucleotideSequence(fasta.get_sequence(file), seq_type=seq_type)
@@ -129,7 +125,7 @@ def test_rna_conversion():
 
 
 def test_alignment_conversion():
-    path = os.path.join(data_dir("sequence"), "alignment.fasta")
+    path = data_dir("sequence") / "alignment.fasta"
     file = fasta.FastaFile.read(path)
     alignment = fasta.get_alignment(file)
     assert str(alignment) == (
@@ -149,9 +145,7 @@ def test_a3m_alignment_conversion():
     Check if reading alignments from file and writing them again gives the same file
     content.
     """
-    a3m_file = fasta.FastaFile.read(
-        os.path.join(data_dir("sequence"), "1a00_A_uniref90.a3m")
-    )
+    a3m_file = fasta.FastaFile.read(data_dir("sequence") / "1a00_A_uniref90.a3m")
     ref_content = a3m_file.lines
 
     labels = list(a3m_file.keys())
@@ -164,7 +158,9 @@ def test_a3m_alignment_conversion():
 
 
 @pytest.mark.parametrize(
-    "file_name", glob.glob(os.path.join(data_dir("sequence"), "*.fasta"))
+    "file_name",
+    sorted(data_dir("sequence").glob("*.fasta")),
+    ids=lambda path: path.name,
 )
 def test_read_iter(file_name):
     ref_dict = dict(fasta.FastaFile.read(file_name).items())
@@ -174,9 +170,8 @@ def test_read_iter(file_name):
     assert test_dict == ref_dict
 
 
-@pytest.mark.parametrize(
-    "chars_per_line, n_sequences", itertools.product([80, 200], [1, 10])
-)
+@pytest.mark.parametrize("chars_per_line", [80, 200])
+@pytest.mark.parametrize("n_sequences", [1, 10])
 def test_write_iter(chars_per_line, n_sequences):
     """
     Test whether :class:`FastaFile.write()` and
@@ -186,13 +181,11 @@ def test_write_iter(chars_per_line, n_sequences):
     LENGTH_RANGE = (50, 150)
 
     # Generate random sequences and scores
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
     sequences = []
     for i in range(n_sequences):
-        seq_length = np.random.randint(*LENGTH_RANGE)
-        code = np.random.randint(
-            len(seq.NucleotideSequence.alphabet_unamb), size=seq_length
-        )
+        seq_length = rng.integers(*LENGTH_RANGE)
+        code = rng.integers(len(seq.NucleotideSequence.alphabet_unamb), size=seq_length)
         sequence = seq.NucleotideSequence()
         sequence.code = code
         sequences.append(sequence)
