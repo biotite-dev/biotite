@@ -25,7 +25,7 @@ or in a ``pixi``-managed environment
 
 .. code-block:: console
 
-    $ pixi run doc-full
+    $ pixi run -e doc doc-full
 
 Documentation structure
 -----------------------
@@ -89,7 +89,7 @@ or, equivalently,
 
 .. code-block:: console
 
-    $ pixi run doc
+    $ pixi run -e doc doc
 
 You may also ask the *Biotite* maintainers to run the example script and check
 the generated page, if building the gallery on your device is not possible.

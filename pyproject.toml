@@ -247,11 +247,20 @@ doc = { features = ["doc", "interface", "application"] }
 # -> Add interfaced packages as well
 lint = { features = ["lint", "interface"] }
 
-# Editable install — re-runs only when a Cython or Rust source file changes
-[tool.pixi.tasks._pip-install-editable]
+[tool.pixi.tasks._pip-install-rust]
 cmd = "python -m pip install -e ."
-# Editable install only need to re-run when a Cython or Rust source file changes
-inputs = ["src/**/*.pyx", "src/**/*.pxd", "src/**/*.rs", "Cargo.toml", "pyproject.toml"]
+env = { BIOTITE_OMIT_CYTHON = "1" }
+inputs = ["src/**/*.rs", "Cargo.toml", "pyproject.toml"]
+
+[tool.pixi.tasks._pip-install-cython]
+cmd = "python -m pip install -e ."
+env = { BIOTITE_OMIT_RUST = "1" }
+inputs = ["src/**/*.pyx", "src/**/*.pxd", "pyproject.toml"]
+
+[tool.pixi.tasks._pip-install]
+cmd = "python -m pip install -e ."
+env = { BIOTITE_OMIT_CYTHON = "1", BIOTITE_OMIT_RUST = "1" }
+depends-on = ["_pip-install-rust", "_pip-install-cython"]
 
 [tool.pixi.tasks._current-date]
 # Writes the current ISO year-month into a marker file
@@ -259,14 +268,14 @@ cmd = "date +%Y-%m > .date"
 
 [tool.pixi.tasks._setup-ccd]
 cmd = "python -m biotite.setup_ccd"
-depends-on = ["_pip-install-editable", "_current-date"]
+depends-on = ["_pip-install", "_current-date"]
 # Cached: only re-runs once per month
 inputs = [".date"]
 outputs = ["src/biotite/structure/info/components.bcif"]
 
 [tool.pixi.tasks.install]
 cmd = "true"
-depends-on = ["_pip-install-editable", "_setup-ccd"]
+depends-on = ["_pip-install", "_setup-ccd"]
 description = "Install Biotite in editable mode"
 
 [tool.pixi.tasks._bundle-licenses]
@@ -296,7 +305,7 @@ description = "Run the test suite"
 _ruff-check = { cmd = "ruff check", default-environment = "lint" }
 _ruff-format-check = { cmd = "ruff format --diff", default-environment = "lint" }
 # `pyright` complains if it does not see Biotite's extension modules
-_pyright = { cmd = "pyright", depends-on = ["_pip-install-editable"], default-environment = "lint" }
+_pyright = { cmd = "pyright", depends-on = ["_pip-install"], default-environment = "lint" }
 _numpydoc = { cmd = "numpydoc lint src/biotite/**/*.py", default-environment = "lint" }
 _cargo-fmt-check = { cmd = "cargo fmt --check", default-environment = "lint" }
 _cargo-clippy = { cmd = "cargo clippy -- -Dwarnings", default-environment = "lint" }
