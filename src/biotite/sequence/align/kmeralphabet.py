@@ -2,32 +2,23 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 __all__ = ["KmerAlphabet"]
 
-cimport cython
-cimport numpy as np
-
+from collections.abc import Iterator
+from collections.abc import Sequence as SequenceABC
+from typing import Any, overload
 import numpy as np
-from ..alphabet import Alphabet, LetterAlphabet, AlphabetError
+from biotite.rust.sequence.align import create_kmers as rust_create_kmers
+from biotite.rust.sequence.align import split_kmers as rust_split_kmers
+from biotite.sequence.alphabet import Alphabet, AlphabetError, LetterAlphabet
+from biotite.typing import K, N, NDArray1, NDArray2, S
 
 
-ctypedef np.uint8_t uint8
-ctypedef np.uint16_t uint16
-ctypedef np.uint32_t uint32
-ctypedef np.uint64_t uint64
-ctypedef np.int64_t int64
-
-
-ctypedef fused CodeType:
-    uint8
-    uint16
-    uint32
-    uint64
-
-
-class KmerAlphabet(Alphabet):
+class KmerAlphabet(Alphabet[tuple[S, ...]]):
     """
     __init__(base_alphabet, k, spacing=None)
 
@@ -84,7 +75,7 @@ class KmerAlphabet(Alphabet):
     -----
     The symbol code for a *k-mer* :math:`s` calculates as
 
-    .. math:: RMSD = \sum_{i=0}^{k-1} n^{k-i-1} s_i
+    .. math:: RMSD = \\sum_{i=0}^{k-1} n^{k-i-1} s_i
 
     where :math:`n` is the length of the base alphabet.
 
@@ -147,11 +138,15 @@ class KmerAlphabet(Alphabet):
     ['BI_T', 'IQ_I', 'QT_T', 'TI_E']
     """
 
-    def __init__(self, base_alphabet, k, spacing=None):
+    def __init__(
+        self,
+        base_alphabet: Alphabet[S],
+        k: int,
+        spacing: str | list[int] | NDArray1[K, np.integer] | None = None,
+    ) -> None:
         if not isinstance(base_alphabet, Alphabet):
             raise TypeError(
-                f"Got {type(base_alphabet).__name__}, "
-                f"but Alphabet was expected"
+                f"Got {type(base_alphabet).__name__}, but Alphabet was expected"
             )
         if k < 2:
             raise ValueError("k must be at least 2")
@@ -160,8 +155,7 @@ class KmerAlphabet(Alphabet):
 
         base_alph_len = len(self._base_alph)
         self._radix_multiplier = np.array(
-            [base_alph_len**n for n in reversed(range(0, self._k))],
-            dtype=np.int64
+            [base_alph_len**n for n in reversed(range(0, self._k))], dtype=np.int64
         )
 
         if spacing is None:
@@ -174,35 +168,29 @@ class KmerAlphabet(Alphabet):
             self._spacing = np.array(spacing, dtype=np.int64)
             self._spacing.sort()
             if (self._spacing < 0).any():
-                raise ValueError(
-                    "Only non-negative integers are allowed for spacing"
-                )
+                raise ValueError("Only non-negative integers are allowed for spacing")
             if len(np.unique(self._spacing)) != len(self._spacing):
-                raise ValueError(
-                    "Spacing model contains duplicate values"
-                )
+                raise ValueError("Spacing model contains duplicate values")
 
-        if spacing is not None and len(self._spacing) != self._k:
+        if self._spacing is not None and len(self._spacing) != self._k:
             raise ValueError(
                 f"Expected {self._k} informative positions, "
                 f"but got {len(self._spacing)} positions in spacing"
             )
 
-
     @property
-    def base_alphabet(self):
+    def base_alphabet(self) -> Alphabet[S]:
         return self._base_alph
 
     @property
-    def k(self):
+    def k(self) -> int:
         return self._k
 
     @property
-    def spacing(self):
+    def spacing(self) -> NDArray1[K, np.int64] | None:
         return None if self._spacing is None else self._spacing.copy()
 
-
-    def get_symbols(self):
+    def get_symbols(self) -> tuple:
         """
         get_symbols()
 
@@ -224,12 +212,14 @@ class KmerAlphabet(Alphabet):
         to be created first.
         """
         if isinstance(self._base_alph, LetterAlphabet):
-            return tuple(["".join(self.decode(code)) for code in range(len(self))])
+            return tuple(
+                # For a `LetterAlphabet` the decoded symbols are single characters
+                ["".join(self.decode(code)) for code in range(len(self))]  # pyright: ignore[reportCallIssue, reportArgumentType]
+            )
         else:
             return tuple([list(self.decode(code)) for code in range(len(self))])
 
-
-    def extends(self, alphabet):
+    def extends(self, alphabet: Alphabet[Any]) -> bool:
         # A KmerAlphabet cannot really extend another KmerAlphabet:
         # If k is not equal, all symbols are not equal
         # If the base alphabet has additional symbols, the correct
@@ -238,16 +228,19 @@ class KmerAlphabet(Alphabet):
         # if the two alphabets are equal
         return alphabet == self
 
-
-    def encode(self, symbol):
+    def encode(self, symbol: SequenceABC[S]) -> int:
         return self.fuse(self._base_alph.encode_multiple(symbol))
 
-
-    def decode(self, code):
+    def decode(self, code: int) -> SequenceABC[S]:
         return self._base_alph.decode_multiple(self.split(code))
 
-
-    def fuse(self, codes):
+    @overload
+    def fuse(self, codes: NDArray1[K, np.integer]) -> int: ...
+    @overload
+    def fuse(self, codes: NDArray2[N, K, np.integer]) -> NDArray1[N, np.int64]: ...
+    def fuse(
+        self, codes: NDArray1[K, np.integer] | NDArray2[N, K, np.integer]
+    ) -> int | NDArray1[N, np.int64]:
         """
         fuse(codes)
 
@@ -299,7 +292,15 @@ class KmerAlphabet(Alphabet):
         # The last dimension is removed since it collpased in np.sum
         return kmer_code.reshape(orig_shape[:-1])
 
-    def split(self, kmer_code):
+    @overload
+    def split(self, kmer_code: int) -> NDArray1[K, np.uint64]: ...
+    @overload
+    def split(
+        self, kmer_code: NDArray1[N, np.integer]
+    ) -> NDArray2[N, K, np.uint64]: ...
+    def split(
+        self, kmer_code: int | NDArray1[N, np.integer]
+    ) -> NDArray1[K, np.uint64] | NDArray2[N, K, np.uint64]:
         """
         split(kmer_code)
 
@@ -338,42 +339,17 @@ class KmerAlphabet(Alphabet):
         [3 1]
         """
         if np.any(kmer_code >= len(self)) or np.any(kmer_code < 0):
-            raise AlphabetError(
-                f"Given k-mer symbol code is invalid for this alphabet"
-            )
+            raise AlphabetError("Given k-mer symbol code is invalid for this alphabet")
 
         orig_shape = np.shape(kmer_code)
-        split_codes = self._split(
-            np.atleast_1d(kmer_code).astype(np.int64, copy=False)
+        split_codes = rust_split_kmers(
+            np.atleast_1d(kmer_code).astype(np.int64, copy=False),
+            self._k,
+            len(self._base_alph),
         )
         return split_codes.reshape(orig_shape + (self._k,))
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    @cython.cdivision(True)
-    def _split(self, int64[:] codes not None):
-        cdef int i, n
-        cdef int64 code, val, symbol_code
-
-        cdef int64[:] radix_multiplier = self._radix_multiplier
-
-        cdef uint64[:,:] split_codes = np.empty(
-            (codes.shape[0], self._k), dtype=np.uint64
-        )
-
-        cdef int k = self._k
-        for i in range(codes.shape[0]):
-            code = codes[i]
-            for n in range(k):
-                val = radix_multiplier[n]
-                symbol_code = code // val
-                split_codes[i,n] = symbol_code
-                code -= symbol_code * val
-
-        return np.asarray(split_codes)
-
-
-    def kmer_array_length(self, int64 length):
+    def kmer_array_length(self, length: int) -> int:
         """
         kmer_array_length(length)
 
@@ -384,25 +360,20 @@ class KmerAlphabet(Alphabet):
         Parameters
         ----------
         length : int
-            The length of the hypothetical sequence
+            The length of the hypothetical sequence.
 
         Returns
         -------
         kmer_length : int
             The length of created *k-mer* array.
         """
-        cdef int64 max_offset
-        cdef int64[:] spacing
-
         if self._spacing is None:
             return length - self._k + 1
         else:
-            spacing = self._spacing
-            max_offset = self._spacing[len(spacing)-1] + 1
+            max_offset = int(self._spacing[-1]) + 1
             return length - max_offset + 1
 
-
-    def create_kmers(self, seq_code):
+    def create_kmers(self, seq_code: NDArray1[N, np.integer]) -> NDArray1[K, np.int64]:
         """
         create_kmers(seq_code)
 
@@ -431,117 +402,17 @@ class KmerAlphabet(Alphabet):
         >>> print(["".join(kmer) for kmer in kmer_alphabet.decode_multiple(kmer_codes)])
         ['AT', 'TT', 'TG', 'GC', 'CT']
         """
-        if self._spacing is None:
-            return self._create_continuous_kmers(seq_code)
-        else:
-            return self._create_spaced_kmers(seq_code)
+        return rust_create_kmers(seq_code, self._k, len(self._base_alph), self._spacing)
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    def _create_continuous_kmers(self, CodeType[:] seq_code not None):
-        """
-        Fast implementation of k-mer decomposition.
-        Each k-mer is computed from the previous one by removing
-        a symbol shifting the remaining values and add the new symbol.
-        Requires looping only over sequence length.
-        """
-        cdef int64 i
-
-        cdef int k = self._k
-        cdef uint64 alphabet_length = len(self._base_alph)
-        cdef int64[:] radix_multiplier = self._radix_multiplier
-        cdef int64 end_radix_multiplier = alphabet_length**(k-1)
-
-        if len(seq_code) < <unsigned int>k:
-            raise ValueError(
-                "The length of the sequence code is shorter than k"
-            )
-
-        cdef int64[:] kmers = np.empty(
-            self.kmer_array_length(len(seq_code)), dtype=np.int64
-        )
-
-        cdef CodeType code
-        cdef int64 kmer, prev_kmer
-        # Compute first k-mer using naive approach
-        kmer = 0
-        for i in range(k):
-            code = seq_code[i]
-            if code >= alphabet_length:
-                raise AlphabetError(f"Symbol code {code} is out of range")
-            kmer += radix_multiplier[i] * code
-        kmers[0] = kmer
-
-        # Compute all following k-mers from the previous one
-        prev_kmer = kmer
-        for i in range(1, kmers.shape[0]):
-            code = seq_code[i + k - 1]
-            if code >= alphabet_length:
-                raise AlphabetError(f"Symbol code {code} is out of range")
-            kmer = (
-                (
-                    # Remove first symbol
-                    (prev_kmer - seq_code[i - 1] * end_radix_multiplier)
-                    # Shift k-mer to left
-                    * alphabet_length
-                )
-                # Add new symbol
-                + code
-            )
-            kmers[i] = kmer
-            prev_kmer = kmer
-
-        return np.asarray(kmers)
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    def _create_spaced_kmers(self, CodeType[:] seq_code not None):
-        cdef int64 i, j
-
-        cdef int k = self._k
-        cdef int64[:] spacing = self._spacing
-        # The last element of the spacing model
-        # defines the total k-mer 'span'
-        cdef int64 max_offset = spacing[len(spacing)-1] + 1
-        cdef uint64 alphabet_length = len(self._base_alph)
-        cdef int64[:] radix_multiplier = self._radix_multiplier
-
-        if len(seq_code) < <unsigned int>max_offset:
-            raise ValueError(
-                "The length of the sequence code is shorter "
-                "than the k-mer span"
-            )
-
-        cdef int64[:] kmers = np.empty(
-            self.kmer_array_length(len(seq_code)), dtype=np.int64
-        )
-
-        cdef CodeType code
-        cdef int64 kmer
-        cdef int64 offset
-        for i in range(kmers.shape[0]):
-            kmer = 0
-            for j in range(k):
-                offset = spacing[j]
-                code = seq_code[i + offset]
-                if code >= alphabet_length:
-                    raise AlphabetError(f"Symbol code {code} is out of range")
-                kmer += radix_multiplier[j] * code
-            kmers[i] = kmer
-
-        return np.asarray(kmers)
-
-
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.get_symbols())
 
+    def __repr__(self) -> str:
+        return (
+            f"KmerAlphabet({repr(self._base_alph)}, {self._k}, {repr(self._spacing)})"
+        )
 
-    def __repr__(self):
-        return f"KmerAlphabet({repr(self._base_alph)}, " \
-               f"{self._k}, {repr(self._spacing)})"
-
-
-    def __eq__(self, item):
+    def __eq__(self, item: object) -> bool:
         if item is self:
             return True
         if not isinstance(item, KmerAlphabet):
@@ -559,37 +430,37 @@ class KmerAlphabet(Alphabet):
 
         return True
 
+    def __hash__(self) -> int:
+        spacing = None if self._spacing is None else tuple(self._spacing.tolist())
+        return hash((self._base_alph, self._k, spacing))
 
-    def __hash__(self):
-        return hash((self._base_alph, self._k, tuple(self._spacing.tolist())))
-
-
-    def __len__(self):
+    def __len__(self) -> int:
         return int(len(self._base_alph) ** self._k)
 
-
-    def __iter__(self):
+    def __iter__(self) -> Iterator[SequenceABC[S]]:
         # Creating all symbols is expensive
         # -> Use a generator instead
         if isinstance(self._base_alph, LetterAlphabet):
-            return ("".join(self.decode(code)) for code in range(len(self)))
+            return (
+                "".join(self.decode(code))  # pyright: ignore[reportCallIssue, reportArgumentType]
+                for code in range(len(self))
+            )
         else:
-            return (list(self.decode(code)) for code in range(len(self)))
+            return (tuple(self.decode(code)) for code in range(len(self)))
 
-
-    def __contains__(self, symbol):
+    def __contains__(self, symbol: object) -> bool:
         try:
-            self.fuse(self._base_alph.encode_multiple(symbol))
+            self.fuse(self._base_alph.encode_multiple(symbol))  # pyright: ignore[reportArgumentType]
             return True
         except AlphabetError:
             return False
 
 
-def _to_array_form(model_string):
+def _to_array_form(model_string: str) -> NDArray1[K, np.int64]:
     """
     Convert the the common string representation of a *k-mer* spacing
     model into an array, e.g. ``'1*11'`` into ``[0, 2, 3]``.
     """
-    return np.array([
-        i for i in range(len(model_string)) if model_string[i] == "1"
-    ], dtype=np.int64)
+    return np.array(
+        [i for i in range(len(model_string)) if model_string[i] == "1"], dtype=np.int64
+    )

@@ -2,18 +2,18 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.sequence.align"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Permutation", "RandomPermutation", "FrequencyPermutation"]
 
-cimport cython
-cimport numpy as np
-
 import abc
+from typing import Generic
 import numpy as np
-
-
-ctypedef np.int64_t int64
+from biotite.sequence.align.kmeralphabet import KmerAlphabet
+from biotite.sequence.align.kmertable import KmerTable
+from biotite.typing import N, NDArray1, S
 
 
 class Permutation(metaclass=abc.ABCMeta):
@@ -38,20 +38,18 @@ class Permutation(metaclass=abc.ABCMeta):
         Must be overridden by subclasses.
     """
 
-
     @property
     @abc.abstractmethod
-    def min(self):
+    def min(self) -> int:
         pass
 
     @property
     @abc.abstractmethod
-    def max(self):
+    def max(self) -> int:
         pass
 
-
     @abc.abstractmethod
-    def permute(self, kmers):
+    def permute(self, kmers: NDArray1[N, np.int64]) -> NDArray1[N, np.int64]:
         """
         permute(kmers)
 
@@ -79,6 +77,13 @@ class RandomPermutation(Permutation):
     r"""
     Provide a pseudo-randomized order for *k-mers*.
 
+    Attributes
+    ----------
+    min, max: int
+        The minimum and maximum value, the permutated value
+        (i.e. the return value of :meth:`permute()`)
+        can take.
+
     Notes
     -----
 
@@ -91,13 +96,6 @@ class RandomPermutation(Permutation):
     full periodicity and good random behavior.
     However, note that LCGs in general do not provide perfect random
     behavior, but only *good-enough* values for this purpose.
-
-    Attributes
-    ----------
-    min, max: int
-        The minimum and maximum value, the permutated value
-        (i.e. the return value of :meth:`permute()`)
-        can take.
 
     References
     ----------
@@ -131,34 +129,31 @@ class RandomPermutation(Permutation):
     ['GA', 'TC', 'AG', 'CT', 'TA', 'AC', 'CG', 'GT', 'AA', 'CC', 'GG', 'TT', 'CA', 'GC', 'TG', 'AT']
     """
 
-    LCG_A = 0xd1342543de82ef95
+    LCG_A = 0xD1342543DE82EF95
     LCG_C = 1
 
-
     @property
-    def min(self):
+    def min(self) -> int:
         return np.iinfo(np.int64).min
 
     @property
-    def max(self):
+    def max(self) -> int:
         return np.iinfo(np.int64).max
 
-
-    def permute(self, kmers):
-        kmers = kmers.astype(np.int64, copy=False)
+    def permute(self, kmers: NDArray1[N, np.int64]) -> NDArray1[N, np.int64]:
         # Cast to unsigned int to harness the m=2^64 LCG
-        kmers = kmers.view(np.uint64)
+        unsigned = kmers.astype(np.int64, copy=False).view(np.uint64)
         # Apply LCG
         # Applying the modulo operator is not necessary
-        # is the corresponding bits are truncated automatically
-        permutation = RandomPermutation.LCG_A * kmers + RandomPermutation.LCG_C
+        # as the corresponding bits are truncated automatically
+        permutation = RandomPermutation.LCG_A * unsigned + RandomPermutation.LCG_C
         # Convert back to required signed int64
         # The resulting integer overflow changes the order, but this is
         # no problem since the order is pseudo-random anyway
         return permutation.view(np.int64)
 
 
-class FrequencyPermutation(Permutation):
+class FrequencyPermutation(Permutation, Generic[S]):
     """
     __init__(kmer_alphabet, counts)
 
@@ -236,7 +231,9 @@ class FrequencyPermutation(Permutation):
     ['...', 'rc', 'rd', 'rr', 'ac', 'ad', 'ca', 'da', 'ab', 'br', 'ra']
     """
 
-    def __init__(self, kmer_alphabet, counts):
+    def __init__(
+        self, kmer_alphabet: KmerAlphabet[S], counts: NDArray1[N, np.int64]
+    ) -> None:
         if len(kmer_alphabet) != len(counts):
             raise IndexError(
                 f"The k-mer alphabet has {len(kmer_alphabet)} k-mers, "
@@ -250,22 +247,20 @@ class FrequencyPermutation(Permutation):
         self._permutation_table = _invert_mapping(order)
         self._kmer_alph = kmer_alphabet
 
-
     @property
-    def min(self):
+    def min(self) -> int:
         return 0
 
     @property
-    def max(self):
+    def max(self) -> int:
         return len(self._permutation_table) - 1
 
     @property
-    def kmer_alphabet(self):
+    def kmer_alphabet(self) -> KmerAlphabet[S]:
         return self._kmer_alph
 
-
     @staticmethod
-    def from_table(kmer_table):
+    def from_table(kmer_table: KmerTable[S]) -> FrequencyPermutation:
         """
         from_table(kmer_table)
 
@@ -282,18 +277,13 @@ class FrequencyPermutation(Permutation):
         permutation : FrequencyPermutation
             The permutation is based on the counts.
         """
-        return FrequencyPermutation(
-            kmer_table.kmer_alphabet, kmer_table.count()
-        )
+        return FrequencyPermutation(kmer_table.kmer_alphabet, kmer_table.count())
 
-
-    def permute(self, kmers):
+    def permute(self, kmers: NDArray1[N, np.int64]) -> NDArray1[N, np.int64]:
         return self._permutation_table[kmers]
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def _invert_mapping(int64[:] mapping):
+def _invert_mapping(mapping: NDArray1[N, np.int64]) -> np.ndarray:
     """
     If `mapping` maps a unique integer ``A`` to a unique integer
     ``B``, i.e. ``B = mapping[A]``, this function inverts the mapping
@@ -302,12 +292,6 @@ def _invert_mapping(int64[:] mapping):
     Note that it is necessary that the mapping must be bijective and in
     the range ``0..n``.
     """
-    cdef int64 i
-    cdef int64 value
-
-    cdef int64[:] inverted = np.empty(mapping.shape[0], dtype=np.int64)
-    for i in range(mapping.shape[0]):
-        value = mapping[i]
-        inverted[value] = i
-
-    return np.asarray(inverted)
+    inverted = np.empty(len(mapping), dtype=np.int64)
+    inverted[mapping] = np.arange(len(mapping), dtype=np.int64)
+    return inverted
