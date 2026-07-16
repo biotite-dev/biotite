@@ -55,6 +55,28 @@ def test_conversion(chars_per_line):
         assert np.array_equal(test_scores, ref_scores)
 
 
+@pytest.mark.parametrize(
+    ("member_name", "legacy_name", "expected_value"),
+    [
+        ("SANGER", "Sanger", 33),
+        ("SOLEXA", "Solexa", 64),
+        ("ILLUMINA_1_3", "Illumina-1.3", 64),
+        ("ILLUMINA_1_5", "Illumina-1.5", 64),
+        ("ILLUMINA_1_8", "Illumina-1.8", 33),
+    ],
+)
+def test_offset_enum(member_name, legacy_name, expected_value):
+    offset = fastq.FastqFile.Offset[member_name]
+    assert int(offset) == expected_value
+
+    scores = np.array([0, 1, 2])
+    enum_file = fastq.FastqFile(offset)
+    legacy_file = fastq.FastqFile(legacy_name)
+    enum_file["seq"] = "ACG", scores
+    legacy_file["seq"] = "ACG", scores
+    assert str(enum_file) == str(legacy_file)
+
+
 def test_rna_conversion():
     sequence = seq.NucleotideSequence("ACGT")
     scores = np.array([0, 0, 0, 0])
