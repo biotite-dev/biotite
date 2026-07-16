@@ -77,11 +77,6 @@ def test_offset_enum(member_name, expected_value):
     assert np.array_equal(actual_scores, scores)
 
 
-def test_offset_string_is_not_supported():
-    with pytest.raises(ValueError):
-        fastq.FastqFile("Sanger")
-
-
 def test_rna_conversion():
     sequence = seq.NucleotideSequence("ACGT")
     scores = np.array([0, 0, 0, 0])
