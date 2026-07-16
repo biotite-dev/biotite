@@ -49,7 +49,9 @@ def test_docking(flexible):
         [20, 20, 20],
         flexible=flexible_mask,
     )
-    app.set_seed(0)
+    # A non-zero seed is required: Vina interprets seed 0 as a request for
+    # a random seed, which would make this test non-deterministic
+    app.set_seed(42)
     # Single-threaded execution is required for fully reproducible
     # results — even with a fixed seed, parallel Vina is not deterministic
     app.set_cpu(1)
