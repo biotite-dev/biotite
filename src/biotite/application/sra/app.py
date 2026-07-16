@@ -14,7 +14,6 @@ from os import PathLike
 from os.path import join
 from subprocess import PIPE, Popen, SubprocessError, TimeoutExpired
 from tempfile import TemporaryDirectory
-from typing import Literal, TypeAlias
 import numpy as np
 from biotite.application.application import (
     Application,
@@ -27,10 +26,6 @@ from biotite.sequence.io.fasta.file import FastaFile
 from biotite.sequence.io.fastq.convert import get_sequences as get_sequences_and_scores
 from biotite.sequence.io.fastq.file import FastqFile
 from biotite.sequence.seqtypes import NucleotideSequence
-
-_OffsetFormat: TypeAlias = Literal[
-    "Sanger", "Solexa", "Illumina-1.3", "Illumina-1.5", "Illumina-1.8"
-]
 
 
 # Do not use LocalApp, as two programs are executed
@@ -237,11 +232,11 @@ class FastqDumpApp(_DumpApp):
     prefetch_path, fasterq_dump_path : str, optional
         Path to the ``prefetch_path`` and ``fasterq-dump`` binary,
         respectively.
-    offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}, optional
+    offset : int or FastqFile.Offset, optional
         This value is subtracted from the FASTQ ASCII code to obtain the
         quality score.
-        Can either be directly the value, or a string that indicates
-        the score format.
+        Can be provided directly as integer or as a member of
+        :class:`FastqFile.Offset`.
     """
 
     def __init__(
@@ -250,10 +245,10 @@ class FastqDumpApp(_DumpApp):
         output_path_prefix: PathLike[str] | str | None = None,
         prefetch_path: PathLike[str] | str = "prefetch",
         fasterq_dump_path: PathLike[str] | str = "fasterq-dump",
-        offset: int | _OffsetFormat = "Sanger",
+        offset: int | FastqFile.Offset = FastqFile.Offset.SANGER,
     ) -> None:
         super().__init__(uid, output_path_prefix, prefetch_path, fasterq_dump_path)
-        self._offset: int | _OffsetFormat = offset
+        self._offset: int | FastqFile.Offset = offset
         self._fastq_files: list[FastqFile] | None = None
 
     @requires_state(AppState.JOINED)
@@ -312,7 +307,7 @@ class FastqDumpApp(_DumpApp):
         output_path_prefix: PathLike[str] | str | None = None,
         prefetch_path: PathLike[str] | str = "prefetch",
         fasterq_dump_path: PathLike[str] | str = "fasterq-dump",
-        offset: int | _OffsetFormat = "Sanger",
+        offset: int | FastqFile.Offset = FastqFile.Offset.SANGER,
     ) -> list[dict[str, NucleotideSequence]]:
         """
         Get the sequences belonging to the UID from the
@@ -333,11 +328,11 @@ class FastqDumpApp(_DumpApp):
         prefetch_path, fasterq_dump_path : str, optional
             Path to the ``prefetch_path`` and ``fasterq-dump`` binary,
             respectively.
-        offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}, optional
+        offset : int or FastqFile.Offset, optional
             This value is subtracted from the FASTQ ASCII code to obtain the
             quality score.
-            Can either be directly the value, or a string that indicates
-            the score format.
+            Can be provided directly as integer or as a member of
+            :class:`FastqFile.Offset`.
 
         Returns
         -------

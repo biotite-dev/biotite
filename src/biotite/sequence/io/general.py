@@ -52,7 +52,7 @@ def load_sequence(file_path: PathLike[str] | str) -> Sequence:
 
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
-        file = FastqFile.read(file_path, offset="Sanger")
+        file = FastqFile.read(file_path, offset=FastqFile.Offset.SANGER)
         # Get first sequence
         try:
             seq_str, _ = next(iter(file.values()))
@@ -98,7 +98,7 @@ def save_sequence(file_path: PathLike[str] | str, sequence: Sequence) -> None:
 
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
-        file = FastqFile(offset="Sanger")
+        file = FastqFile(offset=FastqFile.Offset.SANGER)
         # Scores are set to 0 since no score information is supplied
         scores = np.zeros(len(sequence))
         file["sequence"] = str(sequence), scores
@@ -150,7 +150,7 @@ def load_sequences(file_path: PathLike[str] | str) -> dict[str, Sequence]:
 
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
-        file = FastqFile.read(file_path, offset="Sanger")
+        file = FastqFile.read(file_path, offset=FastqFile.Offset.SANGER)
         return {
             identifier: NucleotideSequence(seq_str)
             for identifier, (seq_str, scores) in file.items()
@@ -199,7 +199,7 @@ def save_sequences(
 
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
-        file = FastqFile(offset="Sanger")
+        file = FastqFile(offset=FastqFile.Offset.SANGER)
         for identifier, sequence in sequences.items():
             # Scores are set to 0 since no score information is supplied
             scores = np.zeros(len(sequence))
