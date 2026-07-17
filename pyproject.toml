@@ -204,6 +204,15 @@ tantan = "*"
 viennarna = ">=2.5.0"
 muscle = "3.*"
 
+[tool.pixi.feature.mmseqs.dependencies]
+# MMseqs2 and Foldseek require an `aria2`/`libxml2` stack that is incompatible
+# with SRA Tools and DSSP on macOS ARM64
+# -> Keep them in a separate environment
+foldseek = "*"
+# Older releases reject custom substitution matrices,
+# as they lack the solver for the matrix parameters
+mmseqs2 = ">=18"
+
 [tool.pixi.feature.test.dependencies]
 pytest = ">=7.0"
 pytest-codspeed = ">=2.0"
@@ -241,6 +250,7 @@ scipy = ">=1.8.0"
 [tool.pixi.environments]
 default = { features = ["test", "interface", "application", "doc", "lint"] }
 test = { features = ["test", "interface", "application"] }
+test-mmseqs = { features = ["test", "mmseqs"] }
 test-muscle5 = { features = ["muscle5", "test"] }
 doc = { features = ["doc", "interface", "application"] }
 # `pyright` is ideally is run in the context of the runtime dependencies

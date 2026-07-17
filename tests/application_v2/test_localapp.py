@@ -3,6 +3,7 @@
 # information.
 
 import gc
+import subprocess
 import weakref
 from pathlib import Path
 import pytest
@@ -32,6 +33,8 @@ APPS = [
 # A trivial executable that ignores its arguments and exits successfully,
 # used to construct a dummy `LocalApp` for testing base-class behavior
 DUMMY_BIN = "true"
+# The counterpart that always exits with a non-zero exit code
+FAILING_BIN = "false"
 
 
 class _DummyApp(LocalApp):
@@ -198,6 +201,20 @@ def test_extra_option():
     )
     # The run still completes successfully
     future.result()
+
+
+def test_process_error_is_deferred():
+    """
+    A non-zero exit code is not raised at launch, but as
+    :class:`SubprocessError` when the result of the future is requested.
+    """
+    if is_not_installed(FAILING_BIN):
+        pytest.skip(f"'{FAILING_BIN}' is not installed")
+    app = _DummyApp(FAILING_BIN)
+
+    future = app.run()
+    with pytest.raises(subprocess.SubprocessError):
+        future.result()
 
 
 def test_disallowed_option():
