@@ -322,7 +322,7 @@ def superimpose_without_outliers(
             break
 
     anchor_indices = np.where(inlier_mask)[0]
-    transform = cast("AffineTransformation[M]", transform)
+    transform = cast(AffineTransformation[M], transform)
     return transform.apply(mobile), transform, anchor_indices
 
 

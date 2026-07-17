@@ -17,6 +17,8 @@ This module contains the main types of the ``structure`` subpackage:
 :class:`Atom`, :class:`AtomArray` and :class:`AtomArrayStack`.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -108,7 +110,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-    def add_annotation(self, category: str, dtype: "np.dtype | type | str") -> None:
+    def add_annotation(self, category: str, dtype: np.dtype | type | str) -> None:
         """
         Add an annotation category, if not already existing.
 
@@ -246,9 +248,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         new_object._array_length = new_length
         return new_object  # pyright: ignore[reportReturnType]
 
-    def _set_element(
-        self, index: int | NDArray1[Any, np.integer], atom: "Atom"
-    ) -> None:
+    def _set_element(self, index: int | NDArray1[Any, np.integer], atom: Atom) -> None:
         try:
             if isinstance(index, (numbers.Integral, np.ndarray)):
                 for name in self._annot:
@@ -309,7 +309,7 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
                 return False
         return True
 
-    def equal_annotation_categories(self, item: "_AtomArrayBase") -> bool:
+    def equal_annotation_categories(self, item: _AtomArrayBase) -> bool:
         """
         Check, if this object shares equal annotation array categories
         with the given :class:`AtomArray` or :class:`AtomArrayStack`.
@@ -594,11 +594,11 @@ class Atom(Copyable):
     def __ne__(self, item: object) -> bool:
         return not self == item
 
-    def __copy_create__(self) -> "Atom":
+    def __copy_create__(self) -> Atom:
         return Atom(self.coord, **self._annot)
 
 
-class AtomArray(_AtomArrayBase, Sequence["Atom"], Generic[N]):
+class AtomArray(_AtomArrayBase, Sequence[Atom], Generic[N]):
     """
     An array representation of a model consisting of multiple atoms.
 
@@ -777,7 +777,7 @@ class AtomArray(_AtomArrayBase, Sequence["Atom"], Generic[N]):
             kwargs[name] = annotation[index]
         return Atom(coord=self._coord[index], kwargs=kwargs)
 
-    def __iter__(self) -> "Iterator[Atom]":
+    def __iter__(self) -> Iterator[Atom]:
         """
         Iterate through the array.
 
@@ -790,7 +790,7 @@ class AtomArray(_AtomArrayBase, Sequence["Atom"], Generic[N]):
             yield self.get_atom(i)
             i += 1
 
-    def __getitem__(self, index: Any) -> "Atom | AtomArray[Any]":
+    def __getitem__(self, index: Any) -> Atom | AtomArray[Any]:
         """
         Obtain a subarray or the atom instance at the specified index.
 
@@ -887,11 +887,11 @@ class AtomArray(_AtomArrayBase, Sequence["Atom"], Generic[N]):
             string += "\n\t..."
         return string
 
-    def __copy_create__(self) -> "AtomArray[Any]":
+    def __copy_create__(self) -> AtomArray[Any]:
         return AtomArray(self.array_length())
 
 
-class AtomArrayStack(_AtomArrayBase, Sequence["AtomArray"], Generic[M, N]):
+class AtomArrayStack(_AtomArrayBase, Sequence[AtomArray], Generic[M, N]):
     """
     A collection of multiple :class:`AtomArray` instances, where each
     atom array has equal annotation arrays.
@@ -1003,7 +1003,7 @@ class AtomArrayStack(_AtomArrayBase, Sequence["AtomArray"], Generic[M, N]):
             arrays = arrays + "\t...,\n"
         return f"stack([\n{arrays}])"
 
-    def get_array(self, index: int) -> "AtomArray[Any]":
+    def get_array(self, index: int) -> AtomArray[Any]:
         """
         Obtain the atom array instance of the stack at the specified
         index.
@@ -1065,7 +1065,7 @@ class AtomArrayStack(_AtomArrayBase, Sequence["AtomArray"], Generic[M, N]):
         """
         return self.stack_depth(), self.array_length()
 
-    def __iter__(self) -> "Iterator[AtomArray[Any]]":
+    def __iter__(self) -> Iterator[AtomArray[Any]]:
         """
         Iterate through the array.
 
@@ -1080,7 +1080,7 @@ class AtomArrayStack(_AtomArrayBase, Sequence["AtomArray"], Generic[M, N]):
 
     def __getitem__(
         self, index: Any
-    ) -> "Atom | AtomArray[Any] | AtomArrayStack[Any, Any]":
+    ) -> Atom | AtomArray[Any] | AtomArrayStack[Any, Any]:
         """
         Obtain the atom array instance or an substack at the specified
         index.
@@ -1131,7 +1131,7 @@ class AtomArrayStack(_AtomArrayBase, Sequence["AtomArray"], Generic[M, N]):
                 new_stack._box = self._box[index]
             return new_stack
 
-    def __setitem__(self, index: int, array: "AtomArray[N]") -> None:
+    def __setitem__(self, index: int, array: AtomArray[N]) -> None:
         """
         Set the atom array at the specified stack position.
 
@@ -1218,7 +1218,7 @@ class AtomArrayStack(_AtomArrayBase, Sequence["AtomArray"], Generic[M, N]):
             string += str(array) + "\n" + "\n"
         return string
 
-    def __copy_create__(self) -> "AtomArrayStack[Any, Any]":
+    def __copy_create__(self) -> AtomArrayStack[Any, Any]:
         return AtomArrayStack(self.stack_depth(), self.array_length())
 
 
@@ -1592,10 +1592,10 @@ def repeat(
 
 
 def from_template(
-    template: "AtomArray[N] | AtomArrayStack[Any, N]",
+    template: AtomArray[N] | AtomArrayStack[Any, N],
     coord: NDArray3[M, N, XYZ, np.floating],
     box: NDArray3[M, XYZ, XYZ, np.floating] | None = None,
-) -> "AtomArrayStack[M, N]":
+) -> AtomArrayStack[M, N]:
     """
     Create an :class:`AtomArrayStack` using template atoms and given
     coordinates.

@@ -354,7 +354,7 @@ class BinaryCIFColumn(_Component):
         return True
 
 
-class BinaryCIFCategory(_HierarchicalContainer["BinaryCIFColumn"]):
+class BinaryCIFCategory(_HierarchicalContainer[BinaryCIFColumn]):
     """
     This class represents a category in a :class:`BinaryCIFBlock`.
 
@@ -468,7 +468,7 @@ class BinaryCIFCategory(_HierarchicalContainer["BinaryCIFColumn"]):
         super().__setitem__(key, element)
 
 
-class BinaryCIFBlock(_HierarchicalContainer["BinaryCIFCategory"]):
+class BinaryCIFBlock(_HierarchicalContainer[BinaryCIFCategory]):
     """
     This class represents a block in a :class:`BinaryCIFFile`.
 
@@ -563,7 +563,7 @@ class BinaryCIFBlock(_HierarchicalContainer["BinaryCIFCategory"]):
         return super().__contains__("_" + key)
 
 
-class BinaryCIFFile(File, _HierarchicalContainer["BinaryCIFBlock"]):
+class BinaryCIFFile(File, _HierarchicalContainer[BinaryCIFBlock]):
     """
     This class represents a *BinaryCIF* file.
 
