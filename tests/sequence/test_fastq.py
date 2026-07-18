@@ -55,10 +55,32 @@ def test_conversion(chars_per_line):
         assert np.array_equal(test_scores, ref_scores)
 
 
+@pytest.mark.parametrize(
+    ("member_name", "expected_value"),
+    [
+        ("SANGER", 33),
+        ("SOLEXA", 64),
+        ("ILLUMINA_1_3", 64),
+        ("ILLUMINA_1_5", 64),
+        ("ILLUMINA_1_8", 33),
+    ],
+)
+def test_offset_enum(member_name, expected_value):
+    offset = fastq.FastqFile.Offset[member_name]
+    assert int(offset) == expected_value
+
+    scores = np.array([0, 1, 2])
+    enum_file = fastq.FastqFile(offset)
+    enum_file["seq"] = "ACG", scores
+    actual_sequence, actual_scores = enum_file["seq"]
+    assert actual_sequence == "ACG"
+    assert np.array_equal(actual_scores, scores)
+
+
 def test_rna_conversion():
     sequence = seq.NucleotideSequence("ACGT")
     scores = np.array([0, 0, 0, 0])
-    fastq_file = fastq.FastqFile(offset="Sanger")
+    fastq_file = fastq.FastqFile(offset=fastq.FastqFile.Offset.SANGER)
     fastq.set_sequence(fastq_file, sequence, scores, "seq1", as_rna=False)
     fastq.set_sequence(fastq_file, sequence, scores, "seq2", as_rna=True)
     assert fastq_file["seq1"][0] == "ACGT"
@@ -71,9 +93,13 @@ def test_rna_conversion():
     ids=lambda path: path.name,
 )
 def test_read_iter(file_name):
-    ref_dict = dict(fastq.FastqFile.read(file_name, offset="Sanger").items())
+    ref_dict = dict(
+        fastq.FastqFile.read(file_name, offset=fastq.FastqFile.Offset.SANGER).items()
+    )
 
-    test_dict = dict(fastq.FastqFile.read_iter(file_name, offset="Sanger"))
+    test_dict = dict(
+        fastq.FastqFile.read_iter(file_name, offset=fastq.FastqFile.Offset.SANGER)
+    )
 
     for (test_id, (test_seq, test_sc)), (ref_id, (ref_seq, ref_sc)) in zip(
         test_dict.items(), ref_dict.items()
@@ -83,7 +109,7 @@ def test_read_iter(file_name):
         assert (test_sc == ref_sc).all()
 
 
-@pytest.mark.parametrize("offset", [33, 42, "Solexa"])
+@pytest.mark.parametrize("offset", [33, 42, fastq.FastqFile.Offset.SOLEXA])
 @pytest.mark.parametrize("chars_per_line", [None, 80])
 @pytest.mark.parametrize("n_sequences", [1, 10])
 def test_write_iter(offset, chars_per_line, n_sequences):

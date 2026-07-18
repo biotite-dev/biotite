@@ -9,23 +9,14 @@ __author__ = "Patrick Kunzmann"
 
 from collections import OrderedDict
 from collections.abc import Iterable, Iterator, MutableMapping
-from numbers import Integral
+from enum import IntEnum
 from os import PathLike
-from typing import IO, Literal, Self
+from typing import IO, Self
 import numpy as np
 from biotite.file import InvalidFileError, TextFile, wrap_string
 from biotite.typing import K, NDArray1
 
 __all__ = ["FastqFile"]
-
-
-_OFFSETS = {
-    "Sanger": 33,
-    "Solexa": 64,
-    "Illumina-1.3": 64,
-    "Illumina-1.5": 64,
-    "Illumina-1.8": 33,
-}
 
 
 class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
@@ -42,8 +33,8 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
     `offset` value.
     The offset is format dependent.
     As the offset is not reliably deducible from the file contets, it
-    must be provided explicitly, either as number or format
-    (e.g. ``'Illumina-1.8'``).
+    must be provided explicitly, either as number or as a
+    :class:`FastqFile.Offset` member.
 
     Similar to the :class:`FastaFile` class, this class implements the
     :class:`MutableMapping` interface:
@@ -53,11 +44,11 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
 
     Parameters
     ----------
-    offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}
+    offset : int or FastqFile.Offset
         This value is added to the quality score to obtain the
         ASCII code.
-        Can either be directly the value, or a string that indicates
-        the score format.
+        Can be provided directly as integer or as a member of
+        :class:`FastqFile.Offset`.
     chars_per_line : int, optional
         The number characters in a line containing sequence data
         after which a line break is inserted.
@@ -69,7 +60,7 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
     --------
 
     >>> import os.path
-    >>> file = FastqFile(offset="Sanger")
+    >>> file = FastqFile(offset=FastqFile.Offset.SANGER)
     >>> file["seq1"] = str(NucleotideSequence("ATACT")), [0,3,10,7,12]
     >>> file["seq2"] = str(NucleotideSequence("TTGTAGG")), [15,13,24,21,28,38,35]
     >>> print(file)
@@ -95,23 +86,32 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
     >>> file.write(os.path.join(path_to_directory, "test.fastq"))
     """
 
+    class Offset(IntEnum):
+        """
+        Quality score ASCII offsets for FASTQ format variants.
+        """
+
+        SANGER = 33
+        SOLEXA = 64
+        ILLUMINA_1_3 = 64
+        ILLUMINA_1_5 = 64
+        ILLUMINA_1_8 = 33
+
     def __init__(
         self,
-        offset: int
-        | Literal["Sanger", "Solexa", "Illumina-1.3", "Illumina-1.5", "Illumina-1.8"],
+        offset: int | FastqFile.Offset,
         chars_per_line: int | None = None,
     ) -> None:
         super().__init__()
         self._chars_per_line = chars_per_line
         self._entries: OrderedDict[str, tuple[int, int, int, int]] = OrderedDict()
-        self._offset = _convert_offset(offset)
+        self._offset = int(offset)
 
     @classmethod
     def read(
         cls,
         file: PathLike[str] | str | IO[str],
-        offset: int
-        | Literal["Sanger", "Solexa", "Illumina-1.3", "Illumina-1.5", "Illumina-1.8"],
+        offset: int | FastqFile.Offset,
         chars_per_line: int | None = None,
     ) -> Self:
         """
@@ -122,10 +122,11 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
         file : file-like object or str
             The file to be read.
             Alternatively a file path can be supplied.
-        offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}
+        offset : int or FastqFile.Offset
             This value is added to the quality score to obtain the
             ASCII code.
-            Can either be directly the value, or a string that indicates
+            Can be provided directly as integer, as a member of
+            :class:`FastqFile.Offset`, or as a string that indicates
             the score format.
         chars_per_line : int, optional
             The number characters in a line containing sequence data
@@ -330,8 +331,7 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
     @staticmethod
     def read_iter(
         file: PathLike[str] | str | IO[str],
-        offset: int
-        | Literal["Sanger", "Solexa", "Illumina-1.3", "Illumina-1.5", "Illumina-1.8"],
+        offset: int | FastqFile.Offset,
     ) -> Iterator[tuple[str, tuple[str, np.ndarray]]]:
         """
         Create an iterator over each sequence (and corresponding scores)
@@ -342,10 +342,11 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
         file : file-like object or str
             The file to be read.
             Alternatively a file path can be supplied.
-        offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}
-            This value that is added to the quality score to obtain the
+        offset : int or FastqFile.Offset
+            This value is added to the quality score to obtain the
             ASCII code.
-            Can either be directly the value, or a string that indicates
+            Can be provided directly as integer, as a member of
+            :class:`FastqFile.Offset`, or as a string that indicates
             the score format.
 
         Yields
@@ -362,7 +363,7 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
         `FastqFile.read(file, offset).items()`, but is slightly faster
         and much more memory efficient.
         """
-        offset = _convert_offset(offset)
+        offset = int(offset)
 
         identifier: str = "None"
         seq_str_list: list[str] = []
@@ -422,8 +423,7 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
     def write_iter(
         file: PathLike[str] | str | IO[str],
         items: Iterable[tuple[str, tuple[str, np.ndarray]]],
-        offset: int
-        | Literal["Sanger", "Solexa", "Illumina-1.3", "Illumina-1.5", "Illumina-1.8"],
+        offset: int | FastqFile.Offset,
         chars_per_line: int | None = None,
     ) -> None:
         """
@@ -446,10 +446,11 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
             The entries to be written into the file.
             Each entry consists of an identifier string and a tuple
             containing a sequence (as string) and a score array.
-        offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}
+        offset : int or FastqFile.Offset
             This value is added to the quality score to obtain the
             ASCII code.
-            Can either be directly the value, or a string that indicates
+            Can be provided directly as integer, as a member of
+            :class:`FastqFile.Offset`, or as a string that indicates
             the score format.
         chars_per_line : int, optional
             The number characters in a line containing sequence data
@@ -463,7 +464,7 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
         This method does not test, whether the given identifiers are
         unambiguous.
         """
-        offset = _convert_offset(offset)
+        offset = int(offset)
 
         def line_generator() -> Iterator[str]:
             for item in items:
@@ -515,19 +516,3 @@ def _scores_to_score_str(scores: NDArray1[K, np.integer], offset: int) -> str:
     """
     scores = np.asarray(scores) + offset
     return scores.astype(np.int8, copy=False).tobytes().decode("ascii")
-
-
-def _convert_offset(offset_val_or_string: int | str) -> int:
-    """
-    If the given offset is a string return the corresponding numerical
-    value.
-    """
-    if isinstance(offset_val_or_string, (int, Integral)):
-        return int(offset_val_or_string)
-    elif isinstance(offset_val_or_string, str):
-        return _OFFSETS[offset_val_or_string]
-    else:
-        raise TypeError(
-            f"The offset must be either an integer or a string "
-            f"indicating the format, not {type(offset_val_or_string).__name__}"
-        )
