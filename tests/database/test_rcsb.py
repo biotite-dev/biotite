@@ -33,9 +33,8 @@ TC5B_TERM = "Miniprotein Construct TC5b"
         pytest.param("cif", True, True),
         pytest.param("bcif", False, False),
         pytest.param("bcif", False, True),
-        # https://models.rcsb.org/ does not support extended PDB IDs yet
-        pytest.param("bcif", True, False, marks=pytest.mark.xfail),
-        pytest.param("bcif", True, True, marks=pytest.mark.xfail),
+        pytest.param("bcif", True, False),
+        pytest.param("bcif", True, True),
         pytest.param("fasta", False, False),
     ],
 )
