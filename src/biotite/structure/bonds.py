@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -13,7 +15,7 @@ from enum import IntEnum
 from biotite.rust.structure import BondList, bond_type_members
 
 
-def _without_aromaticity(self: "BondType") -> "BondType":
+def _without_aromaticity(self: BondType) -> BondType:
     """
     Get the non-aromatic counterpart of this bond type.
 

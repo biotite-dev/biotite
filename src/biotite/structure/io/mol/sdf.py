@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann, Benjamin Mayer"
 __all__ = ["SDFile", "SDRecord", "Metadata"]
@@ -207,11 +209,11 @@ class Metadata(MutableMapping):
 
     def __init__(
         self,
-        metadata: "Mapping[Metadata.Key | str, str] | None" = None,
+        metadata: Mapping[Metadata.Key | str, str] | None = None,
     ) -> None:
         if metadata is None:
             metadata = {}
-        self._metadata: dict["Metadata.Key", str] = {}
+        self._metadata: dict[Metadata.Key, str] = {}
         for key, value in metadata.items():
             self._metadata[_to_metadata_key(key)] = value
 
@@ -269,18 +271,18 @@ class Metadata(MutableMapping):
             text_blocks.append(value + "\n")
         return _join_with_terminal_newline(text_blocks)
 
-    def __getitem__(self, key: "Metadata.Key | str") -> str:
+    def __getitem__(self, key: Metadata.Key | str) -> str:
         return self._metadata[_to_metadata_key(key)]
 
-    def __setitem__(self, key: "Metadata.Key | str", value: str) -> None:
+    def __setitem__(self, key: Metadata.Key | str, value: str) -> None:
         if len(value) == 0:
             raise ValueError("Metadata value must not be empty")
         self._metadata[_to_metadata_key(key)] = value
 
-    def __delitem__(self, key: "Metadata.Key | str") -> None:
+    def __delitem__(self, key: Metadata.Key | str) -> None:
         del self._metadata[_to_metadata_key(key)]
 
-    def __iter__(self) -> "Iterator[Metadata.Key]":
+    def __iter__(self) -> Iterator[Metadata.Key]:
         return iter(self._metadata)
 
     def __len__(self) -> int:
@@ -388,14 +390,14 @@ class SDRecord:
         metadata: Metadata | Mapping[Metadata.Key | str, str] | str | None = None,
     ) -> None:
         if header is None:
-            self._header: "Header | str" = Header()
+            self._header: Header | str = Header()
         else:
             self._header = header
 
         self._ctab = ctab
 
         if metadata is None:
-            self._metadata: "Metadata | str" = Metadata()
+            self._metadata: Metadata | str = Metadata()
         elif isinstance(metadata, Metadata):
             self._metadata = metadata
         elif isinstance(metadata, Mapping):
@@ -439,7 +441,7 @@ class SDRecord:
         return self._metadata
 
     @metadata.setter
-    def metadata(self, metadata: "Metadata | Mapping[Metadata.Key | str, str]") -> None:
+    def metadata(self, metadata: Metadata | Mapping[Metadata.Key | str, str]) -> None:
         if isinstance(metadata, Metadata):
             self._metadata = metadata
         elif isinstance(metadata, Mapping):

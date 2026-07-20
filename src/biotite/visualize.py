@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
 __all__ = ["colors", "plot_scaled_text", "set_font_size_in_coord", "AdaptiveFancyArrow"]
@@ -148,7 +150,7 @@ def plot_scaled_text(
 
 
 def set_font_size_in_coord(
-    text: "Text",
+    text: Text,
     width: float | None = None,
     height: float | None = None,
     mode: Literal["proportional", "unlocked", "maximum", "minimum"] = "unlocked",
@@ -205,7 +207,6 @@ def set_font_size_in_coord(
     from matplotlib.backend_bases import GraphicsContextBase, RendererBase
     from matplotlib.path import Path
     from matplotlib.patheffects import AbstractPathEffect
-    from matplotlib.text import Text
     from matplotlib.transforms import Affine2D, Bbox, Transform
 
     class TextScaler(AbstractPathEffect):

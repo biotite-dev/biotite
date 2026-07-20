@@ -7,6 +7,8 @@ This module contains a convenience function for loading structures from
 general structure files.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.structure.io"
 __author__ = "Patrick Kunzmann"
 __all__ = ["load_structure", "save_structure"]
@@ -254,7 +256,7 @@ def _as_single_model_if_possible(
         return atoms
 
 
-def _mol_header() -> "Header":
+def _mol_header() -> Header:
     from biotite.structure.io.mol import Header
 
     return Header(

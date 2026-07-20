@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __author__ = "Patrick Kunzmann"
 __all__ = []
 
@@ -18,7 +20,7 @@ CCD_URL = "https://files.wwpdb.org/pub/pdb/data/monomers/components.cif.gz"
 
 def concatenate_ccd(
     categories: Iterable[str] | None = None,
-) -> "BinaryCIFFile":  # noqa: F405
+) -> BinaryCIFFile:  # noqa: F405
     """
     Create the CCD in BinaryCIF format with each category contains the
     data of all blocks.
@@ -55,9 +57,9 @@ def concatenate_ccd(
 
 
 def _concatenate_blocks_into_category(
-    pdbx_file: "CIFFile",  # noqa: F405
+    pdbx_file: CIFFile,  # noqa: F405
     category_name: str,
-) -> "BinaryCIFCategory":  # noqa: F405
+) -> BinaryCIFCategory:  # noqa: F405
     """
     Concatenate the given category from all blocks into a single
     category.
@@ -115,7 +117,7 @@ def _concatenate_blocks_into_category(
 
 
 def _list_all_column_names(
-    pdbx_file: "CIFFile",  # noqa: F405
+    pdbx_file: CIFFile,  # noqa: F405
     category_name: str,
 ) -> list[str]:
     """
@@ -140,7 +142,7 @@ def _list_all_column_names(
     return sorted(columns_names)
 
 
-def _list_all_category_names(pdbx_file: "CIFFile") -> list[str]:  # noqa: F405
+def _list_all_category_names(pdbx_file: CIFFile) -> list[str]:  # noqa: F405
     """
     Get all categories that exist in any block.
 

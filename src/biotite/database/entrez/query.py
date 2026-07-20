@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.database.entrez"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Query", "SimpleQuery", "CompositeQuery", "search"]
@@ -31,17 +33,17 @@ class Query(metaclass=abc.ABCMeta):
     def __str__(self) -> str:
         pass
 
-    def __or__(self, operand: "Query | str") -> "CompositeQuery":
+    def __or__(self, operand: Query | str) -> CompositeQuery:
         if not isinstance(operand, Query):
             operand = SimpleQuery(operand)
         return CompositeQuery("OR", self, operand)
 
-    def __and__(self, operand: "Query | str") -> "CompositeQuery":
+    def __and__(self, operand: Query | str) -> CompositeQuery:
         if not isinstance(operand, Query):
             operand = SimpleQuery(operand)
         return CompositeQuery("AND", self, operand)
 
-    def __xor__(self, operand: "Query | str") -> "CompositeQuery":
+    def __xor__(self, operand: Query | str) -> CompositeQuery:
         if not isinstance(operand, Query):
             operand = SimpleQuery(operand)
         return CompositeQuery("NOT", self, operand)

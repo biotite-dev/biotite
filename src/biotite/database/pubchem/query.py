@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.database.pubchem"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -236,7 +238,7 @@ class FormulaQuery(Query):
         atoms: AtomArray[N],
         allow_other_elements: bool = False,
         number: int | None = None,
-    ) -> "FormulaQuery":
+    ) -> FormulaQuery:
         """
         Create the query from an the given structure by using its
         molecular formula.
@@ -385,7 +387,7 @@ class StructureQuery(Query, metaclass=abc.ABCMeta):
         atoms: AtomArray[N],
         *args: Any,
         **kwargs: Any,
-    ) -> "StructureQuery":
+    ) -> StructureQuery:
         """
         Create a query using the given query structure.
 
