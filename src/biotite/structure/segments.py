@@ -242,21 +242,12 @@ def get_segment_starts_for(
         The indices that point to the segment starts for the input
         `indices`.
     """
-    indices = np.asarray(indices)
-    length = starts[-1]
-    # Remove exclusive stop
-    starts = starts[:-1]
-
-    if (indices < 0).any():
-        raise ValueError("This function does not support negative indices")
-    if (indices >= length).any():
-        index = np.min(np.where(indices >= length)[0])
-        raise ValueError(
-            f"Index {index} is out of range for an atom array with length {length}"
-        )
-
-    insertion_points = np.searchsorted(starts, indices, side="right") - 1
-    return starts[insertion_points]
+    # The segment positions are the indices of the corresponding segment starts
+    # `indices` is validated in `get_segment_positions()`
+    positions = get_segment_positions(starts, indices)
+    # The positions never point to the exclusive stop,
+    # hence it does not need to be removed from `starts`
+    return starts[positions]
 
 
 def get_segment_positions(
@@ -290,8 +281,6 @@ def get_segment_positions(
     """
     indices = np.asarray(indices)
     length = starts[-1]
-    # Remove exclusive stop
-    starts = starts[:-1]
 
     if (indices < 0).any():
         raise ValueError("This function does not support negative indices")
@@ -301,7 +290,14 @@ def get_segment_positions(
             f"Index {index} is out of range for an atom array with length {length}"
         )
 
-    return np.searchsorted(starts, indices, side="right") - 1
+    if indices.size >= length:
+        # If there are many indices, creating a lookup table for all atoms amortizes:
+        # It is built in linear time and the subsequent lookup is a cache-friendly
+        # gather, in contrast to a binary search for each index
+        return get_all_segment_positions(starts, length)[indices]
+    else:
+        # Remove exclusive stop
+        return np.searchsorted(starts[:-1], indices, side="right") - 1
 
 
 def get_all_segment_positions(
