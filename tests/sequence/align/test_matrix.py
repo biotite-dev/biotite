@@ -14,7 +14,7 @@ import biotite.structure.alphabet as strucalph
     [
         entry
         for entry in align.SubstitutionMatrix.list_db()
-        if entry not in ["NUC", "GONNET", "3Di", "PB"]
+        if entry not in ["NUC", "GONNET", "3Di", "PB", "CLESUM"]
     ],
 )
 def test_matrices(db_entry):
@@ -46,6 +46,7 @@ def test_structural_alphabet_matrices(matrix_name, alphabet):
         "std_nucleotide_matrix",
         "std_3di_matrix",
         "std_protein_blocks_matrix",
+        "std_clepaps_matrix",
     ],
 )
 def test_default_matrices(method_name):
