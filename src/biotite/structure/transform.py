@@ -543,7 +543,7 @@ def rotate_about_axis(
 def orient_principal_components(
     atoms: _AtomsLikeT,
     order: Any = None,
-) -> _AtomsLikeT:
+) -> tuple[_AtomsLikeT, AffineTransformation[int]]:
     """
     Translate and rotate the atoms to be centered at the origin with
     the principal axes aligned to the Cartesian axes, as specified by
@@ -570,6 +570,9 @@ def orient_principal_components(
     AtomArray or ndarray, shape=(n,3)
         The atoms with coordinates centered at the orgin and aligned with
         xyz axes.
+    transform : AffineTransformation
+        The affine transformation that maps the original coordinates onto
+        the aligned principal-component coordinates.
 
     Examples
     --------
@@ -578,12 +581,12 @@ def orient_principal_components(
 
     >>> print("original variance =", atom_array.coord.var(axis=0))
     original variance = [26.517 20.009  9.325]
-    >>> moved = orient_principal_components(atom_array)
+    >>> moved, _ = orient_principal_components(atom_array)
     >>> print("moved variance =", moved.coord.var(axis=0))
     moved variance = [28.906 18.495  8.450]
     >>> # Note the increase in variance along the x-axis
     >>> # Specifying the order keyword changes the orientation
-    >>> moved_z = orient_principal_components(atom_array, order=(2, 1, 0))
+    >>> moved_z, _ = orient_principal_components(atom_array, order=(2, 1, 0))
     >>> print("moved (zyx) variance =", moved_z.coord.var(axis=0))
     moved (zyx) variance = [ 8.450 18.495 28.906]
     """
@@ -607,10 +610,12 @@ def orient_principal_components(
             raise ValueError("Expected order to contain [0, 1, 2].")
 
     # place centroid of the atoms at the origin
-    centered = coords - coords.mean(axis=0)
+    centroid = coords.mean(axis=0)
+    centered = coords - centroid
 
     # iterate a few times to ensure the ideal rotation has been applied
     identity = np.eye(3)
+    cumulative_rotation = identity.copy()
     MAX_ITER = 50
     for _ in range(MAX_ITER):
         # PCA, W is the component matrix, s ~ explained variance
@@ -630,9 +635,16 @@ def orient_principal_components(
         rotation = v @ wt
         if np.isclose(rotation, identity, atol=1e-5).all():
             break
+        cumulative_rotation = cumulative_rotation @ rotation
         # Apply rotation, keep molecule centered on the origin
         centered = centered @ rotation
-    return _put_back(atoms, centered)
+
+    transform = AffineTransformation(
+        -centroid,
+        cumulative_rotation.T,
+        np.zeros(3),
+    )
+    return _put_back(atoms, centered), transform
 
 
 def align_vectors(

@@ -290,9 +290,15 @@ def test_orient_principal_components(input_atoms, as_list, order):
     if as_list:
         order = order.tolist()
 
-    result = struc.orient_principal_components(input_atoms, order=order)
+    result, transform = struc.orient_principal_components(input_atoms, order=order)
     neg_variance = -struc.coord(result).var(axis=0)
     assert isinstance(result, type(input_atoms))
+    assert isinstance(transform, struc.AffineTransformation)
+    assert np.allclose(
+        struc.coord(transform.apply(input_atoms)),
+        struc.coord(result),
+        atol=1e-5,
+    )
     assert (neg_variance.argsort() == np.argsort(order)).all()
 
 
