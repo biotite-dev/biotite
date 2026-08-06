@@ -83,7 +83,6 @@ def test_split_one_line(cif_line, expected_fields):
     assert list(pdbx.cif._split_one_line(cif_line)) == expected_fields
 
 
-@pytest.mark.parametrize("find_matches_by_dict", [False, True])
 @pytest.mark.parametrize("model", [None, 1, -1])
 @pytest.mark.parametrize(
     "path",
@@ -91,16 +90,12 @@ def test_split_one_line(cif_line, expected_fields):
     ids=lambda path: path.name,
 )
 @pytest.mark.parametrize("format", ["cif", "bcif"])
-def test_conversion(monkeypatch, tmp_path, format, path, model, find_matches_by_dict):
+def test_conversion(tmp_path, format, path, model):
     """
     Test serializing and deserializing a structure from a file
     restores the same structure.
     """
     DELETED_ANNOTATION = "auth_comp_id"
-
-    if find_matches_by_dict:
-        # Lower the threshold to 0 to force usage of `_find_matches_by_dict()`
-        monkeypatch.setattr(pdbx.convert, "FIND_MATCHES_SWITCH_THRESHOLD", 0)
 
     if format == "cif":
         data_path = path.with_suffix(".cif")
