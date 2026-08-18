@@ -5,6 +5,7 @@
 import io
 import numpy as np
 import pytest
+import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.fasta as fasta
 from tests.util import data_dir
@@ -205,3 +206,35 @@ def test_write_iter(chars_per_line, n_sequences):
     )
 
     assert test_file.getvalue() == ref_file.getvalue()
+
+
+@pytest.mark.parametrize(
+    ["original_headers", "deduplicated_headers", "has_duplicates"],
+    [
+        (["A", "B", "C"], ["A", "B", "C"], False),
+        (["A", "A", "A"], ["A", "A_1", "A_2"], True),
+        (["A", "B", "A"], ["A", "B", "A_1"], True),
+        (["A", "A", "A_1"], ["A", "A_1", "A_1_1"], True),
+        (["A", "A_1", "A"], ["A", "A_1", "A_2"], True),
+    ],
+)
+@pytest.mark.parametrize("allow_duplicates", [False, True])
+def test_duplicate_headers(
+    allow_duplicates, original_headers, deduplicated_headers, has_duplicates
+):
+    """
+    Check that reading a file with duplicate headers either raises an
+    exception or appends ``_<number>`` suffixes to the duplicates,
+    depending on `allow_duplicates`.
+    """
+    file = io.StringIO("".join(f">{header}\nSEQ\n" for header in original_headers))
+
+    if allow_duplicates:
+        fasta_file = fasta.FastaFile.read(file, allow_duplicates=True)
+        assert list(fasta_file.keys()) == deduplicated_headers
+    elif has_duplicates:
+        with pytest.raises(biotite.InvalidFileError, match="Duplicate header"):
+            fasta.FastaFile.read(file)
+    else:
+        fasta_file = fasta.FastaFile.read(file)
+        assert list(fasta_file.keys()) == deduplicated_headers
