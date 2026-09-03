@@ -39,6 +39,30 @@ def test_table_load(table_id):
     seq.CodonTable.load(table_id)
 
 
+@pytest.mark.parametrize(
+    "table_id, expected_amino_acid",
+    [
+        # The ciliate/oligohymenophorean nuclear codes reassign stop codons,
+        # not the leucine box (NCBI gc.prt >= 4.3)
+        (27, "L"),  # Karyorelict Nuclear
+        (28, "L"),  # Condylostoma Nuclear
+        (29, "L"),  # Mesodinium Nuclear
+        (30, "L"),  # Peritrich Nuclear
+        # Controls: tables that genuinely reassign 'CTG'
+        (1, "L"),  # Standard
+        (3, "T"),  # Yeast Mitochondrial
+        (12, "S"),  # Alternative Yeast Nuclear
+        (26, "A"),  # Pachysolen tannophilus Nuclear
+        (31, "L"),  # Blastocrithidia Nuclear
+    ],
+)
+def test_ctg_assignment(table_id, expected_amino_acid):
+    """
+    Check the 'CTG' assignment against the NCBI genetic code tables.
+    """
+    assert seq.CodonTable.load(table_id)["CTG"] == expected_amino_acid
+
+
 def test_table_indexing():
     table = seq.CodonTable.load("Standard")
     assert table["ATG"] == "M"
