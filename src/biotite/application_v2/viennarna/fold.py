@@ -118,7 +118,6 @@ class FoldApp(LocalApp):
         downstream: Any = None,
         upstream: Any = None,
         enforce: bool = False,
-        **kwargs: Any,
     ) -> CommandSetup[FoldedRNA]:
         """
         Compute the minimum free energy secondary structure.
@@ -148,8 +147,6 @@ class FoldApp(LocalApp):
             pairs must form.
             By default, a constraint only forbids the formation of a base pair that
             would conflict with this constraint.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -223,7 +220,6 @@ class SuboptApp(LocalApp):
         downstream: Any = None,
         upstream: Any = None,
         enforce: bool = False,
-        **kwargs: Any,
     ) -> CommandSetup[list[FoldedRNA]]:
         """
         Compute suboptimal secondary structures.
@@ -256,8 +252,6 @@ class SuboptApp(LocalApp):
             pairs must form.
             By default, a constraint only forbids the formation of a base pair that
             would conflict with this constraint.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -336,7 +330,6 @@ class PKplexApp(LocalApp):
         self,
         sequence: NucleotideSequence,
         temperature: float = 37,
-        **kwargs: Any,
     ) -> CommandSetup[FoldedRNA]:
         """
         Predict a secondary structure including pseudoknots.
@@ -347,8 +340,6 @@ class PKplexApp(LocalApp):
             The RNA sequence.
         temperature : float, optional
             The temperature (°C) to be assumed for the energy parameters.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -408,7 +399,6 @@ class LfoldApp(LocalApp):
         sequence: NucleotideSequence,
         max_span: int = 150,
         temperature: float = 37,
-        **kwargs: Any,
     ) -> CommandSetup[list[FoldedRNA]]:
         """
         Compute locally stable secondary structures.
@@ -421,8 +411,6 @@ class LfoldApp(LocalApp):
             The maximum allowed span (number of bases) of a base pair.
         temperature : float, optional
             The temperature (°C) to be assumed for the energy parameters.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -496,7 +484,6 @@ class CofoldApp(LocalApp):
         sequence1: NucleotideSequence,
         sequence2: NucleotideSequence,
         temperature: float = 37,
-        **kwargs: Any,
     ) -> CommandSetup[CofoldedRNA]:
         """
         Compute the minimum free energy structure of a dimer.
@@ -507,8 +494,6 @@ class CofoldApp(LocalApp):
             The two RNA strands.
         temperature : float, optional
             The temperature (°C) to be assumed for the energy parameters.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -574,7 +559,6 @@ class MultifoldApp(LocalApp):
         self,
         sequences: Sequence[NucleotideSequence],
         temperature: float = 37,
-        **kwargs: Any,
     ) -> CommandSetup[CofoldedRNA]:
         """
         Compute the minimum free energy structure of a complex.
@@ -585,8 +569,6 @@ class MultifoldApp(LocalApp):
             The RNA strands forming the complex.
         temperature : float, optional
             The temperature (°C) to be assumed for the energy parameters.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -649,7 +631,6 @@ class DuplexApp(LocalApp):
         sequence1: NucleotideSequence,
         sequence2: NucleotideSequence,
         temperature: float = 37,
-        **kwargs: Any,
     ) -> CommandSetup[CofoldedRNA]:
         """
         Predict the hybridization structure of two strands.
@@ -660,8 +641,6 @@ class DuplexApp(LocalApp):
             The two RNA strands.
         temperature : float, optional
             The temperature (°C) to be assumed for the energy parameters.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -736,7 +715,6 @@ class PlexApp(LocalApp):
         target: NucleotideSequence,
         query: NucleotideSequence,
         temperature: float = 37,
-        **kwargs: Any,
     ) -> CommandSetup[list[CofoldedRNA]]:
         """
         Find hybridization sites of a query in a target.
@@ -749,8 +727,6 @@ class PlexApp(LocalApp):
             The (usually short) query RNA strand.
         temperature : float, optional
             The temperature (°C) to be assumed for the energy parameters.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -846,7 +822,6 @@ class AlifoldApp(LocalApp):
         downstream: Any = None,
         upstream: Any = None,
         enforce: bool = False,
-        **kwargs: Any,
     ) -> CommandSetup[FoldedAlignment]:
         """
         Predict the consensus secondary structure of an alignment.
@@ -876,8 +851,6 @@ class AlifoldApp(LocalApp):
             pairs must form.
             By default, a constraint only forbids the formation of a base pair that
             would conflict with this constraint.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -970,7 +943,6 @@ class LalifoldApp(LocalApp):
         alignment: Alignment,
         max_span: int = 70,
         temperature: float = 37,
-        **kwargs: Any,
     ) -> CommandSetup[list[FoldedAlignment]]:
         """
         Compute locally stable consensus secondary structures.
@@ -983,8 +955,6 @@ class LalifoldApp(LocalApp):
             The maximum allowed span (number of columns) of a base pair.
         temperature : float, optional
             The temperature (°C) to be assumed for the energy parameters.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1102,7 +1072,6 @@ class AliduplexApp(LocalApp):
         alignment1: Alignment,
         alignment2: Alignment,
         temperature: float = 37,
-        **kwargs: Any,
     ) -> CommandSetup[CofoldedAlignment]:
         """
         Predict the hybridization structure of two alignments.
@@ -1113,8 +1082,6 @@ class AliduplexApp(LocalApp):
             The two RNA alignments.
         temperature : float, optional
             The temperature (°C) to be assumed for the energy parameters.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1190,7 +1157,6 @@ class EvalApp(LocalApp):
         self,
         folded: FoldedRNA | CofoldedRNA,
         temperature: float = 37,
-        **kwargs: Any,
     ) -> CommandSetup[FoldedRNA | CofoldedRNA]:
         """
         Evaluate the free energy of a secondary structure.
@@ -1205,8 +1171,6 @@ class EvalApp(LocalApp):
             Its ``free_energy`` is ignored and may be ``None``.
         temperature : float, optional
             The temperature (°C) to be assumed for the energy parameters.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------

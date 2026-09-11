@@ -11,7 +11,6 @@ __all__ = ["VinaApp", "VinaResult"]
 from dataclasses import dataclass
 from os import PathLike
 from tempfile import NamedTemporaryFile
-from typing import Any
 import numpy as np
 from biotite.application_v2.localapp import (
     CLIOption,
@@ -138,7 +137,6 @@ class VinaApp(LocalApp):
         size: np.ndarray,
         flexible: np.ndarray | None = None,
         seed: int | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[VinaResult]:
         """
         Dock a ligand to a receptor molecule.
@@ -170,8 +168,6 @@ class VinaApp(LocalApp):
             docking run reproducible.
             Must not be ``0``, as *AutoDock Vina* interprets ``0`` as no seed set.
             By default, *Vina* chooses a random seed.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------

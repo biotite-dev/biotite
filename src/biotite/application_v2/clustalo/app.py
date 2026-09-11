@@ -12,7 +12,6 @@ from collections.abc import Sequence as SequenceABC
 from dataclasses import dataclass
 from os import PathLike
 from tempfile import NamedTemporaryFile
-from typing import Any
 import numpy as np
 from biotite.application_v2.localapp import (
     CLIFlag,
@@ -93,7 +92,6 @@ class ClustalOmegaApp(LocalApp):
         distance_matrix: np.ndarray | None = None,
         guide_tree: Tree | None = None,
         use_full_matrix: bool = False,
-        **kwargs: Any,
     ) -> CommandSetup[ClustalOmegaResult]:
         """
         Perform a multiple sequence alignment.
@@ -111,8 +109,6 @@ class ClustalOmegaApp(LocalApp):
             calculation, equivalent to the ``--full`` option, instead of
             the default *mBed* heuristic.
             This is required to obtain the distance matrix in the result.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------

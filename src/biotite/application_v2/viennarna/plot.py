@@ -13,7 +13,6 @@ import tempfile
 from enum import IntEnum
 from os import PathLike
 from tempfile import NamedTemporaryFile
-from typing import Any
 import numpy as np
 from biotite.application_v2.localapp import (
     CLIOption,
@@ -74,7 +73,6 @@ class PlotApp(LocalApp):
         base_pairs: NDArray2[N, C2, np.integer] | None = None,
         length: int | None = None,
         layout_type: Layout = Layout.NAVIEW,
-        **kwargs: Any,
     ) -> CommandSetup[NDArray2[N, C2, np.floating]]:
         """
         Get coordinates for a 2D representation of an RNA structure.
@@ -92,8 +90,6 @@ class PlotApp(LocalApp):
             This parameter is required if `base_pairs` is given.
         layout_type : PlotApp.Layout, optional
             The layout type according to the ``RNAplot`` documentation.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------

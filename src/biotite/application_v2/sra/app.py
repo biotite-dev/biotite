@@ -20,7 +20,7 @@ from os import PathLike
 from os.path import join
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Literal, TypeAlias
+from typing import Literal, TypeAlias
 import numpy as np
 from biotite.application_v2.localapp import (
     CLIArgument,
@@ -231,7 +231,6 @@ class PrefetchApp(LocalApp):
         self,
         accession: str,
         output_directory: PathLike[str] | str | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[PrefetchDirectory]:
         """
         Download the run with the given accession.
@@ -244,8 +243,6 @@ class PrefetchApp(LocalApp):
             The directory the run is downloaded into.
             By default, a temporary directory is used, that is deleted
             once the returned :class:`PrefetchDirectory` is discarded.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -320,7 +317,6 @@ class FastqDumpApp(LocalApp):
         accession: str,
         prefetch: PrefetchDirectory | None = None,
         output_path_prefix: PathLike[str] | str | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[FastqResult]:
         """
         Extract the run with the given accession as FASTQ.
@@ -338,8 +334,6 @@ class FastqDumpApp(LocalApp):
             ``.fastq`` is appended for a single read per spot, ``_1.fastq``,
             ``_2.fastq``, etc. for multiple reads per spot.
             By default, a temporary directory is used.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -377,7 +371,6 @@ class FastqDumpApp(LocalApp):
         accession: str,
         prefetch: PrefetchDirectory | None = None,
         output_path_prefix: PathLike[str] | str | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[FastaResult]:
         """
         Extract the run with the given accession as FASTA.
@@ -393,8 +386,6 @@ class FastqDumpApp(LocalApp):
         output_path_prefix : str or Path, optional
             The prefix of the path to store the extracted FASTA file(s).
             By default, a temporary directory is used.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------

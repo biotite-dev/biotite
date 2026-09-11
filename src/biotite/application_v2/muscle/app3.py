@@ -107,7 +107,6 @@ class Muscle3App(LocalApp):
         sequences: SequenceABC[Sequence],
         matrix: SubstitutionMatrix | None = None,
         gap_penalty: float | tuple[float, float] | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[Muscle3Result]:
         """
         Perform a multiple sequence alignment.
@@ -125,8 +124,6 @@ class Muscle3App(LocalApp):
             The first value in the tuple is the gap opening penalty,
             the second value is the gap extension penalty.
             The values need to be negative.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------

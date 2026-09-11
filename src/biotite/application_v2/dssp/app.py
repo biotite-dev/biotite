@@ -11,7 +11,6 @@ __all__ = ["DsspApp"]
 import subprocess
 from os import PathLike
 from tempfile import NamedTemporaryFile
-from typing import Any
 import numpy as np
 from biotite.application_v2.localapp import (
     CLIArgument,
@@ -67,9 +66,7 @@ class DsspApp(LocalApp):
         super().__init__(path)
 
     @command
-    def run(
-        self, atom_array: AtomArray, **kwargs: Any
-    ) -> CommandSetup[NDArray1[K, np.str_]]:
+    def run(self, atom_array: AtomArray) -> CommandSetup[NDArray1[K, np.str_]]:
         """
         Assign the secondary structure of the given atom array.
 
@@ -77,8 +74,6 @@ class DsspApp(LocalApp):
         ----------
         atom_array : AtomArray
             The atom array to be annotated.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------

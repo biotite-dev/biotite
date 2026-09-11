@@ -98,7 +98,6 @@ class Muscle5App(LocalApp):
         self,
         sequences: SequenceABC[Sequence],
         super5: bool = False,
-        **kwargs: Any,
     ) -> CommandSetup[Muscle5Result]:
         """
         Perform a multiple sequence alignment.
@@ -110,8 +109,6 @@ class Muscle5App(LocalApp):
         super5 : bool, optional
             If set, the *Super5* algorithm is used for the alignment,
             which is faster for a large number of sequences.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------

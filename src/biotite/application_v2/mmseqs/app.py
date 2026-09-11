@@ -769,7 +769,6 @@ class MMseqsLikeApp(LocalApp):
     def databases(
         self,
         name: str,
-        **kwargs: Any,
     ) -> CommandSetup[SequenceDatabase[Any]]:
         """
         Download and prepare a named database using ``databases``.
@@ -778,8 +777,6 @@ class MMseqsLikeApp(LocalApp):
         ----------
         name : str
             The database name understood by the application.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -808,7 +805,6 @@ class MMseqsLikeApp(LocalApp):
             Iterable[PathLike[str] | str | IO[str]] | PathLike[str] | str | IO[str]
         ),
         db_type: DatabaseType | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[SequenceDatabase[Any]]:
         """
         Create a sequence or structure database using ``createdb``.
@@ -823,8 +819,6 @@ class MMseqsLikeApp(LocalApp):
         db_type : DatabaseType, optional
             The type of the input sequences. By default, *MMseqs2* detects the
             type automatically. This option is not supported by *Foldseek*.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -863,7 +857,6 @@ class MMseqsLikeApp(LocalApp):
         self,
         subset: Database[Any] | PathLike[str] | str,
         sequence_db: SequenceDatabase[Any],
-        **kwargs: Any,
     ) -> CommandSetup[SequenceDatabase[Any]]:
         """
         Create a sequence database containing a selected subset using
@@ -875,8 +868,6 @@ class MMseqsLikeApp(LocalApp):
             A database or file defining the retained database keys.
         sequence_db : SequenceDatabase
             The source sequence database.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -904,7 +895,6 @@ class MMseqsLikeApp(LocalApp):
     def create_index(
         self,
         sequence_db: SequenceDatabase[Any],
-        **kwargs: Any,
     ) -> CommandSetup[SequenceDatabase[Any]]:
         """
         Precompute the *k-mer* index of a sequence database using
@@ -915,8 +905,6 @@ class MMseqsLikeApp(LocalApp):
         sequence_db : SequenceDatabase
             The database to create the index for.
             The index is added in place to this database.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1087,7 +1075,6 @@ class MMseqsLikeApp(LocalApp):
         self,
         alignment_db: AlignmentDatabase[Any],
         msa_format_mode: MSAFormatMode | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[MSADatabase[Any]]:
         """
         Convert pairwise alignment results into multiple alignments using
@@ -1101,8 +1088,6 @@ class MMseqsLikeApp(LocalApp):
             The multiple alignment format.
             The flat-file :attr:`MSAFormatMode.STOCKHOLM` mode is not supported because
             this method returns an :class:`MSADatabase`.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1139,7 +1124,6 @@ class MMseqsLikeApp(LocalApp):
         self,
         source: PathLike[str] | str,
         destination: PathLike[str] | str,
-        **kwargs: Any,
     ) -> CommandSetup[Path]:
         """
         Create a symbolic database link using ``lndb``.
@@ -1154,8 +1138,6 @@ class MMseqsLikeApp(LocalApp):
             The source database prefix.
         destination : path-like
             The destination database prefix.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1187,7 +1169,6 @@ class MMseqsLikeApp(LocalApp):
         self,
         database: Database[Any],
         directory: PathLike[str] | str,
-        **kwargs: Any,
     ) -> CommandSetup[Path]:
         """
         Write each entry of a database into a separate file using ``unpackdb``.
@@ -1205,8 +1186,6 @@ class MMseqsLikeApp(LocalApp):
         directory : path-like
             The directory the files are written to.
             It is created, if it does not exist.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1384,7 +1363,6 @@ class MMseqsApp(MMseqsLikeApp):
         target_db: SequenceDatabase[Any],
         matrix: SubstitutionMatrix[Any, Any] | None = None,
         gap_penalty: int | tuple[int, int] | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[AlignmentDatabase[Any]]:
         """
         Search a target database for matches to every query using ``search``.
@@ -1404,8 +1382,6 @@ class MMseqsApp(MMseqsLikeApp):
             The negative gap penalty.
             A single value applies to both opening and extension.
             A tuple gives the respective affine penalties.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1441,7 +1417,6 @@ class MMseqsApp(MMseqsLikeApp):
     def convert_msa(
         self,
         msa_path: PathLike[str] | str | IO[str],
-        **kwargs: Any,
     ) -> CommandSetup[MSADatabase[Any]]:
         """
         Create an MSA database from a *Stockholm* file using ``convertmsa``.
@@ -1451,8 +1426,6 @@ class MMseqsApp(MMseqsLikeApp):
         msa_path : path-like or text file
             The MSA file to convert.
             Must be in *Stockholm* format, optionally gzip-compressed.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1490,7 +1463,6 @@ class MMseqsApp(MMseqsLikeApp):
         self,
         msa_db: MSADatabase[Any],
         match_mode: ProfileMatchMode | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[ProfileDatabase[Any]]:
         """
         Convert an MSA database into a profile database using ``msa2profile``.
@@ -1503,8 +1475,6 @@ class MMseqsApp(MMseqsLikeApp):
             Defines which MSA columns become profile columns.
             By default, the columns are defined by the first sequence of each
             MSA, i.e. the profile is kept in the coordinate frame of the query sequence.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1535,7 +1505,6 @@ class MMseqsApp(MMseqsLikeApp):
     def profile_to_sequences(
         self,
         profile_db: ProfileDatabase[Any],
-        **kwargs: Any,
     ) -> CommandSetup[SequenceDatabase[Any]]:
         """
         Extract the representative sequence of each profile using
@@ -1545,8 +1514,6 @@ class MMseqsApp(MMseqsLikeApp):
         ----------
         profile_db : ProfileDatabase
             The profile database to extract the sequences from.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1585,7 +1552,6 @@ class MMseqsApp(MMseqsLikeApp):
         alignment_db: AlignmentDatabase[Any],
         matrix: SubstitutionMatrix[Any, Any] | None = None,
         gap_penalty: int | tuple[int, int] | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[AlignmentDatabase[Any]]:
         """
         Recompute the gapped alignments of a result database using ``align``.
@@ -1604,8 +1570,6 @@ class MMseqsApp(MMseqsLikeApp):
             The negative gap penalty.
             A single value applies to both opening and extension.
             A tuple gives the respective affine penalties.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1641,7 +1605,6 @@ class MMseqsApp(MMseqsLikeApp):
         target_db: SequenceDatabase[Any],
         matrix: SubstitutionMatrix[Any, Any] | None = None,
         gap_penalty: int | tuple[int, int] | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[AlignmentDatabase[Any]]:
         """
         Find reciprocal best hits between two databases using ``rbh``.
@@ -1659,8 +1622,6 @@ class MMseqsApp(MMseqsLikeApp):
             The negative gap penalty.
             A single value applies to both opening and extension.
             A tuple gives the respective affine penalties.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1693,7 +1654,6 @@ class MMseqsApp(MMseqsLikeApp):
         sequence_db: SequenceDatabase[Any],
         matrix: SubstitutionMatrix[Any, Any] | None = None,
         gap_penalty: int | tuple[int, int] | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[ClusterDatabase[Any]]:
         """
         Cluster a sequence database using the cascaded ``cluster`` workflow.
@@ -1709,8 +1669,6 @@ class MMseqsApp(MMseqsLikeApp):
             The negative gap penalty.
             A single value applies to both opening and extension.
             A tuple gives the respective affine penalties.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1748,7 +1706,6 @@ class MMseqsApp(MMseqsLikeApp):
         sequence_db: SequenceDatabase[Any],
         matrix: SubstitutionMatrix[Any, Any] | None = None,
         gap_penalty: int | tuple[int, int] | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[ClusterDatabase[Any]]:
         """
         Cluster a sequence database using the ``linclust`` workflow.
@@ -1767,8 +1724,6 @@ class MMseqsApp(MMseqsLikeApp):
             The negative gap penalty.
             A single value applies to both opening and extension.
             A tuple gives the respective affine penalties.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1799,7 +1754,6 @@ class MMseqsApp(MMseqsLikeApp):
     def result_to_profile(
         self,
         alignment_db: AlignmentDatabase[Any],
-        **kwargs: Any,
     ) -> CommandSetup[ProfileDatabase[Any]]:
         """
         Compute a profile per query from search results using ``result2profile``.
@@ -1811,8 +1765,6 @@ class MMseqsApp(MMseqsLikeApp):
         ----------
         alignment_db : AlignmentDatabase
             The pairwise alignment results to summarize.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -1845,7 +1797,6 @@ class MMseqsApp(MMseqsLikeApp):
     def profile_to_consensus(
         self,
         profile_db: ProfileDatabase[Any],
-        **kwargs: Any,
     ) -> CommandSetup[SequenceDatabase[Any]]:
         """
         Extract the consensus sequence of each profile using
@@ -1855,8 +1806,6 @@ class MMseqsApp(MMseqsLikeApp):
         ----------
         profile_db : ProfileDatabase
             The profile database to extract the sequences from.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -2008,7 +1957,6 @@ class FoldseekApp(MMseqsLikeApp):
         self,
         query_db: SequenceDatabase[Any],
         target_db: SequenceDatabase[Any],
-        **kwargs: Any,
     ) -> CommandSetup[AlignmentDatabase[Any]]:
         """
         Search a target database for structural matches using ``search``.
@@ -2017,8 +1965,6 @@ class FoldseekApp(MMseqsLikeApp):
         ----------
         query_db, target_db : SequenceDatabase
             The query and target structure databases.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -2048,7 +1994,6 @@ class FoldseekApp(MMseqsLikeApp):
     def structure_align(
         self,
         alignment_db: AlignmentDatabase[Any],
-        **kwargs: Any,
     ) -> CommandSetup[AlignmentDatabase[Any]]:
         """
         Recompute structural alignments of a result database using
@@ -2061,8 +2006,6 @@ class FoldseekApp(MMseqsLikeApp):
         ----------
         alignment_db : AlignmentDatabase
             The result database whose hits are aligned.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -2097,7 +2040,6 @@ class FoldseekApp(MMseqsLikeApp):
         self,
         query_db: SequenceDatabase[Any],
         target_db: SequenceDatabase[Any],
-        **kwargs: Any,
     ) -> CommandSetup[AlignmentDatabase[Any]]:
         """
         Find reciprocal best hits between two databases using ``rbh``.
@@ -2108,8 +2050,6 @@ class FoldseekApp(MMseqsLikeApp):
         ----------
         query_db, target_db : SequenceDatabase
             The query and target structure databases.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -2141,7 +2081,6 @@ class FoldseekApp(MMseqsLikeApp):
     def cluster(
         self,
         sequence_db: SequenceDatabase[Any],
-        **kwargs: Any,
     ) -> CommandSetup[ClusterDatabase[Any]]:
         """
         Cluster a structure database using the cascaded ``cluster`` workflow.
@@ -2150,8 +2089,6 @@ class FoldseekApp(MMseqsLikeApp):
         ----------
         sequence_db : SequenceDatabase
             The structure database to cluster.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------
@@ -2182,7 +2119,6 @@ class FoldseekApp(MMseqsLikeApp):
         self,
         query_db: SequenceDatabase[Any],
         target_db: SequenceDatabase[Any],
-        **kwargs: Any,
     ) -> CommandSetup[AlignmentDatabase[Any]]:
         """
         Search multi-chain structures against each other using
@@ -2197,8 +2133,6 @@ class FoldseekApp(MMseqsLikeApp):
             The query and target structure databases.
             Chains of the same structure must share their structure identifier,
             which is the case for databases created from multi-chain files.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------

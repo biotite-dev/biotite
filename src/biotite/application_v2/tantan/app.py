@@ -12,7 +12,6 @@ import io
 from collections.abc import Iterable
 from os import PathLike
 from tempfile import NamedTemporaryFile
-from typing import Any
 import numpy as np
 from biotite.application_v2.localapp import (
     CLIArgument,
@@ -70,7 +69,6 @@ class TantanApp(LocalApp):
         self,
         sequences: Iterable[NucleotideSequence | ProteinSequence],
         matrix: SubstitutionMatrix | None = None,
-        **kwargs: Any,
     ) -> CommandSetup[list[NDArray1[K, np.bool_]]]:
         r"""
         Mask sequence repeat regions.
@@ -87,8 +85,6 @@ class TantanApp(LocalApp):
             A sequence segment is considered to be a repeat of another
             segment, if the substitution score between these segments is
             greater than a threshold value.
-        **kwargs
-            Additional command line options.
 
         Returns
         -------

@@ -3,6 +3,7 @@
 # information.
 
 import gc
+import inspect
 import subprocess
 import weakref
 from pathlib import Path
@@ -60,6 +61,54 @@ class _PresetApp(LocalApp):
             parameters=[CLIOption("preset_option", 1), CLIFlag("preset_flag")],
             evaluate=lambda stdout, stderr: None,
         )
+
+
+class _DocumentedApp(LocalApp):
+    """
+    A :class:`LocalApp` with documented commands, used to test that the
+    decorator exposes the extra keyword arguments.
+    """
+
+    @command(allowed_options=["some_option"])
+    def with_options(self, value: int):
+        """
+        Run with a documented parameter.
+
+        Parameters
+        ----------
+        value : int
+            Some value.
+
+        Returns
+        -------
+        result : None
+            Nothing.
+        """
+        return CommandSetup(evaluate=lambda stdout, stderr: None)
+
+    @command(allowed_options=["some_option"])
+    def without_parameters(self):
+        """
+        Run without own parameters.
+
+        Returns
+        -------
+        result : None
+            Nothing.
+        """
+        return CommandSetup(evaluate=lambda stdout, stderr: None)
+
+    @command
+    def without_options(self, value: int):
+        """
+        Run without allowed options.
+
+        Parameters
+        ----------
+        value : int
+            Some value.
+        """
+        return CommandSetup(evaluate=lambda stdout, stderr: None)
 
 
 class _Resource:
@@ -240,6 +289,35 @@ def test_extra_option_collision(key):
 
     with pytest.raises(ValueError, match="already set"):
         app.run(**{key: 42})
+
+
+@pytest.mark.parametrize(
+    ["method_name", "expect_kwargs"],
+    [
+        ("with_options", True),
+        ("without_parameters", True),
+        ("without_options", False),
+    ],
+)
+def test_kwargs_exposure(method_name, expect_kwargs):
+    """
+    A command that allows options exposes ``**kwargs`` in its signature and as
+    last entry of the *Parameters* section, a command without options does not.
+    """
+    method = getattr(_DocumentedApp, method_name)
+    parameters = inspect.signature(method).parameters
+    docstring = inspect.getdoc(method)
+
+    assert ("kwargs" in parameters) == expect_kwargs
+    assert ("**kwargs" in docstring) == expect_kwargs
+    if expect_kwargs:
+        assert parameters["kwargs"].kind == inspect.Parameter.VAR_KEYWORD
+        assert list(parameters)[-1] == "kwargs"
+        parameter_section = docstring.split("Parameters\n----------\n")[1]
+        parameter_section = parameter_section.split("\n\n")[0]
+        assert parameter_section.splitlines()[-2] == "**kwargs"
+        # The other sections are left intact
+        assert "Returns\n-------" in docstring
 
 
 def test_parameters_are_retained_for_future_lifetime():

@@ -565,6 +565,11 @@ def command(
     Only keyword arguments whose key is listed in `allowed_options` are
     accepted.
 
+    If options are allowed, the decorated method does not need to declare
+    ``**kwargs`` itself:
+    The decorator adds them to the signature and to the *Parameters* section
+    of the docstring, so that they appear in the documentation.
+
     Parameters
     ----------
     method : callable, optional
@@ -605,7 +610,8 @@ def command(
     def decorator(
         method: Callable[..., CommandSetup[T]],
     ) -> Callable[..., LocalProcessFuture[T]]:
-        parameter_names = set(inspect.signature(method).parameters)
+        signature = inspect.signature(method)
+        parameter_names = set(signature.parameters)
 
         @functools.wraps(method)
         def wrapper(self: LocalApp, *args: Any, **kwargs: Any) -> LocalProcessFuture[T]:
@@ -650,11 +656,96 @@ def command(
                 subcommand=subcommand,
             )
 
+        declares_kwargs = any(
+            parameter.kind == inspect.Parameter.VAR_KEYWORD
+            for parameter in signature.parameters.values()
+        )
+        if allowed and not declares_kwargs:
+            # Expose the extra keyword arguments to introspection,
+            # so that they appear in the documentation
+            kwargs_parameter = inspect.Parameter(
+                "kwargs", inspect.Parameter.VAR_KEYWORD, annotation=Any
+            )
+            wrapper.__signature__ = signature.replace(  # type: ignore[attr-defined]
+                parameters=[*signature.parameters.values(), kwargs_parameter]
+            )
+            wrapper.__doc__ = _document_kwargs(wrapper.__doc__)
+
         return wrapper
 
     if method is None:
         return decorator
     return decorator(method)
+
+
+def _document_kwargs(docstring: str | None) -> str | None:
+    """
+    Add ``**kwargs`` to the *Parameters* section of a Numpydoc docstring.
+
+    Parameters
+    ----------
+    docstring : str or None
+        The docstring to extend.
+
+    Returns
+    -------
+    docstring : str or None
+        The docstring with ``**kwargs`` documented as last parameter.
+        If the section does not exist yet, it is created in front of the first
+        other section.
+        The docstring is returned unchanged, if it already documents
+        ``**kwargs``.
+    """
+    if docstring is None:
+        return None
+    lines = docstring.splitlines()
+    # A section header is a line followed by a line of dashes
+    headers = [
+        i
+        for i in range(len(lines) - 1)
+        if lines[i].strip() and re.fullmatch(r"-+", lines[i + 1].strip())
+    ]
+    if any(line.strip().startswith("**kwargs") for line in lines):
+        return docstring
+
+    parameter_headers = [i for i in headers if lines[i].strip() == "Parameters"]
+    if parameter_headers:
+        start = parameter_headers[0]
+        indent = lines[start][: len(lines[start]) - len(lines[start].lstrip())]
+        following = [i for i in headers if i > start]
+        end = following[0] if following else len(lines)
+        # Insert after the last entry, in front of the blank lines that
+        # separate the section from the next one
+        insert_at = end
+        while insert_at > start + 2 and not lines[insert_at - 1].strip():
+            insert_at -= 1
+        entry = [f"{indent}**kwargs", f"{indent}    Additional command line options."]
+        lines[insert_at:insert_at] = entry
+    else:
+        if headers:
+            insert_at = headers[0]
+            indent = lines[insert_at][
+                : len(lines[insert_at]) - len(lines[insert_at].lstrip())
+            ]
+        else:
+            insert_at = len(lines)
+            body = [line for line in lines[1:] if line.strip()]
+            indent = min(
+                (line[: len(line) - len(line.lstrip())] for line in body),
+                key=len,
+                default="",
+            )
+        section = [
+            f"{indent}Parameters",
+            f"{indent}----------",
+            f"{indent}**kwargs",
+            f"{indent}    Additional command line options.",
+            "",
+        ]
+        if insert_at > 0 and lines[insert_at - 1].strip():
+            section.insert(0, "")
+        lines[insert_at:insert_at] = section
+    return "\n".join(lines)
 
 
 def cleanup_tempfile(temp_file: Any) -> None:
