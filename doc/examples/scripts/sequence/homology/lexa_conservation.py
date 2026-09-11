@@ -22,7 +22,7 @@ the entires for their definition (title) and source (species).
 # License: BSD 3 clause
 
 import matplotlib.pyplot as plt
-import biotite.application.clustalo as clustalo
+import biotite.application_v2.clustalo as clustalo
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.graphics as graphics
@@ -124,7 +124,7 @@ for site in binding_sites[:20]:
 # Since we have up to 200 sequences we visualize only a small portion of
 # the alignment.
 
-alignment = clustalo.ClustalOmegaApp.align(binding_sites)
+alignment = clustalo.ClustalOmegaApp().run(binding_sites).result().alignment
 fig = plt.figure(figsize=(4.5, 4.0))
 ax = fig.add_subplot(111)
 graphics.plot_alignment_similarity_based(

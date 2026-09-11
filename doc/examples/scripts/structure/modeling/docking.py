@@ -31,7 +31,7 @@ respect to their RMSD.
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import spearmanr
-import biotite.application.autodock as autodock
+import biotite.application_v2.autodock as autodock
 import biotite.database.rcsb as rcsb
 import biotite.interface.pymol as pymol_interface
 import biotite.structure as struc
@@ -63,22 +63,26 @@ ligand = info.residue("BTN")
 
 # Search for a binding mode in a 20 Å radius
 # of the original ligand position
-app = autodock.VinaApp(ligand, receptor, ref_ligand_center, [20, 20, 20])
-# For reproducibility
-# (Vina interprets seed 0 as a request for a random seed, so use a non-zero one)
-app.set_seed(42)
-app.set_cpu(1)
-# This is the maximum number:
-# Vina may find less interesting binding modes
-# and thus output less models
-app.set_max_number_of_models(100)
-# Effectively no limit
-app.set_energy_range(100.0)
-# Start docking run
-app.start()
-app.join()
-docked_coord = app.get_ligand_coord()
-energies = app.get_energies()
+docking_run = autodock.VinaApp().run(
+    ligand,
+    receptor,
+    ref_ligand_center,
+    [20, 20, 20],
+    # For reproducibility
+    # (Vina interprets seed 0 as a request for a random seed,
+    # so use a non-zero one)
+    seed=42,
+    cpu=1,
+    # This is the maximum number:
+    # Vina may find less interesting binding modes
+    # and thus output less models
+    num_modes=100,
+    # Effectively no limit
+    energy_range=100.0,
+)
+docking_result = docking_run.result()
+docked_coord = docking_result.ligand_coord
+energies = docking_result.energies
 
 # Create an AtomArrayStack for all docked binding modes
 docked_ligand = struc.from_template(ligand, docked_coord)

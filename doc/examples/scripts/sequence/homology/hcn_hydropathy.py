@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Patch
 import biotite
-import biotite.application.mafft as mafft
+import biotite.application_v2.mafft as mafft
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align
@@ -113,7 +113,7 @@ sequences = []
 for seq_str in fasta_file.values():
     sequences.append(seq.ProteinSequence(seq_str))
 
-alignment = mafft.MafftApp.align(sequences)
+alignment = mafft.MafftApp().run(sequences).result().alignment
 
 ########################################################################
 # As measure for the positional conservation, the similarity score is
