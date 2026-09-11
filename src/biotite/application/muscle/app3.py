@@ -32,6 +32,8 @@ class MuscleApp(MSAApp):
     """
     Perform a multiple sequence alignment using MUSCLE version 3.
 
+    DEPRECATED: Use :class:`biotite.application_v2.muscle.Muscle3App` instead.
+
     Parameters
     ----------
     sequences : list of Sequence
@@ -62,6 +64,8 @@ class MuscleApp(MSAApp):
     BISM-ITE
     -IQL-ITE
     """
+
+    _v2_alternative = "biotite.application_v2.muscle.Muscle3App"
 
     def __init__(
         self,

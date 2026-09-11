@@ -26,6 +26,9 @@ class ClustalOmegaApp(MSAApp):
     """
     Perform a multiple sequence alignment using Clustal-Omega.
 
+    DEPRECATED: Use :class:`biotite.application_v2.clustalo.ClustalOmegaApp`
+    instead.
+
     Parameters
     ----------
     sequences : list of ProteinSequence or NucleotideSequence
@@ -52,6 +55,8 @@ class ClustalOmegaApp(MSAApp):
     -BISMITE
     --IQLITE
     """
+
+    _v2_alternative = "biotite.application_v2.clustalo.ClustalOmegaApp"
 
     def __init__(
         self,

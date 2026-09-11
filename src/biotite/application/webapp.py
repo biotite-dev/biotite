@@ -16,6 +16,9 @@ class WebApp(Application, metaclass=abc.ABCMeta):
     """
     The base class for all web based applications.
 
+    DEPRECATED: :mod:`biotite.application_v2` has no web applications, use the
+    respective locally installed application instead.
+
     It allows for getting and setting the URL of the app and raises
     an :class:`RuleViolationError` when a subclass calls
     :func:`violate_rule()`
@@ -33,6 +36,8 @@ class WebApp(Application, metaclass=abc.ABCMeta):
         If true, the application raises an :class:`RuleViolationError`, if
         the server rules are violated.
     """
+
+    _v2_alternative = "biotite.application_v2"
 
     def __init__(self, app_url: str, obey_rules: bool = True) -> None:
         super().__init__()

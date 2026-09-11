@@ -23,6 +23,8 @@ class RNAplotApp(LocalApp):
     Get coordinates for a 2D representation of any unknotted RNA
     structure using *ViennaRNA's* *RNAplot*.
 
+    DEPRECATED: Use :class:`biotite.application_v2.viennarna.PlotApp` instead.
+
     The structure has to be provided either in dot bracket notation or
     as a ``ndarray`` of base pairs and the total sequence length.
 
@@ -58,6 +60,8 @@ class RNAplotApp(LocalApp):
      [-107.50   77.50]
      [-107.50   92.50]]
     """
+
+    _v2_alternative = "biotite.application_v2.viennarna.PlotApp"
 
     class Layout(IntEnum):
         """

@@ -29,6 +29,9 @@ class BlastWebApp(WebApp):
     Perform a local alignment against a large sequence database using
     using the web-based BLAST application (by default NCBI BLAST).
 
+    DEPRECATED: Use :class:`biotite.application_v2.mmseqs.MMseqsApp` instead,
+    which searches a locally downloaded database.
+
     Parameters
     ----------
     program : str
@@ -55,6 +58,8 @@ class BlastWebApp(WebApp):
         HTTP request. This allows the NCBI to contact you in case
         your application sends too many requests.
     """
+
+    _v2_alternative = "biotite.application_v2.mmseqs.MMseqsApp"
 
     _last_contact = 0
     _last_request = 0

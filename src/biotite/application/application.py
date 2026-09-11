@@ -17,10 +17,12 @@ __all__ = [
 
 import abc
 import time
+import warnings
 from collections.abc import Callable
 from enum import Flag, auto
 from functools import wraps
-from typing import ParamSpec, TypeVar
+from pathlib import Path
+from typing import ClassVar, ParamSpec, TypeVar
 
 _P = ParamSpec("_P")
 _R = TypeVar("_R")
@@ -91,6 +93,8 @@ class Application(metaclass=abc.ABCMeta):
     specify the respective kind of software and the way of interacting
     with it.
 
+    DEPRECATED: Use :class:`biotite.application_v2.Application` instead.
+
     Every :class:`Application` runs through a different app states
     (instances of enum :class:`AppState`) from its creation until its
     termination.
@@ -126,7 +130,19 @@ class Application(metaclass=abc.ABCMeta):
     executed, while the application runs in the background.
     """
 
+    # The replacement in `biotite.application_v2`,
+    # which the deprecation warning on instantiation refers to
+    _v2_alternative: ClassVar[str] = "biotite.application_v2.Application"
+
     def __init__(self) -> None:
+        warnings.warn(
+            f"'{type(self).__module__}.{type(self).__qualname__}' is deprecated, "
+            f"use '{self._v2_alternative}' instead",
+            DeprecationWarning,
+            # Point to the code instantiating the application,
+            # regardless of the depth of the constructor chain within this package
+            skip_file_prefixes=(str(Path(__file__).parent),),
+        )
         self._state: AppState = AppState.CREATED
 
     @requires_state(AppState.CREATED)

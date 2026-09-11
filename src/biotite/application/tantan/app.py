@@ -28,6 +28,8 @@ class TantanApp(LocalApp):
     r"""
     Mask sequence repeat regions using *tantan*. :footcite:`Frith2011`
 
+    DEPRECATED: Use :class:`biotite.application_v2.tantan.TantanApp` instead.
+
     Parameters
     ----------
     sequence : (list of) NucleotideSequence or ProteinSequence
@@ -65,6 +67,8 @@ class TantanApp(LocalApp):
     GGCATCGATATATATATATAGTCAA
              ^^^^^^^^^^^
     """
+
+    _v2_alternative = "biotite.application_v2.tantan.TantanApp"
 
     def __init__(
         self,
