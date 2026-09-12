@@ -167,7 +167,10 @@ def _compress_data(
         encoding = StringArrayEncoding(data_encoding=[], offset_encoding=[])
         # Run encode to initialize the data and offset arrays
         indices = encoding.encode(array)
-        offsets = np.cumsum([0] + [len(s) for s in encoding.strings])  # pyright: ignore[reportOptionalIterable]
+        offsets = np.cumulative_sum(
+            np.strings.str_len(encoding.strings),  # pyright: ignore[reportArgumentType]
+            include_initial=True,
+        )
         encoding.data_encoding = _find_best_integer_compression(indices)  # pyright: ignore[reportArgumentType]
         encoding.offset_encoding = _find_best_integer_compression(offsets)
         return bcif.BinaryCIFData(array, [encoding])

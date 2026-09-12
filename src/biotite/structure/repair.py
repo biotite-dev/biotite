@@ -108,8 +108,11 @@ def infer_elements(
     if isinstance(atoms, (AtomArray, AtomArrayStack)):
         atom_names = atoms.atom_name
     else:
-        atom_names = atoms
-    return np.array([_guess_element(name) for name in atom_names])
+        atom_names = np.asarray(atoms)
+    # Guess each unique atom name only once instead of each atom
+    unique_names, inverse = np.unique_inverse(atom_names)
+    unique_elements = np.array([_guess_element(name) for name in unique_names.tolist()])
+    return unique_elements[inverse]
 
 
 def create_atom_names(

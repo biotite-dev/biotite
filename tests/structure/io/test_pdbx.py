@@ -17,6 +17,25 @@ from biotite.structure.io.pdbx.compress import _get_decimal_places as get_decima
 from tests.util import data_dir
 
 
+ESCAPE_STRINGS = [
+    "",
+    " ",
+    "  ",
+    "te  xt",
+    "text",
+    "_text",
+    "'",
+    '"',
+    "te'xt",
+    'te"xt',
+    "te\nxt",
+    "\t",
+    """single"anddouble"marks""",
+    """single' and double" marks with whitespace""",
+]
+
+
+
 @pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_get_model_count(format):
     """
@@ -33,21 +52,7 @@ def test_get_model_count(format):
     assert test_model_count == ref_model_count
 
 
-@pytest.mark.parametrize(
-    "string",
-    [
-        "",
-        " ",
-        "  ",
-        "te  xt",
-        "'",
-        '"',
-        "te\nxt",
-        "\t",
-        """single"anddouble"marks""",
-        """single' and double" marks with whitespace""",
-    ],
-)
+@pytest.mark.parametrize("string", ESCAPE_STRINGS)
 @pytest.mark.parametrize("looped", [False, True])
 def test_escape(string, looped):
     """
@@ -65,6 +70,29 @@ def test_escape(string, looped):
         test_value = test_category["test_col"].as_item()
 
     assert test_value == ref_value
+
+
+@pytest.mark.parametrize("looped", [False, True])
+def test_escape_mixed(looped):
+    """
+    Test escaping a category with mixed values, so that each value needs
+    a different type of escaping.
+    The values must be restored after deserialization.
+    """
+    if looped:
+        ref_category = pdbx.CIFCategory({"test_col": ESCAPE_STRINGS}, "test_cat")
+    else:
+        ref_category = pdbx.CIFCategory(
+            {f"col_{i}": string for i, string in enumerate(ESCAPE_STRINGS)},
+            "test_cat",
+        )
+
+    test_category = pdbx.CIFCategory.deserialize(ref_category.serialize())
+    if looped:
+        test_values = test_category["test_col"].as_array(str).tolist()
+    else:
+        test_values = [column.as_item() for column in test_category.values()]
+    assert test_values == ESCAPE_STRINGS
 
 
 @pytest.mark.parametrize(

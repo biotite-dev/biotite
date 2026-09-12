@@ -85,7 +85,7 @@ def draw_arrows(
     color = _arrayfy(color, expected_length, 2)
     head_color = _arrayfy(head_color, expected_length, 2)
 
-    normal = (end - start) / np.linalg.norm(end - start, axis=-1)[:, np.newaxis]
+    normal = (end - start) / np.linalg.vector_norm(end - start, axis=-1)[:, np.newaxis]
     middle = end - normal * head_length[:, np.newaxis]
 
     cgo_list = []

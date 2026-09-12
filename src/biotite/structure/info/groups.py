@@ -129,7 +129,7 @@ def ion_names() -> list[str]:
     formulas = chem_comp["formula"].as_array()
 
     # Simple filter: The formula must contain only one element
-    mask = np.char.isalpha(formulas)
+    mask = np.strings.isalpha(formulas)
     comp_ids = comp_ids[mask]
     formulas = formulas[mask]
 
@@ -164,4 +164,6 @@ def _get_group_members(match_types: list[str]) -> list[str]:
     comp_ids = category["id"].as_array()
     types = category["type"].as_array()
     # Ignore case
-    return comp_ids[np.isin(np.char.lower(types), np.char.lower(match_types))].tolist()
+    return comp_ids[
+        np.isin(np.strings.lower(types), np.strings.lower(match_types))
+    ].tolist()

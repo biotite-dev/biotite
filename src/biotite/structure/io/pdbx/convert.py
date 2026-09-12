@@ -804,7 +804,7 @@ def _find_matches_by_dense_array(
 
     # Duplicate matches indicate that an atom from the query cannot
     # be uniquely matched to an atom in the reference
-    unique_query_matches, counts = np.unique(query_matches, return_counts=True)
+    unique_query_matches, counts = np.unique_counts(query_matches)
     if np.any(counts > 1):
         ambiguous_query = unique_query_matches[np.where(counts > 1)[0][0]]
         raise InvalidFileError(
@@ -1297,7 +1297,7 @@ def _set_intra_residue_bonds(
         return None
     # A structure contains far fewer distinct bond types than bonds,
     # hence the bond type is translated once per distinct type
-    unique_bond_types, type_indices = np.unique(bond_array[:, 2], return_inverse=True)
+    unique_bond_types, type_indices = np.unique_inverse(bond_array[:, 2])
     unique_value_order = np.zeros(len(unique_bond_types), dtype="U4")
     unique_aromatic_flag = np.zeros(len(unique_bond_types), dtype="U1")
     for i, bond_type in enumerate(unique_bond_types):
@@ -1307,8 +1307,6 @@ def _set_intra_residue_bonds(
         unique_value_order[i], unique_aromatic_flag[i] = _get_chem_comp_bond_type(
             bond_type
         )
-    # The shape of the inverse indices depends on the NumPy version
-    type_indices = type_indices.reshape(-1)
     value_order = unique_value_order[type_indices]
     aromatic_flag = unique_aromatic_flag[type_indices]
     any_mask = bond_array[:, 2] == BondType.ANY

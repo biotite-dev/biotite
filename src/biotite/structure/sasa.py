@@ -189,8 +189,7 @@ def _map_radii(
         ],
         dtype=np.float32,
     )
-    # The shape of the inverse indices depends on the NumPy version
-    radii[indices] = unique_radii[inverse_indices.reshape(-1)]
+    radii[indices] = unique_radii[inverse_indices]
     return radii  # pyright: ignore[reportReturnType]
 
 

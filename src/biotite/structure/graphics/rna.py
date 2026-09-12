@@ -279,14 +279,16 @@ def plot_nucleotide_secondary_structure(
                     coordinates[i - 1][1] - coordinates[i][1],
                 ]
             )
-            vector_to_previous = vector_to_previous / np.linalg.norm(vector_to_previous)
+            vector_to_previous = vector_to_previous / np.linalg.vector_norm(
+                vector_to_previous
+            )
             vector_to_next = np.array(
                 [
                     coordinates[i][0] - coordinates[i + 1][0],
                     coordinates[i][1] - coordinates[i + 1][1],
                 ]
             )
-            vector_to_next = vector_to_next / np.linalg.norm(vector_to_next)
+            vector_to_next = vector_to_next / np.linalg.vector_norm(vector_to_next)
             vector = (vector_to_next + vector_to_previous) / 2
         elif i > 0:
             # For the last base get the direction vector to the previous
@@ -307,7 +309,7 @@ def plot_nucleotide_secondary_structure(
                 ]
             )
         # Normalize the vector
-        vector = vector / np.linalg.norm(vector)
+        vector = vector / np.linalg.vector_norm(vector)
         # Get the perpendicular vector
         vector = np.array([vector[1], -vector[0]])
         # The annotations are offset in the direction of the
