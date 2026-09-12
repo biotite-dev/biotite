@@ -412,7 +412,7 @@ try:
             else:
                 self._arrow_head = None
 
-            self._label: "CurvedText | None"
+            self._label: CurvedText | None
             if label is not None:
                 label_properties["color"] = label_color
                 self._label = CurvedText(

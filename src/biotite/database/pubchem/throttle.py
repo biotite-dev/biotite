@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.database.pubchem"
 __author__ = "Patrick Kunzmann"
 __all__ = ["ThrottleStatus"]
@@ -52,7 +54,7 @@ class ThrottleStatus:
     service: float
 
     @staticmethod
-    def from_response(response: requests.Response) -> "ThrottleStatus":
+    def from_response(response: requests.Response) -> ThrottleStatus:
         """
         Extract the throttle status from a *Pubchem* server response.
 

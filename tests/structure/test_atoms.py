@@ -75,6 +75,26 @@ def test_access(array):
         array.set_annotation("test2", np.array([0, 1, 2, 3]))
 
 
+def test_indexing_after_annotation_deletion(array, stack):
+    """
+    Indexing must not resurrect a deleted annotation category, as the
+    resurrected array would not match the length of the indexed object.
+
+    Previously the indexed object was created via its constructor with length 0,
+    which already adds the default annotation categories, and only the categories
+    present in the original object were overwritten afterwards.
+    Hence a deleted default category reappeared in the indexed object as an
+    empty array.
+    """
+    array.del_annotation("chain_id")
+    stack.del_annotation("chain_id")
+
+    for indexed in (array[1:4], stack[:, 1:4]):
+        assert "chain_id" not in indexed.get_annotation_categories()
+        for category in indexed.get_annotation_categories():
+            assert len(indexed.get_annotation(category)) == indexed.array_length()
+
+
 def test_finding_compatible_dtype(array):
     """
     Check if a compatible dtype is selected, if the existing one is incompatible with

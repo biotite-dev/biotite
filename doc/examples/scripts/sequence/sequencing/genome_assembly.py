@@ -46,6 +46,7 @@ terms of base-call error probability :math:`P` :footcite:`Cock2010`:
 # License: BSD 3 clause
 
 import itertools
+import multiprocessing
 import tempfile
 from concurrent.futures import ProcessPoolExecutor
 import matplotlib.pyplot as plt
@@ -354,7 +355,11 @@ def map_sequence(read, diag):
 
 # Each process can be quite memory consuming
 # -> Cap to two processes to make it work on low-RAM commodity hardware
-with ProcessPoolExecutor(max_workers=2) as executor:
+# The 'fork' start method is required for the worker processes to access the
+# functions defined in this script
+with ProcessPoolExecutor(
+    max_workers=2, mp_context=multiprocessing.get_context("fork")
+) as executor:
     alignments = list(
         executor.map(map_sequence, compl_reads, correct_diagonals, chunksize=1000)
     )

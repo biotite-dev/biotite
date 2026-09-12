@@ -60,6 +60,14 @@ from biotite.typing import (
     NDArray3,
 )
 
+# Bond length range (in Angstrom) used to decide whether two positionally
+# adjacent residues are actually connected via a peptide (C-N) or
+# phosphodiester (O3'-P) bond.
+# Mirrors the defaults of `filter_linear_bond_continuity()` /
+# `check_backbone_continuity()` in `biotite.structure.integrity`.
+_BACKBONE_BOND_LENGTH_MIN = 1.2
+_BACKBONE_BOND_LENGTH_MAX = 1.8
+
 # The names of the atoms participating in chi angle
 _CHI_ATOMS = {
     "ARG": [
@@ -647,6 +655,9 @@ def dihedral_backbone(
         `phi` is not defined at the N-terminus, `psi` and `omega` are not defined at the
         C-terminus.
         In these places the arrays have *NaN* values.
+        The same is true if two consecutive residues are not actually connected,
+        e.g. due to a chain break or missing loop, as indicated by an implausible
+        C-N bond length.
         If an :class:`AtomArrayStack` is given, the output angles are 2-dimensional,
         the first dimension corresponds to the model number.
     """
@@ -690,9 +701,29 @@ def dihedral_backbone(
     coord_for_omg[..., 0:-1, :, 3] = coord_ca[..., 1:,   :]
     # fmt: on
 
-    phi = dihedral(*(coord_for_phi[..., i] for i in range(4)))
-    psi = dihedral(*(coord_for_psi[..., i] for i in range(4)))
-    omg = dihedral(*(coord_for_omg[..., i] for i in range(4)))
+    # `np.asarray` strips the unreachable scalar (`np.floating`) branch of
+    # `dihedral`'s return type (see the note on the return statement below),
+    # so the in-place NaN masking further down type-checks.
+    phi = np.asarray(dihedral(*(coord_for_phi[..., i] for i in range(4))))
+    psi = np.asarray(dihedral(*(coord_for_psi[..., i] for i in range(4))))
+    omg = np.asarray(dihedral(*(coord_for_omg[..., i] for i in range(4))))
+
+    # Two residues that are merely positionally adjacent in the atom array
+    # (e.g. due to a missing loop or concatenated chains) are not
+    # necessarily bonded to each other.
+    # Hence, the C-N distance between them is checked to only compute
+    # dihedral angles for backbone atoms that are actually connected.
+    c_n_dist = np.linalg.norm(coord_c[..., :-1, :] - coord_n[..., 1:, :], axis=-1)
+    is_discontinuous = ~(
+        (c_n_dist >= _BACKBONE_BOND_LENGTH_MIN)
+        & (c_n_dist <= _BACKBONE_BOND_LENGTH_MAX)
+    )
+    # `psi` and `omega` of residue `i` as well as `phi` of residue `i + 1`
+    # are defined using atoms from both sides of the junction between
+    # residue `i` and `i + 1`
+    psi[..., :-1][is_discontinuous] = np.nan
+    omg[..., :-1][is_discontinuous] = np.nan
+    phi[..., 1:][is_discontinuous] = np.nan
 
     # `dihedral`'s union return includes a scalar `np.floating` branch
     # that only fires on rank-0 inputs; here the inputs are always at
@@ -851,6 +882,9 @@ def nucleotide_dihedral_backbone(
         :math:`\alpha` is not defined at the 5'-terminus, :math:`\epsilon` and
         :math:`\zeta` are not defined at the 3'-terminus.
         In these places the arrays have *NaN* values.
+        The same is true if two consecutive residues are not actually connected,
+        e.g. due to a chain break or missing residues, as indicated by an
+        implausible O3'-P bond length.
         If an :class:`AtomArrayStack` is given, the output angles are 2-dimensional,
         the first dimension corresponds to the model number.
 
@@ -925,12 +959,33 @@ def nucleotide_dihedral_backbone(
     coord_for_zeta[..., 0:-1, :, 3] = coord_o5p[...,   1:, :]
     # fmt: on
 
-    alpha = dihedral(*(coord_for_alpha[..., i] for i in range(4)))
+    # `alpha`, `epsilon` and `zeta` are wrapped in `np.asarray` to strip the
+    # unreachable scalar (`np.floating`) branch of `dihedral`'s return type
+    # (see the note on the return statement below), so the in-place NaN
+    # masking further down type-checks.
+    alpha = np.asarray(dihedral(*(coord_for_alpha[..., i] for i in range(4))))
     beta = dihedral(*(coord_for_beta[..., i] for i in range(4)))
     gamma = dihedral(*(coord_for_gamma[..., i] for i in range(4)))
     delta = dihedral(*(coord_for_delta[..., i] for i in range(4)))
-    epsilon = dihedral(*(coord_for_epsilon[..., i] for i in range(4)))
-    zeta = dihedral(*(coord_for_zeta[..., i] for i in range(4)))
+    epsilon = np.asarray(dihedral(*(coord_for_epsilon[..., i] for i in range(4))))
+    zeta = np.asarray(dihedral(*(coord_for_zeta[..., i] for i in range(4))))
+
+    # Two residues that are merely positionally adjacent in the atom array
+    # (e.g. due to a missing loop or concatenated chains) are not
+    # necessarily bonded to each other.
+    # Hence, the O3'-P distance between them is checked to only compute
+    # dihedral angles for backbone atoms that are actually connected.
+    o3p_p_dist = np.linalg.norm(coord_o3p[..., :-1, :] - coord_p[..., 1:, :], axis=-1)
+    is_discontinuous = ~(
+        (o3p_p_dist >= _BACKBONE_BOND_LENGTH_MIN)
+        & (o3p_p_dist <= _BACKBONE_BOND_LENGTH_MAX)
+    )
+    # `epsilon` and `zeta` of residue `i` as well as `alpha` of residue
+    # `i + 1` are defined using atoms from both sides of the junction
+    # between residue `i` and `i + 1`
+    epsilon[..., :-1][is_discontinuous] = np.nan
+    zeta[..., :-1][is_discontinuous] = np.nan
+    alpha[..., 1:][is_discontinuous] = np.nan
 
     # See note in `dihedral_backbone` about the scalar branch of
     # `dihedral`'s return type being unreachable here.

@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["MOLFile"]
@@ -87,7 +89,7 @@ class MOLFile(TextFile):
         self._header: Header | None = None
 
     @classmethod
-    def read(cls, file: str | PathLike[str] | IO[str]) -> "MOLFile":
+    def read(cls, file: str | PathLike[str] | IO[str]) -> MOLFile:
         mol_file = super().read(file)
         mol_file._header = None
         return mol_file

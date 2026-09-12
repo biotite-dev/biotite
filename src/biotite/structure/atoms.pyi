@@ -17,7 +17,7 @@ analysis, so every public name listed in ``atoms.py.__all__`` must
 also be declared here.
 """
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from types import EllipsisType
 from typing import Any, Generic, TypeAliasType, overload
 import numpy as np
@@ -50,7 +50,7 @@ class _AtomArrayBase(Copyable):
     def set_annotation(self, category: str, array: np.ndarray) -> None: ...
     def get_annotation_categories(self) -> list[str]: ...
 
-class AtomArrayStack(_AtomArrayBase, Generic[M, N]):
+class AtomArrayStack(_AtomArrayBase, Sequence[AtomArray[N]], Generic[M, N]):
     # --- Mandatory annotation categories ---
     chain_id: NDArray1[N, np.str_]
     res_id: NDArray1[N, np.integer]
@@ -104,7 +104,7 @@ class AtomArrayStack(_AtomArrayBase, Generic[M, N]):
     def __add__(self, other: AtomArrayStack[M, int]) -> AtomArrayStack[M, int]: ...
     def __copy_create__(self) -> AtomArrayStack[M, N]: ...
 
-class AtomArray(_AtomArrayBase, Generic[N]):
+class AtomArray(_AtomArrayBase, Sequence[Atom], Generic[N]):
     # --- Mandatory annotation categories ---
     chain_id: NDArray1[N, np.str_]
     res_id: NDArray1[N, np.integer]

@@ -65,7 +65,8 @@ ligand = info.residue("BTN")
 # of the original ligand position
 app = autodock.VinaApp(ligand, receptor, ref_ligand_center, [20, 20, 20])
 # For reproducibility
-app.set_seed(0)
+# (Vina interprets seed 0 as a request for a random seed, so use a non-zero one)
+app.set_seed(42)
 app.set_cpu(1)
 # This is the maximum number:
 # Vina may find less interesting binding modes

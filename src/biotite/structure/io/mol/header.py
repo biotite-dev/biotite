@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.structure.io.mol"
 __author__ = "Patrick Kunzmann"
 __all__ = ["Header"]
@@ -56,7 +58,7 @@ class Header:
     comments: str = ""
 
     @staticmethod
-    def deserialize(text: str) -> "Header":
+    def deserialize(text: str) -> Header:
         lines = text.splitlines()
 
         mol_name = lines[0].strip()

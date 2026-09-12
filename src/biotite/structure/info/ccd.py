@@ -32,7 +32,7 @@ _DEFAULT_ID_COLUMN_NAME = "comp_id"
 
 
 @functools.cache
-def get_ccd() -> "BinaryCIFBlock":
+def get_ccd() -> BinaryCIFBlock:
     """
     Get the internal subset of the PDB
     *Chemical Component Dictionary* (CCD).
@@ -104,17 +104,17 @@ def set_ccd_path(ccd_path: str | PathLike[str]) -> None:
 @overload
 def get_from_ccd(
     category_name: str, comp_id: str, column_name: None = None
-) -> "BinaryCIFCategory | None": ...
+) -> BinaryCIFCategory | None: ...
 @overload
 def get_from_ccd(
     category_name: str, comp_id: str, column_name: str
-) -> "BinaryCIFColumn | None": ...
+) -> BinaryCIFColumn | None: ...
 @functools.cache
 def get_from_ccd(
     category_name: str,
     comp_id: str,
     column_name: str | None = None,
-) -> "BinaryCIFCategory | BinaryCIFColumn | None":
+) -> BinaryCIFCategory | BinaryCIFColumn | None:
     """
     Get the rows for the given residue in the given category from the
     internal subset of the PDB *Chemical Component Dictionary* (CCD).
@@ -191,9 +191,7 @@ def _residue_index(category_name: str) -> dict[str, tuple[int, int]]:
     return index
 
 
-def _filter_category(
-    category: "BinaryCIFCategory", index: slice
-) -> "BinaryCIFCategory":
+def _filter_category(category: BinaryCIFCategory, index: slice) -> BinaryCIFCategory:
     """
     Reduce the category to the values for the given index.∂
     """
@@ -205,7 +203,7 @@ def _filter_category(
     )
 
 
-def _filter_column(column: "BinaryCIFColumn", index: slice) -> "BinaryCIFColumn":
+def _filter_column(column: BinaryCIFColumn, index: slice) -> BinaryCIFColumn:
     """
     Reduce the column to the values for the given index.
     """

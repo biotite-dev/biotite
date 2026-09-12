@@ -281,7 +281,9 @@ def read_iter(fastq_path):
         yield read_string
 
 
-with multiprocessing.Pool(processes=N_PROCESS) as p:
+# The 'fork' start method is required for the worker processes to access the
+# functions defined in this script
+with multiprocessing.get_context("fork").Pool(processes=N_PROCESS) as p:
     # Use multiprocessing to map reads to genes
     # and remove non-mappable reads (None values) afterwards
     mapping_results = list(

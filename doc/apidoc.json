@@ -265,7 +265,8 @@
             "connect_via_residue_names",
             "connect_via_distances",
             "find_connected",
-            "find_rotatable_bonds"
+            "find_rotatable_bonds",
+            "infer_bond_types"
         ],
         "Geometry" : [
             "displacement",
@@ -465,11 +466,13 @@
     "biotite.structure.alphabet" : {
         "Structural alphabets": [
             "I3DSequence",
-            "ProteinBlocksSequence"
+            "ProteinBlocksSequence",
+            "ClepapsSequence"
         ],
         "Conversion Function": [
             "to_3di",
-            "to_protein_blocks"
+            "to_protein_blocks",
+            "to_clepaps"
         ]
     }
 }

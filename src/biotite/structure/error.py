@@ -10,6 +10,7 @@ __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = [
     "BadStructureError",
+    "InconsistentBondTypeWarning",
     "IncompleteStructureWarning",
     "UnexpectedStructureWarning",
 ]
@@ -18,6 +19,15 @@ __all__ = [
 class BadStructureError(Exception):
     """
     Indicates that a structure is not suitable for a certain operation.
+    """
+
+    pass
+
+
+class InconsistentBondTypeWarning(Warning):
+    """
+    Indicates that the bond types are inconsistent with the valences and formal charges
+    of the atoms.
     """
 
     pass

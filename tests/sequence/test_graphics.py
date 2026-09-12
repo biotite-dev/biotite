@@ -6,16 +6,15 @@ from pathlib import Path
 import pytest
 import biotite.sequence as seq
 import biotite.structure.alphabet as struc_alph
-from tests.util import cannot_import
 
 
-@pytest.mark.skipif(cannot_import("matplotlib"), reason="Matplotlib is not installed")
 @pytest.mark.parametrize(
     "scheme_path",
     sorted((Path(seq.__file__).parent / "graphics" / "color_schemes").glob("*.json")),
     ids=lambda path: path.name,
 )
 def test_load_color_scheme(scheme_path):
+    pytest.importorskip("matplotlib")
     from matplotlib.colors import to_rgb
     import biotite.sequence.graphics as graphics
 

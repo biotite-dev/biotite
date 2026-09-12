@@ -143,23 +143,55 @@ def sasa(
         filter = filter_heavy(array)
         sasa_filter = sasa_filter & filter
         occlusion_filter = occlusion_filter & filter
-        radii = np.full(len(array), np.nan, dtype=np.float32)
-        for i in np.arange(len(radii))[occlusion_filter]:
-            rad = vdw_radius_protor(array.res_name[i].item(), array.atom_name[i].item())
-            # 1.8 is default radius
-            radii[i] = rad if rad is not None else 1.8
+        # 1.8 is default radius
+        radii = _map_radii(
+            vdw_radius_protor, 1.8, occlusion_filter, array.res_name, array.atom_name
+        )
     elif vdw_radii == "Single":
-        radii = np.full(len(array), np.nan, dtype=np.float32)
-        for i in np.arange(len(radii))[occlusion_filter]:
-            rad = vdw_radius_single(array.element[i].item())
-            # 1.5 is default radius
-            radii[i] = rad if rad is not None else 1.8
+        # 1.5 is default radius
+        radii = _map_radii(vdw_radius_single, 1.8, occlusion_filter, array.element)
     else:
         raise KeyError(f"'{vdw_radii}' is not a valid radii set")
     # Increase atom radii by probe size ("rolling probe")
     radii += probe_radius
 
     return rust_sasa(array.coord, radii, sphere_points, sasa_filter, occlusion_filter)
+
+
+def _map_radii(
+    radius_function: Callable[..., float | None],
+    default_radius: float,
+    occlusion_filter: NDArray1[N, np.bool_],
+    *annotations: NDArray1[N, np.str_],
+) -> NDArray1[N, np.floating]:
+    """
+    Get the VdW radius for each filtered atom from the given annotations.
+
+    A structure contains far fewer distinct annotation combinations
+    (e.g. residue/atom name pairs) than atoms, hence `radius_function` is
+    only called once per distinct combination.
+    """
+    radii = np.full(len(occlusion_filter), np.nan, dtype=np.float32)
+    indices = np.where(occlusion_filter)[0]
+    if len(indices) == 0:
+        return radii  # pyright: ignore[reportReturnType]
+    combinations = np.stack([annot[indices] for annot in annotations], axis=-1)
+    unique_combinations, inverse_indices = np.unique(
+        combinations, axis=0, return_inverse=True
+    )
+    unique_radii = np.array(
+        [
+            default_radius if radius is None else radius
+            for radius in (
+                radius_function(*(str(value) for value in combination))
+                for combination in unique_combinations
+            )
+        ],
+        dtype=np.float32,
+    )
+    # The shape of the inverse indices depends on the NumPy version
+    radii[indices] = unique_radii[inverse_indices.reshape(-1)]
+    return radii  # pyright: ignore[reportReturnType]
 
 
 def _create_fibonacci_points(n: int) -> NDArray2[int, XYZ, np.floating]:

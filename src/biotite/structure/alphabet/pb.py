@@ -6,6 +6,8 @@
 Conversion of structures into the *Protein Blocks* structural alphabet.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.structure.alphabet"
 __author__ = "Patrick Kunzmann"
 __all__ = ["ProteinBlocksSequence", "to_protein_blocks"]
@@ -79,7 +81,7 @@ class ProteinBlocksSequence(Sequence):
     def get_alphabet(self) -> LetterAlphabet:
         return ProteinBlocksSequence.alphabet
 
-    def remove_undefined(self) -> "ProteinBlocksSequence":
+    def remove_undefined(self) -> ProteinBlocksSequence:
         """
         Remove undefined symbols from the sequence.
 

@@ -99,6 +99,69 @@ def test_dihedral_backbone_consistency(multi_model):
 
 
 @pytest.mark.parametrize("multi_model", [False, True])
+@pytest.mark.parametrize(
+    "function_name", ["dihedral_backbone", "nucleotide_dihedral_backbone"]
+)
+def test_dihedral_backbone_chain_break(function_name, multi_model):
+    """
+    :func:`dihedral_backbone()` and :func:`nucleotide_dihedral_backbone()`
+    must not compute dihedral angles across a chain break, i.e. two
+    residues that are positionally adjacent in the :class:`AtomArray` but
+    not actually bonded.
+    This is simulated by taking two unrelated fragments of the same chain
+    and translating one of them far away, while keeping the residue IDs
+    perfectly continuous, to ensure the detection is based on the actual
+    bond distance and not on residue numbering.
+    """
+    if function_name == "dihedral_backbone":
+        pdb_id = "1l2y"
+        angle_names = ["phi", "psi", "omega"]
+        # The angles reaching into the following residue and the angle
+        # reaching back into the preceding one
+        trailing_names = ["psi", "omega"]
+        leading_name = "phi"
+    else:
+        pdb_id = "4p5j"
+        angle_names = ["alpha", "beta", "gamma", "delta", "epsilon", "zeta"]
+        trailing_names = ["epsilon", "zeta"]
+        leading_name = "alpha"
+
+    pdbx_file = pdbx.BinaryCIFFile.read(
+        data_dir("structure") / "pdb" / f"{pdb_id}.bcif"
+    )
+    atoms = pdbx.get_structure(pdbx_file, model=1)
+    if function_name == "nucleotide_dihedral_backbone":
+        atoms = atoms[struc.filter_canonical_nucleotides(atoms)]
+
+    fragment_1 = atoms[np.isin(atoms.res_id, [1, 2])].copy()
+    fragment_2 = atoms[np.isin(atoms.res_id, [15, 16])].copy()
+    # Renumber so residue IDs are contiguous with `fragment_1`, although
+    # the two fragments are not physically connected
+    fragment_2.res_id = fragment_2.res_id - 15 + 3
+    fragment_2.coord = fragment_2.coord + np.array([1000, 0, 0], dtype=np.float32)
+    combined = fragment_1 + fragment_2
+    if multi_model:
+        combined = struc.stack([combined] * 2)
+
+    angles = dict(
+        zip(angle_names, getattr(struc, function_name)(combined), strict=True)
+    )
+
+    # The junction between residue index 1 (res_id 2) and residue index 2
+    # (res_id 3) is not an actual bond -> angles spanning it must be NaN
+    for name in trailing_names:
+        assert np.all(np.isnan(angles[name][..., 1]))
+    assert np.all(np.isnan(angles[leading_name][..., 2]))
+    # All other angles within a fragment are unaffected and must remain
+    # finite
+    for name in trailing_names:
+        assert np.all(np.isfinite(angles[name][..., 0]))
+        assert np.all(np.isfinite(angles[name][..., 2]))
+    assert np.all(np.isfinite(angles[leading_name][..., 1]))
+    assert np.all(np.isfinite(angles[leading_name][..., 3]))
+
+
+@pytest.mark.parametrize("multi_model", [False, True])
 def test_dihedral_side_chain_consistency(multi_model):
     """
     Check if the computed dihedral angles are equal to the reference computed with

@@ -6,7 +6,6 @@ import importlib
 import pkgutil
 from pathlib import Path
 import pytest
-from tests.util import cannot_import
 
 
 def find_all_modules(package_name, src_dir):
@@ -32,10 +31,6 @@ def find_all_modules(package_name, src_dir):
     return module_names
 
 
-@pytest.mark.skipif(
-    cannot_import("matplotlib"),
-    reason="Optional dependencies are not met",
-)
 @pytest.mark.parametrize(
     "module_name",
     find_all_modules("biotite", Path(__file__).parent.parent / "src" / "biotite"),
@@ -49,6 +44,9 @@ def test_module_name(module_name):
     For example, we expect 'biotite.structure' instead of
     'biotite.structure.atoms'.
     """
+    # Some modules require optional dependencies to be importable
+    pytest.importorskip("matplotlib")
+
     # Remove the part after the last '.' of the module name
     # to obtain the package name
     package_name = ".".join(module_name.split(".")[:-1])

@@ -8,6 +8,8 @@ Parser for extracting weights from Keras files.
 Adapted from `moof2k/kerasify <https://github.com/moof2k/kerasify>`_.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.structure.alphabet"
 __author__ = "Martin Larralde"
 __all__ = ["load_kerasify"]
@@ -88,7 +90,7 @@ class KerasifyParser:
         else:
             raise NotImplementedError(f"Unsupported layer type: {layer_type!r}")
 
-    def __iter__(self) -> "KerasifyParser":
+    def __iter__(self) -> KerasifyParser:
         return self
 
     def __next__(self) -> Layer:

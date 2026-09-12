@@ -245,6 +245,7 @@ jobs:
       - build-internal
     env:
       NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
     - uses: actions/checkout@v4

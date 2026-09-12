@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import biotite.structure.io.pdbx as pdbx
-from tests.util import cannot_connect_to, cannot_import, is_not_installed
+from tests.util import cannot_connect_to, is_not_installed
 
 NCBI_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/"
 RCSB_URL = "https://www.rcsb.org/"
@@ -20,19 +20,20 @@ UNIPROT_URL = "https://www.uniprot.org/"
 PUBCHEM_URL = "https://pubchem.ncbi.nlm.nih.gov/"
 
 
+# Optional dependencies that are required by the doctests of the respective package
+REQUIRED_MODULES = {
+    "biotite.sequence.graphics": "matplotlib",
+    "biotite.structure.graphics": "matplotlib",
+    "biotite.interface.rdkit": "rdkit",
+}
+
 # Keep test parameters in separate variable to generate IDs from them
 TEST_PARAMETERS = [
     pytest.param("biotite", []),
     pytest.param("biotite.sequence", ["biotite.sequence.align"]),
     pytest.param("biotite.sequence.align", ["biotite.sequence"]),
     pytest.param("biotite.sequence.phylo", ["biotite.sequence"]),
-    pytest.param(
-        "biotite.sequence.graphics",
-        ["biotite.sequence"],
-        marks=pytest.mark.skipif(
-            cannot_import("matplotlib"), reason="Matplotlib is not installed"
-        ),
-    ),
+    pytest.param("biotite.sequence.graphics", ["biotite.sequence"]),
     pytest.param("biotite.sequence.io", ["biotite.sequence"]),
     pytest.param("biotite.sequence.io.fasta", ["biotite.sequence"]),
     pytest.param("biotite.sequence.io.fastq", ["biotite.sequence"]),
@@ -51,13 +52,7 @@ TEST_PARAMETERS = [
     pytest.param(
         "biotite.structure", ["biotite.structure.io", "biotite.structure.info"]
     ),
-    pytest.param(
-        "biotite.structure.graphics",
-        ["biotite.structure"],
-        marks=pytest.mark.skipif(
-            cannot_import("matplotlib"), reason="Matplotlib is not installed"
-        ),
-    ),
+    pytest.param("biotite.structure.graphics", ["biotite.structure"]),
     pytest.param("biotite.structure.io", ["biotite.structure"]),
     pytest.param("biotite.structure.io.pdb", ["biotite.structure", "biotite"]),
     pytest.param("biotite.structure.io.pdbx", ["biotite.structure"]),
@@ -185,9 +180,6 @@ TEST_PARAMETERS = [
     pytest.param(
         "biotite.interface.rdkit",
         ["biotite.structure", "biotite.structure.info"],
-        marks=pytest.mark.skipif(
-            cannot_import("rdkit"), reason="Software is not installed"
-        ),
     ),
 ]
 
@@ -201,6 +193,10 @@ def test_doctest(package_name, context_package_names):
     """
     Run all doctest strings in all Biotite subpackages.
     """
+    required_module = REQUIRED_MODULES.get(package_name)
+    if required_module is not None:
+        pytest.importorskip(required_module)
+
     # Collect all attributes of this package and its subpackages
     # as globals for the doctests
     globs = {}

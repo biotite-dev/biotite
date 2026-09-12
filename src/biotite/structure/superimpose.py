@@ -322,7 +322,7 @@ def superimpose_without_outliers(
             break
 
     anchor_indices = np.where(inlier_mask)[0]
-    transform = cast("AffineTransformation[M]", transform)
+    transform = cast(AffineTransformation[M], transform)
     return transform.apply(mobile), transform, anchor_indices
 
 
@@ -489,7 +489,7 @@ def _get_rotation_matrices(
     Both sets of coordinates must already be centered at origin.
     """
     # Calculate cross-covariance matrices
-    cov = np.sum(fixed[:, :, :, np.newaxis] * mobile[:, :, np.newaxis, :], axis=1)
+    cov = np.matmul(np.swapaxes(fixed, -1, -2), mobile)  # (M, XYZ, XYZ)
     v, s, w = np.linalg.svd(cov)
     # Remove possibility of reflected atom coordinates
     reflected_mask = np.linalg.det(v) * np.linalg.det(w) < 0

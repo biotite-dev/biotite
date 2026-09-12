@@ -1295,15 +1295,22 @@ def _set_intra_residue_bonds(
     bond_array = _filter_bonds(array, "intra")
     if len(bond_array) == 0:
         return None
-    value_order = np.zeros(len(bond_array), dtype="U4")
-    aromatic_flag = np.zeros(len(bond_array), dtype="U1")
-    for i, bond_type in enumerate(bond_array[:, 2]):
+    # A structure contains far fewer distinct bond types than bonds,
+    # hence the bond type is translated once per distinct type
+    unique_bond_types, type_indices = np.unique(bond_array[:, 2], return_inverse=True)
+    unique_value_order = np.zeros(len(unique_bond_types), dtype="U4")
+    unique_aromatic_flag = np.zeros(len(unique_bond_types), dtype="U1")
+    for i, bond_type in enumerate(unique_bond_types):
         if bond_type == BondType.ANY:
             # ANY bonds will be masked anyway, no need to set the value
             continue
-        order, aromatic = _get_chem_comp_bond_type(bond_type)
-        value_order[i] = order
-        aromatic_flag[i] = aromatic
+        unique_value_order[i], unique_aromatic_flag[i] = _get_chem_comp_bond_type(
+            bond_type
+        )
+    # The shape of the inverse indices depends on the NumPy version
+    type_indices = type_indices.reshape(-1)
+    value_order = unique_value_order[type_indices]
+    aromatic_flag = unique_aromatic_flag[type_indices]
     any_mask = bond_array[:, 2] == BondType.ANY
 
     # Remove already existing residue and atom name combinations

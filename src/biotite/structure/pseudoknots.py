@@ -6,6 +6,8 @@
 This module provides functionality for pseudoknot detection.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.structure"
 __author__ = "Tom David Müller"
 __all__ = ["pseudoknots"]
@@ -186,7 +188,7 @@ class _Region:
         """
         return self.region_pairs
 
-    def __lt__(self, other: "_Region") -> bool:
+    def __lt__(self, other: _Region) -> bool:
         """
         This comparison operator is required for :func:`np.unique()`. As
         only the difference between the regions is relevant and not any

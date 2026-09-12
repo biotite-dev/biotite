@@ -20,5 +20,6 @@ from .ccd import *
 from .groups import *
 from .masses import *
 from .misc import *
+from .number import *
 from .radii import *
 from .standardize import *

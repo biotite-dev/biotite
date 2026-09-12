@@ -8,7 +8,7 @@ import biotite.structure as struc
 import biotite.structure.info as strucinfo
 import biotite.structure.io.pdbx as pdbx
 from biotite.structure.info.ccd import _CCD_FILE as INTERNAL_CCD_FILE
-from tests.util import cannot_import, data_dir
+from tests.util import data_dir
 
 
 @pytest.fixture
@@ -179,11 +179,11 @@ def test_common_ion_names():
         assert ion in strucinfo.ion_names()
 
 
-@pytest.mark.skipif(cannot_import("rdkit"), reason="RDKit not installed")
 def test_ion_names_in_periodic_table():
     """
     The chemical formula of all monoatomic ions must be part of the periodic table.
     """
+    pytest.importorskip("rdkit")
     import rdkit.Chem.AllChem as Chem
 
     periodic_table = Chem.GetPeriodicTable()

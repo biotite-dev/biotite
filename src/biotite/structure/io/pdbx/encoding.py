@@ -6,6 +6,8 @@
 This module contains data encodings for BinaryCIF files.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -57,7 +59,7 @@ class TypeCode(IntEnum):
     FLOAT64 = 33
 
     @staticmethod
-    def from_dtype(dtype: "np.dtype | int | TypeCode") -> "TypeCode":
+    def from_dtype(dtype: np.dtype | int | TypeCode) -> TypeCode:
         """
         Convert a *NumPy* dtype to a *BinaryCIF* type code.
 
@@ -927,7 +929,7 @@ def _safe_cast(
         elif not np.issubdtype(source_dtype, np.integer):
             # Neither float, nor integer -> cannot cast
             raise ValueError(f"Cannot cast '{source_dtype}' to integer")
-        dtype_info = np.iinfo(cast("np.dtype[np.integer]", target_dtype))
+        dtype_info = np.iinfo(cast(np.dtype[np.integer], target_dtype))
         # Check if an integer underflow/overflow would occur during conversion
         max_val = np.max(array).item()
         min_val = np.min(array).item()

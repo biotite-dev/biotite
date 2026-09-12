@@ -21,5 +21,6 @@ distinguish them better from the nucleotide and amino acid alphabets.
 __name__ = "biotite.structure.alphabet"
 __author__ = "Martin Larralde, Patrick Kunzmann"
 
+from .clepaps import *
 from .i3d import *
 from .pb import *

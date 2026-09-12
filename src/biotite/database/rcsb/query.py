@@ -2,6 +2,8 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
+from __future__ import annotations
+
 __name__ = "biotite.database.rcsb"
 __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
 __all__ = [
@@ -71,10 +73,10 @@ class Query(metaclass=abc.ABCMeta):
         """
         pass
 
-    def __and__(self, query: "Query") -> "CompositeQuery":
+    def __and__(self, query: Query) -> CompositeQuery:
         return CompositeQuery([self, query], "and")
 
-    def __or__(self, query: "Query") -> "CompositeQuery":
+    def __or__(self, query: Query) -> CompositeQuery:
         return CompositeQuery([self, query], "or")
 
 
@@ -433,7 +435,7 @@ class FieldQuery(SingleQuery):
             content["parameters"]["value"] = self._value
         return content
 
-    def __invert__(self) -> "FieldQuery":
+    def __invert__(self) -> FieldQuery:
         clone = copy.deepcopy(self)
         clone._negation = not clone._negation
         return clone
@@ -831,7 +833,7 @@ class UniprotGrouping(Grouping):
 def count(
     query: Query,
     return_type: _ReturnType = "entry",
-    group_by: "Grouping | None" = None,
+    group_by: Grouping | None = None,
     content_types: Iterable[_ContentType] = ("experimental",),
 ) -> int:
     """

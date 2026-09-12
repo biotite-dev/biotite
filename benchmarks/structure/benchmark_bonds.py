@@ -92,6 +92,36 @@ def benchmark_connect(atoms, connect_fn):
     connect_fn(atoms)
 
 
+@pytest.fixture(scope="module")
+def small_molecules():
+    """
+    Small molecules from the CCD with the bond types removed, keeping only the
+    connectivity.
+    """
+    molecules = []
+    # Common ligands/cofactors covering diverse functional groups with different
+    # difficulty for bond type inference:
+    # phosphates (ATP), charged aromatic nitrogen (NAD), fused aromatic rings (FMN),
+    # sulfonium (SAM), many atoms with ambiguous valence (COA) as well as simple
+    # carboxylate, aromatic and thiol cases (TYR, SIA, CIT, GSH)
+    for res_name in ["ATP", "NAD", "FMN", "SAM", "COA", "TYR", "SIA", "CIT", "GSH"]:
+        molecule = info.residue(res_name)
+        connectivity = molecule.bonds.copy()
+        connectivity.remove_bond_order()
+        molecule.bonds = connectivity
+        molecules.append(molecule)
+    return molecules
+
+
+@pytest.mark.benchmark
+def benchmark_infer_bond_types(small_molecules):
+    """
+    Infer the bond types of small molecules from their connectivity.
+    """
+    for molecule in small_molecules:
+        struc.infer_bond_types(molecule, total_charge=int(molecule.charge.sum()))
+
+
 @pytest.mark.benchmark
 def benchmark_find_connected(atoms):
     """

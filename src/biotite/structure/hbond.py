@@ -420,13 +420,43 @@ def _get_bonded_h_via_distance(
     associated_donor_indices = np.full(len(array), -1, dtype=int)
 
     donor_indices = np.where(donor_mask)[0]
-    for donor_i in donor_indices:
-        candidate_mask = hydrogen_mask & (res_id == res_id[donor_i])
-        distances = distance(coord[donor_i], coord[candidate_mask], box=box)
-        donor_h_indices = np.where(candidate_mask)[0][distances <= CUTOFF]
-        for i in donor_h_indices:
-            associated_donor_indices[i] = donor_i
-            donor_hydrogen_mask[i] = True
+    hydrogen_indices = np.where(hydrogen_mask)[0]
+    if len(donor_indices) == 0 or len(hydrogen_indices) == 0:
+        return (
+            donor_hydrogen_mask,
+            associated_donor_indices,
+        )  # pyright: ignore[reportReturnType]
+
+    # Sort the hydrogen atoms by residue ID, so that the candidates for each
+    # donor can be found via binary search instead of scanning all atoms
+    hydrogen_indices = hydrogen_indices[
+        np.argsort(res_id[hydrogen_indices], kind="stable")
+    ]
+    hydrogen_res_ids = res_id[hydrogen_indices]
+    donor_res_ids = res_id[donor_indices]
+    candidate_start = np.searchsorted(hydrogen_res_ids, donor_res_ids, side="left")
+    candidate_stop = np.searchsorted(hydrogen_res_ids, donor_res_ids, side="right")
+
+    # Flatten the ragged donor-to-candidate mapping into plain index arrays,
+    # so that all distances can be computed in a single vectorized call
+    candidate_count = candidate_stop - candidate_start
+    total_count = candidate_count.sum()
+    if total_count == 0:
+        return (
+            donor_hydrogen_mask,
+            associated_donor_indices,
+        )  # pyright: ignore[reportReturnType]
+    donor_of_pair = np.repeat(np.arange(len(donor_indices)), candidate_count)
+    offsets = np.cumsum(candidate_count) - candidate_count
+    index_in_candidates = np.arange(total_count) - offsets[donor_of_pair]
+    pair_hydrogen_i = hydrogen_indices[
+        candidate_start[donor_of_pair] + index_in_candidates
+    ]
+    pair_donor_i = donor_indices[donor_of_pair]
+
+    is_bonded = distance(coord[pair_donor_i], coord[pair_hydrogen_i], box=box) <= CUTOFF
+    donor_hydrogen_mask[pair_hydrogen_i[is_bonded]] = True
+    associated_donor_indices[pair_hydrogen_i[is_bonded]] = pair_donor_i[is_bonded]
 
     return (
         donor_hydrogen_mask,

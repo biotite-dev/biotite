@@ -2,7 +2,6 @@
 # under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
 # information.
 
-import importlib
 import shutil
 import urllib.error
 import urllib.request
@@ -26,10 +25,6 @@ def cannot_connect_to(url):
         except urllib.error.URLError:
             tested_urls[url] = True
     return tested_urls[url]
-
-
-def cannot_import(module):
-    return importlib.util.find_spec(module) is None
 
 
 def is_not_installed(program):

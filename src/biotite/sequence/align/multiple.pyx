@@ -373,8 +373,8 @@ def _get_distance_matrix(CodeType[:] _T, sequences, matrix,
             for code1 in range(alphabet_size):
                 for code2 in range(alphabet_size):
                     score_rand += score_matrix[code1,code2] \
-                                  * code_count[i,code1] \
-                                  * code_count[j,code2]
+                                  * code_count_v[i,code1] \
+                                  * code_count_v[j,code2]
             score_rand /= alignments[i,j].trace.shape[0]
             gap_open_count, gap_ext_count = _count_gaps(
                 alignments[i,j].trace.astype(np.int64, copy=False),

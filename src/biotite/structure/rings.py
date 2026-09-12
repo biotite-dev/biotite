@@ -6,6 +6,8 @@
 This module provides functions related to aromatic rings.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
 __all__ = [
@@ -112,7 +114,7 @@ def find_stacking_interactions(
     centroid_cutoff: float = 6.5,
     plane_angle_tol: float = np.deg2rad(30.0),
     shift_angle_tol: float = np.deg2rad(30.0),
-) -> list[tuple[NDArray1[Any, np.integer], NDArray1[Any, np.integer], "PiStacking"]]:
+) -> list[tuple[NDArray1[Any, np.integer], NDArray1[Any, np.integer], PiStacking]]:
     """
     Find pi-stacking interactions between aromatic rings.
 

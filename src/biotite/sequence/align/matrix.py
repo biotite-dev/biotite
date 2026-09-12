@@ -76,6 +76,7 @@ class SubstitutionMatrix(Generic[S1, S2]):
 
             - **3Di** - For 3Di alphabet from ``foldseek`` :footcite:`VanKempen2024`
             - **PB** - For Protein Blocks alphabet from *PBexplore* :footcite:`Barnoud2017`
+            - **CLESUM** - For CLePAPS alphabet :footcite:`Wang2008`
 
     A list of all available matrix names is returned by
     :meth:`list_db()`.
@@ -624,6 +625,50 @@ class SubstitutionMatrix(Generic[S1, S2]):
             matrix_dict[symbol, undefined_symbol] = undefined_mismatch
             matrix_dict[undefined_symbol, symbol] = undefined_mismatch
         matrix_dict[undefined_symbol, undefined_symbol] = undefined_match
+        return SubstitutionMatrix(
+            alphabet,
+            alphabet,
+            matrix_dict,
+        )
+
+    @staticmethod
+    @functools.cache
+    def std_clepaps_matrix(
+        unknown_match: int = 200, unknown_mismatch: int = -200
+    ) -> SubstitutionMatrix[str, str]:
+        """
+        Get the *CLESUM* substitution matrix for *CLePAPS* sequence.
+        :footcite:`Wang2008`
+
+        Parameters
+        ----------
+        unknown_match, unknown_mismatch : int, optional
+            The match and mismatch score for the unknown symbol.
+            The default values were chosen arbitrarily, but are in the order of
+            magnitude of the other score values.
+
+        Returns
+        -------
+        matrix : SubstitutionMatrix
+            Default matrix.
+
+        References
+        ----------
+
+        .. footbibliography::
+        """
+        from biotite.structure.alphabet.clepaps import ClepapsSequence
+
+        alphabet = ClepapsSequence.alphabet
+        unknown_symbol = ClepapsSequence.unknown_symbol
+        matrix_dict = SubstitutionMatrix.dict_from_db("CLESUM")
+        # Add match/mismatch scores for the unknown symbol
+        for symbol in alphabet:
+            if symbol == unknown_symbol:
+                continue
+            matrix_dict[symbol, unknown_symbol] = unknown_mismatch
+            matrix_dict[unknown_symbol, symbol] = unknown_mismatch
+        matrix_dict[unknown_symbol, unknown_symbol] = unknown_match
         return SubstitutionMatrix(
             alphabet,
             alphabet,
