@@ -4,17 +4,19 @@
 
 __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
-__all__ = ["mass"]
+__all__ = ["mass", "masses"]
 
+import functools
 import json
 from pathlib import Path
 from typing import Any
+import numpy as np
 from biotite.structure.atoms import Atom, AtomArray, AtomArrayStack
 from biotite.structure.info.ccd import get_from_ccd
+from biotite.typing import N, NDArray1
 
 # Masses are taken from http://www.sbcs.qmul.ac.uk/iupac/AtWt/ (2018/03/01)
 ATOM_MASSES_FILE = Path(__file__).parent / "atom_masses.json"
-_atom_masses = None
 
 
 def mass(
@@ -58,6 +60,10 @@ def mass(
     KeyError
         If the mass is unknown for some residue name.
 
+    See Also
+    --------
+    masses : Get the mass of each element in an array.
+
     References
     ----------
 
@@ -96,24 +102,20 @@ def mass(
     >>> print(mass("N"))
     14.007
     """
-    global _atom_masses
-    with open(ATOM_MASSES_FILE, "r") as file:
-        _atom_masses = json.load(file)
-
     if isinstance(item, str):
         if is_residue is None:
-            result_mass = _atom_masses.get(item.upper())
+            result_mass = _atom_masses().get(item.upper())
             if result_mass is None:
                 result_mass = _mass_for_residue(item)
         elif not is_residue:
-            result_mass = _atom_masses.get(item.upper())
+            result_mass = _atom_masses().get(item.upper())
         else:
             result_mass = _mass_for_residue(item)
 
     elif isinstance(item, Atom):
         result_mass = mass(item.element, is_residue=False)
     elif isinstance(item, AtomArray) or isinstance(item, AtomArrayStack):
-        result_mass = sum((mass(element, is_residue=False) for element in item.element))
+        result_mass = float(np.sum(masses(item)))
 
     else:
         raise TypeError(f"Cannot calculate mass for {type(item).__name__} objects")
@@ -121,6 +123,61 @@ def mass(
     if result_mass is None:
         raise KeyError(f"{item} is not known")
     return result_mass
+
+
+def masses(
+    elements: NDArray1[N, np.str_] | AtomArray[N] | AtomArrayStack[Any, N],
+) -> NDArray1[N, np.floating]:
+    """
+    Get the mass of each chemical element in the given array.
+    :footcite:`Meija2016`
+
+    Parameters
+    ----------
+    elements : ndarray, shape=(n,), dtype=str or AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
+        The chemical elements to get the masses for.
+        If an :class:`AtomArray` or :class:`AtomArrayStack` is given,
+        its ``element`` annotation is used.
+
+    Returns
+    -------
+    masses : ndarray, shape=(n,), dtype=float
+        The mass of each element in *u*.
+
+    Raises
+    ------
+    KeyError
+        If the mass is unknown for some element.
+
+    See Also
+    --------
+    mass : Get the total mass of a single element, residue or molecule.
+
+    References
+    ----------
+
+    .. footbibliography::
+
+    Examples
+    --------
+
+    >>> print(masses(atom_array[:5]))
+    [14.007 12.011 12.011 15.999 12.011]
+    """
+    if isinstance(elements, (AtomArray, AtomArrayStack)):
+        elements = elements.element
+    # Look up each unique element only once instead of each element in the array
+    unique_elements, inverse = np.unique_inverse(elements)
+    unique_masses = np.array(
+        [mass(element, is_residue=False) for element in unique_elements.tolist()]
+    )
+    return unique_masses[inverse]
+
+
+@functools.cache
+def _atom_masses() -> dict[str, float]:
+    with open(ATOM_MASSES_FILE, "r") as file:
+        return json.load(file)
 
 
 def _mass_for_residue(res_name: str) -> float:

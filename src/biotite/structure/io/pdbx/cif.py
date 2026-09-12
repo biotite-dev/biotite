@@ -11,7 +11,7 @@ __all__ = ["CIFFile", "CIFBlock", "CIFCategory", "CIFColumn", "CIFData"]
 import itertools
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from os import PathLike
-from typing import IO, Any, Self, TypeAlias
+from typing import IO, Any, Self, TypeAlias, overload
 import numpy as np
 from biotite.file import (
     DeserializationError,
@@ -551,10 +551,11 @@ class CIFCategory(_Component, MutableMapping[str, CIFColumn]):
         max_len = max(len(key) for key in keys)
         # "+3" Because of three whitespace chars after longest key
         req_len = max_len + 3
+        values = _escape(np.array([column.as_item() for column in self.values()]))
         return [
             # Remove potential terminal newlines from multiline values
-            (key.ljust(req_len) + _escape(column.as_item())).strip()
-            for key, column in zip(keys, self.values())
+            (key.ljust(req_len) + value).strip()
+            for key, value in zip(keys, values.tolist())
         ]
 
     def _serialize_looped(self) -> list[str]:
@@ -564,29 +565,23 @@ class CIFCategory(_Component, MutableMapping[str, CIFColumn]):
             raise SerializationError("Category row count is required")
         key_lines = ["_" + self._name + "." + key + " " for key in self.keys()]
 
-        column_arrays = []
+        value_lines = None
         for column in self.values():
-            array = column.as_array(str)
             # Quote before measuring the number of chars,
             # as the quote characters modify the length
-            array = np.array([_escape(element) for element in array])
-            column_arrays.append(array)
+            array = _escape(column.as_array(str))
+            # Number of characters the longest string in the column needs
+            # The "+1" is for the small whitespace column
+            n_chars = int(np.strings.str_len(array).max(initial=0)) + 1
+            padded = np.strings.ljust(array, n_chars)
+            value_lines = padded if value_lines is None else value_lines + padded
+        if value_lines is None:
+            raise SerializationError("Category contains no columns")
+        # Remove trailing justification of last column
+        # and potential terminal newlines from multiline values
+        value_lines = np.strings.strip(value_lines)
 
-        # Number of characters the longest string in the column needs
-        # This can be deduced from the dtype
-        # The "+1" is for the small whitespace column
-        column_n_chars = [
-            array.dtype.itemsize // UNICODE_CHAR_SIZE + 1 for array in column_arrays
-        ]
-        value_lines = [""] * self._row_count
-        for i in range(self._row_count):
-            for j, array in enumerate(column_arrays):
-                value_lines[i] += array[i].ljust(column_n_chars[j])
-            # Remove trailing justification of last column
-            # and potential terminal newlines from multiline values
-            value_lines[i] = value_lines[i].strip()
-
-        return ["loop_"] + key_lines + value_lines
+        return ["loop_"] + key_lines + value_lines.tolist()
 
 
 class CIFBlock(_Component, MutableMapping[str, CIFCategory]):
@@ -1069,36 +1064,61 @@ def _to_single(lines: list[str]) -> list[str]:
     return processed_lines
 
 
-def _escape(value: str) -> str:
+def _escape(array: NDArray1[Any, np.str_]) -> NDArray1[Any, np.str_]:
     """
-    Escape special characters in a value to make it compatible with CIF.
+    Escape special characters in values to make them compatible with CIF.
     """
-    if "\n" in value:
-        # A value with linebreaks must be represented as multiline value
-        return _multiline(value)
-    elif "'" in value and '"' in value:
-        # If both quote types are present, you cannot use them for escaping
-        return _multiline(value)
-    elif len(value) == 0:
-        return "''"
-    elif value[0] == "_":
-        return "'" + value + "'"
-    elif "'" in value:
-        return '"' + value + '"'
-    elif '"' in value:
-        return "'" + value + "'"
-    elif " " in value:
-        return "'" + value + "'"
-    elif "\t" in value:
-        return "'" + value + "'"
-    else:
-        return value
+    has_linebreak = np.strings.find(array, "\n") != -1
+    has_single_quote = np.strings.find(array, "'") != -1
+    has_double_quote = np.strings.find(array, '"') != -1
+    has_whitespace = (np.strings.find(array, " ") != -1) | (
+        np.strings.find(array, "\t") != -1
+    )
+    is_empty = np.strings.str_len(array) == 0
+    starts_with_underscore = np.strings.startswith(array, "_")
+
+    # A value with linebreaks or with both quote types must be represented
+    # as multiline value, as neither quote type can be used for escaping
+    multiline_mask = has_linebreak | (has_single_quote & has_double_quote)
+    empty_mask = ~multiline_mask & is_empty
+    # Values with an embedded single quote are escaped with double quotes,
+    # all other values that require escaping use single quotes
+    double_quote_mask = (
+        ~multiline_mask & ~is_empty & ~starts_with_underscore & has_single_quote
+    )
+    single_quote_mask = (
+        ~multiline_mask
+        & ~is_empty
+        & (
+            starts_with_underscore
+            | (~has_single_quote & (has_double_quote | has_whitespace))
+        )
+    )
+
+    # Quoting adds two characters
+    escaped = array.astype(f"U{array.dtype.itemsize // UNICODE_CHAR_SIZE + 2}")
+    escaped[empty_mask] = "''"
+    escaped[single_quote_mask] = "'" + array[single_quote_mask] + "'"
+    escaped[double_quote_mask] = '"' + array[double_quote_mask] + '"'
+    if multiline_mask.any():
+        multiline_values = _multiline(array[multiline_mask])
+        # Multiline values need more characters than the quoted ones
+        n_chars = max(escaped.dtype.itemsize, multiline_values.dtype.itemsize)
+        escaped = escaped.astype(f"U{n_chars // UNICODE_CHAR_SIZE}")
+        escaped[multiline_mask] = multiline_values
+    return escaped
 
 
-def _multiline(value: str) -> str:
+@overload
+def _multiline(value: str) -> str: ...
+@overload
+def _multiline(value: NDArray1[Any, np.str_]) -> NDArray1[Any, np.str_]: ...
+def _multiline(
+    value: str | NDArray1[Any, np.str_],
+) -> str | NDArray1[Any, np.str_]:
     """
-    Convert a string that may contain linebreaks into CIF-compatible
-    multiline string.
+    Convert a string (or an array of strings) that may contain linebreaks
+    into CIF-compatible multiline string.
     """
     return "\n;" + value + "\n;\n"
 
