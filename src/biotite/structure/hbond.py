@@ -19,6 +19,7 @@ from biotite.structure.atoms import AtomArray, AtomArrayStack, stack
 from biotite.structure.bonds import BondList
 from biotite.structure.filter import filter_heavy
 from biotite.structure.geometry import angle, distance
+from biotite.structure.residues import get_all_residue_positions
 from biotite.typing import C3, XYZ, K, M, N, NDArray1, NDArray2, NDArray3
 
 
@@ -413,7 +414,7 @@ def _get_bonded_h_via_distance(
     CUTOFF = 1.5
 
     coord = array.coord
-    res_id = array.res_id
+    residue_positions = get_all_residue_positions(array)
     hydrogen_mask = ~filter_heavy(array)
 
     donor_hydrogen_mask = np.zeros(len(array), dtype=bool)
@@ -427,15 +428,12 @@ def _get_bonded_h_via_distance(
             associated_donor_indices,
         )  # pyright: ignore[reportReturnType]
 
-    # Sort the hydrogen atoms by residue ID, so that the candidates for each
-    # donor can be found via binary search instead of scanning all atoms
-    hydrogen_indices = hydrogen_indices[
-        np.argsort(res_id[hydrogen_indices], kind="stable")
-    ]
-    hydrogen_res_ids = res_id[hydrogen_indices]
-    donor_res_ids = res_id[donor_indices]
-    candidate_start = np.searchsorted(hydrogen_res_ids, donor_res_ids, side="left")
-    candidate_stop = np.searchsorted(hydrogen_res_ids, donor_res_ids, side="right")
+    # The residue positions are already sorted in atom order, so the candidates
+    # for each donor can be found via binary search instead of scanning all atoms
+    hydrogen_residues = residue_positions[hydrogen_indices]
+    donor_residues = residue_positions[donor_indices]
+    candidate_start = np.searchsorted(hydrogen_residues, donor_residues, side="left")
+    candidate_stop = np.searchsorted(hydrogen_residues, donor_residues, side="right")
 
     # Flatten the ragged donor-to-candidate mapping into plain index arrays,
     # so that all distances can be computed in a single vectorized call
@@ -447,7 +445,7 @@ def _get_bonded_h_via_distance(
             associated_donor_indices,
         )  # pyright: ignore[reportReturnType]
     donor_of_pair = np.repeat(np.arange(len(donor_indices)), candidate_count)
-    offsets = np.cumsum(candidate_count) - candidate_count
+    offsets = np.cumulative_sum(candidate_count, include_initial=True)[:-1]
     index_in_candidates = np.arange(total_count) - offsets[donor_of_pair]
     pair_hydrogen_i = hydrogen_indices[
         candidate_start[donor_of_pair] + index_in_candidates
