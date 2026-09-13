@@ -3,13 +3,13 @@
 Multiple sequence alignments
 ============================
 
-.. currentmodule:: biotite.application.muscle
+.. currentmodule:: biotite.application_v2.muscle
 
-The :mod:`biotite.application` subpackage provides interfaces to various
+The :mod:`biotite.application_v2` subpackage provides interfaces to various
 *multiple sequence alignments* (MSAs) programs.
 For our example we choose the software MUSCLE:
-The subpackage :mod:`biotite.application.muscle` contains the class
-:class:`MuscleApp` that does the job.
+The subpackage :mod:`biotite.application_v2.muscle` contains the class
+:class:`Muscle3App` that does the job.
 First we get some homologous input sequences from *NCBI Entrez*.
 
 .. jupyter-execute::
@@ -32,54 +32,50 @@ First we get some homologous input sequences from *NCBI Entrez*.
     )
     sequences = list(fasta.get_sequences(fasta_file).values())
 
-We simply input the sequences to :class:`MuscleApp`, run the application
-and get the resulting :class:`Alignment` object.
+We simply input the sequences to :meth:`Muscle3App.run()`, wait for the
+application to finish and get the resulting :class:`Alignment` object from
+the :class:`Muscle3Result`.
 
 .. jupyter-execute::
 
-    import biotite.application.muscle as muscle
+    import biotite.application_v2.muscle as muscle
 
-    app = muscle.MuscleApp(sequences)
-    app.start()
-    app.join()
-    alignment = app.get_alignment()
+    app = muscle.Muscle3App()
+    result = app.run(sequences).result()
+    alignment = result.alignment
     print(alignment)
 
 In most MSA software even more information than the mere alignment can be
 extracted.
-For instance the guide tree, that was used for the alignment, can be obtained
-from the *MUSCLE* output.
+For instance the guide tree, that was used for the alignment, is also part
+of the result.
 
 .. jupyter-execute::
 
     import matplotlib.pyplot as plt
     import biotite.sequence.graphics as graphics
 
-    tree = app.get_guide_tree()
+    tree = result.guide_tree_identity
 
     fig, ax = plt.subplots(figsize=(6.0, 3.0), constrained_layout=True)
     graphics.plot_dendrogram(ax, tree, orientation="left", show_distance=True)
     _ = ax.set_xlabel("Distance")
 
-There is also a convenience method, that handles the :class:`Application`
-execution internally.
-However, this shortcut returns only the :class:`Alignment`.
-
-.. jupyter-execute::
-
-    alignment = muscle.MuscleApp.align(sequences)
+If you have MUSCLE version 5 installed, use :class:`Muscle5App` instead,
+which is used in the same way.
 
 Variety of MSA software
 -----------------------
 The alternatives to MUSCLE are Clustal Omega and MAFFT.
-To use them, simply replace :class:`MuscleApp` with :class:`ClustalOmegaApp` or
-:class:`MafftApp`.
+To use them, simply replace :class:`Muscle3App` with
+:class:`~biotite.application_v2.clustalo.ClustalOmegaApp` or
+:class:`~biotite.application_v2.mafft.MafftApp`.
 
 .. jupyter-execute::
 
-    import biotite.application.clustalo as clustalo
+    import biotite.application_v2.clustalo as clustalo
 
-    alignment = clustalo.ClustalOmegaApp.align(sequences)
+    alignment = clustalo.ClustalOmegaApp().run(sequences).result().alignment
     print(alignment)
 
 As shown in the output, the alignment with Clustal Omega slightly
@@ -95,7 +91,7 @@ Let's show this on the example of a nonsense alphabet.
 .. jupyter-execute::
 
     import numpy as np
-    import biotite.application.mafft as mafft
+    import biotite.application_v2.mafft as mafft
     import biotite.sequence as seq
     import biotite.sequence.align as align
 
@@ -113,7 +109,8 @@ Let's show this on the example of a nonsense alphabet.
             [-100, -100,  100]
         ])
     )
-    alignment = mafft.MafftApp.align(sequences, matrix=matrix)
+    result = mafft.MafftApp().run(sequences, matrix=matrix).result()
+    alignment = result.alignment
     # As the alphabet does not have characters as symbols
     # the alignment cannot be directly printed
     # However, we can print the trace

@@ -43,16 +43,6 @@ state.
 This triggers cleanup, too, but there are no accessible results.
 If a method is called in an unsuitable app state, an
 :class:`AppStateError` is called.
-At each state in the life cycle, :class:`Application` type specific
-methods are called, as shown in the following diagram.
-
-.. figure:: /static/assets/figures/app_lifecycle.png
-    :alt: Application life cycle
-    :scale: 50%
-
-    Taken from
-    `Kunzmann & Hamacher 2018 <https://doi.org/10.1186/s12859-018-2367-z>`_
-    licensed under `CC BY 4.0 <https://creativecommons.org/licenses/by/4.0/>`_.
 
 The execution of an :class:`Application` can run in parallel:
 The time between starting the run and collecting the results can be

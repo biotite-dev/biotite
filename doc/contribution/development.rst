@@ -27,7 +27,7 @@ Specifically, these include
 - :class:`biotite.sequence.AnnotatedSequence`,
 - :class:`biotite.sequence.Profile`,
 - :class:`biotite.sequence.align.Alignment`,
-- :class:`biotite.application.Application` and its subclasses,
+- :class:`biotite.application_v2.Application` and its subclasses,
 - and in general :class:`numpy.ndarray`.
 
 If you think that the currently available classes miss a central *object*
