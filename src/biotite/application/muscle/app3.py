@@ -14,6 +14,7 @@ from collections.abc import Sequence as SequenceABC
 from os import PathLike
 from tempfile import NamedTemporaryFile
 from typing import Literal
+import networkx as nx
 from biotite.application.application import (
     AppState,
     AppStateError,
@@ -24,7 +25,7 @@ from biotite.application.localapp import cleanup_tempfile, get_version
 from biotite.application.msaapp import MSAApp
 from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.align.matrix import SubstitutionMatrix
-from biotite.sequence.phylo.tree import Tree
+from biotite.sequence.phylo.tree import from_newick
 from biotite.sequence.sequence import Sequence
 
 
@@ -77,8 +78,8 @@ class MuscleApp(MSAApp):
         self._gap_open: float | None = None
         self._gap_ext: float | None = None
         self._terminal_penalty: bool | None = None
-        self._tree1: Tree | None = None
-        self._tree2: Tree | None = None
+        self._tree1: nx.DiGraph | None = None
+        self._tree2: nx.DiGraph | None = None
         self._out_tree1_file = NamedTemporaryFile("r", suffix=".tree", delete=False)
         self._out_tree2_file = NamedTemporaryFile("r", suffix=".tree", delete=False)
 
@@ -116,13 +117,13 @@ class MuscleApp(MSAApp):
 
         newick = self._out_tree1_file.read().replace("\n", "")
         if len(newick) > 0:
-            self._tree1 = Tree.from_newick(newick)
+            self._tree1 = from_newick(newick)
         else:
             warnings.warn("MUSCLE did not write a tree file from the first iteration")
 
         newick = self._out_tree2_file.read().replace("\n", "")
         if len(newick) > 0:
-            self._tree2 = Tree.from_newick(newick)
+            self._tree2 = from_newick(newick)
         else:
             warnings.warn("MUSCLE did not write a tree file from the second iteration")
 
@@ -163,7 +164,7 @@ class MuscleApp(MSAApp):
     @requires_state(AppState.JOINED)
     def get_guide_tree(
         self, iteration: Literal["kmer", "identity"] = "identity"
-    ) -> Tree:
+    ) -> nx.DiGraph:
         """
         Get the guide tree created for the progressive alignment.
 
@@ -179,7 +180,7 @@ class MuscleApp(MSAApp):
 
         Returns
         -------
-        tree : Tree
+        tree : DiGraph
             The guide tree.
         """
         if iteration == "kmer":

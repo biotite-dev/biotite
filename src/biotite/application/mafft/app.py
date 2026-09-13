@@ -12,10 +12,11 @@ import os
 import re
 from collections.abc import Sequence as SequenceABC
 from os import PathLike
+import networkx as nx
 from biotite.application.application import AppState, AppStateError, requires_state
 from biotite.application.msaapp import MSAApp
 from biotite.sequence.align.matrix import SubstitutionMatrix
-from biotite.sequence.phylo.tree import Tree
+from biotite.sequence.phylo.tree import from_newick
 from biotite.sequence.sequence import Sequence
 
 _prefix_pattern = re.compile(r"\d*_")
@@ -59,7 +60,7 @@ class MafftApp(MSAApp):
         matrix: SubstitutionMatrix | None = None,
     ) -> None:
         super().__init__(sequences, bin_path, matrix)
-        self._tree: Tree | None = None
+        self._tree: nx.DiGraph | None = None
         self._out_tree_file_name: str = self.get_input_file_path() + ".tree"
 
     def run(self) -> None:
@@ -93,20 +94,20 @@ class MafftApp(MSAApp):
             # Only the <seqname> is required
             # -> remove the '<n>_' prefix
             newick = re.sub(_prefix_pattern, "", raw_newick)
-            self._tree = Tree.from_newick(newick)
+            self._tree = from_newick(newick)
 
     def clean_up(self) -> None:
         super().clean_up()
         os.remove(self._out_tree_file_name)
 
     @requires_state(AppState.JOINED)
-    def get_guide_tree(self) -> Tree:
+    def get_guide_tree(self) -> nx.DiGraph:
         """
         Get the guide tree created for the progressive alignment.
 
         Returns
         -------
-        tree : Tree
+        tree : DiGraph
             The guide tree.
         """
         if self._tree is None:
