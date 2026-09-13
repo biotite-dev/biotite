@@ -3,27 +3,31 @@
 # information.
 
 """
-This subpackage provides functions and data structures for creating
+This subpackage provides functions for creating and handling
 (phylogenetic) trees.
 
-The :class:`Tree` is the central class in this subpackage.
-It wraps a *root* :class:`TreeNode` object.
-A :class:`TreeNode` is either an intermediate node, if it has child
-:class:`TreeNode` objects, or otherwise a leaf node.
+A tree is represented as a rooted :class:`networkx.DiGraph`, whose
+edges point from a parent node to its child node.
+Each edge has a ``"distance"`` attribute, that gives the distance
+between the two nodes.
+The leaf nodes are the integers ``0`` to ``n-1``.
+They are reference indices into a separate list or array, containing
+the actual objects the tree represents, e.g. species names or
+sequences.
+The intermediate nodes may be any other hashable objects.
+By convention, the trees created by this subpackage use the integers
+``n`` upwards for the intermediate nodes, so that the root is the node
+with the highest number.
+This subpackage adds a few convenience functions on top of *NetworkX*
+for common tree queries, namely :func:`get_root()`,
+:func:`get_leaves()`, :func:`get_distance()` and
+:func:`get_leaf_distances()`.
 
-A :class:`Tree` is not a container itself:
-Objects, e.g species names or sequences, that are represented by the
-nodes, cannot be stored directly in a :class:`Tree` or
-:class:`TreeNode`.
-Instead, each leaf node has a reference index:
-These indices refer to a separate list or array, containing the actual
-reference objects.
-
-A :class:`Tree` can be created from or exported to a *Newick* notation,
-usingthe :func:`Tree.from_newick()` or :func:`Tree.to_newick()` method,
+A tree can be created from or exported to a *Newick* notation,
+using the :func:`from_newick()` or :func:`to_newick()` function,
 respectively.
 
-A :class:`Tree` can be build from a pairwise distance matrix using the
+A tree can be built from a pairwise distance matrix using the
 popular *UPGMA* (:func:`upgma()`) and *Neighbor-Joining*
 (:func:`neighbor_joining()`) algorithms.
 """
