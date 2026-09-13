@@ -19,7 +19,7 @@ def legacy_alignments():
     The pairs are sorted by ``file_name``.
     """
     # Import in function to avoid 'ModuleNotFoundError',
-    # if a Cython module is not compiled yet
+    # if the Rust extension is not compiled yet
     import biotite.sequence.io.fasta as fasta
 
     base_dir = data_dir("sequence") / "legacy_consistency"

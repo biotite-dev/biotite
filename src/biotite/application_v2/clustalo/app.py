@@ -12,6 +12,7 @@ from collections.abc import Sequence as SequenceABC
 from dataclasses import dataclass
 from os import PathLike
 from tempfile import NamedTemporaryFile
+import networkx as nx
 import numpy as np
 from biotite.application_v2.localapp import (
     CLIFlag,
@@ -24,7 +25,7 @@ from biotite.application_v2.localapp import (
 )
 from biotite.application_v2.msa import MSAInput
 from biotite.sequence.align.alignment import Alignment
-from biotite.sequence.phylo.tree import Tree
+from biotite.sequence.phylo.tree import from_newick, get_leaves, to_newick
 from biotite.sequence.sequence import Sequence
 
 
@@ -41,7 +42,7 @@ class ClustalOmegaResult:
         The order of the sequences intended by Clustal-Omega.
         Usually this order (e.g. based on the guide tree) differs from
         the input order.
-    guide_tree : Tree
+    guide_tree : nx.DiGraph
         The guide tree used for the progressive alignment.
         If a guide tree was given as input, this is that tree.
     distance_matrix : ndarray, shape=(n,n), dtype=float or None
@@ -52,7 +53,7 @@ class ClustalOmegaResult:
 
     alignment: Alignment
     order: np.ndarray
-    guide_tree: Tree
+    guide_tree: nx.DiGraph
     distance_matrix: np.ndarray | None
 
 
@@ -90,7 +91,7 @@ class ClustalOmegaApp(LocalApp):
         self,
         sequences: SequenceABC[Sequence],
         distance_matrix: np.ndarray | None = None,
-        guide_tree: Tree | None = None,
+        guide_tree: nx.DiGraph | None = None,
         use_full_matrix: bool = False,
     ) -> CommandSetup[ClustalOmegaResult]:
         """
@@ -102,7 +103,7 @@ class ClustalOmegaApp(LocalApp):
             The sequences to be aligned.
         distance_matrix : ndarray, shape=(n,n), dtype=float, optional
             Pairwise sequence distances used to calculate the guide tree.
-        guide_tree : Tree, optional
+        guide_tree : nx.DiGraph, optional
             The guide tree used for the progressive alignment.
         use_full_matrix : bool, optional
             If set, the full distance matrix is used for the guide-tree
@@ -134,9 +135,9 @@ class ClustalOmegaApp(LocalApp):
                 f"Distance matrix with shape {distance_matrix.shape} is not "
                 f"sufficient for {seq_count} sequences"
             )
-        if guide_tree is not None and len(guide_tree) != seq_count:
+        if guide_tree is not None and len(get_leaves(guide_tree)) != seq_count:
             raise ValueError(
-                f"Guide tree with {len(guide_tree)} leaves is not sufficient "
+                f"Guide tree with {len(get_leaves(guide_tree))} leaves is not sufficient "
                 f"for {seq_count} sequences"
             )
 
@@ -186,14 +187,14 @@ class ClustalOmegaApp(LocalApp):
             )
             parameters.append(CLIOption("distmat-in", in_matrix_file.name))
         if guide_tree is not None:
-            in_tree_file.write(str(guide_tree))
+            in_tree_file.write(to_newick(guide_tree))
             in_tree_file.flush()
             parameters.append(CLIOption("guidetree-in", in_tree_file.name))
 
         def evaluate(stdout: bytes, stderr: bytes) -> ClustalOmegaResult:
             alignment, order = msa_input.read_fasta(out_file)
             if guide_tree is None:
-                result_tree = Tree.from_newick(out_tree_file.read().replace("\n", ""))
+                result_tree = from_newick(out_tree_file.read().replace("\n", ""))
             else:
                 result_tree = guide_tree
             if use_full_matrix:

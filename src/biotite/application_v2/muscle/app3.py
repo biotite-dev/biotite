@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from os import PathLike
 from tempfile import NamedTemporaryFile
 from typing import IO, Any
+import networkx as nx
 import numpy as np
 from biotite.application_v2.base import VersionError
 from biotite.application_v2.localapp import (
@@ -28,7 +29,7 @@ from biotite.application_v2.localapp import (
 from biotite.application_v2.msa import MSAInput, resolve_gap_penalty
 from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.align.matrix import SubstitutionMatrix
-from biotite.sequence.phylo.tree import Tree
+from biotite.sequence.phylo.tree import from_newick
 from biotite.sequence.sequence import Sequence
 
 
@@ -45,11 +46,11 @@ class Muscle3Result:
         The order of the sequences intended by MUSCLE.
         Usually this order (e.g. based on the guide tree) differs from
         the input order.
-    guide_tree_kmer : Tree or None
+    guide_tree_kmer : nx.DiGraph or None
         The guide tree from the first progressive alignment iteration,
         using common *k*-mers as distance measure.
         None, if MUSCLE did not write the tree.
-    guide_tree_identity : Tree or None
+    guide_tree_identity : nx.DiGraph or None
         The guide tree from the second progressive alignment iteration,
         using distances based on the pairwise sequence identity after
         the first iteration.
@@ -58,8 +59,8 @@ class Muscle3Result:
 
     alignment: Alignment
     order: np.ndarray
-    guide_tree_kmer: Tree | None
-    guide_tree_identity: Tree | None
+    guide_tree_kmer: nx.DiGraph | None
+    guide_tree_identity: nx.DiGraph | None
 
 
 class Muscle3App(LocalApp):
@@ -196,12 +197,12 @@ class Muscle3App(LocalApp):
         )
 
 
-def _read_tree(temp_file: IO[str], iteration: str) -> Tree | None:
+def _read_tree(temp_file: IO[str], iteration: str) -> nx.DiGraph | None:
     """
     Read a Newick guide tree written by MUSCLE, warning if it is empty.
     """
     newick = temp_file.read().replace("\n", "")
     if len(newick) > 0:
-        return Tree.from_newick(newick)
+        return from_newick(newick)
     warnings.warn(f"MUSCLE did not write a tree file from the {iteration} iteration")
     return None

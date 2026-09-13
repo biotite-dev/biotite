@@ -216,11 +216,16 @@
     },
 
     "biotite.sequence.phylo" : {
-        "Data structures" : [
-            "Tree",
-            "TreeNode",
-            "TreeError",
+        "Tree handling" : [
+            "get_root",
+            "get_leaves",
+            "get_distance",
+            "get_leaf_distances",
             "as_binary"
+        ],
+        "Newick notation" : [
+            "to_newick",
+            "from_newick"
         ],
         "Clustering algorithms" : [
             "upgma",

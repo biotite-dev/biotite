@@ -9,15 +9,16 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["plot_dendrogram"]
 
 from typing import Any, Literal
+import networkx as nx
 import numpy as np
 from matplotlib.axes import Axes
-from biotite.sequence.phylo.tree import Tree, TreeNode
+from biotite.sequence.phylo.tree import get_leaves, get_root
 from biotite.typing import MplColor
 
 
 def plot_dendrogram(
     axes: Axes,
-    tree: Tree,
+    tree: nx.DiGraph,
     orientation: Literal["left", "right", "bottom", "top"] = "left",
     use_distances: bool = True,
     labels: list[str] | None = None,
@@ -33,18 +34,18 @@ def plot_dendrogram(
     ----------
     axes : Axes
         A *Matplotlib* axes, that is used as plotting area.
-    tree : Tree
+    tree : DiGraph
         The tree to be visualized.
     orientation : {'left', 'right', 'bottom', 'top'}, optional
         The position of the root node in the plot
     use_distances : bool, optional
-        If true, the `distance` attribute of the :class:`TreeNode`
-        objects are used as distance measure.
+        If true, the ``"distance"`` attribute of the edges is used as
+        distance measure.
         Otherwise the topological distance is used.
     labels : list of str, optional
         The leaf node labels.
-        The label of a leaf node is the entry at the position of its
-        `index` attribute.
+        The label of a leaf node is the entry at the position of the
+        leaf node.
     label_size : float, optional
         The font size of the labels.
     color : tuple or str, optional
@@ -57,103 +58,86 @@ def plot_dendrogram(
         Additional parameters that are used to draw the dendrogram
         lines.
     """
+    if orientation not in ("left", "right", "bottom", "top"):
+        raise ValueError(f"'{orientation}' is not a valid orientation")
 
-    indices = tree.root.get_indices()
-    leaf_dict: dict[int, int] = {int(indices[i]): int(i) for i in indices}
+    root = get_root(tree)
+    # The leaves are placed on the 'label' axis in depth-first order
+    leaves = get_leaves(tree, root)
+    leaf_positions = {leaf: i for i, leaf in enumerate(leaves)}
 
-    # Required for setting the plot limits
-    max_distance = 0
-
-    def _plot_node(node: TreeNode, distance: float) -> float:
-        """
-        Draw the lines from the given node to its children.
-
-        Parameters
-        ----------
-        dist : float
-            the distance of the node from root
-
-        Returns
-        -------
-        pos : float
-            the position of the node on the 'label' axis
-        """
-        # The term 'distance'
-        # refers to positions along the 'distance' axis
-        # the term 'pos'
-        # refers to positions along the other axis
-        nonlocal max_distance
-        if max_distance < distance:
-            max_distance = distance
-        if node.is_leaf():
-            # No children -> no line can be drawn
-            if node.index is None:
-                raise ValueError("Leaf node has no index")
-            return leaf_dict[node.index]
+    # The term 'distance'
+    # refers to positions along the 'distance' axis
+    # the term 'pos'
+    # refers to positions along the other axis
+    node_distances: dict[Any, float] = {root: 0.0}
+    for parent, child in nx.dfs_edges(tree, root):
+        if use_distances:
+            edge_distance = tree.edges[parent, child]["distance"]
         else:
-            children = node.children
-            if use_distances:
-                child_distances = [distance + c.distance for c in children]
-            else:
-                # Use topologic distance of children to this node,
-                # which is always 1
-                child_distances = [distance + 1 for c in children]
-            child_pos = [
-                _plot_node(child, child_distance)
-                for child, child_distance in zip(children, child_distances)
-            ]
-            # Position of this node is in the center of the child nodes
-            center_pos = sum(child_pos) / len(child_pos)
-            if orientation in ["left", "right"]:
-                # Line connecting the childs
-                axes.plot(
-                    [distance, distance],
-                    [child_pos[0], child_pos[-1]],
-                    color=color,
-                    marker="None",
-                    **kwargs,
-                )
-                # Lines depicting the distances of the childs
-                for child_dist, pos in zip(child_distances, child_pos):
-                    axes.plot(
-                        [distance, child_dist],
-                        [pos, pos],
-                        color=color,
-                        marker="None",
-                        **kwargs,
-                    )
-            elif orientation in ["bottom", "top"]:
-                # Line connecting the childs
-                axes.plot(
-                    [child_pos[0], child_pos[-1]],
-                    [distance, distance],
-                    color=color,
-                    marker="None",
-                    **kwargs,
-                )
-                # Lines depicting the distances of the childs
-                for child_dist, pos in zip(child_distances, child_pos):
-                    axes.plot(
-                        [pos, pos],
-                        [distance, child_dist],
-                        color=color,
-                        marker="None",
-                        **kwargs,
-                    )
-            else:
-                raise ValueError(f"'{orientation}' is not a valid orientation")
-            return center_pos
+            # Use topologic distance of the child to its parent,
+            # which is always 1
+            edge_distance = 1
+        node_distances[child] = node_distances[parent] + edge_distance
+    # Required for setting the plot limits
+    max_distance = max(node_distances.values())
 
-    _plot_node(tree.root, 0)
+    # Position of each node on the 'label' axis,
+    # which is the center of its children
+    node_positions: dict[Any, float] = {}
+    for node in nx.dfs_postorder_nodes(tree, root):
+        children = list(tree.successors(node))
+        if len(children) == 0:
+            # No children -> no line can be drawn
+            node_positions[node] = leaf_positions[node]
+            continue
+        distance = node_distances[node]
+        child_distances = [node_distances[child] for child in children]
+        child_pos = [node_positions[child] for child in children]
+        node_positions[node] = sum(child_pos) / len(child_pos)
+        if orientation in ["left", "right"]:
+            # Line connecting the children
+            axes.plot(
+                [distance, distance],
+                [child_pos[0], child_pos[-1]],
+                color=color,
+                marker="None",
+                **kwargs,
+            )
+            # Lines depicting the distances of the children
+            for child_dist, pos in zip(child_distances, child_pos):
+                axes.plot(
+                    [distance, child_dist],
+                    [pos, pos],
+                    color=color,
+                    marker="None",
+                    **kwargs,
+                )
+        else:
+            # Line connecting the children
+            axes.plot(
+                [child_pos[0], child_pos[-1]],
+                [distance, distance],
+                color=color,
+                marker="None",
+                **kwargs,
+            )
+            # Lines depicting the distances of the children
+            for child_dist, pos in zip(child_distances, child_pos):
+                axes.plot(
+                    [pos, pos],
+                    [distance, child_dist],
+                    color=color,
+                    marker="None",
+                    **kwargs,
+                )
 
     sorted_labels: list[str]
     if labels is not None:
-        # Sort labels using the order of indices in the tree
-        # A list cannot be directly indexed with a list,
-        # hence the conversion to a ndarray
-        sorted_labels = np.array(labels)[indices].tolist()
+        # Sort labels using the order of the leaves in the tree
+        sorted_labels = [labels[leaf] for leaf in leaves]
     else:
-        sorted_labels = [str(i) for i in indices]
+        sorted_labels = [str(leaf) for leaf in leaves]
     # The distance axis does not start at 0,
     # since the root line would not properly rendered
     # Hence the limit is set a to small fraction of the entire axis
@@ -161,8 +145,8 @@ def plot_dendrogram(
     zero_limit = -0.01 * max_distance
     if orientation == "left":
         axes.set_xlim(zero_limit, max_distance)
-        axes.set_ylim(-1, len(indices))
-        axes.set_yticks(np.arange(0, len(indices)))
+        axes.set_ylim(-1, len(leaves))
+        axes.set_yticks(np.arange(0, len(leaves)))
         axes.set_yticklabels(sorted_labels)
         axes.yaxis.set_tick_params(
             left=False,
@@ -180,8 +164,8 @@ def plot_dendrogram(
         )
     elif orientation == "right":
         axes.set_xlim(max_distance, zero_limit)
-        axes.set_ylim(-1, len(indices))
-        axes.set_yticks(np.arange(0, len(indices)))
+        axes.set_ylim(-1, len(leaves))
+        axes.set_yticks(np.arange(0, len(leaves)))
         axes.set_yticklabels(sorted_labels)
         axes.yaxis.set_tick_params(
             left=False,
@@ -199,8 +183,8 @@ def plot_dendrogram(
         )
     elif orientation == "bottom":
         axes.set_ylim(zero_limit, max_distance)
-        axes.set_xlim(-1, len(indices))
-        axes.set_xticks(np.arange(0, len(indices)))
+        axes.set_xlim(-1, len(leaves))
+        axes.set_xticks(np.arange(0, len(leaves)))
         axes.set_xticklabels(sorted_labels)
         axes.xaxis.set_tick_params(
             bottom=False,
@@ -216,10 +200,10 @@ def plot_dendrogram(
             labelright=False,
             labelsize=label_size,
         )
-    elif orientation == "top":
+    else:
         axes.set_ylim(max_distance, zero_limit)
-        axes.set_xlim(-1, len(indices))
-        axes.set_xticks(np.arange(0, len(indices)))
+        axes.set_xlim(-1, len(leaves))
+        axes.set_xticks(np.arange(0, len(leaves)))
         axes.set_xticklabels(sorted_labels)
         axes.xaxis.set_tick_params(
             bottom=False,
@@ -235,6 +219,4 @@ def plot_dendrogram(
             labelright=False,
             labelsize=label_size,
         )
-    else:
-        raise ValueError(f"'{orientation}' is not a valid orientation")
     axes.set_frame_on(False)

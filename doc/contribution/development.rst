@@ -112,9 +112,6 @@ For example *Rust* functionalities for ``biotite.structure.io.pdb`` reside in
 ``biotite.rust`` itself is not publicly exposed, but its functionalities are instead
 internally used or reexported in ``biotite`` subpackages.
 
-Parts of the code are still written in `Cython <https://cython.readthedocs.io/en/latest/>`_,
-but adding new *Cython* modules is discouraged in favor of *Rust*.
-
 Docstrings
 ----------
 *Biotite* uses

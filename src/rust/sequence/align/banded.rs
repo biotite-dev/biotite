@@ -151,6 +151,7 @@ fn align_banded_dtype<'py, S: Symbol + numpy::Element>(
     let (traces, score) = match scoring {
         Scoring::Matrix(scheme) => by_penalty!(scheme),
         Scoring::Match(scheme) => by_penalty!(scheme),
+        Scoring::NeutralMatch(scheme) => by_penalty!(scheme),
     };
 
     let list = PyList::empty(py);
