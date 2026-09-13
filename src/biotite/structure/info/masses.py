@@ -14,6 +14,7 @@ import numpy as np
 from biotite.structure.atoms import Atom, AtomArray, AtomArrayStack
 from biotite.structure.info.ccd import get_from_ccd
 from biotite.typing import N, NDArray1
+from biotite.util import map_unique
 
 # Masses are taken from http://www.sbcs.qmul.ac.uk/iupac/AtWt/ (2018/03/01)
 ATOM_MASSES_FILE = Path(__file__).parent / "atom_masses.json"
@@ -166,12 +167,7 @@ def masses(
     """
     if isinstance(elements, (AtomArray, AtomArrayStack)):
         elements = elements.element
-    # Look up each unique element only once instead of each element in the array
-    unique_elements, inverse = np.unique_inverse(elements)
-    unique_masses = np.array(
-        [mass(element, is_residue=False) for element in unique_elements.tolist()]
-    )
-    return unique_masses[inverse]
+    return map_unique(functools.partial(mass, is_residue=False), elements)
 
 
 @functools.cache

@@ -69,6 +69,7 @@ from biotite.structure.residues import (
 )
 from biotite.structure.transform import AffineTransformation
 from biotite.typing import C2, XYZ, M, N, NDArray1, NDArray2
+from biotite.util import map_unique
 
 _PDBxFile: TypeAlias = CIFFile | CIFBlock | BinaryCIFFile | BinaryCIFBlock
 _Block: TypeAlias = CIFBlock | BinaryCIFBlock
@@ -761,7 +762,7 @@ def _parse_inter_residue_bonds(
     bond_type_id = bond_type_id[covale_mask][mapping_exists_mask]
     # The type ID is always present in the dictionary,
     # as it was used to filter the applicable bonds
-    bond_types = [PDBX_BOND_TYPE_ID_TO_TYPE[type_id] for type_id in bond_type_id]
+    bond_types = map_unique(PDBX_BOND_TYPE_ID_TO_TYPE.__getitem__, bond_type_id)
 
     return BondList(
         atom_count if atom_count is not None else atom_site.row_count,
@@ -1083,7 +1084,9 @@ def set_structure(
         atom_site["occupancy"] = np.copy(array.occupancy)
     if "charge" in annot_categories:
         atom_site["pdbx_formal_charge"] = Column(
-            np.array([f"{c:+d}" if c != 0 else "?" for c in array.charge]),
+            map_unique(
+                lambda charge: f"{charge:+d}" if charge != 0 else "?", array.charge
+            ),
             np.where(array.charge == 0, MaskValue.MISSING, MaskValue.PRESENT),
         )
     if "entity_id" in annot_categories:
@@ -1295,21 +1298,14 @@ def _set_intra_residue_bonds(
     bond_array = _filter_bonds(array, "intra")
     if len(bond_array) == 0:
         return None
-    # A structure contains far fewer distinct bond types than bonds,
-    # hence the bond type is translated once per distinct type
-    unique_bond_types, type_indices = np.unique_inverse(bond_array[:, 2])
-    unique_value_order = np.zeros(len(unique_bond_types), dtype="U4")
-    unique_aromatic_flag = np.zeros(len(unique_bond_types), dtype="U1")
-    for i, bond_type in enumerate(unique_bond_types):
-        if bond_type == BondType.ANY:
-            # ANY bonds will be masked anyway, no need to set the value
-            continue
-        unique_value_order[i], unique_aromatic_flag[i] = _get_chem_comp_bond_type(
-            bond_type
-        )
-    value_order = unique_value_order[type_indices]
-    aromatic_flag = unique_aromatic_flag[type_indices]
     any_mask = bond_array[:, 2] == BondType.ANY
+    value_order = np.zeros(len(bond_array), dtype="U4")
+    aromatic_flag = np.zeros(len(bond_array), dtype="U1")
+    # ANY bonds will be masked anyway, no need to set the value
+    if not np.all(any_mask):
+        value_order[~any_mask], aromatic_flag[~any_mask] = map_unique(
+            _get_chem_comp_bond_type, bond_array[~any_mask, 2]
+        ).T
 
     # Remove already existing residue and atom name combinations
     # These appear when the structure contains a residue multiple times
@@ -1380,11 +1376,11 @@ def _set_inter_residue_bonds(
 
     struct_conn = Category()
     struct_conn["id"] = np.arange(1, len(bond_array) + 1)
-    struct_conn["conn_type_id"] = [
-        PDBX_BOND_TYPE_TO_TYPE_ID[btype] for btype in bond_array[:, 2]
-    ]
+    struct_conn["conn_type_id"] = map_unique(
+        PDBX_BOND_TYPE_TO_TYPE_ID.__getitem__, bond_array[:, 2]
+    )
     struct_conn["pdbx_value_order"] = Column(
-        np.array([PDBX_BOND_TYPE_TO_ORDER[btype] for btype in bond_array[:, 2]]),
+        map_unique(PDBX_BOND_TYPE_TO_ORDER.__getitem__, bond_array[:, 2]),
         np.where(
             np.isin(bond_array[:, 2], (BondType.ANY, BondType.COORDINATION)),
             MaskValue.MISSING,
@@ -1696,19 +1692,16 @@ def set_component(
 
     if array.bonds is not None and array.bonds.get_bond_count() > 0:
         bond_array = array.bonds.as_array()
-        order_flags = []
-        aromatic_flags = []
-        for bond_type in bond_array[:, 2]:
-            order_flag, aromatic_flag = _get_chem_comp_bond_type(bond_type)
-            order_flags.append(order_flag)
-            aromatic_flags.append(aromatic_flag)
+        order_flags, aromatic_flags = map_unique(
+            _get_chem_comp_bond_type, bond_array[:, 2]
+        ).T
 
         bond_cat = Category()
         bond_cat["comp_id"] = np.full(len(bond_array), res_name)
         bond_cat["atom_id_1"] = array.atom_name[bond_array[:, 0]]
         bond_cat["atom_id_2"] = array.atom_name[bond_array[:, 1]]
-        bond_cat["value_order"] = np.array(order_flags)
-        bond_cat["pdbx_aromatic_flag"] = np.array(aromatic_flags)
+        bond_cat["value_order"] = order_flags
+        bond_cat["pdbx_aromatic_flag"] = aromatic_flags
         bond_cat["pdbx_ordinal"] = np.arange(1, len(bond_array) + 1).astype(str)
         block["chem_comp_bond"] = bond_cat
 
