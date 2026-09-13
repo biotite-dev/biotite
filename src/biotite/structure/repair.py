@@ -19,6 +19,7 @@ from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.chains import get_chain_starts
 from biotite.structure.residues import get_residue_starts
 from biotite.typing import M, N, NDArray1
+from biotite.util import map_unique
 
 
 def create_continuous_res_ids(
@@ -109,10 +110,7 @@ def infer_elements(
         atom_names = atoms.atom_name
     else:
         atom_names = np.asarray(atoms)
-    # Guess each unique atom name only once instead of each atom
-    unique_names, inverse = np.unique_inverse(atom_names)
-    unique_elements = np.array([_guess_element(name) for name in unique_names.tolist()])
-    return unique_elements[inverse]
+    return map_unique(_guess_element, atom_names)
 
 
 def create_atom_names(
