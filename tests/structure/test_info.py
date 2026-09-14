@@ -120,8 +120,7 @@ def test_protor_radii():
 )
 def test_protor_radii_element(res_name, atom_name, ref_radius):
     """
-    Check that the element used for the ProtOr group is taken from the
-    *CCD*, not from the first character of the atom name.
+    Check the correct ProtOr radii for manually checked examples.
     """
     assert strucinfo.vdw_radius_protor(res_name, atom_name) == ref_radius
 

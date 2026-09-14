@@ -6,6 +6,8 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["vdw_radius_protor", "vdw_radius_single"]
 
+import functools
+
 from biotite.structure.info.bonds import bonds_in_residue
 from biotite.structure.info.ccd import get_from_ccd
 
@@ -195,6 +197,7 @@ def vdw_radius_protor(res_name: str, atom_name: str) -> float | None:
         return vdw_radius_protor(res_name, atom_name)
 
 
+@functools.cache
 def _calculate_protor_radii(res_name: str) -> dict[str, float | None]:
     """
     Calculate the ProtOr VdW radii for all atoms (atom names) in
@@ -215,7 +218,7 @@ def _calculate_protor_radii(res_name: str) -> dict[str, float | None]:
         # One time the first atom is the one to get valency and H count
         # for and the other time vice versa
         for main_atom, bound_atom in ((atom1, atom2), (atom2, atom1)):
-            element = elements.get(main_atom, "")
+            element = elements[main_atom]
             # Calculating ProtOr radii for hydrogens is not meaningful
             if element in ("H", "D"):
                 continue
@@ -231,7 +234,7 @@ def _calculate_protor_radii(res_name: str) -> dict[str, float | None]:
             # Increase valency by one, since the bond entry exists
             group[1] += 1
             # If the atom is bonded to hydrogen, increase H count
-            if elements.get(bound_atom, "") in ("H", "D"):
+            if elements[bound_atom] in ("H", "D"):
                 group[2] += 1
             groups[main_atom] = group
     # Get radii based on ProtOr groups
@@ -249,7 +252,7 @@ def _elements_in_residue(res_name: str) -> dict[str, str]:
     if atom_names is None or elements is None:
         return {}
     return {
-        str(atom_name): str(element).upper()
+        atom_name.item(): element.item().upper()
         for atom_name, element in zip(atom_names.as_array(str), elements.as_array(str))
     }
 
