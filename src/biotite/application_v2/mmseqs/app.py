@@ -984,11 +984,7 @@ class MMseqsLikeApp(LocalApp):
         True
         >>> fasta_file.close()
         """
-        output: Path | IO[bytes]
-        if fasta_path is None:
-            output = NamedTemporaryFile("w+b")
-        else:
-            output = Path(fasta_path)
+        output = _resolve_output(fasta_path)
         return CommandSetup(
             parameters=[CLIArgument(sequence_db), CLIArgument(output)],
             evaluate=lambda _out, _err: output,
@@ -1052,11 +1048,7 @@ class MMseqsLikeApp(LocalApp):
         True
         >>> alignment_file.close()
         """
-        output: Path | IO[bytes]
-        if output_path is None:
-            output = NamedTemporaryFile("w+b")
-        else:
-            output = Path(output_path)
+        output = _resolve_output(output_path)
         parameters: list[CLIArgument | CLIOption] = [
             CLIArgument(alignment_db.query_db),
             CLIArgument(alignment_db.target_db),
@@ -1301,11 +1293,7 @@ class MMseqsLikeApp(LocalApp):
         else:
             query_db = result_db.query_db
             target_db = result_db.target_db
-        output: Path | IO[bytes]
-        if output_path is None:
-            output = NamedTemporaryFile("w+b")
-        else:
-            output = Path(output_path)
+        output = _resolve_output(output_path)
         return CommandSetup(
             parameters=[
                 CLIArgument(query_db),
@@ -1436,14 +1424,17 @@ class MMseqsApp(MMseqsLikeApp):
         --------
         >>> import tempfile
         >>> app = MMseqsApp()
-        >>> with tempfile.NamedTemporaryFile("w", suffix=".sto") as msa_file:
+        >>> with tempfile.NamedTemporaryFile(
+        ...     "w", suffix=".sto", delete_on_close=False
+        ... ) as msa_file:
         ...     print("# STOCKHOLM 1.0", file=msa_file)
         ...     print("#=GF AC query", file=msa_file)
         ...     print("seq0 NLYIQWLKDGGPSSGRPPPS", file=msa_file)
         ...     print("seq1 NLYIQWLKD-GPSSGRPPPA", file=msa_file)
         ...     print("//", file=msa_file)
-        ...     msa_file.flush()
-        ...     msa_db = app.convert_msa(msa_file).result()
+        ...     # Close the file, so that the application can read it on Windows
+        ...     msa_file.close()
+        ...     msa_db = app.convert_msa(msa_file.name).result()
         """
         database = MSADatabase(self)
         return CommandSetup(
@@ -1916,11 +1907,7 @@ class MMseqsApp(MMseqsLikeApp):
         17 W -3 -2 -5 -3 0 -3 -2 -3 -4 -2 -2 -4 -3 -2 -3 -3 -3 -3 12 1
         >>> pssm_file.close()
         """
-        output: Path | IO[bytes]
-        if output_path is None:
-            output = NamedTemporaryFile("w+b")
-        else:
-            output = Path(output_path)
+        output = _resolve_output(output_path)
         return CommandSetup(
             parameters=[CLIArgument(profile_db), CLIArgument(output)],
             evaluate=lambda _out, _err: output,
@@ -2226,11 +2213,7 @@ class FoldseekApp(MMseqsLikeApp):
         1k6p 1k6p A,B A,B
         >>> report_file.close()
         """
-        output: Path | IO[bytes]
-        if output_path is None:
-            output = NamedTemporaryFile("w+b")
-        else:
-            output = Path(output_path)
+        output = _resolve_output(output_path)
         return CommandSetup(
             parameters=[
                 CLIArgument(alignment_db.query_db),
@@ -2240,6 +2223,29 @@ class FoldseekApp(MMseqsLikeApp):
             ],
             evaluate=lambda _out, _err: output,
         )
+
+
+def _resolve_output(output_path: PathLike[str] | str | None) -> Path | IO[bytes]:
+    """
+    Resolve the output of a command that writes a file.
+
+    Parameters
+    ----------
+    output_path : path-like or None
+        The output path given by the user.
+
+    Returns
+    -------
+    output : Path or binary file
+        The output path or, if none was given, a temporary file the application
+        writes to.
+        Deletion of the temporary file on close is disabled, so that the
+        application can open it on Windows as well.
+        Instead, it is deleted when the file object is garbage collected.
+    """
+    if output_path is None:
+        return NamedTemporaryFile("w+b", delete_on_close=False)
+    return Path(output_path)
 
 
 def _resolve_scoring(
@@ -2263,10 +2269,12 @@ def _resolve_scoring(
     """
     options = []
     if matrix is not None:
-        matrix_file = NamedTemporaryFile("w", suffix=".out")
+        # The file is closed after writing, so that the application can open it
+        # on Windows as well, but it is only deleted when it is garbage collected,
+        # which is delayed by the option that references it
+        matrix_file = NamedTemporaryFile("w", suffix=".out", delete_on_close=False)
         _write_substitution_matrix(matrix, matrix_file)
-        matrix_file.flush()
-        # The file is kept alive by the option it is referenced by
+        matrix_file.close()
         options.append(CLIOption("sub_mat", matrix_file))
     gap_open, gap_extend = resolve_gap_penalty(gap_penalty)
     if gap_open is not None and gap_extend is not None:

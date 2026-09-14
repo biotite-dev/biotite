@@ -51,7 +51,8 @@ def test_database_value_properties(seed):
 
 def test_conversion_to_temporary_file():
     """
-    Omitting a conversion path returns a readable temporary binary file.
+    Omitting a conversion path returns a readable temporary binary file, that is
+    deleted once it is discarded.
     """
     app = MMseqsApp("true")
     sequence_db = SequenceDatabase(app)
@@ -61,7 +62,9 @@ def test_conversion_to_temporary_file():
         app.convert_to_fasta(sequence_db),
         app.convert_alignments(alignment_db),
     ]
-    for future in futures:
+    while futures:
+        # The future references the file, so it must not be retained
+        future = futures.pop()
         output_file = future.result()
         output_path = Path(output_file.name)
 
@@ -70,7 +73,12 @@ def test_conversion_to_temporary_file():
         assert str(output_path) in future.command
         assert output_path.is_file()
 
+        # Closing must not delete the file, as the application may still need
+        # to open it on Windows, but discarding the file object must
         output_file.close()
+        assert output_path.is_file()
+        del output_file, future
+        gc.collect()
         assert not output_path.exists()
 
 

@@ -140,8 +140,11 @@ def create_database_from_sequences(
     should be aligned directly or translated beforehand.
     """
     db_type = _resolve_database_type(sequences)
-    with NamedTemporaryFile("w+", suffix=".fasta") as temp_file:
+    # The file is closed after writing, so that the application can open it on
+    # Windows as well, and it is deleted when the context is exited
+    with NamedTemporaryFile("w+", suffix=".fasta", delete_on_close=False) as temp_file:
         _write_fasta(temp_file, sequences)
+        temp_file.close()
         match app:
             case MMseqsApp():
                 return app.create_db([temp_file], db_type=db_type).result()
@@ -261,10 +264,11 @@ def create_database_from_msa(
     for identifier in msa:
         if any(character.isspace() for character in identifier):
             raise ValueError(f"Identifier '{identifier}' must not contain whitespace")
-    with NamedTemporaryFile("w+", suffix=".sto") as temp_file:
+    # See `create_database_from_sequences()` for the handling of the temporary file
+    with NamedTemporaryFile("w+", suffix=".sto", delete_on_close=False) as temp_file:
         for identifier, alignments in msa.items():
             _write_stockholm(temp_file, alignments, identifier)
-        temp_file.flush()
+        temp_file.close()
         return app.convert_msa(temp_file).result()
 
 
