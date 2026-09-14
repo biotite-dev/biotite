@@ -789,11 +789,11 @@ def _check_pdb_compatibility(
         warnings.warn(f"Residue IDs exceed {max_residues:,}, will be wrapped")
     if np.isnan(array.coord).any():
         raise BadStructureError("Coordinates contain 'NaN' values")
-    if any([len(name) > 1 for name in array.chain_id]):
+    if (np.strings.str_len(array.chain_id) > 1).any():
         raise BadStructureError("Some chain IDs exceed 1 character")
-    if any([len(name) > 3 for name in array.res_name]):
+    if (np.strings.str_len(array.res_name) > 3).any():
         raise BadStructureError("Some residue names exceed 3 characters")
-    if any([len(name) > 4 for name in array.atom_name]):
+    if (np.strings.str_len(array.atom_name) > 4).any():
         raise BadStructureError("Some atom names exceed 4 characters")
     for i, coord_name in enumerate(["x", "y", "z"]):
         n_coord_digits = number_of_integer_digits(array.coord[..., i])

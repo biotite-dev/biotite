@@ -491,7 +491,7 @@ def rotate_about_axis(
 
     # Normalize axis
     axis = np.asarray(axis, dtype=np.float32).copy()
-    if np.linalg.norm(axis) == 0:
+    if np.linalg.vector_norm(axis) == 0:
         raise ValueError("Length of the rotation axis is 0")
     norm_vector(axis)
     # Save some interim values, that are used repeatedly in the
@@ -741,9 +741,9 @@ def align_vectors(
         raise ValueError(
             f"Expected target vector to have shape (3,), got {target_direction.shape}"
         )
-    if np.linalg.norm(origin_direction) == 0:
+    if np.linalg.vector_norm(origin_direction) == 0:
         raise ValueError("Length of the origin vector is 0")
-    if np.linalg.norm(target_direction) == 0:
+    if np.linalg.vector_norm(target_direction) == 0:
         raise ValueError("Length of the target vector is 0")
     if origin_position is not None:
         origin_position = np.asarray(origin_position, dtype=np.float32)
@@ -806,6 +806,4 @@ def _multi_matmul(
     Calculate the matrix multiplication of m matrices
     with m x n vectors.
     """
-    return np.transpose(
-        np.matmul(matrices, np.transpose(vectors, axes=(0, 2, 1))), axes=(0, 2, 1)
-    )
+    return vectors @ matrices.mT
