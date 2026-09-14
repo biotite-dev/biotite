@@ -79,10 +79,9 @@ It allows searching for database entries by specifying and combining criteria
 in a *Pythonic* way and thereby conceals the complexity of the underlying REST
 API of the database.
 
-The :mod:`biotite.application` subpackage extends the repertoire of *Biotite*'s
-analysis functions with interfaces for external software.
-These range from locally installed programs (e.g. *Clustal Omega*) to web
-applications (e.g. *NCBI BLAST*).
+The :mod:`biotite.application_v2` subpackage extends the repertoire of
+*Biotite*'s analysis functions with interfaces for external software, such as
+*Clustal Omega* or *MMseqs2*.
 The interfaces are seamless:
 The input and output are sequence and structure objects, file input/output and
 the command line interface is handled internally.

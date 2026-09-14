@@ -222,6 +222,9 @@ class FastqDumpApp(_DumpApp):
     Fetch sequencing data from the *NCBI sequence read archive*
     (SRA) using *sra-tools*.
 
+    DEPRECATED: Use
+    :meth:`biotite.application_v2.sra.FastqDumpApp.extract_fastq()` instead.
+
     Parameters
     ----------
     uid : str
@@ -243,6 +246,8 @@ class FastqDumpApp(_DumpApp):
         Can either be directly the value, or a string that indicates
         the score format.
     """
+
+    _v2_alternative = "biotite.application_v2.sra.FastqDumpApp"
 
     def __init__(
         self,
@@ -360,6 +365,9 @@ class FastaDumpApp(_DumpApp):
     Fetch sequencing data from the *NCBI sequence read archive*
     (SRA) using *sra-tools*.
 
+    DEPRECATED: Use
+    :meth:`biotite.application_v2.sra.FastqDumpApp.extract_fasta()` instead.
+
     Parameters
     ----------
     uid : str
@@ -376,6 +384,8 @@ class FastaDumpApp(_DumpApp):
         Path to the ``prefetch_path`` and ``fasterq-dump`` binary,
         respectively.
     """
+
+    _v2_alternative = "biotite.application_v2.sra.FastqDumpApp"
 
     def __init__(
         self,

@@ -27,6 +27,9 @@ class RNAalifoldApp(LocalApp):
     Predict the consensus secondary structure from a ribonucleic acid alignment
     using *ViennaRNA's* *RNAalifold* software.
 
+    DEPRECATED: Use :class:`biotite.application_v2.viennarna.AlifoldApp`
+    instead.
+
     In contrast to :class:`RNAfoldApp`, the energy function includes
     a term that includes coevolution information extracted from an
     alignment in addition to the physical free energy term.
@@ -43,6 +46,8 @@ class RNAalifoldApp(LocalApp):
     bin_path : str, optional
         Path of the *RNAalifold* binary.
     """
+
+    _v2_alternative = "biotite.application_v2.viennarna.AlifoldApp"
 
     def __init__(
         self,

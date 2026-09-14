@@ -222,8 +222,9 @@ def base_pairs_from_dot_bracket(
                 "Invalid DBL-notation, not all opening brackets have a closing bracket"
             )
 
+    if len(basepairs) == 0:
+        return np.zeros((0, 2), dtype=int)  # pyright: ignore[reportReturnType]
     # Sort the base pair indices in ascending order
     basepairs = np.array(basepairs)
-    if len(basepairs) > 0:
-        basepairs = basepairs[np.argsort(basepairs[:, 0])]
+    basepairs = basepairs[np.argsort(basepairs[:, 0])]
     return basepairs

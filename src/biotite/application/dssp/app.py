@@ -30,6 +30,8 @@ class DsspApp(LocalApp):
     Annotate the secondary structure of a protein structure using the
     *DSSP* software.
 
+    DEPRECATED: Use :class:`biotite.application_v2.dssp.DsspApp` instead.
+
     Internally this creates a :class:`Popen` instance, which handles
     the execution.
 
@@ -62,6 +64,8 @@ class DsspApp(LocalApp):
     ['C' 'H' 'H' 'H' 'H' 'H' 'H' 'H' 'T' 'T' 'G' 'G' 'G' 'G' 'T' 'C' 'P' 'P'
      'P' 'C']
     """
+
+    _v2_alternative = "biotite.application_v2.dssp.DsspApp"
 
     def __init__(
         self, atom_array: AtomArray[N], bin_path: str | PathLike[str] = "mkdssp"

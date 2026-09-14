@@ -16,7 +16,7 @@ The tree is created using the UPGMA algorithm.
 # License: BSD 3 clause
 
 import matplotlib.pyplot as plt
-import biotite.application.clustalo as clustalo
+import biotite.application_v2.clustalo as clustalo
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align
@@ -47,7 +47,7 @@ sequences = {
 
 ### create a simple phylogenetic tree
 # create MSA
-alignment = clustalo.ClustalOmegaApp.align(list(sequences.values()))
+alignment = clustalo.ClustalOmegaApp().run(list(sequences.values())).result().alignment
 # build simple tree based on deviation from sequence identity
 distances = 1 - align.get_pairwise_sequence_identity(alignment, mode="shortest")
 tree = phylo.upgma(distances)

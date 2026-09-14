@@ -25,6 +25,8 @@ class MafftApp(MSAApp):
     """
     Perform a multiple sequence alignment using MAFFT.
 
+    DEPRECATED: Use :class:`biotite.application_v2.mafft.MafftApp` instead.
+
     Parameters
     ----------
     sequences : list of Sequence
@@ -51,6 +53,8 @@ class MafftApp(MSAApp):
     -BISMITE
     --IQLITE
     """
+
+    _v2_alternative = "biotite.application_v2.mafft.MafftApp"
 
     def __init__(
         self,

@@ -6,6 +6,16 @@ from __future__ import annotations
 
 __name__ = "biotite.sequence.io.fasta"
 __author__ = "Patrick Kunzmann"
+__all__ = [
+    "get_sequence",
+    "get_sequences",
+    "set_sequence",
+    "set_sequences",
+    "get_alignment",
+    "set_alignment",
+    "get_a3m_alignments",
+    "set_a3m_alignments",
+]
 
 import functools
 import warnings
@@ -21,17 +31,6 @@ from biotite.sequence.sequence import Sequence
 from biotite.typing import K, NDArray1
 
 _S = TypeVar("_S", bound=Sequence[str])
-
-__all__ = [
-    "get_sequence",
-    "get_sequences",
-    "set_sequence",
-    "set_sequences",
-    "get_alignment",
-    "set_alignment",
-    "get_a3m_alignments",
-    "set_a3m_alignments",
-]
 
 
 @overload

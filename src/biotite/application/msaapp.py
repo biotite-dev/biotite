@@ -31,6 +31,9 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     This is an abstract base class for multiple sequence alignment
     software.
 
+    DEPRECATED: Use :class:`biotite.application_v2.LocalApp` together with
+    :class:`biotite.application_v2.msa.MSAInput` instead.
+
     It handles conversion of :class:`Sequence` objects to FASTA input
     and FASTA output to an :class:`Alignment` object.
     Inheriting subclasses only need to incorporate the file path
@@ -62,6 +65,8 @@ class MSAApp(LocalApp, metaclass=abc.ABCMeta):
     matrix : SubstitutionMatrix, optional
         A custom substitution matrix.
     """
+
+    _v2_alternative = "biotite.application_v2.LocalApp"
 
     _seqtype: Literal["nucleotide", "protein"]
 

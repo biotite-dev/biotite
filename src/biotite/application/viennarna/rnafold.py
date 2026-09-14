@@ -25,6 +25,8 @@ class RNAfoldApp(LocalApp):
     Compute the minimum free energy secondary structure of a ribonucleic
     acid sequence using *ViennaRNA's* *RNAfold* software.
 
+    DEPRECATED: Use :class:`biotite.application_v2.viennarna.FoldApp` instead.
+
     Internally this creates a :class:`Popen` instance, which handles
     the execution.
 
@@ -49,6 +51,8 @@ class RNAfoldApp(LocalApp):
     >>> print(app.get_dot_bracket())
     (((.((((.......)).)))))....
     """
+
+    _v2_alternative = "biotite.application_v2.viennarna.FoldApp"
 
     def __init__(
         self,
