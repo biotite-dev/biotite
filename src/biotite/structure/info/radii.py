@@ -7,7 +7,6 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["vdw_radius_protor", "vdw_radius_single"]
 
 import functools
-
 from biotite.structure.info.bonds import bonds_in_residue
 from biotite.structure.info.ccd import get_from_ccd
 
