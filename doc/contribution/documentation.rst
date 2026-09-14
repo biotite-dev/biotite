@@ -25,7 +25,11 @@ or in a ``pixi``-managed environment
 
 .. code-block:: console
 
-    $ pixi run -e doc doc-full
+    $ pixi install -e test-mmseqs
+    $ env PATH="$PWD/.pixi/envs/test-mmseqs/bin:$PATH" pixi run -e doc doc-full
+
+The additional environment allows running *MMseqs2* and *Foldseek* without introducing
+their incompatible dependencies into the documentation environment itself.
 
 Documentation structure
 -----------------------

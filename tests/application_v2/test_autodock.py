@@ -1,0 +1,97 @@
+# This source code is part of the Biotite package and is distributed
+# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
+# information.
+
+import numpy as np
+import pytest
+import biotite.structure as struc
+import biotite.structure.info as info
+import biotite.structure.io.pdbx as pdbx
+from biotite.application_v2.autodock import VinaApp
+from tests.util import data_dir, is_not_installed
+
+
+@pytest.mark.skipif(is_not_installed("vina"), reason="Autodock Vina is not installed")
+@pytest.mark.parametrize("flexible", [False, True])
+def test_docking(flexible):
+    """
+    Test :class:`VinaApp` for the case of docking biotin to
+    streptavidin.
+    The output binding pose should be very similar to the pose in the
+    PDB structure.
+    """
+    MAX_DEVIATION = 2.0
+
+    # A structure of a streptavidin-biotin complex
+    pdbx_file = pdbx.BinaryCIFFile.read(data_dir("application") / "2rtg.bcif")
+    structure = pdbx.get_structure(
+        pdbx_file, model=1, extra_fields=["charge"], include_bonds=True
+    )
+    structure = structure[structure.chain_id == "B"]
+    receptor = structure[struc.filter_amino_acids(structure)]
+    ref_ligand = structure[structure.res_name == "BTN"]
+    ref_ligand_coord = ref_ligand.coord
+
+    ligand = info.residue("BTN")
+    # Remove hydrogen atom that is missing in ref_ligand
+    ligand = ligand[ligand.atom_name != "HO2"]
+
+    if flexible:
+        # Two residues within the binding pocket: ASN23, SER88
+        flexible_mask = np.isin(receptor.res_id, (23, 88))
+    else:
+        flexible_mask = None
+
+    # A fixed nonzero seed and single-threaded execution give fully reproducible results
+    result = (
+        VinaApp()
+        .run(
+            ligand,
+            receptor,
+            struc.centroid(ref_ligand),
+            [20, 20, 20],
+            flexible=flexible_mask,
+            seed=42,
+            cpu=1,
+        )
+        .result()
+    )
+
+    test_ligand_coord = result.ligand_coord
+    test_receptor_coord = result.receptor_coord
+    energies = result.energies
+    # One energy value per model
+    assert len(test_ligand_coord) == len(energies)
+    assert len(test_receptor_coord) == len(energies)
+
+    assert np.all(energies < 0)
+
+    # Select best binding pose
+    test_ligand_coord = test_ligand_coord[0]
+    not_nan_mask = ~np.isnan(test_ligand_coord).any(axis=-1)
+    ref_ligand_coord = ref_ligand_coord[not_nan_mask]
+    test_ligand_coord = test_ligand_coord[not_nan_mask]
+    # Check if it least one atom is preserved
+    assert test_ligand_coord.shape[1] > 0
+    rmsd = struc.rmsd(ref_ligand_coord, test_ligand_coord)
+    # The deviation of the best pose from the real conformation
+    # should be small
+    assert rmsd < 1.1
+
+    if flexible:
+        # Select best binding pose
+        test_receptor_coord = test_receptor_coord[0]
+        not_nan_mask = ~np.isnan(test_receptor_coord).any(axis=-1)
+        ref_receptor_coord = receptor[not_nan_mask]
+        test_receptor_coord = test_receptor_coord[not_nan_mask]
+        # Check if it least one atom is preserved
+        assert test_receptor_coord.shape[1] > 0
+        # The flexible residues should only have a small deviation
+        assert (
+            np.max(struc.distance(test_receptor_coord, ref_receptor_coord))
+            < MAX_DEVIATION
+        )
+    else:
+        ref_receptor_coord = receptor.coord
+        for model_coord in test_receptor_coord:
+            assert np.array_equal(model_coord, ref_receptor_coord)

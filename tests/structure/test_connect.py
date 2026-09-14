@@ -62,14 +62,14 @@ def _without_overlong_bonds(atoms, max_length=3.0):
     return struc.BondList(atoms.array_length(), bond_array[bond_lengths <= max_length])
 
 
-def _without_metal_metal_bonds(atoms):
+def _without_metal_bonds(atoms):
     """
-    Get the bonds of the given atoms, excluding bonds between two metal atoms.
+    Get the bonds of the given atoms, excluding bonds involving a metal atom.
     """
     is_metal = ~np.isin(atoms.element, list(_ORGANIC_ELEMENTS))
     bond_array = atoms.bonds.as_array()
-    is_metal_metal_bond = is_metal[bond_array[:, 0]] & is_metal[bond_array[:, 1]]
-    return struc.BondList(atoms.array_length(), bond_array[~is_metal_metal_bond])
+    is_metal_bond = is_metal[bond_array[:, 0]] | is_metal[bond_array[:, 1]]
+    return struc.BondList(atoms.array_length(), bond_array[~is_metal_bond])
 
 
 def _infer_aromaticity(atoms, bonds):
@@ -224,11 +224,14 @@ def test_connect_via_distances_small_molecules(res_name):
     test_atoms = ref_atoms.copy()
     test_atoms.bonds = struc.connect_via_distances(test_atoms)
 
-    # In metal clusters (e.g. iron-sulfur clusters) the metal atoms are within covalent
-    # distance of each other, although the CCD defines no bonds between them
-    # -> Bonds between metal atoms are not compared
-    ref_bonds = _without_metal_metal_bonds(ref_atoms)
-    test_bonds = _without_metal_metal_bonds(test_atoms)
+    # Coordination bonds cannot be told apart from mere proximity by covalent radii:
+    # In metal clusters (e.g. iron-sulfur clusters) the metal atoms are within
+    # covalent distance of each other, although the CCD defines no bonds between them,
+    # and conversely a ligand atom may be within covalent distance of a metal without
+    # being coordinated to it
+    # -> Bonds involving metal atoms are not compared
+    ref_bonds = _without_metal_bonds(ref_atoms)
+    test_bonds = _without_metal_bonds(test_atoms)
     assert test_bonds.as_set() == ref_bonds.as_set()
 
 

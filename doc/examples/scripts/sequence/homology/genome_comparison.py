@@ -36,7 +36,7 @@ import numpy as np
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import MultipleLocator
 import biotite
-import biotite.application.tantan as tantan
+import biotite.application_v2.tantan as tantan
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align
@@ -69,7 +69,8 @@ bacterium_seq = seqio.load_sequence(fasta_file)
 # However, not every spacing model performs equally well, so the proven
 # one ``111*1*11*1*11*111`` :footcite:`Choi2004` is used here.
 
-repeat_mask = tantan.TantanApp.mask_repeats(bacterium_seq)
+tantan_app = tantan.TantanApp()
+repeat_mask = tantan_app.run([bacterium_seq]).result()[0]
 bacterium_seqs = [bacterium_seq, bacterium_seq.reverse(copy=False).complement()]
 
 table = align.KmerTable.from_sequences(
@@ -85,7 +86,7 @@ table = align.KmerTable.from_sequences(
 # Again, low complexity regions are removed.
 
 matches = table.match(
-    chloroplast_seq, ignore_mask=tantan.TantanApp.mask_repeats(chloroplast_seq)
+    chloroplast_seq, ignore_mask=tantan_app.run([chloroplast_seq]).result()[0]
 )
 print("Exemplary matches")
 print(matches[:10])

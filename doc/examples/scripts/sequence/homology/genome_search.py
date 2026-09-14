@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
 import biotite
-import biotite.application.viennarna as viennarna
+import biotite.application_v2.viennarna as viennarna
 import biotite.database.entrez as entrez
 import biotite.sequence.align as align
 import biotite.sequence.graphics as seqgraphics
@@ -186,15 +186,11 @@ fig.tight_layout()
 # with help from *ViennaRNA* and highlight mismatch position between
 # *E. coli* and *S. enterica* *M1*.
 
-app = viennarna.RNAfoldApp(m1_sequence)
-app.start()
-app.join()
-base_pairs = app.get_base_pairs()
-
-app = viennarna.RNAplotApp(base_pairs=base_pairs, length=len(m1_sequence))
-app.start()
-app.join()
-plot_coord = app.get_coordinates()
+folded_rna = viennarna.FoldApp().run(m1_sequence).result()
+base_pairs = folded_rna.base_pairs()
+plot_coord = (
+    viennarna.PlotApp().run(base_pairs=base_pairs, length=len(m1_sequence)).result()
+)
 
 codes = align.get_codes(best_alignment)
 m1_no_gap_codes = codes[codes[:, 0] != -1]

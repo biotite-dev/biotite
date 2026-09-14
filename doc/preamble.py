@@ -17,7 +17,6 @@ def setup_script(*args, **kwargs):
     # Import inside function as Biotite may not be known
     # at the time of function definition
     import biotite
-    import biotite.application.blast as blast
     import biotite.database.entrez as entrez
     import biotite.interface.pymol as pymol_interface
 
@@ -56,12 +55,3 @@ def setup_script(*args, **kwargs):
     # Expose the Biotite colors with the 'biotite_' prefix
     for color_name, color_value in biotite.colors.items():
         pymol_interface.cmd.set_color("biotite_" + color_name, to_rgb(color_value))
-
-    # Mock the BlastWebApp class
-    # to allow subsequent BLAST calls when building the tutorial
-    class MockedBlastApp(blast.BlastWebApp):
-        def __init__(self, *args, **kwargs):
-            kwargs["obey_rules"] = False
-            super().__init__(*args, **kwargs)
-
-    blast.BlastWebApp = MockedBlastApp

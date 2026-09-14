@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 import requests
 import biotite
-import biotite.application.sra as sra
+import biotite.application_v2.sra as sra
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.sequence.io.fasta as fasta
@@ -66,11 +66,9 @@ READS_UID = "SRR6919890"
 # The sequence reads are downloaded from the NCBI
 # *Sequence Read Archive* (SRA).
 
-app = sra.FastqDumpApp(READS_UID)
-app.start()
-app.join()
+reads_result = sra.FastqDumpApp().extract_fastq(READS_UID).result()
 # Single-ended -> Only one FASTQ
-fastq_path = app.get_file_paths()[0]
+fastq_path = reads_result.file_paths[0]
 
 ########################################################################
 # To quantify the expression from the RNA-seq data, we need a reference,

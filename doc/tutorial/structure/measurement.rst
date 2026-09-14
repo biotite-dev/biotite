@@ -159,4 +159,4 @@ An ``'a'`` means alpha-helix, ``'b'`` beta-sheet, and ``'c'`` means coil.
     print("".join(sse))
 
 Note that you can also use the popular *DSSP* program to measure the secondary
-structure as explained in a :doc:`later chapter <application/dssp>`.
+structure as explained in a :doc:`later chapter <../application/dssp>`.

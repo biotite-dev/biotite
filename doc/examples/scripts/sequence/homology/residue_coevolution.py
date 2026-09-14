@@ -33,7 +33,7 @@ shuffled. The results are aggregated into a Z-score:
 This example demonstrates this method on the example of the C-Myb
 DNA-binding domain (C-Myb R1) (PDB: 1GUU).
 At first, sequences of homologous proteins are searched in the
-curated *SwissProt* database via *NCBI BLAST*.
+curated *SwissProt* database via *MMseqs2*.
 Afterwards these sequences are aligned with *Clustal Omega*.
 
 .. footbibliography::
@@ -47,8 +47,8 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 import biotite
-import biotite.application.blast as blast
-import biotite.application.clustalo as clustalo
+import biotite.application_v2.clustalo as clustalo
+import biotite.application_v2.mmseqs as mmseqs
 import biotite.database.rcsb as rcsb
 import biotite.sequence.align as align
 import biotite.sequence.graphics as graphics
@@ -65,33 +65,35 @@ structure = structure[struc.filter_amino_acids(structure)]
 
 # Identity threshold for a sequence to be counted as homologous sequence
 IDENTITY_THRESHOLD = 0.4
-# Find homologous proteins in SwissProt via BLAST
-app = blast.BlastWebApp("blastp", sequence, database="swissprot")
-app.start()
-app.join()
-alignments = app.get_alignments()
+# Find homologous proteins in SwissProt via MMseqs2
+app = mmseqs.MMseqsApp()
+swissprot_db = app.databases("UniProtKB/Swiss-Prot").result()
+query_db = mmseqs.create_database_from_sequences(app, {"query": sequence})
+# Use the highest sensitivity to find remote homologs of the short domain
+# and enable backtracing to obtain the alignments
+alignment_db = app.search(query_db, swissprot_db, s=7.5, a=True).result()
+alignments = mmseqs.get_alignments(app, alignment_db)
 hit_seqs = [sequence]
-hit_ids = ["Query"]
+hit_ids = ["query"]
 hit_starts = [1]
-for ali in alignments:
+for (_, hit_id), ali in alignments.items():
     identity = align.get_sequence_identity(ali)
     # Do not include the exact same sequence -> identity < 1.0
     if identity > IDENTITY_THRESHOLD and identity < 1.0:
-        hit_seqs.append(ali.sequences[1])
-        hit_ids.append(ali.hit_id)
-        hit_starts.append(ali.hit_interval[0])
+        # The hit sequence is the entire protein,
+        # but only the locally aligned part is homologous to the query domain
+        start, stop = ali.trace[0, 1], ali.trace[-1, 1] + 1
+        hit_seqs.append(ali.sequences[1][start:stop])
+        hit_ids.append(hit_id)
+        hit_starts.append(start + 1)
 
 # Perform MSA
-alignment = clustalo.ClustalOmegaApp.align(hit_seqs)
+alignment = clustalo.ClustalOmegaApp().run(hit_seqs).result().alignment
 
 # Plot MSA
-number_functions = []
-for start in hit_starts:
-
-    def some_func(x, start=start):
-        return x + start
-
-    number_functions.append(some_func)
+# Number the residues by their position in the respective full protein
+# ('start=start' binds the current value instead of the loop variable)
+number_functions = [lambda x, start=start: x + start for start in hit_starts]
 fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.gca()
 graphics.plot_alignment_type_based(

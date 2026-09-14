@@ -29,6 +29,8 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
     The base class for all locally installed applications, that are used
     via the command line.
 
+    DEPRECATED: Use :class:`biotite.application_v2.LocalApp` instead.
+
     Internally this creates a :class:`Popen` instance, which handles
     the execution.
 
@@ -37,6 +39,8 @@ class LocalApp(Application, metaclass=abc.ABCMeta):
     bin_path : str
         Path of the application represented by this class.
     """
+
+    _v2_alternative = "biotite.application_v2.LocalApp"
 
     def __init__(self, bin_path: PathLike[str] | str) -> None:
         super().__init__()

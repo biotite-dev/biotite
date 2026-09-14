@@ -54,29 +54,27 @@ import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.lines import Line2D
 import biotite
-import biotite.application.sra as sra
+import biotite.application_v2.sra as sra
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.sequence.graphics as graphics
 import biotite.sequence.io as seqio
 import biotite.sequence.io.fasta as fasta
-import biotite.sequence.io.fastq as fastq
 import biotite.sequence.io.genbank as gb
-
-# Download the sequencing data
-app = sra.FastqDumpApp("SRR13453793")
-app.start()
-app.join()
 
 # Load sequences and quality scores from the sequencing data
 # There is only one read per spot
-file_path = app.get_file_paths()[0]
-fastq_file = fastq.FastqFile.read(file_path, offset="Sanger")
-reads = [
-    seq.NucleotideSequence(seq_str) for seq_str, score_array in fastq_file.values()
-]
-score_arrays = [score_array for seq_str, score_array in fastq_file.values()]
+# Note that the extracted FASTQ files are deleted when the result object is
+# discarded, so the reads must be parsed before
+reads_and_scores = (
+    sra.FastqDumpApp()
+    .extract_fastq("SRR13453793")
+    .result()
+    .get_sequences_and_scores(offset="Sanger")[0]
+)
+reads = [read for read, score_array in reads_and_scores.values()]
+score_arrays = [score_array for read, score_array in reads_and_scores.values()]
 
 print(f"Number of reads: {len(reads)}")
 

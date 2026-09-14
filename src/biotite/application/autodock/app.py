@@ -27,6 +27,8 @@ class VinaApp(LocalApp):
     """
     Dock a ligand to a receptor molecule using *AutoDock Vina*.
 
+    DEPRECATED: Use :class:`biotite.application_v2.autodock.VinaApp` instead.
+
     Parameters
     ----------
     ligand : AtomArray
@@ -68,6 +70,8 @@ class VinaApp(LocalApp):
     ...     flexible=(receptor.res_id == 2) | (receptor.res_id == 5)
     ... )
     """
+
+    _v2_alternative = "biotite.application_v2.autodock.VinaApp"
 
     def __init__(
         self,

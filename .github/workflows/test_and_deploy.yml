@@ -237,6 +237,36 @@ jobs:
         run: pixi run pytest --durations=50 tests//application//test_msa.py
 
 
+  test-mmseqs:
+    name: Test interfaces to MMseqs2 and Foldseek
+
+    runs-on: ubuntu-latest
+    needs:
+      - build-internal
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: internal-build
+          path: dist
+      - uses: prefix-dev/setup-pixi@v0.9.6
+        with:
+          environments: test-mmseqs
+          activate-environment: true
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+      - name: Install pre-built wheel into the pixi environment
+        run: pixi run -e test-mmseqs python -m pip install --no-deps ./dist/*.whl
+      - name: Test MMseqs2 and Foldseek interfaces
+        run: >
+          pixi run -e test-mmseqs pytest
+          --durations=50
+          tests//application_v2//mmseqs
+          tests//test_doctest.py
+          -k mmseqs
+
+
   docs:
     name: Build documentation
 
@@ -271,10 +301,14 @@ jobs:
           build/jupyter_execute
     - name: Install pre-built wheel into the pixi environment
       run: pixi run python -m pip install --no-deps ./dist/*.whl
+    - name: Install MMseqs2 and Foldseek sidecar environment
+      run: pixi install -e test-mmseqs
     # Calling `sphinx-build` directly instead of `doc` task
     # to avoid the time consuming call of the `install` task
     - name: Build base documentation
-      run: pixi run sphinx-build -a -D plot_gallery=0 doc build/doc
+      run: >
+        env PATH="$PWD/.pixi/envs/test-mmseqs/bin:$PATH"
+        pixi run -e doc sphinx-build -a -D plot_gallery=0 doc build/doc
     - name: Build tutorial and gallery
       if: >
         (
@@ -282,7 +316,9 @@ jobs:
           github.event.action == 'published'
         )
         || github.event_name == 'workflow_dispatch'
-      run: pixi run sphinx-build -a doc build/doc
+      run: >
+        env PATH="$PWD/.pixi/envs/test-mmseqs/bin:$PATH"
+        pixi run -e doc sphinx-build -a doc build/doc
     - name: Cache partially built docs from failed build
       id: cache-docs-save
       if: failure()
@@ -340,6 +376,7 @@ jobs:
     - test-and-build
     - sdist
     - test-interfaces
+    - test-mmseqs
     - test-muscle5
     - docs
     runs-on: ubuntu-latest

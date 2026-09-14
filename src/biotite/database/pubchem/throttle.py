@@ -67,8 +67,12 @@ class ThrottleStatus:
         -------
         throttle_status : ThrottleStatus
             The extracted throttle status.
+            If the response does not contain the throttling header, a status
+            without any load is returned.
         """
-        throttle_control = response.headers["X-Throttling-Control"]
+        throttle_control = response.headers.get("X-Throttling-Control")
+        if throttle_control is None:
+            return ThrottleStatus(0.0, 0.0, 0.0)
         throttle_status = [
             substring.split(")")[0] for substring in throttle_control.split("(")[1:]
         ]

@@ -21,6 +21,8 @@ class Muscle5App(MSAApp):
     """
     Perform a multiple sequence alignment using MUSCLE version 5.
 
+    DEPRECATED: Use :class:`biotite.application_v2.muscle.Muscle5App` instead.
+
     Parameters
     ----------
     sequences : list of Sequence
@@ -53,6 +55,8 @@ class Muscle5App(MSAApp):
     BI-SMITE
     -I-QLITE
     """
+
+    _v2_alternative = "biotite.application_v2.muscle.Muscle5App"
 
     def __init__(
         self,

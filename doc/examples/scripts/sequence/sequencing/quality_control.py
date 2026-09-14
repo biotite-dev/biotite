@@ -25,18 +25,17 @@ import matplotlib.ticker as ticker
 import numpy as np
 from scipy.stats import binom
 import biotite
-import biotite.application.sra as sra
+import biotite.application_v2.sra as sra
 import biotite.sequence as seq
 
 FIG_SIZE = (8.0, 6.0)
 
 
-app = sra.FastqDumpApp("ERR266411")
-app.start()
-app.join()
 # Each run can have multiple reads per spot
 # by selecting index 0 we take only the first read for every spot
-sequences_and_scores = app.get_sequences_and_scores()[0]
+sequences_and_scores = (
+    sra.FastqDumpApp().extract_fastq("ERR266411").result().get_sequences_and_scores()[0]
+)
 sequence_codes = np.stack(
     [sequence.code for sequence, _ in sequences_and_scores.values()]
 )

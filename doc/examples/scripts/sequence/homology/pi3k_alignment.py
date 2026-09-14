@@ -19,7 +19,7 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import biotite
-import biotite.application.clustalo as clustalo
+import biotite.application_v2.clustalo as clustalo
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align
@@ -36,7 +36,7 @@ file = fasta.FastaFile.read(
 for header, seq_str in file.items():
     sequences.append(seq.ProteinSequence(seq_str))
 
-alignment = clustalo.ClustalOmegaApp.align(sequences)
+alignment = clustalo.ClustalOmegaApp().run(sequences).result().alignment
 
 ########################################################################
 # Since the sequences are relatively long, the display of the entire
