@@ -12,12 +12,13 @@ from collections.abc import Sequence as SequenceABC
 from os import PathLike
 from tempfile import NamedTemporaryFile
 from typing import Any
+import networkx as nx
 import numpy as np
 from biotite.application.application import AppState, AppStateError, requires_state
 from biotite.application.localapp import cleanup_tempfile
 from biotite.application.msaapp import MSAApp
 from biotite.sequence.align.matrix import SubstitutionMatrix
-from biotite.sequence.phylo.tree import Tree
+from biotite.sequence.phylo.tree import from_newick, get_leaves, to_newick
 from biotite.sequence.sequence import Sequence
 from biotite.typing import K, NDArray2
 
@@ -63,7 +64,7 @@ class ClustalOmegaApp(MSAApp):
         self._seq_count = len(sequences)
         self._mbed: bool = True
         self._dist_matrix: NDArray2[Any, Any, np.floating] | None = None
-        self._tree: Tree | None = None
+        self._tree: nx.DiGraph | None = None
         self._in_dist_matrix_file = NamedTemporaryFile("w", suffix=".mat", delete=False)
         self._out_dist_matrix_file = NamedTemporaryFile(
             "r", suffix=".mat", delete=False
@@ -113,7 +114,7 @@ class ClustalOmegaApp(MSAApp):
             )
             args += ["--distmat-in", self._in_dist_matrix_file.name]
         if self._tree is not None:
-            self._in_tree_file.write(str(self._tree))
+            self._in_tree_file.write(to_newick(self._tree))
             self._in_tree_file.flush()
             args += ["--guidetree-in", self._in_tree_file.name]
         self.set_arguments(args)
@@ -134,7 +135,7 @@ class ClustalOmegaApp(MSAApp):
             self._dist_matrix = self._dist_matrix[:, 1:]
         # Only read output tree if no tree was input
         if self._tree is None:
-            self._tree = Tree.from_newick(self._out_tree_file.read().replace("\n", ""))
+            self._tree = from_newick(self._out_tree_file.read().replace("\n", ""))
 
     def clean_up(self) -> None:
         super().clean_up()
@@ -192,31 +193,31 @@ class ClustalOmegaApp(MSAApp):
         return self._dist_matrix  # pyright: ignore[reportReturnType]
 
     @requires_state(AppState.CREATED)
-    def set_guide_tree(self, tree: Tree) -> None:
+    def set_guide_tree(self, tree: nx.DiGraph) -> None:
         """
         Set the guide tree, the program should use for the
         progressive alignment.
 
         Parameters
         ----------
-        tree : Tree
+        tree : DiGraph
             The guide tree.
         """
-        if self._seq_count != len(tree):
+        if self._seq_count != len(get_leaves(tree)):
             raise ValueError(
-                f"Tree with {len(tree)} leaves is not sufficient for "
+                f"Tree with {len(get_leaves(tree))} leaves is not sufficient for "
                 "{self._seq_count} sequences, must be equal"
             )
         self._tree = tree
 
     @requires_state(AppState.JOINED)
-    def get_guide_tree(self) -> Tree:
+    def get_guide_tree(self) -> nx.DiGraph:
         """
         Get the guide tree created for the progressive alignment.
 
         Returns
         -------
-        tree : Tree
+        tree : DiGraph
             The guide tree.
         """
         if self._tree is None:

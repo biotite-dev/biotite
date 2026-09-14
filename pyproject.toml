@@ -73,7 +73,6 @@ ignore = [
 "benchmarks/sequence/align/benchmark_kmers.py" = ["N803"]
 # Annotation enforcement is reserved for the library source code
 # tests, benchmarks and documentation scripts are exempt
-"setup.py" = ["ANN2"]
 "tests/**/*.py" = ["ANN2"]
 "benchmarks/**/*.py" = ["ANN2"]
 "doc/**/*.py" = ["ANN2"]
@@ -174,7 +173,6 @@ requests = ">=2.12"
 # Build
 python-build = "*"
 cargo-bundle-licenses = "*"
-cython = ">=3.0"
 pip = ">=10.0"
 rust = ">=1.95"
 setuptools = "*"
@@ -247,20 +245,11 @@ doc = { features = ["doc", "interface", "application"] }
 # -> Add interfaced packages as well
 lint = { features = ["lint", "interface"] }
 
-[tool.pixi.tasks._pip-install-rust]
-cmd = "python -m pip install -e ."
-env = { BIOTITE_OMIT_CYTHON = "1" }
-inputs = ["src/**/*.rs", "Cargo.toml", "pyproject.toml"]
-
-[tool.pixi.tasks._pip-install-cython]
-cmd = "python -m pip install -e ."
-env = { BIOTITE_OMIT_RUST = "1" }
-inputs = ["src/**/*.pyx", "src/**/*.pxd", "pyproject.toml"]
-
 [tool.pixi.tasks._pip-install]
 cmd = "python -m pip install -e ."
-env = { BIOTITE_OMIT_CYTHON = "1", BIOTITE_OMIT_RUST = "1" }
-depends-on = ["_pip-install-rust", "_pip-install-cython"]
+# Only rebuild the Rust extension when its sources changed,
+# Python sources are picked up by the editable install anyway
+inputs = ["src/**/*.rs", "Cargo.toml", "pyproject.toml"]
 
 [tool.pixi.tasks._current-date]
 # Writes the current ISO year-month into a marker file
@@ -353,11 +342,11 @@ description = "Build documentation including the example gallery"
 [tool.setuptools_scm]
 version_file = "src/biotite/version.py"
 
-[tool.hatch.build.targets.wheel.hooks.cython.options]
-include_numpy = true
-compile_py = false
-define_macros = [["NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"]]
+[[tool.setuptools-rust.ext-modules]]
+target = "biotite.rust"
+path = "Cargo.toml"
+binding = "PyO3"
 
 [build-system]
-requires = ["setuptools", "setuptools-scm", "setuptools-rust", "puccinialin", "cython >= 3.0", "numpy >= 2.0"]
+requires = ["setuptools", "setuptools-scm", "setuptools-rust", "puccinialin"]
 build-backend = "setuptools.build_meta"
