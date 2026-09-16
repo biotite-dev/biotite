@@ -96,6 +96,35 @@ def test_protor_radii():
         assert radius is not None
 
 
+@pytest.mark.parametrize(
+    "res_name, atom_name, ref_radius",
+    [
+        # Control: standard amino acids are unaffected
+        ("GLY", "CA", 1.88),
+        ("PHE", "CG", 1.61),
+        ("MET", "SD", 1.77),
+        # Selenium has no ProtOr group, so 'None' is expected.
+        # Its element must not be taken from the first character of the
+        # atom name, as this would make 'SE' a sulfur atom
+        ("MSE", "SE", None),
+        ("SEC", "SE", None),
+        # The remaining atoms of the same residue are unaffected
+        ("MSE", "CG", 1.88),
+        # The mercury atom of phenylmercury is named 'HG':
+        # it must not be counted as a hydrogen bonded to 'C4'
+        ("PHG", "C4", 1.61),
+        # Hydrogen atoms whose name starts with a digit (e.g. '1HZ')
+        # must still be counted as hydrogen
+        ("A1BZO", "CZ", 1.88),
+    ],
+)
+def test_protor_radii_element(res_name, atom_name, ref_radius):
+    """
+    Check the correct ProtOr radii for manually checked examples.
+    """
+    assert strucinfo.vdw_radius_protor(res_name, atom_name) == ref_radius
+
+
 def test_protor_radii_invalid():
     with pytest.raises(ValueError):
         # Expect raised exception for hydrogen atoms
