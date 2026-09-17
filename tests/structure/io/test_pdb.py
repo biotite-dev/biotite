@@ -599,6 +599,36 @@ def test_hetatm_intra_residue_bonds():
     np.testing.assert_array_equal(actual_bonds, expected_bonds)
 
 
+def test_inter_residue_bond_with_ins_code():
+    """
+    A bond between two residues that only differ in their insertion code
+    is an inter-residue bond and hence should be written as ``CONECT`` record.
+    """
+    atoms = struc.array(
+        [
+            struc.Atom(
+                [0, 0, 0], chain_id="H", res_id=52, res_name="CYS", atom_name="SG"
+            ),
+            struc.Atom(
+                [2, 0, 0],
+                chain_id="H",
+                res_id=52,
+                ins_code="A",
+                res_name="CYS",
+                atom_name="SG",
+            ),
+        ]
+    )
+    atoms.element[:] = "S"
+    atoms.bonds = struc.BondList(2, np.array([[0, 1]]))
+
+    pdb_file = pdb.PDBFile()
+    pdb_file.set_structure(atoms)
+    test_atoms = pdb_file.get_structure(model=1, include_bonds=True)
+
+    assert test_atoms.bonds.as_array()[:, :2].tolist() == [[0, 1]]
+
+
 def test_multiple_atom_array():
     """
     Setting the structure with an :class:`AtomArrayStack` and with an equivalent list of
