@@ -599,34 +599,77 @@ def test_hetatm_intra_residue_bonds():
     np.testing.assert_array_equal(actual_bonds, expected_bonds)
 
 
-def test_inter_residue_bond_with_ins_code():
+def _conect_pairs(pdb_file):
     """
-    A bond between two residues that only differ in their insertion code
-    is an inter-residue bond and hence should be written as ``CONECT`` record.
+    Get the bonded atom pairs from the ``CONECT`` records of a PDB file,
+    identified by chain, residue ID, insertion code and atom name,
+    to be independent of the atom serial numbers.
     """
-    atoms = struc.array(
-        [
-            struc.Atom(
-                [0, 0, 0], chain_id="H", res_id=52, res_name="CYS", atom_name="SG"
-            ),
-            struc.Atom(
-                [2, 0, 0],
-                chain_id="H",
-                res_id=52,
-                ins_code="A",
-                res_name="CYS",
-                atom_name="SG",
-            ),
-        ]
-    )
-    atoms.element[:] = "S"
-    atoms.bonds = struc.BondList(2, np.array([[0, 1]]))
+    atom_ids = {}
+    for line in pdb_file.lines:
+        if line.startswith(("ATOM", "HETATM")):
+            atom_ids[int(line[6:11])] = (
+                line[21],
+                int(line[22:26]),
+                line[26].strip(),
+                line[12:16].strip(),
+                line[16].strip(),
+            )
+    pairs = set()
+    for line in pdb_file.lines:
+        if line.startswith("CONECT"):
+            serials = [
+                int(line[i : i + 5]) for i in range(6, 31, 5) if line[i : i + 5].strip()
+            ]
+            for serial in serials[1:]:
+                pair = (atom_ids[serials[0]], atom_ids[serial])
+                pairs.add((min(pair), max(pair)))
+    return pairs
 
-    pdb_file = pdb.PDBFile()
-    pdb_file.set_structure(atoms)
-    test_atoms = pdb_file.get_structure(model=1, include_bonds=True)
 
-    assert test_atoms.bonds.as_array()[:, :2].tolist() == [[0, 1]]
+@pytest.mark.parametrize(
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.pdb")),
+    ids=lambda path: path.name,
+)
+def test_conect_records(path):
+    """
+    Writing a structure should give ``CONECT`` records for all
+    ``CONECT`` records in the original PDB file and for all inter-residue
+    bonds, including bonds between residues that only differ in their
+    insertion code (e.g. in ``1igy``).
+    """
+    ref_file = pdb.PDBFile.read(path)
+    atoms = ref_file.get_structure(model=1, include_bonds=True)
+    test_file = pdb.PDBFile()
+    test_file.set_structure(atoms)
+    test_pairs = _conect_pairs(test_file)
+
+    ref_pairs = _conect_pairs(ref_file)
+    # Atoms with an alternative location other than the first one
+    # are not part of the parsed structure
+    ref_pairs = {
+        pair for pair in ref_pairs if all(atom[4] in ("", "A") for atom in pair)
+    }
+    assert ref_pairs <= test_pairs
+
+    bonds = atoms.bonds.as_array()[:, :2]
+    residue_starts = struc.get_residue_starts_for(atoms, bonds.flatten()).reshape(-1, 2)
+    inter_residue_bonds = bonds[residue_starts[:, 0] != residue_starts[:, 1]]
+    inter_residue_pairs = set()
+    for i, j in inter_residue_bonds:
+        pair = tuple(
+            (
+                atoms.chain_id[k],
+                atoms.res_id[k],
+                atoms.ins_code[k],
+                atoms.atom_name[k],
+                "",
+            )
+            for k in (i, j)
+        )
+        inter_residue_pairs.add((min(pair), max(pair)))
+    assert inter_residue_pairs <= test_pairs
 
 
 def test_multiple_atom_array():
