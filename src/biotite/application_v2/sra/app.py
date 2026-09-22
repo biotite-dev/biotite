@@ -20,7 +20,6 @@ from os import PathLike
 from os.path import join
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Literal, TypeAlias
 import numpy as np
 from biotite.application_v2.localapp import (
     CLIArgument,
@@ -36,10 +35,6 @@ from biotite.sequence.io.fasta.file import FastaFile
 from biotite.sequence.io.fastq.convert import get_sequences as _fastq_get_sequences
 from biotite.sequence.io.fastq.file import FastqFile
 from biotite.sequence.seqtypes import NucleotideSequence
-
-_OffsetFormat: TypeAlias = Literal[
-    "Sanger", "Solexa", "Illumina-1.3", "Illumina-1.5", "Illumina-1.8"
-]
 
 
 @dataclass(frozen=True)
@@ -85,13 +80,15 @@ class FastqResult:
         default=None, repr=False, compare=False
     )
 
-    def get_files(self, offset: int | _OffsetFormat = "Sanger") -> list[FastqFile]:
+    def get_files(
+        self, offset: int | FastqFile.Offset = FastqFile.Offset.SANGER
+    ) -> list[FastqFile]:
         """
         Parse the extracted FASTQ files.
 
         Parameters
         ----------
-        offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}, optional
+        offset : int or FastqFile.Offset, optional
             This value is subtracted from the FASTQ ASCII code to obtain
             the quality score.
 
@@ -103,14 +100,14 @@ class FastqResult:
         return [FastqFile.read(path, offset=offset) for path in self.file_paths]
 
     def get_sequences(
-        self, offset: int | _OffsetFormat = "Sanger"
+        self, offset: int | FastqFile.Offset = FastqFile.Offset.SANGER
     ) -> list[dict[str, NucleotideSequence]]:
         """
         Get the reads from the extracted FASTQ files.
 
         Parameters
         ----------
-        offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}, optional
+        offset : int or FastqFile.Offset, optional
             This value is subtracted from the FASTQ ASCII code to obtain
             the quality score.
 
@@ -127,14 +124,14 @@ class FastqResult:
         ]
 
     def get_sequences_and_scores(
-        self, offset: int | _OffsetFormat = "Sanger"
+        self, offset: int | FastqFile.Offset = FastqFile.Offset.SANGER
     ) -> list[dict[str, tuple[NucleotideSequence, np.ndarray]]]:
         """
         Get the reads and quality scores from the extracted FASTQ files.
 
         Parameters
         ----------
-        offset : int or {'Sanger', 'Solexa', 'Illumina-1.3', 'Illumina-1.5', 'Illumina-1.8'}, optional
+        offset : int or FastqFile.Offset, optional
             This value is subtracted from the FASTQ ASCII code to obtain
             the quality score.
 

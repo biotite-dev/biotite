@@ -4,7 +4,7 @@
 
 import numpy as np
 import pytest
-from biotite import map_unique
+from biotite.util import map_unique
 
 
 @pytest.mark.parametrize("seed", range(5))

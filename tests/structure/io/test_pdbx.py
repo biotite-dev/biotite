@@ -16,7 +16,6 @@ from biotite.structure.io.pdbx.bcif import _encode_numpy as encode_numpy
 from biotite.structure.io.pdbx.compress import _get_decimal_places as get_decimal_places
 from tests.util import data_dir
 
-
 ESCAPE_STRINGS = [
     "",
     " ",
@@ -33,7 +32,6 @@ ESCAPE_STRINGS = [
     """single"anddouble"marks""",
     """single' and double" marks with whitespace""",
 ]
-
 
 
 @pytest.mark.parametrize("format", ["cif", "bcif"])
