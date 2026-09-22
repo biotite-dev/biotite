@@ -601,29 +601,16 @@ def test_hetatm_intra_residue_bonds():
 
 def _conect_pairs(pdb_file):
     """
-    Get the bonded atom pairs from the ``CONECT`` records of a PDB file,
-    identified by chain, residue ID, insertion code and atom name,
-    to be independent of the atom serial numbers.
+    Get the pairs of atom IDs from the ``CONECT`` records of a PDB file.
     """
-    atom_ids = {}
-    for line in pdb_file.lines:
-        if line.startswith(("ATOM", "HETATM")):
-            atom_ids[int(line[6:11])] = (
-                line[21],
-                int(line[22:26]),
-                line[26].strip(),
-                line[12:16].strip(),
-                line[16].strip(),
-            )
     pairs = set()
     for line in pdb_file.lines:
         if line.startswith("CONECT"):
-            serials = [
+            atom_ids = [
                 int(line[i : i + 5]) for i in range(6, 31, 5) if line[i : i + 5].strip()
             ]
-            for serial in serials[1:]:
-                pair = (atom_ids[serials[0]], atom_ids[serial])
-                pairs.add((min(pair), max(pair)))
+            for atom_id in atom_ids[1:]:
+                pairs.add((min(atom_ids[0], atom_id), max(atom_ids[0], atom_id)))
     return pairs
 
 
@@ -640,35 +627,27 @@ def test_conect_records(path):
     insertion code (e.g. in ``1igy``).
     """
     ref_file = pdb.PDBFile.read(path)
-    atoms = ref_file.get_structure(model=1, include_bonds=True)
+    # Keep all atoms and their original IDs to be able to compare the
+    # atom IDs in the 'CONECT' records directly
+    atoms = ref_file.get_structure(
+        model=1, altloc="all", extra_fields=["atom_id"], include_bonds=True
+    )
     test_file = pdb.PDBFile()
     test_file.set_structure(atoms)
     test_pairs = _conect_pairs(test_file)
 
-    ref_pairs = _conect_pairs(ref_file)
-    # Atoms with an alternative location other than the first one
-    # are not part of the parsed structure
-    ref_pairs = {
-        pair for pair in ref_pairs if all(atom[4] in ("", "A") for atom in pair)
-    }
-    assert ref_pairs <= test_pairs
+    assert _conect_pairs(ref_file) <= test_pairs
 
     bonds = atoms.bonds.as_array()[:, :2]
     residue_starts = struc.get_residue_starts_for(atoms, bonds.flatten()).reshape(-1, 2)
     inter_residue_bonds = bonds[residue_starts[:, 0] != residue_starts[:, 1]]
-    inter_residue_pairs = set()
-    for i, j in inter_residue_bonds:
-        pair = tuple(
-            (
-                atoms.chain_id[k],
-                atoms.res_id[k],
-                atoms.ins_code[k],
-                atoms.atom_name[k],
-                "",
-            )
-            for k in (i, j)
+    inter_residue_pairs = {
+        (
+            min(atoms.atom_id[i], atoms.atom_id[j]),
+            max(atoms.atom_id[i], atoms.atom_id[j]),
         )
-        inter_residue_pairs.add((min(pair), max(pair)))
+        for i, j in inter_residue_bonds
+    }
     assert inter_residue_pairs <= test_pairs
 
 
