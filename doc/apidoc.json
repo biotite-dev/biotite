@@ -59,6 +59,7 @@
             "from_model"
         ],
         "Compiled Graphics Objects": [
+            "CGO",
             "draw_cgo",
             "get_cylinder_cgo",
             "get_cone_cgo",
