@@ -63,6 +63,7 @@ from biotite.structure.residues import (
     get_residue_positions,
     get_residue_starts_for,
 )
+from biotite.structure.sse import SecondaryStructure
 from biotite.structure.transform import AffineTransformation
 from biotite.typing import C2, XYZ, M, N, NDArray1, NDArray2
 from biotite.util import map_unique
@@ -2256,7 +2257,7 @@ def get_sse(
     pdbx_file: _PDBxFile,
     data_block: str | None = None,
     match_model: int | None = None,
-) -> dict[str, NDArray1[Any, np.str_]]:
+) -> dict[str, NDArray1[Any, np.int_]]:
     """
     Get the secondary structure from a PDBx file.
 
@@ -2286,13 +2287,14 @@ def get_sse(
 
     Returns
     -------
-    sse_dict : dict of str -> ndarray, dtype=str
+    sse_dict : dict of str -> ndarray, dtype=int
         The dictionary maps the chain ID (derived from ``auth_asym_id``) to the
-        secondary structure of the respective chain.
+        secondary structure of the respective chain, given as
+        :class:`SecondaryStructure` values.
 
-        - ``"a"``: alpha-helix
-        - ``"b"``: beta-strand
-        - ``"c"``: coil or not an amino acid
+        - :attr:`SecondaryStructure.HELIX`: alpha-helix
+        - :attr:`SecondaryStructure.STRAND`: beta-strand
+        - :attr:`SecondaryStructure.COIL`: coil or not an amino acid
 
         Each secondary structure element corresponds to the ``label_seq_id`` of the
         ``atom_site`` category.
@@ -2306,17 +2308,14 @@ def get_sse(
     >>> file = CIFFile.read(os.path.join(path_to_structures, "1aki.cif"))
     >>> sse = get_sse(file, match_model=1)
     >>> print(sse)
-    {'A': array(['c', 'c', 'c', 'c', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a',
-                 'a', 'c', 'c', 'c', 'c', 'c', 'a', 'a', 'a', 'c', 'c', 'a', 'a',
-                 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'c', 'c',
-                 'c', 'c', 'c', 'b', 'b', 'b', 'c', 'c', 'c', 'c', 'c', 'b', 'b',
-                 'b', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c',
-                 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c',
-                 'c', 'a', 'a', 'a', 'a', 'a', 'c', 'c', 'c', 'c', 'a', 'a', 'a',
-                 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'c', 'a',
-                 'a', 'a', 'a', 'c', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'c', 'c',
-                 'c', 'c', 'a', 'a', 'a', 'a', 'c', 'c', 'c', 'c', 'c', 'c'],
-                 dtype='<U1')}
+    {'A': array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0,
+                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0,
+                 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+                 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1,
+                 1, 1, 1, 0, 0, 0, 0, 0, 0])}
+    >>> print("".join(SecondaryStructure.to_symbols(sse["A"])))
+    ccccaaaaaaaaaacccccaaaccaaaaaaaaaaaaccccccbbbcccccbbbccccccccccccccccccccccccccaaaaaccccaaaaaaaaaaaaaccaaaacaaaaaacccccaaaacccccc
 
     If only secondary structure elements for resolved residues are requested, the length
     of the returned array matches the number of peptide residues in the structure.
@@ -2331,16 +2330,16 @@ def get_sse(
     """
     block = _get_block(pdbx_file, data_block)
 
-    # Init all chains with "c" for coil
+    # Init all chains with coil
     sse_dict = {
-        chain_id: np.repeat("c", len(sequence))
+        chain_id: np.full(len(sequence), SecondaryStructure.COIL, dtype=int)
         for chain_id, sequence in get_sequence(block).items()
     }
 
     # Populate SSE arrays with helices and strands
     for sse_symbol, category_name in [
-        ("a", "struct_conf"),
-        ("b", "struct_sheet_range"),
+        (SecondaryStructure.HELIX, "struct_conf"),
+        (SecondaryStructure.STRAND, "struct_sheet_range"),
     ]:
         if category_name in block:
             category = block[category_name]

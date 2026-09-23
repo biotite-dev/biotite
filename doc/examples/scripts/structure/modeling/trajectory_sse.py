@@ -39,9 +39,9 @@ sse = np.array([struc.annotate_sse(frame) for frame in traj])
 # Matplotlib needs numbers to assign colors correctly
 def sse_to_num(sse):
     num = np.empty(sse.shape, dtype=float)
-    num[sse == "a"] = 0
-    num[sse == "b"] = 1
-    num[sse == "c"] = np.nan
+    num[sse == struc.SecondaryStructure.HELIX] = 0
+    num[sse == struc.SecondaryStructure.STRAND] = 1
+    num[sse == struc.SecondaryStructure.COIL] = np.nan
     return num
 
 

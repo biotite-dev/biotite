@@ -404,6 +404,7 @@
         "Proteins" : [
             "dihedral_backbone",
             "dihedral_side_chain",
+            "SecondaryStructure",
             "annotate_sse"
         ],
         "Nucleic acids" : [

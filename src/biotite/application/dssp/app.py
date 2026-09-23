@@ -2,7 +2,7 @@ from __future__ import annotations
 
 __name__ = "biotite.application.dssp"
 __author__ = "Patrick Kunzmann"
-__all__ = ["DsspApp"]
+__all__ = ["DsspApp", "DsspElement"]
 
 from os import PathLike
 from subprocess import SubprocessError
@@ -10,6 +10,7 @@ from tempfile import NamedTemporaryFile
 import numpy as np
 from biotite.application.application import AppState, requires_state
 from biotite.application.localapp import LocalApp, cleanup_tempfile, get_version
+from biotite.application_v2.dssp.app import DsspElement
 from biotite.structure.atoms import AtomArray
 from biotite.structure.error import BadStructureError
 from biotite.structure.filter import filter_amino_acids
@@ -31,17 +32,8 @@ class DsspApp(LocalApp):
     Internally this creates a :class:`Popen` instance, which handles
     the execution.
 
-    DSSP differentiates between 8 different types of secondary
-    structure elements:
-
-       - C: loop, coil or irregular
-       - H: :math:`{\alpha}`-helix
-       - B: :math:`{\beta}`-bridge
-       - E: extended strand, participation in :math:`{\beta}`-ladder
-       - G: 3 :sub:`10`-helix
-       - I: :math:`{\pi}`-helix
-       - T: hydrogen bonded turn
-       - S: bend
+    *DSSP* differentiates between the secondary structure elements
+    listed in :class:`DsspElement`.
 
     Parameters
     ----------
@@ -56,9 +48,11 @@ class DsspApp(LocalApp):
     >>> app = DsspApp(atom_array)
     >>> app.start()
     >>> app.join()
-    >>> print(app.get_sse())
-    ['C' 'H' 'H' 'H' 'H' 'H' 'H' 'H' 'T' 'T' 'G' 'G' 'G' 'G' 'T' 'C' 'P' 'P'
-     'P' 'C']
+    >>> sse = app.get_sse()
+    >>> print(sse)
+    [0 1 1 1 1 1 1 1 6 6 4 4 4 4 6 0 8 8 8 0]
+    >>> print("".join(DsspElement.to_symbols(sse)))
+    CHHHHHHHTTGGGGTCPPPC
     """
 
     _v2_alternative = "biotite.application_v2.dssp.DsspApp"
@@ -129,11 +123,12 @@ class DsspApp(LocalApp):
         lines = [
             line for line in lines[sse_start:] if len(line) != 0 and line[13] != "!"
         ]
-        self._sse = np.zeros(len(lines), dtype="U1")
+        symbols = np.zeros(len(lines), dtype="U1")
         # Parse file for SSE letters
         for i, line in enumerate(lines):
-            self._sse[i] = line[16]
-        self._sse[self._sse == " "] = "C"
+            symbols[i] = line[16]
+        symbols[symbols == " "] = "C"
+        self._sse = DsspElement.from_symbols(symbols)
 
     def clean_up(self) -> None:
         super().clean_up()
@@ -141,14 +136,14 @@ class DsspApp(LocalApp):
         cleanup_tempfile(self._out_file)
 
     @requires_state(AppState.JOINED)
-    def get_sse(self) -> NDArray1[K, np.str_]:
+    def get_sse(self) -> NDArray1[K, np.int_]:
         """
         Get the resulting secondary structure assignment.
 
         Returns
         -------
-        sse : ndarray, dtype="U1"
-            An array containing DSSP secondary structure symbols
+        sse : ndarray, dtype=int
+            An array containing :class:`DsspElement` values
             corresponding to the residues in the input atom array.
         """
         return self._sse  # pyright: ignore[reportReturnType]
@@ -156,7 +151,7 @@ class DsspApp(LocalApp):
     @staticmethod
     def annotate_sse(
         atom_array: AtomArray[N], bin_path: str | PathLike[str] = "mkdssp"
-    ) -> NDArray1[K, np.str_]:
+    ) -> NDArray1[K, np.int_]:
         """
         Perform a secondary structure assignment to an atom array.
 
@@ -172,8 +167,8 @@ class DsspApp(LocalApp):
 
         Returns
         -------
-        sse : ndarray, dtype="U1"
-            An array containing DSSP secondary structure symbols
+        sse : ndarray, dtype=int
+            An array containing :class:`DsspElement` values
             corresponding to the residues in the input atom array.
         """
         app = DsspApp(atom_array, bin_path)

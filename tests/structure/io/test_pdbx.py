@@ -754,12 +754,12 @@ def test_get_sse():
         (51, 53),
     ]
 
-    ref_sse = np.full(TOTAL_LENGTH, "c", dtype="U1")
+    ref_sse = np.full(TOTAL_LENGTH, struc.SecondaryStructure.COIL, dtype=int)
     for helix_range in HELIX_RANGES:
         # Conver to zero-based indexing
-        ref_sse[helix_range[0] - 1 : helix_range[1]] = "a"
+        ref_sse[helix_range[0] - 1 : helix_range[1]] = struc.SecondaryStructure.HELIX
     for sheet_range in SHEET_RANGES:
-        ref_sse[sheet_range[0] - 1 : sheet_range[1]] = "b"
+        ref_sse[sheet_range[0] - 1 : sheet_range[1]] = struc.SecondaryStructure.STRAND
 
     pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1aki.bcif")
     test_sse = pdbx.get_sse(pdbx_file)["A"]
