@@ -26,8 +26,11 @@ loading the structure.
     pdbx_file = pdbx.BinaryCIFFile.read(
         rcsb.fetch("2rtg", "bcif", gettempdir())
     )
+    # The author chain IDs are used here, as they assign each ligand to the
+    # chain of the respective receptor monomer
     structure = pdbx.get_structure(
-        pdbx_file, model=1, include_bonds=True, extra_fields=["charge"]
+        pdbx_file, model=1, include_bonds=True, extra_fields=["charge"],
+        use_author_fields=True
     )
     # The structure is a homodimer, one monomer is sufficient
     structure = structure[structure.chain_id == "B"]

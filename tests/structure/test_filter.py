@@ -8,35 +8,50 @@ from tests.util import data_dir
 @pytest.fixture
 def canonical_sample_protein():
     return pdbx.get_structure(
-        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "3o5r.bcif"), model=1
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "3o5r.bcif"),
+        model=1,
+        # The expected values refer to the author fields
+        use_author_fields=True,
     )
 
 
 @pytest.fixture
 def sample_protein():
     return pdbx.get_structure(
-        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "5eil.bcif"), model=1
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "5eil.bcif"),
+        model=1,
+        # The expected values refer to the author fields
+        use_author_fields=True,
     )
 
 
 @pytest.fixture
 def canonical_sample_nucleotide():
     return pdbx.get_structure(
-        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "5ugo.bcif"), model=1
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "5ugo.bcif"),
+        model=1,
+        # The expected values refer to the author fields
+        use_author_fields=True,
     )
 
 
 @pytest.fixture
 def sample_nucleotide():
     return pdbx.get_structure(
-        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "4p5j.bcif"), model=1
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "4p5j.bcif"),
+        model=1,
+        # The expected values refer to the author fields
+        use_author_fields=True,
     )
 
 
 @pytest.fixture
 def sample_carbohydrate():
     return pdbx.get_structure(
-        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "2d0f.bcif"), model=1
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "2d0f.bcif"),
+        model=1,
+        # The expected values refer to the author fields
+        use_author_fields=True,
     )
 
 

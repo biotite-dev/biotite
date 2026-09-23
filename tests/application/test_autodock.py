@@ -21,7 +21,12 @@ def test_docking(flexible):
     # A structure of a straptavidin-biotin complex
     pdbx_file = pdbx.BinaryCIFFile.read(data_dir("application") / "2rtg.bcif")
     structure = pdbx.get_structure(
-        pdbx_file, model=1, extra_fields=["charge"], include_bonds=True
+        pdbx_file,
+        model=1,
+        extra_fields=["charge"],
+        include_bonds=True,
+        # The author chain IDs assign the ligand to the chain of its receptor
+        use_author_fields=True,
     )
     structure = structure[structure.chain_id == "B"]
     receptor = structure[struc.filter_amino_acids(structure)]

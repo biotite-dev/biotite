@@ -55,7 +55,8 @@ def test_to_3di(path):
         # There is some inconsistency in how foldseek and Biotite handle altloc IDs
         # -> skip these cases for the sake of simplicity
         pytest.skip("Structure contains altlocs")
-    atoms = pdbx.get_structure(pdbx_file, model=1)
+    # The reference sequences are labeled with author chain IDs
+    atoms = pdbx.get_structure(pdbx_file, model=1, use_author_fields=True)
     atoms = atoms[struc.filter_amino_acids(atoms)]
     if len(atoms) == 0:
         pytest.skip("Structure contains no peptide chains")
