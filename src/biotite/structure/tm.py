@@ -23,7 +23,7 @@ from biotite.structure.filter import filter_amino_acids
 from biotite.structure.geometry import distance
 from biotite.structure.residues import get_residue_count
 from biotite.structure.superimpose import superimpose
-from biotite.structure.transform import AffineTransformation
+from biotite.structure.transform import RigidTransformation
 from biotite.structure.util import coord_for_atom_name_per_residue
 from biotite.typing import C2, XYZ, K, M, N, NDArray1, NDArray2
 
@@ -123,7 +123,7 @@ def superimpose_structural_homologs(
     | int = "shorter",
 ) -> tuple[
     AtomArray[N],
-    AffineTransformation[int],
+    RigidTransformation[int],
     NDArray1[K, np.integer],
     NDArray1[K, np.integer],
 ]:
@@ -164,10 +164,10 @@ def superimpose_structural_homologs(
     -------
     fitted : AtomArray or AtomArrayStack
         A copy of the `mobile` structure, superimposed on the fixed structure.
-    transform : AffineTransformation
-        This object contains the affine transformation(s) that were
+    transform : RigidTransformation
+        This object contains the rigid transformation(s) that were
         applied on `mobile`.
-        :meth:`AffineTransformation.apply()` can be used to transform
+        :meth:`RigidTransformation.apply()` can be used to transform
         another AtomArray in the same way.
     fixed_indices, mobile_indices : ndarray, shape(k,), dtype=int
         The indices of the corresponding ``CA`` atoms in the fixed and mobile structure,

@@ -1,12 +1,14 @@
 """
-This module provides different transformations#
+This module provides different transformations
 that can be applied on structures.
 """
+
+from __future__ import annotations
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann", "Claude J. Rogers"
 __all__ = [
-    "AffineTransformation",
+    "RigidTransformation",
     "translate",
     "rotate",
     "rotate_centered",
@@ -42,52 +44,121 @@ _AtomsLikeT = TypeVar(
 )
 
 
-class AffineTransformation(Generic[M]):
-    """
-    An affine transformation, consisting of translations and a rotation.
+class RigidTransformation(Generic[M]):
+    r"""
+    A rigid transformation, consisting of a rotation followed by a
+    translation.
+
+    Applying the transformation to coordinates :math:`x` yields
+
+    .. math::
+
+        x' = R x + t,
+
+    where :math:`R` is the rotation matrix and :math:`t` is the
+    translation vector.
 
     Parameters
     ----------
-    center_translation : ndarray, shape=(3,) or shape=(m,3), dtype=float
-        The translation vector for moving the centroid into the
-        origin.
     rotation : ndarray, shape=(3,3) or shape=(m,3,3), dtype=float
         The rotation matrix.
-    target_translation : ndarray, shape=(m,3), dtype=float
-        The translation vector for moving the structure onto the
-        fixed one.
+    translation : ndarray, shape=(3,) or shape=(m,3), dtype=float, optional
+        The translation vector.
+        By default, no translation is applied.
 
     Attributes
     ----------
-    center_translation, rotation, target_translation : ndarray
+    rotation, translation : ndarray
         Same as the parameters.
-        The dimensions are always expanded to *(m,3)* or *(m,3,3)*,
+        The dimensions are always expanded to *(m,3,3)* or *(m,3)*,
         respectively.
+
+    Notes
+    -----
+    Two transformations can be combined via the ``*`` operator:
+    ``(transform1 * transform2).apply(atoms)`` is equivalent to
+    ``transform1.apply(transform2.apply(atoms))``.
+    The inverse of a transformation is obtained via the unary ``-``
+    operator.
+
+    Examples
+    --------
+
+    >>> coord = np.arange(15).reshape(5,3)
+    >>> print(coord)
+    [[ 0  1  2]
+     [ 3  4  5]
+     [ 6  7  8]
+     [ 9 10 11]
+     [12 13 14]]
+    >>> # Rotates 90 degrees around the z-axis and moves along the x-axis
+    >>> transform = RigidTransformation(
+    ...     rotation=np.array([
+    ...         [0, -1,  0],
+    ...         [1,  0,  0],
+    ...         [0,  0,  1]
+    ...     ]),
+    ...     translation=np.array([10, 0, 0])
+    ... )
+    >>> print(transform.apply(coord))
+    [[ 9.  0.  2.]
+     [ 6.  3.  5.]
+     [ 3.  6.  8.]
+     [ 0.  9. 11.]
+     [-3. 12. 14.]]
+    >>> # The inverse transformation restores the original coordinates
+    >>> print((-transform).apply(transform.apply(coord)))
+    [[ 0.  1.  2.]
+     [ 3.  4.  5.]
+     [ 6.  7.  8.]
+     [ 9. 10. 11.]
+     [12. 13. 14.]]
+    >>> # Combining a transformation with its inverse gives the identity
+    >>> print((-transform * transform).as_matrix()[0])
+    [[1. 0. 0. 0.]
+     [0. 1. 0. 0.]
+     [0. 0. 1. 0.]
+     [0. 0. 0. 1.]]
     """
 
     # Coordinate axes are concrete `int` rather than `XYZ` because the
     # class is `Generic[M]` only; `XYZ` would be a free TypeVar here.
     # Same pattern used for the annotation columns on `_AtomArrayBase`.
-    center_translation: NDArray2[M, int, np.floating]
     rotation: NDArray3[M, int, int, np.floating]
-    target_translation: NDArray2[M, int, np.floating]
+    translation: NDArray2[M, int, np.floating]
 
     def __init__(
         self,
-        center_translation: (
-            NDArray1[XYZ, np.floating] | NDArray2[M, XYZ, np.floating]
-        ),
         rotation: (
             NDArray2[XYZ, XYZ, np.floating] | NDArray3[M, XYZ, XYZ, np.floating]
         ),
-        target_translation: (
-            NDArray1[XYZ, np.floating] | NDArray2[M, XYZ, np.floating]
-        ),
+        translation: (
+            NDArray1[XYZ, np.floating] | NDArray2[M, XYZ, np.floating] | None
+        ) = None,
     ) -> None:
-        self.center_translation = _expand_dims(center_translation, 2)
+        rotation = np.asarray(rotation, dtype=float)
+        if rotation.shape[-2:] != (3, 3):
+            raise ValueError("Rotation matrix must have shape (3, 3) or (m, 3, 3)")
         self.rotation = _expand_dims(rotation, 3)
-        self.target_translation = _expand_dims(target_translation, 2)
+        if translation is None:
+            translation_array = np.zeros((self.rotation.shape[0], 3), dtype=float)
+        else:
+            translation_array = np.asarray(translation, dtype=float)
+        if translation_array.shape[-1] != 3:
+            raise ValueError("Translation vector must have shape (3,) or (m, 3)")
+        self.translation = _expand_dims(translation_array, 2)
+        if (
+            self.rotation.shape[0] != self.translation.shape[0]
+            and self.rotation.shape[0] != 1
+            and self.translation.shape[0] != 1
+        ):
+            raise IndexError(
+                f"Number of rotations is {self.rotation.shape[0]}, "
+                f"but number of translations is {self.translation.shape[0]}"
+            )
 
+    # The multi-atom overloads come first,
+    # so that coordinates of unknown dimensionality match them
     @overload
     def apply(self, atoms: AtomArray[N]) -> AtomArray[N]: ...
     @overload
@@ -100,15 +171,25 @@ class AffineTransformation(Generic[M]):
     def apply(
         self, atoms: NDArray3[_M, N, XYZ, np.floating]
     ) -> NDArray3[_M, N, XYZ, np.floating]: ...
+    @overload
+    def apply(self, atoms: Atom) -> Atom: ...
+    @overload
+    def apply(
+        self, atoms: NDArray1[XYZ, np.floating]
+    ) -> NDArray1[XYZ, np.floating]: ...
     def apply(
         self,
-        atoms: AtomArray[N]
+        atoms: Atom
+        | AtomArray[N]
         | AtomArrayStack[_M, N]
+        | NDArray1[XYZ, np.floating]
         | NDArray2[N, XYZ, np.floating]
         | NDArray3[_M, N, XYZ, np.floating],
     ) -> (
-        AtomArray[N]
+        Atom
+        | AtomArray[N]
         | AtomArrayStack[_M, N]
+        | NDArray1[XYZ, np.floating]
         | NDArray2[N, XYZ, np.floating]
         | NDArray3[_M, N, XYZ, np.floating]
     ):
@@ -117,12 +198,12 @@ class AffineTransformation(Generic[M]):
 
         Parameters
         ----------
-        atoms : AtomArray or AtomArrayStack or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
+        atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3), dtype=float
             The structure to apply the transformation on.
 
         Returns
         -------
-        transformed : AtomArray or AtomArrayStack or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
+        transformed : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3), dtype=float
             A copy of the `atoms` structure, with transformations applied.
             Only coordinates are returned, if coordinates were given in `atoms`.
 
@@ -137,14 +218,12 @@ class AffineTransformation(Generic[M]):
          [ 9 10 11]
          [12 13 14]]
         >>> # Rotates 90 degrees around the z-axis
-        >>> transform = AffineTransformation(
-        ...     center_translation=np.array([0,0,0]),
+        >>> transform = RigidTransformation(
         ...     rotation=np.array([
         ...         [0, -1,  0],
         ...         [1,  0,  0],
         ...         [0,  0,  1]
         ...     ]),
-        ...     target_translation=np.array([0,0,0])
         ... )
         >>> print(transform.apply(coord))
         [[ -1.   0.   2.]
@@ -155,32 +234,32 @@ class AffineTransformation(Generic[M]):
         """
         mobile_coord = coord(atoms)
         original_shape = mobile_coord.shape
-        mobile_coord = _reshape_to_3d(mobile_coord)
-        if (
-            self.rotation.shape[0] != 1
-            and mobile_coord.shape[0] != self.rotation.shape[0]
-        ):
+        if mobile_coord.ndim == 1:
+            # A single atom
+            mobile_coord = mobile_coord[np.newaxis, np.newaxis, :]
+        else:
+            mobile_coord = _reshape_to_3d(mobile_coord)
+        n_models = max(self.rotation.shape[0], self.translation.shape[0])
+        if n_models != 1 and mobile_coord.shape[0] != n_models:
             raise IndexError(
-                f"Number of transformations is {self.rotation.shape[0]}, "
+                f"Number of transformations is {n_models}, "
                 f"but number of structure models is {mobile_coord.shape[0]}"
             )
 
-        superimposed_coord = mobile_coord.copy()
-        superimposed_coord += self.center_translation[:, np.newaxis, :]
-        superimposed_coord = _multi_matmul(self.rotation, superimposed_coord)
-        superimposed_coord += self.target_translation[:, np.newaxis, :]
+        transformed_coord = _multi_matmul(self.rotation, mobile_coord)
+        transformed_coord += self.translation[:, np.newaxis, :]
 
-        superimposed_coord = superimposed_coord.reshape(original_shape)
+        transformed_coord = transformed_coord.reshape(original_shape)
         if isinstance(atoms, np.ndarray):
-            return superimposed_coord  # pyright: ignore[reportReturnType]
+            return transformed_coord  # pyright: ignore[reportReturnType]
         else:
-            superimposed = atoms.copy()
-            superimposed.coord = superimposed_coord  # pyright: ignore[reportAttributeAccessIssue]
-            return superimposed
+            transformed = atoms.copy()
+            transformed.coord = transformed_coord  # pyright: ignore[reportAttributeAccessIssue]
+            return transformed
 
     def as_matrix(self) -> NDArray3[M, int, int, np.floating]:
         """
-        Get the translations and rotation as a combined 4x4
+        Get the rotation and translation as a combined 4x4
         transformation matrix.
 
         Multiplying this matrix with coordinates in the form
@@ -204,14 +283,12 @@ class AffineTransformation(Generic[M]):
          [ 9 10 11]
          [12 13 14]]
         >>> # Rotates 90 degrees around the z-axis
-        >>> transform = AffineTransformation(
-        ...     center_translation=np.array([0,0,0]),
+        >>> transform = RigidTransformation(
         ...     rotation=np.array([
         ...         [0, -1,  0],
         ...         [1,  0,  0],
         ...         [0,  0,  1]
         ...     ]),
-        ...     target_translation=np.array([0,0,0])
         ... )
         >>> print(transform.apply(coord))
         [[ -1.   0.   2.]
@@ -234,23 +311,43 @@ class AffineTransformation(Generic[M]):
          [-10.   9.  11.   1.]
          [-13.  12.  14.   1.]]
         """
-        n_models = self.rotation.shape[0]
-        rotation_mat = _3d_identity(n_models, 4)
-        rotation_mat[:, :3, :3] = self.rotation
-        center_translation_mat = _3d_identity(n_models, 4)
-        center_translation_mat[:, :3, 3] = self.center_translation
-        target_translation_mat = _3d_identity(n_models, 4)
-        target_translation_mat[:, :3, 3] = self.target_translation
-        return target_translation_mat @ rotation_mat @ center_translation_mat
+        n_models = max(self.rotation.shape[0], self.translation.shape[0])
+        matrix = _3d_identity(n_models, 4)
+        matrix[:, :3, :3] = self.rotation
+        matrix[:, :3, 3] = self.translation
+        return matrix  # pyright: ignore[reportReturnType]
+
+    def __mul__(self, other: RigidTransformation[Any]) -> RigidTransformation[Any]:
+        """
+        Combine this transformation with another one.
+
+        The returned transformation applies `other` first and this
+        transformation afterwards.
+        """
+        if not isinstance(other, RigidTransformation):
+            return NotImplemented
+        rotation = self.rotation @ other.rotation
+        translation = (self.rotation @ other.translation[..., np.newaxis])[
+            ..., 0
+        ] + self.translation
+        return RigidTransformation(rotation, translation)
+
+    def __neg__(self) -> RigidTransformation[M]:
+        """
+        Get the inverse of this transformation.
+        """
+        inverse_rotation = self.rotation.mT
+        inverse_translation = -(inverse_rotation @ self.translation[..., np.newaxis])[
+            ..., 0
+        ]
+        return RigidTransformation(inverse_rotation, inverse_translation)
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, AffineTransformation):
-            return False
-        if not np.array_equal(self.center_translation, other.center_translation):
+        if not isinstance(other, RigidTransformation):
             return False
         if not np.array_equal(self.rotation, other.rotation):
             return False
-        if not np.array_equal(self.target_translation, other.target_translation):
+        if not np.array_equal(self.translation, other.translation):
             return False
         return True
 
@@ -537,15 +634,15 @@ def rotate_about_axis(
 
 
 def orient_principal_components(
-    atoms: _AtomsLikeT,
+    atoms: AtomArray[N] | NDArray2[N, XYZ, np.floating],
     order: Any = None,
-) -> _AtomsLikeT:
+) -> RigidTransformation[int]:
     """
-    Translate and rotate the atoms to be centered at the origin with
+    Get the transformation that centers the atoms at the origin with
     the principal axes aligned to the Cartesian axes, as specified by
     the `order` parameter. By default, x, y, z.
 
-    By default, the resulting coordinates have the highest variance in
+    By default, the transformed coordinates have the highest variance in
     the x-axis and the lowest variance on the z-axis. Setting the `order`
     parameter will change the direction of the highest variance.
     For example, ``order=(2, 1, 0)`` results in highest variance along the
@@ -554,7 +651,7 @@ def orient_principal_components(
     Parameters
     ----------
     atoms : AtomArray or ndarray, shape=(n,3)
-        The atoms of which the coordinates are transformed.
+        The atoms of which the principal components are computed.
         The coordinates can be directly provided as :class:`ndarray`.
     order : array-like, length=3
         The order of decreasing variance. Setting `order` to ``(2, 0, 1)``
@@ -563,9 +660,10 @@ def orient_principal_components(
 
     Returns
     -------
-    AtomArray or ndarray, shape=(n,3)
-        The atoms with coordinates centered at the orgin and aligned with
-        xyz axes.
+    transform : RigidTransformation
+        The transformation that centers the atoms at the origin and
+        aligns the principal components with the xyz axes.
+        Use :meth:`RigidTransformation.apply()` to transform the atoms.
 
     Examples
     --------
@@ -574,12 +672,14 @@ def orient_principal_components(
 
     >>> print("original variance =", atom_array.coord.var(axis=0))
     original variance = [26.517 20.009  9.325]
-    >>> moved = orient_principal_components(atom_array)
+    >>> transform = orient_principal_components(atom_array)
+    >>> moved = transform.apply(atom_array)
     >>> print("moved variance =", moved.coord.var(axis=0))
     moved variance = [28.906 18.495  8.450]
     >>> # Note the increase in variance along the x-axis
     >>> # Specifying the order keyword changes the orientation
-    >>> moved_z = orient_principal_components(atom_array, order=(2, 1, 0))
+    >>> transform_z = orient_principal_components(atom_array, order=(2, 1, 0))
+    >>> moved_z = transform_z.apply(atom_array)
     >>> print("moved (zyx) variance =", moved_z.coord.var(axis=0))
     moved (zyx) variance = [ 8.450 18.495 28.906]
     """
@@ -603,10 +703,14 @@ def orient_principal_components(
             raise ValueError("Expected order to contain [0, 1, 2].")
 
     # place centroid of the atoms at the origin
-    centered = coords - coords.mean(axis=0)
+    center = coords.mean(axis=0)
+    centered = coords - center
 
     # iterate a few times to ensure the ideal rotation has been applied
     identity = np.eye(3)
+    # The combined rotation of all iterations
+    # in row-vector convention (`coord @ rotation`)
+    total_rotation = np.eye(3)
     MAX_ITER = 50
     for _ in range(MAX_ITER):
         # PCA, W is the component matrix, s ~ explained variance
@@ -628,33 +732,27 @@ def orient_principal_components(
             break
         # Apply rotation, keep molecule centered on the origin
         centered = centered @ rotation
-    return _put_back(atoms, centered)
+        total_rotation = total_rotation @ rotation
+    # Convert to column-vector convention (`rotation @ coord`)
+    total_rotation = total_rotation.T
+    return RigidTransformation(total_rotation, -total_rotation @ center)
 
 
 def align_vectors(
-    atoms: _AtomsLikeT,
     origin_direction: Any,
     target_direction: Any,
     origin_position: Any = None,
     target_position: Any = None,
-) -> _AtomsLikeT:
+) -> RigidTransformation[int]:
     """
-    Apply a transformation to atoms or coordinates, that would transfer
-    a origin vector to a target vector.
+    Get the transformation that would transfer an origin vector to a
+    target vector.
 
-    At first the transformation (translation and rotation), that is
-    necessary to align the origin vector to the target vector is
-    calculated.
     This means, that the application of the transformation on the
     origin vector would give the target vector.
-    Then the same transformation is applied to the given
-    atoms/coordinates.
 
     Parameters
     ----------
-    atoms : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
-        The atoms of which the coordinates are transformed.
-        The coordinates can be directly provided as :class:`ndarray`.
     origin_direction, target_direction : array-like, length=3
         The vectors representing the direction of the origin or target,
         respectively.
@@ -665,9 +763,11 @@ def align_vectors(
 
     Returns
     -------
-    transformed : Atom or AtomArray or AtomArrayStack or ndarray, shape=(3,) or shape=(n,3) or shape=(m,n,3)
-        A copy of the input atoms or coordinates with the applied
-        transformation.
+    transform : RigidTransformation
+        The transformation that aligns the origin vector to the target
+        vector.
+        Use :meth:`RigidTransformation.apply()` to transform atoms or
+        coordinates the same way.
 
     Examples
     --------
@@ -680,13 +780,13 @@ def align_vectors(
     >>> first_residue_cb = first_residue[first_residue.atom_name == "CB"]
     >>> second_residue_ca = second_residue[second_residue.atom_name == "CA"]
     >>> second_residue_cb = second_residue[second_residue.atom_name == "CB"]
-    >>> first_residue = align_vectors(
-    ...     first_residue,
+    >>> transform = align_vectors(
     ...     origin_direction = first_residue_cb.coord - first_residue_ca.coord,
     ...     target_direction = second_residue_cb.coord - second_residue_ca.coord,
     ...     origin_position = first_residue_ca.coord,
     ...     target_position = second_residue_ca.coord
     ... )
+    >>> first_residue = transform.apply(first_residue)
     >>> # The CA and CB coordinates of both residues are now almost equal
     >>> print(first_residue)
         A       1  ASN N      N        -5.549    3.788   -1.125
@@ -741,16 +841,22 @@ def align_vectors(
         raise ValueError("Length of the origin vector is 0")
     if np.linalg.vector_norm(target_direction) == 0:
         raise ValueError("Length of the target vector is 0")
-    if origin_position is not None:
-        origin_position = np.asarray(origin_position, dtype=np.float32)
-    if target_position is not None:
-        target_position = np.asarray(target_position, dtype=np.float32)
-
-    positions = coord(atoms).copy()
-    if origin_position is not None:
-        # Transform coordinates
-        # so that the position of the origin vector is at (0,0,0)
-        positions -= origin_position
+    if origin_position is None:
+        origin_position = np.zeros(3, dtype=np.float32)
+    else:
+        origin_position = np.asarray(origin_position, dtype=np.float32).squeeze()
+    if target_position is None:
+        target_position = np.zeros(3, dtype=np.float32)
+    else:
+        target_position = np.asarray(target_position, dtype=np.float32).squeeze()
+    if origin_position.shape != (3,):
+        raise ValueError(
+            f"Expected origin position to have shape (3,), got {origin_position.shape}"
+        )
+    if target_position.shape != (3,):
+        raise ValueError(
+            f"Expected target position to have shape (3,), got {target_position.shape}"
+        )
 
     # Normalize direction vectors
     origin_direction = origin_direction.copy()
@@ -769,13 +875,10 @@ def align_vectors(
         )
     rot_matrix = np.identity(3) + v_c + (v_c @ v_c) / (1 + cos_a)
 
-    positions = matrix_rotate(positions, rot_matrix)
-
-    if target_position is not None:
-        # Transform coordinates to position of the target vector
-        positions += target_position
-
-    return _put_back(atoms, positions)
+    # The origin position is moved to (0,0,0), then the rotation is applied
+    # and finally the coordinates are moved to the target position
+    translation = target_position - rot_matrix @ origin_position
+    return RigidTransformation(rot_matrix, translation)
 
 
 def _put_back(input_atoms: _AtomsLikeT, transformed: np.ndarray) -> _AtomsLikeT:

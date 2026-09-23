@@ -64,7 +64,7 @@ from biotite.structure.residues import (
     get_residue_starts_for,
 )
 from biotite.structure.sse import SecondaryStructure
-from biotite.structure.transform import AffineTransformation
+from biotite.structure.transform import RigidTransformation
 from biotite.typing import C2, XYZ, M, N, NDArray1, NDArray2
 from biotite.util import map_unique
 
@@ -1985,18 +1985,18 @@ def get_assembly(
 @overload
 def _apply_transformations(
     structure: AtomArray[N],
-    transformation_dict: dict[str, AffineTransformation[Any]],
+    transformation_dict: dict[str, RigidTransformation[Any]],
     operations: list[tuple[str, ...]],
 ) -> AtomArray[Any]: ...
 @overload
 def _apply_transformations(
     structure: AtomArrayStack[M, N],
-    transformation_dict: dict[str, AffineTransformation[Any]],
+    transformation_dict: dict[str, RigidTransformation[Any]],
     operations: list[tuple[str, ...]],
 ) -> AtomArrayStack[M, Any]: ...
 def _apply_transformations(
     structure: AtomArray[N] | AtomArrayStack[M, N],
-    transformation_dict: dict[str, AffineTransformation[Any]],
+    transformation_dict: dict[str, RigidTransformation[Any]],
     operations: list[tuple[str, ...]],
 ) -> AtomArray[Any] | AtomArrayStack[M, Any]:
     """
@@ -2018,9 +2018,9 @@ def _apply_transformations(
 
 def _get_transformations(
     struct_oper: _Category,
-) -> dict[str, AffineTransformation[Any]]:
+) -> dict[str, RigidTransformation[Any]]:
     """
-    Get affine transformation for each operation ID in ``pdbx_struct_oper_list``.
+    Get rigid transformation for each operation ID in ``pdbx_struct_oper_list``.
     """
     transformation_dict = {}
     for index, id in enumerate(struct_oper["id"].as_array(str)):
@@ -2036,8 +2036,8 @@ def _get_transformations(
         translation_vector = np.array(
             [struct_oper[f"vector[{i}]"].as_array(float)[index] for i in (1, 2, 3)]
         )
-        transformation_dict[id] = AffineTransformation(
-            np.zeros(3), rotation_matrix, translation_vector
+        transformation_dict[id] = RigidTransformation(
+            rotation_matrix, translation_vector
         )
     return transformation_dict
 

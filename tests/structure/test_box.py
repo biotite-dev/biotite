@@ -124,7 +124,7 @@ def test_space_group_transforms(space_group, rotations, translations):
         [
             (
                 tuple(transform.rotation[0].flatten().tolist()),
-                tuple(transform.target_translation[0].tolist()),
+                tuple(transform.translation[0].tolist()),
             )
             for transform in struc.space_group_transforms(space_group)
         ]

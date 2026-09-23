@@ -46,27 +46,22 @@ for i, (purine, pyrimidine) in enumerate(pairs):
         pyrimidine[pyrimidine.atom_name == name][0] for name in ("N1", "N3", "C5", "C6")
     ]
     # Pyrimidine N3-C6 axis is aligned to x-axis
-    purine, pyrimidine = [
-        struc.align_vectors(base, n3.coord - c6.coord, np.array([1, 0, 0]))
-        for base in (purine, pyrimidine)
-    ]
+    transform = struc.align_vectors(n3.coord - c6.coord, np.array([1, 0, 0]))
+    purine, pyrimidine = [transform.apply(base) for base in (purine, pyrimidine)]
     # Coords are changed -> update 'Atom' objects
     n1, n3, c4, c5 = [
         pyrimidine[pyrimidine.atom_name == name][0] for name in ("N1", "N3", "C4", "C5")
     ]
     # Pyrimidine base plane normal vector is aligned to z-axis
     # Furthermore, distance between bases is set
-    purine, pyrimidine = [
-        struc.align_vectors(
-            base,
-            np.cross(n3.coord - n1.coord, c5.coord - n1.coord),
-            np.array([0, 0, 1]),
-            origin_position=struc.centroid(purine + pyrimidine),
-            # 10 Å separation between pairs
-            target_position=np.array([0, 10 * i, 0]),
-        )
-        for base in (purine, pyrimidine)
-    ]
+    transform = struc.align_vectors(
+        np.cross(n3.coord - n1.coord, c5.coord - n1.coord),
+        np.array([0, 0, 1]),
+        origin_position=struc.centroid(purine + pyrimidine),
+        # 10 Å separation between pairs
+        target_position=np.array([0, 10 * i, 0]),
+    )
+    purine, pyrimidine = [transform.apply(base) for base in (purine, pyrimidine)]
     pairs[i] = (purine, pyrimidine)
 
 # Plot base pairs

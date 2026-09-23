@@ -64,7 +64,7 @@ used in the previous chapters.
     atoms, as the algorithm requires that each atom corresponds to an atom in
     the other structure.
 
-The returned :class:`AffineTransformation` object can be used later to
+The returned :class:`RigidTransformation` object can be used later to
 transform another structure in the same way the mobile structure was
 transformed.
 

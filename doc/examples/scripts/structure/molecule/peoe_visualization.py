@@ -50,7 +50,7 @@ molecule = info.residue(MOLECULE_NAME)
 # which points into the plane of the figure
 pca = PCA(n_components=3)
 pca.fit(molecule.coord)
-molecule = struc.align_vectors(molecule, pca.components_[-1], [0, 0, 1])
+molecule = struc.align_vectors(pca.components_[-1], [0, 0, 1]).apply(molecule)
 
 # Balls should be colored by partial charge
 charges = struc.partial_charges(molecule, ITERATION_NUMBER)

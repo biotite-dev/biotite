@@ -314,7 +314,7 @@
             "rdf"
         ],
         "Transformations" : [
-            "AffineTransformation",
+            "RigidTransformation",
             "translate",
             "rotate",
             "rotate_centered",
