@@ -20,7 +20,7 @@ from typing import Literal, overload
 from biotite.file import InvalidFileError
 from biotite.sequence.annotation import AnnotatedSequence
 from biotite.sequence.io.genbank.annotation import get_annotation, set_annotation
-from biotite.sequence.io.genbank.file import GenBankFile
+from biotite.sequence.io.genbank.file import GenBankFile, GenBankRecord
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 
 _SYMBOLS_PER_CHUNK = 10
@@ -49,7 +49,7 @@ def get_raw_sequence(gb_file: GenBankFile) -> str:
         raise InvalidFileError("File has no 'ORIGIN' field")
     if len(fields) > 1:
         raise InvalidFileError("File has multiple 'ORIGIN' fields")
-    lines, _ = fields[0]
+    lines = fields[0].content
     return _field_to_seq_string(lines)
 
 
@@ -111,7 +111,7 @@ def get_annotated_sequence(
         raise InvalidFileError("File has no 'ORIGIN' field")
     if len(fields) > 1:
         raise InvalidFileError("File has multiple 'ORIGIN' fields")
-    lines, _ = fields[0]
+    lines = fields[0].content
     sequence = _convert_seq_str(_field_to_seq_string(lines), format)
     seq_start = _get_seq_start(lines)
     annotation = get_annotation(gb_file, include_only)
@@ -173,7 +173,7 @@ def set_sequence(
         line += " " + str(seq_str[i : i + _SYMBOLS_PER_CHUNK])
     # Append last line
     lines.append(line)
-    gb_file.set_field("ORIGIN", lines)
+    gb_file.set_field(GenBankRecord("ORIGIN", lines))
 
 
 def set_annotated_sequence(

@@ -29,19 +29,30 @@ def test_file_access():
     file.
     """
     gb_file = gb.GenBankFile()
-    gb_file.append("SOMEFIELD", ["Some content", "some other content"])
-    gb_file.insert(0, "OTHERFIELD", ["Additional content"])
-    assert gb_file[1] == ("SOMEFIELD", ["Some content", "some other content"], {})
-    gb_file[1] = "NEWFIELD", ["Extra content"], {"SUBFIELD": ["L 1", "L 2"]}
-    gb_file.append("THIRDFIELD", ["Supplementary content"])
+    gb_file.append(
+        gb.GenBankRecord("SOMEFIELD", ["Some content", "some other content"])
+    )
+    gb_file.insert(0, gb.GenBankRecord("OTHERFIELD", ["Additional content"]))
+    assert gb_file[1] == gb.GenBankRecord(
+        "SOMEFIELD", ["Some content", "some other content"], {}
+    )
+    gb_file[1] = gb.GenBankRecord(
+        "NEWFIELD", ["Extra content"], {"SUBFIELD": ["L 1", "L 2"]}
+    )
+    gb_file.append(gb.GenBankRecord("THIRDFIELD", ["Supplementary content"]))
     assert len(gb_file) == 3
-    assert gb_file[0] == ("OTHERFIELD", ["Additional content"], {})
+    assert gb_file[0] == gb.GenBankRecord("OTHERFIELD", ["Additional content"], {})
     del gb_file[0]
-    assert gb_file[0] == ("NEWFIELD", ["Extra content"], {"SUBFIELD": ["L 1", "L 2"]})
+    assert gb_file[0] == gb.GenBankRecord(
+        "NEWFIELD", ["Extra content"], {"SUBFIELD": ["L 1", "L 2"]}
+    )
     del gb_file[0]
-    assert gb_file[0] == ("THIRDFIELD", ["Supplementary content"], {})
+    assert gb_file[0] == gb.GenBankRecord("THIRDFIELD", ["Supplementary content"], {})
     del gb_file[0]
     assert len(gb_file) == 0
+    with pytest.raises(TypeError):
+        # Only records are accepted
+        gb_file.append(("SOMEFIELD", ["Some content"], {}))
 
 
 @pytest.mark.parametrize(
@@ -59,8 +70,8 @@ def test_conversion_lowlevel(path):
     ref_parsed_fields = [field for field in gb_file]
 
     gb_file = gb.GenBankFile()
-    for name, content, subfields in ref_parsed_fields:
-        gb_file.append(name, content, subfields)
+    for record in ref_parsed_fields:
+        gb_file.append(record)
     temp = TemporaryFile("w+")
     gb_file.write(temp)
 
@@ -217,5 +228,5 @@ def test_multi_file():
 )
 def test_parse_locus(locus_content, expected_result):
     gb_file = gb.GenBankFile()
-    gb_file.append("LOCUS", [locus_content])
+    gb_file.append(gb.GenBankRecord("LOCUS", [locus_content]))
     assert gb.get_locus(gb_file) == expected_result

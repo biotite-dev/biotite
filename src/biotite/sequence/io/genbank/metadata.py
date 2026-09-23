@@ -18,10 +18,9 @@ __all__ = [
     "set_locus",
 ]
 
-from collections import OrderedDict
 from dataclasses import dataclass
 from biotite.file import InvalidFileError
-from biotite.sequence.io.genbank.file import GenBankFile
+from biotite.sequence.io.genbank.file import GenBankFile, GenBankRecord
 
 
 @dataclass
@@ -90,7 +89,7 @@ def get_locus(gb_file: GenBankFile) -> GenBankLocus:
     >>> print(locus.date)
     16-FEB-2017
     """
-    lines, _ = _expect_single_field(gb_file, "LOCUS")
+    lines = _expect_single_field(gb_file, "LOCUS").content
     # 'LOCUS' field has only one line
     locus_info = lines[0]
 
@@ -190,7 +189,7 @@ def get_definition(gb_file: GenBankFile) -> str:
     >>> print(get_definition(file))
     Escherichia coli BL21(DE3), complete genome.
     """
-    lines, _ = _expect_single_field(gb_file, "DEFINITION")
+    lines = _expect_single_field(gb_file, "DEFINITION").content
     return " ".join([line.strip() for line in lines])
 
 
@@ -216,7 +215,7 @@ def get_accession(gb_file: GenBankFile) -> str:
     >>> print(get_accession(file))
     CP001509
     """
-    lines, _ = _expect_single_field(gb_file, "ACCESSION")
+    lines = _expect_single_field(gb_file, "ACCESSION").content
     # 'ACCESSION' field has only one line
     return lines[0]
 
@@ -236,7 +235,7 @@ def get_version(gb_file: GenBankFile) -> str:
     version : str
         Content of the *VERSION* field. Does not include GI.
     """
-    lines, _ = _expect_single_field(gb_file, "VERSION")
+    lines = _expect_single_field(gb_file, "VERSION").content
     # 'VERSION' field has only one line
     return lines[0].split()[0]
 
@@ -256,7 +255,7 @@ def get_gi(gb_file: GenBankFile) -> int:
     gi : str
         The GI of the file.
     """
-    lines, _ = _expect_single_field(gb_file, "VERSION")
+    lines = _expect_single_field(gb_file, "VERSION").content
     # 'VERSION' field has only one line
     version_info = lines[0].split()
     if len(version_info) < 2 or "GI" not in version_info[1]:
@@ -290,7 +289,7 @@ def get_db_link(gb_file: GenBankFile) -> dict[str, str]:
     BioProject : PRJNA20713
     BioSample : SAMN02603478
     """
-    lines, _ = _expect_single_field(gb_file, "DBLINK")
+    lines = _expect_single_field(gb_file, "DBLINK").content
     link_dict = {}
     for line in lines:
         key, value = line.split(":")
@@ -312,14 +311,12 @@ def get_source(gb_file: GenBankFile) -> str:
     accession : str
         The name of the source organism.
     """
-    lines, _ = _expect_single_field(gb_file, "SOURCE")
+    lines = _expect_single_field(gb_file, "SOURCE").content
     # 'SOURCE' field has only one line
     return lines[0]
 
 
-def _expect_single_field(
-    gb_file: GenBankFile, name: str
-) -> tuple[list[str], OrderedDict[str, list[str]]]:
+def _expect_single_field(gb_file: GenBankFile, name: str) -> GenBankRecord:
     fields = gb_file.get_fields(name)
     if len(fields) == 0:
         raise InvalidFileError(f"File has no '{name}' field")
@@ -348,4 +345,4 @@ def set_locus(gb_file: GenBankFile, locus: GenBankLocus) -> None:
         f"{locus.name:18} {locus.length:>9} {restype_abbr} {mol_type:^10} "
         f"{circularity:8} {division:3} {date:11}"
     )
-    gb_file.set_field("LOCUS", [line])
+    gb_file.set_field(GenBankRecord("LOCUS", [line]))
