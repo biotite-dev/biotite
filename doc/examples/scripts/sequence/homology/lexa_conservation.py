@@ -22,7 +22,7 @@ the entires for their definition (title) and source (species).
 # License: BSD 3 clause
 
 import matplotlib.pyplot as plt
-import biotite.application_v2.clustalo as clustalo
+import biotite.application.clustalo as clustalo
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.graphics as graphics

@@ -31,7 +31,7 @@ respect to their RMSD.
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import spearmanr
-import biotite.application_v2.autodock as autodock
+import biotite.application.autodock as autodock
 import biotite.database.rcsb as rcsb
 import biotite.interface.pymol as pymol_interface
 import biotite.structure as struc

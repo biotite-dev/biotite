@@ -12,8 +12,8 @@ sequences afterwards, using MUSCLE.
 # License: BSD 3 clause
 from tempfile import gettempdir
 import matplotlib.pyplot as plt
-import biotite.application_v2.mmseqs as mmseqs
-import biotite.application_v2.muscle as muscle
+import biotite.application.mmseqs as mmseqs
+import biotite.application.muscle as muscle
 import biotite.database.entrez as entrez
 import biotite.sequence.graphics as graphics
 import biotite.sequence.io.fasta as fasta

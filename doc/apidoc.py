@@ -38,6 +38,11 @@ def create_api_doc(src_path, doc_path):
     _create_package_index(doc_path, package_list)
 
 
+# Deprecated packages that merely forward to their replacement
+# -> do not document them
+_DEPRECATED_PACKAGES = ["application_v2"]
+
+
 def _create_package_doc(pck, src_path, doc_path):
     if not _is_package(src_path):
         # Directory is not a Python package/subpackage
@@ -45,7 +50,9 @@ def _create_package_doc(pck, src_path, doc_path):
         return []
     # Identify all subdirectories...
     content = listdir(src_path)
-    dirs = [f for f in content if isdir(join(src_path, f))]
+    dirs = [
+        f for f in content if isdir(join(src_path, f)) and f not in _DEPRECATED_PACKAGES
+    ]
     # ... and recursively create also the documentation for them
     sub_pck = []
     for directory in dirs:

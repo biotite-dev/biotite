@@ -3,12 +3,12 @@
 RNA secondary structure prediction
 ==================================
 
-.. currentmodule:: biotite.application_v2.viennarna
+.. currentmodule:: biotite.application.viennarna
 
 The *ViennaRNA* package is a collection of programs for the prediction and
 analysis of RNA secondary structures.
 Each of them is interfaced by a separate class in the
-:mod:`biotite.application_v2.viennarna` subpackage.
+:mod:`biotite.application.viennarna` subpackage.
 The most prominent one is ``RNAfold``, that predicts the secondary structure
 with the minimum free energy for a given sequence.
 Its interface is the :class:`FoldApp`.
@@ -18,7 +18,7 @@ structure found in tRNAs.
 .. jupyter-execute::
 
     import biotite.sequence as seq
-    import biotite.application_v2.viennarna as viennarna
+    import biotite.application.viennarna as viennarna
 
     # Note that RNA sequences use 'T' instead of 'U' in Biotite
     trna = seq.NucleotideSequence(

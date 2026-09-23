@@ -20,7 +20,7 @@ capabilities of the *NetworkX* package.
 import re
 import matplotlib.pyplot as plt
 import networkx as nx
-import biotite.application_v2.clustalo as clustalo
+import biotite.application.clustalo as clustalo
 import biotite.database.uniprot as uniprot
 import biotite.sequence as seq
 import biotite.sequence.align as align
