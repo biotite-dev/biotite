@@ -140,7 +140,7 @@ file_name = entrez.fetch("1QGD_A", gettempdir(), "gb", "protein", "gb")
 gb_file = gb.GenBankFile.read(file_name)
 annotation = gb.get_annotation(gb_file, include_only=["SecStr"])
 # Length of the sequence
-_, length, _, _, _, _ = gb.get_locus(gb_file)
+length = gb.get_locus(gb_file).length
 
 fig = plt.figure(figsize=(8.0, 3.0))
 ax = fig.add_subplot(111)

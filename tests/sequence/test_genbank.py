@@ -89,7 +89,7 @@ def test_conversion_highlevel(path):
     ref_annot_seq = gb.get_annotated_sequence(gb_file, format=suffix)
 
     gb_file = gb.GenBankFile()
-    gb.set_locus(gb_file, *ref_locus)
+    gb.set_locus(gb_file, ref_locus)
     gb.set_annotated_sequence(gb_file, ref_annot_seq)
     temp = TemporaryFile("w+")
     gb_file.write(temp)
@@ -111,7 +111,7 @@ def test_genbank_utility_gb():
     content of a known GenBank file.
     """
     gb_file = gb.GenBankFile.read(data_dir("sequence") / "ec_bl21.gb")
-    assert gb.get_locus(gb_file) == (
+    assert gb.get_locus(gb_file) == gb.GenBankLocus(
         "CP001509",
         4558953,
         "DNA",
@@ -153,7 +153,9 @@ def test_genbank_utility_gp():
     """
     gp_file = gb.GenBankFile.read(data_dir("sequence") / "bt_lysozyme.gp")
     # [print(e) for e in gp_file._field_pos]
-    assert gb.get_locus(gp_file) == ("AAC37312", 147, None, False, "MAM", "27-APR-1993")
+    assert gb.get_locus(gp_file) == gb.GenBankLocus(
+        "AAC37312", 147, None, False, "MAM", "27-APR-1993"
+    )
     assert gb.get_definition(gp_file) == "lysozyme [Bos taurus]."
     assert gb.get_version(gp_file) == "AAC37312.1"
     assert gb.get_gi(gp_file) == 163334
@@ -192,7 +194,7 @@ def test_multi_file():
     [
         (
             "AJ311647LOOOOOOOOOOOOOOOOOOOOOOOOOONGID                1224 bp    DNA     linear   VRT 14-NOV-2006",
-            (
+            gb.GenBankLocus(
                 "AJ311647LOOOOOOOOOOOOOOOOOOOOOOOOOONGID",
                 1224,
                 "DNA",
@@ -203,11 +205,13 @@ def test_multi_file():
         ),
         (
             "SCU49845     5028 bp    DNA             PLN       21-JUN-1999",
-            ("SCU49845", 5028, "DNA", False, "PLN", "21-JUN-1999"),
+            gb.GenBankLocus("SCU49845", 5028, "DNA", False, "PLN", "21-JUN-1999"),
         ),
         (
             "123MissingMolTypeAndCircular     5028 bp                 PLN       21-JUN-1999",
-            ("123MissingMolTypeAndCircular", 5028, None, False, "PLN", "21-JUN-1999"),
+            gb.GenBankLocus(
+                "123MissingMolTypeAndCircular", 5028, None, False, "PLN", "21-JUN-1999"
+            ),
         ),
     ],
 )
