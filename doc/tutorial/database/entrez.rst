@@ -45,13 +45,11 @@ Therefore, we want to download the data in *GenBank* format.
 
 .. jupyter-execute::
 
-    from os.path import basename
-
     file_paths = entrez.fetch(
         ["6BB5_A", "6BB5_B"], gettempdir(), suffix="fa",
         db_name="protein", ret_type="gb"
     )
-    print([basename(path) for path in file_paths])
+    print([path.name for path in file_paths])
 
 File formats like *GenBank* or *FASTA* allow multiple records in a single file.
 Downloading such multi-record files is also possible.

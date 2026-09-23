@@ -17,11 +17,10 @@ We will download a protein structure of the miniprotein *TC5b*
 .. jupyter-execute::
 
     from tempfile import gettempdir
-    from os.path import basename
     import biotite.database.rcsb as rcsb
 
     file_path = rcsb.fetch("1l2y", "pdb", gettempdir())
-    print(basename(file_path))
+    print(file_path.name)
 
 In case we want to download multiple files, we are able to specify a
 list of PDB IDs, which in turn gives us a list of file paths.
@@ -30,7 +29,7 @@ list of PDB IDs, which in turn gives us a list of file paths.
 
     # Download files in the more modern mmCIF format
     file_paths = rcsb.fetch(["1l2y", "1aki"], "cif", gettempdir())
-    print([basename(file_path) for file_path in file_paths])
+    print([file_path.name for file_path in file_paths])
 
 By default :func:`fetch()` checks whether the file to be fetched
 already exists in the directory and downloads it, if it does not
@@ -173,4 +172,4 @@ Its :func:`fetch()` function works very similarly.
         else:
             # Entry is in RCSB PDB
             files.append(rcsb.fetch(id, "cif", gettempdir()))
-    print([basename(file) for file in files])
+    print([file.name for file in files])
