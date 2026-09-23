@@ -187,13 +187,13 @@ EVALUE_THRESHOLD = 0.1
 # Use the symbol frequencies in the bacterial genome to sample
 # the parameters
 background = np.array(list(bacterium_seq.get_symbol_frequency().values()))
-np.random.seed(0)
 estimator = align.EValueEstimator.from_samples(
     chloroplast_seq.alphabet,
     # The scoring scheme must be the same as used for the alignment
     matrix,
     GAP_PENALTY,
     background,
+    rng=np.random.default_rng(0),
 )
 
 # Compute similarity scores for each hit
