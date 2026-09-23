@@ -17,7 +17,7 @@ import biotite.sequence.io.genbank as gb
 # Download E. coli BL21 genome
 file = entrez.fetch("CP001509", None, suffix="gb", db_name="nuccore", ret_type="gb")
 gb_file = gb.GenBankFile.read(file)
-_, seq_length, _, _, _, _ = gb.get_locus(gb_file)
+seq_length = gb.get_locus(gb_file).length
 annotation = gb.get_annotation(gb_file, include_only=["gene"])
 # Find the minimum and maximum locations of lac genes
 min_loc = seq_length

@@ -37,7 +37,7 @@ annotation = gb.get_annotation(
         "misc_feature",
     ],
 )
-_, seq_length, _, _, _, _ = gb.get_locus(gb_file)
+seq_length = gb.get_locus(gb_file).length
 
 
 def custom_feature_formatter(feature):
