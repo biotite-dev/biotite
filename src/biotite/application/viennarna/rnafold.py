@@ -64,9 +64,7 @@ class RNAfoldApp(LocalApp):
         super().__init__(bin_path)
 
     def run(self) -> None:
-        # Insert no line breaks
-        # -> Extremely high value for characters per line
-        fasta_file = FastaFile(chars_per_line=np.iinfo(np.int32).max)
+        fasta_file = FastaFile()
         set_sequence(fasta_file, self._sequence)
         if self._constraints is not None:
             fasta_file.lines.append(self._constraints)

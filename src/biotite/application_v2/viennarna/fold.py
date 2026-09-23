@@ -24,7 +24,6 @@ from collections.abc import Sequence
 from os import PathLike
 from tempfile import NamedTemporaryFile
 from typing import Any
-import numpy as np
 from biotite.application_v2.localapp import (
     CLIArgument,
     CLIFlag,
@@ -1321,7 +1320,7 @@ def _alignment_fasta(alignment: Alignment) -> Any:
     Write an alignment into a temporary aligned FASTA file.
     """
     file = NamedTemporaryFile("w", suffix=".fa", delete=False)
-    fasta_file = FastaFile(chars_per_line=np.iinfo(np.int32).max)
+    fasta_file = FastaFile()
     set_alignment(
         fasta_file,
         alignment,

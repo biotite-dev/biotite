@@ -803,8 +803,6 @@ def _write_fasta(file: IO[str], sequences: Mapping[str, str | Sequence]) -> None
     FastaFile.write_iter(
         file,
         ((identifier, str(sequence)) for identifier, sequence in sequences.items()),
-        # Avoid line breaks within a sequence, as they are not needed here
-        chars_per_line=1_000_000,
     )
     file.flush()
 
