@@ -23,6 +23,7 @@ from biotite.structure.filter import (
 )
 from biotite.structure.info.radii import vdw_radius_protor, vdw_radius_single
 from biotite.typing import XYZ, N, NDArray1, NDArray2
+from biotite.util import map_unique
 
 
 def sasa(
@@ -171,26 +172,15 @@ def _map_radii(
     (e.g. residue/atom name pairs) than atoms, hence `radius_function` is
     only called once per distinct combination.
     """
+
+    def radius_or_default(*values: str) -> float:
+        radius = radius_function(*values)
+        return default_radius if radius is None else radius
+
     radii = np.full(len(occlusion_filter), np.nan, dtype=np.float32)
-    indices = np.where(occlusion_filter)[0]
-    if len(indices) == 0:
-        return radii  # pyright: ignore[reportReturnType]
-    combinations = np.stack([annot[indices] for annot in annotations], axis=-1)
-    unique_combinations, inverse_indices = np.unique(
-        combinations, axis=0, return_inverse=True
+    radii[occlusion_filter] = map_unique(
+        radius_or_default, *(annot[occlusion_filter] for annot in annotations)
     )
-    unique_radii = np.array(
-        [
-            default_radius if radius is None else radius
-            for radius in (
-                radius_function(*(str(value) for value in combination))
-                for combination in unique_combinations
-            )
-        ],
-        dtype=np.float32,
-    )
-    # The shape of the inverse indices depends on the NumPy version
-    radii[indices] = unique_radii[inverse_indices.reshape(-1)]
     return radii  # pyright: ignore[reportReturnType]
 
 

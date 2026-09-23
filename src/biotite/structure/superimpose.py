@@ -489,7 +489,7 @@ def _get_rotation_matrices(
     Both sets of coordinates must already be centered at origin.
     """
     # Calculate cross-covariance matrices
-    cov = np.matmul(np.swapaxes(fixed, -1, -2), mobile)  # (M, XYZ, XYZ)
+    cov = fixed.mT @ mobile  # (M, XYZ, XYZ)
     v, s, w = np.linalg.svd(cov)
     # Remove possibility of reflected atom coordinates
     reflected_mask = np.linalg.det(v) * np.linalg.det(w) < 0

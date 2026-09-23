@@ -948,7 +948,7 @@ def base_pairs(
         to_remove = []
 
         # Get all bases that have non-unique pairing interactions
-        base_indices, occurrences = np.unique(basepairs, return_counts=True)
+        base_indices, occurrences = np.unique_counts(basepairs)
         for base_index, occurrence in zip(base_indices, occurrences):
             if occurrence > 1:
                 # Write the non-unique base pairs to a dictionary as

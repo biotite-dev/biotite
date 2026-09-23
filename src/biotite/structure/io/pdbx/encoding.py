@@ -677,7 +677,9 @@ class StringArrayEncoding(Encoding):
             )
 
         string_data = "".join(self.strings)
-        offsets = np.cumsum([0] + [len(s) for s in self.strings])
+        offsets = np.cumulative_sum(
+            np.strings.str_len(self.strings), include_initial=True
+        )
 
         return {
             "kind": "StringArray",

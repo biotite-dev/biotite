@@ -54,7 +54,7 @@ def norm_vector(v: np.ndarray) -> None:
         The array containing the vector(s).
         The vectors are represented by the last axis.
     """
-    factor = np.linalg.norm(v, axis=-1)
+    factor = np.linalg.vector_norm(v, axis=-1)
     if isinstance(factor, np.ndarray):
         v /= factor[..., np.newaxis]
     else:

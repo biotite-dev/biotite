@@ -282,7 +282,7 @@ class FeatureEncoder(_BaseEncoder):
         desc[i, 4] = numpy.sum(u1 * u4, axis=-1)
         desc[i, 5] = numpy.sum(u2 * u3, axis=-1)
         desc[i, 6] = numpy.sum(u1 * u3, axis=-1)
-        desc[i, 7] = numpy.linalg.norm(ca[i] - ca[j], axis=-1)
+        desc[i, 7] = numpy.linalg.vector_norm(ca[i] - ca[j], axis=-1)
         desc[i, 8] = numpy.clip(j - i, -4, 4)
         desc[i, 9] = numpy.copysign(numpy.log(numpy.abs(j - i) + 1), j - i)
         return desc
@@ -380,5 +380,5 @@ class Encoder(_BaseEncoder):
 
 
 def _normalize(x: numpy.ndarray, *, inplace: bool = False) -> numpy.ndarray:
-    norm = numpy.linalg.norm(x, axis=-1).reshape(*x.shape[:-1], 1)
+    norm = numpy.linalg.vector_norm(x, axis=-1).reshape(*x.shape[:-1], 1)
     return numpy.divide(x, norm, out=x if inplace else None, where=norm != 0)

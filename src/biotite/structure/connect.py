@@ -39,6 +39,7 @@ from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.bonds import BondList, BondType
 from biotite.structure.error import BadStructureError, InconsistentBondTypeWarning
 from biotite.typing import K, N, NDArray1
+from biotite.util import map_unique
 
 # Covalent radii (in Å) taken from Cordero et al.
 # For carbon the sp3 radius is used, for manganese, iron and cobalt the low-spin radius
@@ -240,10 +241,9 @@ def connect_via_distances(
 
     # NaN for unknown elements ensures that they never form bonds,
     # as any comparison with NaN is false
-    radii = np.array(
-        [_COVALENT_RADII.get(element.upper(), np.nan) for element in atoms.element],
-        dtype=np.float32,
-    )
+    radii = map_unique(
+        lambda element: _COVALENT_RADII.get(element.upper(), np.nan), atoms.element
+    ).astype(np.float32)
 
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
 
@@ -559,7 +559,7 @@ def infer_bond_types(
     else:
         known_charges = None
     bond_list, charges, converged = rust_infer_bond_types(
-        [element.upper() for element in atoms.element],
+        atoms.element.tolist(),
         atoms.bonds,
         total_charge,
         known_charges,
@@ -668,9 +668,7 @@ def _connect_inter_residue(
     # Avoid circular import
     from biotite.structure.info.misc import link_type
 
-    link_types = [
-        link_type(res_name) for res_name in atoms.res_name[residue_starts[:-1]]
-    ]
+    link_types = map_unique(link_type, atoms.res_name[residue_starts[:-1]]).tolist()
     is_disconnected = (
         # Residues are not inside the same chain
         (atoms.chain_id[residue_starts[1:-1]] != atoms.chain_id[residue_starts[:-2]])

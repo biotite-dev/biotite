@@ -230,9 +230,9 @@ def unitcell_from_vectors(
     a = box[0]
     b = box[1]
     c = box[2]
-    len_a = linalg.norm(a)
-    len_b = linalg.norm(b)
-    len_c = linalg.norm(c)
+    len_a = linalg.vector_norm(a)
+    len_b = linalg.vector_norm(b)
+    len_c = linalg.vector_norm(c)
     alpha = np.arccos(np.dot(b, c) / (len_b * len_c))
     beta = np.arccos(np.dot(a, c) / (len_a * len_c))
     gamma = np.arccos(np.dot(a, b) / (len_a * len_b))
