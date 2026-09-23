@@ -19,20 +19,21 @@ if TYPE_CHECKING:
 def align_ungapped(
     seq1: Sequence[S1],
     seq2: Sequence[S2],
-    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int],
+    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int] = (1, -1),
     score_only: Literal[False] = False,
 ) -> Alignment: ...
 @overload
 def align_ungapped(
     seq1: Sequence[S1],
     seq2: Sequence[S2],
-    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int],
+    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int] = (1, -1),
+    *,
     score_only: Literal[True],
 ) -> int: ...
 def align_ungapped(
     seq1: Sequence,
     seq2: Sequence,
-    matrix: SubstitutionMatrix | tuple[int, int],
+    matrix: SubstitutionMatrix | tuple[int, int] = (1, -1),
     score_only: bool = False,
 ) -> Alignment | int:
     """
@@ -44,8 +45,9 @@ def align_ungapped(
     ----------
     seq1, seq2 : Sequence
         The sequences, whose similarity should be scored.
-    matrix : SubstitutionMatrix or tuple(int, int)
+    matrix : SubstitutionMatrix or tuple(int, int), optional
         Either a substitution matrix or a ``(match, mismatch)`` pair of scores.
+        By default a match scores ``1`` and a mismatch scores ``-1``.
     score_only : bool, optional
         If true return only the score instead of an alignment.
 
@@ -91,8 +93,8 @@ def align_ungapped(
 def align_optimal(
     seq1: Sequence[S1],
     seq2: Sequence[S2],
-    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int],
-    gap_penalty: int | tuple[int, int] = -10,
+    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int] = (1, -1),
+    gap_penalty: int | tuple[int, int] = -1,
     terminal_penalty: bool = True,
     local: bool = False,
     max_number: int = 1000,
@@ -102,8 +104,8 @@ def align_optimal(
 def align_optimal(
     seq1: Sequence[S1],
     seq2: Sequence[S2],
-    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int],
-    gap_penalty: int | tuple[int, int] = -10,
+    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int] = (1, -1),
+    gap_penalty: int | tuple[int, int] = -1,
     terminal_penalty: bool = True,
     local: bool = False,
     max_number: int = 1000,
@@ -113,8 +115,8 @@ def align_optimal(
 def align_optimal(
     seq1: Sequence,
     seq2: Sequence,
-    matrix: SubstitutionMatrix | tuple[int, int],
-    gap_penalty: int | tuple[int, int] = -10,
+    matrix: SubstitutionMatrix | tuple[int, int] = (1, -1),
+    gap_penalty: int | tuple[int, int] = -1,
     terminal_penalty: bool = True,
     local: bool = False,
     max_number: int = 1000,
@@ -133,8 +135,9 @@ def align_optimal(
     ----------
     seq1, seq2 : Sequence
         The sequences to be aligned.
-    matrix : SubstitutionMatrix or tuple(int, int)
-        The substitution matrix used for scoring.
+    matrix : SubstitutionMatrix or tuple(int, int), optional
+        Either a substitution matrix or a ``(match, mismatch)`` pair of scores.
+        By default a match scores ``1`` and a mismatch scores ``-1``.
     gap_penalty : int or tuple(int, int), optional
         If an integer is provided, the value will be interpreted as
         linear gap penalty.
@@ -142,6 +145,7 @@ def align_optimal(
         The first integer in the tuple is the gap opening penalty,
         the second integer is the gap extension penalty.
         The values need to be negative.
+        By default a linear gap penalty of ``-1`` is used.
     terminal_penalty : bool, optional
         If true, gap penalties are applied to terminal gaps.
         If `local` is true, this parameter has no effect.

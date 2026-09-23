@@ -202,10 +202,10 @@ gapped_scores = np.array(
         align.align_local_gapped(
             chloroplast_seq,
             bacterium_seqs[strand],
-            matrix,
             seed=(i, j),
-            gap_penalty=GAP_PENALTY,
             threshold=X_DROP,
+            matrix=matrix,
+            gap_penalty=GAP_PENALTY,
             score_only=True,
             max_table_size=100_000_000,
         )
@@ -226,10 +226,10 @@ accepted_alignments = [
         align.align_local_gapped(
             chloroplast_seq,
             bacterium_seqs[strand],
-            matrix,
             seed=(i, j),
-            gap_penalty=GAP_PENALTY,
             threshold=X_DROP,
+            matrix=matrix,
+            gap_penalty=GAP_PENALTY,
         )[0],
         log_evalue,
     )

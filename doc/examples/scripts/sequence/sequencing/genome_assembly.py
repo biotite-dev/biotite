@@ -345,9 +345,9 @@ def map_sequence(read, diag):
         return align.align_banded(
             read,
             orig_genome,
-            matrix,
-            gap_penalty=-10,
             band=(diag - deviation, diag + deviation),
+            matrix=matrix,
+            gap_penalty=-10,
             max_number=1,
         )[0]
 
@@ -600,8 +600,8 @@ BAND_WIDTH = 1000
 genome_alignment = align.align_banded(
     var_genome,
     orig_genome,
-    matrix,
     band=(-BAND_WIDTH // 2, BAND_WIDTH // 2),
+    matrix=matrix,
     max_number=1,
 )[0]
 identity = align.get_sequence_identity(genome_alignment, "all")

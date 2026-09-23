@@ -109,12 +109,17 @@ def test_alignment_conversion(seed, local, distinguish_matches, include_terminal
     seg = ref[excerpt_start:excerpt_stop]
     seg = _mutate_sequence(seg, rng)
 
+    # Use a rather high gap penalty to avoid ambiguous terminal gaps
+    # in both sequences, which the CIGAR string cannot represent unambiguously
     matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
+    gap_penalty = -10
     if local:
-        ref_ali = align.align_optimal(ref, seg, matrix, local=True, max_number=1)[0]
+        ref_ali = align.align_optimal(
+            ref, seg, matrix, gap_penalty, local=True, max_number=1
+        )[0]
     else:
         ref_ali = align.align_optimal(
-            ref, seg, matrix, terminal_penalty=False, max_number=1
+            ref, seg, matrix, gap_penalty, terminal_penalty=False, max_number=1
         )[0]
         if not include_terminal_gaps:
             # Turn into a semi-global alignment

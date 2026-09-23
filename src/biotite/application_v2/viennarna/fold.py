@@ -776,6 +776,7 @@ class AlifoldApp(LocalApp):
     ...         NucleotideSequence("GGGAAAACCC"),
     ...     ],
     ...     matrix,
+    ...     gap_penalty=-10,
     ...     terminal_penalty=False,
     ... )[0]
     >>> print(alignment)
@@ -905,6 +906,7 @@ class LalifoldApp(LocalApp):
     ...         NucleotideSequence("GGGAAAACCC"),
     ...     ],
     ...     matrix,
+    ...     gap_penalty=-10,
     ...     terminal_penalty=False,
     ... )[0]
     >>> print(alignment)
@@ -1011,6 +1013,7 @@ class AliduplexApp(LocalApp):
     ...         NucleotideSequence("AACGGGGGGG"),
     ...     ],
     ...     matrix,
+    ...     gap_penalty=-10,
     ...     terminal_penalty=False,
     ... )[0]
     >>> print(alignment1)
@@ -1026,6 +1029,7 @@ class AliduplexApp(LocalApp):
     ...         NucleotideSequence("CCCCCCCAAAAA"),
     ...     ],
     ...     matrix,
+    ...     gap_penalty=-10,
     ...     terminal_penalty=False,
     ... )[0]
     >>> print(alignment2)
