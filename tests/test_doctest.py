@@ -103,18 +103,14 @@ TEST_PARAMETERS = [
         ],
     ),
     pytest.param(
-        "biotite.application",
-        ["biotite.application.clustalo", "biotite.sequence"],
+        "biotite.application_v2",
+        ["biotite.application_v2.clustalo", "biotite.sequence"],
         marks=pytest.mark.skipif(
             is_not_installed("clustalo"), reason="Software is not installed"
         ),
     ),
     pytest.param(
-        "biotite.application.blast",
-        [],
-    ),
-    pytest.param(
-        "biotite.application.muscle",
+        "biotite.application_v2.muscle",
         ["biotite.sequence"],
         marks=[
             pytest.mark.skipif(
@@ -124,39 +120,31 @@ TEST_PARAMETERS = [
         ],
     ),
     pytest.param(
-        "biotite.application.clustalo",
+        "biotite.application_v2.clustalo",
         ["biotite.sequence"],
         marks=pytest.mark.skipif(
             is_not_installed("clustalo"), reason="Software is not installed"
         ),
     ),
     pytest.param(
-        "biotite.application.mafft",
+        "biotite.application_v2.mafft",
         ["biotite.sequence"],
         marks=pytest.mark.skipif(
             is_not_installed("mafft"), reason="Software is not installed"
         ),
     ),
     pytest.param(
-        "biotite.application.sra",
+        "biotite.application_v2.sra",
         ["biotite.sequence"],
         marks=pytest.mark.skipif(
             is_not_installed("fasterq-dump"), reason="Software is not installed"
         ),
     ),
     pytest.param(
-        "biotite.application.tantan",
+        "biotite.application_v2.tantan",
         ["biotite.sequence"],
         marks=pytest.mark.skipif(
             is_not_installed("tantan"), reason="Software is not installed"
-        ),
-    ),
-    pytest.param(
-        "biotite.application.viennarna",
-        ["biotite.sequence"],
-        marks=pytest.mark.skipif(
-            is_not_installed("RNAfold") | is_not_installed("RNAplot"),
-            reason="Software is not installed",
         ),
     ),
     pytest.param(
@@ -181,14 +169,14 @@ TEST_PARAMETERS = [
         ),
     ),
     pytest.param(
-        "biotite.application.dssp",
+        "biotite.application_v2.dssp",
         ["biotite.structure"],
         marks=pytest.mark.skipif(
             is_not_installed("mkdssp"), reason="Software is not installed"
         ),
     ),
     pytest.param(
-        "biotite.application.autodock",
+        "biotite.application_v2.autodock",
         ["biotite.structure", "biotite.structure.info"],
         marks=pytest.mark.skipif(
             is_not_installed("vina"), reason="Software is not installed"

@@ -11,7 +11,6 @@ __all__ = [
 ]
 
 import string
-import warnings
 from collections.abc import Iterable, Iterator
 from collections.abc import Sequence as SequenceABC
 from numbers import Integral
@@ -365,13 +364,7 @@ class LetterAlphabet(Alphabet[str]):
             raise AlphabetError(f"Symbol {repr(symbol)} is not in the alphabet")
         return indices[0].item()
 
-    def decode(self, code: int, as_bytes: bool = False) -> str:
-        if as_bytes:
-            warnings.warn(
-                "'as_bytes' is deprecated, use 'decode_into_byte()' instead",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+    def decode(self, code: int) -> str:
         if code < 0 or code >= len(self._symbols):
             raise AlphabetError(f"'{code:d}' is not a valid code")
         return chr(self._symbols[code])
@@ -435,8 +428,7 @@ class LetterAlphabet(Alphabet[str]):
     def decode_multiple(
         self,
         code: NDArray1[K, np.integer] | Iterable[int],
-        as_bytes: bool = False,
-    ) -> NDArray1[K, np.character]:
+    ) -> NDArray1[K, np.str_]:
         """
         Decode a sequence code into a list of symbols.
 
@@ -445,25 +437,12 @@ class LetterAlphabet(Alphabet[str]):
         code : ndarray, dtype=uint8
             The sequence code to decode.
             Works fastest if a :class:`ndarray` is provided.
-        as_bytes : bool, optional
-            DEPRECATED: Use :meth:`decode_multiple_into_bytes()` instead.
-            If true, the output array will contain `bytes`
-            (dtype 'S1').
-            Otherwise, the the output array will contain `str`
-            (dtype 'U1').
 
         Returns
         -------
-        symbols : ndarray, dtype='U1' or dtype='S1'
+        symbols : ndarray, dtype='U1'
             The decoded list of symbols.
         """
-        if as_bytes:
-            warnings.warn(
-                "'as_bytes' is deprecated, use 'decode_multiple_into_bytes()' instead",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            return self.decode_multiple_into_bytes(code)
         if not isinstance(code, np.ndarray):
             code = np.array(code, dtype=np.uint8)
         code = code.astype(np.uint8, copy=False)

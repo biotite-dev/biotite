@@ -63,7 +63,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray1[XYZ, np.floating],
         radius: float,
-        as_mask: bool = ...,
         *,
         result_format: Literal[Result.PAIRS],
     ) -> NDArray1[K, np.integer]: ...
@@ -73,7 +72,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray2[_M, XYZ, np.floating],
         radius: float | NDArray1[_M, np.floating],
-        as_mask: bool = ...,
         *,
         result_format: Literal[Result.PAIRS],
     ) -> NDArray2[K, C2, np.integer]: ...
@@ -83,7 +81,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray1[XYZ, np.floating],
         radius: float,
-        as_mask: bool = ...,
         *,
         result_format: Literal[Result.MASK],
     ) -> NDArray1[N, np.bool_]: ...
@@ -93,7 +90,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray2[_M, XYZ, np.floating],
         radius: float | NDArray1[_M, np.floating],
-        as_mask: bool = ...,
         *,
         result_format: Literal[Result.MASK],
     ) -> NDArray2[_M, N, np.bool_]: ...
@@ -103,7 +99,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray2[_M, XYZ, np.floating],
         radius: float | NDArray1[_M, np.floating],
-        as_mask: Literal[False] = ...,
         result_format: Literal[Result.MAPPING] = ...,
     ) -> NDArray2[_M, K, np.integer]: ...
     # Single coord + MAPPING (default) -> (k,) integer indices
@@ -112,7 +107,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray1[XYZ, np.floating],
         radius: float,
-        as_mask: Literal[False] = ...,
         result_format: Literal[Result.MAPPING] = ...,
     ) -> NDArray1[K, np.integer]: ...
     # Fallback when `result_format` is a non-literal `Result` value.
@@ -121,7 +115,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray1[XYZ, np.floating] | NDArray2[Any, XYZ, np.floating],
         radius: float | NDArray1[Any, np.floating],
-        as_mask: bool = ...,
         result_format: Result = ...,
     ) -> np.ndarray: ...
     # Same overload structure as `get_atoms`; only the second positional
@@ -131,7 +124,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray1[XYZ, np.floating],
         cell_radius: int | None = ...,
-        as_mask: bool = ...,
         *,
         result_format: Literal[Result.PAIRS],
     ) -> NDArray1[K, np.integer]: ...
@@ -140,7 +132,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray2[_M, XYZ, np.floating],
         cell_radius: int | NDArray1[_M, np.integer] | None = ...,
-        as_mask: bool = ...,
         *,
         result_format: Literal[Result.PAIRS],
     ) -> NDArray2[K, C2, np.integer]: ...
@@ -149,7 +140,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray1[XYZ, np.floating],
         cell_radius: int | None = ...,
-        as_mask: bool = ...,
         *,
         result_format: Literal[Result.MASK],
     ) -> NDArray1[N, np.bool_]: ...
@@ -158,7 +148,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray2[_M, XYZ, np.floating],
         cell_radius: int | NDArray1[_M, np.integer] | None = ...,
-        as_mask: bool = ...,
         *,
         result_format: Literal[Result.MASK],
     ) -> NDArray2[_M, N, np.bool_]: ...
@@ -167,7 +156,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray2[_M, XYZ, np.floating],
         cell_radius: int | NDArray1[_M, np.integer] | None = ...,
-        as_mask: Literal[False] = ...,
         result_format: Literal[Result.MAPPING] = ...,
     ) -> NDArray2[_M, K, np.integer]: ...
     @overload
@@ -175,7 +163,6 @@ class CellList(Generic[N]):
         self,
         coord: NDArray1[XYZ, np.floating],
         cell_radius: int | None = ...,
-        as_mask: Literal[False] = ...,
         result_format: Literal[Result.MAPPING] = ...,
     ) -> NDArray1[K, np.integer]: ...
     @overload
@@ -183,6 +170,5 @@ class CellList(Generic[N]):
         self,
         coord: NDArray1[XYZ, np.floating] | NDArray2[Any, XYZ, np.floating],
         cell_radius: int | NDArray1[Any, np.integer] | None = ...,
-        as_mask: bool = ...,
         result_format: Result = ...,
     ) -> np.ndarray: ...

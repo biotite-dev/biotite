@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
-import biotite.application.muscle as muscle
+import biotite.application_v2.muscle as muscle
 import biotite.sequence as seq
 import biotite.sequence.align as align
-from biotite.application import VersionError
+from biotite.application_v2 import VersionError
 from tests.util import is_not_installed
 
 
@@ -91,8 +91,11 @@ def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
     )[0]
 
     try:
-        ref_alignment = muscle.MuscleApp.align(
-            [seq1, seq2], matrix=matrix, gap_penalty=gap_penalty
+        ref_alignment = (
+            muscle.Muscle3App()
+            .run([seq1, seq2], matrix=matrix, gap_penalty=gap_penalty)
+            .result()
+            .alignment
         )
     except VersionError:
         pytest.skip("Invalid Muscle software version")
