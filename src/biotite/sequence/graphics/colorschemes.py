@@ -2,68 +2,129 @@ from __future__ import annotations
 
 __name__ = "biotite.sequence.graphics"
 __author__ = "Patrick Kunzmann"
-__all__ = ["get_color_scheme", "list_color_scheme_names", "load_color_scheme"]
+__all__ = [
+    "ColorScheme",
+    "get_color_scheme",
+    "list_color_scheme_names",
+    "load_color_scheme",
+]
 
 import glob
 import json
 import os
+from dataclasses import dataclass
 from os import PathLike
 from os.path import dirname, join, realpath
-from typing import Any
 from biotite.sequence.alphabet import Alphabet
 from biotite.typing import MplColor
 
 
-def load_color_scheme(file_name: PathLike[str] | str) -> dict[str, Any]:
+@dataclass(frozen=True)
+class ColorScheme:
+    """
+    A color scheme assigning a color to each symbol of an alphabet.
+
+    Attributes
+    ----------
+    name : str
+        The name of the scheme.
+    alphabet : Alphabet
+        The alphabet the scheme is defined for.
+    colors : list of (str or tuple or None), length=n
+        A *Matplotlib* compatible color for each symbol in the
+        `alphabet`, indexed by the symbol code.
+        ``None`` indicates that no color is defined for the respective
+        symbol.
+
+    Examples
+    --------
+
+    >>> alphabet = NucleotideSequence.alphabet_unamb
+    >>> scheme = ColorScheme("example", alphabet, ["red", "green", None, "blue"])
+    >>> print(scheme.fit(alphabet, default="black"))
+    ['red', 'green', 'black', 'blue']
+    """
+
+    name: str
+    alphabet: Alphabet
+    colors: list[MplColor | None]
+
+    def __post_init__(self) -> None:
+        if len(self.colors) != len(self.alphabet):
+            raise ValueError(
+                f"The scheme has {len(self.colors)} colors, "
+                f"but the alphabet has {len(self.alphabet)} symbols"
+            )
+
+    def fit(self, alphabet: Alphabet, default: MplColor = "#FFFFFF") -> list[MplColor]:
+        """
+        Get the colors of this scheme for the symbols of the given
+        alphabet.
+
+        Parameters
+        ----------
+        alphabet : Alphabet
+            The alphabet to obtain the colors for.
+            The alphabet of this scheme must equal or extend this
+            alphabet.
+        default : str or tuple, optional
+            A *Matplotlib* compatible color that is used for symbols that
+            have no defined color in the scheme.
+
+        Returns
+        -------
+        colors : list of (str or tuple), length=n
+            A list of *Matplotlib* compatible colors.
+            The colors in the list have the same order as the symbols in
+            the given `alphabet`.
+        """
+        if not self.alphabet.extends(alphabet):
+            raise ValueError(
+                f"The scheme '{self.name}' does not cover the given alphabet"
+            )
+        # Only return colors that are in scope of this alphabet
+        # and replace undefined colors with the default color
+        return [
+            color if color is not None else default
+            for color in self.colors[: len(alphabet)]
+        ]
+
+
+def load_color_scheme(file_name: PathLike[str] | str) -> ColorScheme:
     """
     Load a color scheme from a JSON file.
 
-    A color scheme is a list of colors that correspond to symbols of an
-    alphabet. The color for a symbol is list of colors indexed by the
-    corresponding symbol code.
-
     Parameters
     ----------
-    file_name : str
+    file_name : str or PathLike
         The file name of the JSON file containing the scheme.
 
     Returns
     -------
-    scheme : dict
-        A dictionary representing the color scheme, It contains the
-        following keys, if the input file is proper:
-
-           - **name** - Name of the scheme.
-           - **alphabet** - :class:`Alphabet` instance describing the
-             type of sequence the scheme can be used for.
-           - **colors** - List of *Matplotlib* compatible colors
+    scheme : ColorScheme
+        The loaded color scheme.
+        Symbols of the alphabet, that are not defined in the file, get
+        ``None`` as color.
     """
     with open(file_name, "r") as file:
         scheme = json.load(file)
-        alphabet = Alphabet(scheme["alphabet"])
-        # Store alphabet as 'Alphabet' object
-        scheme["alphabet"] = alphabet
-        colors = [None] * len(alphabet)
-        for key, value in scheme["colors"].items():
-            index = alphabet.encode(key)
-            colors[index] = value
-        # Store colors as symbol code ordered list of colors,
-        # rather than dictionary
-        scheme["colors"] = colors
-        return scheme
+    alphabet = Alphabet(scheme["alphabet"])
+    # Store colors as symbol code ordered list of colors,
+    # rather than dictionary
+    colors: list[MplColor | None] = [None] * len(alphabet)
+    for key, value in scheme["colors"].items():
+        index = alphabet.encode(key)
+        colors[index] = value
+    return ColorScheme(scheme["name"], alphabet, colors)
 
 
 def get_color_scheme(
     name: str,
     alphabet: Alphabet,
     default: MplColor = "#FFFFFF",
-) -> list[Any]:
+) -> list[MplColor]:
     """
-    Get a color scheme by name and alphabet.
-
-    A color scheme is a list of colors that correspond to symbols of an
-    alphabet. The color for a symbol is list of colors indexed by the
-    corresponding symbol code.
+    Get the colors of a built-in color scheme by name and alphabet.
 
     Parameters
     ----------
@@ -78,12 +139,13 @@ def get_color_scheme(
 
     Returns
     -------
-    colors : list
+    colors : list of (str or tuple)
         A list of *Matplotlib* compatible colors. The colors in the list
         have the same order as the symbols in the given `alphabet`.
-        Since the alphabet of the color scheme may extend the given
-        `alphabet`, the list of colors can be longer than the
-        `alphabet`.
+
+    See Also
+    --------
+    ColorScheme.fit : The method used to fit the scheme to the alphabet.
 
     Notes
     -----
@@ -101,20 +163,21 @@ def get_color_scheme(
     """
     # Try exact alphabet match first
     for scheme in _color_schemes:
-        if scheme["name"] == name and scheme["alphabet"] == alphabet:
-            return _fit_color_scheme(alphabet, scheme, default)
+        if scheme.name == name and scheme.alphabet == alphabet:
+            return scheme.fit(alphabet, default)
     # If no exact match was found, try to find a scheme for an alphabet
     # that extends the given alphabet
     for scheme in _color_schemes:
-        if scheme["name"] == name and scheme["alphabet"].extends(alphabet):
-            return _fit_color_scheme(alphabet, scheme, default)
+        if scheme.name == name and scheme.alphabet.extends(alphabet):
+            return scheme.fit(alphabet, default)
 
     raise ValueError(f"Unknown scheme '{name}' for given alphabet")
 
 
 def list_color_scheme_names(alphabet: Alphabet, strict: bool = False) -> list[str]:
     """
-    Get a list of available color scheme names for a given alphabet.
+    Get a list of available built-in color scheme names for a given
+    alphabet.
 
     Parameters
     ----------
@@ -133,47 +196,16 @@ def list_color_scheme_names(alphabet: Alphabet, strict: bool = False) -> list[st
     """
     scheme_list = []
     for scheme in _color_schemes:
-        if strict and scheme["alphabet"] == alphabet:
-            scheme_list.append(scheme["name"])
-        if not strict and scheme["alphabet"].extends(alphabet):
-            scheme_list.append(scheme["name"])
+        if strict and scheme.alphabet == alphabet:
+            scheme_list.append(scheme.name)
+        if not strict and scheme.alphabet.extends(alphabet):
+            scheme_list.append(scheme.name)
     return scheme_list
 
 
 _scheme_dir = join(dirname(realpath(__file__)), "color_schemes")
 
-_color_schemes = []
-
-for file_name in glob.glob(_scheme_dir + os.sep + "*.json"):
-    scheme = load_color_scheme(file_name)
-    _color_schemes.append(scheme)
-
-
-def _fit_color_scheme(
-    alphabet: Alphabet,
-    color_scheme: dict[str, Any],
-    default_color: MplColor,
-) -> list[Any]:
-    """
-    Fit a color scheme to the given alphabet.
-
-    Parameters
-    ----------
-    alphabet : Alphabet
-        The alphabet to get the color scheme for.
-    color_scheme : dict
-        The color scheme.
-    default_color : str or tuple
-        The default color.
-
-    Returns
-    -------
-    scheme : list of str
-        The colors from the scheme.
-    """
-    colors = color_scheme["colors"]
-    # Replace None values with default color
-    colors = [color if color is not None else default_color for color in colors]
-    # Only return colors that are in scope of this alphabet
-    # and not the extended alphabet
-    return colors[: len(alphabet)]
+_color_schemes = [
+    load_color_scheme(file_name)
+    for file_name in glob.glob(_scheme_dir + os.sep + "*.json")
+]
