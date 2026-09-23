@@ -5,7 +5,7 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["get_annotation", "set_annotation"]
 
 from biotite.sequence.annotation import Annotation, Feature, Location
-from biotite.sequence.io.gff.file import GFFFile
+from biotite.sequence.io.gff.file import GFFFile, GFFRecord
 
 
 def get_annotation(gff_file: GFFFile) -> Annotation:
@@ -37,10 +37,11 @@ def get_annotation(gff_file: GFFFile) -> Annotation:
     current_locs: list[Location] = []
     current_qual: dict[str, str | None] = {}
     current_id = None
-    for _, _, type, start, end, _, strand, _, attrib in gff_file:
+    for record in gff_file:
+        strand = record.strand
         if strand is None:
             strand = Location.Strand.FORWARD
-        id = attrib.get("ID")
+        id = record.attributes.get("ID")
         if id != current_id or id is None:
             # current_key is None, when there is no previous feature
             # (beginning of the file)
@@ -48,11 +49,11 @@ def get_annotation(gff_file: GFFFile) -> Annotation:
                 # Beginning of new feature -> Save previous feature
                 annot.add_feature(Feature(current_key, current_locs, current_qual))
             # Track new feature
-            current_key = type
-            current_locs = [Location(start, end, strand)]
-            current_qual = dict(attrib)
+            current_key = record.type
+            current_locs = [Location(record.start, record.end, strand)]
+            current_qual = dict(record.attributes)
         else:
-            current_locs.append(Location(start, end, strand))
+            current_locs.append(Location(record.start, record.end, strand))
         current_id = id
     # Save last feature
     if current_key is not None:
@@ -131,5 +132,7 @@ def set_annotation(
             else:
                 phase = None
             gff_file.append(
-                seqid, source, type, start, end, score, strand, phase, attributes
+                GFFRecord(
+                    seqid, source, type, start, end, score, strand, phase, attributes
+                )
             )
