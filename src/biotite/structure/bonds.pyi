@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 from collections.abc import Iterable, Iterator
 from enum import IntEnum
 from typing import Any, Generic, TypeVar, overload

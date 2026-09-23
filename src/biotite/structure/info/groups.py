@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 __name__ = "biotite.structure.info"
 __author__ = "Tom David Müller, Patrick Kunzmann"
 __all__ = ["amino_acid_names", "nucleotide_names", "carbohydrate_names", "ion_names"]

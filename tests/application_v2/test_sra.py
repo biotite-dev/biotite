@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import pytest
 from biotite.application_v2.sra import FastqDumpApp, PrefetchApp
 from biotite.sequence.io.fasta import FastaFile

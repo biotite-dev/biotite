@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 Tests that apply equally to all three pairwise alignment functions
 (:func:`align_optimal()`, :func:`align_banded()` and
