@@ -27,7 +27,6 @@ def fetch(
     target_path: str,
     as_structural_formula: bool = False,
     overwrite: bool = False,
-    verbose: bool = False,
     throttle_threshold: float = 0.5,
     *,
     return_throttle_status: Literal[False] = False,
@@ -39,7 +38,6 @@ def fetch(
     target_path: str,
     as_structural_formula: bool = False,
     overwrite: bool = False,
-    verbose: bool = False,
     throttle_threshold: float = 0.5,
     *,
     return_throttle_status: Literal[True],
@@ -51,7 +49,6 @@ def fetch(
     target_path: None = None,
     as_structural_formula: bool = False,
     overwrite: bool = False,
-    verbose: bool = False,
     throttle_threshold: float = 0.5,
     *,
     return_throttle_status: Literal[False] = False,
@@ -63,7 +60,6 @@ def fetch(
     target_path: None = None,
     as_structural_formula: bool = False,
     overwrite: bool = False,
-    verbose: bool = False,
     throttle_threshold: float = 0.5,
     *,
     return_throttle_status: Literal[True],
@@ -75,7 +71,6 @@ def fetch(
     target_path: str,
     as_structural_formula: bool = False,
     overwrite: bool = False,
-    verbose: bool = False,
     throttle_threshold: float = 0.5,
     *,
     return_throttle_status: Literal[False] = False,
@@ -87,7 +82,6 @@ def fetch(
     target_path: str,
     as_structural_formula: bool = False,
     overwrite: bool = False,
-    verbose: bool = False,
     throttle_threshold: float = 0.5,
     *,
     return_throttle_status: Literal[True],
@@ -99,7 +93,6 @@ def fetch(
     target_path: None = None,
     as_structural_formula: bool = False,
     overwrite: bool = False,
-    verbose: bool = False,
     throttle_threshold: float = 0.5,
     *,
     return_throttle_status: Literal[False] = False,
@@ -111,7 +104,6 @@ def fetch(
     target_path: None = None,
     as_structural_formula: bool = False,
     overwrite: bool = False,
-    verbose: bool = False,
     throttle_threshold: float = 0.5,
     *,
     return_throttle_status: Literal[True],
@@ -122,7 +114,6 @@ def fetch(
     target_path: str | None = None,
     as_structural_formula: bool = False,
     overwrite: bool = False,
-    verbose: bool = False,
     throttle_threshold: float = 0.5,
     return_throttle_status: bool = False,
 ) -> (
@@ -163,8 +154,6 @@ def fetch(
         Otherwise the respective file will only be downloaded, if the
         file does not exist yet in the specified target directory or if
         the file is empty.
-    verbose : bool, optional
-        If set to true, the function will output the download progress.
     throttle_threshold : float or None, optional
         A value between 0 and 1.
         If the load of either the request time or count exceeds this
@@ -219,14 +208,11 @@ def fetch(
     files = []
     throttle_status: ThrottleStatus | None = None
     session = requests.Session()
-    for i, cid in enumerate(cid_list):
+    for cid in cid_list:
         # Prevent IDs as strings, this could be a common error, as other
         # database interfaces of Biotite use string IDs
         if isinstance(cid, str):
             raise TypeError("CIDs must be given as integers, not as string")
-        # Verbose output
-        if verbose:
-            print(f"Fetching file {i + 1:d} / {len(cid_list):d} ({cid})...", end="\r")
 
         # Fetch file from database
         if target_path is not None:
@@ -264,8 +250,6 @@ def fetch(
                 throttle_status.wait_if_busy(throttle_threshold)
 
         files.append(file)
-    if verbose:
-        print("\nDone")
     # If input was a single ID, return only a single path
     if single_element:
         return_value = files[0]

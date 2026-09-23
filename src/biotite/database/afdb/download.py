@@ -31,7 +31,6 @@ def fetch(
     format: _AfdbFormat,
     target_path: str | PathLike[str],
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> str: ...
 @overload
 def fetch(
@@ -39,7 +38,6 @@ def fetch(
     format: _AfdbFormat,
     target_path: None = None,
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> io.StringIO | io.BytesIO: ...
 @overload
 def fetch(
@@ -47,7 +45,6 @@ def fetch(
     format: _AfdbFormat,
     target_path: str | PathLike[str],
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> list[str]: ...
 @overload
 def fetch(
@@ -55,14 +52,12 @@ def fetch(
     format: _AfdbFormat,
     target_path: None = None,
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> list[io.StringIO | io.BytesIO]: ...
 def fetch(
     ids: str | Iterable[str],
     format: _AfdbFormat,
     target_path: str | PathLike[str] | None = None,
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> str | io.StringIO | io.BytesIO | list[str] | list[io.StringIO | io.BytesIO]:
     """
     Download predicted protein structures from the AlphaFold DB.
@@ -85,8 +80,6 @@ def fetch(
         If true, existing files will be overwritten.
         Otherwise the respective file will only be downloaded if the file does not
         exist yet in the specified target directory or if the file is empty.
-    verbose : bool, optional
-        If true, the function will output the download progress.
 
     Returns
     -------
@@ -128,10 +121,7 @@ def fetch(
 
     files = []
     session = requests.Session()
-    for i, id in enumerate(id_list):
-        # Verbose output
-        if verbose:
-            print(f"Fetching file {i + 1:d} / {len(id_list):d} ({id})...", end="\r")
+    for id in id_list:
         # Fetch file from database
         if target_path is not None:
             file = target_path / f"{id}.{format}"
@@ -157,8 +147,6 @@ def fetch(
                     f.write(content)  # pyright: ignore[reportArgumentType]
 
         files.append(file)
-    if verbose:
-        print("\nDone")
 
     # Return paths as strings
     files = [file.as_posix() if isinstance(file, Path) else file for file in files]

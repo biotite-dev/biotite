@@ -33,7 +33,6 @@ def fetch(
     format: _RcsbFormat,
     target_path: str,
     overwrite: bool = False,
-    verbose: bool = False,
     gzip: bool = False,
 ) -> str: ...
 @overload
@@ -42,7 +41,6 @@ def fetch(
     format: _RcsbFormat,
     target_path: None = None,
     overwrite: bool = False,
-    verbose: bool = False,
     gzip: bool = False,
 ) -> io.StringIO | io.BytesIO: ...
 @overload
@@ -51,7 +49,6 @@ def fetch(
     format: _RcsbFormat,
     target_path: str,
     overwrite: bool = False,
-    verbose: bool = False,
     gzip: bool = False,
 ) -> list[str]: ...
 @overload
@@ -60,7 +57,6 @@ def fetch(
     format: _RcsbFormat,
     target_path: None = None,
     overwrite: bool = False,
-    verbose: bool = False,
     gzip: bool = False,
 ) -> list[io.StringIO | io.BytesIO]: ...
 def fetch(
@@ -68,7 +64,6 @@ def fetch(
     format: _RcsbFormat,
     target_path: str | None = None,
     overwrite: bool = False,
-    verbose: bool = False,
     gzip: bool = False,
 ) -> str | io.StringIO | io.BytesIO | list[str] | list[io.StringIO | io.BytesIO]:
     """
@@ -95,8 +90,6 @@ def fetch(
         Otherwise the respective file will only be downloaded, if the
         file does not exist yet in the specified target directory or if
         the file is empty.
-    verbose : bool, optional
-        If set to true, the function will output the download progress.
     gzip : bool, optional
         If set to true, the file will be downloaded in gzipped format.
         If `format` is not ``None``, the written files get the additional ``.gz``
@@ -154,11 +147,7 @@ def fetch(
 
     files = []
     session = requests.Session()
-    for i, id in enumerate(id_list):
-        # Verbose output
-        if verbose:
-            print(f"Fetching file {i + 1:d} / {len(id_list):d} ({id})...", end="\r")
-
+    for id in id_list:
         # Fetch file from database
         if target_path is not None:
             file = join(target_path, id + "." + format + gz_suffix)
@@ -203,8 +192,6 @@ def fetch(
                     f.write(content)  # pyright: ignore[reportArgumentType]
 
         files.append(file)
-    if verbose:
-        print("\nDone")
     # If input was a single ID, return only a single path
     if single_element:
         return files[0]

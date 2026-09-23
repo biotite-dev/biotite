@@ -26,7 +26,6 @@ def fetch(
     ret_type: str,
     ret_mode: _EntrezRetMode = "text",
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> str: ...
 @overload
 def fetch(
@@ -37,7 +36,6 @@ def fetch(
     ret_type: str,
     ret_mode: _EntrezRetMode = "text",
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> io.StringIO | io.BytesIO: ...
 @overload
 def fetch(
@@ -48,7 +46,6 @@ def fetch(
     ret_type: str,
     ret_mode: _EntrezRetMode = "text",
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> list[str]: ...
 @overload
 def fetch(
@@ -59,7 +56,6 @@ def fetch(
     ret_type: str,
     ret_mode: _EntrezRetMode = "text",
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> list[io.StringIO | io.BytesIO]: ...
 def fetch(
     uids: str | Iterable[str],
@@ -69,7 +65,6 @@ def fetch(
     ret_type: str,
     ret_mode: _EntrezRetMode = "text",
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> str | io.StringIO | io.BytesIO | list[str] | list[io.StringIO | io.BytesIO]:
     """
     Download files from the NCBI Entrez database in various formats.
@@ -105,8 +100,6 @@ def fetch(
         respective file will only be downloaded if the file does not
         exist yet in the specified target directory or if the file is
         empty.
-    verbose : bool, optional
-        If true, the function will output the download progress.
 
     Returns
     -------
@@ -153,10 +146,7 @@ def fetch(
         os.makedirs(target_path)
     files = []
     session = requests.Session()
-    for i, id in enumerate(uid_list):
-        # Verbose output
-        if verbose:
-            print(f"Fetching file {i + 1:d} / {len(uid_list):d} ({id})...", end="\r")
+    for id in uid_list:
         # Fetch file from database
         if target_path is not None:
             file = join(target_path, id + "." + suffix)
@@ -183,8 +173,6 @@ def fetch(
                 with open(file, "w+") as f:
                     f.write(content)
         files.append(file)
-    if verbose:
-        print("\nDone")
     # If input was a single ID, return only a single path
     if single_element:
         return files[0]
