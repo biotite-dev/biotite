@@ -42,7 +42,6 @@ def fetch(
     format: _UniprotFormat,
     target_path: str,
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> str: ...
 @overload
 def fetch(
@@ -50,7 +49,6 @@ def fetch(
     format: _UniprotFormat,
     target_path: None = None,
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> io.StringIO: ...
 @overload
 def fetch(
@@ -58,7 +56,6 @@ def fetch(
     format: _UniprotFormat,
     target_path: str,
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> list[str]: ...
 @overload
 def fetch(
@@ -66,14 +63,12 @@ def fetch(
     format: _UniprotFormat,
     target_path: None = None,
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> list[io.StringIO]: ...
 def fetch(
     ids: str | Iterable[str],
     format: _UniprotFormat,
     target_path: str | None = None,
     overwrite: bool = False,
-    verbose: bool = False,
 ) -> str | io.StringIO | list[str] | list[io.StringIO]:
     """
     Download files from the UniProt in various formats.
@@ -95,8 +90,6 @@ def fetch(
         If true, existing files will be overwritten. Otherwise the
         respective file will only be downloaded if the file does not
         exist yet in the specified target directory.
-    verbose : bool, optional
-        If true, the function will output the download progress.
 
     Returns
     -------
@@ -132,11 +125,8 @@ def fetch(
         os.makedirs(target_path)
     files = []
     session = requests.Session()
-    for i, id in enumerate(id_list):
+    for id in id_list:
         db_name = _get_database_name(id)
-        # Verbose output
-        if verbose:
-            print(f"Fetching file {i + 1:d} / {len(id_list):d} ({id})...", end="\r")
         # Fetch file from database
         if target_path is not None:
             file = join(target_path, id + "." + format)
@@ -156,8 +146,6 @@ def fetch(
                 with open(file, "w+") as f:
                     f.write(content)
         files.append(file)
-    if verbose:
-        print("\nDone")
     # If input was a single ID, return only a single path
     if single_element:
         return files[0]
