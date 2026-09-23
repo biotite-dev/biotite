@@ -62,9 +62,7 @@ class RNAalifoldApp(LocalApp):
         )
 
     def run(self) -> None:
-        # Insert no line breaks
-        # -> Extremely high value for characters per line
-        fasta_file = FastaFile(chars_per_line=np.iinfo(np.int32).max)
+        fasta_file = FastaFile()
         set_alignment(
             fasta_file,
             self._alignment,
