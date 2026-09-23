@@ -1,5 +1,6 @@
 import pytest
 from biotite.interface.pymol import (
+    CGO,
     draw_cgo,
     get_cone_cgo,
     get_cylinder_cgo,
@@ -36,7 +37,10 @@ def test_draw_single_cgo(cgo_func, param):
     Test drawing a single CGO.
     Only the absence of exceptions is tested.
     """
-    draw_cgo([cgo_func(*param)])
+    cgo = cgo_func(*param)
+    assert isinstance(cgo, CGO)
+    assert cgo.values.dtype == float
+    draw_cgo([cgo])
 
 
 def test_draw_multiple_cgo():
@@ -67,3 +71,12 @@ def test_draw_invalid_cgo(cgo_func, param):
     """
     with pytest.raises(IndexError):
         draw_cgo([cgo_func(*param)])
+
+
+def test_draw_non_cgo():
+    """
+    Check if an exception is raised if a raw list of values is given
+    instead of a :class:`CGO` object.
+    """
+    with pytest.raises(TypeError):
+        draw_cgo([[CGO.Type.SPHERE, 0.0, 0.0, 0.0, 1.0]])

@@ -3,6 +3,7 @@ from __future__ import annotations
 __name__ = "biotite.interface.pymol"
 __author__ = "Patrick Kunzmann"
 __all__ = [
+    "CGO",
     "draw_cgo",
     "get_cylinder_cgo",
     "get_cone_cgo",
@@ -12,7 +13,6 @@ __all__ = [
     "get_multiline_cgo",
 ]
 
-import itertools
 from collections.abc import Sequence
 from enum import IntEnum
 from typing import Any, TypeAlias
@@ -22,7 +22,6 @@ from biotite.interface.pymol.object import PyMOLObject
 from biotite.interface.pymol.startup import PyMOLInstance, get_and_set_pymol_instance
 from biotite.typing import NDArray1
 
-_CGODirective: TypeAlias = list[float | int | np.floating]
 # Iterable-and-len vector input; unlike numpy's ArrayLike this excludes scalars
 # so it can be unpacked with `*` to splat the elements into a CGO command list.
 _Vector: TypeAlias = Sequence[float] | NDArray1[Any, np.floating]
@@ -30,47 +29,106 @@ _Vector: TypeAlias = Sequence[float] | NDArray1[Any, np.floating]
 _object_counter: int = 0
 
 
-class CGO(IntEnum):
-    # List compiled from uppercase attributes in 'pymol.cgo'
-    ALPHA = 25
-    ALPHA_TRIANGLE = 17
-    BEGIN = 2
-    CHAR = 23
-    COLOR = 6
-    CONE = 27
-    CUSTOM_CYLINDER = 15
-    CYLINDER = 9
-    DISABLE = 13
-    DOTWIDTH = 16
-    ELLIPSOID = 18
-    ENABLE = 12
-    END = 3
-    FONT = 19
-    FONT_AXES = 22
-    FONT_SCALE = 20
-    FONT_VERTEX = 21
-    LINES = 1
-    LINEWIDTH = 10
-    LINE_LOOP = 2
-    LINE_STRIP = 3
-    NORMAL = 5
-    NULL = 1
-    PICK_COLOR = 31
-    POINTS = 0
-    QUADRIC = 26
-    SAUSAGE = 14
-    SPHERE = 7
-    STOP = 0
-    TRIANGLE = 8
-    TRIANGLES = 4
-    TRIANGLE_FAN = 6
-    TRIANGLE_STRIP = 5
-    VERTEX = 4
-    WIDTHSCALE = 11
+class CGO:
+    """
+    A *Compiled Graphics Object* (CGO) describing a geometric shape that
+    can be drawn in *PyMOL*.
+
+    Under the hood, a CGO is a sequence of floating point values
+    comprising directives (see :class:`CGO.Type`) and their arguments.
+    Usually, a :class:`CGO` is created via one of the ``get_xxx_cgo()``
+    functions and drawn via :func:`draw_cgo()`.
+
+    Parameters
+    ----------
+    values : array-like, shape=(k,), dtype=float
+        The raw sequence of CGO directives and their arguments.
+        Integer values are converted to floats, as *PyMOL* may
+        otherwise fail to render the shape.
+
+    Attributes
+    ----------
+    values : ndarray, shape=(k,), dtype=float
+        The raw values of the CGO.
+
+    Examples
+    --------
+
+    >>> cgo = get_sphere_cgo(pos=(1.0, 2.0, 3.0), radius=1.5, color=(1.0, 0.0, 0.0))
+    >>> print(cgo)
+    CGO([6.0, 1.0, 0.0, 0.0, 7.0, 1.0, 2.0, 3.0, 1.5])
+    >>> print(cgo.values[0] == CGO.Type.COLOR)
+    True
+    """
+
+    class Type(IntEnum):
+        """
+        The directives a CGO may contain.
+        """
+
+        # List compiled from uppercase attributes in 'pymol.cgo'
+        ALPHA = 25
+        ALPHA_TRIANGLE = 17
+        BEGIN = 2
+        CHAR = 23
+        COLOR = 6
+        CONE = 27
+        CUSTOM_CYLINDER = 15
+        CYLINDER = 9
+        DISABLE = 13
+        DOTWIDTH = 16
+        ELLIPSOID = 18
+        ENABLE = 12
+        END = 3
+        FONT = 19
+        FONT_AXES = 22
+        FONT_SCALE = 20
+        FONT_VERTEX = 21
+        LINES = 1
+        LINEWIDTH = 10
+        LINE_LOOP = 2
+        LINE_STRIP = 3
+        NORMAL = 5
+        NULL = 1
+        PICK_COLOR = 31
+        POINTS = 0
+        QUADRIC = 26
+        SAUSAGE = 14
+        SPHERE = 7
+        STOP = 0
+        TRIANGLE = 8
+        TRIANGLES = 4
+        TRIANGLE_FAN = 6
+        TRIANGLE_STRIP = 5
+        VERTEX = 4
+        WIDTHSCALE = 11
+
+    def __init__(self, values: ArrayLike | Sequence[float | np.floating]) -> None:
+        # If CGO values are integers instead of floats
+        # the rendering may fail
+        values = np.asarray(values, dtype=float)
+        if values.ndim != 1:
+            raise ValueError("CGO values must be one-dimensional")
+        self._values: NDArray1[Any, np.floating] = values
+
+    @property
+    def values(self) -> NDArray1[Any, np.floating]:
+        return self._values
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, CGO):
+            return False
+        return np.array_equal(self._values, other._values)
+
+    def __len__(self) -> int:
+        return len(self._values)
+
+    def __repr__(self) -> str:
+        return f"CGO({self._values.tolist()})"
 
 
 def draw_cgo(
-    cgo_list: Sequence[_CGODirective],
+    cgos: Sequence[CGO],
     name: str | None = None,
     pymol_instance: PyMOLInstance | None = None,
     delete: bool = True,
@@ -78,12 +136,9 @@ def draw_cgo(
     """
     Draw geometric shapes using *Compiled Graphics Objects* (CGOs).
 
-    Each CGO is represented by a list of floats, which can be obtained
-    via the ``get_xxx_cgo()`` functions.
-
     Parameters
     ----------
-    cgo_list : list of list of float
+    cgos : list of CGO
         The CGOs to draw.
         It is recommended to use a ``get_xxx_cgo()`` function to obtain
         the elements for this list, if possible.
@@ -113,13 +168,12 @@ def draw_cgo(
     if name is None:
         name = f"biotite_cgo_{_object_counter}"
         _object_counter += 1
+    for cgo in cgos:
+        if not isinstance(cgo, CGO):
+            raise TypeError(f"Expected 'CGO', but got '{type(cgo).__name__}'")
     pymol_instance = get_and_set_pymol_instance(pymol_instance)
-    pymol_instance.cmd.load_cgo(
-        # If CGO values are integers instead of floats
-        # the rendering may fail
-        [float(value) for value in list(itertools.chain(*cgo_list))],
-        name,
-    )
+    values = np.concatenate([cgo.values for cgo in cgos]) if cgos else np.zeros(0)
+    pymol_instance.cmd.load_cgo(values.tolist(), name)
     return PyMOLObject(name, pymol_instance, delete)
 
 
@@ -129,7 +183,7 @@ def get_cylinder_cgo(
     radius: float,
     start_color: _Vector,
     end_color: _Vector,
-) -> _CGODirective:
+) -> CGO:
     """
     Get the CGO for a cylinder.
 
@@ -145,7 +199,7 @@ def get_cylinder_cgo(
 
     Returns
     -------
-    cgo : list of float
+    cgo : CGO
         The CGO representation.
     """
     _expect_length(start, "start", 3)
@@ -154,7 +208,7 @@ def get_cylinder_cgo(
     _expect_length(end_color, "end_color", 3)
     _check_color(start_color)
     _check_color(end_color)
-    return [CGO.CYLINDER, *start, *end, radius, *start_color, *end_color]
+    return CGO([CGO.Type.CYLINDER, *start, *end, radius, *start_color, *end_color])
 
 
 def get_cone_cgo(
@@ -166,7 +220,7 @@ def get_cone_cgo(
     end_color: _Vector,
     start_cap: bool,
     end_cap: bool,
-) -> _CGODirective:
+) -> CGO:
     """
     Get the CGO for a cone.
 
@@ -185,7 +239,7 @@ def get_cone_cgo(
 
     Returns
     -------
-    cgo : list of float
+    cgo : CGO
         The CGO representation.
     """
     _expect_length(start, "start", 3)
@@ -194,20 +248,22 @@ def get_cone_cgo(
     _expect_length(end_color, "end_color", 3)
     _check_color(start_color)
     _check_color(end_color)
-    return [
-        CGO.CONE,
-        *start,
-        *end,
-        start_radius,
-        end_radius,
-        *start_color,
-        *end_color,
-        start_cap,
-        end_cap,
-    ]
+    return CGO(
+        [
+            CGO.Type.CONE,
+            *start,
+            *end,
+            start_radius,
+            end_radius,
+            *start_color,
+            *end_color,
+            start_cap,
+            end_cap,
+        ]
+    )
 
 
-def get_sphere_cgo(pos: _Vector, radius: float, color: _Vector) -> _CGODirective:
+def get_sphere_cgo(pos: _Vector, radius: float, color: _Vector) -> CGO:
     """
     Get the CGO for a sphere.
 
@@ -223,16 +279,16 @@ def get_sphere_cgo(pos: _Vector, radius: float, color: _Vector) -> _CGODirective
 
     Returns
     -------
-    cgo : list of float
+    cgo : CGO
         The CGO representation.
     """
     _expect_length(pos, "pos", 3)
     _expect_length(color, "color", 3)
     _check_color(color)
-    return [CGO.COLOR, *color, CGO.SPHERE, *pos, radius]
+    return CGO([CGO.Type.COLOR, *color, CGO.Type.SPHERE, *pos, radius])
 
 
-def get_point_cgo(pos: ArrayLike, color: ArrayLike) -> _CGODirective:
+def get_point_cgo(pos: ArrayLike, color: ArrayLike) -> CGO:
     """
     Get the CGO for one or multiple points.
 
@@ -248,7 +304,7 @@ def get_point_cgo(pos: ArrayLike, color: ArrayLike) -> _CGODirective:
 
     Returns
     -------
-    cgo : list of float
+    cgo : CGO
         The CGO representation.
     """
     pos_array = np.atleast_2d(pos)
@@ -262,12 +318,12 @@ def get_point_cgo(pos: ArrayLike, color: ArrayLike) -> _CGODirective:
 
     vertices: list[float] = []
     for p, c in zip(pos_array, color_array):
-        vertices += [CGO.COLOR, *c, CGO.VERTEX, *p]
+        vertices += [CGO.Type.COLOR, *c, CGO.Type.VERTEX, *p]
 
-    return [CGO.BEGIN, CGO.POINTS, *vertices, CGO.END]
+    return CGO([CGO.Type.BEGIN, CGO.Type.POINTS, *vertices, CGO.Type.END])
 
 
-def get_line_cgo(pos: ArrayLike, color: ArrayLike, width: float = 1.0) -> _CGODirective:
+def get_line_cgo(pos: ArrayLike, color: ArrayLike, width: float = 1.0) -> CGO:
     """
     Get the CGO for a line following the given positions.
 
@@ -286,7 +342,7 @@ def get_line_cgo(pos: ArrayLike, color: ArrayLike, width: float = 1.0) -> _CGODi
 
     Returns
     -------
-    cgo : list of float
+    cgo : CGO
         The CGO representation.
     """
     pos_array = np.atleast_2d(pos)
@@ -300,14 +356,23 @@ def get_line_cgo(pos: ArrayLike, color: ArrayLike, width: float = 1.0) -> _CGODi
 
     vertices: list[Any] = []
     for p, c in zip(pos_array, color_array):
-        vertices += [CGO.COLOR, *c, CGO.VERTEX, *p]
+        vertices += [CGO.Type.COLOR, *c, CGO.Type.VERTEX, *p]
 
-    return [CGO.LINEWIDTH, width, CGO.BEGIN, CGO.LINE_STRIP, *vertices, CGO.END]
+    return CGO(
+        [
+            CGO.Type.LINEWIDTH,
+            width,
+            CGO.Type.BEGIN,
+            CGO.Type.LINE_STRIP,
+            *vertices,
+            CGO.Type.END,
+        ]
+    )
 
 
 def get_multiline_cgo(
     start: ArrayLike, end: ArrayLike, color: ArrayLike, width: float = 1.0
-) -> _CGODirective:
+) -> CGO:
     """
     Get the CGO for one or multiple straight lines drawn from given
     start to end positions.
@@ -327,7 +392,7 @@ def get_multiline_cgo(
 
     Returns
     -------
-    cgo : list of float
+    cgo : CGO
         The CGO representation.
     """
     start_array = np.atleast_2d(start)
@@ -349,9 +414,18 @@ def get_multiline_cgo(
 
     vertices: list[Any] = []
     for p1, p2, c in zip(start_array, end_array, color_array):
-        vertices += [CGO.COLOR, *c, CGO.VERTEX, *p1, CGO.VERTEX, *p2]
+        vertices += [CGO.Type.COLOR, *c, CGO.Type.VERTEX, *p1, CGO.Type.VERTEX, *p2]
 
-    return [CGO.LINEWIDTH, width, CGO.BEGIN, CGO.LINES, *vertices, CGO.END]
+    return CGO(
+        [
+            CGO.Type.LINEWIDTH,
+            width,
+            CGO.Type.BEGIN,
+            CGO.Type.LINES,
+            *vertices,
+            CGO.Type.END,
+        ]
+    )
 
 
 def _expect_length(values: Any, name: str, length: int) -> None:
