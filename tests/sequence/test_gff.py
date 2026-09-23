@@ -19,7 +19,7 @@ def test_conversion_lowlevel(path):
 
     gff_file = gff.GFFFile()
     for entry in ref_entries:
-        gff_file.append(*entry)
+        gff_file.append(entry)
     temp = TemporaryFile("w+")
     gff_file.write(temp)
 
@@ -43,10 +43,7 @@ def test_conversion_highlevel(path):
     """
     gff_file = gff.GFFFile.read(data_dir("sequence") / path)
     ref_annot = gff.get_annotation(gff_file)
-    ref_phases = []
-    for _, _, type, _, _, _, _, phase, _ in gff_file:
-        if type == "CDS":
-            ref_phases.append(phase)
+    ref_phases = [record.phase for record in gff_file if record.type == "CDS"]
 
     gff_file = gff.GFFFile()
     gff.set_annotation(gff_file, ref_annot)
@@ -57,10 +54,7 @@ def test_conversion_highlevel(path):
     gff_file = gff.GFFFile.read(temp)
     temp.close()
     test_annot = gff.get_annotation(gff_file)
-    test_phases = []
-    for _, _, type, _, _, _, _, phase, _ in gff_file:
-        if type == "CDS":
-            test_phases.append(phase)
+    test_phases = [record.phase for record in gff_file if record.type == "CDS"]
 
     assert ref_annot == test_annot
     assert test_phases == ref_phases
@@ -107,20 +101,18 @@ def test_file_access():
     file.
     """
     file = gff.GFFFile()
-    entry_scaffold = ("ab", "cd", 1, 2, None, None, None, {"Id": "foo"})
-    entry = ("a",) + entry_scaffold
-    file.append(*entry)
-    assert file[0] == entry
-    file.append(*(("b",) + entry_scaffold))
-    file.insert(1, *(("c",) + entry_scaffold))
-    file[1] = ("d",) + entry_scaffold
-    file.insert(3, *(("e",) + entry_scaffold))
+
+    def record(seqid):
+        return gff.GFFRecord(seqid, "ab", "cd", 1, 2, None, None, None, {"Id": "foo"})
+
+    file.append(record("a"))
+    assert file[0] == record("a")
+    file.append(record("b"))
+    file.insert(1, record("c"))
+    file[1] = record("d")
+    file.insert(3, record("e"))
     del file[2]
-    assert [seqid for seqid, _, _, _, _, _, _, _, _ in file] == [
-        "a",
-        "d",
-        "e",
-    ]
+    assert [record.seqid for record in file] == ["a", "d", "e"]
 
 
 def test_entry_indexing():
@@ -145,19 +137,19 @@ def test_percent_encoding():
     artificial test file.
     """
     file = gff.GFFFile.read(data_dir("sequence") / "percent_test.gff3")
-    seqid, source, type, start, end, score, strand, phase, attrib = file[0]
-    assert seqid == "123,456"
-    assert source == "ääh"
-    assert type == "regi&n"
-    assert attrib == {
+    record = file[0]
+    assert record.seqid == "123,456"
+    assert record.source == "ääh"
+    assert record.type == "regi&n"
+    assert record.attributes == {
         "ID": "AnID;AnotherID",
         "Name": "Ångström",
         "c$l$r": "red\tgreen\tblue",
     }
 
     file2 = gff.GFFFile()
-    file2.append(seqid, source, type, start, end, score, strand, phase, attrib)
-    assert (seqid, source, type, start, end, score, strand, phase, attrib) == file2[0]
+    file2.append(record)
+    assert file2[0] == record
 
 
 def test_error():
@@ -167,16 +159,19 @@ def test_error():
     file = gff.GFFFile()
     with pytest.raises(ValueError):
         # 'seqid' beginning with '>' is not legal
-        file.append(">xyz", "ab", "cd", 1, 2, None, None, None, {"Id": "foo"})
+        file.append(gff.GFFRecord(">xyz", "ab", "cd", 1, 2))
     with pytest.raises(ValueError):
         # String fields must not be empty
-        file.append("", "ab", "cd", 1, 2, None, None, None, {"Id": "foo"})
+        file.append(gff.GFFRecord("", "ab", "cd", 1, 2))
     with pytest.raises(ValueError):
         # String fields must not be empty
-        file.append("xyz", "", "cd", 1, 2, None, None, None, {"Id": "foo"})
+        file.append(gff.GFFRecord("xyz", "", "cd", 1, 2))
     with pytest.raises(ValueError):
         # String fields must not be empty
-        file.append("xyz", "ab", "", 1, 2, None, None, None, {"Id": "foo"})
+        file.append(gff.GFFRecord("xyz", "ab", "", 1, 2))
+    with pytest.raises(TypeError):
+        # Only records are accepted
+        file.append(("xyz", "ab", "cd", 1, 2, None, None, None, {}))
 
 
 def test_feature_without_id():
