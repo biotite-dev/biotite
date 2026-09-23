@@ -24,7 +24,7 @@ GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT
 """)
 
 
-fastq_file = fastq.FastqFile.read(fastq_content, offset="Sanger")
+fastq_file = fastq.FastqFile.read(fastq_content, offset=fastq.FastqFile.Offset.SANGER)
 sequence, scores = fastq.get_sequence(fastq_file, "SEQ_ID")
 figure, ax = plt.subplots(figsize=(8.0, 2.0))
 ax.bar(

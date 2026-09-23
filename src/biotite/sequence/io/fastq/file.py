@@ -85,6 +85,12 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
     class Offset(IntEnum):
         """
         Quality score ASCII offsets for FASTQ format variants.
+
+        - ``SANGER``: Sanger/Phred+33 (also used by Illumina 1.8+)
+        - ``SOLEXA``: Solexa+64
+        - ``ILLUMINA_1_3``: Illumina 1.3+ (Phred+64)
+        - ``ILLUMINA_1_5``: Illumina 1.5+ (Phred+64)
+        - ``ILLUMINA_1_8``: Illumina 1.8+ (Phred+33)
         """
 
         SANGER = 33
@@ -121,9 +127,8 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
         offset : int or FastqFile.Offset
             This value is added to the quality score to obtain the
             ASCII code.
-            Can be provided directly as integer, as a member of
-            :class:`FastqFile.Offset`, or as a string that indicates
-            the score format.
+            Can be provided directly as integer or as a member of
+            :class:`FastqFile.Offset`.
         chars_per_line : int, optional
             The number characters in a line containing sequence data
             after which a line break is inserted.
@@ -341,9 +346,8 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
         offset : int or FastqFile.Offset
             This value is added to the quality score to obtain the
             ASCII code.
-            Can be provided directly as integer, as a member of
-            :class:`FastqFile.Offset`, or as a string that indicates
-            the score format.
+            Can be provided directly as integer or as a member of
+            :class:`FastqFile.Offset`.
 
         Yields
         ------
@@ -445,9 +449,8 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
         offset : int or FastqFile.Offset
             This value is added to the quality score to obtain the
             ASCII code.
-            Can be provided directly as integer, as a member of
-            :class:`FastqFile.Offset`, or as a string that indicates
-            the score format.
+            Can be provided directly as integer or as a member of
+            :class:`FastqFile.Offset`.
         chars_per_line : int, optional
             The number characters in a line containing sequence data
             after which a line break is inserted.

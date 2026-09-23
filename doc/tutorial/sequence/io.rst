@@ -113,7 +113,7 @@ array.
         """
     ))
 
-    fastq_file = fastq.FastqFile.read(fastq_content, offset="Sanger")
+    fastq_file = fastq.FastqFile.read(fastq_content, offset=fastq.FastqFile.Offset.SANGER)
     seq_string, scores = fastq_file["SEQ_ID"]
     print(seq_string)
     print(scores)

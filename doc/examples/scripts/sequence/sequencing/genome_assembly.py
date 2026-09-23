@@ -61,6 +61,7 @@ import biotite.sequence.align as align
 import biotite.sequence.graphics as graphics
 import biotite.sequence.io as seqio
 import biotite.sequence.io.fasta as fasta
+import biotite.sequence.io.fastq as fastq
 import biotite.sequence.io.genbank as gb
 
 # Load sequences and quality scores from the sequencing data
@@ -71,7 +72,7 @@ reads_and_scores = (
     sra.FastqDumpApp()
     .extract_fastq("SRR13453793")
     .result()
-    .get_sequences_and_scores(offset="Sanger")[0]
+    .get_sequences_and_scores(offset=fastq.FastqFile.Offset.SANGER)[0]
 )
 reads = [read for read, score_array in reads_and_scores.values()]
 score_arrays = [score_array for read, score_array in reads_and_scores.values()]
