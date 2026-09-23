@@ -242,7 +242,7 @@ def map_read(read_string, kmer_table, gene_sequences, substitution_matrix):
 substitution_matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
 
 for i, (_, (seq_string, q)) in enumerate(
-    fastq.FastqFile.read_iter(fastq_path, offset="Sanger")
+    fastq.FastqFile.read_iter(fastq_path, offset=fastq.FastqFile.Offset.SANGER)
 ):
     # For demonstration only a single clean read is mapped
     if i == 3:
@@ -267,7 +267,7 @@ print(alignment)
 
 def read_iter(fastq_path):
     for i, (_, (read_string, quality)) in enumerate(
-        fastq.FastqFile.read_iter(fastq_path, offset="Sanger")
+        fastq.FastqFile.read_iter(fastq_path, offset=fastq.FastqFile.Offset.SANGER)
     ):
         # For the purpose of this example only a faction of the reads
         # are processed to save computation time
