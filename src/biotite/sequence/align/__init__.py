@@ -126,7 +126,7 @@ are arranged from top to bottom.
 
                 **Ungapped seed extension**
 
-                :class:`align_local_ungapped()`
+                :class:`SeedExtension`
 
     .. grid-item::
         :padding: 2

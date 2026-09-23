@@ -22,12 +22,6 @@ interface returns *Python* objects (e.g. an :class:`Alignment` object).
 
 .. note::
 
-    :mod:`biotite.application_v2` is the refactored version of
-    :mod:`biotite.application`.
-    It will replace :mod:`biotite.application` in the next major release.
-
-.. note::
-
     Note that in order to use an interface in :mod:`biotite.application_v2`
     the corresponding software must be installed.
     These programs are not shipped with the *Biotite* package.

@@ -970,7 +970,6 @@ def set_structure(
     pdbx_file: _PDBxFile,
     array: AtomArray[N] | AtomArrayStack[M, N] | Iterable[AtomArray[N]],  # pyright: ignore[reportRedeclaration]
     data_block: str | None = None,
-    include_bonds: bool = False,
     extra_fields: Iterable[str] = [],
 ) -> None:
     """
@@ -1001,8 +1000,6 @@ def set_structure(
         If the data block object is passed directly to `pdbx_file`,
         this parameter is ignored.
         If the file is empty, a new data block will be created.
-    include_bonds : bool, optional
-        DEPRECATED: Has no effect anymore.
     extra_fields : list of str, optional
         List of additional fields from the ``atom_site`` category
         that should be written into the file.
@@ -1023,13 +1020,6 @@ def set_structure(
     >>> set_structure(file, atom_array)
     >>> file.write(os.path.join(path_to_directory, "structure.cif"))
     """
-    if include_bonds:
-        warnings.warn(
-            "`include_bonds` parameter is deprecated, "
-            "intra-residue are always written, if available",
-            DeprecationWarning,
-        )
-
     if not isinstance(array, (AtomArray, AtomArrayStack)):
         # An iterable of `AtomArray` objects represents multiple models that -
         # unlike an `AtomArrayStack` - may contain different atoms in each model
@@ -1092,12 +1082,6 @@ def set_structure(
         )
     if "entity_id" in annot_categories:
         atom_site["label_entity_id"] = np.copy(array.entity_id)
-    elif "label_entity_id" in annot_categories:
-        warnings.warn(
-            "The 'label_entity_id' annotation is deprecated, use 'entity_id' instead",
-            DeprecationWarning,
-        )
-        atom_site["label_entity_id"] = np.copy(array.get_annotation("label_entity_id"))
     else:
         atom_site["label_entity_id"] = _determine_entity_id(array.chain_id)
 

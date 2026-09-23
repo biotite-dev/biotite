@@ -119,8 +119,6 @@ class Alignment(object):
         """
         Create an :class:`Alignment` from strings that represent aligned sequences.
 
-        **DEPRECATED**: Use :meth:`Alignment.from_strings()` instead.
-
         Parameters
         ----------
         sequence_strings : list of str
