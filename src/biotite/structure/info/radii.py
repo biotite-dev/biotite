@@ -6,7 +6,9 @@ __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["vdw_radius_protor", "vdw_radius_single"]
 
+import functools
 from biotite.structure.info.bonds import bonds_in_residue
+from biotite.structure.info.ccd import get_from_ccd
 
 # fmt: off
 # Contains tuples for the different ProtOr groups:
@@ -194,12 +196,18 @@ def vdw_radius_protor(res_name: str, atom_name: str) -> float | None:
         return vdw_radius_protor(res_name, atom_name)
 
 
+@functools.cache
 def _calculate_protor_radii(res_name: str) -> dict[str, float | None]:
     """
     Calculate the ProtOr VdW radii for all atoms (atom names) in
     a residue.
     """
     bonds = bonds_in_residue(res_name)
+    # The element cannot be inferred from the first character of the atom name,
+    # as this would confuse two-letter elements with one-letter ones
+    # (e.g. 'SE' in 'MSE' would be taken for sulfur)
+    # -> take the element from the same CCD entry the bonds come from
+    elements = _elements_in_residue(res_name)
     # Maps atom names to a ProtOr group
     # -> tuple(element, valency, H count)
     # Based on the group the radius is chosen from _PROTOR_RADII
@@ -209,7 +217,7 @@ def _calculate_protor_radii(res_name: str) -> dict[str, float | None]:
         # One time the first atom is the one to get valency and H count
         # for and the other time vice versa
         for main_atom, bound_atom in ((atom1, atom2), (atom2, atom1)):
-            element = main_atom[0]
+            element = elements[main_atom]
             # Calculating ProtOr radii for hydrogens is not meaningful
             if element in ("H", "D"):
                 continue
@@ -225,12 +233,27 @@ def _calculate_protor_radii(res_name: str) -> dict[str, float | None]:
             # Increase valency by one, since the bond entry exists
             group[1] += 1
             # If the atom is bonded to hydrogen, increase H count
-            if bound_atom[0] == "H":
+            if elements[bound_atom] in ("H", "D"):
                 group[2] += 1
             groups[main_atom] = group
     # Get radii based on ProtOr groups
     radii = {atom: _PROTOR_RADII.get(tuple(group)) for atom, group in groups.items()}
     return radii
+
+
+def _elements_in_residue(res_name: str) -> dict[str, str]:
+    """
+    Map each atom name in the given residue to its element,
+    based on the *Chemical Component Dictionary*.
+    """
+    atom_names = get_from_ccd("chem_comp_atom", res_name, "atom_id")
+    elements = get_from_ccd("chem_comp_atom", res_name, "type_symbol")
+    if atom_names is None or elements is None:
+        return {}
+    return {
+        atom_name.item(): element.item().upper()
+        for atom_name, element in zip(atom_names.as_array(str), elements.as_array(str))
+    }
 
 
 def vdw_radius_single(element: str) -> float | None:
