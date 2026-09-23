@@ -35,7 +35,7 @@ def test_simple_alignment(gap_penalty, seed, threshold, direction, score_only):
         alignment.score = align.score(alignment, matrix, gap_penalty)
 
     test_result = align.align_local_gapped(
-        seq1, seq2, matrix, seed, threshold, gap_penalty, 1000, direction, score_only
+        seq1, seq2, seed, threshold, matrix, gap_penalty, 1000, direction, score_only
     )
 
     if score_only:
@@ -82,9 +82,9 @@ def test_max_table_size(gap_penalty, direction, score_only, should_raise):
             align.align_local_gapped(
                 seq1,
                 seq1,
-                matrix,
                 seed,
                 threshold,
+                matrix,
                 gap_penalty,
                 1,
                 direction,
@@ -95,9 +95,9 @@ def test_max_table_size(gap_penalty, direction, score_only, should_raise):
         result = align.align_local_gapped(
             seq1,
             seq1,
-            matrix,
             seed,
             threshold,
+            matrix,
             gap_penalty,
             1,
             direction,

@@ -20,8 +20,8 @@ from biotite.typing import K, N, NDArray1, NDArray2, S
 
 def align_multiple(
     sequences: SequenceABC[Sequence[S]],
-    matrix: SubstitutionMatrix[S, S] | tuple[int, int],
-    gap_penalty: int | tuple[int, int] = -10,
+    matrix: SubstitutionMatrix[S, S] | tuple[int, int] = (1, -1),
+    gap_penalty: int | tuple[int, int] = -1,
     terminal_penalty: bool = True,
     distances: NDArray2[N, N, np.floating] | None = None,
     guide_tree: nx.DiGraph | None = None,
@@ -42,9 +42,10 @@ def align_multiple(
         The sequences to be aligned.
         The alpahbet of the substitution matrix must be equal or
         extend the alphabet of each sequence.
-    matrix : SubstitutionMatrix or tuple(int, int)
+    matrix : SubstitutionMatrix or tuple(int, int), optional
         Either a substitution matrix or a ``(match, mismatch)`` pair of
         scores.
+        By default a match scores ``1`` and a mismatch scores ``-1``.
         A substitution matrix must be symmetric.
         The pair of scores does not require a substitution matrix over
         the potentially large alphabet of the sequences, which saves
@@ -58,6 +59,7 @@ def align_multiple(
         opening penalty, the second integer is the gap extension
         penalty.
         The values need to be negative.
+        By default a linear gap penalty of ``-1`` is used.
     terminal_penalty : bool, optional
         If true, gap penalties are applied to terminal gaps.
     distances : ndarray, shape=(n,n)
@@ -149,7 +151,7 @@ def align_multiple(
     >>> matrix = SubstitutionMatrix.std_protein_matrix()
     >>>
     >>> alignment, order, tree, distances = align_multiple(
-    ...     [seq1, seq2, seq3, seq4], matrix
+    ...     [seq1, seq2, seq3, seq4], matrix, gap_penalty=-10
     ... )
     >>>
     >>> print(alignment)

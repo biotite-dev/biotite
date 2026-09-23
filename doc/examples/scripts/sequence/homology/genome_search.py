@@ -143,8 +143,8 @@ for strand, m1_pos, genome_pos in trigger_matches:
     alignment = align.align_banded(
         m1_sequence,
         genome,
-        matrix,
         band=(diagonal - BAND_WIDTH, diagonal + BAND_WIDTH),
+        matrix=matrix,
         max_number=1,
     )[0]
     alignments.append((strand, alignment))

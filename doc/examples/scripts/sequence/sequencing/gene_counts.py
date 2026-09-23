@@ -223,8 +223,8 @@ def map_read(read_string, kmer_table, gene_sequences, substitution_matrix):
             align.align_banded(
                 read,
                 gene_sequences[gene_i],
-                substitution_matrix,
                 band=(diagonal - BAND_WIDTH, diagonal + BAND_WIDTH),
+                matrix=substitution_matrix,
                 gap_penalty=-10,
                 max_number=1,
             )[0],

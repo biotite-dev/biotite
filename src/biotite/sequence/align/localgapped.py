@@ -21,10 +21,10 @@ if TYPE_CHECKING:
 def align_local_gapped(
     seq1: Sequence[S1],
     seq2: Sequence[S2],
-    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int],
     seed: tuple[int, int],
     threshold: int,
-    gap_penalty: int | tuple[int, int] = -10,
+    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int] = (1, -1),
+    gap_penalty: int | tuple[int, int] = -1,
     max_number: int = 1,
     direction: Literal["both", "upstream", "downstream"] = "both",
     score_only: Literal[False] = False,
@@ -34,10 +34,10 @@ def align_local_gapped(
 def align_local_gapped(
     seq1: Sequence[S1],
     seq2: Sequence[S2],
-    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int],
     seed: tuple[int, int],
     threshold: int,
-    gap_penalty: int | tuple[int, int] = -10,
+    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int] = (1, -1),
+    gap_penalty: int | tuple[int, int] = -1,
     max_number: int = 1,
     direction: Literal["both", "upstream", "downstream"] = "both",
     *,
@@ -47,10 +47,10 @@ def align_local_gapped(
 def align_local_gapped(
     seq1: Sequence,
     seq2: Sequence,
-    matrix: SubstitutionMatrix | tuple[int, int],
     seed: tuple[int, int],
     threshold: int,
-    gap_penalty: int | tuple[int, int] = -10,
+    matrix: SubstitutionMatrix | tuple[int, int] = (1, -1),
+    gap_penalty: int | tuple[int, int] = -1,
     max_number: int = 1,
     direction: str = "both",
     score_only: bool = False,
@@ -71,8 +71,6 @@ def align_local_gapped(
     ----------
     seq1, seq2 : Sequence
         The sequences to be aligned.
-    matrix : SubstitutionMatrix or tuple(int, int)
-        Either a substitution matrix or a ``(match, mismatch)`` pair of scores.
     seed : tuple(int, int)
         The indices in `seq1` and `seq2` where the local alignment
         starts.
@@ -80,6 +78,9 @@ def align_local_gapped(
     threshold : int
         If the current score falls this value below the maximum score
         found, the alignment terminates.
+    matrix : SubstitutionMatrix or tuple(int, int), optional
+        Either a substitution matrix or a ``(match, mismatch)`` pair of scores.
+        By default a match scores ``1`` and a mismatch scores ``-1``.
     gap_penalty : int or tuple(int, int), optional
         If an integer is provided, the value will be interpreted as
         linear gap penalty.
@@ -88,6 +89,7 @@ def align_local_gapped(
         The first integer in the tuple is the gap opening penalty,
         the second integer is the gap extension penalty.
         The values need to be negative.
+        By default a linear gap penalty of ``-1`` is used.
     max_number : int, optional
         The maximum number of alignments returned.
         When the number of branches exceeds this value in the traceback
@@ -158,7 +160,7 @@ def align_local_gapped(
     >>> seq2 = NucleotideSequence("TATATGCCTTACGGAATTGCTTTTT")
     >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
     >>> alignment = align_local_gapped(
-    ...     seq1, seq2, matrix, seed=(16, 10), threshold=20
+    ...     seq1, seq2, seed=(16, 10), threshold=20, matrix=matrix, gap_penalty=-10
     ... )[0]
     >>> print(alignment)
     TATCGCCTGTACGG

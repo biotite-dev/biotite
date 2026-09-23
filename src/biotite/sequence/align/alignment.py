@@ -558,8 +558,8 @@ def get_pairwise_sequence_identity(
 
 def score(
     alignment: Alignment,
-    matrix: SubstitutionMatrix,
-    gap_penalty: int | tuple[int, int] = -10,
+    matrix: SubstitutionMatrix | tuple[int, int] = (1, -1),
+    gap_penalty: int | tuple[int, int] = -1,
     terminal_penalty: bool = True,
 ) -> int:
     """
@@ -571,16 +571,18 @@ def score(
     Parameters
     ----------
     alignment : Alignment
-        The alignment to calculate the identity for.
-    matrix : SubstitutionMatrix
-        The substitution matrix used for scoring.
-    gap_penalty : int or (tuple, dtype=int), optional
+        The alignment to calculate the score for.
+    matrix : SubstitutionMatrix or tuple(int, int), optional
+        Either a substitution matrix or a ``(match, mismatch)`` pair of scores.
+        By default a match scores ``1`` and a mismatch scores ``-1``.
+    gap_penalty : int or tuple(int, int), optional
         If an integer is provided, the value will be interpreted as
         general gap penalty. If a tuple is provided, an affine gap
         penalty is used. The first integer in the tuple is the gap
         opening penalty, the second integer is the gap extension
         penalty.
         The values need to be negative.
+        By default a linear gap penalty of ``-1`` is used.
     terminal_penalty : bool, optional
         If true, gap penalties are applied to terminal gaps.
 
@@ -590,7 +592,11 @@ def score(
         The similarity score.
     """
     codes = get_codes(alignment)
-    score_matrix = matrix.score_matrix()
+    if isinstance(matrix, tuple):
+        match_score, mismatch_score = matrix
+        score_matrix = None
+    else:
+        score_matrix = matrix.score_matrix()
 
     # Sum similarity scores (without gaps)
     score: int = 0
@@ -606,7 +612,10 @@ def score(
                 code_j = column[j]
                 # Ignore gaps
                 if code_i != -1 and code_j != -1:
-                    score += int(score_matrix[code_i, code_j])
+                    if score_matrix is None:
+                        score += match_score if code_i == code_j else mismatch_score
+                    else:
+                        score += int(score_matrix[code_i, code_j])
 
     # Sum gap penalties
     gap_open: int

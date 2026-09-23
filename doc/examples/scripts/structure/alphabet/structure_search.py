@@ -316,8 +316,8 @@ for query_pos, db_index, db_pos in accepted_hits:
     alignment = align.align_banded(
         query_sequence,
         db_sequences[db_index],
-        substitution_matrix,
         band=(diagonal - BAND_WIDTH, diagonal + BAND_WIDTH),
+        matrix=substitution_matrix,
         gap_penalty=GAP_PENALTY,
         local=True,
         max_number=1,
