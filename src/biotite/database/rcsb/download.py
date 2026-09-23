@@ -3,9 +3,9 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["fetch"]
 
 import io
-import os
 from collections.abc import Iterable
-from os.path import getsize, isfile, join
+from os import PathLike
+from pathlib import Path
 from typing import Literal, overload
 import requests
 from biotite.database.error import RequestError
@@ -31,10 +31,10 @@ _rcsb_error_msgs = [
 def fetch(
     pdb_ids: str,
     format: _RcsbFormat,
-    target_path: str,
+    target_path: str | PathLike[str],
     overwrite: bool = False,
     gzip: bool = False,
-) -> str: ...
+) -> Path: ...
 @overload
 def fetch(
     pdb_ids: str,
@@ -47,10 +47,10 @@ def fetch(
 def fetch(
     pdb_ids: Iterable[str],
     format: _RcsbFormat,
-    target_path: str,
+    target_path: str | PathLike[str],
     overwrite: bool = False,
     gzip: bool = False,
-) -> list[str]: ...
+) -> list[Path]: ...
 @overload
 def fetch(
     pdb_ids: Iterable[str],
@@ -62,10 +62,10 @@ def fetch(
 def fetch(
     pdb_ids: str | Iterable[str],
     format: _RcsbFormat,
-    target_path: str | None = None,
+    target_path: str | PathLike[str] | None = None,
     overwrite: bool = False,
     gzip: bool = False,
-) -> str | io.StringIO | io.BytesIO | list[str] | list[io.StringIO | io.BytesIO]:
+) -> Path | io.StringIO | io.BytesIO | list[Path] | list[io.StringIO | io.BytesIO]:
     """
     Download structure files (or sequence files) from the RCSB PDB in
     various formats.
@@ -81,7 +81,7 @@ def fetch(
         The format of the files to be downloaded.
         ``'pdbx'``, ``'cif'`` and ``'mmcif'`` are synonyms for
         the same format.
-    target_path : str, optional
+    target_path : str or PathLike, optional
         The target directory of the downloaded files.
         By default, the file content is stored in a file-like object
         (:class:`StringIO` or :class:`BytesIO`, respectively).
@@ -98,11 +98,11 @@ def fetch(
 
     Returns
     -------
-    files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
+    files : Path or StringIO or BytesIO or list of (Path or StringIO or BytesIO)
         The file path(s) to the downloaded files.
         If a single PDB ID was given in `pdb_ids`,
-        a single string is returned. If a list (or other iterable
-        object) was given, a list of strings is returned.
+        a single :class:`Path` is returned. If a list (or other iterable
+        object) was given, a list of :class:`Path` objects is returned.
         If no `target_path` was given, the file contents are stored in
         either :class:`StringIO` or :class:`BytesIO` objects.
 
@@ -117,12 +117,11 @@ def fetch(
     Examples
     --------
 
-    >>> import os.path
     >>> file = fetch("1l2y", "cif", path_to_directory)
-    >>> print(os.path.basename(file))
+    >>> print(file.name)
     1l2y.cif
     >>> files = fetch(["1l2y", "3o5r"], "cif", path_to_directory)
-    >>> print([os.path.basename(file) for file in files])
+    >>> print([file.name for file in files])
     ['1l2y.cif', '3o5r.cif']
     """
     # If only a single PDB ID is present,
@@ -134,9 +133,10 @@ def fetch(
         # Materialize the iterable so it can be both iterated and counted
         id_list = list(pdb_ids)
         single_element = False
-    # Create the target folder, if not existing
-    if target_path is not None and not os.path.isdir(target_path):
-        os.makedirs(target_path)
+    if target_path is not None:
+        target_path = Path(target_path)
+        # Create the target folder, if not existing
+        target_path.mkdir(parents=True, exist_ok=True)
 
     if gzip:
         gz_suffix = ".gz"
@@ -150,12 +150,12 @@ def fetch(
     for id in id_list:
         # Fetch file from database
         if target_path is not None:
-            file = join(target_path, id + "." + format + gz_suffix)
+            file = target_path / f"{id}.{format}{gz_suffix}"
         else:
             # 'file = None' -> store content in a file-like object
             file = None
 
-        if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
+        if file is None or not file.is_file() or file.stat().st_size == 0 or overwrite:
             if format == "pdb":
                 r = session.get(_standard_url + id + ".pdb" + gz_suffix)
                 _assert_valid_file(r, id)

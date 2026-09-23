@@ -31,7 +31,7 @@ def fetch(
     format: _AfdbFormat,
     target_path: str | PathLike[str],
     overwrite: bool = False,
-) -> str: ...
+) -> Path: ...
 @overload
 def fetch(
     ids: str,
@@ -45,7 +45,7 @@ def fetch(
     format: _AfdbFormat,
     target_path: str | PathLike[str],
     overwrite: bool = False,
-) -> list[str]: ...
+) -> list[Path]: ...
 @overload
 def fetch(
     ids: Iterable[str],
@@ -58,7 +58,7 @@ def fetch(
     format: _AfdbFormat,
     target_path: str | PathLike[str] | None = None,
     overwrite: bool = False,
-) -> str | io.StringIO | io.BytesIO | list[str] | list[io.StringIO | io.BytesIO]:
+) -> Path | io.StringIO | io.BytesIO | list[Path] | list[io.StringIO | io.BytesIO]:
     """
     Download predicted protein structures from the AlphaFold DB.
 
@@ -72,7 +72,7 @@ def fetch(
         (e.g. ``AF-P12345-F1``) or computational RCSB IDs (e.g. ``AF_AFP12345F1``).
     format : {'pdb', 'pdbx', 'cif', 'mmcif', 'bcif', 'fasta'}
         The format of the files to be downloaded.
-    target_path : str, optional
+    target_path : str or PathLike, optional
         The target directory of the downloaded files.
         By default, the file content is stored in a file-like object
         (`StringIO` or `BytesIO`, respectively).
@@ -83,23 +83,23 @@ def fetch(
 
     Returns
     -------
-    files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
+    files : Path or StringIO or BytesIO or list of (Path or StringIO or BytesIO)
         The file path(s) to the downloaded files.
-        If a single string (a single ID) was given in `ids`, a single string is
-        returned.
-        If a list (or other iterable object) was given, a list of strings is returned.
+        If a single string (a single ID) was given in `ids`, a single :class:`Path`
+        is returned.
+        If a list (or other iterable object) was given, a list of :class:`Path`
+        objects is returned.
         If no `target_path` was given, the file contents are stored in either
         ``StringIO`` or ``BytesIO`` objects.
 
     Examples
     --------
 
-    >>> from pathlib import Path
     >>> file = fetch("P12345", "cif", path_to_directory)
-    >>> print(Path(file).name)
+    >>> print(file.name)
     P12345.cif
     >>> files = fetch(["P12345", "Q8K9I1"], "cif", path_to_directory)
-    >>> print([Path(file).name for file in files])
+    >>> print([file.name for file in files])
     ['P12345.cif', 'Q8K9I1.cif']
     """
     if format not in ["pdb", "pdbx", "cif", "mmcif", "bcif", "fasta"]:
@@ -148,8 +148,6 @@ def fetch(
 
         files.append(file)
 
-    # Return paths as strings
-    files = [file.as_posix() if isinstance(file, Path) else file for file in files]
     # If input was a single ID, return only a single element
     if single_element:
         return files[0]

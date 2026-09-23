@@ -3,9 +3,9 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["fetch", "fetch_single_file"]
 
 import io
-import os
 from collections.abc import Iterable
-from os.path import getsize, isdir, isfile, join
+from os import PathLike
+from pathlib import Path
 from typing import Literal, overload
 import requests
 from biotite.database.entrez.check import check_for_errors
@@ -20,13 +20,13 @@ _EntrezRetMode = Literal["text", "xml", "json", "asn.1", "html"]
 @overload
 def fetch(
     uids: str,
-    target_path: str,
+    target_path: str | PathLike[str],
     suffix: str,
     db_name: str,
     ret_type: str,
     ret_mode: _EntrezRetMode = "text",
     overwrite: bool = False,
-) -> str: ...
+) -> Path: ...
 @overload
 def fetch(
     uids: str,
@@ -40,13 +40,13 @@ def fetch(
 @overload
 def fetch(
     uids: Iterable[str],
-    target_path: str,
+    target_path: str | PathLike[str],
     suffix: str,
     db_name: str,
     ret_type: str,
     ret_mode: _EntrezRetMode = "text",
     overwrite: bool = False,
-) -> list[str]: ...
+) -> list[Path]: ...
 @overload
 def fetch(
     uids: Iterable[str],
@@ -59,13 +59,13 @@ def fetch(
 ) -> list[io.StringIO | io.BytesIO]: ...
 def fetch(
     uids: str | Iterable[str],
-    target_path: str | None,
+    target_path: str | PathLike[str] | None,
     suffix: str,
     db_name: str,
     ret_type: str,
     ret_mode: _EntrezRetMode = "text",
     overwrite: bool = False,
-) -> str | io.StringIO | io.BytesIO | list[str] | list[io.StringIO | io.BytesIO]:
+) -> Path | io.StringIO | io.BytesIO | list[Path] | list[io.StringIO | io.BytesIO]:
     """
     Download files from the NCBI Entrez database in various formats.
 
@@ -82,7 +82,7 @@ def fetch(
     uids : str or iterable object of str
         A single *unique identifier* (UID) or a list of UIDs of the
         file(s) to be downloaded.
-    target_path : str or None
+    target_path : str or PathLike or None
         The target directory of the downloaded files.
         If ``None``, the file content is stored in a file-like object
         (`StringIO` or `BytesIO`, respectively).
@@ -103,11 +103,11 @@ def fetch(
 
     Returns
     -------
-    files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
+    files : Path or StringIO or BytesIO or list of (Path or StringIO or BytesIO)
         The file path(s) to the downloaded files.
         If a single string (a single UID) was given in `uids`,
-        a single string is returned. If a list (or other iterable
-        object) was given, a list of strings is returned.
+        a single :class:`Path` is returned. If a list (or other iterable
+        object) was given, a list of :class:`Path` objects is returned.
         If `target_path` is ``None``, the file contents are stored in
         either `StringIO` or `BytesIO` objects.
 
@@ -126,10 +126,9 @@ def fetch(
     Examples
     --------
 
-    >>> import os.path
     >>> files = fetch(["1L2Y_A","3O5R_A"], path_to_directory, suffix="fa",
     ...               db_name="protein", ret_type="fasta")
-    >>> print([os.path.basename(file) for file in files])
+    >>> print([file.name for file in files])
     ['1L2Y_A.fa', '3O5R_A.fa']
     """
     # If only a single UID is present,
@@ -141,18 +140,19 @@ def fetch(
         # Materialize the iterable so it can be both iterated and counted
         uid_list = list(uids)
         single_element = False
-    # Create the target folder, if not existing
-    if target_path is not None and not isdir(target_path):
-        os.makedirs(target_path)
+    if target_path is not None:
+        target_path = Path(target_path)
+        # Create the target folder, if not existing
+        target_path.mkdir(parents=True, exist_ok=True)
     files = []
     session = requests.Session()
     for id in uid_list:
         # Fetch file from database
         if target_path is not None:
-            file = join(target_path, id + "." + suffix)
+            file = target_path / f"{id}.{suffix}"
         else:
             file = None
-        if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
+        if file is None or not file.is_file() or file.stat().st_size == 0 or overwrite:
             param_dict = {
                 "db": sanitize_database_name(db_name),
                 "id": id,
@@ -183,12 +183,12 @@ def fetch(
 @overload
 def fetch_single_file(
     uids: Iterable[str],
-    file_name: str,
+    file_name: str | PathLike[str],
     db_name: str,
     ret_type: str,
     ret_mode: _EntrezRetMode = "text",
     overwrite: bool = False,
-) -> str: ...
+) -> Path: ...
 @overload
 def fetch_single_file(
     uids: Iterable[str],
@@ -200,12 +200,12 @@ def fetch_single_file(
 ) -> io.StringIO: ...
 def fetch_single_file(
     uids: Iterable[str],
-    file_name: str | None,
+    file_name: str | PathLike[str] | None,
     db_name: str,
     ret_type: str,
     ret_mode: _EntrezRetMode = "text",
     overwrite: bool = False,
-) -> str | io.StringIO:
+) -> Path | io.StringIO:
     """
     Almost the same as :func:`fetch()`, but the data for the given UIDs
     will be stored in a single file.
@@ -215,8 +215,9 @@ def fetch_single_file(
     uids : iterable object of str
         A list of UIDs of the
         file(s) to be downloaded.
-    file_name : str or None
+    file_name : str or PathLike or None
         The file path, including file name, to the target file.
+        If ``None``, the file content is stored in a :class:`StringIO` object.
     db_name : str:
         E-utility or common database name.
     ret_type : str
@@ -229,10 +230,10 @@ def fetch_single_file(
 
     Returns
     -------
-    file : str or StringIO or BytesIO
-        The file name of the downloaded file.
+    file : Path or StringIO
+        The path of the downloaded file.
         If `file_name` is ``None``, the file content is stored in
-        either a `StringIO` or a `BytesIO` object.
+        a :class:`StringIO` object.
 
     Warnings
     --------
@@ -246,14 +247,11 @@ def fetch_single_file(
     --------
     fetch : Fetch one or multiple entries as separate files.
     """
-    if (
-        file_name is not None
-        and os.path.isfile(file_name)
-        and getsize(file_name) > 0
-        and not overwrite
-    ):
-        # Do no redownload the already existing file
-        return file_name
+    if file_name is not None:
+        file_name = Path(file_name)
+        if file_name.is_file() and file_name.stat().st_size > 0 and not overwrite:
+            # Do no redownload the already existing file
+            return file_name
     uid_list_str = ""
     for id in uids:
         uid_list_str += id + ","

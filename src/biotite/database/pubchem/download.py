@@ -4,9 +4,9 @@ __all__ = ["fetch", "fetch_property"]
 
 import io
 import numbers
-import os
 from collections.abc import Iterable
-from os.path import getsize, isdir, isfile, join
+from os import PathLike
+from pathlib import Path
 from typing import Literal, overload
 import requests
 from biotite.database.error import RequestError
@@ -24,24 +24,24 @@ _PubchemFormat = Literal["sdf", "asnt", "asnb", "xml", "json", "jsonp", "png"]
 def fetch(
     cids: int,
     format: _PubchemFormat,
-    target_path: str,
+    target_path: str | PathLike[str],
     as_structural_formula: bool = False,
     overwrite: bool = False,
     throttle_threshold: float = 0.5,
     *,
     return_throttle_status: Literal[False] = False,
-) -> str: ...
+) -> Path: ...
 @overload
 def fetch(
     cids: int,
     format: _PubchemFormat,
-    target_path: str,
+    target_path: str | PathLike[str],
     as_structural_formula: bool = False,
     overwrite: bool = False,
     throttle_threshold: float = 0.5,
     *,
     return_throttle_status: Literal[True],
-) -> tuple[str, ThrottleStatus | None]: ...
+) -> tuple[Path, ThrottleStatus | None]: ...
 @overload
 def fetch(
     cids: int,
@@ -68,24 +68,24 @@ def fetch(
 def fetch(
     cids: Iterable[int],
     format: _PubchemFormat,
-    target_path: str,
+    target_path: str | PathLike[str],
     as_structural_formula: bool = False,
     overwrite: bool = False,
     throttle_threshold: float = 0.5,
     *,
     return_throttle_status: Literal[False] = False,
-) -> list[str]: ...
+) -> list[Path]: ...
 @overload
 def fetch(
     cids: Iterable[int],
     format: _PubchemFormat,
-    target_path: str,
+    target_path: str | PathLike[str],
     as_structural_formula: bool = False,
     overwrite: bool = False,
     throttle_threshold: float = 0.5,
     *,
     return_throttle_status: Literal[True],
-) -> tuple[list[str], ThrottleStatus | None]: ...
+) -> tuple[list[Path], ThrottleStatus | None]: ...
 @overload
 def fetch(
     cids: Iterable[int],
@@ -111,19 +111,19 @@ def fetch(
 def fetch(
     cids: int | Iterable[int],
     format: _PubchemFormat = "sdf",
-    target_path: str | None = None,
+    target_path: str | PathLike[str] | None = None,
     as_structural_formula: bool = False,
     overwrite: bool = False,
     throttle_threshold: float = 0.5,
     return_throttle_status: bool = False,
 ) -> (
-    str
+    Path
     | io.StringIO
     | io.BytesIO
-    | list[str]
+    | list[Path]
     | list[io.StringIO | io.BytesIO]
     | tuple[
-        str | io.StringIO | io.BytesIO | list[str] | list[io.StringIO | io.BytesIO],
+        Path | io.StringIO | io.BytesIO | list[Path] | list[io.StringIO | io.BytesIO],
         ThrottleStatus | None,
     ]
 ):
@@ -139,7 +139,7 @@ def fetch(
         to be downloaded.
     format : {'sdf', 'asnt' 'asnb', 'xml', 'json', 'jsonp', 'png'}
         The format of the files to be downloaded.
-    target_path : str, optional
+    target_path : str or PathLike, optional
         The target directory of the downloaded files.
         By default, the file content is stored in a file-like object
         (:class:`StringIO` or :class:`BytesIO`, respectively).
@@ -166,11 +166,11 @@ def fetch(
 
     Returns
     -------
-    files : str or StringIO or BytesIO or list of (str or StringIO or BytesIO)
+    files : Path or StringIO or BytesIO or list of (Path or StringIO or BytesIO)
         The file path(s) to the downloaded files.
         If a single CID was given in `cids`,
-        a single string is returned. If a list (or other iterable
-        object) was given, a list of strings is returned.
+        a single :class:`Path` is returned. If a list (or other iterable
+        object) was given, a list of :class:`Path` objects is returned.
         If no `target_path` was given, the file contents are stored in
         either :class:`StringIO` or :class:`BytesIO` objects.
     throttle_status : ThrottleStatus or None
@@ -185,12 +185,11 @@ def fetch(
     Examples
     --------
 
-    >>> import os.path
     >>> file = fetch(2244, "sdf", path_to_directory)
-    >>> print(os.path.basename(file))
+    >>> print(file.name)
     2244.sdf
     >>> files = fetch([2244, 5950], "sdf", path_to_directory)
-    >>> print([os.path.basename(file) for file in files])
+    >>> print([file.name for file in files])
     ['2244.sdf', '5950.sdf']
     """
     # If only a single CID is present,
@@ -201,9 +200,10 @@ def fetch(
     else:
         cid_list = list(cids)
         single_element = False
-    # Create the target folder, if not existing
-    if target_path is not None and not isdir(target_path):
-        os.makedirs(target_path)
+    if target_path is not None:
+        target_path = Path(target_path)
+        # Create the target folder, if not existing
+        target_path.mkdir(parents=True, exist_ok=True)
 
     files = []
     throttle_status: ThrottleStatus | None = None
@@ -216,12 +216,12 @@ def fetch(
 
         # Fetch file from database
         if target_path is not None:
-            file = join(target_path, str(cid) + "." + format)
+            file = target_path / f"{cid}.{format}"
         else:
             # 'file = None' -> store content in a file-like object
             file = None
 
-        if file is None or not isfile(file) or getsize(file) == 0 or overwrite:
+        if file is None or not file.is_file() or file.stat().st_size == 0 or overwrite:
             record_type = "2d" if as_structural_formula else "3d"
             r = session.get(
                 _base_url + f"compound/cid/{cid}/{format.upper()}",
