@@ -26,7 +26,10 @@ THRESHOLD_DISTANCE = 4.0
 
 # Fetch and load structure
 pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("2or1", "bcif"))
-structure = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
+# Use the author chain IDs, which name the protein chains 'L' and 'R'
+structure = pdbx.get_structure(
+    pdbx_file, model=1, include_bonds=True, use_author_fields=True
+)
 structure = structure[~struc.filter_solvent(structure)]
 
 

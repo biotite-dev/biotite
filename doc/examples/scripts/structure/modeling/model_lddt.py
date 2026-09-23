@@ -35,7 +35,7 @@ ids = rcsb.search(query, return_type="polymer_instance")
 # Simply use the first matching chain as reference
 pdb_id, chain_id = ids[0].split(".")
 pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch(pdb_id, "bcif"))
-reference = pdbx.get_structure(pdbx_file, model=1, use_author_fields=False)
+reference = pdbx.get_structure(pdbx_file, model=1)
 reference = reference[reference.chain_id == chain_id]
 # The experimental structure may contain additional small molecules
 # (e.g. water, ions etc.) that are not part of the predicted structure
@@ -46,7 +46,7 @@ reference = reference[struc.filter_amino_acids(reference)]
 pdbx_file = pdbx.BinaryCIFFile.read(afdb.fetch(UNIPROT_ID, "bcif"))
 # Use 'label_<x>' fields to make sure the residue ID is the the same as given in the
 # `ma_qa_metric_local` category, where the pLDDT is obtained from
-model = pdbx.get_structure(pdbx_file, model=1, use_author_fields=False)
+model = pdbx.get_structure(pdbx_file, model=1)
 
 
 ## Filter the structures to common atoms that are present in both structures

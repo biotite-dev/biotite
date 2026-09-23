@@ -47,6 +47,9 @@ structure = pdbx.get_structure(
     model=1,
     include_bonds=True,
     extra_fields=["charge"],
+    # The author chain IDs assign each ligand to the chain of the respective
+    # receptor monomer
+    use_author_fields=True,
 )
 # The asymmetric unit describes a streptavidin homodimer
 # However, we are only interested in a single monomer
