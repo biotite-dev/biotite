@@ -23,7 +23,6 @@ class Source(Enum):
     """Type of source file for an attribute."""
 
     PYTHON = auto()
-    CYTHON = auto()
     RUST = auto()
 
 
@@ -192,7 +191,7 @@ def _index_attributes(
         the name of a Python module and to the source type.
     extension_line_index : dict( tuple(str, str) -> tuple(int, int) ) )
         Maps the combination of (sub)package name and attribute to
-        the first and last line in an extension module (Cython or Rust).
+        the first and last line in a Rust extension module.
         Does not contain entries for attributes that are not part of an
         extension module.
     """
@@ -228,7 +227,7 @@ def _index_attributes(
     source_files = [
         f
         for f in src_path.iterdir()
-        if f.is_file() and f.name != "__init__.py" and f.suffix in (".py", ".pyx")
+        if f.is_file() and f.name != "__init__.py" and f.suffix == ".py"
     ]
 
     for source_file in source_files:
@@ -252,8 +251,7 @@ def _index_attributes(
             continue
 
         # Determine source type
-        is_cython = source_file.suffix == ".pyx"
-        rust_imports = set() if is_cython else _get_rust_imports(source_file)
+        rust_imports = _get_rust_imports(source_file)
 
         for attribute in module.__all__:
             if attribute in rust_imports and attribute in rust_attribute_index:
@@ -265,106 +263,11 @@ def _index_attributes(
                     extension_line_index[(package_name, attribute)] = rust_line_index[
                         attribute
                     ]
-            elif is_cython:
-                source_type = Source.CYTHON
-                attribute_index[(package_name, attribute)] = (module_name, source_type)
             else:
                 source_type = Source.PYTHON
                 attribute_index[(package_name, attribute)] = (module_name, source_type)
 
-        if is_cython:
-            lines = source_file.read_text().splitlines()
-            for attribute, (first, last) in _index_cython_code(lines).items():
-                extension_line_index[(package_name, attribute)] = (first, last)
-
     return attribute_index, extension_line_index
-
-
-def _index_cython_code(code_lines):
-    """
-    Find the line position of classes and functions in *Cython* files.
-
-    This analyzer works in a very simple way:
-    It looks for the `def` and `class` keywords at zero-indentation
-    level and determines the end of a class/function by the start of the
-    next zero-indentation level attribute or the end of the file,
-    respectively.
-
-    By the nature of this approach, methods or inner classes are not
-    identified.
-
-    Parameters
-    ----------
-    code_lines : list of str
-        The *Cython* source code splitted into lines.
-
-    Returns
-    -------
-    line_index : dict (str -> tuple(int, int))
-        Maps an attribute name to its first and last line in a Cython
-        module.
-    """
-    line_index = {}
-
-    for i in range(len(code_lines)):
-        line = code_lines[i]
-        stripped_line = line.strip()
-
-        # Skip empty and comment lines
-        if len(stripped_line) == 0 or stripped_line[0] == "#":
-            continue
-
-        if line.startswith(("def")):
-            # Get name of the function:
-            # Remove 'def' from line...
-            cropped_line = stripped_line[3:].strip()
-            # ...and determine the end of the name by finding the
-            # subsequent '('
-            cropped_line = cropped_line[: cropped_line.index("(")].strip()
-            attr_name = cropped_line
-        elif line.startswith(("class", "cdef class")):
-            cropped_line = stripped_line
-            # Get name of the class:
-            # Remove potential 'cdef' from line...
-            if cropped_line.startswith("cdef"):
-                cropped_line = cropped_line[4:].strip()
-            # ...and remove 'class' from line...
-            cropped_line = cropped_line[5:].strip()
-            # ...and determine the end of the name by finding the
-            # subsequent '(' or ':'
-            index = (
-                cropped_line.index("(")
-                if "(" in cropped_line
-                else cropped_line.index(":")
-            )
-            cropped_line = cropped_line[:index].strip()
-            attr_name = cropped_line
-        else:
-            # No new attribute -> skip line
-            continue
-
-        attr_line_start = i
-        attr_line_stop = i + 1
-        for j in range(i + 1, len(code_lines)):
-            attr_line = code_lines[j]
-            if len(attr_line.strip()) == 0 or attr_line.strip()[0] == "#":
-                continue
-            indent = len(attr_line) - len(attr_line.lstrip())
-            if indent == 0:
-                # No indentation -> end of attribute
-                break
-            else:
-                # Exclusive stop -> +1
-                attr_line_stop = j + 1
-
-        line_index[attr_name] = (
-            # 'One' based indexing
-            attr_line_start + 1,
-            # 'One' based indexing and inclusive stop
-            attr_line_stop,
-        )
-
-    return line_index
 
 
 def _is_package(path):
@@ -400,18 +303,6 @@ def linkcode_resolve(domain, info):
                 return base_url + f"{module_or_path}#L{first}-L{last}"
             else:
                 return base_url + f"{module_or_path}"
-
-        case Source.CYTHON:
-            module_name = module_or_path
-            if (package_name, attr_name) in _extension_line_index:
-                first, last = _extension_line_index[(package_name, attr_name)]
-                return (
-                    base_url + f"{module_name.replace('.', '/')}.pyx#L{first}-L{last}"
-                )
-            else:
-                # In case the attribute is not found
-                # by the Cython code analyzer
-                return base_url + f"{module_name.replace('.', '/')}.pyx"
 
         case Source.PYTHON:
             module_name = module_or_path

@@ -305,7 +305,7 @@ class LetterAlphabet(Alphabet[str]):
     The encoding and decoding process is a lot faster than for a
     normal :class:`Alphabet`.
 
-    The performance gain comes through the use of *NumPy* and *Cython*
+    The performance gain comes through the use of *NumPy* and *Rust*
     for encoding and decoding, without the need of a dictionary.
 
     Parameters

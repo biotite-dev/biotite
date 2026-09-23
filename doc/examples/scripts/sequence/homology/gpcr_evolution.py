@@ -66,9 +66,8 @@ alignment = clustalo.ClustalOmegaApp().run(sequences).result().alignment
 distances = 1 - align.get_pairwise_sequence_identity(alignment, mode="shortest")
 # Create tree via neighbor joining
 tree = phylo.neighbor_joining(distances)
-# Convert to NetworkX graph
 # For the graph visualization, the edge directions are unnecessary
-graph = tree.as_graph().to_undirected()
+graph = tree.to_undirected()
 
 fig = plt.figure(figsize=(8.0, 8.0))
 ax = fig.gca()

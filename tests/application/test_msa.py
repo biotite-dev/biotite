@@ -291,11 +291,7 @@ def test_clustalo_tree(sequences):
     if is_not_installed(bin_path):
         pytest.skip(f"'{bin_path}' is not installed")
 
-    leaves = [phylo.TreeNode(index=i) for i in range(len(sequences))]
-    inter1 = phylo.TreeNode([leaves[0], leaves[1]], [1.0, 1.0])
-    inter2 = phylo.TreeNode([leaves[2], leaves[3]], [2.5, 2.5])
-    root = phylo.TreeNode([inter1, inter2], [3.5, 2])
-    tree = phylo.Tree(root)
+    tree = phylo.from_newick("((0:1.0,1:1.0):3.5,(2:2.5,3:2.5):2.0);")
     # You cannot simultaneously set and get a tree in ClustalOmega
     # -> Test whether both is possible in separate calls
     app = ClustalOmegaApp(sequences)

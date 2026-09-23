@@ -12,7 +12,7 @@ def sequences():
     10 Cas9 sequences.
     """
     # Import in function to avoid 'ModuleNotFoundError',
-    # if a Cython module is not compiled yet
+    # if the Rust extension is not compiled yet
     import biotite.sequence as seq
     import biotite.sequence.io.fasta as fasta
 

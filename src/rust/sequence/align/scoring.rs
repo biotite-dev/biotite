@@ -123,6 +123,54 @@ impl<'a, 'py> FromPyObject<'a, 'py> for Match {
     }
 }
 
+/// A match/mismatch scoring scheme with an additional *neutral* symbol,
+/// that scores 0 against every symbol (including itself).
+///
+/// This is used for the gap symbol in progressive multiple sequence
+/// alignments, where a gapped sequence is aligned against another sequence.
+pub struct NeutralMatch {
+    match_score: Score,
+    mismatch_score: Score,
+    neutral: usize,
+}
+
+impl NeutralMatch {
+    pub fn new(match_score: Score, mismatch_score: Score, neutral: usize) -> Self {
+        NeutralMatch {
+            match_score,
+            mismatch_score,
+            neutral,
+        }
+    }
+}
+
+impl<S: Symbol> ScoringScheme<S> for NeutralMatch {
+    #[inline(always)]
+    fn score(&self, symbol1: S, symbol2: S) -> Score {
+        if symbol1.index() == self.neutral || symbol2.index() == self.neutral {
+            0
+        } else if symbol1 == symbol2 {
+            self.match_score
+        } else {
+            self.mismatch_score
+        }
+    }
+
+    #[inline(always)]
+    fn min(&self) -> Score {
+        self.match_score.min(self.mismatch_score).min(0)
+    }
+}
+
+impl<'a, 'py> FromPyObject<'a, 'py> for NeutralMatch {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
+        let (match_score, mismatch_score, neutral): (Score, Score, usize) = obj.extract()?;
+        Ok(NeutralMatch::new(match_score, mismatch_score, neutral))
+    }
+}
+
 /// The gap penalty configuration passed from the Python layer.
 ///
 /// The concrete variant is only known at run time, so each alignment module
@@ -136,7 +184,8 @@ pub enum GapPenalty {
 }
 
 /// A scoring scheme accepted from the Python layer: either a [`SubstitutionMatrix`]
-/// (a 2D array) or a [`Match`]/mismatch tuple.
+/// (a 2D array), a `(match, mismatch)` tuple or a `(match, mismatch, neutral)`
+/// tuple.
 ///
 /// Like [`GapPenalty`], the variant is resolved at run time and drives the
 /// dispatch to a monomorphized fill rule.
@@ -144,4 +193,5 @@ pub enum GapPenalty {
 pub enum Scoring {
     Matrix(SubstitutionMatrix),
     Match(Match),
+    NeutralMatch(NeutralMatch),
 }

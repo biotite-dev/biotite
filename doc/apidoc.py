@@ -284,13 +284,8 @@ def _is_relevant_type(obj):
             )
         )
         | (
-            # Functions from Cython extensions and wrapped functions
-            type(obj).__name__
-            in [
-                "cython_function_or_method",
-                "fused_cython_function",
-                "_lru_cache_wrapper",
-            ]
+            # Wrapped functions
+            type(obj).__name__ in ["_lru_cache_wrapper"]
         )
         | (
             # Enum instance

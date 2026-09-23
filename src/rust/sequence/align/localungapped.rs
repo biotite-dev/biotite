@@ -190,6 +190,9 @@ fn align_dtype<'py, S: Symbol + numpy::Element>(
     let (total_score, start_offset, stop_offset) = match &extension.scoring {
         Scoring::Matrix(scheme) => seed_extend(extension, code1_slice, code2_slice, scheme, seed),
         Scoring::Match(scheme) => seed_extend(extension, code1_slice, code2_slice, scheme, seed),
+        Scoring::NeutralMatch(scheme) => {
+            seed_extend(extension, code1_slice, code2_slice, scheme, seed)
+        }
     };
 
     if score_only {

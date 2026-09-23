@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from io import StringIO
 from os import PathLike
 from tempfile import NamedTemporaryFile
+import networkx as nx
 import numpy as np
 from biotite.application_v2.localapp import (
     CLIArgument,
@@ -29,7 +30,7 @@ from biotite.application_v2.localapp import (
 from biotite.application_v2.msa import MSAInput, resolve_gap_penalty
 from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.align.matrix import SubstitutionMatrix
-from biotite.sequence.phylo.tree import Tree
+from biotite.sequence.phylo.tree import from_newick
 from biotite.sequence.sequence import Sequence
 
 # MAFFT labels each leaf of the guide tree as '<n>_<sequence name>'
@@ -49,13 +50,13 @@ class MafftResult:
         The order of the sequences intended by MAFFT.
         Usually this order (e.g. based on the guide tree) differs from
         the input order.
-    guide_tree : Tree
+    guide_tree : nx.DiGraph
         The guide tree created for the progressive alignment.
     """
 
     alignment: Alignment
     order: np.ndarray
-    guide_tree: Tree
+    guide_tree: nx.DiGraph
 
 
 class MafftApp(LocalApp):
@@ -166,7 +167,7 @@ class MafftApp(LocalApp):
             return MafftResult(
                 alignment=alignment,
                 order=order,
-                guide_tree=Tree.from_newick(newick),
+                guide_tree=from_newick(newick),
             )
 
         def cleanup() -> None:
