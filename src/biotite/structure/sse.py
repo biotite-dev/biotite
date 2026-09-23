@@ -3,11 +3,16 @@ This module allows estimation of secondary structure elements in protein
 structures.
 """
 
+from __future__ import annotations
+
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["annotate_sse"]
+__all__ = ["SecondaryStructure", "annotate_sse"]
 
+from enum import IntEnum
+from typing import TypeVar
 import numpy as np
+from numpy.typing import ArrayLike
 from biotite.rust.structure import CellList
 from biotite.structure.atoms import AtomArray
 from biotite.structure.filter import filter_amino_acids
@@ -29,7 +34,159 @@ _d3_strand = ((9.9 - 0.9), (9.9 + 0.9))
 _d4_strand = ((12.4 - 1.1), (12.4 + 1.1))
 
 
-def annotate_sse(atom_array: AtomArray[N]) -> NDArray1[K, np.str_]:
+class SecondaryStructure(IntEnum):
+    r"""
+    The secondary structure elements (SSEs) a residue can be assigned to.
+
+    Each element has a corresponding one-letter `symbol`, that is used
+    in text-based representations, e.g. by the original *P-SEA*
+    software.
+
+    - ``NONE`` (``''``): The residue is not an amino acid or has no
+      ``CA`` atom.
+    - ``COIL`` (``'c'``): coil
+    - ``HELIX`` (``'a'``): :math:`{\alpha}`-helix
+    - ``STRAND`` (``'b'``): :math:`{\beta}`-strand/sheet
+
+    Examples
+    --------
+
+    >>> sse = SecondaryStructure.from_symbols(["c", "a", "a", "b", ""])
+    >>> print(sse)
+    [ 0  1  1  2 -1]
+    >>> print(SecondaryStructure.to_symbols(sse))
+    ['c' 'a' 'a' 'b' '']
+    >>> print(SecondaryStructure.HELIX.symbol)
+    a
+    >>> print(SecondaryStructure.from_symbol("b").name)
+    STRAND
+    """
+
+    NONE = -1
+    COIL = 0
+    HELIX = 1
+    STRAND = 2
+
+    @property
+    def symbol(self) -> str:
+        """
+        The one-letter symbol of the secondary structure element.
+
+        Returns
+        -------
+        symbol : str
+            The one-letter symbol.
+        """
+        return _SSE_SYMBOLS[self]
+
+    @classmethod
+    def from_symbol(cls, symbol: str) -> SecondaryStructure:
+        """
+        Get the secondary structure element from its one-letter symbol.
+
+        Parameters
+        ----------
+        symbol : str
+            The symbol.
+
+        Returns
+        -------
+        sse : SecondaryStructure
+            The corresponding secondary structure element.
+        """
+        for sse, sse_symbol in _SSE_SYMBOLS.items():
+            if sse_symbol == symbol:
+                return sse
+        raise ValueError(f"Unknown secondary structure symbol '{symbol}'")
+
+    @classmethod
+    def from_symbols(cls, symbols: ArrayLike) -> NDArray1[K, np.int_]:
+        """
+        Convert an array of one-letter symbols into an array of
+        secondary structure elements.
+
+        Parameters
+        ----------
+        symbols : array-like, shape=(k,), dtype=str
+            The symbols.
+
+        Returns
+        -------
+        sse : ndarray, shape=(k,), dtype=int
+            The corresponding secondary structure elements.
+        """
+        return _symbols_to_values(_SSE_SYMBOLS, symbols)
+
+    @classmethod
+    def to_symbols(cls, sse: ArrayLike) -> NDArray1[K, np.str_]:
+        """
+        Convert an array of secondary structure elements into an array
+        of one-letter symbols.
+
+        Parameters
+        ----------
+        sse : array-like, shape=(k,), dtype=int
+            The secondary structure elements.
+
+        Returns
+        -------
+        symbols : ndarray, shape=(k,), dtype=str
+            The corresponding symbols.
+        """
+        return _values_to_symbols(_SSE_SYMBOLS, sse)
+
+
+_E = TypeVar("_E", bound=IntEnum)
+
+_SSE_SYMBOLS = {
+    SecondaryStructure.NONE: "",
+    SecondaryStructure.COIL: "c",
+    SecondaryStructure.HELIX: "a",
+    SecondaryStructure.STRAND: "b",
+}
+
+
+def _symbols_to_values(
+    symbol_dict: dict[_E, str], symbols: ArrayLike
+) -> NDArray1[K, np.int_]:
+    """
+    Convert an array of symbols into an array of the corresponding enum values
+    using the given mapping.
+    """
+    symbols = np.asarray(symbols, dtype=str)
+    values = np.zeros(symbols.shape, dtype=int)
+    known = np.zeros(symbols.shape, dtype=bool)
+    for value, symbol in symbol_dict.items():
+        mask = symbols == symbol
+        values[mask] = value
+        known |= mask
+    if not known.all():
+        unknown = np.unique(symbols[~known]).tolist()
+        raise ValueError(f"Unknown symbols {unknown}")
+    return values  # pyright: ignore[reportReturnType]
+
+
+def _values_to_symbols(
+    symbol_dict: dict[_E, str], values: ArrayLike
+) -> NDArray1[K, np.str_]:
+    """
+    Convert an array of enum values into an array of the corresponding symbols
+    using the given mapping.
+    """
+    values = np.asarray(values, dtype=int)
+    symbols = np.zeros(values.shape, dtype="U1")
+    known = np.zeros(values.shape, dtype=bool)
+    for value, symbol in symbol_dict.items():
+        mask = values == value
+        symbols[mask] = symbol
+        known |= mask
+    if not known.all():
+        unknown = np.unique(values[~known]).tolist()
+        raise ValueError(f"Unknown values {unknown}")
+    return symbols  # pyright: ignore[reportReturnType]
+
+
+def annotate_sse(atom_array: AtomArray[N]) -> NDArray1[K, np.int_]:
     r"""
     Calculate the secondary structure elements (SSEs) of a
     peptide chain based on the `P-SEA` algorithm.
@@ -43,19 +200,18 @@ def annotate_sse(atom_array: AtomArray[N]) -> NDArray1[K, np.str_]:
     ----------
     atom_array : AtomArray
         The atom array to annotate for.
-        Non-peptide residues are also allowed and obtain a ``''``
-        SSE.
+        Non-peptide residues are also allowed and obtain
+        :attr:`SecondaryStructure.NONE`.
 
     Returns
     -------
-    sse : ndarray
-        An array containing the secondary structure elements,
+    sse : ndarray, dtype=int
+        An array containing the secondary structure elements as
+        :class:`SecondaryStructure` values,
         where the index corresponds to a residue of  `atom_array`
         (see e.g. :func:`get_residues()`).
-        ``'a'`` means :math:`{\alpha}`-helix, ``'b'`` means
-        :math:`{\beta}`-strand/sheet, ``'c'`` means coil.
-        ``''`` indicates that a residue is not an amino acid or it
-        comprises no ``CA`` atom.
+        :attr:`SecondaryStructure.NONE` indicates that a residue is not
+        an amino acid or it comprises no ``CA`` atom.
 
     Notes
     -----
@@ -76,8 +232,9 @@ def annotate_sse(atom_array: AtomArray[N]) -> NDArray1[K, np.str_]:
 
     >>> sse = annotate_sse(atom_array)
     >>> print(sse)
-    ['c' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'a' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c' 'c'
-     'c' 'c']
+    [0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0]
+    >>> print("".join(SecondaryStructure.to_symbols(sse)))
+    caaaaaaaaccccccccccc
     """
     residue_starts = get_residue_starts(atom_array)
     # Sort CA coord into the coord array at the respective residue index
@@ -95,10 +252,10 @@ def annotate_sse(atom_array: AtomArray[N]) -> NDArray1[K, np.str_]:
         # The number of atoms is too small #
         # to measure the distances/angles
         # -> Return an SSE array where each amino acid is 'coil'
-        sse = np.full(len(ca_coord), "c", dtype="U1")
+        sse = np.full(len(ca_coord), SecondaryStructure.COIL, dtype=int)
         # Residues where coord are NaN do not belong to amino acids
         # (or at least they have no CA)
-        sse[np.isnan(ca_coord).any(axis=-1)] = ""
+        sse[np.isnan(ca_coord).any(axis=-1)] = SecondaryStructure.NONE
         return sse  # pyright: ignore[reportReturnType]
 
     # Add virtual residues w/o CA coord at chain discontinuity indices
@@ -189,14 +346,14 @@ def annotate_sse(atom_array: AtomArray[N]) -> NDArray1[K, np.str_]:
     )
     strand_mask = _extend_region(strand_mask | short_strand_mask, relaxed_strand)
 
-    sse = np.full(length, "c", dtype="U1")
-    sse[helix_mask] = "a"
-    sse[strand_mask] = "b"
+    sse = np.full(length, SecondaryStructure.COIL, dtype=int)
+    sse[helix_mask] = SecondaryStructure.HELIX
+    sse[strand_mask] = SecondaryStructure.STRAND
     # Residues where coord are NaN do not belong to amino acids
     # (or at least they have no CA)
-    sse[np.isnan(ca_coord).any(axis=-1)] = ""
+    sse[np.isnan(ca_coord).any(axis=-1)] = SecondaryStructure.NONE
     # Remove SSE for virtual atoms and return
-    return sse[no_virtual_mask]
+    return sse[no_virtual_mask]  # pyright: ignore[reportReturnType]
 
 
 def _mask_consecutive(

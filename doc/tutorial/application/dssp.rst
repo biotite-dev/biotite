@@ -22,7 +22,7 @@ Let us demonstrate this on the example of the good old miniprotein *TC5b*.
     pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch("1l2y", "bcif", gettempdir()))
     atom_array = pdbx.get_structure(pdbx_file, model=1)
     sse = dssp.DsspApp().run(atom_array).result()
-    print("".join(sse))
+    print("".join(dssp.DsspElement.to_symbols(sse)))
 
 .. jupyter-output::
 

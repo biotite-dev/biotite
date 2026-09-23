@@ -20,7 +20,7 @@ def test_sse():
     ref_psea_file = fasta.FastaFile.read(data_dir("structure") / "psea.fasta")
 
     for pdb_id in ref_psea_file:
-        ref_sse = np.array(list(ref_psea_file[pdb_id]))
+        ref_sse = struc.SecondaryStructure.from_symbols(list(ref_psea_file[pdb_id]))
 
         atoms = pdbx.get_structure(
             pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / f"{pdb_id}.bcif"),
@@ -74,7 +74,7 @@ def test_sse_discontinuity(discont_pos):
     # In proximity of the discontinuity we expect 'coil'
     discont_proximity = np.zeros(len(ref_sse), dtype=bool)
     discont_proximity[discont_pos - 2 : discont_pos + 1] = True
-    assert (test_sse[discont_proximity] == "c").all()
+    assert (test_sse[discont_proximity] == struc.SecondaryStructure.COIL).all()
 
 
 @pytest.mark.parametrize(
@@ -98,5 +98,31 @@ def test_sse_non_peptide(file_name):
     # Project mask to residue level
     peptide_mask = peptide_mask[struc.get_residue_starts(atoms)]
 
-    assert np.all(np.isin(sse[peptide_mask], ["a", "b", "c"]))
-    assert np.all(sse[~peptide_mask] == "")
+    assert np.all(
+        np.isin(
+            sse[peptide_mask],
+            [
+                struc.SecondaryStructure.COIL,
+                struc.SecondaryStructure.HELIX,
+                struc.SecondaryStructure.STRAND,
+            ],
+        )
+    )
+    assert np.all(sse[~peptide_mask] == struc.SecondaryStructure.NONE)
+
+
+def test_symbol_conversion():
+    """
+    Converting :class:`SecondaryStructure` values to symbols and back
+    must restore the original values and unknown symbols must be
+    rejected.
+    """
+    ref_sse = np.array([sse.value for sse in struc.SecondaryStructure] * 3)
+    symbols = struc.SecondaryStructure.to_symbols(ref_sse)
+    assert struc.SecondaryStructure.from_symbols(symbols).tolist() == ref_sse.tolist()
+    for sse in struc.SecondaryStructure:
+        assert struc.SecondaryStructure.from_symbol(sse.symbol) == sse
+    with pytest.raises(ValueError):
+        struc.SecondaryStructure.from_symbols(["a", "x"])
+    with pytest.raises(ValueError):
+        struc.SecondaryStructure.from_symbol("x")

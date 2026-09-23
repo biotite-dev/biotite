@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-from biotite.application_v2.dssp import DsspApp
+from biotite.application_v2.dssp import DsspApp, DsspElement
 from tests.util import data_dir, is_not_installed
 
 
@@ -27,9 +27,23 @@ def test_annotation(pdb_id):
     atoms = atoms[struc.filter_amino_acids(atoms)]
     sse = DsspApp().run(atoms).result()
 
-    assert np.all(np.isin(sse, ["C", "H", "B", "E", "G", "I", "T", "S", "P"]))
+    assert np.all(np.isin(sse, list(DsspElement)))
     # One SSE per residue
     assert len(sse) == struc.get_residue_count(atoms)
+
+
+def test_symbol_conversion():
+    """
+    Converting :class:`DsspElement` values to symbols and back must
+    restore the original values and unknown symbols must be rejected.
+    """
+    ref_sse = np.array([sse.value for sse in DsspElement] * 3)
+    symbols = DsspElement.to_symbols(ref_sse)
+    assert DsspElement.from_symbols(symbols).tolist() == ref_sse.tolist()
+    for sse in DsspElement:
+        assert DsspElement.from_symbol(sse.symbol) == sse
+    with pytest.raises(ValueError):
+        DsspElement.from_symbols(["H", "x"])
 
 
 @pytest.mark.skipif(is_not_installed("mkdssp"), reason="DSSP is not installed")

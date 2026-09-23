@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-from biotite.application.dssp import DsspApp
+from biotite.application.dssp import DsspApp, DsspElement
 from tests.util import data_dir, is_not_installed
 
 
@@ -26,7 +26,7 @@ def test_annotation(pdb_id):
     atoms = atoms[struc.filter_amino_acids(atoms)]
     sse = DsspApp.annotate_sse(atoms)
 
-    assert np.all(np.isin(sse, ["C", "H", "B", "E", "G", "I", "T", "S", "P"]))
+    assert np.all(np.isin(sse, list(DsspElement)))
     # One SSE per residue
     assert len(sse) == struc.get_residue_count(atoms)
 
