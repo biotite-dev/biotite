@@ -47,8 +47,8 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 import biotite
-import biotite.application_v2.clustalo as clustalo
-import biotite.application_v2.mmseqs as mmseqs
+import biotite.application.clustalo as clustalo
+import biotite.application.mmseqs as mmseqs
 import biotite.database.rcsb as rcsb
 import biotite.sequence.align as align
 import biotite.sequence.graphics as graphics

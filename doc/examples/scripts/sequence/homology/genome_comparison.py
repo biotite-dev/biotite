@@ -36,7 +36,7 @@ import numpy as np
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import MultipleLocator
 import biotite
-import biotite.application_v2.tantan as tantan
+import biotite.application.tantan as tantan
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align

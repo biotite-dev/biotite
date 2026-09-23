@@ -4,7 +4,7 @@ ecosystem.
 Its purpose is to convert between native Biotite objects, such as :class:`.AtomArray`
 and :class:`.Sequence`, and the corresponding objects in the respective interfaced
 package.
-In contrast to :mod:`biotite.application_v2`, where an entire application run is handled
+In contrast to :mod:`biotite.application`, where an entire application run is handled
 under the hood, :mod:`biotite.interface` only covers the object conversion, allowing
 for more flexibility.
 """

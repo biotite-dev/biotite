@@ -79,7 +79,7 @@ It allows searching for database entries by specifying and combining criteria
 in a *Pythonic* way and thereby conceals the complexity of the underlying REST
 API of the database.
 
-The :mod:`biotite.application_v2` subpackage extends the repertoire of
+The :mod:`biotite.application` subpackage extends the repertoire of
 *Biotite*'s analysis functions with interfaces for external software, such as
 *Clustal Omega* or *MMseqs2*.
 The interfaces are seamless:

@@ -8,7 +8,7 @@ from itertools import repeat
 from typing import Any
 import numpy as np
 from matplotlib.axes import Axes
-from biotite.application_v2.viennarna import PlotApp
+from biotite.application.viennarna import PlotApp
 from biotite.structure import pseudoknots
 from biotite.typing import C2, K, MplColor, NDArray1, NDArray2
 
@@ -41,7 +41,7 @@ def plot_nucleotide_secondary_structure(
     interface to *RNAplot*, which is part of the *ViennaRNA* software
     package.
 
-    Internally a :class:`biotite.application_v2.viennarna.PlotApp`
+    Internally a :class:`biotite.application.viennarna.PlotApp`
     instance is created to generate coordinates for each individual base
     on a 2D plane. *ViennaRNA* must be installed in order to use this
     function.

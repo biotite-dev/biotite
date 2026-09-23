@@ -54,7 +54,7 @@ import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.lines import Line2D
 import biotite
-import biotite.application_v2.sra as sra
+import biotite.application.sra as sra
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align

@@ -3,12 +3,12 @@
 Molecular docking
 =================
 
-.. currentmodule:: biotite.application_v2.autodock
+.. currentmodule:: biotite.application.autodock
 
 *AutoDock Vina* predicts how a small molecule, the *ligand*, binds to a
 protein, the *receptor*.
 It is interfaced by the :class:`VinaApp` in the
-:mod:`biotite.application_v2.autodock` subpackage.
+:mod:`biotite.application.autodock` subpackage.
 Let's dock biotin into its famous binding partner streptavidin.
 As we would like to check how well the docking works, we download a
 high-resolution crystal structure of the complex, which we split into the
@@ -55,7 +55,7 @@ reference ligand, which we would not know for an unknown complex.
 
 .. jupyter-execute::
 
-    import biotite.application_v2.autodock as autodock
+    import biotite.application.autodock as autodock
 
     app = autodock.VinaApp()
     result = app.run(

@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
-import biotite.application_v2.muscle as muscle
+import biotite.application.muscle as muscle
 import biotite.sequence as seq
 import biotite.sequence.align as align
-from biotite.application_v2 import VersionError
+from biotite.application import VersionError
 from tests.util import is_not_installed
 
 

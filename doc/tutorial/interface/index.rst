@@ -11,7 +11,7 @@ Connecting the ecosystem - The ``interface`` subpackage
 
 .. currentmodule:: biotite.interface
 
-In the last section we learned that :mod:`biotite.application_v2` encapsulates
+In the last section we learned that :mod:`biotite.application` encapsulates
 entire external application runs into a single method call.
 In contrast :mod:`biotite.interface` provides flexible interfaces to other Python
 packages in the bioinformatics ecosystem.
@@ -25,7 +25,7 @@ For example, the interface to ``rdkit`` is placed in the subpackage
 
 .. note::
 
-    Like in :mod:`biotite.application_v2`, the interfaced Python packages are
+    Like in :mod:`biotite.application`, the interfaced Python packages are
     not dependencies of the ``biotite`` package.
     Hence, they need to be installed separately.
 

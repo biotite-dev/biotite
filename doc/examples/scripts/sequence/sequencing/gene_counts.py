@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 import requests
 import biotite
-import biotite.application_v2.sra as sra
+import biotite.application.sra as sra
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.sequence.io.fasta as fasta

@@ -3,12 +3,12 @@
 Multiple sequence alignments
 ============================
 
-.. currentmodule:: biotite.application_v2.muscle
+.. currentmodule:: biotite.application.muscle
 
-The :mod:`biotite.application_v2` subpackage provides interfaces to various
+The :mod:`biotite.application` subpackage provides interfaces to various
 *multiple sequence alignments* (MSAs) programs.
 For our example we choose the software MUSCLE:
-The subpackage :mod:`biotite.application_v2.muscle` contains the class
+The subpackage :mod:`biotite.application.muscle` contains the class
 :class:`Muscle3App` that does the job.
 First we get some homologous input sequences from *NCBI Entrez*.
 
@@ -38,7 +38,7 @@ the :class:`Muscle3Result`.
 
 .. jupyter-execute::
 
-    import biotite.application_v2.muscle as muscle
+    import biotite.application.muscle as muscle
 
     app = muscle.Muscle3App()
     result = app.run(sequences).result()
@@ -68,12 +68,12 @@ Variety of MSA software
 -----------------------
 The alternatives to MUSCLE are Clustal Omega and MAFFT.
 To use them, simply replace :class:`Muscle3App` with
-:class:`~biotite.application_v2.clustalo.ClustalOmegaApp` or
-:class:`~biotite.application_v2.mafft.MafftApp`.
+:class:`~biotite.application.clustalo.ClustalOmegaApp` or
+:class:`~biotite.application.mafft.MafftApp`.
 
 .. jupyter-execute::
 
-    import biotite.application_v2.clustalo as clustalo
+    import biotite.application.clustalo as clustalo
 
     alignment = clustalo.ClustalOmegaApp().run(sequences).result().alignment
     print(alignment)
@@ -91,7 +91,7 @@ Let's show this on the example of a nonsense alphabet.
 .. jupyter-execute::
 
     import numpy as np
-    import biotite.application_v2.mafft as mafft
+    import biotite.application.mafft as mafft
     import biotite.sequence as seq
     import biotite.sequence.align as align
 

@@ -10,7 +10,7 @@
         ]
     },
 
-    "biotite.application_v2.viennarna" : {
+    "biotite.application.viennarna" : {
         "Application interfaces" : [
             "FoldApp",
             "SuboptApp",

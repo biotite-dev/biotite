@@ -32,7 +32,7 @@ dependencies:
   - numpydoc =1.8.0
   - pyright =1.1.409
   - taplo =0.9.3
-  # Interfaced software in biotite.application_v2 (can also be installed separately)
+  # Interfaced software in biotite.application (can also be installed separately)
   - vina
   - clustalo
   - dssp =4
