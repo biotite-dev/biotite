@@ -6,15 +6,29 @@ import biotite.sequence.phylo as phylo
 from biotite.application import VersionError
 from biotite.application.clustalo import ClustalOmegaApp
 from biotite.application.mafft import MafftApp
-from biotite.application.muscle import Muscle5App, MuscleApp
+from biotite.application.muscle import Muscle3App, Muscle5App
 from tests.util import is_not_installed
 
+# Each implemented MSA `LocalApp` together with the name of its executable
 BIN_PATH = {
-    MuscleApp: "muscle",
+    Muscle3App: "muscle",
     Muscle5App: "muscle",
     MafftApp: "mafft",
     ClustalOmegaApp: "clustalo",
 }
+
+
+def _app_or_skip(app_class):
+    """
+    Return an MSA app instance or skip the test if it is not available.
+    """
+    bin_path = BIN_PATH[app_class]
+    if is_not_installed(bin_path):
+        pytest.skip(f"'{bin_path}' is not installed")
+    try:
+        return app_class(bin_path)
+    except VersionError:
+        pytest.skip("Invalid software version")
 
 
 @pytest.fixture
@@ -26,15 +40,15 @@ def sequences():
 
 
 @pytest.mark.parametrize(
-    ["app_cls", "exp_ali", "exp_order"],
+    ["app_class", "exp_ali", "exp_order"],
     [
         (
-            MuscleApp,
+            Muscle3App,
             "BIQT-ITE\n"
             "TITANITE\n"
             "BISM-ITE\n"
             "-IQL-ITE",
-            [1, 2, 0, 3]
+            [1, 2, 0, 3],
         ),
         (
             Muscle5App,
@@ -42,7 +56,7 @@ def sequences():
             "TITANITE\n"
             "BI-SMITE\n"
             "-I-QLITE",
-            [1, 3, 0, 2]
+            [1, 3, 0, 2],
         ),
         (
             MafftApp,
@@ -50,7 +64,7 @@ def sequences():
             "TITANITE\n"
             "-BISMITE\n"
             "--IQLITE",
-            [0, 3, 2, 1]
+            [0, 3, 2, 1],
         ),
         (
             ClustalOmegaApp,
@@ -58,86 +72,49 @@ def sequences():
             "TITANITE\n"
             "-BISMITE\n"
             "--IQLITE",
-            [1, 2, 0, 3]
-        )
-    ]
+            [1, 2, 0, 3],
+        ),
+    ],
+    ids=lambda value: value.__name__ if isinstance(value, type) else None,
 )  # fmt: skip
-def test_msa(sequences, app_cls, exp_ali, exp_order):
+def test_msa(sequences, app_class, exp_ali, exp_order):
     """
-    Test MSA software on short toy sequences with known alignment
+    Test the MSA software on short toy sequences with known alignment
     result.
     """
-    bin_path = BIN_PATH[app_cls]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
+    app = _app_or_skip(app_class)
 
-    try:
-        app = app_cls(sequences)
-    except VersionError:
-        pytest.skip("Invalid software version")
-    app.start()
-    app.join()
-    alignment = app.get_alignment()
-    order = app.get_alignment_order()
-    assert str(alignment) == exp_ali
-    assert order.tolist() == exp_order
+    result = app.run(sequences).result()
+    assert str(result.alignment) == exp_ali
+    assert result.order.tolist() == exp_order
 
 
-@pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])
-def test_large_sequence_number(app_cls):
+@pytest.mark.parametrize("app_class", [Muscle3App, MafftApp, ClustalOmegaApp])
+def test_large_sequence_number(app_class):
     """
-    Test MSA software on large number of sequences.
+    Test MSA software on a large number of (identical) sequences.
     The quality of the MSA is not evaluated here, therefore identical
-    sequences are used
+    sequences are used.
     """
     SEQ_LENGTH = 50
     SEQ_NUMBER = 100
 
-    bin_path = BIN_PATH[app_cls]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
+    app = _app_or_skip(app_class)
 
-    # Create random sequence
     sequence = seq.ProteinSequence()
     sequence.code = np.random.default_rng().integers(20, size=SEQ_LENGTH)
-    # Use identical sequences
     sequences = [sequence] * SEQ_NUMBER
 
-    try:
-        app = app_cls(sequences)
-    except VersionError:
-        pytest.skip("Invalid software version")
-    app.start()
-    app.join()
-    alignment = app.get_alignment()
+    result = app.run(sequences).result()
     # Expect completely matching sequences
-    assert alignment.trace.tolist() == [[i] * SEQ_NUMBER for i in range(SEQ_LENGTH)]
+    assert result.alignment.trace.tolist() == [
+        [i] * SEQ_NUMBER for i in range(SEQ_LENGTH)
+    ]
 
 
-def test_additional_options(sequences):
-    bin_path = BIN_PATH[ClustalOmegaApp]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
-
-    app1 = ClustalOmegaApp(sequences)
-    app1.start()
-
-    app2 = ClustalOmegaApp(sequences)
-    app2.add_additional_options(["--full"])
-    app2.start()
-
-    app1.join()
-    app2.join()
-    assert "--full" not in app1.get_command()
-    assert "--full" in app2.get_command()
-    assert app1.get_alignment() == app2.get_alignment()
-
-
-@pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp])
-def test_custom_substitution_matrix(sequences, app_cls):
-    bin_path = BIN_PATH[app_cls]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
+@pytest.mark.parametrize("app_class", [Muscle3App, MafftApp])
+def test_custom_substitution_matrix(sequences, app_class):
+    app = _app_or_skip(app_class)
 
     alph = seq.ProteinSequence.alphabet
     # Strong identity matrix
@@ -149,23 +126,15 @@ def test_custom_substitution_matrix(sequences, app_cls):
         "BI-SMITE\n"
         "-I-QLITE"
     )  # fmt: skip
-    try:
-        app = app_cls(sequences, matrix=matrix)
-    except VersionError:
-        pytest.skip("Invalid software version")
-    app.start()
-    app.join()
-    alignment = app.get_alignment()
-    assert str(alignment) == exp_ali
+    result = app.run(sequences, matrix=matrix).result()
+    assert str(result.alignment) == exp_ali
 
 
 # Ignore warnings about missing tree output in MUSCLE
 @pytest.mark.filterwarnings("ignore")
-@pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp])
-def test_custom_sequence_type(app_cls):
-    bin_path = BIN_PATH[app_cls]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
+@pytest.mark.parametrize("app_class", [Muscle3App, MafftApp])
+def test_custom_sequence_type(app_class):
+    app = _app_or_skip(app_class)
 
     alph = seq.Alphabet(("foo", "bar", 42))
     sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
@@ -187,26 +156,19 @@ def test_custom_sequence_type(app_cls):
     score_matrix[score_matrix == 0] = -1000
     score_matrix[score_matrix == 1] = 1000
     matrix = align.SubstitutionMatrix(alph, alph, score_matrix)
-    try:
-        app = app_cls(sequences, matrix=matrix)
-    except VersionError:
-        pytest.skip("Invalid software version")
-    app.start()
-    app.join()
-    alignment = app.get_alignment()
-    assert alignment.sequences == sequences
-    assert alignment.trace.tolist() == exp_trace
+
+    result = app.run(sequences, matrix=matrix).result()
+    assert result.alignment.sequences == sequences
+    assert result.alignment.trace.tolist() == exp_trace
 
 
-@pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])
-def test_invalid_sequence_type_no_matrix(app_cls):
+@pytest.mark.parametrize("app_class", [Muscle3App, MafftApp, ClustalOmegaApp])
+def test_invalid_sequence_type_no_matrix(app_class):
     """
     A custom substitution matrix is required for normally unsupported
     sequence types.
     """
-    bin_path = BIN_PATH[app_cls]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
+    app = _app_or_skip(app_class)
 
     alph = seq.Alphabet(("foo", "bar", 42))
     sequences = [seq.GeneralSequence(alph, sequence) for sequence in [
@@ -214,21 +176,16 @@ def test_invalid_sequence_type_no_matrix(app_cls):
         ["foo",        42, "foo", "bar", "foo", 42, 42],
     ]]  # fmt: skip
     with pytest.raises(TypeError):
-        try:
-            app_cls(sequences)
-        except VersionError:
-            pytest.skip("Invalid software version")
+        app.run(sequences)
 
 
-@pytest.mark.parametrize("app_cls", [MuscleApp, MafftApp, ClustalOmegaApp])
-def test_invalid_sequence_type_unsuitable_alphabet(app_cls):
+@pytest.mark.parametrize("app_class", [Muscle3App, MafftApp, ClustalOmegaApp])
+def test_invalid_sequence_type_unsuitable_alphabet(app_class):
     """
     The alphabet of the custom sequence type cannot be longer than the
     amino acid alphabet.
     """
-    bin_path = BIN_PATH[app_cls]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
+    app = _app_or_skip(app_class)
 
     alph = seq.Alphabet(range(50))
     sequences = [
@@ -239,120 +196,89 @@ def test_invalid_sequence_type_unsuitable_alphabet(app_cls):
         ]
     ]
     with pytest.raises(TypeError):
-        try:
-            app_cls(sequences)
-        except VersionError:
-            pytest.skip("Invalid software version")
+        app.run(sequences)
 
 
-def test_invalid_muscle_version(sequences):
+def test_invalid_muscle_version():
     """
-    One of `MuscleApp` and `Muscle5App` should raise an error, since one
-    is incompatible with the installed version
+    One of `Muscle3App` and `Muscle5App` raises an error, since one is
+    incompatible with the installed version.
     """
-    bin_path = BIN_PATH[MuscleApp]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
-
     if is_not_installed("muscle"):
         pytest.skip("'muscle' is not installed")
 
     with pytest.raises(VersionError):
-        MuscleApp(sequences)
-        Muscle5App(sequences)
+        Muscle3App("muscle")
+        Muscle5App("muscle")
 
 
-def test_clustalo_matrix(sequences):
-    bin_path = BIN_PATH[ClustalOmegaApp]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
+def test_muscle3_tree(sequences):
+    """
+    MUSCLE 3 provides both guide trees.
+    """
+    app = _app_or_skip(Muscle3App)
 
-    ref_matrix = [
-        [0, 1, 2, 3],
-        [1, 0, 1, 2],
-        [2, 1, 0, 1],
-        [3, 2, 1, 0]
-    ]  # fmt: skip
-    app = ClustalOmegaApp(sequences)
-    app.full_matrix_calculation()
-    app.set_distance_matrix(np.array(ref_matrix))
-    app.start()
-    app.join()
-    test_matrix = app.get_distance_matrix()
-    assert np.allclose(ref_matrix, test_matrix)
+    result = app.run(sequences).result()
+    assert result.guide_tree_kmer is not None
+    assert result.guide_tree_identity is not None
 
 
-def test_clustalo_tree(sequences):
-    bin_path = BIN_PATH[ClustalOmegaApp]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
+def test_muscle3_gap_penalty(sequences):
+    """
+    Setting a gap penalty is reflected in the executed command and still
+    yields a valid alignment.
+    """
+    app = _app_or_skip(Muscle3App)
 
-    tree = phylo.from_newick("((0:1.0,1:1.0):3.5,(2:2.5,3:2.5):2.0);")
-    # You cannot simultaneously set and get a tree in ClustalOmega
-    # -> Test whether both is possible in separate calls
-    app = ClustalOmegaApp(sequences)
-    app.set_guide_tree(tree)
-    app.start()
-    app.join()
-
-    app = ClustalOmegaApp(sequences)
-    app.start()
-    app.join()
-    assert app.get_guide_tree() is not None
+    future = app.run(sequences, gap_penalty=(-12, -1))
+    assert "-gapopen" in future.command
+    assert "-gapextend" in future.command
+    alignment = future.result().alignment
+    assert len(alignment.sequences) == len(sequences)
 
 
 def test_mafft_tree(sequences):
-    bin_path = BIN_PATH[MafftApp]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
+    """
+    MAFFT provides a guide tree.
+    """
+    app = _app_or_skip(MafftApp)
 
-    app = MafftApp(sequences)
-    app.start()
-    app.join()
-    tree = app.get_guide_tree()
-    assert tree is not None
+    result = app.run(sequences).result()
+    assert result.guide_tree is not None
 
 
-def test_muscle_tree(sequences):
-    bin_path = BIN_PATH[MuscleApp]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
+def test_clustalo_matrix(sequences):
+    """
+    Clustal-Omega returns the distance matrix when the full matrix
+    calculation is used.
+    """
+    app = _app_or_skip(ClustalOmegaApp)
 
-    try:
-        app = MuscleApp(sequences)
-    except VersionError:
-        pytest.skip("Invalid software version")
-    app.start()
-    app.join()
-    tree1 = app.get_guide_tree(iteration="kmer")
-    tree2 = app.get_guide_tree(iteration="identity")
-    assert tree1 is not None
-    assert tree2 is not None
+    ref_matrix = np.array([
+        [0, 1, 2, 3],
+        [1, 0, 1, 2],
+        [2, 1, 0, 1],
+        [3, 2, 1, 0],
+    ], dtype=float)  # fmt: skip
+    result = app.run(
+        sequences, distance_matrix=ref_matrix, use_full_matrix=True
+    ).result()
+    assert np.allclose(ref_matrix, result.distance_matrix)
 
 
-def test_muscle5_options(sequences):
-    bin_path = BIN_PATH[Muscle5App]
-    if is_not_installed(bin_path):
-        pytest.skip(f"'{bin_path}' is not installed")
+def test_clustalo_tree(sequences):
+    """
+    Clustal-Omega accepts a guide tree as input and provides one as
+    output.
+    """
+    app = _app_or_skip(ClustalOmegaApp)
 
-    try:
-        app = Muscle5App(sequences)
-    except VersionError:
-        pytest.skip("Invalid software version")
-    app.use_super5()
-    app.set_iterations(2, 100)
-    app.set_thread_number(2)
-    app.start()
+    tree = phylo.from_newick("((0:1.0,1:1.0):3.5,(2:2.5,3:2.5):2.0);")
 
-    assert "-super5" in app.get_command()
-    assert "-consiters" in app.get_command()
-    assert "-refineiters" in app.get_command()
-    assert "-threads" in app.get_command()
+    # A guide tree can be provided as input
+    result_with_tree = app.run(sequences, guide_tree=tree).result()
+    assert result_with_tree.guide_tree is tree
 
-    app.join()
-    assert str(app.get_alignment()) == (
-        "BI-QTITE\n" \
-        "TITANITE\n" \
-        "BI-SMITE\n" \
-        "-I-QLITE"
-    )  # fmt: skip
+    # A guide tree is provided as output
+    result_without_tree = app.run(sequences).result()
+    assert result_without_tree.guide_tree is not None

@@ -1,56 +1,46 @@
 import pytest
-from biotite.application.sra import FastaDumpApp, FastqDumpApp
+from biotite.application.sra import FastqDumpApp, PrefetchApp
 from biotite.sequence.io.fasta import FastaFile
 from biotite.sequence.io.fastq import FastqFile
 from tests.util import is_not_installed
 
+# Small dataset for low server impact
+UID = "ERR11344941"
+
 
 @pytest.mark.skipif(
     is_not_installed("fasterq-dump"), reason="sra-tools is not installed"
 )
-@pytest.mark.parametrize("app_class", [FastqDumpApp, FastaDumpApp])
-@pytest.mark.parametrize("custom_prefix", [False, True])
-def test_objects(app_class, custom_prefix, tmp_path):
+@pytest.mark.parametrize("mode", ["fastq", "fasta"])
+@pytest.mark.parametrize("use_prefetch", [False, True])
+def test_dump(mode, use_prefetch):
     """
-    Test return types of methods from the respective `Application` class.
+    Test the dump application in both modes, with and without a preceding
+    prefetch.
     """
-    # Small dataset for low server impact
-    UID = "ERR11344941"
-
-    prefix = str(tmp_path / "test_fastq") if custom_prefix else None
-    app = app_class(UID, output_path_prefix=prefix)
-    app.start()
-    app.join()
-
-    for sequences in app.get_sequences():
-        assert isinstance(sequences, dict)
-
-    if app_class == FastqDumpApp:
-        for sequences_and_scores in app.get_sequences_and_scores():
-            assert isinstance(sequences_and_scores, dict)
-
-    if app_class == FastqDumpApp:
-        for fastq_file in app.get_fastq():
-            assert isinstance(fastq_file, FastqFile)
+    if use_prefetch:
+        prefetch = PrefetchApp().run(UID).result()
     else:
-        for fasta_file in app.get_fasta():
-            assert isinstance(fasta_file, FastaFile)
+        prefetch = None
 
+    app = FastqDumpApp()
+    if mode == "fastq":
+        result = app.extract_fastq(UID, prefetch).result()
+        expected_file_type = FastqFile
+    else:
+        result = app.extract_fasta(UID, prefetch).result()
+        expected_file_type = FastaFile
 
-@pytest.mark.skipif(
-    is_not_installed("fasterq-dump"), reason="sra-tools is not installed"
-)
-@pytest.mark.parametrize("app_class", [FastqDumpApp, FastaDumpApp])
-@pytest.mark.parametrize("custom_prefix", [False, True])
-def test_classmethod(app_class, custom_prefix, tmp_path):
-    """
-    Test return types of the `fetch()` class method.
-    """
-    UID = "ERR11344941"
+    # The result stores only the file paths; everything else is lazy
+    assert len(result.file_paths) > 0
+    for path in result.file_paths:
+        assert path.is_file()
 
-    prefix = str(tmp_path / "test_fastq") if custom_prefix else None
-
-    sequences = app_class.fetch(UID, output_path_prefix=prefix)
-
-    for sequences in sequences:
+    for file in result.get_files():
+        assert isinstance(file, expected_file_type)
+    for sequences in result.get_sequences():
         assert isinstance(sequences, dict)
+
+    if mode == "fastq":
+        for sequences_and_scores in result.get_sequences_and_scores():
+            assert isinstance(sequences_and_scores, dict)

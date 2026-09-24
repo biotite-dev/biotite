@@ -77,11 +77,11 @@ class EValueEstimator:
     database.
 
     >>> # Ensure deterministic results
-    >>> np.random.seed(0)
+    >>> rng = np.random.default_rng(0)
     >>> # Sequences in database have a GC content of 0.6
     >>> background = np.array([0.2, 0.3, 0.3, 0.2])
     >>> estimator = EValueEstimator.from_samples(
-    ...     query.alphabet, matrix, gap_penalty, background, sample_length=100
+    ...     query.alphabet, matrix, gap_penalty, background, sample_length=100, rng=rng
     ... )
 
     Approach 1: Calculate E-value based on number of sequences in the
@@ -89,14 +89,14 @@ class EValueEstimator:
 
     >>> log_e = estimator.log_evalue(alignment.score, len(query), 100 * len(hit))
     >>> print(f"E-value = {10**log_e:.2e}")
-    E-value = 3.36e-01
+    E-value = 3.41e-01
 
     Approach 2: Calculate E-value based on total length of all sequences
     in the hypothetical database combined (*10000*).
 
     >>> log_e = estimator.log_evalue(alignment.score, len(query), 10000)
     >>> print(f"E-value = {10**log_e:.2e}")
-    E-value = 8.41e-01
+    E-value = 8.53e-01
     """
 
     def __init__(self, lam: float, k: float) -> None:
@@ -111,6 +111,7 @@ class EValueEstimator:
         frequencies: NDArray1[K, np.floating],
         sample_length: int = 1000,
         sample_size: int = 1000,
+        rng: np.random.Generator | None = None,
     ) -> EValueEstimator:
         r"""
         Create an :class:`EValueEstimator` with :math:`\lambda` and
@@ -145,6 +146,11 @@ class EValueEstimator:
             The number of sampled sequences.
             The accuracy of the estimated parameters and E-values,
             but also the runtime increases with the sample size.
+        rng : numpy.random.Generator, optional
+            The random number generator used to sample the random
+            sequences.
+            Provide a seeded generator to obtain reproducible results.
+            By default a new unseeded generator is used.
 
         Returns
         -------
@@ -154,12 +160,14 @@ class EValueEstimator:
 
         Notes
         -----
-        The sampling process generates random sequences based on
-        ``numpy.random``.
-        To ensure reproducible results you could call
-        :func:`numpy.random.seed()` before running
-        :meth:`from_samples()`.
+        The sampling process generates random sequences using the
+        given `rng`.
+        To ensure reproducible results provide a seeded
+        :class:`numpy.random.Generator`, e.g. from
+        :func:`numpy.random.default_rng()`.
         """
+        if rng is None:
+            rng = np.random.default_rng()
         if len(frequencies) != len(alphabet):
             raise IndexError(
                 f"Background frequencies for {len(frequencies)} symbols were "
@@ -190,7 +198,7 @@ class EValueEstimator:
             )
 
         # Generate the sequence code for the random sequences
-        random_sequence_code = np.random.choice(
+        random_sequence_code = rng.choice(
             len(alphabet), size=(sample_size, 2, sample_length), p=frequencies
         )
 

@@ -29,19 +29,30 @@ def test_file_access():
     file.
     """
     gb_file = gb.GenBankFile()
-    gb_file.append("SOMEFIELD", ["Some content", "some other content"])
-    gb_file.insert(0, "OTHERFIELD", ["Additional content"])
-    assert gb_file[1] == ("SOMEFIELD", ["Some content", "some other content"], {})
-    gb_file[1] = "NEWFIELD", ["Extra content"], {"SUBFIELD": ["L 1", "L 2"]}
-    gb_file.append("THIRDFIELD", ["Supplementary content"])
+    gb_file.append(
+        gb.GenBankRecord("SOMEFIELD", ["Some content", "some other content"])
+    )
+    gb_file.insert(0, gb.GenBankRecord("OTHERFIELD", ["Additional content"]))
+    assert gb_file[1] == gb.GenBankRecord(
+        "SOMEFIELD", ["Some content", "some other content"], {}
+    )
+    gb_file[1] = gb.GenBankRecord(
+        "NEWFIELD", ["Extra content"], {"SUBFIELD": ["L 1", "L 2"]}
+    )
+    gb_file.append(gb.GenBankRecord("THIRDFIELD", ["Supplementary content"]))
     assert len(gb_file) == 3
-    assert gb_file[0] == ("OTHERFIELD", ["Additional content"], {})
+    assert gb_file[0] == gb.GenBankRecord("OTHERFIELD", ["Additional content"], {})
     del gb_file[0]
-    assert gb_file[0] == ("NEWFIELD", ["Extra content"], {"SUBFIELD": ["L 1", "L 2"]})
+    assert gb_file[0] == gb.GenBankRecord(
+        "NEWFIELD", ["Extra content"], {"SUBFIELD": ["L 1", "L 2"]}
+    )
     del gb_file[0]
-    assert gb_file[0] == ("THIRDFIELD", ["Supplementary content"], {})
+    assert gb_file[0] == gb.GenBankRecord("THIRDFIELD", ["Supplementary content"], {})
     del gb_file[0]
     assert len(gb_file) == 0
+    with pytest.raises(TypeError):
+        # Only records are accepted
+        gb_file.append(("SOMEFIELD", ["Some content"], {}))
 
 
 @pytest.mark.parametrize(
@@ -59,8 +70,8 @@ def test_conversion_lowlevel(path):
     ref_parsed_fields = [field for field in gb_file]
 
     gb_file = gb.GenBankFile()
-    for name, content, subfields in ref_parsed_fields:
-        gb_file.append(name, content, subfields)
+    for record in ref_parsed_fields:
+        gb_file.append(record)
     temp = TemporaryFile("w+")
     gb_file.write(temp)
 
@@ -89,7 +100,7 @@ def test_conversion_highlevel(path):
     ref_annot_seq = gb.get_annotated_sequence(gb_file, format=suffix)
 
     gb_file = gb.GenBankFile()
-    gb.set_locus(gb_file, *ref_locus)
+    gb.set_locus(gb_file, ref_locus)
     gb.set_annotated_sequence(gb_file, ref_annot_seq)
     temp = TemporaryFile("w+")
     gb_file.write(temp)
@@ -111,7 +122,7 @@ def test_genbank_utility_gb():
     content of a known GenBank file.
     """
     gb_file = gb.GenBankFile.read(data_dir("sequence") / "ec_bl21.gb")
-    assert gb.get_locus(gb_file) == (
+    assert gb.get_locus(gb_file) == gb.GenBankLocus(
         "CP001509",
         4558953,
         "DNA",
@@ -153,7 +164,9 @@ def test_genbank_utility_gp():
     """
     gp_file = gb.GenBankFile.read(data_dir("sequence") / "bt_lysozyme.gp")
     # [print(e) for e in gp_file._field_pos]
-    assert gb.get_locus(gp_file) == ("AAC37312", 147, None, False, "MAM", "27-APR-1993")
+    assert gb.get_locus(gp_file) == gb.GenBankLocus(
+        "AAC37312", 147, None, False, "MAM", "27-APR-1993"
+    )
     assert gb.get_definition(gp_file) == "lysozyme [Bos taurus]."
     assert gb.get_version(gp_file) == "AAC37312.1"
     assert gb.get_gi(gp_file) == 163334
@@ -192,7 +205,7 @@ def test_multi_file():
     [
         (
             "AJ311647LOOOOOOOOOOOOOOOOOOOOOOOOOONGID                1224 bp    DNA     linear   VRT 14-NOV-2006",
-            (
+            gb.GenBankLocus(
                 "AJ311647LOOOOOOOOOOOOOOOOOOOOOOOOOONGID",
                 1224,
                 "DNA",
@@ -203,15 +216,17 @@ def test_multi_file():
         ),
         (
             "SCU49845     5028 bp    DNA             PLN       21-JUN-1999",
-            ("SCU49845", 5028, "DNA", False, "PLN", "21-JUN-1999"),
+            gb.GenBankLocus("SCU49845", 5028, "DNA", False, "PLN", "21-JUN-1999"),
         ),
         (
             "123MissingMolTypeAndCircular     5028 bp                 PLN       21-JUN-1999",
-            ("123MissingMolTypeAndCircular", 5028, None, False, "PLN", "21-JUN-1999"),
+            gb.GenBankLocus(
+                "123MissingMolTypeAndCircular", 5028, None, False, "PLN", "21-JUN-1999"
+            ),
         ),
     ],
 )
 def test_parse_locus(locus_content, expected_result):
     gb_file = gb.GenBankFile()
-    gb_file.append("LOCUS", [locus_content])
+    gb_file.append(gb.GenBankRecord("LOCUS", [locus_content]))
     assert gb.get_locus(gb_file) == expected_result

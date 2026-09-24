@@ -5,42 +5,37 @@ __author__ = "Patrick Kunzmann"
 __all__ = ["TantanApp"]
 
 import io
-from collections.abc import Sequence as SequenceABC
+from collections.abc import Iterable
 from os import PathLike
 from tempfile import NamedTemporaryFile
 import numpy as np
-from biotite.application.application import AppState, requires_state
-from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.application.localapp import (
+    CLIArgument,
+    CLIFlag,
+    CLIOption,
+    CLIParameter,
+    CommandSetup,
+    LocalApp,
+    cleanup_tempfile,
+    command,
+)
 from biotite.sequence.align.matrix import SubstitutionMatrix
 from biotite.sequence.alphabet import common_alphabet
 from biotite.sequence.io.fasta.file import FastaFile
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
-from biotite.typing import N, NDArray1
+from biotite.typing import K, NDArray1
 
 MASKING_LETTER = "!"
 
 
 class TantanApp(LocalApp):
     r"""
-    Mask sequence repeat regions using *tantan*. :footcite:`Frith2011`
-
-    DEPRECATED: Use :class:`biotite.application_v2.tantan.TantanApp` instead.
+    A handle to ``tantan``. :footcite:`Frith2011`
 
     Parameters
     ----------
-    sequence : (list of) NucleotideSequence or ProteinSequence
-        The sequence(s) to be masked.
-        Either a single sequence or multiple sequences can be masked.
-        Masking multiple sequences in a single run decreases the
-        run time compared to multiple runs with a single sequence.
-        All sequences must be of the same type.
-    matrix : SubstitutionMatrix, optional
-        The substitution matrix to use for repeat identification.
-        A sequence segment is considered to be a repeat of another
-        segment, if the substitution score between these segments is
-        greater than a threshold value.
-    bin_path : str, optional
-        Path of the *tantan* binary.
+    path : str, optional
+        Path of the ``tantan`` binary.
 
     References
     ----------
@@ -51,10 +46,8 @@ class TantanApp(LocalApp):
     --------
 
     >>> sequence = NucleotideSequence("GGCATCGATATATATATATAGTCAA")
-    >>> app = TantanApp(sequence)
-    >>> app.start()
-    >>> app.join()
-    >>> repeat_mask = app.get_mask()
+    >>> masks = TantanApp().run([sequence]).result()
+    >>> repeat_mask = masks[0]
     >>> print(repeat_mask)
     [False False False False False False False False False  True  True  True
       True  True  True  True  True  True  True  True False False False False
@@ -64,140 +57,22 @@ class TantanApp(LocalApp):
              ^^^^^^^^^^^
     """
 
-    _v2_alternative = "biotite.application_v2.tantan.TantanApp"
+    def __init__(self, path: PathLike[str] | str = "tantan") -> None:
+        super().__init__(path)
 
-    def __init__(
+    @command(allowed_options=["r", "e", "w", "d", "s"])
+    def run(
         self,
-        sequence: NucleotideSequence
-        | ProteinSequence
-        | SequenceABC[NucleotideSequence | ProteinSequence],
+        sequences: Iterable[NucleotideSequence | ProteinSequence],
         matrix: SubstitutionMatrix | None = None,
-        bin_path: PathLike[str] | str = "tantan",
-    ) -> None:
-        super().__init__(bin_path)
-
-        self._as_list: bool
-        self._sequences: SequenceABC[NucleotideSequence | ProteinSequence]
-        if isinstance(sequence, SequenceABC):
-            self._as_list = True
-            self._sequences = sequence
-        else:
-            # Convert to list of sequences anyway for consistent handling
-            self._as_list = False
-            self._sequences = [sequence]
-
-        self._is_protein: bool | None = None
-        for seq in self._sequences:
-            if isinstance(seq, NucleotideSequence):
-                if self._is_protein is True:
-                    # Already protein sequences in the list
-                    raise ValueError(
-                        "List of sequences contains mixed "
-                        "nucleotide and protein sequences"
-                    )
-                self._is_protein = False
-            elif isinstance(seq, ProteinSequence):
-                if self._is_protein is False:
-                    # Already nucleotide sequences in the list
-                    raise ValueError(
-                        "List of sequences contains mixed "
-                        "nucleotide and protein sequences"
-                    )
-                self._is_protein = True
-            else:
-                raise TypeError("A NucleotideSequence or ProteinSequence is required")
-
-        if matrix is None:
-            self._matrix_file = None
-        else:
-            common_alph = common_alphabet((seq.alphabet for seq in self._sequences))
-            if common_alph is None:
-                raise ValueError("There is no common alphabet within the sequences")
-            if not matrix.get_alphabet1().extends(common_alph):
-                raise ValueError(
-                    "The alphabet of the sequence(s) do not fit the matrix"
-                )
-            if not matrix.is_symmetric():
-                raise ValueError("A symmetric matrix is required")
-            self._matrix_file = NamedTemporaryFile("w", suffix=".mat", delete=False)
-        self._matrix = matrix
-
-        self._in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
-
-    def run(self) -> None:
-        FastaFile.write_iter(
-            self._in_file,
-            ((f"sequence_{i:d}", str(seq)) for i, seq in enumerate(self._sequences)),
-        )
-        self._in_file.flush()
-        if self._matrix is not None:
-            if self._matrix_file is None:
-                raise RuntimeError(
-                    "Matrix file is missing despite custom matrix being set"
-                )
-            self._matrix_file.write(str(self._matrix))
-            self._matrix_file.flush()
-
-        args = []
-        if self._matrix is not None and self._matrix_file is not None:
-            args += ["-m", self._matrix_file.name]
-        if self._is_protein:
-            args += ["-p"]
-        args += ["-x", MASKING_LETTER, self._in_file.name]
-        self.set_arguments(args)
-        super().run()
-
-    def evaluate(self) -> None:
-        super().evaluate()
-
-        out_file = io.StringIO(self.get_stdout())
-        self._masks = []
-        encoded_masking_letter = MASKING_LETTER.encode("ASCII")[0]
-        for _, masked_seq_string in FastaFile.read_iter(out_file):
-            array = np.frombuffer(masked_seq_string.encode("ASCII"), dtype=np.ubyte)
-            self._masks.append(array == encoded_masking_letter)
-
-    def clean_up(self) -> None:
-        super().clean_up()
-        cleanup_tempfile(self._in_file)
-        if self._matrix_file is not None:
-            cleanup_tempfile(self._matrix_file)
-
-    @requires_state(AppState.JOINED)
-    def get_mask(self) -> NDArray1[N, np.bool_] | list[NDArray1[N, np.bool_]]:
-        """
-        Get a boolean mask covering identified repeat regions of each
-        input sequence.
-
-        Returns
-        -------
-        repeat_mask : (list of) ndarray, shape=(n,), dtype=bool
-            A boolean mask that is true for each sequence position that
-            is identified as repeat.
-            If a list of sequences were given as input, a list of masks
-            is returned instead.
-        """
-        if self._as_list:
-            return self._masks
-        else:
-            return self._masks[0]
-
-    @staticmethod
-    def mask_repeats(
-        sequence: NucleotideSequence
-        | ProteinSequence
-        | SequenceABC[NucleotideSequence | ProteinSequence],
-        matrix: SubstitutionMatrix | None = None,
-        bin_path: PathLike[str] | str = "tantan",
-    ) -> NDArray1[N, np.bool_] | list[NDArray1[N, np.bool_]]:
-        """
-        Mask repeat regions of the given input sequence(s).
+    ) -> CommandSetup[list[NDArray1[K, np.bool_]]]:
+        r"""
+        Mask sequence repeat regions.
 
         Parameters
         ----------
-        sequence : (list of) NucleotideSequence or ProteinSequence
-            The sequence(s) to be masked.
-            Either a single sequence or multiple sequences can be masked.
+        sequences : iterable object of NucleotideSequence or ProteinSequence
+            The sequences to be masked.
             Masking multiple sequences in a single run decreases the
             run time compared to multiple runs with a single sequence.
             All sequences must be of the same type.
@@ -206,18 +81,89 @@ class TantanApp(LocalApp):
             A sequence segment is considered to be a repeat of another
             segment, if the substitution score between these segments is
             greater than a threshold value.
-        bin_path : str, optional
-            Path of the *tantan* binary.
 
         Returns
         -------
-        repeat_mask : (list of) ndarray, shape=(n,), dtype=bool
-            A boolean mask that is true for each sequence position that
-            is identified as repeat.
-            If a list of sequences were given as input, a list of masks
-            is returned instead.
+        future : Future of list of ndarray, shape=(k,), dtype=bool
+            A handle to the running masking.
+            Call :meth:`Future.result()` to obtain one boolean mask per
+            input sequence (in input order), where each mask is true for
+            the sequence positions identified as repeat.
+
+        References
+        ----------
+
+        .. footbibliography::
         """
-        app = TantanApp(sequence, matrix, bin_path)
-        app.start()
-        app.join()
-        return app.get_mask()
+        sequences = list(sequences)
+
+        is_protein: bool | None = None
+        for seq in sequences:
+            if isinstance(seq, NucleotideSequence):
+                if is_protein is True:
+                    # Already protein sequences in the list
+                    raise ValueError(
+                        "List of sequences contains mixed "
+                        "nucleotide and protein sequences"
+                    )
+                is_protein = False
+            elif isinstance(seq, ProteinSequence):
+                if is_protein is False:
+                    # Already nucleotide sequences in the list
+                    raise ValueError(
+                        "List of sequences contains mixed "
+                        "nucleotide and protein sequences"
+                    )
+                is_protein = True
+            else:
+                raise TypeError("A NucleotideSequence or ProteinSequence is required")
+
+        in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
+        FastaFile.write_iter(
+            in_file,
+            ((f"sequence_{i:d}", str(seq)) for i, seq in enumerate(sequences)),
+        )
+        in_file.flush()
+
+        matrix_file = None
+        if matrix is not None:
+            common_alph = common_alphabet((seq.alphabet for seq in sequences))
+            if common_alph is None:
+                raise ValueError("There is no common alphabet within the sequences")
+            if not matrix.get_alphabet1().extends(common_alph):
+                raise ValueError(
+                    "The alphabet of the sequence(s) do not fit the matrix"
+                )
+            if not matrix.is_symmetric():
+                raise ValueError("A symmetric matrix is required")
+            matrix_file = NamedTemporaryFile("w", suffix=".mat", delete=False)
+            matrix_file.write(str(matrix))
+            matrix_file.flush()
+
+        parameters: list[CLIParameter] = []
+        if matrix_file is not None:
+            parameters.append(CLIOption("m", matrix_file.name))
+        if is_protein:
+            parameters.append(CLIFlag("p"))
+        parameters.append(CLIOption("x", MASKING_LETTER))
+        parameters.append(CLIArgument(in_file.name))
+
+        def evaluate(stdout: bytes, stderr: bytes) -> list[NDArray1[K, np.bool_]]:
+            out_file = io.StringIO(stdout.decode("UTF-8"))
+            masks = []
+            encoded_masking_letter = MASKING_LETTER.encode("ASCII")[0]
+            for _, masked_seq_string in FastaFile.read_iter(out_file):
+                array = np.frombuffer(masked_seq_string.encode("ASCII"), dtype=np.ubyte)
+                masks.append(array == encoded_masking_letter)
+            return masks
+
+        def cleanup() -> None:
+            cleanup_tempfile(in_file)
+            if matrix_file is not None:
+                cleanup_tempfile(matrix_file)
+
+        return CommandSetup(
+            parameters=parameters,
+            evaluate=evaluate,
+            cleanup=cleanup,
+        )

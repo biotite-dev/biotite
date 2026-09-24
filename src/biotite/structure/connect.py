@@ -141,7 +141,6 @@ _COVALENT_RADII = {
 
 def connect_via_distances(
     atoms: AtomArray[N],
-    distance_range: Mapping[tuple[str, str], tuple[float, float]] | None = None,
     tolerance: float = 0.4,
     inter_residue: bool = True,
     default_bond_type: BondType = BondType.ANY,
@@ -161,9 +160,6 @@ def connect_via_distances(
     ----------
     atoms : AtomArray
         The structure to create the :class:`BondList` for.
-    distance_range : dict of tuple(str, str) -> tuple(float, float), optional
-        Deprecated, has no effect anymore:
-        The distance range is now computed from the covalent radii and `tolerance`.
     tolerance : float, optional
         The tolerance added to the sum of the covalent radii of two atoms to obtain the
         maximum bond distance.
@@ -223,12 +219,6 @@ def connect_via_distances(
     from biotite.structure.atoms import AtomArray
     from biotite.structure.residues import get_residue_starts
 
-    if distance_range is not None:
-        warnings.warn(
-            "'distance_range' is deprecated and has no effect anymore, "
-            "use 'tolerance' to adjust the maximum bond distance",
-            DeprecationWarning,
-        )
     if not isinstance(atoms, AtomArray):
         raise TypeError(f"Expected 'AtomArray', not '{type(atoms).__name__}'")
     if periodic:

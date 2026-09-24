@@ -25,7 +25,7 @@ import matplotlib.ticker as ticker
 import numpy as np
 from scipy.stats import binom
 import biotite
-import biotite.application_v2.sra as sra
+import biotite.application.sra as sra
 import biotite.sequence as seq
 
 FIG_SIZE = (8.0, 6.0)

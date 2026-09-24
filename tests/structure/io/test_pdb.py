@@ -122,7 +122,10 @@ def test_pdbx_consistency(model, path):
     bcif_path = path.with_suffix(".bcif")
     pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
     try:
-        ref_atoms = pdbx.get_structure(pdbx_file, model=model, include_bonds=True)
+        # The PDB format only supports author fields
+        ref_atoms = pdbx.get_structure(
+            pdbx_file, model=model, include_bonds=True, use_author_fields=True
+        )
     except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
@@ -196,7 +199,8 @@ def test_pdbx_consistency_assembly(path, model):
 
     bcif_path = path.with_suffix(".bcif")
     pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
-    ref_assembly = pdbx.get_assembly(pdbx_file, model=model)
+    # The PDB format only supports author fields
+    ref_assembly = pdbx.get_assembly(pdbx_file, model=model, use_author_fields=True)
 
     for category in ref_assembly.get_annotation_categories():
         assert (

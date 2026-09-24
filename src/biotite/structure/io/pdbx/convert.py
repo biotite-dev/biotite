@@ -63,7 +63,8 @@ from biotite.structure.residues import (
     get_residue_positions,
     get_residue_starts_for,
 )
-from biotite.structure.transform import AffineTransformation
+from biotite.structure.sse import SecondaryStructure
+from biotite.structure.transform import RigidTransformation
 from biotite.typing import C2, XYZ, M, N, NDArray1, NDArray2
 from biotite.util import map_unique
 
@@ -179,6 +180,9 @@ def get_sequence(
     Get the protein and nucleotide sequences from the
     ``entity_poly.pdbx_seq_one_letter_code_can`` entry.
 
+    The ``struct_asym`` category is used to assign the sequences to the
+    chains.
+
     Supported polymer types (``_entity_poly.type``) are:
     ``'polypeptide(D)'``, ``'polypeptide(L)'``,
     ``'polydeoxyribonucleotide'``, ``'polyribonucleotide'`` and
@@ -199,8 +203,8 @@ def get_sequence(
     Returns
     -------
     sequence_dict : Dictionary of Sequences
-        Dictionary keys are derived from ``entity_poly.pdbx_strand_id``
-        (equivalent to ``atom_site.auth_asym_id``).
+        Dictionary keys are derived from ``struct_asym.id``
+        (equivalent to ``atom_site.label_asym_id``).
         Dictionary values are sequences.
 
     Notes
@@ -214,24 +218,24 @@ def get_sequence(
 
     block = _get_block(pdbx_file, data_block)
     poly_category = block["entity_poly"]
+    asym_category = block["struct_asym"]
 
     seq_string = poly_category["pdbx_seq_one_letter_code_can"].as_array(str)
     seq_type = poly_category["type"].as_array(str)
+    entity_ids = poly_category["entity_id"].as_array(str)
 
-    sequences = [
-        _convert_string_to_sequence(string, stype)
-        for string, stype in zip(seq_string, seq_type)
-    ]
-
-    strand_ids = poly_category["pdbx_strand_id"].as_array(str)
-    strand_ids = [strand_id.split(",") for strand_id in strand_ids]
-
-    sequence_dict: dict[str, Sequence] = {
-        strand_id: sequence
-        for sequence, strand_ids in zip(sequences, strand_ids)
-        for strand_id in strand_ids
-        if sequence is not None
+    sequence_by_entity = {
+        entity_id: _convert_string_to_sequence(string, stype)
+        for entity_id, string, stype in zip(entity_ids, seq_string, seq_type)
     }
+
+    sequence_dict: dict[str, Sequence] = {}
+    for asym_id, entity_id in zip(
+        asym_category["id"].as_array(str), asym_category["entity_id"].as_array(str)
+    ):
+        sequence = sequence_by_entity.get(entity_id)
+        if sequence is not None:
+            sequence_dict[str(asym_id)] = sequence
 
     return sequence_dict
 
@@ -270,7 +274,7 @@ def get_structure(
     data_block: str | None = None,
     altloc: Literal["first", "occupancy", "all"] = "first",
     extra_fields: Iterable[str] | None = None,
-    use_author_fields: bool = True,
+    use_author_fields: bool = False,
     include_bonds: bool = False,
 ) -> AtomArray[Any]: ...
 @overload
@@ -280,7 +284,7 @@ def get_structure(
     data_block: str | None = None,
     altloc: Literal["first", "occupancy", "all"] = "first",
     extra_fields: Iterable[str] | None = None,
-    use_author_fields: bool = True,
+    use_author_fields: bool = False,
     include_bonds: bool = False,
 ) -> AtomArrayStack[Any, Any]: ...
 def get_structure(
@@ -289,7 +293,7 @@ def get_structure(
     data_block: str | None = None,
     altloc: Literal["first", "occupancy", "all"] = "first",
     extra_fields: Iterable[str] | None = None,
-    use_author_fields: bool = True,
+    use_author_fields: bool = False,
     include_bonds: bool = False,
 ) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
@@ -344,9 +348,10 @@ def get_structure(
         to other categories in the file, the ``auth_xxx``
         fields are set by the author(s) of the structure and are
         consistent with the corresponding values in PDB files.
-        If `use_author_fields` is true, the annotation arrays will be
-        read from the ``auth_xxx`` fields (if applicable),
-        otherwise from the the ``label_xxx`` fields.
+        By default, the annotation arrays are read from the
+        ``label_xxx`` fields (if applicable).
+        If `use_author_fields` is true, they are read from the
+        ``auth_xxx`` fields instead.
         If the requested field is not available, the respective other
         field is taken as fallback.
     include_bonds : bool, optional
@@ -965,7 +970,6 @@ def set_structure(
     pdbx_file: _PDBxFile,
     array: AtomArray[N] | AtomArrayStack[M, N] | Iterable[AtomArray[N]],  # pyright: ignore[reportRedeclaration]
     data_block: str | None = None,
-    include_bonds: bool = False,
     extra_fields: Iterable[str] = [],
 ) -> None:
     """
@@ -996,8 +1000,6 @@ def set_structure(
         If the data block object is passed directly to `pdbx_file`,
         this parameter is ignored.
         If the file is empty, a new data block will be created.
-    include_bonds : bool, optional
-        DEPRECATED: Has no effect anymore.
     extra_fields : list of str, optional
         List of additional fields from the ``atom_site`` category
         that should be written into the file.
@@ -1018,13 +1020,6 @@ def set_structure(
     >>> set_structure(file, atom_array)
     >>> file.write(os.path.join(path_to_directory, "structure.cif"))
     """
-    if include_bonds:
-        warnings.warn(
-            "`include_bonds` parameter is deprecated, "
-            "intra-residue are always written, if available",
-            DeprecationWarning,
-        )
-
     if not isinstance(array, (AtomArray, AtomArrayStack)):
         # An iterable of `AtomArray` objects represents multiple models that -
         # unlike an `AtomArrayStack` - may contain different atoms in each model
@@ -1087,12 +1082,6 @@ def set_structure(
         )
     if "entity_id" in annot_categories:
         atom_site["label_entity_id"] = np.copy(array.entity_id)
-    elif "label_entity_id" in annot_categories:
-        warnings.warn(
-            "The 'label_entity_id' annotation is deprecated, use 'entity_id' instead",
-            DeprecationWarning,
-        )
-        atom_site["label_entity_id"] = np.copy(array.get_annotation("label_entity_id"))
     else:
         atom_site["label_entity_id"] = _determine_entity_id(array.chain_id)
 
@@ -1770,7 +1759,7 @@ def get_assembly(
     data_block: str | None = None,
     altloc: Literal["first", "occupancy", "all"] = "first",
     extra_fields: Iterable[str] | None = None,
-    use_author_fields: bool = True,
+    use_author_fields: bool = False,
     include_bonds: bool = False,
 ) -> AtomArray[Any]: ...
 @overload
@@ -1781,7 +1770,7 @@ def get_assembly(
     data_block: str | None = None,
     altloc: Literal["first", "occupancy", "all"] = "first",
     extra_fields: Iterable[str] | None = None,
-    use_author_fields: bool = True,
+    use_author_fields: bool = False,
     include_bonds: bool = False,
 ) -> AtomArrayStack[Any, Any]: ...
 def get_assembly(
@@ -1791,7 +1780,7 @@ def get_assembly(
     data_block: str | None = None,
     altloc: Literal["first", "occupancy", "all"] = "first",
     extra_fields: Iterable[str] | None = None,
-    use_author_fields: bool = True,
+    use_author_fields: bool = False,
     include_bonds: bool = False,
 ) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
@@ -1854,9 +1843,10 @@ def get_assembly(
         to other categories in the file, the ``auth_xxx``
         fields are set by the author(s) of the structure and are
         consistent with the corresponding values in PDB files.
-        If `use_author_fields` is true, the annotation arrays will be
-        read from the ``auth_xxx`` fields (if applicable),
-        otherwise from the the ``label_xxx`` fields.
+        By default, the annotation arrays are read from the
+        ``label_xxx`` fields (if applicable).
+        If `use_author_fields` is true, they are read from the
+        ``auth_xxx`` fields instead.
     include_bonds : bool, optional
         If set to true, a :class:`BondList` will be created for the
         resulting :class:`AtomArray` containing the bond information
@@ -1984,18 +1974,18 @@ def get_assembly(
 @overload
 def _apply_transformations(
     structure: AtomArray[N],
-    transformation_dict: dict[str, AffineTransformation[Any]],
+    transformation_dict: dict[str, RigidTransformation[Any]],
     operations: list[tuple[str, ...]],
 ) -> AtomArray[Any]: ...
 @overload
 def _apply_transformations(
     structure: AtomArrayStack[M, N],
-    transformation_dict: dict[str, AffineTransformation[Any]],
+    transformation_dict: dict[str, RigidTransformation[Any]],
     operations: list[tuple[str, ...]],
 ) -> AtomArrayStack[M, Any]: ...
 def _apply_transformations(
     structure: AtomArray[N] | AtomArrayStack[M, N],
-    transformation_dict: dict[str, AffineTransformation[Any]],
+    transformation_dict: dict[str, RigidTransformation[Any]],
     operations: list[tuple[str, ...]],
 ) -> AtomArray[Any] | AtomArrayStack[M, Any]:
     """
@@ -2017,9 +2007,9 @@ def _apply_transformations(
 
 def _get_transformations(
     struct_oper: _Category,
-) -> dict[str, AffineTransformation[Any]]:
+) -> dict[str, RigidTransformation[Any]]:
     """
-    Get affine transformation for each operation ID in ``pdbx_struct_oper_list``.
+    Get rigid transformation for each operation ID in ``pdbx_struct_oper_list``.
     """
     transformation_dict = {}
     for index, id in enumerate(struct_oper["id"].as_array(str)):
@@ -2035,8 +2025,8 @@ def _get_transformations(
         translation_vector = np.array(
             [struct_oper[f"vector[{i}]"].as_array(float)[index] for i in (1, 2, 3)]
         )
-        transformation_dict[id] = AffineTransformation(
-            np.zeros(3), rotation_matrix, translation_vector
+        transformation_dict[id] = RigidTransformation(
+            rotation_matrix, translation_vector
         )
     return transformation_dict
 
@@ -2103,7 +2093,7 @@ def get_unit_cell(
     data_block: str | None = None,
     altloc: Literal["first", "occupancy", "all"] = "first",
     extra_fields: Iterable[str] | None = None,
-    use_author_fields: bool = True,
+    use_author_fields: bool = False,
     include_bonds: bool = False,
 ) -> AtomArray[Any]: ...
 @overload
@@ -2114,7 +2104,7 @@ def get_unit_cell(
     data_block: str | None = None,
     altloc: Literal["first", "occupancy", "all"] = "first",
     extra_fields: Iterable[str] | None = None,
-    use_author_fields: bool = True,
+    use_author_fields: bool = False,
     include_bonds: bool = False,
 ) -> AtomArrayStack[Any, Any]: ...
 def get_unit_cell(
@@ -2124,7 +2114,7 @@ def get_unit_cell(
     data_block: str | None = None,
     altloc: Literal["first", "occupancy", "all"] = "first",
     extra_fields: Iterable[str] | None = None,
-    use_author_fields: bool = True,
+    use_author_fields: bool = False,
     include_bonds: bool = False,
 ) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
     """
@@ -2188,9 +2178,10 @@ def get_unit_cell(
         to other categories in the file, the ``auth_xxx``
         fields are set by the author(s) of the structure and are
         consistent with the corresponding values in PDB files.
-        If `use_author_fields` is true, the annotation arrays will be
-        read from the ``auth_xxx`` fields (if applicable),
-        otherwise from the the ``label_xxx`` fields.
+        By default, the annotation arrays are read from the
+        ``label_xxx`` fields (if applicable).
+        If `use_author_fields` is true, they are read from the
+        ``auth_xxx`` fields instead.
     include_bonds : bool, optional
         If set to true, a :class:`BondList` will be created for the
         resulting :class:`AtomArray` containing the bond information
@@ -2256,7 +2247,7 @@ def get_sse(
     pdbx_file: _PDBxFile,
     data_block: str | None = None,
     match_model: int | None = None,
-) -> dict[str, NDArray1[Any, np.str_]]:
+) -> dict[str, NDArray1[Any, np.int_]]:
     """
     Get the secondary structure from a PDBx file.
 
@@ -2267,6 +2258,7 @@ def get_sse(
         The following categories are required:
 
         - ``entity_poly``
+        - ``struct_asym``
         - ``struct_conf`` (if alpha-helices are present)
         - ``struct_sheet_range`` (if beta-strands are present)
         - ``atom_site`` (if `match_model` is set)
@@ -2286,13 +2278,14 @@ def get_sse(
 
     Returns
     -------
-    sse_dict : dict of str -> ndarray, dtype=str
-        The dictionary maps the chain ID (derived from ``auth_asym_id``) to the
-        secondary structure of the respective chain.
+    sse_dict : dict of str -> ndarray, dtype=int
+        The dictionary maps the chain ID (derived from ``label_asym_id``) to the
+        secondary structure of the respective chain, given as
+        :class:`SecondaryStructure` values.
 
-        - ``"a"``: alpha-helix
-        - ``"b"``: beta-strand
-        - ``"c"``: coil or not an amino acid
+        - :attr:`SecondaryStructure.HELIX`: alpha-helix
+        - :attr:`SecondaryStructure.STRAND`: beta-strand
+        - :attr:`SecondaryStructure.COIL`: coil or not an amino acid
 
         Each secondary structure element corresponds to the ``label_seq_id`` of the
         ``atom_site`` category.
@@ -2306,17 +2299,14 @@ def get_sse(
     >>> file = CIFFile.read(os.path.join(path_to_structures, "1aki.cif"))
     >>> sse = get_sse(file, match_model=1)
     >>> print(sse)
-    {'A': array(['c', 'c', 'c', 'c', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a',
-                 'a', 'c', 'c', 'c', 'c', 'c', 'a', 'a', 'a', 'c', 'c', 'a', 'a',
-                 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'c', 'c',
-                 'c', 'c', 'c', 'b', 'b', 'b', 'c', 'c', 'c', 'c', 'c', 'b', 'b',
-                 'b', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c',
-                 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c',
-                 'c', 'a', 'a', 'a', 'a', 'a', 'c', 'c', 'c', 'c', 'a', 'a', 'a',
-                 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'c', 'a',
-                 'a', 'a', 'a', 'c', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'c', 'c',
-                 'c', 'c', 'a', 'a', 'a', 'a', 'c', 'c', 'c', 'c', 'c', 'c'],
-                 dtype='<U1')}
+    {'A': array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0,
+                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0,
+                 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+                 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1,
+                 1, 1, 1, 0, 0, 0, 0, 0, 0])}
+    >>> print("".join(SecondaryStructure.to_symbols(sse["A"])))
+    ccccaaaaaaaaaacccccaaaccaaaaaaaaaaaaccccccbbbcccccbbbccccccccccccccccccccccccccaaaaaccccaaaaaaaaaaaaaccaaaacaaaaaacccccaaaacccccc
 
     If only secondary structure elements for resolved residues are requested, the length
     of the returned array matches the number of peptide residues in the structure.
@@ -2331,20 +2321,20 @@ def get_sse(
     """
     block = _get_block(pdbx_file, data_block)
 
-    # Init all chains with "c" for coil
+    # Init all chains with coil
     sse_dict = {
-        chain_id: np.repeat("c", len(sequence))
+        chain_id: np.full(len(sequence), SecondaryStructure.COIL, dtype=int)
         for chain_id, sequence in get_sequence(block).items()
     }
 
     # Populate SSE arrays with helices and strands
     for sse_symbol, category_name in [
-        ("a", "struct_conf"),
-        ("b", "struct_sheet_range"),
+        (SecondaryStructure.HELIX, "struct_conf"),
+        (SecondaryStructure.STRAND, "struct_sheet_range"),
     ]:
         if category_name in block:
             category = block[category_name]
-            chains = category["beg_auth_asym_id"].as_array(str)
+            chains = category["beg_label_asym_id"].as_array(str)
             start_positions = category["beg_label_seq_id"].as_array(int)
             end_positions = category["end_label_seq_id"].as_array(int)
 
@@ -2355,7 +2345,7 @@ def get_sse(
 
     if match_model is not None:
         model_atom_site = _filter_model(block["atom_site"], match_model)
-        chain_ids = model_atom_site["auth_asym_id"].as_array(str)
+        chain_ids = model_atom_site["label_asym_id"].as_array(str)
         res_ids = model_atom_site["label_seq_id"].as_array(int, masked_value=-1)
         # Filter out masked residues, i.e. residues not part of a chain
         mask = res_ids != -1

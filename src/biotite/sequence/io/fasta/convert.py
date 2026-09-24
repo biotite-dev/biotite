@@ -379,7 +379,7 @@ def set_a3m_alignments(
             raise ValueError("A3M requires a letter sequence")
         # Keep gaps in the query sequence as lower case letters
         a3m_string_array[query_gaps] = np.strings.lower(
-            query.alphabet.decode_multiple(target_code[query_gaps], as_bytes=True)  # pyright: ignore[reportCallIssue,reportArgumentType]
+            alphabet.decode_multiple_into_bytes(target_code[query_gaps])
         )
         # Matches/mismatches are indicated with upper case letters
         a3m_string_array[match_mask] = alphabet.decode_multiple_into_bytes(

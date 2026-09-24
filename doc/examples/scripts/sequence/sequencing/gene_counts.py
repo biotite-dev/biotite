@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 import requests
 import biotite
-import biotite.application_v2.sra as sra
+import biotite.application.sra as sra
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.sequence.io.fasta as fasta
@@ -223,8 +223,8 @@ def map_read(read_string, kmer_table, gene_sequences, substitution_matrix):
             align.align_banded(
                 read,
                 gene_sequences[gene_i],
-                substitution_matrix,
                 band=(diagonal - BAND_WIDTH, diagonal + BAND_WIDTH),
+                matrix=substitution_matrix,
                 gap_penalty=-10,
                 max_number=1,
             )[0],
@@ -242,7 +242,7 @@ def map_read(read_string, kmer_table, gene_sequences, substitution_matrix):
 substitution_matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
 
 for i, (_, (seq_string, q)) in enumerate(
-    fastq.FastqFile.read_iter(fastq_path, offset="Sanger")
+    fastq.FastqFile.read_iter(fastq_path, offset=fastq.FastqFile.Offset.SANGER)
 ):
     # For demonstration only a single clean read is mapped
     if i == 3:
@@ -267,7 +267,7 @@ print(alignment)
 
 def read_iter(fastq_path):
     for i, (_, (read_string, quality)) in enumerate(
-        fastq.FastqFile.read_iter(fastq_path, offset="Sanger")
+        fastq.FastqFile.read_iter(fastq_path, offset=fastq.FastqFile.Offset.SANGER)
     ):
         # For the purpose of this example only a faction of the reads
         # are processed to save computation time

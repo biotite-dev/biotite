@@ -54,13 +54,14 @@ import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.lines import Line2D
 import biotite
-import biotite.application_v2.sra as sra
+import biotite.application.sra as sra
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align
 import biotite.sequence.graphics as graphics
 import biotite.sequence.io as seqio
 import biotite.sequence.io.fasta as fasta
+import biotite.sequence.io.fastq as fastq
 import biotite.sequence.io.genbank as gb
 
 # Load sequences and quality scores from the sequencing data
@@ -71,7 +72,7 @@ reads_and_scores = (
     sra.FastqDumpApp()
     .extract_fastq("SRR13453793")
     .result()
-    .get_sequences_and_scores(offset="Sanger")[0]
+    .get_sequences_and_scores(offset=fastq.FastqFile.Offset.SANGER)[0]
 )
 reads = [read for read, score_array in reads_and_scores.values()]
 score_arrays = [score_array for read, score_array in reads_and_scores.values()]
@@ -344,9 +345,9 @@ def map_sequence(read, diag):
         return align.align_banded(
             read,
             orig_genome,
-            matrix,
-            gap_penalty=-10,
             band=(diag - deviation, diag + deviation),
+            matrix=matrix,
+            gap_penalty=-10,
             max_number=1,
         )[0]
 
@@ -599,8 +600,8 @@ BAND_WIDTH = 1000
 genome_alignment = align.align_banded(
     var_genome,
     orig_genome,
-    matrix,
     band=(-BAND_WIDTH // 2, BAND_WIDTH // 2),
+    matrix=matrix,
     max_number=1,
 )[0]
 identity = align.get_sequence_identity(genome_alignment, "all")

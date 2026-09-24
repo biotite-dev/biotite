@@ -2,33 +2,60 @@ from __future__ import annotations
 
 __name__ = "biotite.application.muscle"
 __author__ = "Patrick Kunzmann"
-__all__ = ["Muscle5App"]
+__all__ = ["Muscle5App", "Muscle5Result"]
 
 from collections.abc import Sequence as SequenceABC
+from dataclasses import dataclass
 from os import PathLike
-from biotite.application.application import AppState, VersionError, requires_state
-from biotite.application.localapp import get_version
-from biotite.application.msaapp import MSAApp
+from tempfile import NamedTemporaryFile
+from typing import Any
+import numpy as np
+from biotite.application.base import VersionError
+from biotite.application.localapp import (
+    CLIFlag,
+    CLIOption,
+    CLIParameter,
+    CommandSetup,
+    LocalApp,
+    cleanup_tempfile,
+    command,
+)
+from biotite.application.msa import MSAInput
 from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.sequence import Sequence
 
 
-class Muscle5App(MSAApp):
+@dataclass(frozen=True)
+class Muscle5Result:
     """
-    Perform a multiple sequence alignment using MUSCLE version 5.
+    The result of a MUSCLE version 5 alignment run.
 
-    DEPRECATED: Use :class:`biotite.application_v2.muscle.Muscle5App` instead.
+    Attributes
+    ----------
+    alignment : Alignment
+        The global multiple sequence alignment.
+    order : ndarray, dtype=int
+        The order of the sequences intended by MUSCLE.
+        Usually this order (e.g. based on the guide tree) differs from
+        the input order.
+    """
+
+    alignment: Alignment
+    order: np.ndarray
+
+
+class Muscle5App(LocalApp):
+    """
+    A handle to *MUSCLE* version 5.
 
     Parameters
     ----------
-    sequences : list of Sequence
-        The sequences to be aligned.
-    bin_path : str, optional
+    path : str, optional
         Path of the MUSCLE binary.
 
     See Also
     --------
-    MuscleApp : Interface to MUSCLE version ``<5``.
+    Muscle3App : Interface to MUSCLE version ``<5``.
 
     Notes
     -----
@@ -37,143 +64,86 @@ class Muscle5App(MSAApp):
     Examples
     --------
 
-    >>> seq1 = ProteinSequence("BIQTITE")
-    >>> seq2 = ProteinSequence("TITANITE")
-    >>> seq3 = ProteinSequence("BISMITE")
-    >>> seq4 = ProteinSequence("IQLITE")
-    >>> app = Muscle5App([seq1, seq2, seq3, seq4])
-    >>> app.start()
-    >>> app.join()
-    >>> alignment = app.get_alignment()
-    >>> print(alignment)
+    >>> sequences = [
+    ...     ProteinSequence("BIQTITE"),
+    ...     ProteinSequence("TITANITE"),
+    ...     ProteinSequence("BISMITE"),
+    ...     ProteinSequence("IQLITE"),
+    ... ]
+    >>> result = Muscle5App().run(sequences).result()
+    >>> print(result.alignment)
     BI-QTITE
     TITANITE
     BI-SMITE
     -I-QLITE
     """
 
-    _v2_alternative = "biotite.application_v2.muscle.Muscle5App"
-
-    def __init__(
-        self,
-        sequences: SequenceABC[Sequence],
-        bin_path: PathLike[str] | str = "muscle",
-    ) -> None:
-        major_version = get_version(bin_path, "-version")[0]
-        if major_version < 5:
+    def __init__(self, path: PathLike[str] | str = "muscle") -> None:
+        super().__init__(path)
+        if self.version.major < 5:
             raise VersionError(
-                f"At least Muscle 5 is required, got version {major_version}"
+                f"At least Muscle 5 is required, got version {self.version}"
             )
 
-        super().__init__(sequences, bin_path)
-        self._mode: str = "align"
-        self._consiters: int | None = None
-        self._refineiters: int | None = None
-        self._n_threads: int | None = None
+    def _format_key(self, key: Any) -> str:
+        # MUSCLE 5 uses single-dash options, e.g. '-align' or '-version'
+        return "-" + str(key)
 
-    @requires_state(AppState.CREATED)
-    def set_iterations(
-        self, consistency: int | None = None, refinement: int | None = None
-    ) -> None:
-        """
-        Set the number of iterations for the alignment algorithm.
-
-        Parameters
-        ----------
-        consistency : int, optional
-            The number of consistency iterations.
-        refinement : int, optional
-            The number of refinement iterations.
-        """
-        if consistency is not None:
-            self._consiters = consistency
-        if refinement is not None:
-            self._refineiters = refinement
-
-    @requires_state(AppState.CREATED)
-    def set_thread_number(self, number: int) -> None:
-        """
-        Set the number of threads for the alignment run.
-
-        Parameters
-        ----------
-        number : int, optional
-            The number of threads.
-        """
-        self._n_threads = number
-
-    @requires_state(AppState.CREATED)
-    def use_super5(self) -> None:
-        """
-        Use the *Super5* algorithm for the alignment run.
-        """
-        self._mode = "super5"
-
-    def run(self) -> None:
-        args = [
-            f"-{self._mode}",
-            self.get_input_file_path(),
-            "-output",
-            self.get_output_file_path(),
-        ]
-        if self.get_seqtype() == "protein":
-            args += ["-amino"]
-        else:
-            args += ["-nt"]
-        if self._n_threads is not None:
-            args += ["-threads", str(self._n_threads)]
-        if self._consiters is not None:
-            args += ["-consiters", str(self._consiters)]
-        if self._refineiters is not None:
-            args += ["-refineiters", str(self._refineiters)]
-        self.set_arguments(args)
-        super().run()
-
-    def clean_up(self) -> None:
-        super().clean_up()
-
-    @staticmethod
-    def supports_nucleotide() -> bool:
-        return True
-
-    @staticmethod
-    def supports_protein() -> bool:
-        return True
-
-    @staticmethod
-    def supports_custom_nucleotide_matrix() -> bool:
-        return False
-
-    @staticmethod
-    def supports_custom_protein_matrix() -> bool:
-        return False
-
-    @classmethod
-    def align(
-        cls,
+    @command(allowed_options=["threads", "consiters", "refineiters", "perturb"])
+    def run(
+        self,
         sequences: SequenceABC[Sequence],
-        bin_path: PathLike[str] | str = "muscle",
-    ) -> Alignment:
+        super5: bool = False,
+    ) -> CommandSetup[Muscle5Result]:
         """
         Perform a multiple sequence alignment.
-
-        This is a convenience function, that wraps the :class:`Muscle5App`
-        execution.
 
         Parameters
         ----------
         sequences : iterable object of Sequence
             The sequences to be aligned.
-        bin_path : str, optional
-            Path of the MSA software binary. By default, the default path
-            will be used.
+        super5 : bool, optional
+            If set, the *Super5* algorithm is used for the alignment,
+            which is faster for a large number of sequences.
 
         Returns
         -------
-        alignment : Alignment
-            The global multiple sequence alignment.
+        future : Future of Muscle5Result
+            A handle to the running alignment.
+            Call :meth:`Future.result()` to obtain the
+            :class:`Muscle5Result`.
         """
-        app = cls(sequences, bin_path)
-        app.start()
-        app.join()
-        return app.get_alignment()
+        msa_input = MSAInput.from_input(
+            sequences,
+            None,
+            supports_nucleotide=True,
+            supports_protein=True,
+            supports_custom_nucleotide_matrix=False,
+            supports_custom_protein_matrix=False,
+        )
+
+        in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
+        out_file = NamedTemporaryFile("r", suffix=".fa", delete=False)
+        msa_input.write_fasta(in_file)
+
+        # The alignment mode takes the input file as its value
+        mode = "super5" if super5 else "align"
+        parameters: list[CLIParameter] = [
+            CLIOption(mode, in_file.name),
+            CLIOption("output", out_file.name),
+            CLIFlag("amino" if msa_input.seqtype == "protein" else "nt"),
+        ]
+
+        def evaluate(stdout: bytes, stderr: bytes) -> Muscle5Result:
+            alignment, order = msa_input.read_fasta(out_file)
+            return Muscle5Result(alignment=alignment, order=order)
+
+        def cleanup() -> None:
+            for temp_file in (in_file, out_file):
+                cleanup_tempfile(temp_file)
+
+        return CommandSetup(
+            parameters=parameters,
+            evaluate=evaluate,
+            cleanup=cleanup,
+        )

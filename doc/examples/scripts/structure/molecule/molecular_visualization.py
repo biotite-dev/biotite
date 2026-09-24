@@ -34,7 +34,7 @@ n7 = caffeine[caffeine.atom_name == "N7"][0]
 # Normal vector of ring plane
 normal = np.cross(n1.coord - n3.coord, n1.coord - n7.coord)
 # Align ring plane normal to z-axis
-caffeine = struc.align_vectors(caffeine, normal, np.array([0, 0, 1]))
+caffeine = struc.align_vectors(normal, np.array([0, 0, 1])).apply(caffeine)
 
 # Caffeine should be colored by element
 colors = np.zeros((caffeine.array_length(), 3))

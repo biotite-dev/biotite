@@ -23,7 +23,7 @@ from biotite.structure.chains import chain_iter
 from biotite.structure.filter import filter_amino_acids, filter_nucleotides
 from biotite.structure.geometry import centroid, distance
 from biotite.structure.sequence import to_sequence
-from biotite.structure.transform import AffineTransformation
+from biotite.structure.transform import RigidTransformation
 from biotite.typing import (
     C2,
     XYZ,
@@ -41,7 +41,7 @@ def superimpose(
     fixed: Coord[N],
     mobile: Coord[N],
     atom_mask: NDArray1[N, np.bool_] | None = None,
-) -> tuple[Coord[N], AffineTransformation[int]]: ...
+) -> tuple[Coord[N], RigidTransformation[int]]: ...
 
 
 @overload
@@ -51,7 +51,7 @@ def superimpose(
     atom_mask: NDArray1[N, np.bool_] | None = None,
 ) -> tuple[
     MultiCoord[M, N],
-    AffineTransformation[M],
+    RigidTransformation[M],
 ]: ...
 
 
@@ -61,7 +61,7 @@ def superimpose(
     atom_mask: NDArray1[N, np.bool_] | None = None,
 ) -> tuple[
     Coord[N] | MultiCoord[M, N],
-    AffineTransformation[M],
+    RigidTransformation[M],
 ]:
     """
     Superimpose structures onto each other, minimizing the RMSD between
@@ -100,9 +100,9 @@ def superimpose(
         superimposed on the fixed structure(s).
         Only coordinates are returned, if coordinates were given in
         `mobile`.
-    transformation : AffineTransformation
-        The affine transformation(s) that were applied on `mobile`.
-        :meth:`AffineTransformation.apply()` can be used to transform
+    transformation : RigidTransformation
+        The rigid transformation(s) that were applied on `mobile`.
+        :meth:`RigidTransformation.apply()` can be used to transform
         another AtomArray in the same way.
 
     See Also
@@ -118,7 +118,7 @@ def superimpose(
     Often the two structures need to be filtered in order to obtain the
     same size and annotation arrays.
     After superimposition the transformation can be applied on the
-    original structure using :meth:`AffineTransformation.apply()`.
+    original structure using :meth:`RigidTransformation.apply()`.
 
     References
     ----------
@@ -173,7 +173,10 @@ def superimpose(
     fix_centered_filtered = fix_filtered - fix_centroid[:, np.newaxis, :]
 
     rotation = _get_rotation_matrices(fix_centered_filtered, mob_centered_filtered)
-    transform = AffineTransformation(-mob_centroid, rotation, fix_centroid)
+    # The mobile centroid is moved to the origin, the rotation is applied
+    # and the coordinates are moved to the fixed centroid
+    translation = fix_centroid - (rotation @ mob_centroid[..., np.newaxis])[..., 0]
+    transform = RigidTransformation(rotation, translation)
     return transform.apply(mobile), transform
 
 
@@ -186,7 +189,7 @@ def superimpose_without_outliers(
     outlier_threshold: float = 1.5,
 ) -> tuple[
     Coord[N] | MultiCoord[M, N],
-    AffineTransformation[M],
+    RigidTransformation[M],
     NDArray1[K, np.integer],
 ]:
     r"""
@@ -235,10 +238,10 @@ def superimpose_without_outliers(
         structure.
         Only coordinates are returned, if coordinates were given in
         `mobile`.
-    transform : AffineTransformation
-        This object contains the affine transformation(s) that were
+    transform : RigidTransformation
+        This object contains the rigid transformation(s) that were
         applied on `mobile`.
-        :meth:`AffineTransformation.apply()` can be used to transform
+        :meth:`RigidTransformation.apply()` can be used to transform
         another AtomArray in the same way.
     anchor_indices : ndarray, shape(k,), dtype=int
         The indices of the anchor atoms.
@@ -318,7 +321,7 @@ def superimpose_without_outliers(
             break
 
     anchor_indices = np.where(inlier_mask)[0]
-    transform = cast(AffineTransformation[M], transform)
+    transform = cast(RigidTransformation[M], transform)
     return transform.apply(mobile), transform, anchor_indices
 
 
@@ -332,7 +335,7 @@ def superimpose_homologs(
     **kwargs: Any,
 ) -> tuple[
     AtomArray[N] | AtomArrayStack[M, N],
-    AffineTransformation[M],
+    RigidTransformation[M],
     NDArray1[K, np.integer],
     NDArray1[K, np.integer],
 ]:
@@ -386,10 +389,10 @@ def superimpose_homologs(
     fitted : AtomArray or AtomArrayStack
         A copy of the `mobile` structure(s), superimposed on the fixed
         structure(s).
-    transform : AffineTransformation
-        This object contains the affine transformation(s) that were
+    transform : RigidTransformation
+        This object contains the rigid transformation(s) that were
         applied on `mobile`.
-        :meth:`AffineTransformation.apply()` can be used to transform
+        :meth:`RigidTransformation.apply()` can be used to transform
         another AtomArray in the same way.
     fixed_anchor_indices, mobile_anchor_indices : ndarray, shape(k,), dtype=int
         The indices of the anchor atoms in the fixed and mobile

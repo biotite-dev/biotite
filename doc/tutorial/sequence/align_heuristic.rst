@@ -210,10 +210,11 @@ found.
     for query_pos, ref_id, ref_pos in matches:
         diagonal = query_pos - ref_pos
         alignment = align.align_banded(
-            reference, query, matrix, gap_penalty=-5, max_number=1,
+            reference, query,
             # Center the band at the match diagonal and extend the band by
             # one half of the band width in each direction
-            band=(diagonal - BAND_WIDTH//2, diagonal + BAND_WIDTH//2)
+            band=(diagonal - BAND_WIDTH//2, diagonal + BAND_WIDTH//2),
+            matrix=matrix, gap_penalty=-5, max_number=1,
         )[0]
         alignments.append(alignment)
 

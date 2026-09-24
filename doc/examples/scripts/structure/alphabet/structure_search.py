@@ -136,13 +136,13 @@ graphics.plot_alignment_similarity_based(
 background = np.array(list(AA_FREQUENCY.values()))
 # Normalize background frequencies
 background = background / background.sum()
-np.random.seed(0)
 estimator = align.EValueEstimator.from_samples(
     seq.ProteinSequence.alphabet,
     align.SubstitutionMatrix.std_protein_matrix(),
     GAP_PENALTY,
     background,
     sample_size=500,
+    rng=np.random.default_rng(0),
 )
 log_evalue = estimator.log_evalue(alignment.score, len(query_aa_sequence), DB_SIZE)
 print(f"E-value: {10**log_evalue:.2e}")
@@ -301,13 +301,13 @@ for sequence in db_sequences:
     background += np.bincount(
         sequence.code, minlength=len(strucalph.I3DSequence.alphabet)
     )
-np.random.seed(0)
 estimator_for_3di = align.EValueEstimator.from_samples(
     strucalph.I3DSequence.alphabet,
     substitution_matrix,
     GAP_PENALTY,
     background,
     sample_size=500,
+    rng=np.random.default_rng(0),
 )
 
 significant_alignments = {}
@@ -316,8 +316,8 @@ for query_pos, db_index, db_pos in accepted_hits:
     alignment = align.align_banded(
         query_sequence,
         db_sequences[db_index],
-        substitution_matrix,
         band=(diagonal - BAND_WIDTH, diagonal + BAND_WIDTH),
+        matrix=substitution_matrix,
         gap_penalty=GAP_PENALTY,
         local=True,
         max_number=1,

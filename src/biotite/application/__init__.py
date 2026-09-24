@@ -1,55 +1,16 @@
 """
-A subpackage that provides interfaces for external software in case
-*Biotite*’s integrated functionality is not sufficient for your tasks.
-These interfaces range from locally installed software
-(e.g. MSA software) to web services (e.g. BLAST).
-The interfaces are seamless:
-Writing input files and reading output files is handled internally.
-The user only needs to provide objects like a :class:`Sequence`
-and will receive objects like an :class:`Alignment`.
+A redesigned subpackage that provides interfaces for external software.
 
-Note that in order to use an interface in :mod:`biotite.application`
-the corresponding software must be installed or the web server must be
-reachable, respectively.
-These programs are not shipped with the *Biotite* package.
-
-Each application is represented by its respective :class:`Application`
-class.
-Each :class:`Application` instance has a life cycle, starting with its
-creation and ending with the result extraction.
-Each state in this life cycle is described by the value of the
-*enum* :class:`AppState`, that each :class:`Application` contains:
-Directly after its instantiation the app is in the ``CREATED`` state.
-In this state further parameters can be set for the application run.
-After the user calls the :func:`Application.start()` method, the app
-state is set to ``RUNNING`` and the app performs the calculations.
-When the application finishes the AppState
-changes to ``FINISHED``.
-The user can now call the :func:`Application.join()` method, concluding
-the application in the ``JOINED`` state and making the results of the
-application accessible.
-Furthermore, this may trigger cleanup actions in some applications.
-:func:`Application.join()` can even be called in the ``RUNNING`` state:
-This will constantly check if the application has finished and will
-directly go into the ``JOINED`` state as soon as the application reaches
-the ``FINISHED`` state.
-Calling the :func:`Application.cancel()` method while the application is
-``RUNNING`` or ``FINISHED`` leaves the application in the ``CANCELLED``
-state.
-This triggers cleanup, too, but there are no accessible results.
-If a method is called in an unsuitable app state, an
-:class:`AppStateError` is called.
-
-The execution of an :class:`Application` can run in parallel:
-The time between starting the run and collecting the results can be
-used to run other code, similar to the *Python* :class:`Thread` or
-:class:`Process` classes.
+In contrast to :mod:`biotite.application`, an :class:`Application` is a
+reusable, stateless handle to the wrapped software.
+A run is launched by calling the respective method (e.g. ``align()``)
+with all required parameters, which returns a :class:`Future`.
+The actual result is obtained by calling :meth:`Future.result()`.
 """
 
 __name__ = "biotite.application"
 __author__ = "Patrick Kunzmann"
 
-from .application import *
+from .base import *
 from .localapp import *
-from .msaapp import *
-from .webapp import *
+from .msa import *

@@ -2,468 +2,444 @@ from __future__ import annotations
 
 __name__ = "biotite.application.sra"
 __author__ = "Patrick Kunzmann"
-__all__ = ["FastaDumpApp", "FastqDumpApp"]
+__all__ = [
+    "PrefetchApp",
+    "PrefetchDirectory",
+    "FastqDumpApp",
+    "FastqResult",
+    "FastaResult",
+]
 
-import abc
 import glob
+from dataclasses import dataclass, field
 from os import PathLike
 from os.path import join
-from subprocess import PIPE, Popen, SubprocessError, TimeoutExpired
+from pathlib import Path
 from tempfile import TemporaryDirectory
 import numpy as np
-from biotite.application.application import (
-    Application,
-    AppState,
-    AppStateError,
-    requires_state,
+from biotite.application.localapp import (
+    CLIArgument,
+    CLIFlag,
+    CLIOption,
+    CLIParameter,
+    CommandSetup,
+    LocalApp,
+    command,
 )
-from biotite.sequence.io.fasta.convert import get_sequences
+from biotite.sequence.io.fasta.convert import get_sequences as _fasta_get_sequences
 from biotite.sequence.io.fasta.file import FastaFile
-from biotite.sequence.io.fastq.convert import get_sequences as get_sequences_and_scores
+from biotite.sequence.io.fastq.convert import get_sequences as _fastq_get_sequences
 from biotite.sequence.io.fastq.file import FastqFile
 from biotite.sequence.seqtypes import NucleotideSequence
 
 
-# Do not use LocalApp, as two programs are executed
-class _DumpApp(Application, metaclass=abc.ABCMeta):
+@dataclass(frozen=True)
+class PrefetchDirectory:
     """
-    Fetch sequencing data from the *NCBI sequence read archive*
-    (SRA) using *sra-tools*.
+    A handle to the directory an SRA run was prefetched into.
 
-    Parameters
+    It can be passed to a dump application to avoid downloading the run
+    again.
+
+    Attributes
     ----------
-    uid : str
-        A *unique identifier* (UID) of the file to be downloaded.
-    output_path_prefix : str, optional
-        The prefix of the path to store the downloaded FASTQ file.
-        ``.fastq`` is appended to this prefix if the run contains
-        a single read per spot.
-        ``_1.fastq``, ``_2.fastq``, etc. is appended if it contains
-        multiple reads per spot.
-        By default, the files are created in a temporary directory and
-        deleted after the files have been read.
-    prefetch_path, fasterq_dump_path : str, optional
-        Path to the ``prefetch_path`` and ``fasterq-dump`` binary,
-        respectively.
+    directory : Path
+        The path to the ``prefetch`` output directory.
     """
 
-    def __init__(
-        self,
-        uid: str,
-        output_path_prefix: PathLike[str] | str | None = None,
-        prefetch_path: PathLike[str] | str = "prefetch",
-        fasterq_dump_path: PathLike[str] | str = "fasterq-dump",
-    ) -> None:
-        super().__init__()
-        self._prefetch_path: str = str(prefetch_path)
-        self._fasterq_dump_path: str = str(fasterq_dump_path)
-        self._uid: str = uid
-        self._sra_dir: TemporaryDirectory[str] = TemporaryDirectory(suffix="_sra")
-        self._prefix: str = (
-            join(self._sra_dir.name, self._uid)
-            if output_path_prefix is None
-            else str(output_path_prefix)
-        )
-        self._process: Popen[str] | None = None
-        self._stderr: str = ""
+    directory: Path
+    # Keep a temporary directory alive as long as this handle exists,
+    # so the prefetched data is available until the handle is discarded
+    _temp_dir: TemporaryDirectory[str] | None = field(
+        default=None, repr=False, compare=False
+    )
 
-    @requires_state(AppState.RUNNING | AppState.FINISHED)
-    def join(self, timeout: float | None = None) -> None:
-        # Override method as repetitive calls of 'is_finished()'
-        # are not necessary as 'communicate()' already waits for the
-        # finished application
-        if self._process is None:
-            raise AppStateError("Process has not been started yet")
-        try:
-            _, self._stderr = self._process.communicate(timeout=timeout)
-        except TimeoutExpired:
-            self.cancel()
-            raise TimeoutError(f"The application expired its timeout ({timeout:.1f} s)")
-        self._state = AppState.FINISHED
 
-        try:
-            self.evaluate()
-        except AppStateError:
-            raise
-        except:
-            self._state = AppState.CANCELLED
-            raise
-        else:
-            self._state = AppState.JOINED
-        self.clean_up()
+@dataclass(frozen=True)
+class FastqResult:
+    """
+    The result of a FASTQ extraction with :meth:`FastqDumpApp.extract_fastq`.
 
-    def run(self) -> None:
-        # Prefetch into a temp directory with file name equaling UID
-        # This ensures that the ID in the header is not the temp prefix
-        sra_file_name = join(self._sra_dir.name, self._uid)
-        command = (
-            f"{self._prefetch_path} -q -O {self._sra_dir.name} "
-            f"{self.get_prefetch_options()} {self._uid}; "
-            f"{self._fasterq_dump_path} -q -o {self._prefix}.fastq "
-            f"{self.get_fastq_dump_options()} {sra_file_name}"
-        )
-        self._process = Popen(
-            command, stdout=PIPE, stderr=PIPE, shell=True, encoding="UTF-8"
-        )
+    The parsed files and sequences are not kept in memory, but are read
+    from :attr:`file_paths` on demand via :meth:`get_files`,
+    :meth:`get_sequences` and :meth:`get_sequences_and_scores`.
 
-    def is_finished(self) -> bool:
-        if self._process is None:
-            raise AppStateError("Process has not been started yet")
-        code = self._process.poll()
-        if code is None:
-            return False
-        else:
-            _, self._stderr = self._process.communicate()
-            return True
+    Attributes
+    ----------
+    file_paths : list of Path
+        The paths to the extracted FASTQ files.
+        There is one file per read in a spot.
+    """
 
-    def evaluate(self) -> None:
-        super().evaluate()
-        # Check if applicaion terminated correctly
-        if self._process is None:
-            raise AppStateError("Process has not been started yet")
-        exit_code = self._process.returncode
-        if exit_code != 0:
-            err_msg = self._stderr.replace("\n", " ")
-            raise SubprocessError(
-                f"'prefetch' or 'fasterq-dump' returned with exit code "
-                f"{exit_code}: {err_msg}"
-            )
+    file_paths: list[Path]
+    _temp_dir: TemporaryDirectory[str] | None = field(
+        default=None, repr=False, compare=False
+    )
 
-        self._file_names: list[str] = (
-            # For entries with one read per spot
-            glob.glob(self._prefix + ".fastq")
-            +
-            # For entries with multiple reads per spot
-            glob.glob(self._prefix + "_*.fastq")
-        )
-        # Only load FASTQ files into memory when needed
-        self._fastq_files: list[FastqFile] | None = None
-
-    def wait_interval(self) -> float:
-        # Not used in this implementation of 'join()'
-        raise NotImplementedError()
-
-    def clean_up(self) -> None:
-        if self.get_app_state() == AppState.CANCELLED and self._process is not None:
-            self._process.kill()
-        # Directory with temp files does not need to be deleted,
-        # as temp dir is automatically deleted upon object destruction
-
-    @requires_state(AppState.CREATED)
-    def get_prefetch_options(self) -> str:
+    def get_files(
+        self, offset: int | FastqFile.Offset = FastqFile.Offset.SANGER
+    ) -> list[FastqFile]:
         """
-        Get additional options for the `prefetch` call.
+        Parse the extracted FASTQ files.
 
-        PROTECTED: Override when inheriting.
+        Parameters
+        ----------
+        offset : int or FastqFile.Offset, optional
+            This value is subtracted from the FASTQ ASCII code to obtain
+            the quality score.
 
         Returns
         -------
-        options: str
-            The additional options.
+        files : list of FastqFile
+            The parsed FASTQ files, one per read in a spot.
         """
-        return ""
+        return [FastqFile.read(path, offset=offset) for path in self.file_paths]
 
-    @requires_state(AppState.CREATED)
-    def get_fastq_dump_options(self) -> str:
+    def get_sequences(
+        self, offset: int | FastqFile.Offset = FastqFile.Offset.SANGER
+    ) -> list[dict[str, NucleotideSequence]]:
         """
-        Get additional options for the `fasterq-dump` call.
+        Get the reads from the extracted FASTQ files.
 
-        PROTECTED: Override when inheriting.
-
-        Returns
-        -------
-        options: str
-            The additional options.
-        """
-        return ""
-
-    @requires_state(AppState.JOINED)
-    def get_file_paths(self) -> list[str]:
-        """
-        Get the file paths to the downloaded files.
-
-        Returns
-        -------
-        paths : list of str
-            The file paths to the downloaded files.
-        """
-        return self._file_names
-
-    @requires_state(AppState.JOINED)
-    @abc.abstractmethod
-    def get_sequences(self) -> list[dict[str, NucleotideSequence]]:
-        """
-        Get the sequences from the downloaded file(s).
+        Parameters
+        ----------
+        offset : int or FastqFile.Offset, optional
+            This value is subtracted from the FASTQ ASCII code to obtain
+            the quality score.
 
         Returns
         -------
         sequences : list of dict (str -> NucleotideSequence)
-            This list contains the reads for each spot:
-            The first item contains the first read for each spot, the
-            second item contains the second read for each spot (if existing),
-            etc.
-            Each item in the list is a dictionary mapping identifiers to its
-            corresponding sequence.
+            The reads for each spot: the first item contains the first
+            read for each spot, the second item the second read, etc.
+            Each item maps identifiers to their sequence.
         """
-        pass
-
-
-class FastqDumpApp(_DumpApp):
-    """
-    Fetch sequencing data from the *NCBI sequence read archive*
-    (SRA) using *sra-tools*.
-
-    DEPRECATED: Use
-    :meth:`biotite.application_v2.sra.FastqDumpApp.extract_fastq()` instead.
-
-    Parameters
-    ----------
-    uid : str
-        A *unique identifier* (UID) of the file to be downloaded.
-    output_path_prefix : str, optional
-        The prefix of the path to store the downloaded FASTQ file.
-        ``.fastq`` is appended to this prefix if the run contains
-        a single read per spot.
-        ``_1.fastq``, ``_2.fastq``, etc. is appended if it contains
-        multiple reads per spot.
-        By default, the files are created in a temporary directory and
-        deleted after the files have been read.
-    prefetch_path, fasterq_dump_path : str, optional
-        Path to the ``prefetch_path`` and ``fasterq-dump`` binary,
-        respectively.
-    offset : int or FastqFile.Offset, optional
-        This value is subtracted from the FASTQ ASCII code to obtain the
-        quality score.
-        Can be provided directly as integer or as a member of
-        :class:`FastqFile.Offset`.
-    """
-
-    _v2_alternative = "biotite.application_v2.sra.FastqDumpApp"
-
-    def __init__(
-        self,
-        uid: str,
-        output_path_prefix: PathLike[str] | str | None = None,
-        prefetch_path: PathLike[str] | str = "prefetch",
-        fasterq_dump_path: PathLike[str] | str = "fasterq-dump",
-        offset: int | FastqFile.Offset = FastqFile.Offset.SANGER,
-    ) -> None:
-        super().__init__(uid, output_path_prefix, prefetch_path, fasterq_dump_path)
-        self._offset: int | FastqFile.Offset = offset
-        self._fastq_files: list[FastqFile] | None = None
-
-    @requires_state(AppState.JOINED)
-    def get_fastq(self) -> list[FastqFile]:
-        """
-        Get the `FastqFile` objects from the downloaded file(s).
-
-        Returns
-        -------
-        fastq_files : list of FastqFile
-            This list contains the reads for each spot:
-            The first item contains the first read for each spot, the
-            second item contains the second read for each spot (if existing),
-            etc.
-        """
-        if self._fastq_files is None:
-            self._fastq_files = [
-                FastqFile.read(file_name, offset=self._offset)
-                for file_name in self.get_file_paths()
-            ]
-        return self._fastq_files
-
-    @requires_state(AppState.JOINED)
-    def get_sequences(self) -> list[dict[str, NucleotideSequence]]:
         return [
-            {
-                header: NucleotideSequence(seq_str.replace("U", "T").replace("X", "N"))
-                for header, (seq_str, _) in fastq_file.items()
-            }
-            for fastq_file in self.get_fastq()
+            {header: sequence for header, (sequence, _) in spot.items()}
+            for spot in self.get_sequences_and_scores(offset)
         ]
 
-    @requires_state(AppState.JOINED)
     def get_sequences_and_scores(
-        self,
+        self, offset: int | FastqFile.Offset = FastqFile.Offset.SANGER
     ) -> list[dict[str, tuple[NucleotideSequence, np.ndarray]]]:
         """
-        Get the sequences and score values from the downloaded file(s).
-
-        Returns
-        -------
-        sequences_and_scores : list of dict (str -> (NucleotideSequence, ndarray))
-            This list contains the reads for each spot:
-            The first item contains the first read for each spot, the
-            second item contains the second read for each spot (if existing),
-            etc.
-            Each item in the list is a dictionary mapping identifiers to its
-            corresponding sequence and score values.
-        """
-        return [get_sequences_and_scores(fastq_file) for fastq_file in self.get_fastq()]
-
-    @classmethod
-    def fetch(
-        cls,
-        uid: str,
-        output_path_prefix: PathLike[str] | str | None = None,
-        prefetch_path: PathLike[str] | str = "prefetch",
-        fasterq_dump_path: PathLike[str] | str = "fasterq-dump",
-        offset: int | FastqFile.Offset = FastqFile.Offset.SANGER,
-    ) -> list[dict[str, NucleotideSequence]]:
-        """
-        Get the sequences belonging to the UID from the
-        *NCBI sequence read archive* (SRA).
+        Get the reads and quality scores from the extracted FASTQ files.
 
         Parameters
         ----------
-        uid : str
-            A *unique identifier* (UID) of the file to be downloaded.
-        output_path_prefix : str, optional
-            The prefix of the path to store the downloaded FASTQ file.
-            ``.fastq`` is appended to this prefix if the run contains
-            a single read per spot.
-            ``_1.fastq``, ``_2.fastq``, etc. is appended if it contains
-            multiple reads per spot.
-            By default, the files are created in a temporary directory and
-            deleted after the files have been read.
-        prefetch_path, fasterq_dump_path : str, optional
-            Path to the ``prefetch_path`` and ``fasterq-dump`` binary,
-            respectively.
         offset : int or FastqFile.Offset, optional
-            This value is subtracted from the FASTQ ASCII code to obtain the
-            quality score.
-            Can be provided directly as integer or as a member of
-            :class:`FastqFile.Offset`.
+            This value is subtracted from the FASTQ ASCII code to obtain
+            the quality score.
+
+        Returns
+        -------
+        sequences_and_scores : list of dict (str -> tuple(NucleotideSequence, ndarray))
+            Like the result of :meth:`get_sequences`, but each value
+            additionally contains the quality scores.
+        """
+        return [_fastq_get_sequences(file) for file in self.get_files(offset)]
+
+
+@dataclass(frozen=True)
+class FastaResult:
+    """
+    The result of a FASTA extraction with :meth:`FastqDumpApp.extract_fasta`.
+
+    The parsed files and sequences are not kept in memory, but are read
+    from :attr:`file_paths` on demand via :meth:`get_files` and
+    :meth:`get_sequences`.
+
+    Attributes
+    ----------
+    file_paths : list of Path
+        The paths to the extracted FASTA files.
+        There is one file per read in a spot.
+    """
+
+    file_paths: list[Path]
+    _temp_dir: TemporaryDirectory[str] | None = field(
+        default=None, repr=False, compare=False
+    )
+
+    def get_files(self) -> list[FastaFile]:
+        """
+        Parse the extracted FASTA files.
+
+        Returns
+        -------
+        files : list of FastaFile
+            The parsed FASTA files, one per read in a spot.
+        """
+        return [FastaFile.read(path) for path in self.file_paths]
+
+    def get_sequences(self) -> list[dict[str, NucleotideSequence]]:
+        """
+        Get the reads from the extracted FASTA files.
 
         Returns
         -------
         sequences : list of dict (str -> NucleotideSequence)
-            This list contains the reads for each spot:
-            The first item contains the first read for each spot, the
-            second item contains the second read for each spot (if existing),
-            etc.
-            Each item in the list is a dictionary mapping identifiers to its
-            corresponding sequence.
+            The reads for each spot: the first item contains the first
+            read for each spot, the second item the second read, etc.
+            Each item maps identifiers to their sequence.
         """
-        app = cls(uid, output_path_prefix, prefetch_path, fasterq_dump_path, offset)
-        app.start()
-        app.join()
-        return app.get_sequences()
+        return [
+            _fasta_get_sequences(file, seq_type=NucleotideSequence)
+            for file in self.get_files()
+        ]
 
 
-class FastaDumpApp(_DumpApp):
+class PrefetchApp(LocalApp):
     """
-    Fetch sequencing data from the *NCBI sequence read archive*
-    (SRA) using *sra-tools*.
-
-    DEPRECATED: Use
-    :meth:`biotite.application_v2.sra.FastqDumpApp.extract_fasta()` instead.
+    A handle to ``prefetch`` from *sra-tools*.
 
     Parameters
     ----------
-    uid : str
-        A *unique identifier* (UID) of the file to be downloaded.
-    output_path_prefix : str, optional
-        The prefix of the path to store the downloaded FASTQ file.
-        ``.fastq`` is appended to this prefix if the run contains
-        a single read per spot.
-        ``_1.fastq``, ``_2.fastq``, etc. is appended if it contains
-        multiple reads per spot.
-        By default, the files are created in a temporary directory and
-        deleted after the files have been read.
-    prefetch_path, fasterq_dump_path : str, optional
-        Path to the ``prefetch_path`` and ``fasterq-dump`` binary,
-        respectively.
+    path : str, optional
+        Path of the ``prefetch`` binary.
+
+    Notes
+    -----
+    According to the *sra-tools*
+    `documentation <https://github.com/ncbi/sra-tools/wiki/08.-prefetch-and-fasterq-dump>`_,
+    running ``prefetch`` before ``fastq-dump``
+    '*is the fastest way to extract FASTQ-files from SRA-accessions*'.
+
+    Examples
+    --------
+
+    >>> prefetch = PrefetchApp().run("ERR11344941").result()  # doctest: +SKIP
+    >>> sequences = FastqDumpApp().extract_fastq(  # doctest: +SKIP
+    ...     "ERR11344941", prefetch=prefetch
+    ... ).result().get_sequences()
     """
 
-    _v2_alternative = "biotite.application_v2.sra.FastqDumpApp"
+    def __init__(self, path: PathLike[str] | str = "prefetch") -> None:
+        super().__init__(path)
 
-    def __init__(
+    @command(
+        allowed_options=["transport", "min_size", "max_size", "verify", "resume", "ngc"]
+    )
+    def run(
         self,
-        uid: str,
-        output_path_prefix: PathLike[str] | str | None = None,
-        prefetch_path: PathLike[str] | str = "prefetch",
-        fasterq_dump_path: PathLike[str] | str = "fasterq-dump",
-    ) -> None:
-        super().__init__(uid, output_path_prefix, prefetch_path, fasterq_dump_path)
-        self._fasta_files: list[FastaFile] | None = None
-
-    @requires_state(AppState.CREATED)
-    def get_prefetch_options(self) -> str:
-        return ""
-        # TODO: Use '--eliminate-quals'
-        # when https://github.com/ncbi/sra-tools/issues/883 is resolved
-        # return "--eliminate-quals"
-
-    @requires_state(AppState.CREATED)
-    def get_fastq_dump_options(self) -> str:
-        return "--fasta"
-
-    @requires_state(AppState.JOINED)
-    def get_fasta(self) -> list[FastaFile]:
+        accession: str,
+        output_directory: PathLike[str] | str | None = None,
+    ) -> CommandSetup[PrefetchDirectory]:
         """
-        Get the `FastaFile` objects from the downloaded file(s).
-
-        Returns
-        -------
-        fasta_files : list of FastaFile
-            This list contains the reads for each spot:
-            The first item contains the first read for each spot, the
-            second item contains the second read for each spot (if existing),
-            etc.
-        """
-        if self._fasta_files is None:
-            self._fasta_files = [
-                FastaFile.read(file_name) for file_name in self.get_file_paths()
-            ]
-        return self._fasta_files
-
-    @requires_state(AppState.JOINED)
-    def get_sequences(self) -> list[dict[str, NucleotideSequence]]:
-        return [
-            get_sequences(fasta_file, seq_type=NucleotideSequence)
-            for fasta_file in self.get_fasta()
-        ]
-
-    @classmethod
-    def fetch(
-        cls,
-        uid: str,
-        output_path_prefix: PathLike[str] | str | None = None,
-        prefetch_path: PathLike[str] | str = "prefetch",
-        fasterq_dump_path: PathLike[str] | str = "fasterq-dump",
-    ) -> list[dict[str, NucleotideSequence]]:
-        """
-        Get the sequences belonging to the UID from the
-        *NCBI sequence read archive* (SRA).
+        Download the run with the given accession.
 
         Parameters
         ----------
-        uid : str
-            A *unique identifier* (UID) of the file to be downloaded.
-        output_path_prefix : str, optional
-            The prefix of the path to store the downloaded FASTQ file.
-            ``.fastq`` is appended to this prefix if the run contains
-            a single read per spot.
-            ``_1.fastq``, ``_2.fastq``, etc. is appended if it contains
-            multiple reads per spot.
-            By default, the files are created in a temporary directory and
-            deleted after the files have been read.
-        prefetch_path, fasterq_dump_path : str, optional
-            Path to the ``prefetch_path`` and ``fasterq-dump`` binary,
-            respectively.
+        accession : str
+            The accession of the run to be downloaded.
+        output_directory : str or Path, optional
+            The directory the run is downloaded into.
+            By default, a temporary directory is used, that is deleted
+            once the returned :class:`PrefetchDirectory` is discarded.
 
         Returns
         -------
-        sequences : list of dict (str -> NucleotideSequence)
-            This list contains the reads for each spot:
-            The first item contains the first read for each spot, the
-            second item contains the second read for each spot (if existing),
-            etc.
-            Each item in the list is a dictionary mapping identifiers to its
-            corresponding sequence.
+        future : Future of PrefetchDirectory
+            A handle to the running download.
+            Call :meth:`Future.result()` to obtain the
+            :class:`PrefetchDirectory`.
         """
-        app = cls(uid, output_path_prefix, prefetch_path, fasterq_dump_path)
-        app.start()
-        app.join()
-        return app.get_sequences()
+        if output_directory is None:
+            temp_dir = TemporaryDirectory(suffix="_sra")
+            directory = Path(temp_dir.name)
+        else:
+            temp_dir = None
+            directory = Path(output_directory)
+
+        parameters: list[CLIParameter] = [
+            CLIFlag("q"),
+            CLIOption("O", directory),
+            CLIArgument(accession),
+        ]
+
+        def evaluate(stdout: bytes, stderr: bytes) -> PrefetchDirectory:
+            return PrefetchDirectory(directory=directory, _temp_dir=temp_dir)
+
+        return CommandSetup(parameters=parameters, evaluate=evaluate)
+
+
+class FastqDumpApp(LocalApp):
+    """
+    A handle to ``fasterq-dump`` from *sra-tools*.
+
+    The reads can be extracted as FASTQ, i.e. including quality scores,
+    via :meth:`extract_fastq` or as FASTA via :meth:`extract_fasta`.
+
+    Parameters
+    ----------
+    path : str, optional
+        Path of the ``fasterq-dump`` binary.
+
+    Notes
+    -----
+    According to the *sra-tools*
+    `documentation <https://github.com/ncbi/sra-tools/wiki/08.-prefetch-and-fasterq-dump>`_,
+    running ``prefetch`` before ``fastq-dump``
+    '*is the fastest way to extract FASTQ-files from SRA-accessions*'.
+
+    Examples
+    --------
+
+    >>> app = FastqDumpApp()
+    >>> sequences = app.extract_fastq("ERR11344941").result().get_sequences()  # doctest: +SKIP
+    """
+
+    def __init__(self, path: PathLike[str] | str = "fasterq-dump") -> None:
+        super().__init__(path)
+
+    @command(
+        allowed_options=[
+            "threads",
+            "mem",
+            "temp",
+            "bufsize",
+            "curcache",
+            "skip_technical",
+            "include_technical",
+            "min_read_len",
+            "bases",
+        ]
+    )
+    def extract_fastq(
+        self,
+        accession: str,
+        prefetch: PrefetchDirectory | None = None,
+        output_path_prefix: PathLike[str] | str | None = None,
+    ) -> CommandSetup[FastqResult]:
+        """
+        Extract the run with the given accession as FASTQ.
+
+        Parameters
+        ----------
+        accession : str
+            The accession of the run to be extracted.
+        prefetch : PrefetchDirectory, optional
+            A directory a previous :class:`PrefetchApp` downloaded the run
+            into.
+            If not given, the run is downloaded on the fly.
+        output_path_prefix : str or Path, optional
+            The prefix of the path to store the extracted FASTQ file(s).
+            ``.fastq`` is appended for a single read per spot, ``_1.fastq``,
+            ``_2.fastq``, etc. for multiple reads per spot.
+            By default, a temporary directory is used.
+
+        Returns
+        -------
+        future : Future of FastqResult
+            A handle to the running extraction.
+            Call :meth:`Future.result()` to obtain the
+            :class:`FastqResult`.
+        """
+        parameters, temp_dir, prefix, suffix = _setup_parameters(
+            accession, prefetch, output_path_prefix, fasta=False
+        )
+
+        def evaluate(stdout: bytes, stderr: bytes) -> FastqResult:
+            return FastqResult(
+                file_paths=_find_files(prefix, suffix), _temp_dir=temp_dir
+            )
+
+        return CommandSetup(parameters=parameters, evaluate=evaluate)
+
+    @command(
+        allowed_options=[
+            "threads",
+            "mem",
+            "temp",
+            "bufsize",
+            "curcache",
+            "skip_technical",
+            "include_technical",
+            "min_read_len",
+            "bases",
+        ]
+    )
+    def extract_fasta(
+        self,
+        accession: str,
+        prefetch: PrefetchDirectory | None = None,
+        output_path_prefix: PathLike[str] | str | None = None,
+    ) -> CommandSetup[FastaResult]:
+        """
+        Extract the run with the given accession as FASTA.
+
+        Parameters
+        ----------
+        accession : str
+            The accession of the run to be extracted.
+        prefetch : PrefetchDirectory, optional
+            A directory a previous :class:`PrefetchApp` downloaded the run
+            into.
+            If not given, the run is downloaded on the fly.
+        output_path_prefix : str or Path, optional
+            The prefix of the path to store the extracted FASTA file(s).
+            By default, a temporary directory is used.
+
+        Returns
+        -------
+        future : Future of FastaResult
+            A handle to the running extraction.
+            Call :meth:`Future.result()` to obtain the
+            :class:`FastaResult`.
+        """
+        parameters, temp_dir, prefix, suffix = _setup_parameters(
+            accession, prefetch, output_path_prefix, fasta=True
+        )
+
+        def evaluate(stdout: bytes, stderr: bytes) -> FastaResult:
+            return FastaResult(
+                file_paths=_find_files(prefix, suffix), _temp_dir=temp_dir
+            )
+
+        return CommandSetup(parameters=parameters, evaluate=evaluate)
+
+
+def _setup_parameters(
+    accession: str,
+    prefetch: PrefetchDirectory | None,
+    output_path_prefix: PathLike[str] | str | None,
+    fasta: bool,
+) -> tuple[list[CLIParameter], TemporaryDirectory[str] | None, str, str]:
+    """
+    Assemble the ``fasterq-dump`` command line parameters for a run.
+    """
+    if output_path_prefix is None:
+        temp_dir = TemporaryDirectory(suffix="_sra")
+        prefix = join(temp_dir.name, accession)
+    else:
+        temp_dir = None
+        prefix = str(output_path_prefix)
+    # Without a prefetched directory, the accession is downloaded on the fly
+    input_path = accession if prefetch is None else prefetch.directory / accession
+
+    # 'fasterq-dump' uses the given output file name verbatim,
+    # so the extension must match the actual output format
+    suffix = ".fasta" if fasta else ".fastq"
+    parameters: list[CLIParameter] = [
+        CLIFlag("q"),
+        CLIOption("o", prefix + suffix),
+    ]
+    if fasta:
+        parameters.append(CLIFlag("fasta"))
+    parameters.append(CLIArgument(input_path))
+    return parameters, temp_dir, prefix, suffix
+
+
+def _find_files(prefix: str, suffix: str) -> list[Path]:
+    """
+    Find the FASTQ/FASTA files written by ``fasterq-dump`` for a run.
+    """
+    return [
+        Path(path)
+        for path in sorted(
+            # Entries with one read per spot
+            glob.glob(prefix + suffix)
+            # Entries with multiple reads per spot
+            + glob.glob(prefix + "_*" + suffix)
+        )
+    ]

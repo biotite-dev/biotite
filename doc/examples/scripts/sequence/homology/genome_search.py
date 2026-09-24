@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
 import biotite
-import biotite.application_v2.viennarna as viennarna
+import biotite.application.viennarna as viennarna
 import biotite.database.entrez as entrez
 import biotite.sequence.align as align
 import biotite.sequence.graphics as seqgraphics
@@ -143,8 +143,8 @@ for strand, m1_pos, genome_pos in trigger_matches:
     alignment = align.align_banded(
         m1_sequence,
         genome,
-        matrix,
         band=(diagonal - BAND_WIDTH, diagonal + BAND_WIDTH),
+        matrix=matrix,
         max_number=1,
     )[0]
     alignments.append((strand, alignment))

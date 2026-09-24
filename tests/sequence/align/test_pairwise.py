@@ -91,8 +91,11 @@ def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
     )[0]
 
     try:
-        ref_alignment = muscle.MuscleApp.align(
-            [seq1, seq2], matrix=matrix, gap_penalty=gap_penalty
+        ref_alignment = (
+            muscle.Muscle3App()
+            .run([seq1, seq2], matrix=matrix, gap_penalty=gap_penalty)
+            .result()
+            .alignment
         )
     except VersionError:
         pytest.skip("Invalid Muscle software version")

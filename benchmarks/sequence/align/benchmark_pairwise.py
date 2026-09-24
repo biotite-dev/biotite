@@ -45,4 +45,4 @@ def benchmark_align_pairwise(seq_pair, matrix, seed, method, score_only):
     Perform pairwise sequence alignment using different algorithms.
     """
     kwargs = {"seed": seed} if method.func is align.align_local_gapped else {}
-    method(seq_pair[0], seq_pair[1], matrix, score_only=score_only, **kwargs)
+    method(seq_pair[0], seq_pair[1], matrix=matrix, score_only=score_only, **kwargs)

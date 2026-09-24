@@ -8,7 +8,7 @@ from typing import Any
 import numpy as np
 from matplotlib.axes import Axes
 from biotite.sequence.alphabet import LetterAlphabet
-from biotite.sequence.graphics.colorschemes import get_color_scheme
+from biotite.sequence.graphics.colorschemes import ColorScheme, get_color_scheme
 from biotite.sequence.profile import SequenceProfile
 from biotite.typing import MplColor
 from biotite.visualize import plot_scaled_text
@@ -17,7 +17,7 @@ from biotite.visualize import plot_scaled_text
 def plot_sequence_logo(
     axes: Axes,
     profile: SequenceProfile,
-    scheme: str | list[MplColor] | None = None,
+    scheme: str | ColorScheme | list[MplColor] | None = None,
     **kwargs: Any,
 ) -> None:
     """
@@ -38,10 +38,11 @@ def plot_sequence_logo(
         The axes to draw the logo one.
     profile : SequenceProfile
         The logo is created based on this profile.
-    scheme : str or list of (tuple or str)
-        Either a valid color scheme name
-        (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.)
-        or a list of *Matplotlib* compatible colors.
+    scheme : str or ColorScheme or list of (tuple or str), optional
+        Either a valid built-in color scheme name
+        (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.),
+        a :class:`ColorScheme` or a list of *Matplotlib* compatible
+        colors.
         The list length must be at least as long as the
         length of the alphabet used by the `profile`.
     **kwargs
@@ -61,6 +62,8 @@ def plot_sequence_logo(
         colors = get_color_scheme("flower", alphabet)
     elif isinstance(scheme, str):
         colors = get_color_scheme(scheme, alphabet)
+    elif isinstance(scheme, ColorScheme):
+        colors = scheme.fit(alphabet)
     else:
         colors = scheme
 

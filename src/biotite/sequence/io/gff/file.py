@@ -2,10 +2,11 @@ from __future__ import annotations
 
 __name__ = "biotite.sequence.io.gff"
 __author__ = "Patrick Kunzmann"
-__all__ = ["GFFFile"]
+__all__ = ["GFFFile", "GFFRecord"]
 
 import string
 import warnings
+from dataclasses import dataclass, field
 from os import PathLike
 from typing import IO, Any, Self
 from urllib.parse import quote, unquote
@@ -17,6 +18,50 @@ from biotite.sequence.annotation import Location
 _NOT_QUOTED = (
     "".join([char for char in string.punctuation if char not in "%;=&,"]) + " "
 )
+
+
+@dataclass
+class GFFRecord:
+    """
+    An entry of a GFF3 file, i.e. one non-comment and non-directive
+    line.
+
+    The fields correspond to the 9 columns of GFF3.
+
+    Attributes
+    ----------
+    seqid : str or None
+        The ID of the reference sequence.
+        ``None`` if the column is undefined (``.``).
+    source : str or None
+        Source of the data (e.g. ``Genbank``).
+        ``None`` if the column is undefined (``.``).
+    type : str
+        Type of the feature (e.g. ``CDS``).
+    start : int
+        Start coordinate of feature on the reference sequence.
+    end : int
+        End coordinate of feature on the reference sequence.
+    score : float or None, optional
+        Optional score (e.g. an E-value).
+    strand : Location.Strand or None, optional
+        Strand of the feature, ``None`` if feature is not stranded.
+    phase : int or None, optional
+        Reading frame shift, ``None`` for non-CDS features.
+    attributes : dict of str -> (str or None), optional
+        Additional properties of the feature.
+        ``None`` values are written as empty values.
+    """
+
+    seqid: str | None
+    source: str | None
+    type: str
+    start: int
+    end: int
+    score: float | None = None
+    strand: Location.Strand | None = None
+    phase: int | None = None
+    attributes: dict[str, str | None] = field(default_factory=dict)
 
 
 class GFFFile(TextFile):
@@ -31,22 +76,8 @@ class GFFFile(TextFile):
     However, it does not provide additional meta information.
 
     This class serves as low-level API for accessing GFF3 files.
-    It is used as a sequence of entries, where each entry is defined as
-    a non-comment and non-directive line.
-    Each entry consists of values corresponding to the 9 columns of
-    GFF3:
-
-    ==============  ===============================  ==========================================================
-    **seqid**       ``str``                          The ID of the reference sequence
-    **source**      ``str``                          Source of the data (e.g. ``Genbank``)
-    **type**        ``str``                          Type of the feature (e.g. ``CDS``)
-    **start**       ``int``                          Start coordinate of feature on the reference sequence
-    **end**         ``int``                          End coordinate of feature on the reference sequence
-    **score**       ``float`` or ``None``            Optional score (e.g. an E-value)
-    **strand**      ``Location.Strand`` or ``None``  Strand of the feature, ``None`` if feature is not stranded
-    **phase**       ``int`` or ``None``              Reading frame shift, ``None`` for non-CDS features
-    **attributes**  ``dict``                         Additional properties of the feature
-    ==============  ===============================  ==========================================================
+    It is used as a sequence of :class:`GFFRecord` entries, where each
+    entry is defined as a non-comment and non-directive line.
 
     Note that the entry index may not be equal to the line index,
     because GFF3 files can contain comment and directive lines.
@@ -80,28 +111,28 @@ class GFFFile(TextFile):
     >>> import os.path
     >>> gff_file = GFFFile.read(os.path.join(path_to_sequences, "gg_avidin.gff3"))
     >>> # Get content of first entry
-    >>> seqid, source, type, start, end, score, strand, phase, attrib = gff_file[0]
-    >>> print(seqid)
+    >>> record = gff_file[0]
+    >>> print(record.seqid)
     AJ311647.1
-    >>> print(source)
+    >>> print(record.source)
     EMBL
-    >>> print(type)
+    >>> print(record.type)
     region
-    >>> print(start)
+    >>> print(record.start)
     1
-    >>> print(end)
+    >>> print(record.end)
     1224
-    >>> print(score)
+    >>> print(record.score)
     None
-    >>> print(strand)
+    >>> print(record.strand)
     Strand.FORWARD
-    >>> print(phase)
+    >>> print(record.phase)
     None
-    >>> print(attrib)
+    >>> print(record.attributes)
     {'ID': 'AJ311647.1:1..1224', 'Dbxref': 'taxon:9031', 'Name': 'Z', 'chromosome': 'Z', 'gbkey': 'Src', 'mol_type': 'genomic DNA'}
     >>> # Edit the first entry: Simply add a score
-    >>> score = 1.0
-    >>> gff_file[0] = seqid, source, type, start, end, score, strand, phase, attrib
+    >>> record.score = 1.0
+    >>> gff_file[0] = record
     >>> # Delete first entry
     >>> del gff_file[0]
 
@@ -109,11 +140,11 @@ class GFFFile(TextFile):
 
     >>> gff_file = GFFFile()
     >>> gff_file.append_directive("Example directive", "param1", "param2")
-    >>> gff_file.append(
+    >>> gff_file.append(GFFRecord(
     ...     "SomeSeqID", "Biotite", "CDS", 1, 99,
     ...     None, Location.Strand.FORWARD, 0,
     ...     {"ID": "FeatureID", "product":"A protein"}
-    ... )
+    ... ))
     >>> print(gff_file)   #doctest: +NORMALIZE_WHITESPACE
     ##gff-version 3
     ##Example directive param1 param2
@@ -151,19 +182,7 @@ class GFFFile(TextFile):
         gff_file._index_entries()
         return gff_file
 
-    def insert(
-        self,
-        index: int,
-        seqid: str | None,
-        source: str | None,
-        type: str,
-        start: int,
-        end: int,
-        score: float | None,
-        strand: Location.Strand | None,
-        phase: int | None,
-        attributes: dict[str, str | None] | None = None,
-    ) -> None:
+    def insert(self, index: int, record: GFFRecord) -> None:
         """
         Insert an entry at the given index.
 
@@ -173,81 +192,32 @@ class GFFFile(TextFile):
             Index where the entry is inserted.
             If the index is equal to the length of the file, the entry
             is appended at the end of the file.
-        seqid : str
-            The ID of the reference sequence.
-        source : str
-            Source of the data (e.g. ``Genbank``).
-        type : str
-            Type of the feature (e.g. ``CDS``).
-        start : int
-            Start coordinate of feature on the reference sequence.
-        end : int
-            End coordinate of feature on the reference sequence.
-        score : float or None
-            Optional score (e.g. an E-value).
-        strand : Location.Strand or None
-            Strand of the feature, ``None`` if feature is not stranded.
-        phase : int or None
-            Reading frame shift, ``None`` for non-CDS features.
-        attributes : dict, optional
-            Additional properties of the feature.
+        record : GFFRecord
+            The entry to insert.
         """
         if index == len(self):
-            self.append(
-                seqid, source, type, start, end, score, strand, phase, attributes
-            )
+            self.append(record)
         else:
             line_index = self._entries[index]
-            line = GFFFile._create_line(
-                seqid, source, type, start, end, score, strand, phase, attributes
-            )
+            line = GFFFile._create_line(record)
             self.lines.insert(line_index, line)
             self._index_entries()
 
-    def append(
-        self,
-        seqid: str | None,
-        source: str | None,
-        type: str,
-        start: int,
-        end: int,
-        score: float | None,
-        strand: Location.Strand | None,
-        phase: int | None,
-        attributes: dict[str, str | None] | None = None,
-    ) -> None:
+    def append(self, record: GFFRecord) -> None:
         """
         Append an entry to the end of the file.
 
         Parameters
         ----------
-        seqid : str
-            The ID of the reference sequence.
-        source : str
-            Source of the data (e.g. ``Genbank``).
-        type : str
-            Type of the feature (e.g. ``CDS``).
-        start : int
-            Start coordinate of feature on the reference sequence.
-        end : int
-            End coordinate of feature on the reference sequence.
-        score : float or None
-            Optional score (e.g. an E-value).
-        strand : Location.Strand or None
-            Strand of the feature, ``None`` if feature is not stranded.
-        phase : int or None
-            Reading frame shift, ``None`` for non-CDS features.
-        attributes : dict, optional
-            Additional properties of the feature.
+        record : GFFRecord
+            The entry to append.
         """
         if self._has_fasta:
             raise NotImplementedError(
                 "Cannot append feature entries, "
                 "as this file contains additional FASTA data"
             )
-        line = GFFFile._create_line(
-            seqid, source, type, start, end, score, strand, phase, attributes
-        )
+        line = GFFFile._create_line(record)
         self.lines.append(line)
         # Fast update of entry index by adding last line
         self._entries.append(len(self.lines) - 1)
@@ -301,41 +271,12 @@ class GFFFile(TextFile):
         # Sort in line order
         return sorted(self._directives, key=lambda directive: directive[1])
 
-    def __setitem__(
-        self,
-        index: int,
-        item: tuple[
-            str,
-            str,
-            str,
-            int,
-            int,
-            float | None,
-            Location.Strand | None,
-            int | None,
-            dict[str, str | None] | None,
-        ],
-    ) -> None:
-        seqid, source, type, start, end, score, strand, phase, attrib = item
-        line = GFFFile._create_line(
-            seqid, source, type, start, end, score, strand, phase, attrib
-        )
+    def __setitem__(self, index: int, record: GFFRecord) -> None:
+        line = GFFFile._create_line(record)
         line_index = self._entries[index]
         self.lines[line_index] = line
 
-    def __getitem__(
-        self, index: int
-    ) -> tuple[
-        str,
-        str,
-        str,
-        int,
-        int,
-        float | None,
-        Location.Strand | None,
-        int | None,
-        dict[str, str],
-    ]:
+    def __getitem__(self, index: int) -> GFFRecord:
         if (index >= 0 and index >= len(self)) or (index < 0 and -index > len(self)):
             raise IndexError(
                 f"Index {index} is out of range for GFFFile with {len(self)} entries"
@@ -363,7 +304,7 @@ class GFFFile(TextFile):
         phase = None if phase == "." else int(phase)
         attrib = GFFFile._parse_attributes(attrib)
 
-        return seqid, source, type, start, end, score, strand, phase, attrib
+        return GFFRecord(seqid, source, type, start, end, score, strand, phase, attrib)
 
     def __delitem__(self, index: int) -> None:
         line_index = self._entries[index]
@@ -414,30 +355,36 @@ class GFFFile(TextFile):
         self._entries = entries[:entry_counter]
 
     @staticmethod
-    def _create_line(
-        seqid: str | None,
-        source: str | None,
-        type: str,
-        start: int,
-        end: int,
-        score: float | None,
-        strand: Location.Strand | None,
-        phase: int | None,
-        attributes: dict[str, str | None] | None,
-    ) -> str:
+    def _create_line(record: GFFRecord) -> str:
         """
         Create a line for a newly created entry.
         """
-        seqid = quote(seqid.strip(), safe=_NOT_QUOTED) if seqid is not None else "."
-        source = quote(source.strip(), safe=_NOT_QUOTED) if source is not None else "."
-        type = type.strip()
+        if not isinstance(record, GFFRecord):
+            raise TypeError(f"Expected 'GFFRecord', but got '{type(record).__name__}'")
+        seqid = (
+            quote(record.seqid.strip(), safe=_NOT_QUOTED)
+            if record.seqid is not None
+            else "."
+        )
+        source = (
+            quote(record.source.strip(), safe=_NOT_QUOTED)
+            if record.source is not None
+            else "."
+        )
+        feature_type = record.type.strip()
+        start = record.start
+        end = record.end
+        score = record.score
+        strand = record.strand
+        phase = record.phase
+        attributes = record.attributes
 
         # Perform checks
         if len(seqid) == 0:
             raise ValueError("'seqid' must not be empty")
         if len(source) == 0:
             raise ValueError("'source' must not be empty")
-        if len(type) == 0:
+        if len(feature_type) == 0:
             raise ValueError("'type' must not be empty")
         if seqid[0] == ">":
             raise ValueError("'seqid' must not start with '>'")
@@ -467,7 +414,7 @@ class GFFFile(TextFile):
             [
                 seqid,
                 source,
-                type,
+                feature_type,
                 str(start),
                 str(end),
                 score_str,
@@ -478,14 +425,14 @@ class GFFFile(TextFile):
         )
 
     @staticmethod
-    def _parse_attributes(attributes: str) -> dict[str, str]:
+    def _parse_attributes(attributes: str) -> dict[str, str | None]:
         """
         Parse the *attributes* string into a dictionary.
         """
         if attributes == ".":
             return {}
 
-        attrib_dict = {}
+        attrib_dict: dict[str, str | None] = {}
         attrib_entries = attributes.split(";")
         for entry in attrib_entries:
             compounds = entry.split("=")

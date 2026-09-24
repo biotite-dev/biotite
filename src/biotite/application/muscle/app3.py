@@ -2,43 +2,71 @@ from __future__ import annotations
 
 __name__ = "biotite.application.muscle"
 __author__ = "Patrick Kunzmann"
-__all__ = ["MuscleApp"]
+__all__ = ["Muscle3App", "Muscle3Result"]
 
-import numbers
 import warnings
 from collections.abc import Sequence as SequenceABC
+from dataclasses import dataclass
 from os import PathLike
 from tempfile import NamedTemporaryFile
-from typing import Literal
+from typing import IO, Any
 import networkx as nx
-from biotite.application.application import (
-    AppState,
-    AppStateError,
-    VersionError,
-    requires_state,
+import numpy as np
+from biotite.application.base import VersionError
+from biotite.application.localapp import (
+    CLIFlag,
+    CLIOption,
+    CLIParameter,
+    CommandSetup,
+    LocalApp,
+    cleanup_tempfile,
+    command,
 )
-from biotite.application.localapp import cleanup_tempfile, get_version
-from biotite.application.msaapp import MSAApp
+from biotite.application.msa import MSAInput, resolve_gap_penalty
 from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.align.matrix import SubstitutionMatrix
 from biotite.sequence.phylo.tree import from_newick
 from biotite.sequence.sequence import Sequence
 
 
-class MuscleApp(MSAApp):
+@dataclass(frozen=True)
+class Muscle3Result:
     """
-    Perform a multiple sequence alignment using MUSCLE version 3.
+    The result of a MUSCLE version 3 alignment run.
 
-    DEPRECATED: Use :class:`biotite.application_v2.muscle.Muscle3App` instead.
+    Attributes
+    ----------
+    alignment : Alignment
+        The global multiple sequence alignment.
+    order : ndarray, dtype=int
+        The order of the sequences intended by MUSCLE.
+        Usually this order (e.g. based on the guide tree) differs from
+        the input order.
+    guide_tree_kmer : nx.DiGraph or None
+        The guide tree from the first progressive alignment iteration,
+        using common *k*-mers as distance measure.
+        None, if MUSCLE did not write the tree.
+    guide_tree_identity : nx.DiGraph or None
+        The guide tree from the second progressive alignment iteration,
+        using distances based on the pairwise sequence identity after
+        the first iteration.
+        None, if MUSCLE did not write the tree.
+    """
+
+    alignment: Alignment
+    order: np.ndarray
+    guide_tree_kmer: nx.DiGraph | None
+    guide_tree_identity: nx.DiGraph | None
+
+
+class Muscle3App(LocalApp):
+    """
+    A handle to *MUSCLE* version 3.
 
     Parameters
     ----------
-    sequences : list of Sequence
-        The sequences to be aligned.
-    bin_path : str, optional
+    path : str, optional
         Path of the MUSCLE binary.
-    matrix : SubstitutionMatrix, optional
-        A custom substitution matrix.
 
     See Also
     --------
@@ -47,192 +75,46 @@ class MuscleApp(MSAApp):
     Examples
     --------
 
-    >>> seq1 = ProteinSequence("BIQTITE")
-    >>> seq2 = ProteinSequence("TITANITE")
-    >>> seq3 = ProteinSequence("BISMITE")
-    >>> seq4 = ProteinSequence("IQLITE")
-    >>> app = MuscleApp([seq1, seq2, seq3, seq4])
-    >>> app.start()
-    >>> app.join()
-    >>> alignment = app.get_alignment()
-    >>> print(alignment)
+    >>> sequences = [
+    ...     ProteinSequence("BIQTITE"),
+    ...     ProteinSequence("TITANITE"),
+    ...     ProteinSequence("BISMITE"),
+    ...     ProteinSequence("IQLITE"),
+    ... ]
+    >>> result = Muscle3App().run(sequences).result()
+    >>> print(result.alignment)
     BIQT-ITE
     TITANITE
     BISM-ITE
     -IQL-ITE
     """
 
-    _v2_alternative = "biotite.application_v2.muscle.Muscle3App"
+    def __init__(self, path: PathLike[str] | str = "muscle") -> None:
+        super().__init__(path)
+        if self.version.major != 3:
+            raise VersionError(f"Muscle 3 is required, got version {self.version}")
 
-    def __init__(
+    def _format_key(self, key: Any) -> str:
+        # MUSCLE 3 uses single-dash options, e.g. '-in' or '-version'
+        return "-" + str(key)
+
+    @command(allowed_options=["maxiters", "maxhours", "diags"])
+    def run(
         self,
         sequences: SequenceABC[Sequence],
-        bin_path: PathLike[str] | str = "muscle",
-        matrix: SubstitutionMatrix | None = None,
-    ) -> None:
-        major_version = get_version(bin_path, "-version")[0]
-        if major_version != 3:
-            raise VersionError(f"Muscle 3 is required, got version {major_version}")
-
-        super().__init__(sequences, bin_path, matrix)
-        self._gap_open: float | None = None
-        self._gap_ext: float | None = None
-        self._terminal_penalty: bool | None = None
-        self._tree1: nx.DiGraph | None = None
-        self._tree2: nx.DiGraph | None = None
-        self._out_tree1_file = NamedTemporaryFile("r", suffix=".tree", delete=False)
-        self._out_tree2_file = NamedTemporaryFile("r", suffix=".tree", delete=False)
-
-    def run(self) -> None:
-        args = [
-            "-quiet",
-            "-in",
-            self.get_input_file_path(),
-            "-out",
-            self.get_output_file_path(),
-            "-tree1",
-            self._out_tree1_file.name,
-            "-tree2",
-            self._out_tree2_file.name,
-        ]
-        if self.get_seqtype() == "protein":
-            args += ["-seqtype", "protein"]
-        else:
-            args += ["-seqtype", "dna"]
-        if self.get_matrix_file_path() is not None:
-            args += ["-matrix", self.get_matrix_file_path()]
-        if self._gap_open is not None and self._gap_ext is not None:
-            args += ["-gapopen", f"{self._gap_open:.1f}"]
-            args += ["-gapextend", f"{self._gap_ext:.1f}"]
-            # When the gap penalty is set,
-            # use the penalty also for hydrophobic regions
-            args += ["-hydrofactor", "1.0"]
-            # Use the recommendation of the documentation
-            args += ["-center", "0.0"]
-        self.set_arguments(args)
-        super().run()
-
-    def evaluate(self) -> None:
-        super().evaluate()
-
-        newick = self._out_tree1_file.read().replace("\n", "")
-        if len(newick) > 0:
-            self._tree1 = from_newick(newick)
-        else:
-            warnings.warn("MUSCLE did not write a tree file from the first iteration")
-
-        newick = self._out_tree2_file.read().replace("\n", "")
-        if len(newick) > 0:
-            self._tree2 = from_newick(newick)
-        else:
-            warnings.warn("MUSCLE did not write a tree file from the second iteration")
-
-    def clean_up(self) -> None:
-        super().clean_up()
-        cleanup_tempfile(self._out_tree1_file)
-        cleanup_tempfile(self._out_tree2_file)
-
-    @requires_state(AppState.CREATED)
-    def set_gap_penalty(self, gap_penalty: float | tuple[float, float]) -> None:
-        """
-        Set the gap penalty for the alignment.
-
-        Parameters
-        ----------
-        gap_penalty : float or tuple of (float, float)
-            If a float is provided, the value will be interpreted as
-            general gap penalty.
-            If a tuple is provided, an affine gap penalty is used.
-            The first value in the tuple is the gap opening penalty,
-            the second value is the gap extension penalty.
-            The values need to be negative.
-        """
-        # Check if gap penalty is general or affine
-        if isinstance(gap_penalty, SequenceABC):
-            if gap_penalty[0] > 0 or gap_penalty[1] > 0:
-                raise ValueError("Gap penalty must be negative")
-            self._gap_open = gap_penalty[0]
-            self._gap_ext = gap_penalty[1]
-        elif isinstance(gap_penalty, numbers.Real):
-            if gap_penalty > 0:
-                raise ValueError("Gap penalty must be negative")
-            self._gap_open = gap_penalty
-            self._gap_ext = gap_penalty
-        else:
-            raise TypeError("Gap penalty must be either float or tuple")
-
-    @requires_state(AppState.JOINED)
-    def get_guide_tree(
-        self, iteration: Literal["kmer", "identity"] = "identity"
-    ) -> nx.DiGraph:
-        """
-        Get the guide tree created for the progressive alignment.
-
-        Parameters
-        ----------
-        iteration : {'kmer', 'identity'}
-            If 'kmer', the first iteration tree is returned.
-            This tree uses the sequences common *k*-mers as distance
-            measure.
-            If 'identity' the second iteration tree is returned.
-            This tree uses distances based on the pairwise sequence
-            identity after the first progressive alignment iteration.
-
-        Returns
-        -------
-        tree : DiGraph
-            The guide tree.
-        """
-        if iteration == "kmer":
-            tree = self._tree1
-        elif iteration == "identity":
-            tree = self._tree2
-        else:
-            raise ValueError("Iteration must be 'kmer' or 'identity'")
-        if tree is None:
-            raise AppStateError("MUSCLE did not write a tree file yet")
-        return tree
-
-    @staticmethod
-    def supports_nucleotide() -> bool:
-        return True
-
-    @staticmethod
-    def supports_protein() -> bool:
-        return True
-
-    @staticmethod
-    def supports_custom_nucleotide_matrix() -> bool:
-        return False
-
-    @staticmethod
-    def supports_custom_protein_matrix() -> bool:
-        return True
-
-    @classmethod
-    def align(
-        cls,
-        sequences: SequenceABC[Sequence],
-        bin_path: PathLike[str] | str | None = None,
         matrix: SubstitutionMatrix | None = None,
         gap_penalty: float | tuple[float, float] | None = None,
-    ) -> Alignment:
+    ) -> CommandSetup[Muscle3Result]:
         """
         Perform a multiple sequence alignment.
-
-        This is a convenience function, that wraps the :class:`MuscleApp`
-        execution.
 
         Parameters
         ----------
         sequences : iterable object of Sequence
             The sequences to be aligned.
-        bin_path : str, optional
-            Path of the MSA software binary. By default, the default path
-            will be used.
         matrix : SubstitutionMatrix, optional
             A custom substitution matrix.
-        gap_penalty : float or (float, float), optional
+        gap_penalty : float or tuple of (float, float), optional
             If a float is provided, the value will be interpreted as
             general gap penalty.
             If a tuple is provided, an affine gap penalty is used.
@@ -242,15 +124,81 @@ class MuscleApp(MSAApp):
 
         Returns
         -------
-        alignment : Alignment
-            The global multiple sequence alignment.
+        future : Future of Muscle3Result
+            A handle to the running alignment.
+            Call :meth:`Future.result()` to obtain the
+            :class:`Muscle3Result`.
         """
-        if bin_path is None:
-            app = cls(sequences, matrix=matrix)
-        else:
-            app = cls(sequences, bin_path, matrix=matrix)
-        if gap_penalty is not None:
-            app.set_gap_penalty(gap_penalty)
-        app.start()
-        app.join()
-        return app.get_alignment()
+        msa_input = MSAInput.from_input(
+            sequences,
+            matrix,
+            supports_nucleotide=True,
+            supports_protein=True,
+            supports_custom_nucleotide_matrix=False,
+            supports_custom_protein_matrix=True,
+        )
+        gap_open, gap_ext = resolve_gap_penalty(gap_penalty)
+
+        in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
+        out_file = NamedTemporaryFile("r", suffix=".fa", delete=False)
+        matrix_file = NamedTemporaryFile("w", suffix=".mat", delete=False)
+        tree1_file = NamedTemporaryFile("r", suffix=".tree", delete=False)
+        tree2_file = NamedTemporaryFile("r", suffix=".tree", delete=False)
+
+        msa_input.write_fasta(in_file)
+        if msa_input.matrix is not None:
+            matrix_file.write(str(msa_input.matrix))
+            matrix_file.flush()
+
+        parameters: list[CLIParameter] = [
+            CLIFlag("quiet"),
+            CLIOption("in", in_file.name),
+            CLIOption("out", out_file.name),
+            CLIOption("tree1", tree1_file.name),
+            CLIOption("tree2", tree2_file.name),
+            CLIOption(
+                "seqtype", "protein" if msa_input.seqtype == "protein" else "dna"
+            ),
+        ]
+        if msa_input.matrix is not None:
+            parameters.append(CLIOption("matrix", matrix_file.name))
+        if gap_open is not None:
+            parameters += [
+                CLIOption("gapopen", f"{gap_open:.1f}"),
+                CLIOption("gapextend", f"{gap_ext:.1f}"),
+                # When the gap penalty is set,
+                # use the penalty also for hydrophobic regions
+                CLIOption("hydrofactor", "1.0"),
+                # Use the recommendation of the documentation
+                CLIOption("center", "0.0"),
+            ]
+
+        def evaluate(stdout: bytes, stderr: bytes) -> Muscle3Result:
+            alignment, order = msa_input.read_fasta(out_file)
+            return Muscle3Result(
+                alignment=alignment,
+                order=order,
+                guide_tree_kmer=_read_tree(tree1_file, "first"),
+                guide_tree_identity=_read_tree(tree2_file, "second"),
+            )
+
+        def cleanup() -> None:
+            for temp_file in (in_file, out_file, matrix_file, tree1_file, tree2_file):
+                cleanup_tempfile(temp_file)
+
+        return CommandSetup(
+            parameters=parameters,
+            evaluate=evaluate,
+            cleanup=cleanup,
+        )
+
+
+def _read_tree(temp_file: IO[str], iteration: str) -> nx.DiGraph | None:
+    """
+    Read a Newick guide tree written by MUSCLE, warning if it is empty.
+    """
+    newick = temp_file.read().replace("\n", "")
+    if len(newick) > 0:
+        return from_newick(newick)
+    warnings.warn(f"MUSCLE did not write a tree file from the {iteration} iteration")
+    return None

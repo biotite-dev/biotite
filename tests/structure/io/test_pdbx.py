@@ -118,7 +118,7 @@ def test_conversion(monkeypatch, tmp_path, format, path, model, find_matches_by_
     Test serializing and deserializing a structure from a file
     restores the same structure.
     """
-    DELETED_ANNOTATION = "auth_comp_id"
+    DELETED_ANNOTATION = "label_comp_id"
 
     if find_matches_by_dict:
         # Lower the threshold to 0 to force usage of `_find_matches_by_dict()`
@@ -642,7 +642,10 @@ def test_unit_cell_pdb_consistency(pdb_path):
     pdbx_file = pdbx.BinaryCIFFile.read(pdb_path.with_suffix(".bcif"))
     # The reference transformations do not center the copies,
     # so we do not do this here either
-    test_unit_cell = pdbx.get_unit_cell(pdbx_file, model=1, center=False)
+    # The PDB format only supports author fields
+    test_unit_cell = pdbx.get_unit_cell(
+        pdbx_file, model=1, center=False, use_author_fields=True
+    )
 
     for category in ref_unit_cell.get_annotation_categories():
         assert (
@@ -706,14 +709,16 @@ def test_get_sequence(format):
     sequences_1 = pdbx.get_sequence(pdbx_file)
     pdbx_file = File.read(data_dir("structure") / "pdb" / f"4gxy.{format}")
     sequences_2 = pdbx.get_sequence(pdbx_file)
-    assert str(sequences_1["T"]) == "CCGACGGCGCATCAGC"
-    assert type(sequences_1["T"]) is seq.NucleotideSequence
-    assert str(sequences_1["P"]) == "GCTGATGCGCC"
-    assert type(sequences_1["P"]) is seq.NucleotideSequence
-    assert str(sequences_1["D"]) == "GTCGG"
-    assert type(sequences_1["D"]) is seq.NucleotideSequence
+    # The keys are the 'label_asym_id' values,
+    # e.g. the author chain 'T' is the label chain 'A'
+    assert str(sequences_1["A"]) == "CCGACGGCGCATCAGC"
+    assert type(sequences_1["A"]) is seq.NucleotideSequence
+    assert str(sequences_1["B"]) == "GCTGATGCGCC"
+    assert type(sequences_1["B"]) is seq.NucleotideSequence
+    assert str(sequences_1["C"]) == "GTCGG"
+    assert type(sequences_1["C"]) is seq.NucleotideSequence
     assert (
-        str(sequences_1["A"]) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
+        str(sequences_1["D"]) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
         "AYRKAASVIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQD"
         "DTSSSINFLTRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGD"
         "FEKRIPREEMLQMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPS"
@@ -721,7 +726,7 @@ def test_get_sequence(format):
         "RIDIRLIPKDQYYCGVLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVA"
         "GEPLPVDSEKDIFDYIQWKYREPKDRSE"
     )
-    assert type(sequences_1["A"]) is seq.ProteinSequence
+    assert type(sequences_1["D"]) is seq.ProteinSequence
     assert (
         str(sequences_2["A"]) == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAA"
         "AAGGGAAGCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCC"
@@ -754,12 +759,12 @@ def test_get_sse():
         (51, 53),
     ]
 
-    ref_sse = np.full(TOTAL_LENGTH, "c", dtype="U1")
+    ref_sse = np.full(TOTAL_LENGTH, struc.SecondaryStructure.COIL, dtype=int)
     for helix_range in HELIX_RANGES:
         # Conver to zero-based indexing
-        ref_sse[helix_range[0] - 1 : helix_range[1]] = "a"
+        ref_sse[helix_range[0] - 1 : helix_range[1]] = struc.SecondaryStructure.HELIX
     for sheet_range in SHEET_RANGES:
-        ref_sse[sheet_range[0] - 1 : sheet_range[1]] = "b"
+        ref_sse[sheet_range[0] - 1 : sheet_range[1]] = struc.SecondaryStructure.STRAND
 
     pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1aki.bcif")
     test_sse = pdbx.get_sse(pdbx_file)["A"]

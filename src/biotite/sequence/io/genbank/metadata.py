@@ -7,6 +7,7 @@ from __future__ import annotations
 __name__ = "biotite.sequence.io.genbank"
 __author__ = "Patrick Kunzmann, Natasha Jaffe"
 __all__ = [
+    "GenBankLocus",
     "get_locus",
     "get_definition",
     "get_accession",
@@ -17,14 +18,45 @@ __all__ = [
     "set_locus",
 ]
 
-from collections import OrderedDict
+from dataclasses import dataclass
 from biotite.file import InvalidFileError
-from biotite.sequence.io.genbank.file import GenBankFile
+from biotite.sequence.io.genbank.file import GenBankFile, GenBankRecord
 
 
-def get_locus(
-    gb_file: GenBankFile,
-) -> tuple[str, int, str | None, bool, str | None, str]:
+@dataclass
+class GenBankLocus:
+    """
+    The content of the *LOCUS* field of a GenBank or GenPept file.
+
+    Attributes
+    ----------
+    name : str
+        The locus name.
+    length : int
+        Sequence length.
+    mol_type : str or None, optional
+        The molecule type.
+        Usually one of ``'DNA'``, ``'RNA'``, ``'Protein'`` or ``''``.
+        ``None``, if the molecule type is not given.
+    is_circular : bool, optional
+        True, if the sequence is circular, false otherwise.
+    division : str or None, optional
+        The GenBank division to which the file belongs.
+        ``None``, if the division is not given.
+    date : str or None, optional
+        The date of last modification.
+        ``None``, if the date is not given.
+    """
+
+    name: str
+    length: int
+    mol_type: str | None = None
+    is_circular: bool = False
+    division: str | None = None
+    date: str | None = None
+
+
+def get_locus(gb_file: GenBankFile) -> GenBankLocus:
     """
     Parse the *LOCUS* field of a GenBank or GenPept file.
 
@@ -35,40 +67,29 @@ def get_locus(
 
     Returns
     -------
-    name : str
-        The locus name.
-    length : int
-        Sequence length.
-    mol_type : str, optional
-        The molecule type.
-        Usually one of ``'DNA'``, ``'RNA'``, ``'Protein'`` or ``''``.
-    is_circular : bool, optional
-        True, if the sequence is circular, false otherwise.
-    division : str, optional
-        The GenBank division to which the file belongs.
-    date : str, optional
-        The date of last modification.
+    locus : GenBankLocus
+        The content of the *LOCUS* field.
 
     Examples
     --------
 
     >>> import os.path
     >>> file = GenBankFile.read(os.path.join(path_to_sequences, "ec_bl21.gb"))
-    >>> name, length, mol_type, is_circular, division, date = get_locus(file)
-    >>> print(name)
+    >>> locus = get_locus(file)
+    >>> print(locus.name)
     CP001509
-    >>> print(length)
+    >>> print(locus.length)
     4558953
-    >>> print(mol_type)
+    >>> print(locus.mol_type)
     DNA
-    >>> print(is_circular)
+    >>> print(locus.is_circular)
     True
-    >>> print(division)
+    >>> print(locus.division)
     BCT
-    >>> print(date)
+    >>> print(locus.date)
     16-FEB-2017
     """
-    lines, _ = _expect_single_field(gb_file, "LOCUS")
+    lines = _expect_single_field(gb_file, "LOCUS").content
     # 'LOCUS' field has only one line
     locus_info = lines[0]
 
@@ -143,7 +164,7 @@ def get_locus(
     # The last field is a date in the format DD-M-YYYY
     date = fields[next_idx]
 
-    return name, length, mol_type, is_circular, division, date
+    return GenBankLocus(name, length, mol_type, is_circular, division, date)
 
 
 def get_definition(gb_file: GenBankFile) -> str:
@@ -168,7 +189,7 @@ def get_definition(gb_file: GenBankFile) -> str:
     >>> print(get_definition(file))
     Escherichia coli BL21(DE3), complete genome.
     """
-    lines, _ = _expect_single_field(gb_file, "DEFINITION")
+    lines = _expect_single_field(gb_file, "DEFINITION").content
     return " ".join([line.strip() for line in lines])
 
 
@@ -194,7 +215,7 @@ def get_accession(gb_file: GenBankFile) -> str:
     >>> print(get_accession(file))
     CP001509
     """
-    lines, _ = _expect_single_field(gb_file, "ACCESSION")
+    lines = _expect_single_field(gb_file, "ACCESSION").content
     # 'ACCESSION' field has only one line
     return lines[0]
 
@@ -214,7 +235,7 @@ def get_version(gb_file: GenBankFile) -> str:
     version : str
         Content of the *VERSION* field. Does not include GI.
     """
-    lines, _ = _expect_single_field(gb_file, "VERSION")
+    lines = _expect_single_field(gb_file, "VERSION").content
     # 'VERSION' field has only one line
     return lines[0].split()[0]
 
@@ -234,7 +255,7 @@ def get_gi(gb_file: GenBankFile) -> int:
     gi : str
         The GI of the file.
     """
-    lines, _ = _expect_single_field(gb_file, "VERSION")
+    lines = _expect_single_field(gb_file, "VERSION").content
     # 'VERSION' field has only one line
     version_info = lines[0].split()
     if len(version_info) < 2 or "GI" not in version_info[1]:
@@ -268,7 +289,7 @@ def get_db_link(gb_file: GenBankFile) -> dict[str, str]:
     BioProject : PRJNA20713
     BioSample : SAMN02603478
     """
-    lines, _ = _expect_single_field(gb_file, "DBLINK")
+    lines = _expect_single_field(gb_file, "DBLINK").content
     link_dict = {}
     for line in lines:
         key, value = line.split(":")
@@ -290,14 +311,12 @@ def get_source(gb_file: GenBankFile) -> str:
     accession : str
         The name of the source organism.
     """
-    lines, _ = _expect_single_field(gb_file, "SOURCE")
+    lines = _expect_single_field(gb_file, "SOURCE").content
     # 'SOURCE' field has only one line
     return lines[0]
 
 
-def _expect_single_field(
-    gb_file: GenBankFile, name: str
-) -> tuple[list[str], OrderedDict[str, list[str]]]:
+def _expect_single_field(gb_file: GenBankFile, name: str) -> GenBankRecord:
     fields = gb_file.get_fields(name)
     if len(fields) == 0:
         raise InvalidFileError(f"File has no '{name}' field")
@@ -306,15 +325,7 @@ def _expect_single_field(
     return fields[0]
 
 
-def set_locus(
-    gb_file: GenBankFile,
-    name: str,
-    length: int,
-    mol_type: str | None = None,
-    is_circular: bool = False,
-    division: str | None = None,
-    date: str | None = None,
-) -> None:
+def set_locus(gb_file: GenBankFile, locus: GenBankLocus) -> None:
     """
     Set the *LOCUS* field of a GenBank file.
 
@@ -322,27 +333,16 @@ def set_locus(
     ----------
     gb_file : GenBankFile
         The GenBank file to be edited.
-    name : str
-        The locus name.
-    length : int
-        Sequence length.
-    mol_type : str, optional
-        The molecule type.
-        Usually one of ``'DNA'``, ``'RNA'``, ``'Protein'`` or ``''``.
-    is_circular : bool, optional
-        True, if the sequence is circular, false otherwise.
-    division : str, optional
-        The GenBank division to which the file belongs.
-    date : str, optional
-        The date of last modification.
+    locus : GenBankLocus
+        The content of the *LOCUS* field.
     """
-    mol_type = "" if mol_type is None else mol_type
+    mol_type = "" if locus.mol_type is None else locus.mol_type
     restype_abbr = "aa" if mol_type in ["", "Protein"] else "bp"
-    circularity = "circular" if is_circular else "linear"
-    division = "" if division is None else division
-    date = "" if date is None else date
+    circularity = "circular" if locus.is_circular else "linear"
+    division = "" if locus.division is None else locus.division
+    date = "" if locus.date is None else locus.date
     line = (
-        f"{name:18} {length:>9} {restype_abbr} {mol_type:^10} "
+        f"{locus.name:18} {locus.length:>9} {restype_abbr} {mol_type:^10} "
         f"{circularity:8} {division:3} {date:11}"
     )
-    gb_file.set_field("LOCUS", [line])
+    gb_file.set_field(GenBankRecord("LOCUS", [line]))

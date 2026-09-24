@@ -10,16 +10,7 @@
         ]
     },
 
-    "biotite.application" : {
-        "Application classes" : [
-            "Application",
-            "WebApp",
-            "LocalApp",
-            "MSAApp"
-        ]
-    },
-
-    "biotite.application_v2.viennarna" : {
+    "biotite.application.viennarna" : {
         "Application interfaces" : [
             "FoldApp",
             "SuboptApp",
@@ -59,6 +50,7 @@
             "from_model"
         ],
         "Compiled Graphics Objects": [
+            "CGO",
             "draw_cgo",
             "get_cylinder_cgo",
             "get_cone_cgo",
@@ -176,7 +168,6 @@
             "align_ungapped",
             "align_optimal",
             "SeedExtension",
-            "align_local_ungapped",
             "align_local_gapped",
             "align_banded",
             "align_multiple"
@@ -257,6 +248,7 @@
             "MiscFeaturePlotter"
         ],
         "Color schemes" : [
+            "ColorScheme",
             "load_color_scheme",
             "get_color_scheme",
             "list_color_scheme_names"
@@ -312,7 +304,7 @@
             "rdf"
         ],
         "Transformations" : [
-            "AffineTransformation",
+            "RigidTransformation",
             "translate",
             "rotate",
             "rotate_centered",
@@ -404,6 +396,7 @@
         "Proteins" : [
             "dihedral_backbone",
             "dihedral_side_chain",
+            "SecondaryStructure",
             "annotate_sse"
         ],
         "Nucleic acids" : [
