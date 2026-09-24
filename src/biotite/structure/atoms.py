@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 # The four pyright rules below are disabled file-wide because the
 # internal state of `_AtomArrayBase` (`_coord`, `_bonds`, `_box`) is
 # initialized to `None` in `__init__` and then populated by subclass

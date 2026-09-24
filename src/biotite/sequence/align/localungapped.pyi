@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 from typing import Generic, Literal, overload
 from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.align.matrix import SubstitutionMatrix
