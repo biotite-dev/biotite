@@ -167,9 +167,9 @@ def visualize_secondary_structure(sse, first_id):
     """
 
     def _add_sec_str(annotation, first, last, sse):
-        if sse == struc.SecondaryStructure.HELIX:
+        if sse == struc.PSeaElement.HELIX:
             str_type = "helix"
-        elif sse == struc.SecondaryStructure.STRAND:
+        elif sse == struc.PSeaElement.STRAND:
             str_type = "sheet"
         else:
             # coil

@@ -396,7 +396,7 @@
         "Proteins" : [
             "dihedral_backbone",
             "dihedral_side_chain",
-            "SecondaryStructure",
+            "PSeaElement",
             "annotate_sse"
         ],
         "Nucleic acids" : [

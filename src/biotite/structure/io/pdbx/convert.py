@@ -63,7 +63,7 @@ from biotite.structure.residues import (
     get_residue_positions,
     get_residue_starts_for,
 )
-from biotite.structure.sse import SecondaryStructure
+from biotite.structure.sse import PSeaElement
 from biotite.structure.transform import RigidTransformation
 from biotite.typing import C2, XYZ, M, N, NDArray1, NDArray2
 from biotite.util import map_unique
@@ -2281,11 +2281,11 @@ def get_sse(
     sse_dict : dict of str -> ndarray, dtype=int
         The dictionary maps the chain ID (derived from ``label_asym_id``) to the
         secondary structure of the respective chain, given as
-        :class:`SecondaryStructure` values.
+        :class:`PSeaElement` values.
 
-        - :attr:`SecondaryStructure.HELIX`: alpha-helix
-        - :attr:`SecondaryStructure.STRAND`: beta-strand
-        - :attr:`SecondaryStructure.COIL`: coil or not an amino acid
+        - :attr:`PSeaElement.HELIX`: alpha-helix
+        - :attr:`PSeaElement.STRAND`: beta-strand
+        - :attr:`PSeaElement.COIL`: coil or not an amino acid
 
         Each secondary structure element corresponds to the ``label_seq_id`` of the
         ``atom_site`` category.
@@ -2305,7 +2305,7 @@ def get_sse(
                  0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
                  1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1,
                  1, 1, 1, 0, 0, 0, 0, 0, 0])}
-    >>> print("".join(SecondaryStructure.to_symbols(sse["A"])))
+    >>> print("".join(PSeaElement.to_symbols(sse["A"])))
     ccccaaaaaaaaaacccccaaaccaaaaaaaaaaaaccccccbbbcccccbbbccccccccccccccccccccccccccaaaaaccccaaaaaaaaaaaaaccaaaacaaaaaacccccaaaacccccc
 
     If only secondary structure elements for resolved residues are requested, the length
@@ -2323,14 +2323,14 @@ def get_sse(
 
     # Init all chains with coil
     sse_dict = {
-        chain_id: np.full(len(sequence), SecondaryStructure.COIL, dtype=int)
+        chain_id: np.full(len(sequence), PSeaElement.COIL, dtype=int)
         for chain_id, sequence in get_sequence(block).items()
     }
 
     # Populate SSE arrays with helices and strands
     for sse_symbol, category_name in [
-        (SecondaryStructure.HELIX, "struct_conf"),
-        (SecondaryStructure.STRAND, "struct_sheet_range"),
+        (PSeaElement.HELIX, "struct_conf"),
+        (PSeaElement.STRAND, "struct_sheet_range"),
     ]:
         if category_name in block:
             category = block[category_name]

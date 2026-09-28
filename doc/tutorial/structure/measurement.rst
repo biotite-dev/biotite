@@ -147,7 +147,7 @@ Secondary structure
 
 *Biotite* can also be used to assign *secondary structure elements* (SSE) to a
 structure with the :func:`annotate_sse()` function.
-The returned array contains :class:`SecondaryStructure` values, which can be
+The returned array contains :class:`PSeaElement` values, which can be
 converted into their one-letter symbols for pretty printing:
 An ``'a'`` means alpha-helix, ``'b'`` beta-sheet, and ``'c'`` means coil.
 
@@ -159,7 +159,7 @@ An ``'a'`` means alpha-helix, ``'b'`` beta-sheet, and ``'c'`` means coil.
     sse = struc.annotate_sse(array)
     print(sse)
     # Pretty print
-    print("".join(struc.SecondaryStructure.to_symbols(sse)))
+    print("".join(struc.PSeaElement.to_symbols(sse)))
 
 Note that you can also use the popular *DSSP* program to measure the secondary
 structure as explained in a :doc:`later chapter <../application/dssp>`.
