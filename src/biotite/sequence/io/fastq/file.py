@@ -275,6 +275,7 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
 
     def _find_entries(self, allow_duplicates: bool) -> None:
         self._entries = OrderedDict()
+        next_suffix: dict[str, int] = {}
         in_sequence = False
         # Record if the parser is currently in a quality score section,
         # as the '@' character at the start of a line may also be a
@@ -319,7 +320,7 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
                     in_scores = False
                     # Record this entry
                     unique_identifier, was_deduplicated = self._deduplicate_identifier(
-                        identifier
+                        identifier, next_suffix
                     )
                     if was_deduplicated:
                         if not allow_duplicates:
@@ -346,12 +347,16 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
         if in_sequence or in_scores:
             raise InvalidFileError("The last entry in the file is incomplete")
 
-    def _deduplicate_identifier(self, identifier: str) -> tuple[str, bool]:
+    def _deduplicate_identifier(
+        self, identifier: str, next_suffix: dict[str, int]
+    ) -> tuple[str, bool]:
         if identifier not in self._entries:
             return identifier, False
-        counter = 1
+        # Resume after the last assigned suffix instead of rescanning duplicates.
+        counter = next_suffix.get(identifier, 1)
         while (unique_identifier := f"{identifier}_{counter}") in self._entries:
             counter += 1
+        next_suffix[identifier] = counter + 1
         return unique_identifier, True
 
     @staticmethod

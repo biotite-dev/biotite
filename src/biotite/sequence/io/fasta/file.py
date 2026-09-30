@@ -174,6 +174,7 @@ class FastaFile(TextFile, MutableMapping[str, str]):
                 header_i.append(i)
 
         self._entries = OrderedDict()
+        next_suffix: dict[str, int] = {}
         for j in range(len(header_i)):
             # Remove leading '>' from header
             header = self.lines[header_i[j]].strip()[1:]
@@ -185,7 +186,9 @@ class FastaFile(TextFile, MutableMapping[str, str]):
             else:
                 # Last header -> entry stops at end of file
                 stop = len(self.lines)
-            unique_header, was_deduplicated = self._deduplicate_header(header)
+            unique_header, was_deduplicated = self._deduplicate_header(
+                header, next_suffix
+            )
             if was_deduplicated:
                 if not allow_duplicates:
                     raise InvalidFileError(f"Duplicate header '{header}'")
@@ -193,12 +196,16 @@ class FastaFile(TextFile, MutableMapping[str, str]):
                 self.lines[start] = ">" + unique_header
             self._entries[unique_header] = (start, stop)
 
-    def _deduplicate_header(self, header: str) -> tuple[str, bool]:
+    def _deduplicate_header(
+        self, header: str, next_suffix: dict[str, int]
+    ) -> tuple[str, bool]:
         if header not in self._entries:
             return header, False
-        counter = 1
+        # Resume after the last assigned suffix instead of rescanning duplicates.
+        counter = next_suffix.get(header, 1)
         while (unique_header := f"{header}_{counter}") in self._entries:
             counter += 1
+        next_suffix[header] = counter + 1
         return unique_header, True
 
     @staticmethod

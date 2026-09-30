@@ -138,6 +138,11 @@ def test_write_iter(offset, chars_per_line, n_sequences):
         (["A", "B", "A"], ["A", "B", "A_1"], True),
         (["A", "A", "A_1"], ["A", "A_1", "A_1_1"], True),
         (["A", "A_1", "A"], ["A", "A_1", "A_2"], True),
+        (
+            ["A", "A", "A_3", "A", "A", "A_1", "A_1"],
+            ["A", "A_1", "A_3", "A_2", "A_4", "A_1_1", "A_1_2"],
+            True,
+        ),
     ],
 )
 @pytest.mark.parametrize("allow_duplicates", [False, True])
