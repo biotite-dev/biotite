@@ -403,8 +403,8 @@ class SequenceProfile(Generic[S]):
         consensus = ProteinSequence()
         consensus.code = np.argmax(self.symbols, axis=1)
         consensus.code = np.where(
-            np.sum(self.symbols, axis=1) == 0, 23, consensus.code
-        )  # _PROT_ALPH[23] = 'X'
+            np.sum(self.symbols, axis=1) == 0, _PROT_ALPH.encode("X"), consensus.code
+        )
         return consensus
 
     def _general_to_consensus(self) -> GeneralSequence:

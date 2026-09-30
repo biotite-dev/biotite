@@ -442,6 +442,7 @@ class ProteinSequence(Sequence[str]):
             "Y",
             "B",
             "Z",
+            "J",
             "X",
             "*",
         ]
@@ -474,6 +475,7 @@ class ProteinSequence(Sequence[str]):
             163.1760,  # Y
             np.nan,  # B
             np.nan,  # Z
+            113.1594,  # J
             np.nan,  # X
             np.nan,  # *
         ]
@@ -503,6 +505,7 @@ class ProteinSequence(Sequence[str]):
             163.06333,  # Y
             np.nan,  # B
             np.nan,  # Z
+            113.08406,  # J
             np.nan,  # X
             np.nan,  # *
         ]
@@ -531,6 +534,7 @@ class ProteinSequence(Sequence[str]):
         "Y": "TYR",
         "B": "ASX",
         "Z": "GLX",
+        "J": "XLE",
         "X": "UNK",
         "*": " * ",
     }

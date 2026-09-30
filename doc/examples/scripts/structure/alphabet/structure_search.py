@@ -58,6 +58,7 @@ AA_FREQUENCY = {
     # Set ambiguous amino acid count to 1 to avoid division by zero in log odds matrix
     "B": 1,
     "Z": 1,
+    "J": 1,
     "X": 1,
     "*": 1,
 }

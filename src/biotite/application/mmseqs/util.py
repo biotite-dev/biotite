@@ -484,14 +484,14 @@ def get_matrix_from_profile(
     >>> profiles = app.result_to_profile(hits, threads=1).result()
     >>> matrix = get_matrix_from_profile(app, profiles)[0]
     >>> print(matrix.shape)
-    (1368, 24)
+    (1368, 25)
     >>> # One symbol per profile column, shown as the consensus residue
     >>> print([str(symbol) for symbol in matrix.get_alphabet1().get_symbols()[:10]])
     ['M', 'K', 'K', 'P', 'Y', 'S', 'I', 'G', 'L', 'D']
     >>> # The protein alphabet
     >>> print(matrix.get_alphabet2())
     ('A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S',
-     'T', 'V', 'W', 'Y', 'B', 'Z', 'X', '*')
+     'T', 'V', 'W', 'Y', 'B', 'Z', 'J', 'X', '*')
     """
     pssm_file = app.profile_to_pssm(profile_db).result()
     try:

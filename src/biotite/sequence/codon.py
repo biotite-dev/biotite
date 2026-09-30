@@ -204,7 +204,7 @@ class CodonTable(object):
         >>> # Map to amino acids
         >>> aa_codes = CodonTable.default_table().map_codon_codes(codon_codes)
         >>> print(aa_codes)
-        [10 17 23]
+        [10 17 24]
         >>> # Put into a protein sequence
         >>> protein = ProteinSequence()
         >>> protein.code = aa_codes
