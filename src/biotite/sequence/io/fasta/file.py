@@ -201,7 +201,6 @@ class FastaFile(TextFile, MutableMapping[str, str]):
     ) -> tuple[str, bool]:
         if header not in self._entries:
             return header, False
-        # Resume after the last assigned suffix instead of rescanning duplicates.
         counter = next_suffix.get(header, 1)
         while (unique_header := f"{header}_{counter}") in self._entries:
             counter += 1

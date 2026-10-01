@@ -352,7 +352,6 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
     ) -> tuple[str, bool]:
         if identifier not in self._entries:
             return identifier, False
-        # Resume after the last assigned suffix instead of rescanning duplicates.
         counter = next_suffix.get(identifier, 1)
         while (unique_identifier := f"{identifier}_{counter}") in self._entries:
             counter += 1
