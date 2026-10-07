@@ -680,7 +680,7 @@ def _parse_intra_residue_bonds(
         if res_name not in custom_bond_dict:
             custom_bond_dict[res_name] = {}
         bond_type = COMP_BOND_ORDER_TO_TYPE.get(
-            (order.upper(), aromatic_flag), BondType.ANY
+            (order.upper(), aromatic_flag.upper()), BondType.ANY
         )
         custom_bond_dict[res_name][atom_1.item(), atom_2.item()] = bond_type
     return custom_bond_dict
@@ -1609,7 +1609,7 @@ def get_component(
         ):
             atom_i = np.where(array.atom_name == atom1)[0][0]
             atom_j = np.where(array.atom_name == atom2)[0][0]
-            bond_type = COMP_BOND_ORDER_TO_TYPE[order, aromatic_flag]
+            bond_type = COMP_BOND_ORDER_TO_TYPE[order.upper(), aromatic_flag.upper()]
             bonds.add_bond(atom_i, atom_j, bond_type)
         array.bonds = bonds
 
