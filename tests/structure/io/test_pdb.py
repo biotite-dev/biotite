@@ -8,6 +8,7 @@ from tempfile import TemporaryFile
 import numpy as np
 import pytest
 import biotite
+import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
@@ -26,6 +27,61 @@ def test_get_model_count():
     test_model_count = pdb.get_model_count(pdb_file)
     ref_model_count = pdb.get_structure(pdb_file).stack_depth()
     assert test_model_count == ref_model_count
+
+
+def test_get_sequence():
+    """
+    Check if :meth:`PDBFile.get_sequence()` returns the correct
+    sequences for a known example.
+    """
+    pdb_file = pdb.PDBFile.read(data_dir("structure") / "pdb" / "5ugo.pdb")
+    sequences = pdb_file.get_sequence()
+    # Test also the thin wrapper around the method 'get_sequence()'
+    assert sequences == pdb.get_sequence(pdb_file)
+
+    assert str(sequences["T"]) == "CCGACGGCGCATCAGC"
+    assert type(sequences["T"]) is seq.NucleotideSequence
+    assert str(sequences["P"]) == "GCTGATGCGCC"
+    assert type(sequences["P"]) is seq.NucleotideSequence
+    assert str(sequences["D"]) == "GTCGG"
+    assert type(sequences["D"]) is seq.NucleotideSequence
+    assert (
+        str(sequences["A"]) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
+        "AYRKAASVIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQD"
+        "DTSSSINFLTRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGD"
+        "FEKRIPREEMLQMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPS"
+        "FTSESTKQPKLLHQVVEQLQKVHFITDTLSKGETKFMGVCQLPSKNDEKEYPHR"
+        "RIDIRLIPKDQYYCGVLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVA"
+        "GEPLPVDSEKDIFDYIQWKYREPKDRSE"
+    )
+    assert type(sequences["A"]) is seq.ProteinSequence
+
+
+@pytest.mark.parametrize(
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.pdb")),
+    ids=lambda path: path.name,
+)
+def test_pdbx_sequence_consistency(path):
+    """
+    Check if sequences extracted by :meth:`PDBFile.get_sequence()` are
+    equal to the sequences stored in the corresponding PDBx file.
+    """
+    if "4gxy" in path.name:
+        pytest.skip(
+            "Edge case: contains 'GTP' which has one-letter code, "
+            "but is a 'NON-POLYMER' in the CCD"
+        )
+
+    test_sequences = pdb.PDBFile.read(path).get_sequence()
+    ref_sequences = pdbx.get_sequence(
+        pdbx.BinaryCIFFile.read(path.with_suffix(".bcif"))
+    )
+
+    assert test_sequences.keys() == ref_sequences.keys()
+    for chain_id, sequence in test_sequences.items():
+        assert type(sequence) is type(ref_sequences[chain_id])
+        assert str(sequence) == str(ref_sequences[chain_id])
 
 
 @pytest.mark.parametrize(
