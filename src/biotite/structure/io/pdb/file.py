@@ -322,6 +322,8 @@ class PDBFile(RustPDBFile):
                 one_letter_symbols[hetero_mask] = "N"
                 # Replace uracil
                 one_letter_symbols[one_letter_symbols == "U"] = "T"
+                # Inosine is not part of the nucleotide alphabet
+                one_letter_symbols[one_letter_symbols == "I"] = "N"
                 sequence_dict[chain_id] = NucleotideSequence(
                     "".join(one_letter_symbols)
                 )
