@@ -197,6 +197,23 @@ def test_extra_annotations(values):
     assert test_annot.tolist() == ref_annot.tolist()
 
 
+def test_deuterium():
+    """
+    Check if deuterium is converted into a hydrogen isotope in *RDKit* and back.
+    """
+    ref_atoms = info.residue("DOD")
+
+    mol = rdkit_interface.to_mol(ref_atoms)
+    assert [(atom.GetSymbol(), atom.GetIsotope()) for atom in mol.GetAtoms()] == [
+        ("O", 0),
+        ("H", 2),
+        ("H", 2),
+    ]
+
+    test_atoms = rdkit_interface.from_mol(mol, add_hydrogen=False)
+    assert test_atoms.element.tolist() == ref_atoms.element.tolist()
+
+
 def test_unmappable_bond_type():
     """
     Test that a warning is raised when a bond type cannot be mapped to Biotite.

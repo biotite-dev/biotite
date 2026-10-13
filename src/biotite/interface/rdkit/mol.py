@@ -190,7 +190,13 @@ def to_mol(
     extra_annot = set(include_extra_annotations) - _STANDARD_ANNOTATIONS
 
     for i in range(atoms.array_length()):
-        rdkit_atom = Chem.Atom(atoms.element[i].capitalize())
+        element = atoms.element[i].capitalize()
+        if element == "D":
+            # RDKit represents deuterium as hydrogen isotope
+            rdkit_atom = Chem.Atom("H")
+            rdkit_atom.SetIsotope(2)
+        else:
+            rdkit_atom = Chem.Atom(element)
         if explicit_hydrogen:
             # ... tell RDKit to not assume any implicit hydrogens
             rdkit_atom.SetNoImplicit(True)
@@ -394,6 +400,8 @@ def from_mol(
 
         # ... add standard annotations
         element = rdkit_atom.GetSymbol().upper().strip()
+        if element == "H" and rdkit_atom.GetIsotope() == 2:
+            element = "D"
         atoms.element[_atom_idx] = element
         atoms.charge[_atom_idx] = rdkit_atom.GetFormalCharge()
 
