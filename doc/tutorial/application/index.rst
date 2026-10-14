@@ -3,17 +3,17 @@
 .. include:: /tutorial/preamble.rst
 
 #############################
-``application_v2`` subpackage
+``application`` subpackage
 #############################
 
-Beyond Biotite - The ``application_v2`` subpackage
+Beyond Biotite - The ``application`` subpackage
 ==================================================
 
-.. currentmodule:: biotite.application_v2
+.. currentmodule:: biotite.application
 
 Although you can achieve a lot with *Biotite*, there are still a lot of things
 which are not implemented in this *Python* package.
-But wait, this is what the :mod:`biotite.application_v2` package is for:
+But wait, this is what the :mod:`biotite.application` package is for:
 It contains interfaces for popular external software.
 The usage of these interfaces is seamless: Rather than writing input files and
 reading output files, you simply put in your *Python*
@@ -22,13 +22,7 @@ interface returns *Python* objects (e.g. an :class:`Alignment` object).
 
 .. note::
 
-    :mod:`biotite.application_v2` is the refactored version of
-    :mod:`biotite.application`.
-    It will replace :mod:`biotite.application` in the next major release.
-
-.. note::
-
-    Note that in order to use an interface in :mod:`biotite.application_v2`
+    Note that in order to use an interface in :mod:`biotite.application`
     the corresponding software must be installed.
     These programs are not shipped with the *Biotite* package.
 
@@ -46,7 +40,7 @@ in the background.
 .. jupyter-execute::
 
     import biotite.sequence as seq
-    import biotite.application_v2.muscle as muscle
+    import biotite.application.muscle as muscle
 
     sequences = [
         seq.ProteinSequence("BIQTITE"),
@@ -110,7 +104,7 @@ rejected.
     app.run(sequences, quiet=None)
 
 The following chapters will give you an overview of the different applications
-interfaced in the :mod:`biotite.application_v2` subpackage.
+interfaced in the :mod:`biotite.application` subpackage.
 
 .. toctree::
     :maxdepth: 1

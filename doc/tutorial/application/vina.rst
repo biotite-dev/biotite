@@ -3,12 +3,12 @@
 Molecular docking
 =================
 
-.. currentmodule:: biotite.application_v2.autodock
+.. currentmodule:: biotite.application.autodock
 
 *AutoDock Vina* predicts how a small molecule, the *ligand*, binds to a
 protein, the *receptor*.
 It is interfaced by the :class:`VinaApp` in the
-:mod:`biotite.application_v2.autodock` subpackage.
+:mod:`biotite.application.autodock` subpackage.
 Let's dock biotin into its famous binding partner streptavidin.
 As we would like to check how well the docking works, we download a
 high-resolution crystal structure of the complex, which we split into the
@@ -26,8 +26,11 @@ loading the structure.
     pdbx_file = pdbx.BinaryCIFFile.read(
         rcsb.fetch("2rtg", "bcif", gettempdir())
     )
+    # The author chain IDs are used here, as they assign each ligand to the
+    # chain of the respective receptor monomer
     structure = pdbx.get_structure(
-        pdbx_file, model=1, include_bonds=True, extra_fields=["charge"]
+        pdbx_file, model=1, include_bonds=True, extra_fields=["charge"],
+        use_author_fields=True
     )
     # The structure is a homodimer, one monomer is sufficient
     structure = structure[structure.chain_id == "B"]
@@ -52,7 +55,7 @@ reference ligand, which we would not know for an unknown complex.
 
 .. jupyter-execute::
 
-    import biotite.application_v2.autodock as autodock
+    import biotite.application.autodock as autodock
 
     app = autodock.VinaApp()
     result = app.run(

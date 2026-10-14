@@ -2,241 +2,225 @@ from __future__ import annotations
 
 __name__ = "biotite.application.clustalo"
 __author__ = "Patrick Kunzmann"
-__all__ = ["ClustalOmegaApp"]
+__all__ = ["ClustalOmegaApp", "ClustalOmegaResult"]
 
 from collections.abc import Sequence as SequenceABC
+from dataclasses import dataclass
 from os import PathLike
 from tempfile import NamedTemporaryFile
-from typing import Any
 import networkx as nx
 import numpy as np
-from biotite.application.application import AppState, AppStateError, requires_state
-from biotite.application.localapp import cleanup_tempfile
-from biotite.application.msaapp import MSAApp
-from biotite.sequence.align.matrix import SubstitutionMatrix
+from biotite.application.localapp import (
+    CLIFlag,
+    CLIOption,
+    CLIParameter,
+    CommandSetup,
+    LocalApp,
+    cleanup_tempfile,
+    command,
+)
+from biotite.application.msa import MSAInput
+from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.phylo.tree import from_newick, get_leaves, to_newick
 from biotite.sequence.sequence import Sequence
-from biotite.typing import K, NDArray2
 
 
-class ClustalOmegaApp(MSAApp):
+@dataclass(frozen=True)
+class ClustalOmegaResult:
     """
-    Perform a multiple sequence alignment using Clustal-Omega.
+    The result of a Clustal-Omega alignment run.
 
-    DEPRECATED: Use :class:`biotite.application_v2.clustalo.ClustalOmegaApp`
-    instead.
+    Attributes
+    ----------
+    alignment : Alignment
+        The global multiple sequence alignment.
+    order : ndarray, dtype=int
+        The order of the sequences intended by Clustal-Omega.
+        Usually this order (e.g. based on the guide tree) differs from
+        the input order.
+    guide_tree : nx.DiGraph
+        The guide tree used for the progressive alignment.
+        If a guide tree was given as input, this is that tree.
+    distance_matrix : ndarray, shape=(n,n), dtype=float or None
+        The pairwise sequence distances used to calculate the guide
+        tree.
+        Only available if ``use_full_matrix`` was set, otherwise None.
+    """
+
+    alignment: Alignment
+    order: np.ndarray
+    guide_tree: nx.DiGraph
+    distance_matrix: np.ndarray | None
+
+
+class ClustalOmegaApp(LocalApp):
+    """
+    A handle to *Clustal-Omega*.
 
     Parameters
     ----------
-    sequences : list of ProteinSequence or NucleotideSequence
-        The sequences to be aligned.
-    bin_path : str, optional
-        Path of the Custal-Omega binary.
-    matrix : None
-        This parameter is used for compatibility reasons and is ignored.
+    path : str, optional
+        Path of the Clustal-Omega binary.
 
     Examples
     --------
 
-    >>> seq1 = ProteinSequence("BIQTITE")
-    >>> seq2 = ProteinSequence("TITANITE")
-    >>> seq3 = ProteinSequence("BISMITE")
-    >>> seq4 = ProteinSequence("IQLITE")
-    >>> app = ClustalOmegaApp([seq1, seq2, seq3, seq4])
-    >>> app.start()
-    >>> app.join()
-    >>> alignment = app.get_alignment()
-    >>> print(alignment)
+    >>> sequences = [
+    ...     ProteinSequence("BIQTITE"),
+    ...     ProteinSequence("TITANITE"),
+    ...     ProteinSequence("BISMITE"),
+    ...     ProteinSequence("IQLITE"),
+    ... ]
+    >>> result = ClustalOmegaApp().run(sequences).result()
+    >>> print(result.alignment)
     -BIQTITE
     TITANITE
     -BISMITE
     --IQLITE
     """
 
-    _v2_alternative = "biotite.application_v2.clustalo.ClustalOmegaApp"
+    def __init__(self, path: PathLike[str] | str = "clustalo") -> None:
+        super().__init__(path)
 
-    def __init__(
+    @command(allowed_options=["iterations", "threads"])
+    def run(
         self,
         sequences: SequenceABC[Sequence],
-        bin_path: PathLike[str] | str = "clustalo",
-        matrix: SubstitutionMatrix | None = None,
-    ) -> None:
-        super().__init__(sequences, bin_path, None)
-        self._seq_count = len(sequences)
-        self._mbed: bool = True
-        self._dist_matrix: NDArray2[Any, Any, np.floating] | None = None
-        self._tree: nx.DiGraph | None = None
-        self._in_dist_matrix_file = NamedTemporaryFile("w", suffix=".mat", delete=False)
-        self._out_dist_matrix_file = NamedTemporaryFile(
-            "r", suffix=".mat", delete=False
-        )
-        self._in_tree_file = NamedTemporaryFile("w", suffix=".tree", delete=False)
-        self._out_tree_file = NamedTemporaryFile("r", suffix=".tree", delete=False)
+        distance_matrix: np.ndarray | None = None,
+        guide_tree: nx.DiGraph | None = None,
+        use_full_matrix: bool = False,
+    ) -> CommandSetup[ClustalOmegaResult]:
+        """
+        Perform a multiple sequence alignment.
 
-    def run(self) -> None:
-        args = [
-            "--in",
-            self.get_input_file_path(),
-            "--out",
-            self.get_output_file_path(),
-            # The temporary files are already created
-            # -> tell Clustal to overwrite these empty files
-            "--force",
-            # Tree order for get_alignment_order() to work properly
-            "--output-order=tree-order",
+        Parameters
+        ----------
+        sequences : iterable object of Sequence
+            The sequences to be aligned.
+        distance_matrix : ndarray, shape=(n,n), dtype=float, optional
+            Pairwise sequence distances used to calculate the guide tree.
+        guide_tree : nx.DiGraph, optional
+            The guide tree used for the progressive alignment.
+        use_full_matrix : bool, optional
+            If set, the full distance matrix is used for the guide-tree
+            calculation, equivalent to the ``--full`` option, instead of
+            the default *mBed* heuristic.
+            This is required to obtain the distance matrix in the result.
+
+        Returns
+        -------
+        future : Future of ClustalOmegaResult
+            A handle to the running alignment.
+            Call :meth:`Future.result()` to obtain the
+            :class:`ClustalOmegaResult`.
+        """
+        msa_input = MSAInput.from_input(
+            sequences,
+            None,
+            supports_nucleotide=True,
+            supports_protein=True,
+            supports_custom_nucleotide_matrix=False,
+            supports_custom_protein_matrix=False,
+        )
+        seq_count = len(msa_input.original_sequences)
+        if distance_matrix is not None and distance_matrix.shape != (
+            seq_count,
+            seq_count,
+        ):
+            raise ValueError(
+                f"Distance matrix with shape {distance_matrix.shape} is not "
+                f"sufficient for {seq_count} sequences"
+            )
+        if guide_tree is not None and len(get_leaves(guide_tree)) != seq_count:
+            raise ValueError(
+                f"Guide tree with {len(get_leaves(guide_tree))} leaves is not sufficient "
+                f"for {seq_count} sequences"
+            )
+
+        in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
+        out_file = NamedTemporaryFile("r", suffix=".fa", delete=False)
+        in_matrix_file = NamedTemporaryFile("w", suffix=".mat", delete=False)
+        out_matrix_file = NamedTemporaryFile("r", suffix=".mat", delete=False)
+        in_tree_file = NamedTemporaryFile("w", suffix=".tree", delete=False)
+        out_tree_file = NamedTemporaryFile("r", suffix=".tree", delete=False)
+        msa_input.write_fasta(in_file)
+
+        parameters: list[CLIParameter] = [
+            CLIOption("in", in_file.name),
+            CLIOption("out", out_file.name),
+            CLIOption(
+                "seqtype", "Protein" if msa_input.seqtype == "protein" else "DNA"
+            ),
+            # The temporary output files already exist -> overwrite them
+            CLIFlag("force"),
+            # Tree order for `order` to reflect the guide tree
+            CLIOption("output-order", "tree-order"),
         ]
-        if self.get_seqtype() == "protein":
-            args += ["--seqtype", "Protein"]
-        else:
-            args += ["--seqtype", "DNA"]
-        if self._tree is None:
-            # ClustalOmega does not like when a tree is set
-            # as input and output#
-            # -> Only request tree output when not tree is input
-            args += [
-                "--guidetree-out",
-                self._out_tree_file.name,
-            ]
-        if not self._mbed:
-            args += ["--full", "--distmat-out", self._out_dist_matrix_file.name]
-        if self._dist_matrix is not None:
-            # Add the sequence names (0, 1, 2, 3 ...) as first column
-            dist_matrix_with_index = np.concatenate(
-                (np.arange(self._seq_count)[:, np.newaxis], self._dist_matrix), axis=1
+        if guide_tree is None:
+            # Clustal-Omega does not accept a tree as input and output
+            # at the same time
+            parameters.append(CLIOption("guidetree-out", out_tree_file.name))
+        if use_full_matrix:
+            parameters.append(CLIFlag("full"))
+            parameters.append(CLIOption("distmat-out", out_matrix_file.name))
+        if distance_matrix is not None:
+            # Prepend the sequence indices as first column
+            matrix_with_index = np.concatenate(
+                (
+                    np.arange(seq_count)[:, np.newaxis],
+                    distance_matrix.astype(float, copy=False),
+                ),
+                axis=1,
             )
             np.savetxt(
-                self._in_dist_matrix_file.name,
-                dist_matrix_with_index,
-                # The first line contains the amount of sequences
+                in_matrix_file.name,
+                matrix_with_index,
                 comments="",
-                header=str(self._seq_count),
+                # The first line contains the number of sequences
+                header=str(seq_count),
                 # The sequence indices are integers, the rest are floats
-                fmt=["%d"] + ["%.5f"] * self._seq_count,
+                fmt=["%d"] + ["%.5f"] * seq_count,
             )
-            args += ["--distmat-in", self._in_dist_matrix_file.name]
-        if self._tree is not None:
-            self._in_tree_file.write(to_newick(self._tree))
-            self._in_tree_file.flush()
-            args += ["--guidetree-in", self._in_tree_file.name]
-        self.set_arguments(args)
-        super().run()
+            parameters.append(CLIOption("distmat-in", in_matrix_file.name))
+        if guide_tree is not None:
+            in_tree_file.write(to_newick(guide_tree))
+            in_tree_file.flush()
+            parameters.append(CLIOption("guidetree-in", in_tree_file.name))
 
-    def evaluate(self) -> None:
-        super().evaluate()
-        if not self._mbed:
-            self._dist_matrix = np.loadtxt(
-                self._out_dist_matrix_file.name,
-                # The first row only contains the number of sequences
-                skiprows=1,
-                dtype=float,
+        def evaluate(stdout: bytes, stderr: bytes) -> ClustalOmegaResult:
+            alignment, order = msa_input.read_fasta(out_file)
+            if guide_tree is None:
+                result_tree = from_newick(out_tree_file.read().replace("\n", ""))
+            else:
+                result_tree = guide_tree
+            if use_full_matrix:
+                # The first row only contains the number of sequences and
+                # the first column only the sequence indices
+                result_matrix = np.loadtxt(
+                    out_matrix_file.name, skiprows=1, dtype=float
+                )[:, 1:]
+            else:
+                result_matrix = None
+            return ClustalOmegaResult(
+                alignment=alignment,
+                order=order,
+                guide_tree=result_tree,
+                distance_matrix=result_matrix,
             )
-            # The first column contains only the name of the
-            # sequences, in this case 0, 1, 2, 3 ...
-            # -> Omit the first column
-            self._dist_matrix = self._dist_matrix[:, 1:]
-        # Only read output tree if no tree was input
-        if self._tree is None:
-            self._tree = from_newick(self._out_tree_file.read().replace("\n", ""))
 
-    def clean_up(self) -> None:
-        super().clean_up()
-        cleanup_tempfile(self._in_dist_matrix_file)
-        cleanup_tempfile(self._out_dist_matrix_file)
-        cleanup_tempfile(self._in_tree_file)
-        cleanup_tempfile(self._out_tree_file)
+        def cleanup() -> None:
+            for temp_file in (
+                in_file,
+                out_file,
+                in_matrix_file,
+                out_matrix_file,
+                in_tree_file,
+                out_tree_file,
+            ):
+                cleanup_tempfile(temp_file)
 
-    @requires_state(AppState.CREATED)
-    def full_matrix_calculation(self) -> None:
-        """
-        Use full distance matrix for guide-tree calculation, equivalent
-        to the ``--full`` option.
-
-        This makes the distance matrix calculation slower than using the
-        default *mBed* heuristic.
-        """
-        self._mbed = False
-
-    @requires_state(AppState.CREATED)
-    def set_distance_matrix(self, matrix: NDArray2[K, K, np.floating]) -> None:
-        """
-        Set the pairwise sequence distances, the program should use to
-        calculate the guide tree.
-
-        Parameters
-        ----------
-        matrix : ndarray, shape=(n,n), dtype=float
-            The pairwise distances.
-        """
-        if matrix.shape != (self._seq_count, self._seq_count):
-            raise ValueError(
-                f"Matrix with shape {matrix.shape} is not sufficient for "
-                f"{self._seq_count} sequences"
-            )
-        self._dist_matrix = matrix.astype(float, copy=False)
-
-    @requires_state(AppState.JOINED)
-    def get_distance_matrix(self) -> NDArray2[K, K, np.floating]:
-        """
-        Get the pairwise sequence distances the program used to
-        calculate the guide tree.
-
-        Returns
-        -------
-        matrix : ndarray, shape=(n,n), dtype=float
-            The pairwise distances.
-        """
-        if self._mbed:
-            raise ValueError(
-                "Getting the distance matrix requires 'full_matrix_calculation()'"
-            )
-        if self._dist_matrix is None:
-            raise AppStateError("Distance matrix is not available")
-        return self._dist_matrix  # pyright: ignore[reportReturnType]
-
-    @requires_state(AppState.CREATED)
-    def set_guide_tree(self, tree: nx.DiGraph) -> None:
-        """
-        Set the guide tree, the program should use for the
-        progressive alignment.
-
-        Parameters
-        ----------
-        tree : DiGraph
-            The guide tree.
-        """
-        if self._seq_count != len(get_leaves(tree)):
-            raise ValueError(
-                f"Tree with {len(get_leaves(tree))} leaves is not sufficient for "
-                "{self._seq_count} sequences, must be equal"
-            )
-        self._tree = tree
-
-    @requires_state(AppState.JOINED)
-    def get_guide_tree(self) -> nx.DiGraph:
-        """
-        Get the guide tree created for the progressive alignment.
-
-        Returns
-        -------
-        tree : DiGraph
-            The guide tree.
-        """
-        if self._tree is None:
-            raise AppStateError("Guide tree is not available")
-        return self._tree
-
-    @staticmethod
-    def supports_nucleotide() -> bool:
-        return True
-
-    @staticmethod
-    def supports_protein() -> bool:
-        return True
-
-    @staticmethod
-    def supports_custom_nucleotide_matrix() -> bool:
-        return False
-
-    @staticmethod
-    def supports_custom_protein_matrix() -> bool:
-        return False
+        return CommandSetup(
+            parameters=parameters,
+            evaluate=evaluate,
+            cleanup=cleanup,
+        )

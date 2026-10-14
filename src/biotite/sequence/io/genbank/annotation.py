@@ -13,7 +13,7 @@ import warnings
 from collections.abc import Iterable
 from biotite.file import InvalidFileError
 from biotite.sequence.annotation import Annotation, Feature, Location
-from biotite.sequence.io.genbank.file import GenBankFile
+from biotite.sequence.io.genbank.file import GenBankFile, GenBankRecord
 
 _KEY_START = 5
 _QUAL_START = 21
@@ -44,7 +44,7 @@ def get_annotation(
         raise InvalidFileError("File has no 'FEATURES' field")
     if len(fields) > 1:
         raise InvalidFileError("File has multiple 'FEATURES' fields")
-    lines, _ = fields[0]
+    lines = fields[0].content
 
     ### Parse all lines to create an index of features,
     # i.e. pairs of the feature key
@@ -244,7 +244,7 @@ def set_annotation(gb_file: GenBankFile, annotation: Annotation) -> None:
                     line = " " * _QUAL_START
                     line += f'/{key}="{val}"'
                     lines.append(line)
-    gb_file.set_field("FEATURES", lines)
+    gb_file.set_field(GenBankRecord("FEATURES", lines))
 
 
 def _convert_to_loc_string(locs: Iterable[Location]) -> str:

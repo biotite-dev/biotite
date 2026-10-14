@@ -125,7 +125,8 @@ def test_dihedral_backbone_chain_break(function_name, multi_model):
     pdbx_file = pdbx.BinaryCIFFile.read(
         data_dir("structure") / "pdb" / f"{pdb_id}.bcif"
     )
-    atoms = pdbx.get_structure(pdbx_file, model=1)
+    # The residue IDs below refer to the author fields
+    atoms = pdbx.get_structure(pdbx_file, model=1, use_author_fields=True)
     if function_name == "nucleotide_dihedral_backbone":
         atoms = atoms[struc.filter_canonical_nucleotides(atoms)]
 

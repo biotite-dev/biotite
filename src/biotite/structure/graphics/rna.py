@@ -8,7 +8,7 @@ from itertools import repeat
 from typing import Any
 import numpy as np
 from matplotlib.axes import Axes
-from biotite.application.viennarna import RNAplotApp
+from biotite.application.viennarna import PlotApp
 from biotite.structure import pseudoknots
 from biotite.typing import C2, K, MplColor, NDArray1, NDArray2
 
@@ -18,7 +18,7 @@ def plot_nucleotide_secondary_structure(
     base_labels: Iterable[str],
     base_pairs: NDArray2[K, C2, np.integer],
     length: int,
-    layout_type: RNAplotApp.Layout = RNAplotApp.Layout.NAVIEW,
+    layout_type: PlotApp.Layout = PlotApp.Layout.NAVIEW,
     draw_pseudoknots: bool = True,
     pseudoknot_order: NDArray1[K, np.integer] | None = None,
     angle: float = 0,
@@ -41,7 +41,7 @@ def plot_nucleotide_secondary_structure(
     interface to *RNAplot*, which is part of the *ViennaRNA* software
     package.
 
-    Internally a :class:`biotite.application.viennarna.RNAplotApp`
+    Internally a :class:`biotite.application.viennarna.PlotApp`
     instance is created to generate coordinates for each individual base
     on a 2D plane. *ViennaRNA* must be installed in order to use this
     function.
@@ -57,7 +57,7 @@ def plot_nucleotide_secondary_structure(
         sequence. The positions are counted from zero.
     length : int
         The number of bases in the sequence.
-    layout_type : RNAplotApp.Layout, optional
+    layout_type : PlotApp.Layout, optional
         The layout type according to the *RNAplot* documentation.
     draw_pseudoknots : bool, optional
         Whether pseudoknotted bonds should be drawn.
@@ -194,11 +194,10 @@ def plot_nucleotide_secondary_structure(
         annotation_text_iter = annotation_text
 
     # Get coordinates for secondary structure plot
-    coordinates = RNAplotApp.compute_coordinates(
-        base_pairs=unknotted_base_pairs,
-        length=length,
-        bin_path=bin_path,
-        layout_type=layout_type,
+    coordinates = (
+        PlotApp(bin_path)
+        .run(base_pairs=unknotted_base_pairs, length=length, layout_type=layout_type)
+        .result()
     )
 
     # Rotate Coordinates

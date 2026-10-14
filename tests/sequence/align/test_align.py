@@ -10,6 +10,7 @@ single function live in the respective ``test_<name>.py``.
 
 import numpy as np
 import pytest
+import biotite.sequence as seq
 import biotite.sequence.align as align
 from tests.sequence.align.util import legacy_alignments
 
@@ -77,7 +78,7 @@ def test_scoring(sequences, param):
     kwargs = _kwargs(param)
     matrix = align.SubstitutionMatrix.std_protein_matrix()
 
-    alignment = align_function(seq1, seq2, matrix, max_number=1, **kwargs)[0]
+    alignment = align_function(seq1, seq2, matrix=matrix, max_number=1, **kwargs)[0]
 
     # The standalone score() function reproduces the alignment score
     # `terminal_penalty` only applies to align_optimal(); the other functions
@@ -93,7 +94,9 @@ def test_scoring(sequences, param):
     )
     # The score-only mode returns the same score as the full alignment
     assert (
-        align_function(seq1, seq2, matrix, max_number=1, score_only=True, **kwargs)
+        align_function(
+            seq1, seq2, matrix=matrix, max_number=1, score_only=True, **kwargs
+        )
         == alignment.score
     )
 
@@ -118,11 +121,11 @@ def test_match_mismatch(sequences, param):
     matrix_data = np.full((len(alphabet), len(alphabet)), MISMATCH, dtype=np.int32)
     np.fill_diagonal(matrix_data, MATCH)
     matrix = align.SubstitutionMatrix(alphabet, alphabet, matrix_data)
-    from_matrix = align_function(seq1, seq2, matrix, max_number=1, **kwargs)[0]
+    from_matrix = align_function(seq1, seq2, matrix=matrix, max_number=1, **kwargs)[0]
 
-    from_tuple = align_function(seq1, seq2, (MATCH, MISMATCH), max_number=1, **kwargs)[
-        0
-    ]
+    from_tuple = align_function(
+        seq1, seq2, matrix=(MATCH, MISMATCH), max_number=1, **kwargs
+    )[0]
 
     assert from_tuple.score == from_matrix.score
     assert from_tuple.get_gapped_sequences() == from_matrix.get_gapped_sequences()
@@ -141,9 +144,11 @@ def test_symmetry(sequences, param):
     kwargs = _kwargs(param)
     matrix = align.SubstitutionMatrix.std_protein_matrix()
 
-    alignments = align_function(seq1, seq2, matrix, max_number=MAX_NUMBER, **kwargs)
+    alignments = align_function(
+        seq1, seq2, matrix=matrix, max_number=MAX_NUMBER, **kwargs
+    )
     swapped = align_function(
-        seq2, seq1, matrix, max_number=MAX_NUMBER, **_swap_order(kwargs)
+        seq2, seq1, matrix=matrix, max_number=MAX_NUMBER, **_swap_order(kwargs)
     )
 
     assert alignments[0].score == swapped[0].score
@@ -192,8 +197,8 @@ def test_comparison_to_optimal_alignment(sequences, param):
         test_alignments = align.align_banded(
             seq1,
             seq2,
-            matrix,
             band=(-len(seq1), len(seq2)),
+            matrix=matrix,
             gap_penalty=gap_penalty,
             local=local,
             max_number=MAX_NUMBER,
@@ -204,9 +209,9 @@ def test_comparison_to_optimal_alignment(sequences, param):
         test_alignments = align.align_local_gapped(
             seq1,
             seq2,
-            matrix,
             seed=_center_seed(ref_alignments[0]),
             threshold=1000,
+            matrix=matrix,
             gap_penalty=gap_penalty,
             max_number=MAX_NUMBER,
         )
@@ -241,10 +246,52 @@ def test_consistency_with_legacy(sequences, param, ref_alignment):
     i, j = param["seq_indices"]
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     test_alignment = align_function(
-        sequences[i], sequences[j], matrix, max_number=1, **_kwargs(param)
+        sequences[i], sequences[j], matrix=matrix, max_number=1, **_kwargs(param)
     )[0]
 
     # Direct alignment comparison is not possible, because the reference
     # alignment loaded from FASTA has no score and the trace offset from
     # semi-global/local alignment is lost during FASTA round-tripping
     assert test_alignment.get_gapped_sequences() == ref_alignment.get_gapped_sequences()
+
+
+@pytest.mark.parametrize("seed", range(5))
+def test_default_scoring(seed):
+    """
+    Omitting the scoring scheme is equivalent to a match score of 1,
+    a mismatch score of -1 and a linear gap penalty of -1 for all
+    alignment functions.
+    """
+    LENGTH = 100
+    rng = np.random.default_rng(seed)
+    alphabet = seq.NucleotideSequence.alphabet_unamb
+    seq1 = seq.NucleotideSequence()
+    seq1.code = rng.integers(len(alphabet), size=LENGTH)
+    # Mutate the sequence to obtain a homologous second sequence
+    seq2 = seq.NucleotideSequence()
+    seq2.code = np.where(
+        rng.random(LENGTH) < 0.1, rng.integers(len(alphabet), size=LENGTH), seq1.code
+    )
+    band = (-10, 10)
+    seed_pos = (LENGTH // 2, LENGTH // 2)
+
+    test_optimal = align.align_optimal(seq1, seq2)
+    ref_optimal = align.align_optimal(seq1, seq2, (1, -1), gap_penalty=-1)
+    assert test_optimal == ref_optimal
+    test_banded = align.align_banded(seq1, seq2, band)
+    ref_banded = align.align_banded(seq1, seq2, band, (1, -1), gap_penalty=-1)
+    assert test_banded == ref_banded
+    test_local = align.align_local_gapped(seq1, seq2, seed_pos, 20)
+    ref_local = align.align_local_gapped(
+        seq1, seq2, seed_pos, 20, (1, -1), gap_penalty=-1
+    )
+    assert test_local == ref_local
+    test_ungapped = align.align_ungapped(seq1, seq2)
+    ref_ungapped = align.align_ungapped(seq1, seq2, (1, -1))
+    assert test_ungapped == ref_ungapped
+    assert align.score(test_optimal[0]) == test_optimal[0].score
+    test_multiple, _, _, _ = align.align_multiple([seq1, seq2, seq1])
+    ref_multiple, _, _, _ = align.align_multiple(
+        [seq1, seq2, seq1], (1, -1), gap_penalty=-1
+    )
+    assert test_multiple == ref_multiple

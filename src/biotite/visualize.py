@@ -2,22 +2,20 @@ from __future__ import annotations
 
 __name__ = "biotite"
 __author__ = "Patrick Kunzmann"
-__all__ = ["colors", "plot_scaled_text", "set_font_size_in_coord", "AdaptiveFancyArrow"]
+__all__ = ["colors", "plot_scaled_text", "AdaptiveFancyArrow"]
 
 # Matplotlib's typing stubs are tighter than its runtime API
 # pyright: reportOptionalOperand=false, reportOptionalMemberAccess=false
 # pyright: reportArgumentType=false, reportAttributeAccessIssue=false
 # pyright: reportRedeclaration=false
 
-import warnings
 from collections import OrderedDict
 from typing import TYPE_CHECKING, Any, Literal
 import numpy as np
 from numpy.linalg import norm
-from biotite.typing import MplColor
 
 if TYPE_CHECKING:
-    from matplotlib.text import Text
+    pass
 
 _FONT_PROPERTY_KEYS = ["family", "style", "variant", "weight", "stretch", "size"]
 
@@ -143,152 +141,6 @@ def plot_scaled_text(
     axes.add_patch(patch)
 
     return patch
-
-
-def set_font_size_in_coord(
-    text: Text,
-    width: float | None = None,
-    height: float | None = None,
-    mode: Literal["proportional", "unlocked", "maximum", "minimum"] = "unlocked",
-) -> None:
-    """
-    Specifiy the font size of an existing `Text` object in coordinates
-    of the object's reference coordiante system.
-
-    Instead of having the font size fixed in 'pt', the size of the text
-    scales to the specied width/height and adapts to changes in the
-    plot's width/height.
-    The scaling can be proportional or non-proportional, depending
-    the `mode`.
-
-    DEPRECATED: Use :func:`plot_scaled_text()` instead.
-
-    Parameters
-    ----------
-    text : Text:
-        The matplotlib `Text` to be scaled.
-    width, height : float, optional
-        The new width/height of `text` in its
-        reference coordinate system.
-        At least one value must be supplied.
-    mode : {'proportional', 'unlocked', 'maximum', 'minimum'}, optional
-        The scaling mode:
-
-            - *proportional* - The width and height are scaled by the
-              same extent.
-              Either `width` or `height` must be set for this mode.
-            - *unlocked* - The width and the height are scaled by
-              different extents, changing the aspect ratio.
-              Both `width` and `height` must be set for this mode.
-            - *maximum* - The width and the height are scaled by
-              the same extent, so that they are at maximum as large
-              as the supplied `width`/`height`.
-              Both `width` and `height` must be set for this mode.
-            - *minimum* - The width and the height are scaled by
-              the same extent, so that they are at minimum as large
-              as the supplied `width`/`height`.
-              Both `width` and `height` must be set for this mode.
-
-    Notes
-    -----
-    This function uses the :func:`get_window_extent()` method of the
-    :class:`Text` object.
-    According to experience, this function does not give the the exact
-    visual boundaries of the text.
-    Consequently, the scaled text might be slightly smaller or larger
-    than the specified width/height.
-    This behavior is not equal for all initial font sizes (in 'pt'),
-    the boundaries for an initial size of 1 'pt' seem to be most exact.
-    """
-    from matplotlib.backend_bases import GraphicsContextBase, RendererBase
-    from matplotlib.path import Path
-    from matplotlib.patheffects import AbstractPathEffect
-    from matplotlib.transforms import Affine2D, Bbox, Transform
-
-    class TextScaler(AbstractPathEffect):
-        def __init__(
-            self,
-            text: Text,
-            width: float | None,
-            height: float | None,
-            mode: Literal["proportional", "unlocked", "maximum", "minimum"],
-        ) -> None:
-            self._text = text
-            self._mode = mode
-            self._width = width
-            self._height = height
-
-        def draw_path(
-            self,
-            renderer: RendererBase,
-            gc: GraphicsContextBase,
-            tpath: Path,
-            affine: Transform,
-            rgbFace: MplColor | None = None,  # noqa: N803
-        ) -> None:
-            ax = self._text.axes
-            try:
-                renderer = ax.get_figure().canvas.get_renderer()
-            except Exception:
-                # Use cached renderer for backends, where
-                # `get_renderer()` is not available
-                # Based on the strategy from `Text.get_window_extent()`
-                renderer = ax.get_figure()._cachedRenderer
-            if renderer is None:
-                raise
-            bbox = text.get_window_extent(renderer)
-            bbox = Bbox(ax.transData.inverted().transform(bbox))
-
-            match self._mode:
-                case "proportional":
-                    if self._width is None:
-                        # Proportional scaling based on height
-                        scale_y = self._height / bbox.height
-                        scale_x = scale_y
-                    elif self._height is None:
-                        # Proportional scaling based on width
-                        scale_x = self._width / bbox.width
-                        scale_y = scale_x
-                    else:
-                        raise ValueError(
-                            "Width or height are mutually exclusive "
-                            "in 'proportional' mode"
-                        )
-                case "unlocked":
-                    scale_x = self._width / bbox.width
-                    scale_y = self._height / bbox.height
-                case "minimum":
-                    scale_x = self._width / bbox.width
-                    scale_y = self._height / bbox.height
-                    scale = max(scale_x, scale_y)
-                    scale_x, scale_y = scale, scale
-                case "maximum":
-                    scale_x = self._width / bbox.width
-                    scale_y = self._height / bbox.height
-                    scale = min(scale_x, scale_y)
-                    scale_x, scale_y = scale, scale
-                case _:
-                    raise ValueError(f"Unknown mode '{self._mode}'")
-
-            affine = Affine2D().scale(scale_x, scale_y) + affine
-            renderer.draw_path(gc, tpath, affine, rgbFace)
-
-    warnings.warn(
-        "Deprecated, use 'biotite.graphics.text.plot_scaled_text()' instead.",
-        DeprecationWarning,
-    )
-
-    if mode in ["unlocked", "minimum", "maximum"]:
-        if width is None or height is None:
-            raise TypeError(f"Width and height must be set in '{mode}' mode")
-    elif mode == "proportional":
-        if not (width is None and height is not None) or not (
-            height is None and width is not None
-        ):
-            raise TypeError(f"Either width or height must be set in '{mode}' mode")
-    else:
-        raise ValueError(f"Unknown mode '{mode}'")
-    text.set_path_effects([TextScaler(text, width, height, mode)])
 
 
 try:

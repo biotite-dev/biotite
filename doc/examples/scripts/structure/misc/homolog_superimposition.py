@@ -30,7 +30,8 @@ streptavidin = _extract_monomer(
     pdbx.get_structure(streptavidin_file, model=1, include_bonds=True)
 )
 
-streptavidin, _, _, _ = struc.superimpose_homologs(avidin, streptavidin)
+transform, _, _ = struc.superimpose_homologs(avidin, streptavidin)
+streptavidin = transform.apply(streptavidin)
 
 # Visualization with PyMOL
 pymol_avidin = pymol_interface.PyMOLObject.from_structure(avidin)

@@ -153,7 +153,8 @@ Drawing custom shapes
 ---------------------
 In addition to visualization of molecules *PyMOL* is capable of drawing
 arbitrary geometric shapes using *compiled graphics objects* (CGOs).
-A CGO (for example a sphere) is represented by a list of floating point values.
+A CGO (for example a sphere) is represented by a :class:`CGO` object, that wraps
+the floating point values *PyMOL* interprets as drawing directives.
 :mod:`biotite.interface.pymol` supports a range of CGOs, that can be created
 conveniently using dedicated functions, such as :func:`get_cylinder_cgo()`.
 Calling this function does not draw anything, yet.

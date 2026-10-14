@@ -100,10 +100,15 @@ def save_sequence(file_path: PathLike[str] | str, sequence: Sequence) -> None:
         file["sequence"] = str(sequence), scores
         file.write(file_path)
     elif suffix in [".gb", ".gbk", ".gp"]:
-        from biotite.sequence.io.genbank import GenBankFile, set_locus, set_sequence
+        from biotite.sequence.io.genbank import (
+            GenBankFile,
+            GenBankLocus,
+            set_locus,
+            set_sequence,
+        )
 
         file = GenBankFile()
-        set_locus(file, "sequence", len(sequence))
+        set_locus(file, GenBankLocus("sequence", len(sequence)))
         if not isinstance(sequence, (NucleotideSequence, ProteinSequence)):
             raise TypeError(
                 "GenBank files require a NucleotideSequence or ProteinSequence"

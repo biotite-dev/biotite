@@ -29,7 +29,10 @@ def path(request):
 @pytest.mark.parametrize("altloc", ["first", "occupancy", "all"])
 def test_to_biotite(path, altloc, state):
     pdbx_file = pdbx.CIFFile.read(path)
-    ref_array = pdbx.get_structure(pdbx_file, model=state, altloc=altloc)
+    # PyMOL uses the author fields
+    ref_array = pdbx.get_structure(
+        pdbx_file, model=state, altloc=altloc, use_author_fields=True
+    )
 
     pymol_interface.cmd.load(path, "test")
     test_array = pymol_interface.PyMOLObject("test").to_structure(
@@ -49,8 +52,12 @@ def test_to_pymol(path):
     ref_model = pymol_interface.cmd.get_model("test", 1)
 
     pdbx_file = pdbx.CIFFile.read(path)
+    # PyMOL uses the author fields
     atom_array = pdbx.get_structure(
-        pdbx_file, model=1, extra_fields=["b_factor", "occupancy", "charge"]
+        pdbx_file,
+        model=1,
+        extra_fields=["b_factor", "occupancy", "charge"],
+        use_author_fields=True,
     )
     test_model = pymol_interface.to_model(atom_array)
 

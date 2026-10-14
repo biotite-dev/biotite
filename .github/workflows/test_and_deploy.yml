@@ -262,7 +262,7 @@ jobs:
         run: >
           pixi run -e test-mmseqs pytest
           --durations=50
-          tests//application_v2//mmseqs
+          tests//application//mmseqs
           tests//test_doctest.py
           -k mmseqs
 

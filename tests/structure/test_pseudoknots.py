@@ -12,7 +12,10 @@ def nuc_sample_array():
     Sample structure for pseudoknot detection.
     """
     return pdbx.get_structure(
-        pdbx.CIFFile.read(data_dir("structure") / "pdb" / "4p5j.cif"), model=1
+        pdbx.CIFFile.read(data_dir("structure") / "pdb" / "4p5j.cif"),
+        model=1,
+        # The expected values refer to the author fields
+        use_author_fields=True,
     )
 
 

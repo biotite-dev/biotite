@@ -18,10 +18,15 @@ def test_docking(flexible):
     """
     MAX_DEVIATION = 2.0
 
-    # A structure of a straptavidin-biotin complex
+    # A structure of a streptavidin-biotin complex
     pdbx_file = pdbx.BinaryCIFFile.read(data_dir("application") / "2rtg.bcif")
     structure = pdbx.get_structure(
-        pdbx_file, model=1, extra_fields=["charge"], include_bonds=True
+        pdbx_file,
+        model=1,
+        extra_fields=["charge"],
+        include_bonds=True,
+        # The author chain IDs assign the ligand to the chain of its receptor
+        use_author_fields=True,
     )
     structure = structure[structure.chain_id == "B"]
     receptor = structure[struc.filter_amino_acids(structure)]
@@ -38,25 +43,24 @@ def test_docking(flexible):
     else:
         flexible_mask = None
 
-    app = VinaApp(
-        ligand,
-        receptor,
-        struc.centroid(ref_ligand),
-        [20, 20, 20],
-        flexible=flexible_mask,
+    # A fixed nonzero seed and single-threaded execution give fully reproducible results
+    result = (
+        VinaApp()
+        .run(
+            ligand,
+            receptor,
+            struc.centroid(ref_ligand),
+            [20, 20, 20],
+            flexible=flexible_mask,
+            seed=42,
+            cpu=1,
+        )
+        .result()
     )
-    # A non-zero seed is required: Vina interprets seed 0 as a request for
-    # a random seed, which would make this test non-deterministic
-    app.set_seed(42)
-    # Single-threaded execution is required for fully reproducible
-    # results — even with a fixed seed, parallel Vina is not deterministic
-    app.set_cpu(1)
-    app.start()
-    app.join()
 
-    test_ligand_coord = app.get_ligand_coord()
-    test_receptor_coord = app.get_receptor_coord()
-    energies = app.get_energies()
+    test_ligand_coord = result.ligand_coord
+    test_receptor_coord = result.receptor_coord
+    energies = result.energies
     # One energy value per model
     assert len(test_ligand_coord) == len(energies)
     assert len(test_receptor_coord) == len(energies)
@@ -83,7 +87,7 @@ def test_docking(flexible):
         test_receptor_coord = test_receptor_coord[not_nan_mask]
         # Check if it least one atom is preserved
         assert test_receptor_coord.shape[1] > 0
-        # The flexible residues should only have a small deviation from the original
+        # The flexible residues should only have a small deviation
         assert (
             np.max(struc.distance(test_receptor_coord, ref_receptor_coord))
             < MAX_DEVIATION

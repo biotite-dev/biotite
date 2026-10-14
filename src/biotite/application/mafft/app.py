@@ -2,130 +2,180 @@ from __future__ import annotations
 
 __name__ = "biotite.application.mafft"
 __author__ = "Patrick Kunzmann"
-__all__ = ["MafftApp"]
+__all__ = ["MafftApp", "MafftResult"]
 
 import os
 import re
 from collections.abc import Sequence as SequenceABC
+from dataclasses import dataclass
+from io import StringIO
 from os import PathLike
+from tempfile import NamedTemporaryFile
 import networkx as nx
-from biotite.application.application import AppState, AppStateError, requires_state
-from biotite.application.msaapp import MSAApp
+import numpy as np
+from biotite.application.localapp import (
+    CLIArgument,
+    CLIFlag,
+    CLIOption,
+    CLIParameter,
+    CommandSetup,
+    LocalApp,
+    cleanup_tempfile,
+    command,
+)
+from biotite.application.msa import MSAInput, resolve_gap_penalty
+from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.align.matrix import SubstitutionMatrix
 from biotite.sequence.phylo.tree import from_newick
 from biotite.sequence.sequence import Sequence
 
-_prefix_pattern = re.compile(r"\d*_")
+# MAFFT labels each leaf of the guide tree as '<n>_<sequence name>'
+_PREFIX_PATTERN = re.compile(r"\d*_")
 
 
-class MafftApp(MSAApp):
+@dataclass(frozen=True)
+class MafftResult:
     """
-    Perform a multiple sequence alignment using MAFFT.
+    The result of a MAFFT alignment run.
 
-    DEPRECATED: Use :class:`biotite.application_v2.mafft.MafftApp` instead.
+    Attributes
+    ----------
+    alignment : Alignment
+        The global multiple sequence alignment.
+    order : ndarray, dtype=int
+        The order of the sequences intended by MAFFT.
+        Usually this order (e.g. based on the guide tree) differs from
+        the input order.
+    guide_tree : nx.DiGraph
+        The guide tree created for the progressive alignment.
+    """
+
+    alignment: Alignment
+    order: np.ndarray
+    guide_tree: nx.DiGraph
+
+
+class MafftApp(LocalApp):
+    """
+    A handle to *MAFFT*.
 
     Parameters
     ----------
-    sequences : list of Sequence
-        The sequences to be aligned.
-    bin_path : str, optional
-        Path of the MUSCLE binary.
-    matrix : SubstitutionMatrix, optional
-        A custom substitution matrix.
+    path : str, optional
+        Path of the MAFFT binary.
 
     Examples
     --------
 
-    >>> seq1 = ProteinSequence("BIQTITE")
-    >>> seq2 = ProteinSequence("TITANITE")
-    >>> seq3 = ProteinSequence("BISMITE")
-    >>> seq4 = ProteinSequence("IQLITE")
-    >>> app = MafftApp([seq1, seq2, seq3, seq4])
-    >>> app.start()
-    >>> app.join()
-    >>> alignment = app.get_alignment()
-    >>> print(alignment)
+    >>> sequences = [
+    ...     ProteinSequence("BIQTITE"),
+    ...     ProteinSequence("TITANITE"),
+    ...     ProteinSequence("BISMITE"),
+    ...     ProteinSequence("IQLITE"),
+    ... ]
+    >>> result = MafftApp().run(sequences).result()
+    >>> print(result.alignment)
     -BIQTITE
     TITANITE
     -BISMITE
     --IQLITE
     """
 
-    _v2_alternative = "biotite.application_v2.mafft.MafftApp"
+    def __init__(self, path: PathLike[str] | str = "mafft") -> None:
+        super().__init__(path)
 
-    def __init__(
+    @command(allowed_options=["thread"])
+    def run(
         self,
         sequences: SequenceABC[Sequence],
-        bin_path: PathLike[str] | str = "mafft",
         matrix: SubstitutionMatrix | None = None,
-    ) -> None:
-        super().__init__(sequences, bin_path, matrix)
-        self._tree: nx.DiGraph | None = None
-        self._out_tree_file_name: str = self.get_input_file_path() + ".tree"
-
-    def run(self) -> None:
-        args = [
-            "--quiet",
-            "--auto",
-            "--treeout",
-            # Get the reordered alignment in order for
-            # get_alignment_order() to work properly
-            "--reorder",
-        ]
-        if self.get_seqtype() == "protein":
-            args += ["--amino"]
-        else:
-            args += ["--nuc"]
-        if self.get_matrix_file_path() is not None:
-            args += ["--aamatrix", self.get_matrix_file_path()]
-        args += [self.get_input_file_path()]
-        self.set_arguments(args)
-        super().run()
-
-    def evaluate(self) -> None:
-        with open(self.get_output_file_path(), "w") as f:
-            # MAFFT outputs alignment to stdout
-            # -> write stdout to output file name
-            f.write(self.get_stdout())
-        super().evaluate()
-        with open(self._out_tree_file_name, "r") as file:
-            raw_newick = file.read().replace("\n", "")
-            # Mafft uses sequences label in the form '<n>_<seqname>'
-            # Only the <seqname> is required
-            # -> remove the '<n>_' prefix
-            newick = re.sub(_prefix_pattern, "", raw_newick)
-            self._tree = from_newick(newick)
-
-    def clean_up(self) -> None:
-        super().clean_up()
-        os.remove(self._out_tree_file_name)
-
-    @requires_state(AppState.JOINED)
-    def get_guide_tree(self) -> nx.DiGraph:
+        gap_penalty: float | tuple[float, float] | None = None,
+    ) -> CommandSetup[MafftResult]:
         """
-        Get the guide tree created for the progressive alignment.
+        Perform a multiple sequence alignment.
+
+        Parameters
+        ----------
+        sequences : iterable object of Sequence
+            The sequences to be aligned.
+        matrix : SubstitutionMatrix, optional
+            A custom substitution matrix.
+        gap_penalty : float or tuple of (float, float), optional
+            If a float is provided, the value will be interpreted as
+            general gap penalty.
+            If a tuple is provided, an affine gap penalty is used.
+            The first value in the tuple is the gap opening penalty,
+            the second value is the gap extension penalty.
+            The values need to be negative.
 
         Returns
         -------
-        tree : DiGraph
-            The guide tree.
+        future : Future of MafftResult
+            A handle to the running alignment.
+            Call :meth:`Future.result()` to obtain the
+            :class:`MafftResult`.
         """
-        if self._tree is None:
-            raise AppStateError("Guide tree is not available")
-        return self._tree
+        msa_input = MSAInput.from_input(
+            sequences,
+            matrix,
+            supports_nucleotide=True,
+            supports_protein=True,
+            supports_custom_nucleotide_matrix=True,
+            supports_custom_protein_matrix=True,
+        )
 
-    @staticmethod
-    def supports_nucleotide() -> bool:
-        return True
+        in_file = NamedTemporaryFile("w", suffix=".fa", delete=False)
+        matrix_file = NamedTemporaryFile("w", suffix=".mat", delete=False)
+        # MAFFT writes the guide tree next to the input file
+        tree_file_name = in_file.name + ".tree"
+        msa_input.write_fasta(in_file)
+        if msa_input.matrix is not None:
+            matrix_file.write(str(msa_input.matrix))
+            matrix_file.flush()
 
-    @staticmethod
-    def supports_protein() -> bool:
-        return True
+        parameters: list[CLIParameter] = [
+            CLIFlag("quiet"),
+            CLIFlag("auto"),
+            CLIFlag("treeout"),
+            # Reorder the output for `order` to reflect the guide tree
+            CLIFlag("reorder"),
+            CLIFlag("amino" if msa_input.seqtype == "protein" else "nuc"),
+            # The input file is a positional argument
+            CLIArgument(in_file.name),
+        ]
+        if msa_input.matrix is not None:
+            parameters.append(CLIOption("aamatrix", matrix_file.name))
+        gap_open, gap_ext = resolve_gap_penalty(gap_penalty)
+        if gap_open is not None and gap_ext is not None:
+            # MAFFT expects the gap penalties as positive magnitudes
+            parameters += [
+                CLIOption("op", f"{abs(gap_open):g}"),
+                CLIOption("ep", f"{abs(gap_ext):g}"),
+            ]
 
-    @staticmethod
-    def supports_custom_nucleotide_matrix() -> bool:
-        return True
+        def evaluate(stdout: bytes, stderr: bytes) -> MafftResult:
+            # MAFFT writes the alignment to the standard output
+            alignment, order = msa_input.read_fasta(StringIO(stdout.decode("UTF-8")))
+            with open(tree_file_name) as file:
+                raw_newick = file.read().replace("\n", "")
+            # Remove the '<n>_' prefix from each leaf label
+            newick = re.sub(_PREFIX_PATTERN, "", raw_newick)
+            return MafftResult(
+                alignment=alignment,
+                order=order,
+                guide_tree=from_newick(newick),
+            )
 
-    @staticmethod
-    def supports_custom_protein_matrix() -> bool:
-        return True
+        def cleanup() -> None:
+            for temp_file in (in_file, matrix_file):
+                cleanup_tempfile(temp_file)
+            try:
+                os.remove(tree_file_name)
+            except FileNotFoundError:
+                pass
+
+        return CommandSetup(
+            parameters=parameters,
+            evaluate=evaluate,
+            cleanup=cleanup,
+        )

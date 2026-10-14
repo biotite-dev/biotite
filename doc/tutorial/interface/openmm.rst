@@ -229,7 +229,7 @@ trajectory, analogous to the snippets shown above.
     # as not atoms have been added or removed
     trajectory = openmm_interface.from_states(water, states)
     # Superimpose the frames
-    trajectory, _ = struc.superimpose(trajectory[0], trajectory)
+    trajectory = struc.superimpose(trajectory[0], trajectory).apply(trajectory)
 
     # Remove the box from the previous visualization
     del box

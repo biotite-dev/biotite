@@ -20,9 +20,9 @@ if TYPE_CHECKING:
 def align_banded(
     seq1: Sequence[S1],
     seq2: Sequence[S2],
-    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int],
     band: tuple[int, int],
-    gap_penalty: int | tuple[int, int] = -10,
+    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int] = (1, -1),
+    gap_penalty: int | tuple[int, int] = -1,
     local: bool = False,
     max_number: int = 1000,
     score_only: Literal[False] = False,
@@ -31,9 +31,9 @@ def align_banded(
 def align_banded(
     seq1: Sequence[S1],
     seq2: Sequence[S2],
-    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int],
     band: tuple[int, int],
-    gap_penalty: int | tuple[int, int] = -10,
+    matrix: SubstitutionMatrix[S1, S2] | tuple[int, int] = (1, -1),
+    gap_penalty: int | tuple[int, int] = -1,
     local: bool = False,
     max_number: int = 1000,
     *,
@@ -42,9 +42,9 @@ def align_banded(
 def align_banded(
     seq1: Sequence,
     seq2: Sequence,
-    matrix: SubstitutionMatrix | tuple[int, int],
     band: tuple[int, int],
-    gap_penalty: int | tuple[int, int] = -10,
+    matrix: SubstitutionMatrix | tuple[int, int] = (1, -1),
+    gap_penalty: int | tuple[int, int] = -1,
     local: bool = False,
     max_number: int = 1000,
     score_only: bool = False,
@@ -67,8 +67,6 @@ def align_banded(
     ----------
     seq1, seq2 : Sequence
         The sequences to be aligned.
-    matrix : SubstitutionMatrix or tuple(int, int)
-        Either a substitution matrix or a ``(match, mismatch)`` pair of scores.
     band : tuple(int, int)
         The diagonals that represent the lower and upper limit of the
         search space.
@@ -78,6 +76,9 @@ def align_banded(
         An alignment of sequence positions where :math:`D` is lower than
         the lower limit or greater than the upper limit is not explored
         by the algorithm.
+    matrix : SubstitutionMatrix or tuple(int, int), optional
+        Either a substitution matrix or a ``(match, mismatch)`` pair of scores.
+        By default a match scores ``1`` and a mismatch scores ``-1``.
     gap_penalty : int or tuple(int, int), optional
         If an integer is provided, the value will be interpreted as
         linear gap penalty.
@@ -85,6 +86,7 @@ def align_banded(
         The first integer in the tuple is the gap opening penalty,
         the second integer is the gap extension penalty.
         The values need to be negative.
+        By default a linear gap penalty of ``-1`` is used.
     local : bool, optional
         If set to true, a local alignment is performed.
         Otherwise (default) a semi-global alignment is performed.
@@ -188,8 +190,8 @@ def align_banded(
     >>> BUFFER = 5
     >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
     >>> alignment = align_banded(
-    ...     sequence1, sequence2, matrix,
-    ...     band=(diagonal - BUFFER, diagonal + BUFFER), gap_penalty=(-6, -1)
+    ...     sequence1, sequence2, band=(diagonal - BUFFER, diagonal + BUFFER),
+    ...     matrix=matrix, gap_penalty=(-6, -1)
     ... )[0]
     >>> print(alignment)
     TATATTAT

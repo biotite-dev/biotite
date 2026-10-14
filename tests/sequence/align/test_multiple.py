@@ -26,8 +26,11 @@ def test_align_multiple(sequences, gap_penalty):
     test_score = align.score(test_alignment, matrix, gap_penalty, terminal_penalty=True)
 
     try:
-        ref_alignment = muscle.MuscleApp.align(
-            sequences, matrix=matrix, gap_penalty=gap_penalty
+        ref_alignment = (
+            muscle.Muscle3App()
+            .run(sequences, matrix=matrix, gap_penalty=gap_penalty)
+            .result()
+            .alignment
         )
     except VersionError:
         pytest.skip("Invalid Muscle software version")

@@ -123,7 +123,6 @@ exclude = [
     'query.SuperstructureQuery',
     'query.SubstructureQuery',
     # Numpydoc expects a return value for decorators
-    'application.requires_state',
     'version.requires_version',
     'object.validate',
     # Usage of the return value is not intended

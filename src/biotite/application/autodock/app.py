@@ -2,53 +2,92 @@ from __future__ import annotations
 
 __name__ = "biotite.application.autodock"
 __author__ = "Patrick Kunzmann"
-__all__ = ["VinaApp"]
+__all__ = ["VinaApp", "VinaResult"]
 
-import copy
+from dataclasses import dataclass
 from os import PathLike
 from tempfile import NamedTemporaryFile
-from typing import Any
 import numpy as np
-from biotite.application.application import AppState, requires_state
-from biotite.application.localapp import LocalApp, cleanup_tempfile
+from biotite.application.localapp import (
+    CLIOption,
+    CLIParameter,
+    CommandSetup,
+    LocalApp,
+    cleanup_tempfile,
+    command,
+)
 from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.connect import find_connected
 from biotite.structure.error import BadStructureError
 from biotite.structure.io.pdbqt import PDBQTFile
 from biotite.structure.residues import get_residue_masks, get_residue_starts_for
-from biotite.typing import XYZ, K, M, N, NDArray1, NDArray3
+
+
+@dataclass(frozen=True)
+class VinaResult:
+    """
+    The result of an *AutoDock Vina* docking run.
+
+    Attributes
+    ----------
+    ligand_models : AtomArrayStack
+        The docked ligand.
+        Each model corresponds to one binding mode.
+        The models are sorted from best to worst predicted binding
+        affinity.
+        The returned structure may contain less atoms than the input
+        structure, as *Vina* removes nonpolar hydrogen atoms.
+        Furthermore, the returned structure contains *AutoDock* atom
+        types as ``element`` annotation.
+    ligand_coord : ndarray, shape=(m,n,3), dtype=float
+        The coordinates for *m* binding modes and *n* atoms
+        of the input ligand.
+        The models are sorted from best to worst predicted binding
+        affinity.
+        Missing coordinates due to the removed nonpolar hydrogen
+        atoms are set to *NaN*.
+    flexible_residue_models : AtomArrayStack
+        The docked side chains.
+        Each model corresponds to one binding mode.
+        The models are sorted from best to worst predicted binding
+        affinity.
+        If no flexible side chains were defined, this
+        :class:`AtomArrayStack` contains no atoms.
+        The returned structure may contain less atoms than the input
+        structure, as *Vina* removes nonpolar hydrogen atoms.
+        Furthermore, the returned structure contains *AutoDock* atom
+        types as ``element`` annotation.
+    receptor_coord : ndarray, shape=(m,n,3), dtype=float
+        The coordinates for *m* binding modes and *n* atoms
+        of the input receptor.
+        The models are sorted from best to worst predicted binding
+        affinity.
+        Missing coordinates due to the removed nonpolar hydrogen
+        atoms from flexible side chains are set to *NaN*.
+        The output is only meaningful, if flexible side chains were
+        defined.
+        Otherwise, the coordinates are simply *m* repetitions
+        of the input receptor coordinates.
+    energies : ndarray, dtype=float
+        The predicted binding energies (kcal/mol).
+        The energies are sorted from best to worst.
+    """
+
+    ligand_models: AtomArrayStack
+    ligand_coord: np.ndarray
+    flexible_residue_models: AtomArrayStack
+    receptor_coord: np.ndarray
+    energies: np.ndarray
 
 
 class VinaApp(LocalApp):
     """
-    Dock a ligand to a receptor molecule using *AutoDock Vina*.
-
-    DEPRECATED: Use :class:`biotite.application_v2.autodock.VinaApp` instead.
+    A handle to *AutoDock Vina*.
 
     Parameters
     ----------
-    ligand : AtomArray
-        The structure of the ligand molecule.
-        Must have an associated :class:`BondList`.
-        An associated ``charge`` annotation is recommended for proper
-        calculation of partial charges.
-    receptor : AtomArray, shape=(n,)
-        The structure of the receptor molecule.
-        Must have an associated :class:`BondList`.
-        An associated ``charge`` annotation is recommended for proper
-        calculation of partial charges.
-    center : ndarray, shape=(3,), dtype=float
-        The *xyz* coordinates for the center of the search space.
-    size : ndarray, shape=(3,), dtype=float
-        The size of the search space in *xyz* directions.
-    flexible : ndarray, shape=(n,), dtype=bool, optional
-        A boolean mask that indicates flexible amino acid side chains
-        in `receptor`.
-        Each residue, where at least one atom index is ``True`` in
-        `flexible`, is considered flexible.
-        By default, the receptor has no flexibility.
-    bin_path : str, optional
-        Path to the *Vina* binary.
+    path : str, optional
+        Path to the ``vina`` binary.
 
     Examples
     --------
@@ -56,7 +95,8 @@ class VinaApp(LocalApp):
     >>> # A dummy receptor and ligand
     >>> ligand = residue("ASP")
     >>> receptor = atom_array
-    >>> app = VinaApp(
+    >>> app = VinaApp()
+    >>> result = app.run(
     ...     ligand, receptor,
     ...     # Binding pocket is in the center of the receptor
     ...     center=centroid(receptor),
@@ -64,440 +104,38 @@ class VinaApp(LocalApp):
     ...     size=[20, 20, 20],
     ...     # Handle residues 2 and 5 as flexible
     ...     flexible=(receptor.res_id == 2) | (receptor.res_id == 5)
-    ... )
+    ... ).result()
     """
 
-    _v2_alternative = "biotite.application_v2.autodock.VinaApp"
+    def __init__(self, path: PathLike[str] | str = "vina") -> None:
+        super().__init__(path)
 
-    def __init__(
-        self,
-        ligand: AtomArray[Any],
-        receptor: AtomArray[N],
-        center: NDArray1[XYZ, np.floating],
-        size: NDArray1[XYZ, np.floating],
-        flexible: NDArray1[N, np.bool_] | None = None,
-        bin_path: PathLike[str] | str = "vina",
-    ) -> None:
-        super().__init__(bin_path)
+    def _format_key(self, key: str) -> str:
+        # Vina uses double-dash options and preserves underscores
+        return "--" + str(key)
 
-        if ligand.bonds is None:
-            raise ValueError("The ligand has no associated BondList")
-        if receptor.bonds is None:
-            raise ValueError("The receptor has no associated BondList")
-
-        self._ligand: AtomArray[Any] = ligand.copy()
-        self._receptor: AtomArray[Any] = receptor.copy()
-        self._center: NDArray1[Any, np.floating] = copy.deepcopy(center)
-        self._size: NDArray1[Any, np.floating] = copy.deepcopy(size)
-        self._is_flexible: bool = flexible is not None
-        self._seed: int | None = None
-        self._cpu: int | None = None
-        self._exhaustiveness: int | None = None
-        self._number: int | None = None
-        self._energy_range: float | None = None
-
-        if flexible is not None:
-            flexible_indices = np.where(flexible)[0]
-            self._flex_res_starts = np.unique(
-                get_residue_starts_for(receptor, flexible_indices)
-            )
-
-        self._ligand_file = NamedTemporaryFile("w", suffix=".pdbqt", delete=False)
-        self._receptor_file = NamedTemporaryFile("w", suffix=".pdbqt", delete=False)
-        self._receptor_flex_file = NamedTemporaryFile(
-            "w", suffix=".pdbqt", delete=False
-        )
-        self._out_file = NamedTemporaryFile("r", suffix=".pdbqt", delete=False)
-
-    @requires_state(AppState.CREATED)
-    def set_seed(self, seed: int) -> None:
-        """
-        Fix the seed for the random number generator to get
-        reproducible results.
-
-        By default, the seed is chosen randomly.
-
-        Parameters
-        ----------
-        seed : int
-            The seed for the random number generator.
-        """
-        self._seed = seed
-
-    @requires_state(AppState.CREATED)
-    def set_cpu(self, cpu: int) -> None:
-        """
-        Set the number of CPUs *Vina* uses for docking.
-
-        By default, all available CPUs are used.
-
-        Parameters
-        ----------
-        cpu : int
-            The number of CPUs to use.
-        """
-        self._cpu = cpu
-
-    @requires_state(AppState.CREATED)
-    def set_exhaustiveness(self, exhaustiveness: int) -> None:
-        """
-        Set the *exhaustiveness* parameter for *Vina*.
-
-        A higher exhaustiveness may lead to better docking results, but
-        also increases the computation time.
-        By default, the exhaustiveness is ``8``.
-
-        Parameters
-        ----------
-        exhaustiveness : int
-            The value for the exhaustiveness parameter.
-            Must be greater than 0.
-        """
-        self._exhaustiveness = exhaustiveness
-
-    @requires_state(AppState.CREATED)
-    def set_max_number_of_models(self, number: int) -> None:
-        """
-        Set the maximum number of binding modes to generate.
-
-        *Vina* may generate less modes, if the docking process does
-        not find enough distinct conformations.
-        By default, the maximum number is ``9``.
-
-        Parameters
-        ----------
-        number : int
-            The maximum number of generated modes/models.
-        """
-        self._number = number
-
-    @requires_state(AppState.CREATED)
-    def set_energy_range(self, energy_range: float) -> None:
-        """
-        Set the maximum energy range of the generated models.
-
-        *Vina* will ignore binding modes if the difference between this
-        mode and the best mode is greater than this value.
-        By default, the range is ``3.0``.
-
-        Parameters
-        ----------
-        energy_range : float
-            The energy range (kcal/mol).
-        """
-        self._energy_range = energy_range
-
-    def run(self) -> None:
-        # Use different atom ID ranges for atoms in ligand and receptor
-        # for unambiguous assignment, if the receptor contains flexible
-        # residues
-        self._ligand.set_annotation(
-            "atom_id", np.arange(1, self._ligand.array_length() + 1)
-        )
-        self._receptor.set_annotation(
-            "atom_id",
-            np.arange(
-                self._ligand.array_length() + 1,
-                self._ligand.array_length() + self._receptor.array_length() + 1,
-            ),
-        )
-
-        ligand_file = PDBQTFile()
-        # Contains 'true' entries for all atoms that have not been
-        # removed from ligand
-        self._ligand_mask = ligand_file.set_structure(
-            self._ligand, rotatable_bonds="all"
-        )
-        ligand_file.write(self._ligand_file)
-        self._ligand_file.flush()
-
-        if self._is_flexible:
-            self._rigid_mask = np.ones(self._receptor.array_length(), dtype=bool)
-            # Contains 'true' entries for all atoms that have not been
-            # removed from receptor in flexible side chains
-            self._receptor_mask = np.zeros(self._receptor.array_length(), dtype=bool)
-            for i, start in enumerate(self._flex_res_starts):
-                flex_mask, rigid_mask, root = self._get_flexible_residue(start)
-                self._rigid_mask &= rigid_mask
-                root_in_flex_residue = np.where(
-                    np.arange(self._receptor.array_length())[flex_mask] == root
-                )[0][0]
-                flex_file = PDBQTFile()
-                self._receptor_mask[flex_mask] |= flex_file.set_structure(
-                    self._receptor[flex_mask],
-                    rotatable_bonds="all",
-                    root=root_in_flex_residue,
-                    include_torsdof=False,
-                )
-                # Enclose each flexible residue
-                # with BEGIN_RES and END_RES
-                self._receptor_flex_file.write(f"BEGIN_RES {i}\n")
-                flex_file.write(self._receptor_flex_file)
-                self._receptor_flex_file.write(f"END_RES {i}\n")
-            self._receptor_flex_file.flush()
-
-            receptor_file = PDBQTFile()
-            receptor_file.set_structure(
-                self._receptor[self._rigid_mask],
-                rotatable_bonds=None,
-                include_torsdof=False,
-            )
-            receptor_file.write(self._receptor_file)
-            self._receptor_file.flush()
-
-        else:
-            receptor_file = PDBQTFile()
-            receptor_file.set_structure(
-                self._receptor, rotatable_bonds=None, include_torsdof=False
-            )
-            receptor_file.write(self._receptor_file)
-            self._receptor_file.flush()
-
-        arguments = [
-            "--ligand",
-            self._ligand_file.name,
-            "--receptor",
-            self._receptor_file.name,
-            "--out",
-            self._out_file.name,
-            "--center_x",
-            f"{self._center[0]:.3f}",
-            "--center_y",
-            f"{self._center[1]:.3f}",
-            "--center_z",
-            f"{self._center[2]:.3f}",
-            "--size_x",
-            f"{self._size[0]:.3f}",
-            "--size_y",
-            f"{self._size[1]:.3f}",
-            "--size_z",
-            f"{self._size[2]:.3f}",
+    @command(
+        allowed_options=[
+            "cpu",
+            "exhaustiveness",
+            "num_modes",
+            "energy_range",
+            "min_rmsd",
+            "max_evals",
+            "spacing",
         ]
-        if self._seed is not None:
-            arguments.extend(["--seed", str(self._seed)])
-        if self._cpu is not None:
-            arguments.extend(["--cpu", str(self._cpu)])
-        if self._exhaustiveness is not None:
-            arguments.extend(["--exhaustiveness", str(self._exhaustiveness)])
-        if self._number is not None:
-            arguments.extend(["--num_modes", str(self._number)])
-        if self._energy_range is not None:
-            arguments.extend(["--energy_range", str(self._energy_range)])
-        if self._is_flexible:
-            arguments.extend(["--flex", str(self._receptor_flex_file.name)])
-
-        self.set_arguments(arguments)
-        super().run()
-
-    def evaluate(self) -> None:
-        super().evaluate()
-        out_file = PDBQTFile.read(self._out_file)
-
-        models = out_file.get_structure()
-
-        n_ligand_atoms = np.count_nonzero(self._ligand_mask)
-        self._ligand_models = models[..., :n_ligand_atoms]
-        self._flex_models = models[..., n_ligand_atoms:]
-        self._n_models = models.stack_depth()
-
-        remarks = out_file.get_remarks()
-        self._energies = np.array(
-            # VINA RESULT:      -5.8      0.000      0.000
-            #                     ^
-            [float(remark[12:].split()[0]) for remark in remarks]
-        )
-
-    def clean_up(self) -> None:
-        super().clean_up()
-        cleanup_tempfile(self._ligand_file)
-        cleanup_tempfile(self._receptor_file)
-        cleanup_tempfile(self._receptor_flex_file)
-        cleanup_tempfile(self._out_file)
-
-    @requires_state(AppState.JOINED)
-    def get_energies(self) -> NDArray1[K, np.floating]:
+    )
+    def run(
+        self,
+        ligand: AtomArray,
+        receptor: AtomArray,
+        center: np.ndarray,
+        size: np.ndarray,
+        flexible: np.ndarray | None = None,
+        seed: int | None = None,
+    ) -> CommandSetup[VinaResult]:
         """
-        Get the predicted binding energy for each generated binding
-        mode.
-
-        Returns
-        -------
-        energies : ndarray, dtype=float
-            The predicted binding energies (kcal/mol).
-            The energies are sorted from best to worst.
-        """
-        return self._energies
-
-    @requires_state(AppState.JOINED)
-    def get_ligand_models(self) -> AtomArrayStack[Any, Any]:
-        """
-        Get the ligand structure with the conformations for each
-        generated binding mode.
-
-        Returns
-        -------
-        ligand : AtomArrayStack
-            The docked ligand.
-            Each model corresponds to one binding mode.
-            The models are sorted from best to worst predicted binding
-            affinity.
-
-        Notes
-        -----
-        The returned structure may contain less atoms than the input
-        structure, as *Vina* removes nonpolar hydrogen atoms.
-        Furthermore, the returned structure contains *AutoDock* atom
-        types as ``element`` annotation.
-        """
-        return self._ligand_models
-
-    @requires_state(AppState.JOINED)
-    def get_ligand_coord(self) -> NDArray3[M, N, XYZ, np.floating]:
-        """
-        Get the ligand coordinates for each generated binding mode.
-
-        Returns
-        -------
-        coord : ndarray, shape=(m,n,3), dtype=float
-            The coordinates for *m* binding modes and *n* atoms
-            of the input ligand.
-            The models are sorted from best to worst predicted binding
-            affinity.
-            Missing coordinates due to the removed nonpolar hydrogen
-            atoms are set to *NaN*.
-        """
-        coord = np.full(
-            (self._n_models, self._ligand.array_length(), 3), np.nan, dtype=np.float32
-        )
-        coord[:, self._ligand_mask] = self._ligand_models.coord
-        return coord  # pyright: ignore[reportReturnType]
-
-    @requires_state(AppState.JOINED)
-    def get_flexible_residue_models(self) -> AtomArrayStack[Any, Any]:
-        """
-        Get the structure for the flexible side chains with the
-        conformations for each generated binding mode.
-
-        If no flexible side chains were defined, the returned
-        :class:`AtomArrayStack` contains no atoms.
-
-        Returns
-        -------
-        side_chains : AtomArrayStack
-            The docked side chains.
-            Each model corresponds to one binding mode.
-            The models are sorted from best to worst predicted binding
-            affinity.
-
-        Notes
-        -----
-        The returned structure may contain less atoms than the input
-        structure, as *Vina* removes nonpolar hydrogen atoms.
-        Furthermore, the returned structure contains *AutoDock* atom
-        types as ``element`` annotation.
-        """
-        return self._flex_models
-
-    @requires_state(AppState.JOINED)
-    def get_receptor_coord(self) -> NDArray3[M, N, XYZ, np.floating]:
-        """
-        Get the get_receptor_coord coordinates for each generated
-        binding mode.
-
-        Returns
-        -------
-        coord : ndarray, shape=(m,n,3), dtype=float
-            The coordinates for *m* binding modes and *n* atoms
-            of the input receptor.
-            The models are sorted from best to worst predicted binding
-            affinity.
-            Missing coordinates due to the removed nonpolar hydrogen
-            atoms from flexible side chains are set to *NaN*.
-
-        Notes
-        -----
-        The output is only meaningful, if flexible side chains were
-        defined.
-        Otherwise, the returned coordinates are simply *m* repetitions
-        of the input receptor coordinates.
-        """
-        coord = np.repeat(
-            self._receptor.coord[np.newaxis, ...], repeats=self._n_models, axis=0
-        )
-        if self._is_flexible:
-            # Replace original coordinates with modeled coordinates
-            # for the the flexible side chains
-            # The coordinates from removed atoms are NaN
-            coord[:, ~self._rigid_mask] = np.nan
-            coord[:, self._receptor_mask] = self._flex_models.coord
-        return coord
-
-    def _get_flexible_residue(
-        self, residue_start: int
-    ) -> tuple[np.ndarray, np.ndarray, int]:
-        residue_indices = np.where(
-            get_residue_masks(self._receptor, [residue_start])[0]
-        )[0]
-        root_indices_in_residue = np.isin(
-            self._receptor.atom_name[residue_indices], ("CA",)
-        )
-        root_indices = residue_indices[root_indices_in_residue]
-        if len(root_indices) == 0:
-            raise BadStructureError("Found no CA atom in residue")
-        if len(root_indices) > 1:
-            raise BadStructureError("Multiple CA atom in residue")
-        root_index = root_indices[0]
-
-        # Find the index of the atom connected to root on the flexible
-        # side chain (CB)
-        if self._receptor.bonds is None:
-            raise ValueError("The receptor has no associated BondList")
-        root_connect_indices, _ = self._receptor.bonds.get_bonds(root_index)
-        connected_index = None
-        try:
-            connected_index = root_connect_indices[
-                np.isin(self._receptor.atom_name[root_connect_indices], ("CB",))
-            ][0]
-        except IndexError:
-            # Residue has no appropriate connection (e.g. in glycine)
-            # -> There is no atom in the flexible side chain
-            flex_mask = np.zeros(self._receptor.array_length(), dtype=bool)
-            rigid_mask = np.ones(self._receptor.array_length(), dtype=bool)
-            return flex_mask, rigid_mask, root_index
-
-        # Remove the root bond from the bond list
-        # to find the atoms involved in the flexible part
-        bonds = self._receptor.bonds.copy()
-        bonds.remove_bond(root_index, connected_index)
-        flexible_indices = find_connected(bonds, connected_index)
-        if root_index in flexible_indices:
-            raise BadStructureError(
-                "There are multiple connections between the flexible and "
-                "rigid part, maybe a cyclic residue like proline was selected"
-            )
-
-        flex_mask = np.zeros(self._receptor.array_length(), dtype=bool)
-        flex_mask[flexible_indices] = True
-        rigid_mask = ~flex_mask
-        # Root index is part of rigid and flexible part
-        flex_mask[root_index] = True
-
-        return flex_mask, rigid_mask, root_index
-
-    @staticmethod
-    def dock(
-        ligand: AtomArray[Any],
-        receptor: AtomArray[N],
-        center: NDArray1[XYZ, np.floating],
-        size: NDArray1[XYZ, np.floating],
-        flexible: NDArray1[N, np.bool_] | None = None,
-        bin_path: PathLike[str] | str = "vina",
-    ) -> tuple[NDArray3[M, N, XYZ, np.floating], NDArray1[K, np.floating]]:
-        """
-        Dock a ligand to a receptor molecule using *AutoDock Vina*.
-
-        This is a convenience function, that wraps the :class:`VinaApp`
-        execution.
+        Dock a ligand to a receptor molecule.
 
         Parameters
         ----------
@@ -521,22 +159,230 @@ class VinaApp(LocalApp):
             Each residue, where at least one atom index is ``True`` in
             `flexible`, is considered flexible.
             By default, the receptor has no flexibility.
-        bin_path : str, optional
-            Path to the *Vina* binary.
+        seed : int, optional
+            The seed for the random number generator, used to make the
+            docking run reproducible.
+            Must not be ``0``, as *AutoDock Vina* interprets ``0`` as no seed set.
+            By default, *Vina* chooses a random seed.
 
         Returns
         -------
-        coord : ndarray, shape=(m,n,3), dtype=float
-            The docked ligand coordinates for *m* binding modes and
-            *n* atoms of the input ligand.
-            The models are sorted from best to worst predicted binding
-            affinity.
-            Missing coordinates due to the removed nonpolar hydrogen
-            atoms are set to *NaN*.
-        energies : ndarray, shape=(m,), dtype=float
-            The corresponding predicted binding energies (kcal/mol).
+        future : Future of VinaResult
+            A handle to the running docking run.
+            Call :meth:`Future.result()` to obtain the
+            :class:`VinaResult`.
+
+        Raises
+        ------
+        ValueError
+            If `seed` is ``0``.
         """
-        app = VinaApp(ligand, receptor, center, size, flexible, bin_path)
-        app.start()
-        app.join()
-        return app.get_ligand_coord(), app.get_energies()
+        if ligand.bonds is None:
+            raise ValueError("The ligand has no associated BondList")
+        if receptor.bonds is None:
+            raise ValueError("The receptor has no associated BondList")
+        if seed == 0:
+            raise ValueError(
+                "A seed of 0 is interpreted by Vina as a request for a random seed"
+            )
+
+        ligand = ligand.copy()
+        receptor = receptor.copy()
+        is_flexible = flexible is not None
+
+        if flexible is not None:
+            flexible_indices = np.where(flexible)[0]
+            flex_res_starts = np.unique(
+                get_residue_starts_for(receptor, flexible_indices)
+            )
+
+        ligand_file = NamedTemporaryFile("w", suffix=".pdbqt", delete=False)
+        receptor_file = NamedTemporaryFile("w", suffix=".pdbqt", delete=False)
+        receptor_flex_file = NamedTemporaryFile("w", suffix=".pdbqt", delete=False)
+        out_file = NamedTemporaryFile("r", suffix=".pdbqt", delete=False)
+
+        # Use different atom ID ranges for atoms in ligand and receptor
+        # for unambiguous assignment, if the receptor contains flexible
+        # residues
+        ligand.set_annotation("atom_id", np.arange(1, ligand.array_length() + 1))
+        receptor.set_annotation(
+            "atom_id",
+            np.arange(
+                ligand.array_length() + 1,
+                ligand.array_length() + receptor.array_length() + 1,
+            ),
+        )
+
+        ligand_pdbqt = PDBQTFile()
+        # Contains 'true' entries for all atoms that have not been
+        # removed from ligand
+        ligand_mask = ligand_pdbqt.set_structure(ligand, rotatable_bonds="all")
+        ligand_pdbqt.write(ligand_file)
+        ligand_file.flush()
+
+        if is_flexible:
+            rigid_mask = np.ones(receptor.array_length(), dtype=bool)
+            # Contains 'true' entries for all atoms that have not been
+            # removed from receptor in flexible side chains
+            receptor_mask = np.zeros(receptor.array_length(), dtype=bool)
+            for i, start in enumerate(flex_res_starts):
+                flex_mask, res_rigid_mask, root = _get_flexible_residue(receptor, start)
+                rigid_mask &= res_rigid_mask
+                root_in_flex_residue = np.where(
+                    np.arange(receptor.array_length())[flex_mask] == root
+                )[0][0]
+                flex_pdbqt = PDBQTFile()
+                receptor_mask[flex_mask] |= flex_pdbqt.set_structure(
+                    receptor[flex_mask],
+                    rotatable_bonds="all",
+                    root=root_in_flex_residue,
+                    include_torsdof=False,
+                )
+                # Enclose each flexible residue
+                # with BEGIN_RES and END_RES
+                receptor_flex_file.write(f"BEGIN_RES {i}\n")
+                flex_pdbqt.write(receptor_flex_file)
+                receptor_flex_file.write(f"END_RES {i}\n")
+            receptor_flex_file.flush()
+
+            receptor_pdbqt = PDBQTFile()
+            receptor_pdbqt.set_structure(
+                receptor[rigid_mask],
+                rotatable_bonds=None,
+                include_torsdof=False,
+            )
+            receptor_pdbqt.write(receptor_file)
+            receptor_file.flush()
+
+        else:
+            # These masks are only consulted for flexible receptors, but
+            # are kept as arrays here to keep them well-typed
+            rigid_mask = np.ones(receptor.array_length(), dtype=bool)
+            receptor_mask = np.zeros(receptor.array_length(), dtype=bool)
+            receptor_pdbqt = PDBQTFile()
+            receptor_pdbqt.set_structure(
+                receptor, rotatable_bonds=None, include_torsdof=False
+            )
+            receptor_pdbqt.write(receptor_file)
+            receptor_file.flush()
+
+        parameters: list[CLIParameter] = [
+            CLIOption("ligand", ligand_file.name),
+            CLIOption("receptor", receptor_file.name),
+            CLIOption("out", out_file.name),
+            CLIOption("center_x", f"{center[0]:.3f}"),
+            CLIOption("center_y", f"{center[1]:.3f}"),
+            CLIOption("center_z", f"{center[2]:.3f}"),
+            CLIOption("size_x", f"{size[0]:.3f}"),
+            CLIOption("size_y", f"{size[1]:.3f}"),
+            CLIOption("size_z", f"{size[2]:.3f}"),
+        ]
+        if is_flexible:
+            parameters.append(CLIOption("flex", receptor_flex_file.name))
+        if seed is not None:
+            parameters.append(CLIOption("seed", seed))
+
+        def evaluate(stdout: bytes, stderr: bytes) -> VinaResult:
+            out_pdbqt = PDBQTFile.read(out_file)
+            models = out_pdbqt.get_structure()
+
+            n_ligand_atoms = np.count_nonzero(ligand_mask)
+            ligand_models = models[..., :n_ligand_atoms]
+            flex_models = models[..., n_ligand_atoms:]
+            n_models = models.stack_depth()
+
+            remarks = out_pdbqt.get_remarks()
+            energies = np.array(
+                # VINA RESULT:      -5.8      0.000      0.000
+                #                     ^
+                [float(remark[12:].split()[0]) for remark in remarks]
+            )
+
+            # Ligand coordinates for each binding mode
+            ligand_coord = np.full(
+                (n_models, ligand.array_length(), 3), np.nan, dtype=np.float32
+            )
+            ligand_coord[:, ligand_mask] = ligand_models.coord
+
+            # Receptor coordinates for each binding mode
+            receptor_coord = np.repeat(
+                receptor.coord[np.newaxis, ...], repeats=n_models, axis=0
+            )
+            if is_flexible:
+                # Replace original coordinates with modeled coordinates
+                # for the flexible side chains
+                # The coordinates from removed atoms are NaN
+                receptor_coord[:, ~rigid_mask] = np.nan
+                receptor_coord[:, receptor_mask] = flex_models.coord
+
+            return VinaResult(
+                ligand_models=ligand_models,
+                ligand_coord=ligand_coord,
+                flexible_residue_models=flex_models,
+                receptor_coord=receptor_coord,
+                energies=energies,
+            )
+
+        def cleanup() -> None:
+            for temp_file in (
+                ligand_file,
+                receptor_file,
+                receptor_flex_file,
+                out_file,
+            ):
+                cleanup_tempfile(temp_file)
+
+        return CommandSetup(
+            parameters=parameters,
+            evaluate=evaluate,
+            cleanup=cleanup,
+        )
+
+
+def _get_flexible_residue(
+    receptor: AtomArray, residue_start: int
+) -> tuple[np.ndarray, np.ndarray, int]:
+    residue_indices = np.where(get_residue_masks(receptor, [residue_start])[0])[0]
+    root_indices_in_residue = np.isin(receptor.atom_name[residue_indices], ("CA",))
+    root_indices = residue_indices[root_indices_in_residue]
+    if len(root_indices) == 0:
+        raise BadStructureError("Found no CA atom in residue")
+    if len(root_indices) > 1:
+        raise BadStructureError("Multiple CA atom in residue")
+    root_index = root_indices[0]
+
+    # Find the index of the atom connected to root on the flexible
+    # side chain (CB)
+    if receptor.bonds is None:
+        raise ValueError("The receptor has no associated BondList")
+    root_connect_indices, _ = receptor.bonds.get_bonds(root_index)
+    connected_index = None
+    try:
+        connected_index = root_connect_indices[
+            np.isin(receptor.atom_name[root_connect_indices], ("CB",))
+        ][0]
+    except IndexError:
+        # Residue has no appropriate connection (e.g. in glycine)
+        # -> There is no atom in the flexible side chain
+        flex_mask = np.zeros(receptor.array_length(), dtype=bool)
+        rigid_mask = np.ones(receptor.array_length(), dtype=bool)
+        return flex_mask, rigid_mask, root_index
+
+    # Remove the root bond from the bond list
+    # to find the atoms involved in the flexible part
+    bonds = receptor.bonds.copy()
+    bonds.remove_bond(root_index, connected_index)
+    flexible_indices = find_connected(bonds, connected_index)
+    if root_index in flexible_indices:
+        raise BadStructureError(
+            "There are multiple connections between the flexible and "
+            "rigid part, maybe a cyclic residue like proline was selected"
+        )
+
+    flex_mask = np.zeros(receptor.array_length(), dtype=bool)
+    flex_mask[flexible_indices] = True
+    rigid_mask = ~flex_mask
+    # Root index is part of rigid and flexible part
+    flex_mask[root_index] = True
+
+    return flex_mask, rigid_mask, root_index

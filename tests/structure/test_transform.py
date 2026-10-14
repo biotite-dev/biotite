@@ -28,23 +28,32 @@ def input_atoms(request):
         return atoms
 
 
+def _random_rotations(rng, n_models):
+    """
+    Create random proper rotation matrices.
+    """
+    matrices, _ = np.linalg.qr(rng.random((n_models, 3, 3)))
+    # Ensure the determinant is 1
+    matrices[np.linalg.det(matrices) < 0, :, 0] *= -1
+    return matrices
+
+
 def test_transform_as_matrix():
     """
     Check if the 4x4 matrix obtained from
-    :meth:`AffineTransformation.as_matrix()` transforms coordinates in
-    the same way as :meth:`AffineTransformation.apply()`.
+    :meth:`RigidTransformation.as_matrix()` transforms coordinates in
+    the same way as :meth:`RigidTransformation.apply()`.
     """
     N_MODELS = 10
     N_COORD = 100
 
     rng = np.random.default_rng(0)
     orig_coord = rng.random((N_MODELS, N_COORD, 3))
-    transform = struc.AffineTransformation(
-        center_translation=rng.random((N_MODELS, 3)),
+    transform = struc.RigidTransformation(
         # This is not really a rotation matrix,
         # but the same maths apply
         rotation=rng.random((N_MODELS, 3, 3)),
-        target_translation=rng.random((N_MODELS, 3)),
+        translation=rng.random((N_MODELS, 3)),
     )
 
     ref_coord = transform.apply(orig_coord)
@@ -58,6 +67,35 @@ def test_transform_as_matrix():
     assert test_coord.flatten().tolist() == pytest.approx(
         ref_coord.flatten().tolist(), abs=1e-6
     )
+
+
+@pytest.mark.parametrize("n_models", [1, 5])
+@pytest.mark.parametrize("random_seed", np.arange(5))
+def test_transform_composition(n_models, random_seed):
+    """
+    Combining two transformations must be equivalent to applying them
+    successively and combining a transformation with its inverse must
+    restore the original coordinates.
+    """
+    N_COORD = 100
+
+    rng = np.random.default_rng(random_seed)
+    orig_coord = rng.random((n_models, N_COORD, 3))
+    transform_1 = struc.RigidTransformation(
+        _random_rotations(rng, n_models), rng.random((n_models, 3))
+    )
+    transform_2 = struc.RigidTransformation(
+        _random_rotations(rng, n_models), rng.random((n_models, 3))
+    )
+
+    ref_coord = transform_1.apply(transform_2.apply(orig_coord))
+    test_coord = (transform_1 * transform_2).apply(orig_coord)
+    assert np.allclose(test_coord, ref_coord, atol=1e-6)
+
+    restored_coord = (-transform_1).apply(transform_1.apply(orig_coord))
+    assert np.allclose(restored_coord, orig_coord, atol=1e-6)
+    identity = (-transform_1 * transform_1).as_matrix()
+    assert np.allclose(identity, np.eye(4)[np.newaxis, ...], atol=1e-6)
 
 
 @pytest.mark.parametrize("ndim", [1, 2, 3])
@@ -286,10 +324,13 @@ def test_orient_principal_components(input_atoms, as_list, order):
     if as_list:
         order = order.tolist()
 
-    result = struc.orient_principal_components(input_atoms, order=order)
+    transform = struc.orient_principal_components(input_atoms, order=order)
+    result = transform.apply(input_atoms)
     neg_variance = -struc.coord(result).var(axis=0)
     assert isinstance(result, type(input_atoms))
     assert (neg_variance.argsort() == np.argsort(order)).all()
+    # The atoms are centered at the origin
+    assert np.allclose(struc.coord(result).mean(axis=0), 0, atol=1e-4)
 
 
 @pytest.mark.parametrize("bad_order", (np.array([2, 3, 4]), np.arange(4)))
@@ -327,42 +368,41 @@ def test_align_vectors(input_atoms, as_list, use_support, random_seed):
             target_position = target_position.tolist()
 
     transformed = struc.align_vectors(
-        input_atoms,
         source_direction,
         target_direction,
         source_position,
         target_position,
-    )
+    ).apply(input_atoms)
+    # The transformation moves the source position onto the target position
+    if use_support:
+        assert np.allclose(
+            struc.align_vectors(
+                source_direction, target_direction, source_position, target_position
+            ).apply(np.asarray(source_position, dtype=float)[np.newaxis, :]),
+            np.asarray(target_position, dtype=float)[np.newaxis, :],
+            atol=1e-5,
+        )
     restored = struc.align_vectors(
-        transformed,
         target_direction,
         source_direction,
         target_position,
         source_position,
-    )
+    ).apply(transformed)
 
     assert isinstance(restored, type(input_atoms))
     assert struc.coord(restored).shape == struc.coord(input_atoms).shape
     assert np.allclose(struc.coord(restored), struc.coord(input_atoms), atol=1e-5)
 
 
-def test_align_vectors_non_vector_inputs(input_atoms):
+def test_align_vectors_non_vector_inputs():
     """
     Ensure input vectors to ``struct.align_vectors`` have the correct shape.
     """
     source_direction = np.random.default_rng().random((2, 3))
     target_direction = np.random.default_rng().random((2, 3))
     with pytest.raises(ValueError):
-        struc.align_vectors(
-            input_atoms,
-            source_direction,
-            target_direction,
-        )
+        struc.align_vectors(source_direction, target_direction)
     source_direction = np.random.default_rng().random(4)
     target_direction = np.random.default_rng().random(4)
     with pytest.raises(ValueError):
-        struc.align_vectors(
-            input_atoms,
-            source_direction,
-            target_direction,
-        )
+        struc.align_vectors(source_direction, target_direction)

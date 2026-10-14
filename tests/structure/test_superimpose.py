@@ -24,7 +24,7 @@ def test_restoration(seed, multi_model):
 
     # Try to restore original coordinates after random relocation
     test_coord = _transform_random_affine(ref_coord, rng)
-    test_coord, _ = struc.superimpose(ref_coord, test_coord)
+    test_coord = struc.superimpose(ref_coord, test_coord).apply(test_coord)
 
     assert test_coord.flatten().tolist() == pytest.approx(
         ref_coord.flatten().tolist(), abs=1e-6
@@ -46,7 +46,7 @@ def test_rotation_matrix():
     original_coord = rng.random((N_COORD, 3))
     # Rotate about 90 degrees around z-axis
     rotated_coord = struc.rotate(original_coord, angles=(0, 0, np.pi / 2))
-    _, transform = struc.superimpose(rotated_coord, original_coord)
+    transform = struc.superimpose(rotated_coord, original_coord)
     test_rotation = transform.rotation
 
     assert test_rotation.flatten().tolist() == pytest.approx(
@@ -77,12 +77,7 @@ def test_superimposition_array(path, coord_only):
         fixed = fixed.coord
         mobile = mobile.coord
 
-    fitted, transformation = struc.superimpose(fixed, mobile)
-
-    if coord_only:
-        assert isinstance(fitted, np.ndarray)
-    assert struc.rmsd(fixed, fitted) == pytest.approx(0, abs=6e-4)
-
+    transformation = struc.superimpose(fixed, mobile)
     fitted = transformation.apply(mobile)
 
     if coord_only:
@@ -106,7 +101,7 @@ def test_superimposition_stack(ca_only):
     else:
         mask = None
 
-    fitted, _ = struc.superimpose(fixed, mobile, mask)
+    fitted = struc.superimpose(fixed, mobile, mask).apply(mobile)
 
     if ca_only:
         # The superimpositions are better for most cases than the
@@ -140,13 +135,9 @@ def test_masked_superimposition(seed):
     # already 0 prior to superimposition
     assert struc.distance(fixed[mask], mobile[mask])[0] != pytest.approx(0, abs=5e-4)
 
-    fitted, transformation = struc.superimpose(fixed, mobile, mask)
+    fitted = struc.superimpose(fixed, mobile, mask).apply(mobile)
 
     assert struc.distance(fixed[mask], fitted[mask])[0] == pytest.approx(0, abs=5e-4)
-
-    fitted = transformation.apply(mobile)
-
-    struc.distance(fixed[mask], fitted[mask])[0] == pytest.approx(0, abs=5e-4)
 
 
 @pytest.mark.parametrize("single_model", [False, True])
@@ -168,7 +159,7 @@ def test_input_shapes(single_model, single_atom):
         mobile = mobile[:, :1]
         fixed = fixed[:1]
 
-    fitted, _ = struc.superimpose(fixed, mobile)
+    fitted = struc.superimpose(fixed, mobile).apply(mobile)
 
     assert isinstance(fitted, type(mobile))
     assert fitted.coord.shape == mobile.coord.shape
@@ -198,13 +189,14 @@ def test_outlier_detection(seed):
     mobile_coord[ref_outlier_mask] += OUTLIER_MAGNITUDE
     mobile_coord = _transform_random_affine(mobile_coord, rng)
 
-    superimposed_coord, _, anchors = struc.superimpose_without_outliers(
+    transform, anchors = struc.superimpose_without_outliers(
         # Increase the threshold a bit,
         # to ensure that no inlier is classified as outlier
         fixed_coord,
         mobile_coord,
         outlier_threshold=3.0,
     )
+    superimposed_coord = transform.apply(mobile_coord)
     test_outlier_mask = np.full(N_COORD, True)
     test_outlier_mask[anchors] = False
 
@@ -232,7 +224,8 @@ def test_superimpose_without_outliers_inputs(multi_model, coord_only):
     if coord_only:
         atoms = atoms.coord
 
-    superimposed, transform, _ = struc.superimpose_without_outliers(atoms, atoms)
+    transform, _ = struc.superimpose_without_outliers(atoms, atoms)
+    superimposed = transform.apply(atoms)
 
     assert isinstance(superimposed, type(atoms))
     assert superimposed.shape == atoms.shape
@@ -278,9 +271,10 @@ def test_superimpose_homologs(pdb_id, chain_id, as_stack):
     mobile_atoms = _delete_random_residues(atoms, P_CONSERVATION, rng)
     mobile_atoms.coord = _transform_random_affine(mobile_atoms.coord, rng)
 
-    super_atoms, _, fix_anchors, mob_anchors = struc.superimpose_homologs(
+    transform, fix_anchors, mob_anchors = struc.superimpose_homologs(
         fixed_atoms, mobile_atoms
     )
+    super_atoms = transform.apply(mobile_atoms)
 
     # Check if corresponding residues were superimposed
     assert (
