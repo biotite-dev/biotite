@@ -46,7 +46,7 @@ def superimposed_models(models):
     Models superimposed on the first model
     """
     bb_mask = struc.filter_peptide_backbone(models[0])
-    supimp, _ = struc.superimpose(models[0], models, atom_mask=bb_mask)
+    supimp = struc.superimpose(models[0], models, atom_mask=bb_mask).apply(models)
     return models, supimp
 
 

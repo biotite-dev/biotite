@@ -155,10 +155,8 @@ One simply inputs the ``CA`` atoms of the aligned residues.
         fixed_anchors = fixed_ca[superimposition_anchors[:, 0]]
         mobile_anchors = mobile_ca[superimposition_anchors[:, 1]]
 
-        mobile_anchors, transform = struc.superimpose(
-            fixed_anchors,
-            mobile_anchors,
-        )
+        transform = struc.superimpose(fixed_anchors, mobile_anchors)
+        mobile_anchors = transform.apply(mobile_anchors)
         return struc.rmsd(fixed_anchors, mobile_anchors), len(superimposition_anchors)
 
     rmsd, n_anchors = rmsd_from_alignment(ec_ferredoxin, st_ferredoxin, alignment)

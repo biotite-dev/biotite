@@ -85,7 +85,7 @@ structural flexibility of each atom.
 
     # The comparison requires that the frames are properly superimposed
     # Arbitrarily choose the first frame as reference
-    trajectory, _ = struc.superimpose(trajectory[0], trajectory)
+    trajectory = struc.superimpose(trajectory[0], trajectory).apply(trajectory)
     # Compute RMSD/RMSF only for CA atoms
     trajectory = trajectory[:, trajectory.atom_name == "CA"]
     rmsd = struc.rmsd(trajectory[0], trajectory)

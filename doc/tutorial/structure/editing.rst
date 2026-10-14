@@ -55,7 +55,8 @@ used in the previous chapters.
     reference = struc.rotate(reference, [np.deg2rad(45), 0, 0])
     mobile = pdbx.get_structure(pdbx_file, model=2)
     print(f"RMSD before superimposition: {struc.rmsd(reference, mobile):.2f}")
-    superimposed, transformation = struc.superimpose(reference, mobile)
+    transformation = struc.superimpose(reference, mobile)
+    superimposed = transformation.apply(mobile)
     print(f"RMSD after superimposition: {struc.rmsd(reference, superimposed):.2f}")
 
 .. note::
@@ -64,9 +65,10 @@ used in the previous chapters.
     atoms, as the algorithm requires that each atom corresponds to an atom in
     the other structure.
 
-The returned :class:`RigidTransformation` object can be used later to
-transform another structure in the same way the mobile structure was
-transformed.
+:func:`superimpose()` returns a :class:`RigidTransformation`, which is applied to
+the mobile structure to obtain the superimposed structure.
+The same transformation can be used later to transform another structure in the
+same way the mobile structure was transformed.
 
 .. jupyter-execute::
 

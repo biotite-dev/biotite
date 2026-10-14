@@ -96,9 +96,10 @@ def tm_score(
 
     >>> reference = atom_array_stack[0]
     >>> subject = atom_array_stack[1]
-    >>> superimposed, _, ref_indices, sub_indices = superimpose_structural_homologs(
+    >>> transform, ref_indices, sub_indices = superimpose_structural_homologs(
     ...     reference, subject, max_iterations=1
     ... )
+    >>> superimposed = transform.apply(subject)
     >>> print(tm_score(reference, superimposed, ref_indices, sub_indices))
     0.69...
     """
@@ -122,7 +123,6 @@ def superimpose_structural_homologs(
     reference_length: Literal["shorter", "longer", "reference", "subject"]
     | int = "shorter",
 ) -> tuple[
-    AtomArray[N],
     RigidTransformation[int],
     NDArray1[K, np.integer],
     NDArray1[K, np.integer],
@@ -162,13 +162,10 @@ def superimpose_structural_homologs(
 
     Returns
     -------
-    fitted : AtomArray or AtomArrayStack
-        A copy of the `mobile` structure, superimposed on the fixed structure.
     transform : RigidTransformation
-        This object contains the rigid transformation(s) that were
-        applied on `mobile`.
-        :meth:`RigidTransformation.apply()` can be used to transform
-        another AtomArray in the same way.
+        The rigid transformation that superimposes `mobile` onto `fixed`.
+        Use :meth:`RigidTransformation.apply()` to obtain the superimposed
+        `mobile` structure or to transform another structure in the same way.
     fixed_indices, mobile_indices : ndarray, shape(k,), dtype=int
         The indices of the corresponding ``CA`` atoms in the fixed and mobile structure,
         respectively.
@@ -207,9 +204,10 @@ def superimpose_structural_homologs(
 
     >>> fixed = atom_array_stack[0]
     >>> mobile = atom_array_stack[1]
-    >>> superimposed, _, fix_indices, mob_indices = superimpose_structural_homologs(
+    >>> transform, fix_indices, mob_indices = superimpose_structural_homologs(
     ...     fixed, mobile, max_iterations=1
     ... )
+    >>> superimposed = transform.apply(mobile)
     >>> print(tm_score(fixed, superimposed, fix_indices, mob_indices))
     0.69...
     >>> print(rmsd(fixed[fix_indices], superimposed[mob_indices]))
@@ -253,7 +251,7 @@ def superimpose_structural_homologs(
 
     # 1. step
     anchors = _find_anchors_structure_based(fixed_seq, mobile_seq, substitution_matrix)
-    _, transform = superimpose(
+    transform = superimpose(
         *_filter_by_anchors(fixed_ca_coord, mobile_ca_coord, anchors)
     )
     superimposed_ca_coord = transform.apply(mobile_ca_coord)
@@ -267,7 +265,7 @@ def superimpose_structural_homologs(
         substitution_matrix,
         reference_length,
     )
-    _, transform = superimpose(
+    transform = superimpose(
         *_filter_by_anchors(
             fixed_ca_coord,
             mobile_ca_coord,
@@ -282,7 +280,7 @@ def superimpose_structural_homologs(
         anchors = _find_anchors_tm_based(
             fixed_ca_coord, superimposed_ca_coord, reference_length
         )
-        _, transform = superimpose(
+        transform = superimpose(
             *_filter_by_anchors(
                 fixed_ca_coord,
                 mobile_ca_coord,
@@ -299,7 +297,7 @@ def superimpose_structural_homologs(
     # -> map anchors back to all-atom indices
     fixed_anchors = np.where(fixed.atom_name == "CA")[0][anchors[:, 0]]
     mobile_anchors = np.where(mobile.atom_name == "CA")[0][anchors[:, 1]]
-    return transform.apply(mobile), transform, fixed_anchors, mobile_anchors
+    return transform, fixed_anchors, mobile_anchors
 
 
 def _concatenate_sequences(sequences: Any) -> Any:

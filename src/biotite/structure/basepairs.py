@@ -1217,7 +1217,7 @@ def _match_base(
     nucleotide_matched = nucleotide_matched[standardize_order(nucleotide_matched)]
 
     # Match the selected std_base to the base.
-    _, transformation = superimpose(nucleotide_matched, std_base_matched)
+    transformation = superimpose(nucleotide_matched, std_base_matched)
     vectors = transformation.apply(vectors)
     # Normalize the base-normal-vector
     vectors[1, :] = vectors[1, :] - vectors[0, :]
@@ -1344,7 +1344,7 @@ def map_nucleotide(
             continue
 
         # Superimpose the nucleotide to the reference base
-        fitted, _ = superimpose(ref_base_matched, nuc)
+        fitted = superimpose(ref_base_matched, nuc).apply(nuc)
 
         # If the RMSD is lower than the specified cutoff or better than
         # a previous found reference, the current reference is selected

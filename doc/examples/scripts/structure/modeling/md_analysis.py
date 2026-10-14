@@ -73,7 +73,7 @@ trajectory = struc.remove_pbc(trajectory)
 # superimpose all models onto a reference, in this case we also choose
 # the initial structure.
 
-trajectory, _ = struc.superimpose(trajectory[0], trajectory)
+trajectory = struc.superimpose(trajectory[0], trajectory).apply(trajectory)
 rmsd = struc.rmsd(trajectory[0], trajectory)
 
 figure = plt.figure(figsize=(6, 3))

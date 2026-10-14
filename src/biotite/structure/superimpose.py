@@ -41,7 +41,7 @@ def superimpose(
     fixed: Coord[N],
     mobile: Coord[N],
     atom_mask: NDArray1[N, np.bool_] | None = None,
-) -> tuple[Coord[N], RigidTransformation[int]]: ...
+) -> RigidTransformation[int]: ...
 
 
 @overload
@@ -49,23 +49,17 @@ def superimpose(
     fixed: MultiCoord[M, N],
     mobile: MultiCoord[M, N],
     atom_mask: NDArray1[N, np.bool_] | None = None,
-) -> tuple[
-    MultiCoord[M, N],
-    RigidTransformation[M],
-]: ...
+) -> RigidTransformation[M]: ...
 
 
 def superimpose(
     fixed: (Coord[N] | MultiCoord[M, N]),
     mobile: (Coord[N] | MultiCoord[M, N]),
     atom_mask: NDArray1[N, np.bool_] | None = None,
-) -> tuple[
-    Coord[N] | MultiCoord[M, N],
-    RigidTransformation[M],
-]:
+) -> RigidTransformation[Any]:
     """
-    Superimpose structures onto each other, minimizing the RMSD between
-    them.
+    Find the transformation that superimposes structures onto each other,
+    minimizing the RMSD between them.
     :footcite:`Kabsch1976, Kabsch1978`.
 
     More precisely, the `mobile` structure is rotated and translated onto
@@ -95,15 +89,12 @@ def superimpose(
 
     Returns
     -------
-    fitted : AtomArray or AtomArrayStack or ndarray, shape(n,), dtype=float or ndarray, shape(m,n), dtype=float
-        A copy of the `mobile` structure(s),
-        superimposed on the fixed structure(s).
-        Only coordinates are returned, if coordinates were given in
-        `mobile`.
     transformation : RigidTransformation
-        The rigid transformation(s) that were applied on `mobile`.
-        :meth:`RigidTransformation.apply()` can be used to transform
-        another AtomArray in the same way.
+        The rigid transformation(s) that superimpose `mobile` onto
+        `fixed`.
+        Use :meth:`RigidTransformation.apply()` to obtain the
+        superimposed `mobile` structure or to transform another
+        structure in the same way.
 
     See Also
     --------
@@ -117,8 +108,6 @@ def superimpose(
     structures with different amount of atoms.
     Often the two structures need to be filtered in order to obtain the
     same size and annotation arrays.
-    After superimposition the transformation can be applied on the
-    original structure using :meth:`RigidTransformation.apply()`.
 
     References
     ----------
@@ -141,16 +130,18 @@ def superimpose(
 
     RMSD decreases after superimposition of only CA atoms:
 
-    >>> array2_fit, transformation = superimpose(
+    >>> transformation = superimpose(
     ...     array1, array2, atom_mask=(array2.atom_name == "CA")
     ... )
+    >>> array2_fit = transformation.apply(array2)
     >>> print("{:.3f}".format(rmsd(array1, array2_fit)))
     1.961
 
     RMSD is even lower when all atoms are considered in the
     superimposition:
 
-    >>> array2_fit, transformation = superimpose(array1, array2)
+    >>> transformation = superimpose(array1, array2)
+    >>> array2_fit = transformation.apply(array2)
     >>> print("{:.3f}".format(rmsd(array1, array2_fit)))
     1.928
     """
@@ -176,8 +167,7 @@ def superimpose(
     # The mobile centroid is moved to the origin, the rotation is applied
     # and the coordinates are moved to the fixed centroid
     translation = fix_centroid - (rotation @ mob_centroid[..., np.newaxis])[..., 0]
-    transform = RigidTransformation(rotation, translation)
-    return transform.apply(mobile), transform
+    return RigidTransformation(rotation, translation)
 
 
 def superimpose_without_outliers(
@@ -187,11 +177,7 @@ def superimpose_without_outliers(
     max_iterations: int = 10,
     quantiles: tuple[float, float] = (0.25, 0.75),
     outlier_threshold: float = 1.5,
-) -> tuple[
-    Coord[N] | MultiCoord[M, N],
-    RigidTransformation[M],
-    NDArray1[K, np.integer],
-]:
+) -> tuple[RigidTransformation[Any], NDArray1[K, np.integer]]:
     r"""
     Superimpose structures onto a fixed structure, ignoring
     conformational outliers.
@@ -233,16 +219,12 @@ def superimpose_without_outliers(
 
     Returns
     -------
-    fitted : AtomArray or AtomArrayStack
-        A copy of the `mobile` structure(s), superimposed on the fixed
-        structure.
-        Only coordinates are returned, if coordinates were given in
-        `mobile`.
     transform : RigidTransformation
-        This object contains the rigid transformation(s) that were
-        applied on `mobile`.
-        :meth:`RigidTransformation.apply()` can be used to transform
-        another AtomArray in the same way.
+        The rigid transformation(s) that superimpose `mobile` onto
+        `fixed`.
+        Use :meth:`RigidTransformation.apply()` to obtain the
+        superimposed `mobile` structure or to transform another
+        structure in the same way.
     anchor_indices : ndarray, shape(k,), dtype=int
         The indices of the anchor atoms.
         These atoms were used for the superimposition.
@@ -295,9 +277,8 @@ def superimpose_without_outliers(
         inlier_mask = updated_inlier_mask
         filtered_fixed_coord = fixed_coord[..., inlier_mask, :]
         filtered_mobile_coord = mobile_coord[..., inlier_mask, :]
-        superimposed_coord, transform = superimpose(
-            filtered_fixed_coord, filtered_mobile_coord
-        )
+        transform = superimpose(filtered_fixed_coord, filtered_mobile_coord)
+        superimposed_coord = transform.apply(filtered_mobile_coord)
 
         # Find outliers
         sq_dist = distance(filtered_fixed_coord, superimposed_coord) ** 2
@@ -321,8 +302,8 @@ def superimpose_without_outliers(
             break
 
     anchor_indices = np.where(inlier_mask)[0]
-    transform = cast(RigidTransformation[M], transform)
-    return transform.apply(mobile), transform, anchor_indices
+    transform = cast(RigidTransformation[Any], transform)
+    return transform, anchor_indices
 
 
 def superimpose_homologs(
@@ -334,8 +315,7 @@ def superimpose_homologs(
     terminal_penalty: bool = False,
     **kwargs: Any,
 ) -> tuple[
-    AtomArray[N] | AtomArrayStack[M, N],
-    RigidTransformation[M],
+    RigidTransformation[Any],
     NDArray1[K, np.integer],
     NDArray1[K, np.integer],
 ]:
@@ -386,14 +366,12 @@ def superimpose_homologs(
 
     Returns
     -------
-    fitted : AtomArray or AtomArrayStack
-        A copy of the `mobile` structure(s), superimposed on the fixed
-        structure(s).
     transform : RigidTransformation
-        This object contains the rigid transformation(s) that were
-        applied on `mobile`.
-        :meth:`RigidTransformation.apply()` can be used to transform
-        another AtomArray in the same way.
+        The rigid transformation(s) that superimpose `mobile` onto
+        `fixed`.
+        Use :meth:`RigidTransformation.apply()` to obtain the
+        superimposed `mobile` structure or to transform another
+        structure in the same way.
     fixed_anchor_indices, mobile_anchor_indices : ndarray, shape(k,), dtype=int
         The indices of the anchor atoms in the fixed and mobile
         structure, respectively.
@@ -442,7 +420,7 @@ def superimpose_homologs(
         fixed_anchor_indices = fixed_anchor_indices[anchor_indices[:, 0]]
         mobile_anchor_indices = mobile_anchor_indices[anchor_indices[:, 1]]
 
-    _, transform, selected_anchor_indices = superimpose_without_outliers(
+    transform, selected_anchor_indices = superimpose_without_outliers(
         fixed[..., fixed_anchor_indices],
         mobile[..., mobile_anchor_indices],
         min_anchors,
@@ -451,12 +429,7 @@ def superimpose_homologs(
     fixed_anchor_indices = fixed_anchor_indices[selected_anchor_indices]
     mobile_anchor_indices = mobile_anchor_indices[selected_anchor_indices]
 
-    return (
-        transform.apply(mobile),
-        transform,
-        fixed_anchor_indices,
-        mobile_anchor_indices,
-    )
+    return transform, fixed_anchor_indices, mobile_anchor_indices
 
 
 def _reshape_to_3d(

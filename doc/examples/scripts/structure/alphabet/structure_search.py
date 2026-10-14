@@ -371,7 +371,7 @@ target_chain = get_protein_chain(TARGET_ID, TARGET_CHAIN)
 query_anchors = query_chain[query_chain.atom_name == "CA"][anchor_indices[:, 0]]
 target_anchors = target_chain[target_chain.atom_name == "CA"][anchor_indices[:, 1]]
 # Find transformation that superimposes the anchor atoms
-_, transform = struc.superimpose(query_anchors, target_anchors)
+transform = struc.superimpose(query_anchors, target_anchors)
 # Apply this transformation to full structure
 target_chain = transform.apply(target_chain)
 
