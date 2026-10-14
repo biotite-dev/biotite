@@ -58,8 +58,6 @@ import biotite.structure.io.pdbx as pdbx
 # Get structure and sequence
 pdbx_file = pdbx.CIFFile.read(rcsb.fetch("1GUU", "mmcif"))
 sequence = pdbx.get_sequence(pdbx_file)["A"]
-# By default the 'label' fields are used,
-# which ensures that values in the 'res_id' annotation point to the sequence
 structure = pdbx.get_structure(pdbx_file, model=1)
 structure = structure[struc.filter_amino_acids(structure)]
 
