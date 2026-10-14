@@ -25,6 +25,7 @@ Test structures
 - 4I39: Contains altlocs for every atom
 - 1K6P: Structure contains numeric altloc IDs
 - 3WIP: Structure contains a pi-cation interaction between the protein and ligand
+- 1LU0: Structure contains zinc and sulfate on special symmetry positions
 
 Creation
 --------

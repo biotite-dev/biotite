@@ -9,6 +9,7 @@ __all__ = ["PDBFile", "SpaceGroupInfo"]
 
 import copy
 import itertools
+import re
 import warnings
 from collections.abc import Iterable
 from os import PathLike
@@ -28,7 +29,7 @@ from biotite.structure.filter import (
     filter_solvent,
 )
 from biotite.structure.info.bonds import bonds_in_residue
-from biotite.structure.io.util import number_of_integer_digits
+from biotite.structure.io.util import merge_special_symmetry, number_of_integer_digits
 from biotite.structure.util import matrix_rotate
 from biotite.typing import XYZ, M, N, NDArray1, NDArray2, NDArray3
 
@@ -303,6 +304,9 @@ class PDBFile(RustPDBFile):
         This function receives the data from ``REMARK 350`` records in
         the file.
         Consequently, this remark must be present in the file.
+        Overlapping symmetry copies of residues listed in ``REMARK 375``
+        are merged, retaining atoms from the lower symmetry ID, unless
+        `altloc` is ``'all'``.
 
         Parameters
         ----------
@@ -329,6 +333,8 @@ class PDBFile(RustPDBFile):
                   Note that this leads to duplicate atoms.
                   When this option is chosen, the ``altloc_id``
                   annotation array is added to the returned structure.
+                  Overlapping atoms at special symmetry positions are not merged,
+                  as their correspondence between symmetry copies is ambiguous.
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the output array or stack.
@@ -462,7 +468,9 @@ class PDBFile(RustPDBFile):
 
         if assembly is None:
             raise InvalidFileError("Invalid remark 350")
-        return assembly
+        if altloc == "all":
+            return assembly
+        return _merge_atoms_special_symmetry(assembly, self.get_remark(375))
 
     @overload
     def get_unit_cell(
@@ -496,6 +504,9 @@ class PDBFile(RustPDBFile):
         the file.
         Consequently, this remark must be present in the file, which is
         usually only true for crystal structures.
+        Overlapping symmetry copies of residues listed in ``REMARK 375``
+        are merged, retaining atoms from the lower symmetry ID, unless
+        `altloc` is ``'all'``.
 
         Parameters
         ----------
@@ -518,6 +529,8 @@ class PDBFile(RustPDBFile):
                   Note that this leads to duplicate atoms.
                   When this option is chosen, the ``altloc_id``
                   annotation array is added to the returned structure.
+                  Overlapping atoms at special symmetry positions are not merged,
+                  as their correspondence between symmetry copies is ambiguous.
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the output array or stack.
@@ -569,7 +582,10 @@ class PDBFile(RustPDBFile):
             )
         transform_lines = [line for line in remark_lines if line.startswith("  SMTRY")]
         rotations, translations = _parse_transformations(transform_lines)
-        return _apply_transformations(structure, rotations, translations)
+        unit_cell = _apply_transformations(structure, rotations, translations)
+        if altloc == "all":
+            return unit_cell
+        return _merge_atoms_special_symmetry(unit_cell, self.get_remark(375))
 
     @overload
     def get_symmetry_mates(
@@ -627,6 +643,8 @@ class PDBFile(RustPDBFile):
                   Note that this leads to duplicate atoms.
                   When this option is chosen, the ``altloc_id``
                   annotation array is added to the returned structure.
+                  Overlapping atoms at special symmetry positions are not merged,
+                  as their correspondence between symmetry copies is ambiguous.
         extra_fields : list of str, optional
             The strings in the list are optional annotation categories
             that should be stored in the output array or stack.
@@ -824,3 +842,30 @@ def _check_pdb_compatibility(
                 "1 column for charge is available, "
                 f"but array would require {n_charge_digits}"
             )
+
+
+def _merge_atoms_special_symmetry(
+    atoms: AtomArray[Any] | AtomArrayStack[Any, Any],
+    remark_lines: list[str] | None,
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
+    """Merge symmetry copies of residues listed in REMARK 375."""
+    if remark_lines is None:
+        return atoms
+    residue_masks = []
+    for line in remark_lines:
+        # REMARK 375 may include an atom name before the residue identifier.
+        match = re.search(
+            r"(?P<res_name>\S{1,3})\s+?(?P<chain_id>.)(?P<res_id>\s*-?\d+)"
+            r"(?P<ins_code>\S?)\s+LIES ON A SPECIAL POSITION\.",
+            line,
+        )
+        if match is not None:
+            residue_masks.append(
+                (atoms.res_name == match["res_name"])
+                & (atoms.chain_id == match["chain_id"].strip())
+                & (atoms.res_id == int(match["res_id"]))
+                & (atoms.ins_code == match["ins_code"])
+            )
+    if not residue_masks:
+        return atoms
+    return merge_special_symmetry(atoms, residue_masks)
