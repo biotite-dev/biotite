@@ -29,6 +29,7 @@ from biotite.structure.filter import (
 )
 from biotite.structure.info.bonds import bonds_in_residue
 from biotite.structure.io.util import number_of_integer_digits
+from biotite.structure.residues import get_residue_starts_for
 from biotite.structure.util import matrix_rotate
 from biotite.typing import XYZ, M, N, NDArray1, NDArray2, NDArray3
 
@@ -758,11 +759,15 @@ def _remove_non_conect_bonds(
     atoms = copy.copy(atoms)
     hetero_indices = np.where(atoms.hetero & ~filter_solvent(atoms))[0]
     bond_array = original_bonds.as_array()
+    # Comparing residue starts also distinguishes residues
+    # that only differ in their insertion code
+    residue_starts_1, residue_starts_2 = (
+        get_residue_starts_for(atoms, bond_array[:, :2].flatten()).reshape(-1, 2).T
+    )
     bond_array = bond_array[
         np.isin(bond_array[:, 0], hetero_indices)
         | np.isin(bond_array[:, 1], hetero_indices)
-        | (atoms.res_id[bond_array[:, 0]] != atoms.res_id[bond_array[:, 1]])
-        | (atoms.chain_id[bond_array[:, 0]] != atoms.chain_id[bond_array[:, 1]])
+        | (residue_starts_1 != residue_starts_2)
     ]
     atoms.bonds = BondList(atoms.array_length(), bond_array)
     return atoms

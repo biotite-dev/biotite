@@ -599,6 +599,58 @@ def test_hetatm_intra_residue_bonds():
     np.testing.assert_array_equal(actual_bonds, expected_bonds)
 
 
+def _conect_pairs(pdb_file):
+    """
+    Get the pairs of atom IDs from the ``CONECT`` records of a PDB file.
+    """
+    pairs = set()
+    for line in pdb_file.lines:
+        if line.startswith("CONECT"):
+            atom_ids = [
+                int(line[i : i + 5]) for i in range(6, 31, 5) if line[i : i + 5].strip()
+            ]
+            for atom_id in atom_ids[1:]:
+                pairs.add((min(atom_ids[0], atom_id), max(atom_ids[0], atom_id)))
+    return pairs
+
+
+@pytest.mark.parametrize(
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.pdb")),
+    ids=lambda path: path.name,
+)
+def test_conect_records(path):
+    """
+    Writing a structure should give ``CONECT`` records for all
+    ``CONECT`` records in the original PDB file and for all inter-residue
+    bonds, including bonds between residues that only differ in their
+    insertion code (e.g. in ``1igy``).
+    """
+    ref_file = pdb.PDBFile.read(path)
+    # Keep all atoms and their original IDs to be able to compare the
+    # atom IDs in the 'CONECT' records directly
+    atoms = ref_file.get_structure(
+        model=1, altloc="all", extra_fields=["atom_id"], include_bonds=True
+    )
+    test_file = pdb.PDBFile()
+    test_file.set_structure(atoms)
+    test_pairs = _conect_pairs(test_file)
+
+    assert _conect_pairs(ref_file) <= test_pairs
+
+    bonds = atoms.bonds.as_array()[:, :2]
+    residue_starts = struc.get_residue_starts_for(atoms, bonds.flatten()).reshape(-1, 2)
+    inter_residue_bonds = bonds[residue_starts[:, 0] != residue_starts[:, 1]]
+    inter_residue_pairs = {
+        (
+            min(atoms.atom_id[i], atoms.atom_id[j]),
+            max(atoms.atom_id[i], atoms.atom_id[j]),
+        )
+        for i, j in inter_residue_bonds
+    }
+    assert inter_residue_pairs <= test_pairs
+
+
 def test_multiple_atom_array():
     """
     Setting the structure with an :class:`AtomArrayStack` and with an equivalent list of
