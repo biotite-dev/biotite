@@ -76,8 +76,6 @@ class GFFFile(TextFile):
     However, it does not provide additional meta information.
 
     This class serves as low-level API for accessing GFF3 files.
-    It is used as a sequence of :class:`GFFRecord` entries, where each
-    entry is defined as a non-comment and non-directive line.
 
     Note that the entry index may not be equal to the line index,
     because GFF3 files can contain comment and directive lines.
