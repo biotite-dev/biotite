@@ -10,6 +10,7 @@ __all__ = ["PDBFile", "SpaceGroupInfo"]
 import copy
 import itertools
 import warnings
+from collections import defaultdict
 from collections.abc import Iterable
 from os import PathLike
 from typing import IO, Any, Literal, NamedTuple, Self, overload
@@ -286,10 +287,10 @@ class PDBFile(RustPDBFile):
         NLYIQWLKDGGPSSGRPPPS
         """
         # Group the residue names in 'SEQRES' records by chain ID
-        res_names: dict[str, list[str]] = {}
+        res_names: defaultdict[str, list[str]] = defaultdict(list)
         for line in self.lines:
             if line.startswith("SEQRES"):
-                res_names.setdefault(line[_SEQRES_CHAIN_ID].strip(), []).extend(
+                res_names[line[_SEQRES_CHAIN_ID].strip()].extend(
                     line[_SEQRES_RES_NAMES].split()
                 )
 

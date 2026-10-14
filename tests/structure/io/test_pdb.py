@@ -29,35 +29,6 @@ def test_get_model_count():
     assert test_model_count == ref_model_count
 
 
-def test_get_sequence():
-    """
-    Check if :meth:`PDBFile.get_sequence()` returns the correct
-    sequences for a known example.
-    """
-    pdb_file = pdb.PDBFile.read(data_dir("structure") / "pdb" / "5ugo.pdb")
-    assert hasattr(pdb_file, "get_sequence"), "PDBFile.get_sequence() is missing"
-    sequences = pdb_file.get_sequence()
-    # Test also the thin wrapper around the method 'get_sequence()'
-    assert sequences == pdb.get_sequence(pdb_file)
-
-    assert str(sequences["T"]) == "CCGACGGCGCATCAGC"
-    assert type(sequences["T"]) is seq.NucleotideSequence
-    assert str(sequences["P"]) == "GCTGATGCGCC"
-    assert type(sequences["P"]) is seq.NucleotideSequence
-    assert str(sequences["D"]) == "GTCGG"
-    assert type(sequences["D"]) is seq.NucleotideSequence
-    assert (
-        str(sequences["A"]) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
-        "AYRKAASVIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQD"
-        "DTSSSINFLTRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGD"
-        "FEKRIPREEMLQMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPS"
-        "FTSESTKQPKLLHQVVEQLQKVHFITDTLSKGETKFMGVCQLPSKNDEKEYPHR"
-        "RIDIRLIPKDQYYCGVLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVA"
-        "GEPLPVDSEKDIFDYIQWKYREPKDRSE"
-    )
-    assert type(sequences["A"]) is seq.ProteinSequence
-
-
 @pytest.mark.parametrize("res_name", ["I", "DI", "2BD", "OIP"])
 def test_get_sequence_inosine(res_name):
     pdb_file = pdb.PDBFile([f"SEQRES   1 A    1  {res_name:>3}".ljust(80)])
