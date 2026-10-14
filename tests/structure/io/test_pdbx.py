@@ -250,6 +250,40 @@ def test_bonds_from_ccd(format):
     assert test_bonds == ref_bonds
 
 
+def test_lowercase_bond_order():
+    """
+    The values in ``chem_comp_bond.value_order`` and
+    ``chem_comp_bond.pdbx_aromatic_flag`` are case-insensitive, so lowercase values
+    (as written by some other programs) should give the same bonds.
+    """
+    path = data_dir("structure") / "pdb" / "1l2y.cif"
+    pdbx_file = pdbx.CIFFile.read(path)
+    ref_bonds = pdbx.get_structure(pdbx_file, model=1, include_bonds=True).bonds
+
+    chem_comp_bond = pdbx_file.block["chem_comp_bond"]
+    for column in ["value_order", "pdbx_aromatic_flag"]:
+        chem_comp_bond[column] = np.char.lower(chem_comp_bond[column].as_array(str))
+    test_bonds = pdbx.get_structure(pdbx_file, model=1, include_bonds=True).bonds
+
+    assert test_bonds == ref_bonds
+
+
+def test_lowercase_bond_order_in_component():
+    """
+    Same as :func:`test_lowercase_bond_order()`, but for :func:`get_component()`.
+    """
+    path = data_dir("structure") / "molecules" / "TYR.cif"
+    cif_file = pdbx.CIFFile.read(path)
+    ref_atoms = pdbx.get_component(cif_file)
+
+    chem_comp_bond = cif_file.block["chem_comp_bond"]
+    for column in ["value_order", "pdbx_aromatic_flag"]:
+        chem_comp_bond[column] = np.char.lower(chem_comp_bond[column].as_array(str))
+    test_atoms = pdbx.get_component(cif_file)
+
+    assert test_atoms.bonds == ref_atoms.bonds
+
+
 def test_metal_coordination_bonds():
     """
     Test if metal coordination bonds are properly written and read,
