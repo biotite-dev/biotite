@@ -44,6 +44,25 @@ def test_get_atoms(cell_size):
     assert indices[indices != -1].tolist() == expected_indices
 
 
+@pytest.mark.parametrize(
+    "radii, expected",
+    [
+        (1.0, [[0, 0], [0, 1], [0, 2], [2, 0], [2, 1]]),
+        ([0.0, 0.0, 0.0], [[0, 1], [2, 0]]),
+    ],
+)
+def test_distance_filter_boundaries(radii, expected):
+    """Include boundary contacts in order and exclude distant candidates."""
+    coord = np.array([[0, 0, 0], [1, 0, 0], [2, 0, 0], [4, 0, 0]], dtype=float)
+    # All atoms occupy one cell, so the distance check must exclude candidates.
+    cell_list = struc.CellList(coord, cell_size=5)
+    queries = np.array([[1, 0, 0], [10, 0, 0], [0, 0, 0]], dtype=float)
+    pairs = cell_list.get_atoms(
+        queries, radii, result_format=struc.CellList.Result.PAIRS
+    )
+    assert pairs.tolist() == expected
+
+
 @pytest.mark.parametrize("use_selection", [False, True])
 @pytest.mark.parametrize("periodic", [False, True])
 @pytest.mark.parametrize("threshold", [2, 5, 10])
