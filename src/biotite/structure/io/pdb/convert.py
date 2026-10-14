@@ -248,6 +248,8 @@ def get_assembly(
                 Note that this leads to duplicate atoms.
                 When this option is chosen, the ``altloc_id``
                 annotation array is added to the returned structure.
+                Overlapping atoms at special symmetry positions are not merged,
+                as their correspondence between symmetry copies is ambiguous.
     extra_fields : list of str, optional
         The strings in the list are optional annotation categories
         that should be stored in the output array or stack.
@@ -349,6 +351,8 @@ def get_unit_cell(
                 Note that this leads to duplicate atoms.
                 When this option is chosen, the ``altloc_id``
                 annotation array is added to the returned structure.
+                Overlapping atoms at special symmetry positions are not merged,
+                as their correspondence between symmetry copies is ambiguous.
     extra_fields : list of str, optional
         The strings in the list are optional annotation categories
         that should be stored in the output array or stack.
@@ -445,6 +449,8 @@ def get_symmetry_mates(
                 Note that this leads to duplicate atoms.
                 When this option is chosen, the ``altloc_id``
                 annotation array is added to the returned structure.
+                Overlapping atoms at special symmetry positions are not merged,
+                as their correspondence between symmetry copies is ambiguous.
     extra_fields : list of str, optional
         The strings in the list are optional annotation categories
         that should be stored in the output array or stack.

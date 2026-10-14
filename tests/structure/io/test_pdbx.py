@@ -559,6 +559,38 @@ def test_assembly_sym_id(pdb_id, assembly_id, symmetric_unit_count):
     assert np.isin(np.diff(assembly.sym_id), [0, 1]).all()
 
 
+def test_assembly_special_symmetry():
+    """
+    Remove overlapping symmetry copies while retaining the asymmetric unit.
+
+    This test specifically uses a structure with known special symmetry positions.
+    """
+    OVERLAP_CUTOFF = 0.1
+    file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1lu0.bcif")
+    assembly = pdbx.get_assembly(file, model=1)
+    structure = pdbx.get_structure(file, model=1)
+
+    # No atom should have another atom within the cutoff distance,
+    # as it would indicate an overlap with an atom from another symmetric copy
+    cell_list = struc.CellList(assembly, cell_size=1.0)
+    neighbors = cell_list.get_atoms(assembly.coord, radius=OVERLAP_CUTOFF)
+    assert np.all(np.count_nonzero(neighbors != -1, axis=1) == 1)
+
+    # But at least the first symmetric copy (i.e. the asymmetric unit)
+    # should still have all atoms
+    neighbors = cell_list.get_atoms(structure.coord, radius=OVERLAP_CUTOFF)
+    assert np.all(np.count_nonzero(neighbors != -1, axis=1) == 1)
+    retained = assembly[neighbors[:, 0]]
+    assert np.all(retained.sym_id == 0)
+    retained.del_annotation("sym_id")
+    assert retained == structure
+
+    # Keeping all altlocs disables merging, even for atoms without an altloc.
+    unmerged = pdbx.get_assembly(file, model=1, altloc="all")
+    all_altlocs = pdbx.get_structure(file, model=1, altloc="all")
+    assert unmerged.array_length() == 2 * all_altlocs.array_length()
+
+
 @pytest.mark.parametrize("model", [None, 1])
 @pytest.mark.parametrize("center", [False, True])
 def test_unit_cell_trivial(model, center):

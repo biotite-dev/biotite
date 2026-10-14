@@ -21,7 +21,7 @@ import itertools
 import warnings
 from collections import Counter
 from collections.abc import Iterable
-from typing import Any, Literal, TypeAlias, overload
+from typing import Any, Literal, TypeAlias, cast, overload
 import numpy as np
 from biotite.file import InvalidFileError
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
@@ -61,6 +61,7 @@ from biotite.structure.io.pdbx.bcif import (
 from biotite.structure.io.pdbx.cif import CIFBlock, CIFCategory, CIFColumn, CIFFile
 from biotite.structure.io.pdbx.component import MaskValue
 from biotite.structure.io.pdbx.encoding import StringArrayEncoding
+from biotite.structure.io.util import merge_special_symmetry
 from biotite.structure.repair import create_continuous_res_ids
 from biotite.structure.residues import (
     get_residue_count,
@@ -134,6 +135,17 @@ CANONICAL_RESIDUE_LIST = canonical_aa_list + canonical_nucleotide_list
 # vectorized approach.
 # https://github.com/biotite-dev/biotite/pull/765#issuecomment-2708867357
 FIND_MATCHES_SWITCH_THRESHOLD = 4000000
+
+_SPECIAL_SYMMETRY_FIELDS = {
+    "auth_asym_id": "auth_asym_id",
+    "auth_comp_id": "auth_comp_id",
+    "auth_seq_id": "auth_seq_id",
+    "PDB_ins_code": "pdbx_PDB_ins_code",
+    "PDB_model_num": "pdbx_PDB_model_num",
+    "label_asym_id": "label_asym_id",
+    "label_comp_id": "label_comp_id",
+    "label_seq_id": "label_seq_id",
+}
 
 _proteinseq_type_list = ["polypeptide(D)", "polypeptide(L)"]
 _nucleotideseq_type_list = [
@@ -1848,6 +1860,8 @@ def get_assembly(
               Note that this leads to duplicate atoms.
               When this option is chosen, the ``altloc_id`` annotation
               array is added to the returned structure.
+              Overlapping atoms at special symmetry positions are not merged,
+              as their correspondence between symmetry copies is ambiguous.
     extra_fields : list of str, optional
         The strings in the list are entry names, that are
         additionally added as annotation arrays.
@@ -1892,6 +1906,13 @@ def get_assembly(
     -----
     The ``box`` attribute of the :class:`AtomArray`/:class:`AtomArrayStack` returned by
     this function has limited meaning, as the assembly is not tied to the unit cell.
+    If ``pdbx_struct_special_symmetry`` is present and `altloc` is not ``'all'``,
+    overlapping atoms of the listed residues are merged within a tolerance of
+    0.2 Angstrom. The coordinates and
+    annotations of the copy with the lowest ``sym_id`` are retained, and occupancies
+    are summed (up to 1). Distinct atoms of overlapping residue copies are retained
+    in that residue, with bonds redirected to the retained atoms. Atom names are
+    preserved, so symmetry-completed residues can contain repeated atom names.
 
     Examples
     --------
@@ -1925,12 +1946,18 @@ def get_assembly(
     # Include 'label_asym_id' as annotation array
     # for correct asym ID filtering
     extra_fields = [] if extra_fields is None else list(extra_fields)
-    if "label_asym_id" in extra_fields:
-        extra_fields_and_asym = extra_fields
-    else:
-        # The operations apply on asym IDs
-        # -> they need to be included to select the correct atoms
-        extra_fields_and_asym = extra_fields + ["label_asym_id"]
+    extra_fields_and_asym = list(dict.fromkeys(extra_fields + ["label_asym_id"]))
+    special_symmetry = (
+        block.get("pdbx_struct_special_symmetry") if altloc != "all" else None
+    )
+    if special_symmetry is not None:
+        extra_fields_and_asym += [
+            annotation
+            for field, annotation in _SPECIAL_SYMMETRY_FIELDS.items()
+            if field in special_symmetry
+            and annotation in block["atom_site"]
+            and annotation not in extra_fields_and_asym
+        ]
     structure = get_structure(
         pdbx_file,
         model,
@@ -1982,16 +2009,68 @@ def get_assembly(
 
     # Sort AtomArray or AtomArrayStack by 'sym_id'
     max_sym_id = assembly.sym_id.max()
-    assembly = concatenate(
-        [assembly[..., assembly.sym_id == sym_id] for sym_id in range(max_sym_id + 1)]
+    copies = [
+        assembly[..., assembly.sym_id == sym_id] for sym_id in range(max_sym_id + 1)
+    ]
+    assembly = (
+        _merge_atoms_special_symmetry(copies, special_symmetry)
+        if special_symmetry is not None
+        else concatenate(copies)
     )
 
-    # Remove 'label_asym_id', if it was not included in the original
-    # user-supplied 'extra_fields'
-    if "label_asym_id" not in extra_fields:
-        assembly.del_annotation("label_asym_id")
+    # Remove the internal identifiers that were not requested by the caller.
+    for field in extra_fields_and_asym:
+        if field not in extra_fields:
+            assembly.del_annotation(field)
 
     return assembly
+
+
+def _merge_atoms_special_symmetry(
+    copies: list[AtomArray[Any]] | list[AtomArrayStack[Any, Any]],
+    pdbx_struct_special_symmetry: _Category,
+) -> AtomArray[Any] | AtomArrayStack[Any, Any]:
+    """
+    Merge overlapping atoms and residues annotated on special symmetry positions.
+
+    Copies carry the deposited identifiers from `_SPECIAL_SYMMETRY_FIELDS` and
+    a `sym_id` annotation. Only atoms of the same annotated residue and element
+    in different symmetry copies are merged. For a stack,
+    atoms must overlap in every model. Keep the lower symmetry ID's coordinates,
+    combine occupancies, and redirect bonds before removing duplicate atoms.
+    Distinct atoms from merged residues retain their original atom names.
+    """
+    atoms = concatenate(copies)
+    if atoms.array_length() == 0:
+        return atoms
+    fields = {
+        field: annotation
+        for field, annotation in _SPECIAL_SYMMETRY_FIELDS.items()
+        if field in pdbx_struct_special_symmetry
+        and annotation in atoms.get_annotation_categories()
+    }
+    if not fields:
+        raise InvalidFileError(
+            "No atom identifiers match 'pdbx_struct_special_symmetry'"
+        )
+    identifiers = {
+        field: np.where(np.isin(values, [".", "?"]), "", values)
+        for field, annotation in fields.items()
+        for values in [atoms.get_annotation(annotation)]
+    }
+    queries = {
+        field: pdbx_struct_special_symmetry[field].as_array(str, "") for field in fields
+    }
+    residue_masks = []
+    for row in range(pdbx_struct_special_symmetry.row_count):
+        matches = np.ones(atoms.array_length(), dtype=bool)
+        for field, values in identifiers.items():
+            if field.startswith("label_") and queries[field][row] == "":
+                # Optional label identifiers may be absent for individual rows.
+                continue
+            matches &= values == queries[field][row]
+        residue_masks.append(matches)
+    return merge_special_symmetry(atoms, residue_masks)
 
 
 @overload
@@ -2182,6 +2261,8 @@ def get_unit_cell(
               Note that this leads to duplicate atoms.
               When this option is chosen, the ``altloc_id`` annotation
               array is added to the returned structure.
+              Overlapping atoms at special symmetry positions are not merged,
+              as their correspondence between symmetry copies is ambiguous.
     extra_fields : list of str, optional
         The strings in the list are entry names, that are
         additionally added as annotation arrays.
@@ -2222,6 +2303,13 @@ def get_unit_cell(
         Contains the `sym_id` annotation, which enumerates the copies of the asymmetric
         unit in the unit cell.
 
+    Notes
+    -----
+    Overlapping atoms and residues listed in ``pdbx_struct_special_symmetry`` are
+    merged as in :func:`get_assembly()` unless `altloc` is ``'all'``.
+    Only overlaps in the generated coordinates are merged; atoms on opposite unit
+    cell boundaries remain separate.
+
     Examples
     --------
 
@@ -2237,12 +2325,27 @@ def get_unit_cell(
         raise InvalidFileError("File has no 'symmetry.space_group_name_H-M' field")
     transforms = space_group_transforms(space_group)
 
+    extra_fields = [] if extra_fields is None else list(extra_fields)
+    special_symmetry = (
+        block.get("pdbx_struct_special_symmetry") if altloc != "all" else None
+    )
+    symmetry_fields = (
+        []
+        if special_symmetry is None
+        else [
+            annotation
+            for field, annotation in _SPECIAL_SYMMETRY_FIELDS.items()
+            if field in special_symmetry
+            and annotation in block["atom_site"]
+            and annotation not in extra_fields
+        ]
+    )
     asym = get_structure(
         pdbx_file,
         model,
         data_block,
         altloc,
-        extra_fields,
+        extra_fields + symmetry_fields,
         use_author_fields,
         include_bonds,
     )
@@ -2262,6 +2365,17 @@ def get_unit_cell(
     unit_cell.set_annotation(
         "sym_id", np.repeat(np.arange(len(transforms)), asym.array_length())
     )
+    if special_symmetry is not None:
+        unit_cell = _merge_atoms_special_symmetry(
+            # Every slice has the same array/stack type as the unit cell.
+            cast(
+                list[AtomArray[Any]] | list[AtomArrayStack[Any, Any]],
+                [unit_cell[..., unit_cell.sym_id == i] for i in range(len(transforms))],
+            ),
+            special_symmetry,
+        )
+    for field in symmetry_fields:
+        unit_cell.del_annotation(field)
     return unit_cell
 
 
