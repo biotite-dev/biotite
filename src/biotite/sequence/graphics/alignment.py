@@ -354,13 +354,13 @@ class LetterTypePlotter(LetterPlotter):
         A *Matplotlib* axes, that is used as plotting area.
     alphabet : Alphabet
         The alphabet of the alignment(s) to be plotted.
-    color_scheme : str or ColorScheme or list of (tuple or str), optional
+    color_scheme : str or ColorScheme, optional
         Either a valid built-in color scheme name
-        (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.),
-        a :class:`ColorScheme` or a list of *Matplotlib* compatible
-        colors.
-        The list length must be at least as long as the
-        length of the alphabet used by the sequences.
+        (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.)
+        or a :class:`ColorScheme`.
+        The alphabet of the scheme must equal or extend the alphabet
+        used by the sequences.
+        By default, the ``"flower"`` scheme is used.
     color_symbols : bool, optional
         If true, the symbols themselves are colored.
         If false, the symbols are black, and the boxes behind the
@@ -376,7 +376,7 @@ class LetterTypePlotter(LetterPlotter):
         self,
         axes: Axes,
         alphabet: Any,
-        color_scheme: str | ColorScheme | list[Any] | None = None,
+        color_scheme: str | ColorScheme | None = None,
         color_symbols: bool = False,
         font_size: float | None = None,
         font_param: dict[str, Any] | None = None,
@@ -390,7 +390,10 @@ class LetterTypePlotter(LetterPlotter):
         elif isinstance(color_scheme, ColorScheme):
             self._colors = color_scheme.fit(alphabet)
         else:
-            self._colors = color_scheme
+            raise TypeError(
+                "Expected a color scheme name or 'ColorScheme', "
+                f"but got '{type(color_scheme).__name__}'"
+            )
 
     def get_color(self, alignment: Alignment, column_i: int, seq_i: int) -> Any:
         index = alignment.trace[column_i, seq_i]
@@ -900,7 +903,7 @@ def plot_alignment_type_based(
     label_size: float | None = None,
     show_line_position: bool = False,
     spacing: float = 1,
-    color_scheme: str | ColorScheme | list[Any] | None = None,
+    color_scheme: str | ColorScheme | None = None,
     color_symbols: bool = False,
     symbol_size: float | None = None,
     symbol_param: dict[str, Any] | None = None,
@@ -962,13 +965,13 @@ def plot_alignment_type_based(
     spacing : float, optional
         The spacing between the alignment lines. 1.0 means that the size
         is equal to the size of a symbol box.
-    color_scheme : str or ColorScheme or list of (tuple or str), optional
+    color_scheme : str or ColorScheme, optional
         Either a valid built-in color scheme name
-        (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.),
-        a :class:`ColorScheme` or a list of *Matplotlib* compatible
-        colors.
-        The list length must be at least as long as the
-        length of the alphabet used by the sequences.
+        (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.)
+        or a :class:`ColorScheme`.
+        The alphabet of the scheme must equal or extend the alphabet
+        used by the sequences.
+        By default, the ``"flower"`` scheme is used.
     color_symbols : bool, optional
         If true, the symbols themselves are colored.
         If false, the symbols are black, and the boxes behind the

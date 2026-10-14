@@ -6,7 +6,6 @@ __all__ = [
     "ColorScheme",
     "get_color_scheme",
     "list_color_scheme_names",
-    "load_color_scheme",
 ]
 
 import glob
@@ -15,6 +14,7 @@ import os
 from dataclasses import dataclass
 from os import PathLike
 from os.path import dirname, join, realpath
+from typing import Self
 from biotite.sequence.alphabet import Alphabet
 from biotite.typing import MplColor
 
@@ -89,33 +89,33 @@ class ColorScheme:
             for color in self.colors[: len(alphabet)]
         ]
 
+    @classmethod
+    def load(cls, file_name: PathLike[str] | str) -> Self:
+        """
+        Load a color scheme from a JSON file.
 
-def load_color_scheme(file_name: PathLike[str] | str) -> ColorScheme:
-    """
-    Load a color scheme from a JSON file.
+        Parameters
+        ----------
+        file_name : str or PathLike
+            The file name of the JSON file containing the scheme.
 
-    Parameters
-    ----------
-    file_name : str or PathLike
-        The file name of the JSON file containing the scheme.
-
-    Returns
-    -------
-    scheme : ColorScheme
-        The loaded color scheme.
-        Symbols of the alphabet, that are not defined in the file, get
-        ``None`` as color.
-    """
-    with open(file_name, "r") as file:
-        scheme = json.load(file)
-    alphabet = Alphabet(scheme["alphabet"])
-    # Store colors as symbol code ordered list of colors,
-    # rather than dictionary
-    colors: list[MplColor | None] = [None] * len(alphabet)
-    for key, value in scheme["colors"].items():
-        index = alphabet.encode(key)
-        colors[index] = value
-    return ColorScheme(scheme["name"], alphabet, colors)
+        Returns
+        -------
+        scheme : ColorScheme
+            The loaded color scheme.
+            Symbols of the alphabet, that are not defined in the file, get
+            ``None`` as color.
+        """
+        with open(file_name, "r") as file:
+            scheme = json.load(file)
+        alphabet = Alphabet(scheme["alphabet"])
+        # Store colors as symbol code ordered list of colors,
+        # rather than dictionary
+        colors: list[MplColor | None] = [None] * len(alphabet)
+        for key, value in scheme["colors"].items():
+            index = alphabet.encode(key)
+            colors[index] = value
+        return cls(scheme["name"], alphabet, colors)
 
 
 def get_color_scheme(
@@ -206,6 +206,6 @@ def list_color_scheme_names(alphabet: Alphabet, strict: bool = False) -> list[st
 _scheme_dir = join(dirname(realpath(__file__)), "color_schemes")
 
 _color_schemes = [
-    load_color_scheme(file_name)
+    ColorScheme.load(file_name)
     for file_name in glob.glob(_scheme_dir + os.sep + "*.json")
 ]

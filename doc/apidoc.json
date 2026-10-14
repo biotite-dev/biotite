@@ -249,7 +249,6 @@
         ],
         "Color schemes" : [
             "ColorScheme",
-            "load_color_scheme",
             "get_color_scheme",
             "list_color_scheme_names"
         ]

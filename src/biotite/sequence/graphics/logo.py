@@ -10,14 +10,13 @@ from matplotlib.axes import Axes
 from biotite.sequence.alphabet import LetterAlphabet
 from biotite.sequence.graphics.colorschemes import ColorScheme, get_color_scheme
 from biotite.sequence.profile import SequenceProfile
-from biotite.typing import MplColor
 from biotite.visualize import plot_scaled_text
 
 
 def plot_sequence_logo(
     axes: Axes,
     profile: SequenceProfile,
-    scheme: str | ColorScheme | list[MplColor] | None = None,
+    scheme: str | ColorScheme | None = None,
     **kwargs: Any,
 ) -> None:
     """
@@ -38,13 +37,13 @@ def plot_sequence_logo(
         The axes to draw the logo one.
     profile : SequenceProfile
         The logo is created based on this profile.
-    scheme : str or ColorScheme or list of (tuple or str), optional
+    scheme : str or ColorScheme, optional
         Either a valid built-in color scheme name
-        (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.),
-        a :class:`ColorScheme` or a list of *Matplotlib* compatible
-        colors.
-        The list length must be at least as long as the
-        length of the alphabet used by the `profile`.
+        (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.)
+        or a :class:`ColorScheme`.
+        The alphabet of the scheme must equal or extend the alphabet
+        used by the `profile`.
+        By default, the ``"flower"`` scheme is used.
     **kwargs
         Additional parameters for the :class:`matplotlib.font_manager.FontProperties`
         of the text or the created :class:`matplotlib.patches.PathPatch`.
@@ -65,7 +64,10 @@ def plot_sequence_logo(
     elif isinstance(scheme, ColorScheme):
         colors = scheme.fit(alphabet)
     else:
-        colors = scheme
+        raise TypeError(
+            "Expected a color scheme name or 'ColorScheme', "
+            f"but got '{type(scheme).__name__}'"
+        )
 
     # 'color' and 'size' property is not passed on to text
     kwargs.pop("color", None)

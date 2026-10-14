@@ -9,7 +9,7 @@ import biotite.structure.alphabet as struc_alph
     sorted((Path(seq.__file__).parent / "graphics" / "color_schemes").glob("*.json")),
     ids=lambda path: path.name,
 )
-def test_load_color_scheme(scheme_path):
+def test_load(scheme_path):
     pytest.importorskip("matplotlib")
     from matplotlib.colors import to_rgb
     import biotite.sequence.graphics as graphics
@@ -21,7 +21,7 @@ def test_load_color_scheme(scheme_path):
         struc_alph.ProteinBlocksSequence.alphabet,
     ]
 
-    test_scheme = graphics.load_color_scheme(scheme_path)
+    test_scheme = graphics.ColorScheme.load(scheme_path)
 
     assert isinstance(test_scheme, graphics.ColorScheme)
     assert test_scheme.alphabet in supported_alphabets

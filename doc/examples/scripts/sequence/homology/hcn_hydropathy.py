@@ -211,12 +211,17 @@ def hydropathy_to_color(hydropathy, colormap):
 
 # Create a color scheme highlighting the hydropathy
 colormap = plt.get_cmap("coolwarm")
-colorscheme = [
-    hydropathy_to_color(hydropathy_dict[symbol], colormap)
-    if symbol in hydropathy_dict
-    else None
-    for symbol in sequences[0].get_alphabet()
-]
+alphabet = sequences[0].get_alphabet()
+colorscheme = graphics.ColorScheme(
+    "hydropathy",
+    alphabet,
+    [
+        hydropathy_to_color(hydropathy_dict[symbol], colormap)
+        if symbol in hydropathy_dict
+        else None
+        for symbol in alphabet
+    ],
+)
 
 # Show only the first 600 alignment columns for the sake of brevity
 # This part contains all transmembrane helices
