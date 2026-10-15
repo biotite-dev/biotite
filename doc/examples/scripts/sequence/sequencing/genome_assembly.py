@@ -599,8 +599,9 @@ BAND_WIDTH = 1000
 genome_alignment = align.align_banded(
     var_genome,
     orig_genome,
-    matrix,
     band=(-BAND_WIDTH // 2, BAND_WIDTH // 2),
+    matrix=matrix,
+    gap_penalty=-10,
     max_number=1,
 )[0]
 identity = align.get_sequence_identity(genome_alignment, "all")
@@ -720,7 +721,7 @@ for feature in annot_seq.annotation:
 # Align spike protein sequence to variant genome to get the B.1.1.7
 # spike protein sequence
 alignment = align.align_optimal(
-    var_genome, orig_spike_seq, matrix, local=True, max_number=1
+    var_genome, orig_spike_seq, matrix, gap_penalty=-10, local=True, max_number=1
 )[0]
 var_spike_seq = var_genome[alignment.trace[alignment.trace[:, 0] != -1, 0]]
 
@@ -731,7 +732,11 @@ var_spike_prot_seq = var_spike_seq.translate(complete=True).remove_stops()
 # Align both protein sequences with each other for later comparison
 blosum_matrix = align.SubstitutionMatrix.std_protein_matrix()
 alignment = align.align_optimal(
-    var_spike_prot_seq, orig_spike_prot_seq, blosum_matrix, max_number=1
+    var_spike_prot_seq,
+    orig_spike_prot_seq,
+    blosum_matrix,
+    gap_penalty=-10,
+    max_number=1,
 )[0]
 
 

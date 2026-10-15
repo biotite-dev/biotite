@@ -29,9 +29,10 @@ chain = peptide[peptide.chain_id == "A"]
 phi, psi, omega = struc.dihedral_backbone(chain)
 phi = np.rad2deg(phi)
 psi = np.rad2deg(psi)
-# Remove invalid values (NaN) at first and last position
-phi = phi[1:-1]
-psi = psi[1:-1]
+# Remove invalid values (NaN) at the chain termini and chain breaks
+valid_mask = ~(np.isnan(phi) | np.isnan(psi))
+phi = phi[valid_mask]
+psi = psi[valid_mask]
 
 # Plot density
 figure = plt.figure()

@@ -320,7 +320,7 @@ labels = [header[-1] for header in headers]
 
 # Perform a multiple sequence alignment
 matrix = align.SubstitutionMatrix.std_protein_matrix()
-alignment, order, _, _ = align.align_multiple(sequences, matrix)
+alignment, order, _, _ = align.align_multiple(sequences, matrix, gap_penalty=-10)
 # Order alignment according to guide tree
 alignment = alignment[:, order.tolist()]
 labels = [labels[i] for i in order]

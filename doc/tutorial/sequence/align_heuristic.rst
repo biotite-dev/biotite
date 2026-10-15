@@ -55,7 +55,7 @@ heuristic method scales much better for large sequence data.
 
     # This is the alignment we would expect in the end
     matrix = align.SubstitutionMatrix.std_protein_matrix()
-    print(align.align_optimal(reference, query, matrix)[0])
+    print(align.align_optimal(reference, query, matrix, gap_penalty=-10)[0])
 
 
 Stage 1: k-mer matching

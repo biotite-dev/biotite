@@ -139,7 +139,10 @@ aligned symbols codes instead of the trace.
 
     alignment = alignments[0]
     print("Score: ", alignment.score)
-    print("Recalculated score:", align.score(alignment, matrix=matrix))
+    print(
+        "Recalculated score:",
+        align.score(alignment, matrix=matrix, gap_penalty=-10)
+    )
     print("Sequence identity:", align.get_sequence_identity(alignment))
     print("Symbols:")
     print(align.get_symbols(alignment))
@@ -169,4 +172,4 @@ using :func:`get_alignment()`, where the score is not provided.
 
     fasta_file = fasta.FastaFile.read(temp_file.name)
     alignment = fasta.get_alignment(fasta_file)
-    alignment.score = align.score(alignment, matrix=matrix)
+    alignment.score = align.score(alignment, matrix=matrix, gap_penalty=-10)
