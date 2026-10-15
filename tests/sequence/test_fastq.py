@@ -6,6 +6,7 @@ import io
 from tempfile import TemporaryFile
 import numpy as np
 import pytest
+import biotite
 import biotite.sequence as seq
 import biotite.sequence.io.fastq as fastq
 from tests.util import data_dir
@@ -127,3 +128,44 @@ def test_write_iter(offset, chars_per_line, n_sequences):
     )
 
     assert test_file.getvalue() == ref_file.getvalue()
+
+
+@pytest.mark.parametrize(
+    ["original_identifiers", "deduplicated_identifiers", "has_duplicates"],
+    [
+        (["A", "B", "C"], ["A", "B", "C"], False),
+        (["A", "A", "A"], ["A", "A_1", "A_2"], True),
+        (["A", "B", "A"], ["A", "B", "A_1"], True),
+        (["A", "A", "A_1"], ["A", "A_1", "A_1_1"], True),
+        (["A", "A_1", "A"], ["A", "A_1", "A_2"], True),
+        (
+            ["A", "A", "A_3", "A", "A", "A_1", "A_1"],
+            ["A", "A_1", "A_3", "A_2", "A_4", "A_1_1", "A_1_2"],
+            True,
+        ),
+    ],
+)
+@pytest.mark.parametrize("allow_duplicates", [False, True])
+def test_duplicate_identifiers(
+    allow_duplicates, original_identifiers, deduplicated_identifiers, has_duplicates
+):
+    """
+    Check that reading a file with duplicate identifiers either raises an
+    exception or appends ``_<number>`` suffixes to the duplicates,
+    depending on `allow_duplicates`.
+    """
+    file = io.StringIO(
+        "".join(
+            f"@{identifier}\nACGT\n+\n!!!!\n" for identifier in original_identifiers
+        )
+    )
+
+    if allow_duplicates:
+        fastq_file = fastq.FastqFile.read(file, offset=33, allow_duplicates=True)
+        assert list(fastq_file.keys()) == deduplicated_identifiers
+    elif has_duplicates:
+        with pytest.raises(biotite.InvalidFileError, match="Duplicate identifier"):
+            fastq.FastqFile.read(file, offset=33)
+    else:
+        fastq_file = fastq.FastqFile.read(file, offset=33)
+        assert list(fastq_file.keys()) == deduplicated_identifiers
