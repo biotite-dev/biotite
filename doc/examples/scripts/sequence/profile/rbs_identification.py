@@ -106,12 +106,16 @@ def sequence_loc_formatter(x, pos):
     return f"{x:+}"
 
 
-COLOR_SCHEME = [
-    biotite.colors["lightgreen"],  # A
-    biotite.colors["orange"],  # C
-    biotite.colors["dimgreen"],  # G
-    biotite.colors["brightorange"],  # T
-]
+COLOR_SCHEME = graphics.ColorScheme(
+    "rbs",
+    seq.NucleotideSequence.alphabet_unamb,
+    [
+        biotite.colors["lightgreen"],  # A
+        biotite.colors["orange"],  # C
+        biotite.colors["dimgreen"],  # G
+        biotite.colors["brightorange"],  # T
+    ],
+)
 
 fig, ax = plt.subplots(figsize=(8.0, 3.0))
 graphics.plot_sequence_logo(ax, profile, COLOR_SCHEME)
