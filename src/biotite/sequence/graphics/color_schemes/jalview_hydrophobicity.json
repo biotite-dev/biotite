@@ -2,7 +2,7 @@
     "name" : "hydrophobicity",
     "alphabet" : ["A","C","D","E","F","G","H","I","K","L",
                   "M","N","P","Q","R","S","T","V","W","Y",
-                  "B","Z","X","*"],
+                  "B","Z","J","X","*"],
     "colors" : {
         "A" : "#ad0052",
         "R" : "#0000ff",

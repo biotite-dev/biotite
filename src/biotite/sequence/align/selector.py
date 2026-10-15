@@ -165,8 +165,8 @@ class MinimizerSelector(Selector[S]):
     >>> kmer_alph = KmerAlphabet(sequence1.alphabet, k=3)
     >>> all_kmers = kmer_alph.create_kmers(sequence1.code)
     >>> print(all_kmers)
-    [ 9367  3639  4415  9199 13431  4415  9192 13271   567 13611  8725  2057
-      7899  9875  1993  6363]
+    [10157  3940  4774  9982 15190  4774  9975 15024   615 15378  9463  2217
+      8553 10711  2151  6903]
     >>> print(["".join(kmer_alph.decode(kmer)) for kmer in all_kmers])
     ['THI', 'HIS', 'IS*', 'S*I', '*IS', 'IS*', 'S*A', '*A*', 'A*S', '*SE', 'SEQ', 'EQV', 'QVE', 'VEN', 'ENC', 'NCE']
 
@@ -178,7 +178,7 @@ class MinimizerSelector(Selector[S]):
     >>> print(minimizer_pos)
     [ 1  2  5  8 11 14]
     >>> print(minimizers)
-    [3639 4415 4415  567 2057 1993]
+    [3940 4774 4774  615 2217 2151]
     >>> print(["".join(kmer_alph.decode(kmer)) for kmer in minimizers])
     ['HIS', 'IS*', 'IS*', 'A*S', 'EQV', 'ENC']
 

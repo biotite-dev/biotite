@@ -10,16 +10,29 @@ import biotite.structure.alphabet as strucalph
     [
         entry
         for entry in align.SubstitutionMatrix.list_db()
-        if entry not in ["NUC", "GONNET", "3Di", "PB", "CLESUM"]
+        if entry not in ["NUC", "3Di", "PB", "CLESUM"]
     ],
 )
-def test_matrices(db_entry):
+@pytest.mark.parametrize(
+    ["ambiguous_symbol", "member_symbols"],
+    [("B", ["D", "N"]), ("Z", ["E", "Q"]), ("J", ["I", "L"])],
+)
+def test_matrices(db_entry, ambiguous_symbol, member_symbols):
     """
     Test for exceptions when reading matrix files.
+    Furthermore, check that the scores of ambiguous amino acids against the
+    standard amino acids lie between the scores of the amino acids they
+    represent.
     """
-    alph1 = seq.ProteinSequence.alphabet
-    alph2 = seq.ProteinSequence.alphabet
-    align.SubstitutionMatrix(alph1, alph2, db_entry)
+    alph = seq.ProteinSequence.alphabet
+    matrix = align.SubstitutionMatrix(alph, alph, db_entry)
+
+    scores = matrix.score_matrix()
+    standard = alph.encode_multiple(list("ACDEFGHIKLMNPQRSTVWY"))
+    ambiguous_scores = scores[alph.encode(ambiguous_symbol), standard]
+    member_scores = scores[alph.encode_multiple(member_symbols)][:, standard]
+    assert np.all(ambiguous_scores >= np.min(member_scores, axis=0))
+    assert np.all(ambiguous_scores <= np.max(member_scores, axis=0))
 
 
 @pytest.mark.parametrize(

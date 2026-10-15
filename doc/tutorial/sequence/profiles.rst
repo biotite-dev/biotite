@@ -199,6 +199,6 @@ a position-specific scoring matrix using :meth:`SubstitutionMatrix.as_positional
     print(disulfide_matrix)
 
 You might notice the new shape of the substitution matrix:
-Instead of spanning the 24 x 24 amino acids including ambiguous symbols, it now matches
+Instead of spanning the 25 x 25 amino acids including ambiguous symbols, it now matches
 the lengths of the two input sequences.
 In this matrix you can spot the biased scores at the matching cysteine positions.
