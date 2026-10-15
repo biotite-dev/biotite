@@ -96,7 +96,9 @@ EVALUE_THRESHOLD = 1e-1
 def get_protein_chain(pdb_id, chain_id):
     pdbx_file = pdbx.BinaryCIFFile.read(rcsb.fetch(pdb_id, "bcif"))
     # Bonds are required for the later molecular visualization
-    atoms = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
+    atoms = pdbx.get_structure(
+        pdbx_file, model=1, include_bonds=True, use_author_fields=True
+    )
     atoms = atoms[struc.filter_amino_acids(atoms)]
     return atoms[atoms.chain_id == chain_id]
 
