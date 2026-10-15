@@ -256,14 +256,21 @@ def test_infer_bond_types_small_molecules(res_name, use_charge):
     the reference, the bonds of aromatic systems are set to :attr:`BondType.AROMATIC`
     on both sides, before they are compared.
 
-    The known formal charges merely constrain the search, so the same bond types are
-    expected, regardless of whether they are given.
+    If the formal charges are not given, the location of a charge within a conjugated
+    system is ambiguous, e.g. any nitrogen atom of a guanidinium group may carry the
+    positive charge.
+    Hence, in this case only an equivalent resonance structure, i.e. with the same
+    total bond order and number of charged atoms, is expected.
     """
     pytest.importorskip("rdkit")
 
     ref_atoms = info.residue(res_name, allow_missing_coord=True)
     if not set(ref_atoms.element) <= _ORGANIC_ELEMENTS:
         pytest.skip("Molecule contains unsupported elements")
+    if not use_charge and np.count_nonzero(ref_atoms.charge) > 4:
+        # The number of valence states with the same total charge grows
+        # combinatorially with the number of charged atoms
+        pytest.skip("Too many charged atoms to find assignment without known charges")
     # The reference uses aromatic bond types
     # -> kekulize it, to give it the same treatment as the inferred bonds,
     # as the CCD and rdkit may disagree on aromaticity definition
@@ -281,9 +288,14 @@ def test_infer_bond_types_small_molecules(res_name, use_charge):
 
     # Bound the number of iterations to fail instead of stalling,
     # if no assignment is found
-    test_bonds, _ = struc.infer_bond_types(
+    test_bonds, test_charges = struc.infer_bond_types(
         atoms, total_charge=int(ref_atoms.charge.sum()), max_iterations=1_000_000
     )
+
+    if not use_charge:
+        assert np.count_nonzero(test_charges) == np.count_nonzero(ref_atoms.charge)
+        assert np.sum(test_bonds.as_array()[:, 2]) == np.sum(ref_bonds.as_array()[:, 2])
+        return
 
     test_bonds = _infer_aromaticity(ref_atoms, test_bonds)
     ref_bonds = _infer_aromaticity(ref_atoms, ref_bonds)
