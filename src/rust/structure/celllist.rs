@@ -815,8 +815,8 @@ impl CellList {
 
     /// Find atoms within a Euclidean distance from given coordinates.
     ///
-    /// This method first uses :meth:`get_atoms_in_cells_from_slice` to find candidate
-    /// atoms based on cell adjacency, then filters them by actual Euclidean distance.
+    /// Filter candidate atoms by distance while visiting adjacent cells, so that
+    /// only actual contacts are stored in the result buffer.
     ///
     /// Returns
     /// -------
@@ -833,17 +833,14 @@ impl CellList {
         match radius {
             Radius::Single(r) => {
                 let sq_r = r.powi(2);
-                let pairs = self
-                    .get_atoms_in_cells_from_slice(
-                        py,
-                        coord,
-                        &Radius::Single((r / self.cell_size).ceil() as i32),
-                    )?
-                    .iter()
-                    .filter(|pair| distance_squared(coord[pair[0]], self.coord[pair[1]]) <= sq_r)
-                    .copied()
-                    .collect();
-                Ok(pairs)
+                self.get_atoms_filtered(
+                    py,
+                    coord,
+                    &Radius::Single((r / self.cell_size).ceil() as i32),
+                    |query_idx, atom_idx| {
+                        distance_squared(coord[query_idx], self.coord[atom_idx]) <= sq_r
+                    },
+                )
             }
             Radius::Multiple(rs) => {
                 let cell_radii = rs
@@ -851,15 +848,14 @@ impl CellList {
                     .map(|r| (*r / self.cell_size).ceil() as i32)
                     .collect();
                 let sq_rs: Vec<f32> = rs.iter().map(|r| r.powi(2)).collect();
-                let pairs = self
-                    .get_atoms_in_cells_from_slice(py, coord, &Radius::Multiple(cell_radii))?
-                    .iter()
-                    .filter(|pair| {
-                        distance_squared(coord[pair[0]], self.coord[pair[1]]) <= sq_rs[pair[0]]
-                    })
-                    .copied()
-                    .collect();
-                Ok(pairs)
+                self.get_atoms_filtered(
+                    py,
+                    coord,
+                    &Radius::Multiple(cell_radii),
+                    |query_idx, atom_idx| {
+                        distance_squared(coord[query_idx], self.coord[atom_idx]) <= sq_rs[query_idx]
+                    },
+                )
             }
         }
     }
@@ -891,6 +887,22 @@ impl CellList {
         coord: &[[f32; 3]],
         cell_radii: &Radius<i32>,
     ) -> PyResult<Vec<[usize; 2]>> {
+        self.get_atoms_filtered(py, coord, cell_radii, |_, _| true)
+    }
+
+    /// Visit adjacent cells and collect only pairs accepted by `include`.
+    /// The predicate is specialized at compile time, including the unfiltered
+    /// query used by `get_atoms_in_cells_from_slice()`.
+    fn get_atoms_filtered<F>(
+        &self,
+        py: Python<'_>,
+        coord: &[[f32; 3]],
+        cell_radii: &Radius<i32>,
+        include: F,
+    ) -> PyResult<Vec<[usize; 2]>>
+    where
+        F: Fn(usize, usize) -> bool,
+    {
         if let Radius::Multiple(ref rs) = cell_radii {
             if rs.len() != coord.len() {
                 return Err(exceptions::PyValueError::new_err(format!(
@@ -922,7 +934,9 @@ impl CellList {
                         let cell_atoms = &self.cells[[adj_i, adj_j, adj_k]];
                         adjacent_atoms.reserve(cell_atoms.len());
                         for &atom_idx in cell_atoms {
-                            adjacent_atoms.push([coord_idx, atom_idx]);
+                            if include(coord_idx, atom_idx) {
+                                adjacent_atoms.push([coord_idx, atom_idx]);
+                            }
                         }
                     }
                 }
