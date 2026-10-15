@@ -37,10 +37,14 @@ def test_get_residue_masks(array):
         assert mask.tolist() == ref_mask.tolist()
 
 
-def test_get_residue_starts_for(array):
-    SAMPLE_SIZE = 100
+@pytest.mark.parametrize("sample_size", [100, 1000])
+def test_get_residue_starts_for(array, sample_size):
+    """
+    The two sample sizes are below and above the number of atoms in the structure,
+    to cover both the binary search and the lookup table used internally.
+    """
     rng = np.random.default_rng(0)
-    indices = rng.integers(0, array.array_length(), SAMPLE_SIZE)
+    indices = rng.integers(0, array.array_length(), sample_size)
     ref_starts = np.array(
         [np.where(mask)[0][0] for mask in struc.get_residue_masks(array, indices)]
     )
@@ -76,17 +80,19 @@ def test_get_residues(array):
     assert len(ids) == struc.get_residue_count(array)
 
 
+@pytest.mark.parametrize("sample_size", [100, 1000])
 @pytest.mark.parametrize("seed", range(10))
-def test_get_residue_positions(array, seed):
+def test_get_residue_positions(array, seed, sample_size):
     """
     The positions returned by :func:`get_residue_positions()` with some ``indices``,
     should be the same as indexing the return value of
     :func:`get_all_residue_positions()` with the given indices.
-    """
-    SIZE = 100
 
+    The two sample sizes are below and above the number of atoms in the structure,
+    to cover both the binary search and the lookup table used internally.
+    """
     rng = np.random.default_rng(seed)
-    indices = rng.integers(0, array.array_length(), size=SIZE)
+    indices = rng.integers(0, array.array_length(), size=sample_size)
 
     all_positions = struc.get_all_residue_positions(array)
     ref_positions = all_positions[indices]
