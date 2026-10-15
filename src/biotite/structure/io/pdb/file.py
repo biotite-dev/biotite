@@ -6,6 +6,7 @@ __all__ = ["PDBFile", "SpaceGroupInfo"]
 import copy
 import itertools
 import warnings
+from collections import defaultdict
 from collections.abc import Iterable
 from os import PathLike
 from typing import IO, Any, Literal, NamedTuple, Self, overload
@@ -16,6 +17,8 @@ from biotite.rust.structure.io.pdb import PDBFile as RustPDBFile
 from biotite.rust.structure.io.pdb import (
     max_hybrid36_number,
 )
+from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
+from biotite.sequence.sequence import Sequence
 from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
 from biotite.structure.bonds import BondList
 from biotite.structure.connect import connect_via_residue_names
@@ -24,7 +27,10 @@ from biotite.structure.filter import (
     filter_solvent,
 )
 from biotite.structure.info.bonds import bonds_in_residue
+from biotite.structure.info.groups import amino_acid_names, nucleotide_names
+from biotite.structure.info.misc import one_letter_code
 from biotite.structure.io.util import number_of_integer_digits
+from biotite.structure.sequence import HETERO_PLACEHOLDER
 from biotite.structure.util import matrix_rotate
 from biotite.typing import XYZ, M, N, NDArray1, NDArray2, NDArray3
 
@@ -34,6 +40,9 @@ _PDB_MAX_RESIDUES = 9999
 # slice objects for readability
 _SPACE = slice(55, 66)
 _Z = slice(66, 70)
+
+_SEQRES_CHAIN_ID = 11
+_SEQRES_RES_NAMES = slice(19, 70)
 
 
 class SpaceGroupInfo(NamedTuple):
@@ -236,6 +245,86 @@ class PDBFile(RustPDBFile):
                         f"Line: {line.strip()} | Error: {e}"
                     )
                 break
+
+    def get_sequence(self) -> dict[str, Sequence]:
+        """
+        Get the protein and nucleotide sequences from the ``SEQRES``
+        records.
+
+        Each chain is classified as peptide or nucleic acid based on
+        whether it mostly contains amino acids or nucleotides.
+        Other polymers, such as saccharides, are skipped.
+        Uracil is converted to thymine.
+
+        Returns
+        -------
+        sequence_dict : Dictionary of Sequences
+            Dictionary keys are the chain IDs parsed from the
+            ``SEQRES`` records.
+            Dictionary values are the corresponding sequences.
+            If the file contains no ``SEQRES`` records, an empty
+            dictionary is returned.
+
+        Notes
+        -----
+        The ``SEQRES`` records comprise the initial complete sequence.
+        If the structure represents a truncated or spliced version of
+        this initial sequence, it will include only a subset of the
+        initial sequence.
+        Use :func:`biotite.structure.to_sequence` to retrieve only the
+        residues that are represented in the structure.
+
+        Examples
+        --------
+        >>> import os.path
+        >>> file = PDBFile.read(os.path.join(path_to_structures, "1l2y.pdb"))
+        >>> sequences = file.get_sequence()
+        >>> print(sequences["A"])
+        NLYIQWLKDGGPSSGRPPPS
+        """
+        # Group the residue names in 'SEQRES' records by chain ID
+        res_names: defaultdict[str, list[str]] = defaultdict(list)
+        for line in self.lines:
+            if line.startswith("SEQRES"):
+                res_names[line[_SEQRES_CHAIN_ID].strip()].extend(
+                    line[_SEQRES_RES_NAMES].split()
+                )
+
+        sequence_dict: dict[str, Sequence] = {}
+        for chain_id, chain_res_names in res_names.items():
+            aa_count = np.count_nonzero(np.isin(chain_res_names, amino_acid_names()))
+            nuc_count = np.count_nonzero(np.isin(chain_res_names, nucleotide_names()))
+            if aa_count == 0 and nuc_count == 0:
+                # The chain is neither a peptide nor a nucleic acid,
+                # e.g. a saccharide
+                continue
+            one_letter_symbols = np.array(
+                [
+                    one_letter_code(res_name) or HETERO_PLACEHOLDER
+                    for res_name in chain_res_names
+                ]
+            )
+            hetero_mask = one_letter_symbols == HETERO_PLACEHOLDER
+            if aa_count > nuc_count:
+                # Chain is a peptide
+                hetero_mask |= ~np.isin(chain_res_names, amino_acid_names())
+                one_letter_symbols[hetero_mask] = "X"
+                # Replace selenocysteine and pyrrolysine
+                one_letter_symbols[one_letter_symbols == "U"] = "C"
+                one_letter_symbols[one_letter_symbols == "O"] = "K"
+                sequence_dict[chain_id] = ProteinSequence("".join(one_letter_symbols))
+            else:
+                # Chain is a nucleic acid
+                hetero_mask |= ~np.isin(chain_res_names, nucleotide_names())
+                one_letter_symbols[hetero_mask] = "N"
+                # Replace uracil
+                one_letter_symbols[one_letter_symbols == "U"] = "T"
+                # Inosine is not part of the nucleotide alphabet
+                one_letter_symbols[one_letter_symbols == "I"] = "N"
+                sequence_dict[chain_id] = NucleotideSequence(
+                    "".join(one_letter_symbols)
+                )
+        return sequence_dict
 
     def list_assemblies(self) -> list[str]:
         """

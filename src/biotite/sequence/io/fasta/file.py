@@ -69,7 +69,10 @@ class FastaFile(TextFile, MutableMapping[str, str]):
 
     @classmethod
     def read(
-        cls, file: PathLike[str] | str | IO[str], chars_per_line: int | None = None
+        cls,
+        file: PathLike[str] | str | IO[str],
+        chars_per_line: int | None = None,
+        allow_duplicates: bool = False,
     ) -> Self:
         """
         Read a FASTA file.
@@ -84,6 +87,14 @@ class FastaFile(TextFile, MutableMapping[str, str]):
             after which a line break is inserted.
             Only relevant, when adding sequences to a file.
             By default each sequence is put into one line.
+        allow_duplicates : bool, optional
+            If set to true, duplicate headers are made unique by
+            appending ``_1``, ``_2``, etc. to the second, third, etc.
+            occurrence, respectively.
+            The header of the first occurrence is kept as it is.
+            By default an exception is raised on duplicate headers, as
+            otherwise all but one entry per duplicate header would be
+            inaccessible via the dictionary interface.
 
         Returns
         -------
@@ -99,7 +110,7 @@ class FastaFile(TextFile, MutableMapping[str, str]):
         ]
         if len(fasta_file.lines) == 0:
             raise InvalidFileError("File is empty or contains only comments")
-        fasta_file._find_entries()
+        fasta_file._find_entries(allow_duplicates=allow_duplicates)
         return fasta_file
 
     def __setitem__(self, header: str, seq_str: str) -> None:
@@ -118,7 +129,7 @@ class FastaFile(TextFile, MutableMapping[str, str]):
             # if existing
             del self[header]
             self.lines += new_lines
-            self._find_entries()
+            self._find_entries(allow_duplicates=False)
         else:
             # Simply append lines
             # Add entry in a more efficient way than '_find_entries()'
@@ -138,7 +149,7 @@ class FastaFile(TextFile, MutableMapping[str, str]):
         start, stop = self._entries[header]
         del self.lines[start:stop]
         del self._entries[header]
-        self._find_entries()
+        self._find_entries(allow_duplicates=False)
 
     def __len__(self) -> int:
         return len(self._entries)
@@ -149,7 +160,7 @@ class FastaFile(TextFile, MutableMapping[str, str]):
     def __contains__(self, identifer: object) -> bool:
         return identifer in self._entries
 
-    def _find_entries(self) -> None:
+    def _find_entries(self, allow_duplicates: bool) -> None:
         if len(self.lines) > 0 and self.lines[0][0] != ">":
             raise InvalidFileError(
                 f"File starts with '{self.lines[0][0]}' instead of '>'"
@@ -161,6 +172,7 @@ class FastaFile(TextFile, MutableMapping[str, str]):
                 header_i.append(i)
 
         self._entries = OrderedDict()
+        next_suffix: dict[str, int] = {}
         for j in range(len(header_i)):
             # Remove leading '>' from header
             header = self.lines[header_i[j]].strip()[1:]
@@ -172,7 +184,26 @@ class FastaFile(TextFile, MutableMapping[str, str]):
             else:
                 # Last header -> entry stops at end of file
                 stop = len(self.lines)
-            self._entries[header] = (start, stop)
+            unique_header, was_deduplicated = self._deduplicate_header(
+                header, next_suffix
+            )
+            if was_deduplicated:
+                if not allow_duplicates:
+                    raise InvalidFileError(f"Duplicate header '{header}'")
+                # Keep the file content consistent with the entry mapping
+                self.lines[start] = ">" + unique_header
+            self._entries[unique_header] = (start, stop)
+
+    def _deduplicate_header(
+        self, header: str, next_suffix: dict[str, int]
+    ) -> tuple[str, bool]:
+        if header not in self._entries:
+            return header, False
+        counter = next_suffix.get(header, 1)
+        while (unique_header := f"{header}_{counter}") in self._entries:
+            counter += 1
+        next_suffix[header] = counter + 1
+        return unique_header, True
 
     @staticmethod
     def read_iter(

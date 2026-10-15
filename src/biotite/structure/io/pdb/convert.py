@@ -7,6 +7,7 @@ __name__ = "biotite.structure.io.pdb"
 __author__ = "Patrick Kunzmann"
 __all__ = [
     "get_model_count",
+    "get_sequence",
     "get_structure",
     "set_structure",
     "list_assemblies",
@@ -16,6 +17,7 @@ __all__ = [
 
 from collections.abc import Iterable
 from typing import Any, Literal, overload
+from biotite.sequence.sequence import Sequence
 from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.io.pdb.file import PDBFile
 from biotite.typing import M, N
@@ -36,6 +38,29 @@ def get_model_count(pdb_file: PDBFile) -> int:
         The number of models.
     """
     return pdb_file.get_model_count()
+
+
+def get_sequence(pdb_file: PDBFile) -> dict[str, Sequence]:
+    """
+    Get the protein and nucleotide sequences from a :class:`PDBFile`.
+
+    This function is a thin wrapper around the :class:`PDBFile` method
+    :func:`get_sequence()` for the sake of consistency with other
+    ``structure.io`` subpackages.
+
+    Parameters
+    ----------
+    pdb_file : PDBFile
+        The file object.
+
+    Returns
+    -------
+    sequence_dict : Dictionary of Sequences
+        Dictionary keys are the chain IDs parsed from the ``SEQRES``
+        records.
+        Dictionary values are the corresponding sequences.
+    """
+    return pdb_file.get_sequence()
 
 
 @overload

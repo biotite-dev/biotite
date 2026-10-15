@@ -115,6 +115,7 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
         file: PathLike[str] | str | IO[str],
         offset: int | FastqFile.Offset,
         chars_per_line: int | None = None,
+        allow_duplicates: bool = False,
     ) -> Self:
         """
         Read a FASTQ file.
@@ -135,6 +136,14 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
             Only relevant, when adding sequences to a file.
             By default each sequence (and score string)
             is put into one line.
+        allow_duplicates : bool, optional
+            If set to true, duplicate identifiers are made unique by
+            appending ``_1``, ``_2``, etc. to the second, third, etc.
+            occurrence, respectively.
+            The identifier of the first occurrence is kept as it is.
+            By default an exception is raised on duplicate identifiers,
+            as otherwise all but one entry per duplicate identifier
+            would be inaccessible via the dictionary interface.
 
         Returns
         -------
@@ -148,7 +157,7 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
         fastq_file.lines = [line for line in fastq_file.lines if len(line) != 0]
         if len(fastq_file.lines) == 0:
             raise InvalidFileError("File is empty")
-        fastq_file._find_entries()
+        fastq_file._find_entries(allow_duplicates)
         return fastq_file
 
     def get_seq_string(self, identifier: str) -> str:
@@ -235,7 +244,7 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
             # if existing
             del self[identifier]
             self.lines += new_lines
-            self._find_entries()
+            self._find_entries(allow_duplicates=False)
         else:
             # Simply append lines
             # Add entry in a more efficient way than '_find_entries()'
@@ -255,7 +264,7 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
         seq_start, seq_stop, score_start, score_stop = self._entries[identifier]
         del self.lines[seq_start - 1 : score_stop]
         del self._entries[identifier]
-        self._find_entries()
+        self._find_entries(allow_duplicates=False)
 
     def __len__(self) -> int:
         return len(self._entries)
@@ -266,8 +275,9 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
     def __contains__(self, identifer: object) -> bool:
         return identifer in self._entries
 
-    def _find_entries(self) -> None:
+    def _find_entries(self, allow_duplicates: bool) -> None:
         self._entries = OrderedDict()
+        next_suffix: dict[str, int] = {}
         in_sequence = False
         # Record if the parser is currently in a quality score section,
         # as the '@' character at the start of a line may also be a
@@ -311,7 +321,17 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
                     score_stop_i = i + 1
                     in_scores = False
                     # Record this entry
-                    self._entries[identifier] = (
+                    unique_identifier, was_deduplicated = self._deduplicate_identifier(
+                        identifier, next_suffix
+                    )
+                    if was_deduplicated:
+                        if not allow_duplicates:
+                            raise InvalidFileError(
+                                f"Duplicate identifier '{identifier}'"
+                            )
+                        # Keep the file content consistent with the entry mapping
+                        self.lines[seq_start_i - 1] = "@" + unique_identifier
+                    self._entries[unique_identifier] = (
                         seq_start_i,
                         seq_stop_i,
                         score_start_i,
@@ -328,6 +348,17 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
         # must have properly ended
         if in_sequence or in_scores:
             raise InvalidFileError("The last entry in the file is incomplete")
+
+    def _deduplicate_identifier(
+        self, identifier: str, next_suffix: dict[str, int]
+    ) -> tuple[str, bool]:
+        if identifier not in self._entries:
+            return identifier, False
+        counter = next_suffix.get(identifier, 1)
+        while (unique_identifier := f"{identifier}_{counter}") in self._entries:
+            counter += 1
+        next_suffix[identifier] = counter + 1
+        return unique_identifier, True
 
     @staticmethod
     def read_iter(

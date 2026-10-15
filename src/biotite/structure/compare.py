@@ -468,6 +468,17 @@ def lddt(
         exclude_same_chain,
         filter_function,
     )
+    # Each pair appears twice
+    # (if i is in threshold distance to j, j is also in threshold distance to i),
+    # so only the pair where i < j needs to be kept
+    # This improves performance due to less distances that need to be computed
+    # The assumption also only works when no atoms are masked
+    unordered = (
+        isinstance(aggregation, str)
+        and aggregation == "all"
+        and atom_mask is None
+        and partner_mask is None
+    )
     if symmetric:
         if not isinstance(subject, AtomArray):
             raise TypeError(
@@ -486,18 +497,10 @@ def lddt(
         contacts = np.concatenate((contacts, subject_contacts), axis=0)
         # Adding additional contacts may introduce duplicates between the existing and
         # new ones -> filter them out
-        contacts = np.unique(contacts, axis=0)
-    if (
-        isinstance(aggregation, str)
-        and aggregation == "all"
-        and atom_mask is None
-        and partner_mask is None
-    ):
-        # Remove duplicate pairs as each pair appears twice
-        # (if i is in threshold distance to j, j is also in threshold distance to i)
-        # keep only the pair where i < j
-        # This improves performance due to less distances that need to be computed
-        # The assumption also only works when no atoms are masked
+        contacts = _unique_contacts(
+            contacts, reference_coord.shape[-2], unordered=unordered
+        )
+    elif unordered:
         contacts = contacts[contacts[:, 0] < contacts[:, 1]]
 
     reference_distances = index_distance(reference_coord, contacts)
@@ -671,6 +674,45 @@ def _find_contacts(
             )
         contacts = contacts[mask, :]
     return contacts
+
+
+def _unique_contacts(
+    contacts: NDArray2[N, C2, np.integer],
+    n_atoms: int,
+    unordered: bool = False,
+) -> NDArray2[M, C2, np.integer]:
+    """
+    Remove duplicate contacts.
+
+    Parameters
+    ----------
+    contacts : ndarray, shape=(n,2), dtype=int
+        The contacts to remove duplicates from.
+    n_atoms : int
+        The number of atoms in the structure the `contacts` point to.
+    unordered : bool, optional
+        If set to true, ``(i,j)`` and ``(j,i)`` are considered the same contact and
+        only the pair with ``i < j`` is kept.
+
+    Returns
+    -------
+    contacts : ndarray, shape=(m,2), dtype=int
+        The unique contacts, sorted in lexicographic order.
+    """
+    if unordered:
+        # Bringing each pair into canonical order already removes half of the
+        # duplicates with a cheap vectorized operation instead of a sort
+        lower = np.min(contacts, axis=-1)
+        upper = np.max(contacts, axis=-1)
+    else:
+        lower = contacts[:, 0]
+        upper = contacts[:, 1]
+    # Encode each pair into a single integer, as finding unique values in a 1D array
+    # is much faster than the lexicographic row sort `np.unique(..., axis=0)` requires
+    keys = np.unique(lower.astype(np.int64) * n_atoms + upper)
+    return np.stack([keys // n_atoms, keys % n_atoms], axis=-1).astype(
+        contacts.dtype, copy=False
+    )
 
 
 def _average_over_indices(
