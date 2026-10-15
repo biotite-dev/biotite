@@ -61,7 +61,7 @@ fasta_file = fasta.FastaFile.read(
 )
 sequences = [seq.ProteinSequence(seq_str) for seq_str in fasta_file.values()]
 matrix = align.SubstitutionMatrix.std_protein_matrix()
-alignment, order, _, _ = align.align_multiple(sequences, matrix)
+alignment, order, _, _ = align.align_multiple(sequences, matrix, gap_penalty=-10)
 # Order alignment according to the guide tree
 alignment = alignment[:, order]
 alignment = alignment[220:300]

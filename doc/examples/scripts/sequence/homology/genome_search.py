@@ -143,8 +143,9 @@ for strand, m1_pos, genome_pos in trigger_matches:
     alignment = align.align_banded(
         m1_sequence,
         genome,
-        matrix,
         band=(diagonal - BAND_WIDTH, diagonal + BAND_WIDTH),
+        matrix=matrix,
+        gap_penalty=-10,
         max_number=1,
     )[0]
     alignments.append((strand, alignment))
@@ -193,7 +194,7 @@ plot_coord = (
 )
 
 codes = align.get_codes(best_alignment)
-m1_no_gap_codes = codes[codes[:, 0] != -1]
+m1_no_gap_codes = codes[:, codes[0] != -1]
 identities = m1_no_gap_codes[0] == m1_no_gap_codes[1]
 
 fig = plt.figure(figsize=(8.0, 8.0))
