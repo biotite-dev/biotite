@@ -23,32 +23,32 @@ from biotite.structure.integrity import check_res_id_continuity
 from biotite.structure.residues import get_residue_starts
 from biotite.typing import XYZ, K, N, NDArray1, NDArray2
 
-_r_helix = (np.deg2rad(89 - 12), np.deg2rad(89 + 12))
-_a_helix = (np.deg2rad(50 - 20), np.deg2rad(50 + 20))
-_d2_helix = ((5.5 - 0.5), (5.5 + 0.5))  # Not used in the algorithm description
-_d3_helix = ((5.3 - 0.5), (5.3 + 0.5))
-_d4_helix = ((6.4 - 0.6), (6.4 + 0.6))
+_R_HELIX = (np.deg2rad(89 - 12), np.deg2rad(89 + 12))
+_A_HELIX = (np.deg2rad(50 - 20), np.deg2rad(50 + 20))
+_D2_HELIX = ((5.5 - 0.5), (5.5 + 0.5))  # Not used in the algorithm description
+_D3_HELIX = ((5.3 - 0.5), (5.3 + 0.5))
+_D4_HELIX = ((6.4 - 0.6), (6.4 + 0.6))
 
-_r_strand = (np.deg2rad(124 - 14), np.deg2rad(124 + 14))
-_a_strand = (np.deg2rad(-180), np.deg2rad(-125), np.deg2rad(145), np.deg2rad(180))
-_d2_strand = ((6.7 - 0.6), (6.7 + 0.6))
-_d3_strand = ((9.9 - 0.9), (9.9 + 0.9))
-_d4_strand = ((12.4 - 1.1), (12.4 + 1.1))
+_R_STRAND = (np.deg2rad(124 - 14), np.deg2rad(124 + 14))
+_A_STRAND = (np.deg2rad(-180), np.deg2rad(-125), np.deg2rad(145), np.deg2rad(180))
+_D2_STRAND = ((6.7 - 0.6), (6.7 + 0.6))
+_D3_STRAND = ((9.9 - 0.9), (9.9 + 0.9))
+_D4_STRAND = ((12.4 - 1.1), (12.4 + 1.1))
 
 # Parameters of the DSSP algorithm, taken from the reference implementation
 # H-bonds are only considered between residues with closer CA atoms
-_dssp_ca_cutoff = 9.0
+_DSSP_CA_CUTOFF = 9.0
 # Electrostatic coupling constant (-332 * 0.42 * 0.2) in kcal/mol*Å
-_dssp_coupling = -27.888
-_dssp_min_distance = 0.5
-_dssp_min_energy = -9.9
-_dssp_max_energy = -0.5
+_DSSP_COUPLING = -27.888
+_DSSP_MIN_DISTANCE = 0.5
+_DSSP_MIN_ENERGY = -9.9
+_DSSP_MAX_ENERGY = -0.5
 # Larger C-N distances between consecutive residues indicate a chain break
-_dssp_peptide_bond_cutoff = 2.5
-_dssp_bend_angle = np.deg2rad(70)
-_dssp_ppii_phi = (np.deg2rad(-75 - 29), np.deg2rad(-75 + 29))
-_dssp_ppii_psi = (np.deg2rad(145 - 29), np.deg2rad(145 + 29))
-_dssp_ppii_length = 3
+_DSSP_PEPTIDE_BOND_CUTOFF = 2.5
+_DSSP_BEND_ANGLE = np.deg2rad(70)
+_DSSP_PPII_PHI = (np.deg2rad(-75 - 29), np.deg2rad(-75 + 29))
+_DSSP_PPII_PSI = (np.deg2rad(145 - 29), np.deg2rad(145 + 29))
+_DSSP_PPII_LENGTH = 3
 
 
 _E = TypeVar("_E", bound=IntEnum)
@@ -449,36 +449,36 @@ def annotate_sse(atom_array: AtomArray[N]) -> NDArray1[K, np.int_]:
     )
 
     # Find CA that meet criteria for potential helices and strands
-    relaxed_helix = ((d3i >= _d3_helix[0]) & (d3i <= _d3_helix[1])) | (
-        (ri >= _r_helix[0]) & (ri <= _r_helix[1])
+    relaxed_helix = ((d3i >= _D3_HELIX[0]) & (d3i <= _D3_HELIX[1])) | (
+        (ri >= _R_HELIX[0]) & (ri <= _R_HELIX[1])
     )
     strict_helix = (
-        (d3i >= _d3_helix[0])
-        & (d3i <= _d3_helix[1])
-        & (d4i >= _d4_helix[0])
-        & (d4i <= _d4_helix[1])
+        (d3i >= _D3_HELIX[0])
+        & (d3i <= _D3_HELIX[1])
+        & (d4i >= _D4_HELIX[0])
+        & (d4i <= _D4_HELIX[1])
     ) | (
-        (ri >= _r_helix[0])
-        & (ri <= _r_helix[1])
-        & (ai >= _a_helix[0])
-        & (ai <= _a_helix[1])
+        (ri >= _R_HELIX[0])
+        & (ri <= _R_HELIX[1])
+        & (ai >= _A_HELIX[0])
+        & (ai <= _A_HELIX[1])
     )
 
-    relaxed_strand = (d3i >= _d3_strand[0]) & (d3i <= _d3_strand[1])
+    relaxed_strand = (d3i >= _D3_STRAND[0]) & (d3i <= _D3_STRAND[1])
     strict_strand = (
-        (d2i >= _d2_strand[0])
-        & (d2i <= _d2_strand[1])
-        & (d3i >= _d3_strand[0])
-        & (d3i <= _d3_strand[1])
-        & (d4i >= _d4_strand[0])
-        & (d4i <= _d4_strand[1])
+        (d2i >= _D2_STRAND[0])
+        & (d2i <= _D2_STRAND[1])
+        & (d3i >= _D3_STRAND[0])
+        & (d3i <= _D3_STRAND[1])
+        & (d4i >= _D4_STRAND[0])
+        & (d4i <= _D4_STRAND[1])
     ) | (
-        (ri >= _r_strand[0])
-        & (ri <= _r_strand[1])
+        (ri >= _R_STRAND[0])
+        & (ri <= _R_STRAND[1])
         & (
             # Account for periodic boundary of dihedral angle
-            ((ai >= _a_strand[0]) & (ai <= _a_strand[1]))
-            | ((ai >= _a_strand[2]) & (ai <= _a_strand[3]))
+            ((ai >= _A_STRAND[0]) & (ai <= _A_STRAND[1]))
+            | ((ai >= _A_STRAND[2]) & (ai <= _A_STRAND[3]))
         )
     )
 
@@ -696,7 +696,7 @@ def annotate_dssp(atom_array: AtomArray[N]) -> NDArray1[K, np.int_]:
     # Consecutive residues with the same segment ID are part of a continuous chain
     chain_id = atom_array.chain_id[residue_starts][is_complete]
     is_break = (chain_id[1:] != chain_id[:-1]) | (
-        distance(c[:-1], n[1:]) > _dssp_peptide_bond_cutoff
+        distance(c[:-1], n[1:]) > _DSSP_PEPTIDE_BOND_CUTOFF
     )
     segment = np.concatenate([[0], np.cumsum(is_break)])
 
@@ -760,7 +760,7 @@ def _find_dssp_hbonds(
     order = np.lexsort((acceptor, energy, donor))
     donor, acceptor, energy = donor[order], acceptor[order], energy[order]
     rank = np.arange(len(donor)) - np.searchsorted(donor, donor)
-    mask = (rank < 2) & (energy < _dssp_max_energy)
+    mask = (rank < 2) & (energy < _DSSP_MAX_ENERGY)
     acceptors = np.full((len(n), 2), -1, dtype=int)
     acceptors[donor[mask], rank[mask]] = acceptor[mask]
     return acceptors  # pyright: ignore[reportReturnType]
@@ -772,9 +772,9 @@ def _get_ca_pairs(ca: NDArray2[N, XYZ, np.floating]) -> NDArray2[Any, Any, np.in
     the DSSP cutoff distance.
     Each pair appears in both orders.
     """
-    cell_list = CellList(ca, _dssp_ca_cutoff)
+    cell_list = CellList(ca, _DSSP_CA_CUTOFF)
     pairs = cell_list.get_atoms(
-        ca, _dssp_ca_cutoff, result_format=CellList.Result.PAIRS
+        ca, _DSSP_CA_CUTOFF, result_format=CellList.Result.PAIRS
     )
     return pairs[pairs[:, 0] != pairs[:, 1]]
 
@@ -794,10 +794,10 @@ def _hbond_energy(
     ).astype(np.float64)
     with np.errstate(divide="ignore", invalid="ignore"):
         d_ho, d_hc, d_nc, d_no = distances
-        energy = _dssp_coupling * (1 / d_ho - 1 / d_hc + 1 / d_nc - 1 / d_no)
-    energy[(distances < _dssp_min_distance).any(axis=0)] = _dssp_min_energy
+        energy = _DSSP_COUPLING * (1 / d_ho - 1 / d_hc + 1 / d_nc - 1 / d_no)
+    energy[(distances < _DSSP_MIN_DISTANCE).any(axis=0)] = _DSSP_MIN_ENERGY
     # Rounding is part of the reference implementation
-    return np.maximum(np.round(energy, 3), _dssp_min_energy)
+    return np.maximum(np.round(energy, 3), _DSSP_MIN_ENERGY)
 
 
 def _assign_dssp_elements(
@@ -854,7 +854,7 @@ def _assign_dssp_elements(
     i = np.arange(2, length - 2)
     bend_angle[i] = np.pi - angle(ca[i - 2], ca[i], ca[i + 2])
     bend_angle[i[segment[i - 2] != segment[i + 2]]] = np.nan
-    sse[(bend_angle > _dssp_bend_angle) & (sse == DsspElement.COIL)] = DsspElement.BEND
+    sse[(bend_angle > _DSSP_BEND_ANGLE) & (sse == DsspElement.COIL)] = DsspElement.BEND
 
     # Polyproline II helices are defined by consecutive residues with
     # characteristic backbone dihedral angles
@@ -866,12 +866,12 @@ def _assign_dssp_elements(
     phi[1:][~is_continuous] = np.nan
     psi[:-1][~is_continuous] = np.nan
     is_ppii = (
-        (phi >= _dssp_ppii_phi[0])
-        & (phi <= _dssp_ppii_phi[1])
-        & (psi >= _dssp_ppii_psi[0])
-        & (psi <= _dssp_ppii_psi[1])
+        (phi >= _DSSP_PPII_PHI[0])
+        & (phi <= _DSSP_PPII_PHI[1])
+        & (psi >= _DSSP_PPII_PSI[0])
+        & (psi <= _DSSP_PPII_PSI[1])
     )
-    window = range(_dssp_ppii_length)
+    window = range(_DSSP_PPII_LENGTH)
     starts = _shift(is_ppii, [-k for k in window]).all(axis=0)
     ppii_mask = _shift(starts, window).any(axis=0)  # pyright: ignore[reportArgumentType]
     sse[ppii_mask & (sse == DsspElement.COIL)] = DsspElement.POLYPROLINE_HELIX
