@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import itertools
 import warnings
 import numpy as np
@@ -128,7 +124,7 @@ def test_space_group_transforms(space_group, rotations, translations):
         [
             (
                 tuple(transform.rotation[0].flatten().tolist()),
-                tuple(transform.target_translation[0].tolist()),
+                tuple(transform.translation[0].tolist()),
             )
             for transform in struc.space_group_transforms(space_group)
         ]

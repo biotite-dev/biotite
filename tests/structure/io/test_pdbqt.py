@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import warnings
 from tempfile import TemporaryFile
 import numpy as np
@@ -24,7 +20,11 @@ from tests.util import data_dir
 )
 def test_array_conversion(path):
     pdbx_file = pdbx.BinaryCIFFile.read(path)
-    ref_structure = pdbx.get_structure(pdbx_file, model=1, extra_fields=["charge"])
+    # The PDBQT format only supports single character chain IDs,
+    # as given in the author fields
+    ref_structure = pdbx.get_structure(
+        pdbx_file, model=1, extra_fields=["charge"], use_author_fields=True
+    )
     ref_structure.bonds = struc.connect_via_residue_names(ref_structure)
 
     pdbqt_file = pdbqt.PDBQTFile()

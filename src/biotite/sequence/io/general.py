@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 This module contains a convenience function for loading sequences from
 general sequence files.
@@ -52,7 +48,7 @@ def load_sequence(file_path: PathLike[str] | str) -> Sequence:
 
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
-        file = FastqFile.read(file_path, offset="Sanger")
+        file = FastqFile.read(file_path, offset=FastqFile.Offset.SANGER)
         # Get first sequence
         try:
             seq_str, _ = next(iter(file.values()))
@@ -98,16 +94,21 @@ def save_sequence(file_path: PathLike[str] | str, sequence: Sequence) -> None:
 
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
-        file = FastqFile(offset="Sanger")
+        file = FastqFile(offset=FastqFile.Offset.SANGER)
         # Scores are set to 0 since no score information is supplied
         scores = np.zeros(len(sequence))
         file["sequence"] = str(sequence), scores
         file.write(file_path)
     elif suffix in [".gb", ".gbk", ".gp"]:
-        from biotite.sequence.io.genbank import GenBankFile, set_locus, set_sequence
+        from biotite.sequence.io.genbank import (
+            GenBankFile,
+            GenBankLocus,
+            set_locus,
+            set_sequence,
+        )
 
         file = GenBankFile()
-        set_locus(file, "sequence", len(sequence))
+        set_locus(file, GenBankLocus("sequence", len(sequence)))
         if not isinstance(sequence, (NucleotideSequence, ProteinSequence)):
             raise TypeError(
                 "GenBank files require a NucleotideSequence or ProteinSequence"
@@ -150,7 +151,7 @@ def load_sequences(file_path: PathLike[str] | str) -> dict[str, Sequence]:
 
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
-        file = FastqFile.read(file_path, offset="Sanger")
+        file = FastqFile.read(file_path, offset=FastqFile.Offset.SANGER)
         return {
             identifier: NucleotideSequence(seq_str)
             for identifier, (seq_str, scores) in file.items()
@@ -199,7 +200,7 @@ def save_sequences(
 
         # Quality scores are irrelevant for this function
         # -> Offset is irrelevant
-        file = FastqFile(offset="Sanger")
+        file = FastqFile(offset=FastqFile.Offset.SANGER)
         for identifier, sequence in sequences.items():
             # Scores are set to 0 since no score information is supplied
             scores = np.zeros(len(sequence))

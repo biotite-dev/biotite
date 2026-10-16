@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import warnings
 from io import BytesIO
 import msgpack
@@ -15,6 +11,23 @@ import biotite.structure.io.pdbx as pdbx
 from biotite.structure.io.pdbx.bcif import _encode_numpy as encode_numpy
 from biotite.structure.io.pdbx.compress import _get_decimal_places as get_decimal_places
 from tests.util import data_dir
+
+ESCAPE_STRINGS = [
+    "",
+    " ",
+    "  ",
+    "te  xt",
+    "text",
+    "_text",
+    "'",
+    '"',
+    "te'xt",
+    'te"xt',
+    "te\nxt",
+    "\t",
+    """single"anddouble"marks""",
+    """single' and double" marks with whitespace""",
+]
 
 
 @pytest.mark.parametrize("format", ["cif", "bcif"])
@@ -33,21 +46,7 @@ def test_get_model_count(format):
     assert test_model_count == ref_model_count
 
 
-@pytest.mark.parametrize(
-    "string",
-    [
-        "",
-        " ",
-        "  ",
-        "te  xt",
-        "'",
-        '"',
-        "te\nxt",
-        "\t",
-        """single"anddouble"marks""",
-        """single' and double" marks with whitespace""",
-    ],
-)
+@pytest.mark.parametrize("string", ESCAPE_STRINGS)
 @pytest.mark.parametrize("looped", [False, True])
 def test_escape(string, looped):
     """
@@ -65,6 +64,29 @@ def test_escape(string, looped):
         test_value = test_category["test_col"].as_item()
 
     assert test_value == ref_value
+
+
+@pytest.mark.parametrize("looped", [False, True])
+def test_escape_mixed(looped):
+    """
+    Test escaping a category with mixed values, so that each value needs
+    a different type of escaping.
+    The values must be restored after deserialization.
+    """
+    if looped:
+        ref_category = pdbx.CIFCategory({"test_col": ESCAPE_STRINGS}, "test_cat")
+    else:
+        ref_category = pdbx.CIFCategory(
+            {f"col_{i}": string for i, string in enumerate(ESCAPE_STRINGS)},
+            "test_cat",
+        )
+
+    test_category = pdbx.CIFCategory.deserialize(ref_category.serialize())
+    if looped:
+        test_values = test_category["test_col"].as_array(str).tolist()
+    else:
+        test_values = [column.as_item() for column in test_category.values()]
+    assert test_values == ESCAPE_STRINGS
 
 
 @pytest.mark.parametrize(
@@ -95,7 +117,7 @@ def test_conversion(tmp_path, format, path, model):
     Test serializing and deserializing a structure from a file
     restores the same structure.
     """
-    DELETED_ANNOTATION = "auth_comp_id"
+    DELETED_ANNOTATION = "label_comp_id"
 
     if format == "cif":
         data_path = path.with_suffix(".cif")
@@ -649,7 +671,10 @@ def test_unit_cell_pdb_consistency(pdb_path):
     pdbx_file = pdbx.BinaryCIFFile.read(pdb_path.with_suffix(".bcif"))
     # The reference transformations do not center the copies,
     # so we do not do this here either
-    test_unit_cell = pdbx.get_unit_cell(pdbx_file, model=1, center=False)
+    # The PDB format only supports author fields
+    test_unit_cell = pdbx.get_unit_cell(
+        pdbx_file, model=1, center=False, use_author_fields=True
+    )
 
     for category in ref_unit_cell.get_annotation_categories():
         assert (
@@ -713,14 +738,16 @@ def test_get_sequence(format):
     sequences_1 = pdbx.get_sequence(pdbx_file)
     pdbx_file = File.read(data_dir("structure") / "pdb" / f"4gxy.{format}")
     sequences_2 = pdbx.get_sequence(pdbx_file)
-    assert str(sequences_1["T"]) == "CCGACGGCGCATCAGC"
-    assert type(sequences_1["T"]) is seq.NucleotideSequence
-    assert str(sequences_1["P"]) == "GCTGATGCGCC"
-    assert type(sequences_1["P"]) is seq.NucleotideSequence
-    assert str(sequences_1["D"]) == "GTCGG"
-    assert type(sequences_1["D"]) is seq.NucleotideSequence
+    # The keys are the 'label_asym_id' values,
+    # e.g. the author chain 'T' is the label chain 'A'
+    assert str(sequences_1["A"]) == "CCGACGGCGCATCAGC"
+    assert type(sequences_1["A"]) is seq.NucleotideSequence
+    assert str(sequences_1["B"]) == "GCTGATGCGCC"
+    assert type(sequences_1["B"]) is seq.NucleotideSequence
+    assert str(sequences_1["C"]) == "GTCGG"
+    assert type(sequences_1["C"]) is seq.NucleotideSequence
     assert (
-        str(sequences_1["A"]) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
+        str(sequences_1["D"]) == "MSKRKAPQETLNGGITDMLTELANFEKNVSQAIHKYN"
         "AYRKAASVIAKYPHKIKSGAEAKKLPGVGTKIAEKIDEFLATGKLRKLEKIRQD"
         "DTSSSINFLTRVSGIGPSAARKFVDEGIKTLEDLRKNEDKLNHHQRIGLKYFGD"
         "FEKRIPREEMLQMQDIVLNEVKKVDSEYIATVCGSFRRGAESSGDMDVLLTHPS"
@@ -728,7 +755,7 @@ def test_get_sequence(format):
         "RIDIRLIPKDQYYCGVLYFTGSDIFNKNMRAHALEKGFTINEYTIRPLGVTGVA"
         "GEPLPVDSEKDIFDYIQWKYREPKDRSE"
     )
-    assert type(sequences_1["A"]) is seq.ProteinSequence
+    assert type(sequences_1["D"]) is seq.ProteinSequence
     assert (
         str(sequences_2["A"]) == "GGCGGCAGGTGCTCCCGACCCTGCGGTCGGGAGTTAA"
         "AAGGGAAGCCGGTGCAAGTCCGGCACGGTCCCGCCACTGTGACGGGGAGTCGCC"
@@ -761,12 +788,12 @@ def test_get_sse():
         (51, 53),
     ]
 
-    ref_sse = np.full(TOTAL_LENGTH, "c", dtype="U1")
+    ref_sse = np.full(TOTAL_LENGTH, struc.PSeaElement.COIL, dtype=int)
     for helix_range in HELIX_RANGES:
         # Conver to zero-based indexing
-        ref_sse[helix_range[0] - 1 : helix_range[1]] = "a"
+        ref_sse[helix_range[0] - 1 : helix_range[1]] = struc.PSeaElement.HELIX
     for sheet_range in SHEET_RANGES:
-        ref_sse[sheet_range[0] - 1 : sheet_range[1]] = "b"
+        ref_sse[sheet_range[0] - 1 : sheet_range[1]] = struc.PSeaElement.STRAND
 
     pdbx_file = pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1aki.bcif")
     test_sse = pdbx.get_sse(pdbx_file)["A"]

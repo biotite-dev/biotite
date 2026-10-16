@@ -160,6 +160,7 @@ fn align_region_dtype<'py, S: Symbol + numpy::Element>(
     let result = match scoring {
         Scoring::Matrix(scheme) => by_penalty!(scheme),
         Scoring::Match(scheme) => by_penalty!(scheme),
+        Scoring::NeutralMatch(scheme) => by_penalty!(scheme),
     };
     let (traces, score) =
         result.map_err(|_| PyMemoryError::new_err("Maximum table size exceeded"))?;

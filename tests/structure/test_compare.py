@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import numpy as np
 import pytest
 import biotite.structure as struc
@@ -50,7 +46,7 @@ def superimposed_models(models):
     Models superimposed on the first model
     """
     bb_mask = struc.filter_peptide_backbone(models[0])
-    supimp, _ = struc.superimpose(models[0], models, atom_mask=bb_mask)
+    supimp = struc.superimpose(models[0], models, atom_mask=bb_mask).apply(models)
     return models, supimp
 
 

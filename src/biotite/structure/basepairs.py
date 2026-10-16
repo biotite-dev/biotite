@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 This module provides functions for base pair identification.
 """
@@ -948,7 +944,7 @@ def base_pairs(
         to_remove = []
 
         # Get all bases that have non-unique pairing interactions
-        base_indices, occurrences = np.unique(basepairs, return_counts=True)
+        base_indices, occurrences = np.unique_counts(basepairs)
         for base_index, occurrence in zip(base_indices, occurrences):
             if occurrence > 1:
                 # Write the non-unique base pairs to a dictionary as
@@ -1221,7 +1217,7 @@ def _match_base(
     nucleotide_matched = nucleotide_matched[standardize_order(nucleotide_matched)]
 
     # Match the selected std_base to the base.
-    _, transformation = superimpose(nucleotide_matched, std_base_matched)
+    transformation = superimpose(nucleotide_matched, std_base_matched)
     vectors = transformation.apply(vectors)
     # Normalize the base-normal-vector
     vectors[1, :] = vectors[1, :] - vectors[0, :]
@@ -1348,7 +1344,7 @@ def map_nucleotide(
             continue
 
         # Superimpose the nucleotide to the reference base
-        fitted, _ = superimpose(ref_base_matched, nuc)
+        fitted = superimpose(ref_base_matched, nuc).apply(nuc)
 
         # If the RMSD is lower than the specified cutoff or better than
         # a previous found reference, the current reference is selected

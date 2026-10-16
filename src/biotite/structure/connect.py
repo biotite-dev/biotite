@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 from __future__ import annotations
 
 __name__ = "biotite.structure"
@@ -39,6 +35,7 @@ from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.bonds import BondList, BondType
 from biotite.structure.error import BadStructureError, InconsistentBondTypeWarning
 from biotite.typing import K, N, NDArray1
+from biotite.util import map_unique
 
 # Covalent radii (in Å) taken from Cordero et al.
 # For carbon the sp3 radius is used, for manganese, iron and cobalt the low-spin radius
@@ -144,7 +141,6 @@ _COVALENT_RADII = {
 
 def connect_via_distances(
     atoms: AtomArray[N],
-    distance_range: Mapping[tuple[str, str], tuple[float, float]] | None = None,
     tolerance: float = 0.4,
     inter_residue: bool = True,
     default_bond_type: BondType = BondType.ANY,
@@ -164,9 +160,6 @@ def connect_via_distances(
     ----------
     atoms : AtomArray
         The structure to create the :class:`BondList` for.
-    distance_range : dict of tuple(str, str) -> tuple(float, float), optional
-        Deprecated, has no effect anymore:
-        The distance range is now computed from the covalent radii and `tolerance`.
     tolerance : float, optional
         The tolerance added to the sum of the covalent radii of two atoms to obtain the
         maximum bond distance.
@@ -226,12 +219,6 @@ def connect_via_distances(
     from biotite.structure.atoms import AtomArray
     from biotite.structure.residues import get_residue_starts
 
-    if distance_range is not None:
-        warnings.warn(
-            "'distance_range' is deprecated and has no effect anymore, "
-            "use 'tolerance' to adjust the maximum bond distance",
-            DeprecationWarning,
-        )
     if not isinstance(atoms, AtomArray):
         raise TypeError(f"Expected 'AtomArray', not '{type(atoms).__name__}'")
     if periodic:
@@ -240,10 +227,9 @@ def connect_via_distances(
 
     # NaN for unknown elements ensures that they never form bonds,
     # as any comparison with NaN is false
-    radii = np.array(
-        [_COVALENT_RADII.get(element.upper(), np.nan) for element in atoms.element],
-        dtype=np.float32,
-    )
+    radii = map_unique(
+        lambda element: _COVALENT_RADII.get(element.upper(), np.nan), atoms.element
+    ).astype(np.float32)
 
     residue_starts = get_residue_starts(atoms, add_exclusive_stop=True)
 
@@ -559,7 +545,7 @@ def infer_bond_types(
     else:
         known_charges = None
     bond_list, charges, converged = rust_infer_bond_types(
-        [element.upper() for element in atoms.element],
+        atoms.element.tolist(),
         atoms.bonds,
         total_charge,
         known_charges,
@@ -668,9 +654,7 @@ def _connect_inter_residue(
     # Avoid circular import
     from biotite.structure.info.misc import link_type
 
-    link_types = [
-        link_type(res_name) for res_name in atoms.res_name[residue_starts[:-1]]
-    ]
+    link_types = map_unique(link_type, atoms.res_name[residue_starts[:-1]]).tolist()
     is_disconnected = (
         # Residues are not inside the same chain
         (atoms.chain_id[residue_starts[1:-1]] != atoms.chain_id[residue_starts[:-2]])

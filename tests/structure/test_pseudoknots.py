@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import json
 import numpy as np
 import pytest
@@ -16,7 +12,10 @@ def nuc_sample_array():
     Sample structure for pseudoknot detection.
     """
     return pdbx.get_structure(
-        pdbx.CIFFile.read(data_dir("structure") / "pdb" / "4p5j.cif"), model=1
+        pdbx.CIFFile.read(data_dir("structure") / "pdb" / "4p5j.cif"),
+        model=1,
+        # The expected values refer to the author fields
+        use_author_fields=True,
     )
 
 

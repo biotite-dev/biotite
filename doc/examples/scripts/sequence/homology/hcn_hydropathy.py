@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Patch
 import biotite
-import biotite.application_v2.mafft as mafft
+import biotite.application.mafft as mafft
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align
@@ -211,12 +211,17 @@ def hydropathy_to_color(hydropathy, colormap):
 
 # Create a color scheme highlighting the hydropathy
 colormap = plt.get_cmap("coolwarm")
-colorscheme = [
-    hydropathy_to_color(hydropathy_dict[symbol], colormap)
-    if symbol in hydropathy_dict
-    else None
-    for symbol in sequences[0].get_alphabet()
-]
+alphabet = sequences[0].get_alphabet()
+colorscheme = graphics.ColorScheme(
+    "hydropathy",
+    alphabet,
+    [
+        hydropathy_to_color(hydropathy_dict[symbol], colormap)
+        if symbol in hydropathy_dict
+        else None
+        for symbol in alphabet
+    ],
+)
 
 # Show only the first 600 alignment columns for the sake of brevity
 # This part contains all transmembrane helices

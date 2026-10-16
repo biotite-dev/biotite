@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 This module provides functions related to aromatic rings.
 """
@@ -192,8 +188,8 @@ def find_stacking_interactions(
     ...         dna_helix.res_id[ring_atom_indices_2[0]],
     ...         PiStacking(stacking_type).name
     ...     )
-    17 18 PARALLEL
-    17 18 PARALLEL
+    5 6 PARALLEL
+    5 6 PARALLEL
     5 6 PARALLEL
     5 6 PARALLEL
     5 6 PARALLEL

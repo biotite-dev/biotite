@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 This subpackage provides an interface to the `RDKit <https://www.rdkit.org/>`_
 cheminformatics package.

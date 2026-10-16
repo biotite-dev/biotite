@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import json
 import numpy as np
 import pytest
@@ -29,7 +25,10 @@ def reversed_iterator(iter):
 @pytest.fixture
 def nuc_sample_array():
     return pdbx.get_structure(
-        pdbx.CIFFile.read(data_dir("structure") / "base_pairs" / "1qxb.cif"), model=1
+        pdbx.CIFFile.read(data_dir("structure") / "base_pairs" / "1qxb.cif"),
+        model=1,
+        # The expected values refer to the author fields
+        use_author_fields=True,
     )
 
 
@@ -208,6 +207,8 @@ def get_reference(pdb_id, suffix):
     structure = pdbx.get_structure(
         pdbx.CIFFile.read(data_dir("structure") / "base_pairs" / f"{pdb_id}.cif"),
         model=1,
+        # The expected values refer to the author fields
+        use_author_fields=True,
     )
 
     with open(
@@ -314,7 +315,10 @@ def test_base_stacking():
     """
     # Load the test structure (1BNA) - a DNA-double-helix
     helix = pdbx.get_structure(
-        pdbx.CIFFile.read(data_dir("structure") / "base_pairs" / "1bna.cif"), model=1
+        pdbx.CIFFile.read(data_dir("structure") / "base_pairs" / "1bna.cif"),
+        model=1,
+        # The expected values refer to the author fields
+        use_author_fields=True,
     )
 
     residue_starts = struc.get_residue_starts(helix)

@@ -29,9 +29,9 @@ print(matrix)
 
 # Matrix should not contain ambiguous symbols or stop signal
 matrix = align.SubstitutionMatrix(
-    seq.Alphabet(matrix.get_alphabet1().get_symbols()[:-4]),
-    seq.Alphabet(matrix.get_alphabet2().get_symbols()[:-4]),
-    matrix.score_matrix()[:-4, :-4],
+    seq.Alphabet(matrix.get_alphabet1().get_symbols()[:20]),
+    seq.Alphabet(matrix.get_alphabet2().get_symbols()[:20]),
+    matrix.score_matrix()[:20, :20],
 )
 similarities = matrix.score_matrix()
 print(matrix)

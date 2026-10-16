@@ -1722,8 +1722,8 @@ impl KmerTable {
     /// >>> kmer_codes = [kmer_alphabet.create_kmers(s.code) for s in sequences]
     /// >>> for code in kmer_codes:
     /// ...     print(code)
-    /// [11701  4360  7879  9400  4419]
-    /// [ 6517  4364  7975 11704  4419]
+    /// [12688  4716  8532 10191  4778]
+    /// [ 7063  4720  8632 12691  4778]
     /// >>> table = KmerTable.from_kmers(
     /// ...     kmer_alphabet, kmer_codes
     /// ... )
@@ -1922,7 +1922,7 @@ impl KmerTable {
     /// BIQ: (100, 0)
     /// >>> data = {kmer: table[kmer] for kmer in table}
     /// >>> print(data)
-    /// {4360: array([[100,   1]], dtype=uint32), 4419: array([[100,   4]], dtype=uint32), 7879: array([[100,   2]], dtype=uint32), 9400: array([[100,   3]], dtype=uint32), 11701: array([[100,   0]], dtype=uint32)}
+    /// {4716: array([[100,   1]], dtype=uint32), 4778: array([[100,   4]], dtype=uint32), 8532: array([[100,   2]], dtype=uint32), 10191: array([[100,   3]], dtype=uint32), 12688: array([[100,   0]], dtype=uint32)}
     /// >>> restored_table = KmerTable.from_positions(table.kmer_alphabet, data)
     /// >>> print(restored_table)
     /// IQT: (100, 1)

@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 from __future__ import annotations
 
 __name__ = "biotite.structure.info"
@@ -11,6 +7,7 @@ __all__ = ["atomic_number"]
 import numpy as np
 from biotite.structure.atoms import AtomArray
 from biotite.typing import N, NDArray1
+from biotite.util import map_unique
 
 # fmt: off
 _ATOMIC_NUMBERS = {
@@ -69,10 +66,6 @@ def atomic_number(
         elements = atoms.element
     else:
         elements = atoms
-    # Look up each element only once instead of each atom
-    unique_elements, inverse = np.unique(elements, return_inverse=True)
-    unique_numbers = np.array(
-        [_ATOMIC_NUMBERS.get(element.upper(), 0) for element in unique_elements],
-        dtype=np.uint8,
-    )
-    return unique_numbers[inverse]
+    return map_unique(
+        lambda element: _ATOMIC_NUMBERS.get(element.upper(), 0), elements
+    ).astype(np.uint8)

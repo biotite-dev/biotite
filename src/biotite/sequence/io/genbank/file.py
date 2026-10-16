@@ -1,26 +1,44 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 from __future__ import annotations
 
 __name__ = "biotite.sequence.io.genbank"
 __author__ = "Patrick Kunzmann"
-__all__ = ["GenBankFile", "MultiFile"]
+__all__ = ["GenBankFile", "GenBankRecord", "MultiFile"]
 
-# import textwrap
 import copy
-
-# import re
 import io
-from collections import OrderedDict
 from collections.abc import Iterator
+from dataclasses import dataclass, field
 from os import PathLike
 from typing import IO, Self
 from biotite.file import InvalidFileError, TextFile
 
-# from ...annotation import Location, Feature, Annotation, AnnotatedSequence
-# from ...seqtypes import NucleotideSequence, ProteinSequence
+
+@dataclass
+class GenBankRecord:
+    """
+    A field of a GenBank file, comprising the field name, the content
+    lines and the optional subfields.
+
+    Attributes
+    ----------
+    name : str
+        The field name, e.g. ``'DEFINITION'``.
+    content : list of str
+        The content lines of the field.
+        While the content of metadata fields starts at the standard
+        GenBank indentation of 12, the content of the *FEATURES*
+        (contains the annotation) and *ORIGIN* (contains the sequence)
+        fields starts without indentation.
+    subfields : dict of str -> list of str, optional
+        The subfields of the field.
+        The dictionary maps subfield names to the content lines of
+        the respective subfield.
+        The *FEATURES* and *ORIGIN* fields have no subfields.
+    """
+
+    name: str
+    content: list[str]
+    subfields: dict[str, list[str]] = field(default_factory=dict)
 
 
 class GenBankFile(TextFile):
@@ -43,17 +61,9 @@ class GenBankFile(TextFile):
 
     This class provides a low-level interface for parsing, editing and
     writing GenBank files.
-    It works like a list of field entries, where a field consists of the
-    field name, the field content and the subfields.
-    The field content is separated into the lines belonging to the
-    content.
-    While the content of metadata fields starts at the standard
-    GenBank indentation of 12, the content of the *FEATURES*
-    (contains the annotation) and *ORIGIN* (contains the sequence)
-    fields starts without indentation.
-    The subfields are represented by a dictionary, with subfield names
-    being keys and the corresponding lines being values.
-    The *FEATURES* and *ORIGIN* fields have no subfields.
+    It works like a list of :class:`GenBankRecord` entries, where each
+    record represents a field consisting of the field name, the field
+    content and the subfields.
 
     Every entry can be obtained, set and deleted via the index operator.
 
@@ -68,10 +78,10 @@ class GenBankFile(TextFile):
     Create a GenBank file from scratch:
 
     >>> file = GenBankFile()
-    >>> file.append(
+    >>> file.append(GenBankRecord(
     ...     "SOMEFIELD", ["One line", "A second line"],
     ...     subfields={"SUBFIELD1": ["Single Line"], "SUBFIELD2": ["Two", "lines"]}
-    ... )
+    ... ))
     >>> print(file)
     SOMEFIELD   One line
                 A second line
@@ -79,17 +89,17 @@ class GenBankFile(TextFile):
       SUBFIELD2 Two
                 lines
     //
-    >>> name, content, subfields = file[0]
-    >>> print(name)
+    >>> record = file[0]
+    >>> print(record.name)
     SOMEFIELD
-    >>> print(content)
+    >>> print(record.content)
     ['One line', 'A second line']
-    >>> print(subfields)
-    OrderedDict({'SUBFIELD1': ['Single Line'], 'SUBFIELD2': ['Two', 'lines']})
+    >>> print(record.subfields)
+    {'SUBFIELD1': ['Single Line'], 'SUBFIELD2': ['Two', 'lines']}
 
     Adding an additional field:
 
-    >>> file.insert(0, "OTHERFIELD", ["Another line"])
+    >>> file.insert(0, GenBankRecord("OTHERFIELD", ["Another line"]))
     >>> print(len(file))
     2
     >>> print(file)
@@ -103,12 +113,14 @@ class GenBankFile(TextFile):
 
     Overwriting and deleting an existing field:
 
-    >>> file[1] = "NEWFIELD", ["Yet another line"]
+    >>> file[1] = GenBankRecord("NEWFIELD", ["Yet another line"])
     >>> print(file)
     OTHERFIELD  Another line
     NEWFIELD    Yet another line
     //
-    >>> file[1] = "NEWFIELD", ["Yet another line"], {"NEWSUB": ["Subfield line"]}
+    >>> file[1] = GenBankRecord(
+    ...     "NEWFIELD", ["Yet another line"], {"NEWSUB": ["Subfield line"]}
+    ... )
     >>> print(file)
     OTHERFIELD  Another line
     NEWFIELD    Yet another line
@@ -159,17 +171,17 @@ class GenBankFile(TextFile):
                          /organism="Gallus gallus"
                          /mol_type="genomic DNA"
     ...
-    >>> name, content, _ = file[3]
-    >>> print(name)
+    >>> record = file[3]
+    >>> print(record.name)
     VERSION
-    >>> print(content)
+    >>> print(record.content)
     ['AJ311647.1  GI:13397825']
-    >>> name, content, subfields = file[5]
-    >>> print(name)
+    >>> record = file[5]
+    >>> print(record.name)
     SOURCE
-    >>> print(content)
+    >>> print(record.content)
     ['Gallus gallus (chicken)']
-    >>> print(dict(subfields))
+    >>> print(record.subfields)
     {'ORGANISM': ['Gallus gallus', 'Eukaryota; Metazoa; Chordata; ...', ...]}
     """
 
@@ -202,9 +214,7 @@ class GenBankFile(TextFile):
         gb_file._find_field_indices()
         return gb_file
 
-    def get_fields(
-        self, name: str
-    ) -> list[tuple[list[str], OrderedDict[str, list[str]]]]:
+    def get_fields(self, name: str) -> list[GenBankRecord]:
         """
         Get all *GenBank* fields associated with a given field name.
 
@@ -215,18 +225,13 @@ class GenBankFile(TextFile):
 
         Returns
         -------
-        fields : list of (list of str, OrderedDict of str -> list of str)
+        fields : list of GenBankRecord
             A list containing the fields.
             For most field names, the list will only contain one
             element, but fields like *REFERENCE* are an exception.
-            Each field is represented by a tuple.
-            Each tuple contains as first element the content lines and
-            as second element the subfields as dictionary.
-            If the field has no subfields, the dictionary is empty.
         """
         indices = self.get_indices(name)
-        # Omit the field name
-        return [self[i][1:] for i in indices]
+        return [self[i] for i in indices]
 
     def get_indices(self, name: str) -> list[int]:
         """
@@ -252,12 +257,7 @@ class GenBankFile(TextFile):
                 indices.append(i)
         return indices
 
-    def set_field(
-        self,
-        name: str,
-        content: list[str],
-        subfield_dict: dict[str, list[str]] | None = None,
-    ) -> None:
+    def set_field(self, record: GenBankRecord) -> None:
         """
         Set a *GenBank* field with the given content.
 
@@ -267,14 +267,8 @@ class GenBankFile(TextFile):
 
         Parameters
         ----------
-        name : str
-            The field name.
-        content : list of str
-            The content lines.
-        subfield_dict : dict of str -> list of str, optional
-            The subfields of the field.
-            The dictionary maps subfield names to the content lines of
-            the respective subfield.
+        record : GenBankRecord
+            The field to set.
 
         Raises
         ------
@@ -282,21 +276,19 @@ class GenBankFile(TextFile):
             If the field occurs multiple times in the file.
             In this case it is ambiguous which field to overwrite.
         """
-        name = name.upper()
+        name = record.name.upper()
         indices = self.get_indices(name)
         if len(indices) > 1:
             raise InvalidFileError(f"File contains multiple '{name}' fields")
         elif len(indices) == 1:
             # Replace existing entry
             index = indices[0]
-            self[index] = name, content, subfield_dict
+            self[index] = record
         else:
             # Add new entry as no entry exists yet
-            self.append(name, content, subfield_dict)
+            self.append(record)
 
-    def __getitem__(
-        self, index: int
-    ) -> tuple[str, list[str], OrderedDict[str, list[str]]]:
+    def __getitem__(self, index: int) -> GenBankRecord:
         index = self._translate_idx(index)
         start, stop, name = self._field_pos[index]
 
@@ -304,16 +296,16 @@ class GenBankFile(TextFile):
             # For those two fields return the complete lines,
             # beginning with the line after the field name
             content = self._get_field_content(start + 1, stop, indent=0)
-            subfield_dict = OrderedDict()
+            subfield_dict: dict[str, list[str]] = {}
 
         else:
             # For all metadata fields use the
             # standard GenBank indentation (=12)
             # Find subfields
-            subfield_dict = OrderedDict()
+            subfield_dict = {}
             subfield_start = None
             first_subfield_start = None
-            header = None
+            header = ""
             for i in range(start + 1, stop):
                 line = self.lines[i]
                 if len(line) != 0 and line[:12].strip() != "":
@@ -338,29 +330,11 @@ class GenBankFile(TextFile):
                 stop = first_subfield_start
             content = self._get_field_content(start, stop, indent=12)
 
-        return name, content, subfield_dict
+        return GenBankRecord(name, content, subfield_dict)
 
-    def __setitem__(
-        self,
-        index: int,
-        item: tuple[str, list[str]]
-        | tuple[str, list[str], dict[str, list[str]] | None],
-    ) -> None:
+    def __setitem__(self, index: int, record: GenBankRecord) -> None:
         index = self._translate_idx(index)
-        if not isinstance(item, tuple):
-            raise TypeError(
-                "Expected a tuple of name, content and optionally subfields"
-            )
-        if len(item) == 2:
-            name, content = item
-            subfields = None
-        elif len(item) == 3:
-            name, content, subfields = item
-        else:
-            raise TypeError(
-                "Expected a tuple of name, content and optionally subfields"
-            )
-        inserted_lines = self._to_lines(name, content, subfields)
+        inserted_lines = self._to_lines(record)
 
         # Stop of field to be replaced is start of new field
         start, old_stop, _ = self._field_pos[index]
@@ -378,7 +352,11 @@ class GenBankFile(TextFile):
             old_start, old_stop, fname = self._field_pos[i]
             self._field_pos[i] = old_start + shift, old_stop + shift, fname
         # Add new entry
-        self._field_pos[index] = start, start + len(inserted_lines), name.upper()
+        self._field_pos[index] = (
+            start,
+            start + len(inserted_lines),
+            record.name.upper(),
+        )
 
     def __delitem__(self, index: int) -> None:
         index = self._translate_idx(index)
@@ -395,13 +373,7 @@ class GenBankFile(TextFile):
     def __len__(self) -> int:
         return len(self._field_pos)
 
-    def insert(
-        self,
-        index: int,
-        name: str,
-        content: list[str],
-        subfields: dict[str, list[str]] | None = None,
-    ) -> None:
+    def insert(self, index: int, record: GenBankRecord) -> None:
         """
         Insert a *GenBank* field at the given position.
 
@@ -412,17 +384,11 @@ class GenBankFile(TextFile):
             index.
             If the index is after the last field, the new field
             is appended to the end of the file.
-        name : str
-            The field name.
-        content : list of str
-            The content lines.
-        subfields : dict of str -> str, optional
-            The subfields of the field.
-            The dictionary maps subfield names to the content lines of
-            the respective subfield.
+        record : GenBankRecord
+            The field to insert.
         """
         index = self._translate_idx(index, length_exclusive=False)
-        inserted_lines = self._to_lines(name, content, subfields)
+        inserted_lines = self._to_lines(record)
 
         # Stop of previous field is start of new field
         if index == 0:
@@ -444,30 +410,19 @@ class GenBankFile(TextFile):
             self._field_pos[i] = old_start + shift, old_stop + shift, fname
         # Add new entry
         self._field_pos.insert(
-            index, (start, start + len(inserted_lines), name.upper())
+            index, (start, start + len(inserted_lines), record.name.upper())
         )
 
-    def append(
-        self,
-        name: str,
-        content: list[str],
-        subfields: dict[str, list[str]] | None = None,
-    ) -> None:
+    def append(self, record: GenBankRecord) -> None:
         """
         Create a new *GenBank* field at the end of the file.
 
         Parameters
         ----------
-        name : str
-            The field name.
-        content : list of str
-            The content lines.
-        subfields : dict of str -> str, optional
-            The subfields of the field.
-            The dictionary maps subfield names to the content lines of
-            the respective subfield.
+        record : GenBankRecord
+            The field to append.
         """
-        self.insert(len(self), name, content, subfields)
+        self.insert(len(self), record)
 
     def _find_field_indices(self) -> None:
         """
@@ -501,28 +456,23 @@ class GenBankFile(TextFile):
         else:
             return [line[12:] for line in self.lines[start:stop]]
 
-    def _to_lines(
-        self,
-        name: str,
-        content: list[str],
-        subfields: dict[str, list[str]] | None,
-    ) -> list[str]:
+    def _to_lines(self, record: GenBankRecord) -> list[str]:
         """
         Convert the field name, field content und subfield dictionary
         into text lines
         """
-        if subfields is None:
-            subfields = {}
-
-        name = name.strip().upper()
+        if not isinstance(record, GenBankRecord):
+            raise TypeError(
+                f"Expected 'GenBankRecord', but got '{type(record).__name__}'"
+            )
+        name = record.name.strip().upper()
+        content = record.content
         if len(name) == 0:
             raise ValueError("Must give a non emtpy name")
-        subfields = OrderedDict(
-            {
-                subfield_name.upper().strip(): subfield_lines
-                for subfield_name, subfield_lines in subfields.items()
-            }
-        )
+        subfields = {
+            subfield_name.upper().strip(): subfield_lines
+            for subfield_name, subfield_lines in record.subfields.items()
+        }
 
         # Create lines for new field
         if name == "FEATURES":

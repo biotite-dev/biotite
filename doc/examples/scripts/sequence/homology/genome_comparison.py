@@ -36,7 +36,7 @@ import numpy as np
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import MultipleLocator
 import biotite
-import biotite.application_v2.tantan as tantan
+import biotite.application.tantan as tantan
 import biotite.database.entrez as entrez
 import biotite.sequence as seq
 import biotite.sequence.align as align
@@ -187,13 +187,13 @@ EVALUE_THRESHOLD = 0.1
 # Use the symbol frequencies in the bacterial genome to sample
 # the parameters
 background = np.array(list(bacterium_seq.get_symbol_frequency().values()))
-np.random.seed(0)
 estimator = align.EValueEstimator.from_samples(
     chloroplast_seq.alphabet,
     # The scoring scheme must be the same as used for the alignment
     matrix,
     GAP_PENALTY,
     background,
+    rng=np.random.default_rng(0),
 )
 
 # Compute similarity scores for each hit
@@ -202,10 +202,10 @@ gapped_scores = np.array(
         align.align_local_gapped(
             chloroplast_seq,
             bacterium_seqs[strand],
-            matrix,
             seed=(i, j),
-            gap_penalty=GAP_PENALTY,
             threshold=X_DROP,
+            matrix=matrix,
+            gap_penalty=GAP_PENALTY,
             score_only=True,
             max_table_size=100_000_000,
         )
@@ -226,10 +226,10 @@ accepted_alignments = [
         align.align_local_gapped(
             chloroplast_seq,
             bacterium_seqs[strand],
-            matrix,
             seed=(i, j),
-            gap_penalty=GAP_PENALTY,
             threshold=X_DROP,
+            matrix=matrix,
+            gap_penalty=GAP_PENALTY,
         )[0],
         log_evalue,
     )

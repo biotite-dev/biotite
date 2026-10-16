@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 from __future__ import annotations
 
 __name__ = "biotite.sequence.graphics"
@@ -25,7 +21,7 @@ from matplotlib.axes import Axes
 from matplotlib.transforms import Bbox
 from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.align.matrix import SubstitutionMatrix
-from biotite.sequence.graphics.colorschemes import get_color_scheme
+from biotite.sequence.graphics.colorschemes import ColorScheme, get_color_scheme
 from biotite.typing import K, M, MplColor, N, NDArray2
 from biotite.visualize import colors
 
@@ -358,12 +354,13 @@ class LetterTypePlotter(LetterPlotter):
         A *Matplotlib* axes, that is used as plotting area.
     alphabet : Alphabet
         The alphabet of the alignment(s) to be plotted.
-    color_scheme : str or list of (tuple or str), optional
-        Either a valid color scheme name
+    color_scheme : str or ColorScheme, optional
+        Either a valid built-in color scheme name
         (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.)
-        or a list of *Matplotlib* compatible colors.
-        The list length must be at least as long as the
-        length of the alphabet used by the sequences.
+        or a :class:`ColorScheme`.
+        The alphabet of the scheme must equal or extend the alphabet
+        used by the sequences.
+        By default, the ``"flower"`` scheme is used.
     color_symbols : bool, optional
         If true, the symbols themselves are colored.
         If false, the symbols are black, and the boxes behind the
@@ -379,7 +376,7 @@ class LetterTypePlotter(LetterPlotter):
         self,
         axes: Axes,
         alphabet: Any,
-        color_scheme: str | list[Any] | None = None,
+        color_scheme: str | ColorScheme | None = None,
         color_symbols: bool = False,
         font_size: float | None = None,
         font_param: dict[str, Any] | None = None,
@@ -390,8 +387,13 @@ class LetterTypePlotter(LetterPlotter):
             self._colors = get_color_scheme("flower", alphabet)
         elif isinstance(color_scheme, str):
             self._colors = get_color_scheme(color_scheme, alphabet)
+        elif isinstance(color_scheme, ColorScheme):
+            self._colors = color_scheme.fit(alphabet)
         else:
-            self._colors = color_scheme
+            raise TypeError(
+                "Expected a color scheme name or 'ColorScheme', "
+                f"but got '{type(color_scheme).__name__}'"
+            )
 
     def get_color(self, alignment: Alignment, column_i: int, seq_i: int) -> Any:
         index = alignment.trace[column_i, seq_i]
@@ -901,7 +903,7 @@ def plot_alignment_type_based(
     label_size: float | None = None,
     show_line_position: bool = False,
     spacing: float = 1,
-    color_scheme: str | list[Any] | None = None,
+    color_scheme: str | ColorScheme | None = None,
     color_symbols: bool = False,
     symbol_size: float | None = None,
     symbol_param: dict[str, Any] | None = None,
@@ -963,12 +965,13 @@ def plot_alignment_type_based(
     spacing : float, optional
         The spacing between the alignment lines. 1.0 means that the size
         is equal to the size of a symbol box.
-    color_scheme : str or list of (tuple or str), optional
-        Either a valid color scheme name
+    color_scheme : str or ColorScheme, optional
+        Either a valid built-in color scheme name
         (e.g. ``"flower"``, ``"clustalx"``, ``blossom``, etc.)
-        or a list of *Matplotlib* compatible colors.
-        The list length must be at least as long as the
-        length of the alphabet used by the sequences.
+        or a :class:`ColorScheme`.
+        The alphabet of the scheme must equal or extend the alphabet
+        used by the sequences.
+        By default, the ``"flower"`` scheme is used.
     color_symbols : bool, optional
         If true, the symbols themselves are colored.
         If false, the symbols are black, and the boxes behind the

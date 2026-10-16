@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 __author__ = "Patrick Kunzmann"
 
 import doctest
@@ -114,10 +110,6 @@ TEST_PARAMETERS = [
         ),
     ),
     pytest.param(
-        "biotite.application.blast",
-        [],
-    ),
-    pytest.param(
         "biotite.application.muscle",
         ["biotite.sequence"],
         marks=[
@@ -157,14 +149,6 @@ TEST_PARAMETERS = [
     ),
     pytest.param(
         "biotite.application.viennarna",
-        ["biotite.sequence"],
-        marks=pytest.mark.skipif(
-            is_not_installed("RNAfold") | is_not_installed("RNAplot"),
-            reason="Software is not installed",
-        ),
-    ),
-    pytest.param(
-        "biotite.application_v2.viennarna",
         [
             "biotite.sequence",
             "biotite.sequence.align",
@@ -177,7 +161,7 @@ TEST_PARAMETERS = [
         ),
     ),
     pytest.param(
-        "biotite.application_v2.mmseqs",
+        "biotite.application.mmseqs",
         ["biotite.sequence", "biotite.sequence.align", "biotite.sequence.io.fasta"],
         marks=pytest.mark.skipif(
             is_not_installed("mmseqs") | is_not_installed("foldseek"),
@@ -248,7 +232,8 @@ def test_doctest(package_name, context_package_names):
 
     # Run doctests
     # This test does not use 'testfile()' or 'testmod()'
-    # due to problems with doctest identification for Cython modules
+    # due to problems with doctest identification for attributes
+    # implemented in the Rust extension module
     # More information below
     package = import_module(package_name)
     runner = doctest.DocTestRunner(
@@ -261,9 +246,9 @@ def test_doctest(package_name, context_package_names):
         package,
         package.__name__,
         # It is necessary to set 'module' to 'False', as otherwise
-        # Cython functions and classes would be falsely identified
-        # as members of an external module by 'DocTestFinder._find()'
-        # and consequently would be ignored
+        # functions and classes from the Rust extension module would be
+        # falsely identified as members of an external module by
+        # 'DocTestFinder._find()' and consequently would be ignored
         #
         # Setting 'module=False' omits this check
         # This check is not necessary as the biotite subpackages

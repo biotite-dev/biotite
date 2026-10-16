@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import io
 import numpy as np
 import pytest
@@ -152,7 +148,7 @@ def test_a3m_alignment_conversion():
     labels = list(a3m_file.keys())
     alignments = fasta.get_a3m_alignments(a3m_file)
 
-    a3m_file = fasta.FastaFile(chars_per_line=10000)
+    a3m_file = fasta.FastaFile()
     fasta.set_a3m_alignments(a3m_file, alignments, labels[0], labels[1:])
     test_content = a3m_file.lines
     assert test_content == ref_content
@@ -171,7 +167,7 @@ def test_read_iter(file_name):
     assert test_dict == ref_dict
 
 
-@pytest.mark.parametrize("chars_per_line", [80, 200])
+@pytest.mark.parametrize("chars_per_line", [None, 80, 200])
 @pytest.mark.parametrize("n_sequences", [1, 10])
 def test_write_iter(chars_per_line, n_sequences):
     """

@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 from __future__ import annotations
 
 __name__ = "biotite.sequence.io.fasta"
@@ -38,7 +34,7 @@ class FastaFile(TextFile, MutableMapping[str, str]):
         The number characters in a line containing sequence data
         after which a line break is inserted.
         Only relevant, when adding sequences to a file.
-        Default is 80.
+        By default each sequence is put into one line.
 
     Examples
     --------
@@ -66,7 +62,7 @@ class FastaFile(TextFile, MutableMapping[str, str]):
     >>> file.write(os.path.join(path_to_directory, "test.fasta"))
     """
 
-    def __init__(self, chars_per_line: int = 80) -> None:
+    def __init__(self, chars_per_line: int | None = None) -> None:
         super().__init__()
         self._chars_per_line = chars_per_line
         self._entries: OrderedDict[str, tuple[int, int]] = OrderedDict()
@@ -75,7 +71,7 @@ class FastaFile(TextFile, MutableMapping[str, str]):
     def read(
         cls,
         file: PathLike[str] | str | IO[str],
-        chars_per_line: int = 80,
+        chars_per_line: int | None = None,
         allow_duplicates: bool = False,
     ) -> Self:
         """
@@ -90,7 +86,7 @@ class FastaFile(TextFile, MutableMapping[str, str]):
             The number characters in a line containing sequence data
             after which a line break is inserted.
             Only relevant, when adding sequences to a file.
-            Default is 80.
+            By default each sequence is put into one line.
         allow_duplicates : bool, optional
             If set to true, duplicate headers are made unique by
             appending ``_1``, ``_2``, etc. to the second, third, etc.
@@ -123,9 +119,11 @@ class FastaFile(TextFile, MutableMapping[str, str]):
         if not isinstance(seq_str, str):
             raise TypeError("'FastaFile' only supports sequence strings as values")
         # Create lines for new header and sequence (with line breaks)
-        new_lines = [">" + header.replace("\n", "").strip()] + wrap_string(
-            seq_str, width=self._chars_per_line
-        )
+        new_lines = [">" + header.replace("\n", "").strip()]
+        if self._chars_per_line is None:
+            new_lines.append(seq_str)
+        else:
+            new_lines += wrap_string(seq_str, width=self._chars_per_line)
         if header in self:
             # Delete lines of entry corresponding to the header,
             # if existing
@@ -258,7 +256,7 @@ class FastaFile(TextFile, MutableMapping[str, str]):
     def write_iter(
         file: PathLike[str] | str | IO[str],
         items: Iterable[tuple[str, str]],
-        chars_per_line: int = 80,
+        chars_per_line: int | None = None,
     ) -> None:
         """
         Iterate over the given `items` and write each item into
@@ -283,8 +281,7 @@ class FastaFile(TextFile, MutableMapping[str, str]):
         chars_per_line : int, optional
             The number characters in a line containing sequence data
             after which a line break is inserted.
-            Only relevant, when adding sequences to a file.
-            Default is 80.
+            By default each sequence is put into one line.
 
         Notes
         -----
@@ -304,7 +301,10 @@ class FastaFile(TextFile, MutableMapping[str, str]):
                 yield ">" + header.replace("\n", "").strip()
 
                 # Yield sequence line(s)
-                for line in wrap_string(seq_str, width=chars_per_line):
-                    yield line
+                if chars_per_line is None:
+                    yield seq_str
+                else:
+                    for line in wrap_string(seq_str, width=chars_per_line):
+                        yield line
 
         TextFile.write_iter(file, line_generator())

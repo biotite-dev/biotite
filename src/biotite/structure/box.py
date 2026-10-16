@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 Functions related to working with the simulation box or unit cell
 of a structure.
@@ -35,14 +31,14 @@ from biotite.structure.atoms import AtomArray, AtomArrayStack, repeat
 from biotite.structure.chains import get_chain_masks, get_chain_starts
 from biotite.structure.error import BadStructureError
 from biotite.structure.molecules import get_molecule_masks
-from biotite.structure.transform import AffineTransformation
+from biotite.structure.transform import RigidTransformation
 from biotite.structure.util import vector_dot
 from biotite.typing import XYZ, M, N, NDArray1, NDArray2, NDArray3
 
 
 def space_group_transforms(
     space_group: str,
-) -> list[AffineTransformation[int]]:
+) -> list[RigidTransformation[int]]:
     """
     Get the coordinate transformations for a given space group.
 
@@ -57,7 +53,7 @@ def space_group_transforms(
 
     Returns
     -------
-    transformations : list of AffineTransformation
+    transformations : list of RigidTransformation
         The transformations that creates the symmetric copies of a structure in a unit
         cell of the given space group.
         Note that the transformations need to be applied to coordinates in fractions
@@ -74,7 +70,7 @@ def space_group_transforms(
     >>> transforms = space_group_transforms("P 21 21 21")
     >>> for transform in transforms:
     ...     print(transform.rotation)
-    ...     print(transform.target_translation)
+    ...     print(transform.translation)
     ...     print()
     [[[1. 0. 0.]
       [0. 1. 0.]
@@ -140,11 +136,7 @@ def space_group_transforms(
             matrix[i, :] = part[:3]
             translation[i] = part[3]
         transformations.append(
-            AffineTransformation(
-                center_translation=np.zeros(3, dtype=np.float32),
-                rotation=matrix,
-                target_translation=translation,
-            )
+            RigidTransformation(rotation=matrix, translation=translation)
         )
     return transformations
 
@@ -230,9 +222,9 @@ def unitcell_from_vectors(
     a = box[0]
     b = box[1]
     c = box[2]
-    len_a = linalg.norm(a)
-    len_b = linalg.norm(b)
-    len_c = linalg.norm(c)
+    len_a = linalg.vector_norm(a)
+    len_b = linalg.vector_norm(b)
+    len_c = linalg.vector_norm(c)
     alpha = np.arccos(np.dot(b, c) / (len_b * len_c))
     beta = np.arccos(np.dot(a, c) / (len_a * len_c))
     gamma = np.arccos(np.dot(a, b) / (len_a * len_b))

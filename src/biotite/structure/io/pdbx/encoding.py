@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 This module contains data encodings for BinaryCIF files.
 """
@@ -677,7 +673,9 @@ class StringArrayEncoding(Encoding):
             )
 
         string_data = "".join(self.strings)
-        offsets = np.cumsum([0] + [len(s) for s in self.strings])
+        offsets = np.cumulative_sum(
+            np.strings.str_len(self.strings), include_initial=True
+        )
 
         return {
             "kind": "StringArray",

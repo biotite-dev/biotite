@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 from __future__ import annotations
 
 __name__ = "biotite.sequence"
@@ -446,6 +442,7 @@ class ProteinSequence(Sequence[str]):
             "Y",
             "B",
             "Z",
+            "J",
             "X",
             "*",
         ]
@@ -478,6 +475,7 @@ class ProteinSequence(Sequence[str]):
             163.1760,  # Y
             np.nan,  # B
             np.nan,  # Z
+            113.1594,  # J
             np.nan,  # X
             np.nan,  # *
         ]
@@ -507,6 +505,7 @@ class ProteinSequence(Sequence[str]):
             163.06333,  # Y
             np.nan,  # B
             np.nan,  # Z
+            113.08406,  # J
             np.nan,  # X
             np.nan,  # *
         ]
@@ -535,6 +534,7 @@ class ProteinSequence(Sequence[str]):
         "Y": "TYR",
         "B": "ASX",
         "Z": "GLX",
+        "J": "XLE",
         "X": "UNK",
         "*": " * ",
     }

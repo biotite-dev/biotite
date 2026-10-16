@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import numpy as np
 import pytest
 import biotite.sequence as seq
@@ -87,7 +83,8 @@ def test_to_consensus_prot():
         "GNPLDAVQQ"
     )
     matrix = align.SubstitutionMatrix.std_protein_matrix()
-    alignment = align.align_optimal(seq1, seq2, matrix)[0]
+    # The expected consensus is based on this specific gap penalty
+    alignment = align.align_optimal(seq1, seq2, matrix, gap_penalty=-10)[0]
 
     profile = seq.SequenceProfile.from_alignment(alignment)
     assert (

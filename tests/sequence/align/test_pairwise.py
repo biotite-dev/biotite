@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import numpy as np
 import pytest
 import biotite.application.muscle as muscle
@@ -95,8 +91,11 @@ def test_align_optimal_complex(sequences, gap_penalty, seq_indices):
     )[0]
 
     try:
-        ref_alignment = muscle.MuscleApp.align(
-            [seq1, seq2], matrix=matrix, gap_penalty=gap_penalty
+        ref_alignment = (
+            muscle.Muscle3App()
+            .run([seq1, seq2], matrix=matrix, gap_penalty=gap_penalty)
+            .result()
+            .alignment
         )
     except VersionError:
         pytest.skip("Invalid Muscle software version")

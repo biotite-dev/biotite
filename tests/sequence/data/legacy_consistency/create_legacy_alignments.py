@@ -138,8 +138,8 @@ def main():
                 alignment = align.align_banded(
                     seq1,
                     seq2,
+                    band,
                     matrix,
-                    band=band,
                     gap_penalty=gap_penalty,
                     local=local,
                     max_number=1,
@@ -162,9 +162,9 @@ def main():
                 alignment = align.align_local_gapped(
                     seq1,
                     seq2,
+                    seed,
+                    THRESHOLD,
                     matrix,
-                    seed=seed,
-                    threshold=THRESHOLD,
                     gap_penalty=gap_penalty,
                     max_number=1,
                 )[0]

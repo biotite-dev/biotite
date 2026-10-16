@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import sys
 import warnings
 from tempfile import TemporaryFile
@@ -52,9 +48,21 @@ def test_pdbx_sequence_consistency(path):
         )
 
     test_sequences = pdb.PDBFile.read(path).get_sequence()
-    ref_sequences = pdbx.get_sequence(
-        pdbx.BinaryCIFFile.read(path.with_suffix(".bcif"))
+    pdbx_file = pdbx.BinaryCIFFile.read(path.with_suffix(".bcif"))
+    ref_sequences = pdbx.get_sequence(pdbx_file)
+    # PDB files only know the author chain IDs,
+    # but 'pdbx.get_sequence()' uses the label chain IDs
+    atom_site = pdbx_file.block["atom_site"]
+    label_to_auth_chain_id = dict(
+        zip(
+            atom_site["label_asym_id"].as_array(str),
+            atom_site["auth_asym_id"].as_array(str),
+        )
     )
+    ref_sequences = {
+        label_to_auth_chain_id[chain_id]: sequence
+        for chain_id, sequence in ref_sequences.items()
+    }
 
     assert test_sequences.keys() == ref_sequences.keys()
     for chain_id, sequence in test_sequences.items():
@@ -160,7 +168,10 @@ def test_pdbx_consistency(model, path):
     bcif_path = path.with_suffix(".bcif")
     pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
     try:
-        ref_atoms = pdbx.get_structure(pdbx_file, model=model, include_bonds=True)
+        # The PDB format only supports author fields
+        ref_atoms = pdbx.get_structure(
+            pdbx_file, model=model, include_bonds=True, use_author_fields=True
+        )
     except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
@@ -234,7 +245,8 @@ def test_pdbx_consistency_assembly(path, model):
 
     bcif_path = path.with_suffix(".bcif")
     pdbx_file = pdbx.BinaryCIFFile.read(bcif_path)
-    ref_assembly = pdbx.get_assembly(pdbx_file, model=model)
+    # The PDB format only supports author fields
+    ref_assembly = pdbx.get_assembly(pdbx_file, model=model, use_author_fields=True)
 
     for category in ref_assembly.get_annotation_categories():
         assert (

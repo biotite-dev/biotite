@@ -38,52 +38,49 @@ Phylogenetic and guide trees
 Trees have an important role in bioinformatics, as they are used to
 guide multiple sequence alignments or to create phylogenies.
 
-In *Biotite* such a tree is represented by the :class:`Tree` class in
-the :mod:`biotite.sequence.phylo` package.
+In *Biotite* such a tree is represented by a :class:`networkx.DiGraph`
+(see the :mod:`biotite.sequence.phylo` package).
 Each node in a tree has a number of child nodes (none in case of leaf nodes)
 but only one parent node.
 The exception is the *root node*, which has no parent.
-Each node in a tree is represented by a :class:`TreeNode`.
-When a :class:`TreeNode` is created, you have to provide either child
-nodes and their distances to this node (intermediate node) or a
-reference index (leaf node).
-This reference index is dependent on the context and can refer to
+Accordingly, the edges of the graph point from a parent node to its child node
+and carry a ``distance`` attribute.
+The leaf nodes are the integers ``0`` to ``n-1``, which serve as reference
+indices.
+The reference index is dependent on the context and can refer to
 anything: sequences, organisms, etc.
-
-The children and the reference index cannot be changed after object
-creation.
-Also the parent can only be set once - when the node is used as child
-in the creation of a new node.
+Intermediate nodes can be any other hashable object, but by convention they
+are the integers continuing after the leaf nodes.
 
 .. jupyter-execute::
 
+    import networkx as nx
     import biotite.sequence.phylo as phylo
 
     # The reference objects
     fruits = ["Apple", "Pear", "Orange", "Lemon", "Banana"]
-    # Create nodes
-    apple  = phylo.TreeNode(index=fruits.index("Apple"))
-    pear   = phylo.TreeNode(index=fruits.index("Pear"))
-    orange = phylo.TreeNode(index=fruits.index("Orange"))
-    lemon  = phylo.TreeNode(index=fruits.index("Lemon"))
-    banana = phylo.TreeNode(index=fruits.index("Banana"))
-    intermediate1 = phylo.TreeNode(
-        children=(apple, pear), distances=(2.0, 2.0)
-    )
-    intermediate2 = phylo.TreeNode((orange, lemon), (1.0, 1.0))
-    intermediate3 = phylo.TreeNode((intermediate2, banana), (2.0, 3.0))
-    root = phylo.TreeNode((intermediate1, intermediate3), (2.0, 1.0))
-    # Create tree from root node
-    tree = phylo.Tree(root=root)
+    # The intermediate nodes continue the numbering of the leaf nodes
+    intermediate1, intermediate2, intermediate3, root = 5, 6, 7, 8
+    tree = nx.DiGraph()
+    tree.add_edge(intermediate1, fruits.index("Apple"), distance=2.0)
+    tree.add_edge(intermediate1, fruits.index("Pear"), distance=2.0)
+    tree.add_edge(intermediate2, fruits.index("Orange"), distance=1.0)
+    tree.add_edge(intermediate2, fruits.index("Lemon"), distance=1.0)
+    tree.add_edge(intermediate3, intermediate2, distance=2.0)
+    tree.add_edge(intermediate3, fruits.index("Banana"), distance=3.0)
+    tree.add_edge(root, intermediate1, distance=2.0)
+    tree.add_edge(root, intermediate3, distance=1.0)
     # Trees can be converted into Newick notation
-    print("Tree:", tree.to_newick(labels=fruits))
+    print("Tree:", phylo.to_newick(tree, labels=fruits))
     # Distances can be omitted
     print(
         "Tree w/o distances:",
-        tree.to_newick(labels=fruits, include_distance=False)
+        phylo.to_newick(tree, labels=fruits, include_distance=False)
     )
     # Distances can be measured
-    distance = tree.get_distance(fruits.index("Apple"), fruits.index("Banana"))
+    distance = phylo.get_distance(
+        tree, fruits.index("Apple"), fruits.index("Banana")
+    )
     print("Distance Apple-Banana:", distance)
 
 You can plot a tree as dendrogram.
@@ -100,7 +97,7 @@ From distances to trees
 ^^^^^^^^^^^^^^^^^^^^^^^
 In most scenarios we do not have a tree from the beginning, but only
 distances between the nodes, e.g. distances from an alignment.
-To create a :class:`Tree` from these distances, we can use
+To create a tree from these distances, we can use
 *hierarchical clustering* methods provided by :mod:`biotite.sequence.phylo`,
 namely :func:`upgma()` and :func:`neighbour_joining()`.
 

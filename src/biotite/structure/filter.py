@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 This module provides utility functions for creating filters on atom
 arrays and atom array stacks.
@@ -376,7 +372,7 @@ def filter_linear_bond_continuity(
     Note that this function purely uses distances between consecutive atoms.
     A potential ``BondList`` is not considered here.
     """
-    dist = np.linalg.norm(np.diff(array.coord, axis=0), axis=1)
+    dist = np.linalg.vector_norm(np.diff(array.coord, axis=0), axis=1)
     mask = (dist >= min_len) & (dist <= max_len)
     return np.append(mask, True)  # pyright: ignore[reportReturnType]
 

@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 from __future__ import annotations
 import warnings
 from collections.abc import Sequence as SequenceABC
@@ -407,8 +403,8 @@ class SequenceProfile(Generic[S]):
         consensus = ProteinSequence()
         consensus.code = np.argmax(self.symbols, axis=1)
         consensus.code = np.where(
-            np.sum(self.symbols, axis=1) == 0, 23, consensus.code
-        )  # _PROT_ALPH[23] = 'X'
+            np.sum(self.symbols, axis=1) == 0, _PROT_ALPH.encode("X"), consensus.code
+        )
         return consensus
 
     def _general_to_consensus(self) -> GeneralSequence:

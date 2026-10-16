@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
 import biotite
-import biotite.application_v2.viennarna as viennarna
+import biotite.application.viennarna as viennarna
 import biotite.database.entrez as entrez
 import biotite.sequence.align as align
 import biotite.sequence.graphics as seqgraphics

@@ -2,7 +2,6 @@ __all__ = ["compress"]
 __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 
-import warnings
 from typing import Any, TypeVar
 import msgpack
 import numpy as np
@@ -34,7 +33,6 @@ _MAX_DECIMALS = 100
 
 def compress(
     data: _BCIFContainer,
-    float_tolerance: float | None = None,
     rtol: float = 1e-6,
     atol: float = 1e-4,
 ) -> _BCIFContainer:
@@ -47,9 +45,6 @@ def compress(
     ----------
     data : BinaryCIFFile or BinaryCIFBlock or BinaryCIFCategory or BinaryCIFColumn or BinaryCIFData
         The data to compress.
-    float_tolerance : float, optional
-        The relative error that is accepted when compressing floating point numbers.
-        DEPRECATED: Use `rtol` instead.
     rtol, atol : float, optional
         The compression factor of floating point numbers is chosen such that
         either the relative (`rtol`) or absolute (`atol`) tolerance is fulfilled
@@ -84,12 +79,6 @@ def compress(
     >>> print(f"{len(compressed_file.read()) // 1000} KB")
     114 KB
     """
-    if float_tolerance is not None:
-        warnings.warn(
-            "The 'float_tolerance' parameter is deprecated, use 'rtol' instead",
-            DeprecationWarning,
-        )
-
     if isinstance(data, bcif.BinaryCIFFile):
         return _compress_file(data, rtol, atol)
     elif isinstance(data, bcif.BinaryCIFBlock):
@@ -167,7 +156,10 @@ def _compress_data(
         encoding = StringArrayEncoding(data_encoding=[], offset_encoding=[])
         # Run encode to initialize the data and offset arrays
         indices = encoding.encode(array)
-        offsets = np.cumsum([0] + [len(s) for s in encoding.strings])  # pyright: ignore[reportOptionalIterable]
+        offsets = np.cumulative_sum(
+            np.strings.str_len(encoding.strings),  # pyright: ignore[reportArgumentType]
+            include_initial=True,
+        )
         encoding.data_encoding = _find_best_integer_compression(indices)  # pyright: ignore[reportArgumentType]
         encoding.offset_encoding = _find_best_integer_compression(offsets)
         return bcif.BinaryCIFData(array, [encoding])

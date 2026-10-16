@@ -20,9 +20,7 @@ classifiers = [
 ]
 
 dependencies = [
-    # Wheels compiled with NumPy 2.0 are backward compatible with NumPy 1.x
-    # https://numpy.org/devdocs/dev/depending_on_numpy.html#numpy-2-0-specific-advice
-    "numpy >= 1.25",
+    "numpy >= 2.1",
     "biotraj >= 1.0, < 2.0",
     "requests >= 2.12",
     "msgpack >= 0.5.6",
@@ -73,7 +71,6 @@ ignore = [
 "benchmarks/sequence/align/benchmark_kmers.py" = ["N803"]
 # Annotation enforcement is reserved for the library source code
 # tests, benchmarks and documentation scripts are exempt
-"setup.py" = ["ANN2"]
 "tests/**/*.py" = ["ANN2"]
 "benchmarks/**/*.py" = ["ANN2"]
 "doc/**/*.py" = ["ANN2"]
@@ -126,7 +123,6 @@ exclude = [
     'query.SuperstructureQuery',
     'query.SubstructureQuery',
     # Numpydoc expects a return value for decorators
-    'application.requires_state',
     'version.requires_version',
     'object.validate',
     # Usage of the return value is not intended
@@ -174,7 +170,6 @@ requests = ">=2.12"
 # Build
 python-build = "*"
 cargo-bundle-licenses = "*"
-cython = ">=3.0"
 pip = ">=10.0"
 rust = ">=1.95"
 setuptools = "*"
@@ -257,20 +252,11 @@ doc = { features = ["doc", "interface", "application"] }
 # -> Add interfaced packages as well
 lint = { features = ["lint", "interface"] }
 
-[tool.pixi.tasks._pip-install-rust]
-cmd = "python -m pip install -e ."
-env = { BIOTITE_OMIT_CYTHON = "1" }
-inputs = ["src/**/*.rs", "Cargo.toml", "pyproject.toml"]
-
-[tool.pixi.tasks._pip-install-cython]
-cmd = "python -m pip install -e ."
-env = { BIOTITE_OMIT_RUST = "1" }
-inputs = ["src/**/*.pyx", "src/**/*.pxd", "pyproject.toml"]
-
 [tool.pixi.tasks._pip-install]
 cmd = "python -m pip install -e ."
-env = { BIOTITE_OMIT_CYTHON = "1", BIOTITE_OMIT_RUST = "1" }
-depends-on = ["_pip-install-rust", "_pip-install-cython"]
+# Only rebuild the Rust extension when its sources changed,
+# Python sources are picked up by the editable install anyway
+inputs = ["src/**/*.rs", "Cargo.toml", "pyproject.toml"]
 
 [tool.pixi.tasks._current-date]
 # Writes the current ISO year-month into a marker file
@@ -363,11 +349,11 @@ description = "Build documentation including the example gallery"
 [tool.setuptools_scm]
 version_file = "src/biotite/version.py"
 
-[tool.hatch.build.targets.wheel.hooks.cython.options]
-include_numpy = true
-compile_py = false
-define_macros = [["NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"]]
+[[tool.setuptools-rust.ext-modules]]
+target = "biotite.rust"
+path = "Cargo.toml"
+binding = "PyO3"
 
 [build-system]
-requires = ["setuptools", "setuptools-scm", "setuptools-rust", "puccinialin", "cython >= 3.0", "numpy >= 2.0"]
+requires = ["setuptools", "setuptools-scm", "setuptools-rust", "puccinialin"]
 build-backend = "setuptools.build_meta"

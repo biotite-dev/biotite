@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 from __future__ import annotations
 
 __name__ = "biotite.sequence.align"
@@ -303,7 +299,7 @@ def write_alignment_to_cigar(
     >>> seg = NucleotideSequence("CCCCGGTTTGACCGTATGTAG")
     >>> matrix = SubstitutionMatrix.std_nucleotide_matrix()
     >>> semiglobal_alignment = align_optimal(
-    ...     ref, seg, matrix, local=False, terminal_penalty=False
+    ...     ref, seg, matrix, gap_penalty=-10, local=False, terminal_penalty=False
     ... )[0]
     >>> print(semiglobal_alignment)
     TATAAAAGGTTTCCGACCGTAGGTAGCTGA
@@ -316,7 +312,7 @@ def write_alignment_to_cigar(
     4X5=2D7=1X4=
     >>> print(write_alignment_to_cigar(semiglobal_alignment, include_terminal_gaps=True))
     3D9M2D12M4D
-    >>> local_alignment = align_optimal(ref, seg, matrix, local=True)[0]
+    >>> local_alignment = align_optimal(ref, seg, matrix, gap_penalty=-10, local=True)[0]
     >>> print(local_alignment)
     GGTTTCCGACCGTAGGTAG
     GGTTT--GACCGTATGTAG

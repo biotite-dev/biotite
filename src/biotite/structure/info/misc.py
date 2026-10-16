@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 __name__ = "biotite.structure.info"
 __author__ = "Patrick Kunzmann"
 __all__ = ["all_residues", "full_name", "link_type", "one_letter_code"]

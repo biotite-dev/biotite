@@ -1,5 +1,5 @@
 use crate::structure::util::{distance_squared, extract_coord};
-use crate::util::{check_signals_periodically, warn};
+use crate::util::check_signals_periodically;
 use numpy::ndarray::Array2;
 use numpy::{IntoPyArray, PyArray2, PyReadonlyArray2};
 use pyo3::exceptions;
@@ -609,7 +609,7 @@ impl CellList {
         }
     }
 
-    /// get_atoms(coord, radius, as_mask=False, result_format=CellList.Result.MAPPING)
+    /// get_atoms(coord, radius, result_format=CellList.Result.MAPPING)
     ///
     /// Find atoms with a maximum distance from given coordinates.
     ///
@@ -623,10 +623,6 @@ impl CellList {
     ///     Either a single radius can be given as scalar, or individual
     ///     radii for each position in `coord` can be provided as
     ///     :class:`ndarray`.
-    /// as_mask : bool, optional
-    ///     **Deprecated:** Use ``result_format=CellList.Result.MASK`` instead.
-    ///     If true, the result is returned as boolean mask instead
-    ///     of an index array.
     /// result_format : CellList.Result, optional
     ///     The format of the result. See :class:`CellList.Result` for options.
     ///     Default is ``CellList.Result.MAPPING``.
@@ -658,13 +654,12 @@ impl CellList {
     /// >>> indices = cell_list.get_atoms(pos, radius=2.0)
     /// >>> print(indices)
     /// [102 104 112]
-    #[pyo3(signature = (coord, radius, as_mask=false, result_format=CellListResult::MAPPING))]
+    #[pyo3(signature = (coord, radius, result_format=CellListResult::MAPPING))]
     fn get_atoms<'py>(
         &self,
         py: Python<'py>,
         coord: &Bound<'py, PyAny>,
         radius: &Bound<'py, PyAny>,
-        as_mask: bool,
         result_format: CellListResult,
     ) -> PyResult<Bound<'py, PyAny>> {
         let (converted_coord, is_multi_coord) = self.prepare_coord_from_python(py, coord)?;
@@ -676,12 +671,11 @@ impl CellList {
             self.orig_length,
             pairs,
             result_format,
-            as_mask,
             is_multi_coord,
         )
     }
 
-    /// get_atoms_in_cells(coord, cell_radius=1, as_mask=False, result_format=CellList.Result.MAPPING)
+    /// get_atoms_in_cells(coord, cell_radius=1, result_format=CellList.Result.MAPPING)
     ///
     /// Find atoms with a maximum cell distance from given coordinates.
     ///
@@ -708,10 +702,6 @@ impl CellList {
     ///     :class:`ndarray`.
     ///     By default, atoms are searched in the cell of `coord`
     ///     and directly adjacent cells (``cell_radius=1``).
-    /// as_mask : bool, optional
-    ///     **Deprecated:** Use ``result_format=CellList.Result.MASK`` instead.
-    ///     If true, the result is returned as boolean mask instead
-    ///     of an index array.
     /// result_format : CellList.Result, optional
     ///     The format of the result. See :class:`CellList.Result` for options.
     ///     Default is ``CellList.Result.MAPPING``.
@@ -733,13 +723,12 @@ impl CellList {
     /// threshold radius, the returned indices array may contain the
     /// corresponding index multiple times.
     /// Use ``numpy.unique()`` if this is undesirable.
-    #[pyo3(signature = (coord, cell_radius=None, as_mask=false, result_format=CellListResult::MAPPING))]
+    #[pyo3(signature = (coord, cell_radius=None, result_format=CellListResult::MAPPING))]
     fn get_atoms_in_cells<'py>(
         &self,
         py: Python<'py>,
         coord: &Bound<'py, PyAny>,
         cell_radius: Option<&Bound<'py, PyAny>>,
-        as_mask: bool,
         result_format: CellListResult,
     ) -> PyResult<Bound<'py, PyAny>> {
         let (converted_coord, is_multi_coord) = self.prepare_coord_from_python(py, coord)?;
@@ -754,7 +743,6 @@ impl CellList {
             self.orig_length,
             pairs,
             result_format,
-            as_mask,
             is_multi_coord,
         )
     }
@@ -1246,9 +1234,6 @@ fn format_as_pairs(
 ///     Vector of *[query_idx, atom_idx]* pairs.
 /// result_format
 ///     The desired output format.
-/// as_mask
-///     If ``True``, overrides `result_format` to ``MASK``
-///     and emits a deprecation warning.
 /// is_multi_coord
 ///     Whether multiple query coordinates were provided.
 fn format_result(
@@ -1256,18 +1241,9 @@ fn format_result(
     n_query: usize,
     n_atoms: usize,
     pairs: Vec<[usize; 2]>,
-    mut result_format: CellListResult,
-    as_mask: bool,
+    result_format: CellListResult,
     is_multi_coord: bool,
 ) -> PyResult<Bound<'_, PyAny>> {
-    if as_mask {
-        // Raise DeprecationWarning when `as_mask` is used
-        warn::<exceptions::PyDeprecationWarning>(
-            py,
-            "The 'as_mask' parameter is deprecated, use 'result_format' instead.",
-        )?;
-        result_format = CellListResult::MASK;
-    }
     match result_format {
         CellListResult::MAPPING => format_as_mapping(py, n_query, n_atoms, pairs, is_multi_coord),
         CellListResult::MASK => format_as_mask(py, n_query, n_atoms, pairs, is_multi_coord),

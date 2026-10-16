@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 This subpackage provides functionality for sequence alignments.
 
@@ -130,7 +126,7 @@ are arranged from top to bottom.
 
                 **Ungapped seed extension**
 
-                :class:`align_local_ungapped()`
+                :class:`SeedExtension`
 
     .. grid-item::
         :padding: 2

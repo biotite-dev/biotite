@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 __author__ = "Patrick Kunzmann"
 __all__ = ["create_api_doc", "skip_nonrelevant"]
 
@@ -42,6 +38,11 @@ def create_api_doc(src_path, doc_path):
     _create_package_index(doc_path, package_list)
 
 
+# Deprecated packages that merely forward to their replacement
+# -> do not document them
+_DEPRECATED_PACKAGES = ["application_v2"]
+
+
 def _create_package_doc(pck, src_path, doc_path):
     if not _is_package(src_path):
         # Directory is not a Python package/subpackage
@@ -49,7 +50,9 @@ def _create_package_doc(pck, src_path, doc_path):
         return []
     # Identify all subdirectories...
     content = listdir(src_path)
-    dirs = [f for f in content if isdir(join(src_path, f))]
+    dirs = [
+        f for f in content if isdir(join(src_path, f)) and f not in _DEPRECATED_PACKAGES
+    ]
     # ... and recursively create also the documentation for them
     sub_pck = []
     for directory in dirs:
@@ -284,13 +287,8 @@ def _is_relevant_type(obj):
             )
         )
         | (
-            # Functions from Cython extensions and wrapped functions
-            type(obj).__name__
-            in [
-                "cython_function_or_method",
-                "fused_cython_function",
-                "_lru_cache_wrapper",
-            ]
+            # Wrapped functions
+            type(obj).__name__ in ["_lru_cache_wrapper"]
         )
         | (
             # Enum instance

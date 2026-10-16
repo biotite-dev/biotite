@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 from __future__ import annotations
 
 __name__ = "biotite.sequence.io.fasta"
@@ -382,8 +378,8 @@ def set_a3m_alignments(
         if not isinstance(alphabet, LetterAlphabet):
             raise ValueError("A3M requires a letter sequence")
         # Keep gaps in the query sequence as lower case letters
-        a3m_string_array[query_gaps] = np.char.lower(
-            query.alphabet.decode_multiple(target_code[query_gaps], as_bytes=True)  # pyright: ignore[reportCallIssue,reportArgumentType]
+        a3m_string_array[query_gaps] = np.strings.lower(
+            alphabet.decode_multiple_into_bytes(target_code[query_gaps])
         )
         # Matches/mismatches are indicated with upper case letters
         a3m_string_array[match_mask] = alphabet.decode_multiple_into_bytes(

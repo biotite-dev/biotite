@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 __name__ = "biotite.structure.io.pdbqt"
 __author__ = "Patrick Kunzmann, Daniel Bauer"
 __all__ = ["PDBQTFile"]
@@ -405,11 +401,11 @@ class PDBQTFile(TextFile):
             warnings.warn(f"Residue IDs exceed {max_residues:,}")
         if np.isnan(atoms.coord).any():
             raise BadStructureError("Coordinates contain 'NaN' values")
-        if any([len(name) > 1 for name in atoms.chain_id.tolist()]):
+        if (np.strings.str_len(atoms.chain_id) > 1).any():
             raise BadStructureError("Some chain IDs exceed 1 character")
-        if any([len(name) > 3 for name in atoms.res_name.tolist()]):
+        if (np.strings.str_len(atoms.res_name) > 3).any():
             raise BadStructureError("Some residue names exceed 3 characters")
-        if any([len(name) > 4 for name in atoms.atom_name.tolist()]):
+        if (np.strings.str_len(atoms.atom_name) > 4).any():
             raise BadStructureError("Some atom names exceed 4 characters")
 
         if charges is None:

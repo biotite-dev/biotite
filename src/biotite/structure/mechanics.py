@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 This module provides functions for calculation of mechanical or
 mass-related properties of a molecular structure.
@@ -15,7 +11,7 @@ from typing import overload
 import numpy as np
 from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.geometry import distance
-from biotite.structure.info.masses import mass
+from biotite.structure.info.masses import masses as masses_from_elements
 from biotite.typing import XYZ, M, N, NDArray1, NDArray2
 
 
@@ -55,7 +51,7 @@ def gyration_radius(
         containing the radii of gyration for every model is returned.
     """
     if masses is None:
-        masses = np.array([mass(element) for element in array.element])
+        masses = masses_from_elements(array)
     center = mass_center(array, masses)
     radii = distance(array, center[..., np.newaxis, :])
     inertia_moment = np.sum(masses * radii * radii, axis=-1)
@@ -97,5 +93,5 @@ def mass_center(
         a (*n x 3*) :class:`ndarray` is returned.
     """
     if masses is None:
-        masses = np.array([mass(element) for element in array.element])
+        masses = masses_from_elements(array)
     return np.sum(masses[:, np.newaxis] * array.coord, axis=-2) / np.sum(masses)

@@ -3,12 +3,12 @@
 Homology search with MMseqs2
 ============================
 
-.. currentmodule:: biotite.application_v2.mmseqs
+.. currentmodule:: biotite.application.mmseqs
 
 *MMseqs2* is a software suite for fast searching and clustering of large
 sequence sets.
 Its interface is the :class:`MMseqsApp` class from the
-:mod:`biotite.application_v2.mmseqs` subpackage.
+:mod:`biotite.application.mmseqs` subpackage.
 In contrast to the MSA programs from the previous chapter, *MMseqs2* is not a
 single command, but a collection of subcommands that read and write
 *databases*.
@@ -48,7 +48,7 @@ Hence, the first step is to convert the files into a
 
 .. jupyter-execute::
 
-    import biotite.application_v2.mmseqs as mmseqs
+    import biotite.application.mmseqs as mmseqs
 
     app = mmseqs.MMseqsApp()
     target_db = app.create_db(target_path).result()
@@ -105,7 +105,7 @@ So far we have used the subcommands as they are: with files as input and
 output.
 However, usually you have :class:`Sequence` objects at hand and want to get
 :class:`Alignment` objects back.
-The :mod:`biotite.application_v2.mmseqs` subpackage provides utility
+The :mod:`biotite.application.mmseqs` subpackage provides utility
 functions for this purpose.
 To begin with, :func:`create_database_from_sequences()` creates a
 :class:`SequenceDatabase` from a dictionary of sequences.

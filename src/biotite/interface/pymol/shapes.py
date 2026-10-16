@@ -85,12 +85,12 @@ def draw_arrows(
     color = _arrayfy(color, expected_length, 2)
     head_color = _arrayfy(head_color, expected_length, 2)
 
-    normal = (end - start) / np.linalg.norm(end - start, axis=-1)[:, np.newaxis]
+    normal = (end - start) / np.linalg.vector_norm(end - start, axis=-1)[:, np.newaxis]
     middle = end - normal * head_length[:, np.newaxis]
 
-    cgo_list = []
+    cgos = []
     for i in range(len(start)):
-        cgo_list.extend(
+        cgos.extend(
             [
                 get_cylinder_cgo(start[i], middle[i], radius[i], color[i], color[i]),
                 get_cone_cgo(
@@ -106,7 +106,7 @@ def draw_arrows(
             ]
         )
 
-    return draw_cgo(cgo_list, name, pymol_instance, delete)
+    return draw_cgo(cgos, name, pymol_instance, delete)
 
 
 def draw_box(

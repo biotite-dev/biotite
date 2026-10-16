@@ -93,13 +93,14 @@ def test_superimpose_identical(without_tm_gap_penalty, seed, structural_alphabet
     # Randomly move structure to increase the challenge
     mobile.coord = _transform_random_affine(mobile.coord, rng)
 
-    super, _, fix_indices, mob_indices = struc.superimpose_structural_homologs(
+    transform, fix_indices, mob_indices = struc.superimpose_structural_homologs(
         # Define max-iterations to avoid infinite loop if something goes wrong
         fixed,
         mobile,
         structural_alphabet,
         max_iterations=100,
     )
+    super = transform.apply(mobile)
 
     # The superimposition anchors must be CA atoms
     assert np.all(fixed.atom_name[fix_indices] == "CA")
@@ -149,10 +150,11 @@ def test_superimpose_consistency(fixed_pdb_id, mobile_pdb_id, ref_tm_score):
         data_dir("structure") / "homologs" / f"{mobile_pdb_id}.bcif"
     )
 
-    super, _, fix_indices, mob_indices = struc.superimpose_structural_homologs(
+    transform, fix_indices, mob_indices = struc.superimpose_structural_homologs(
         fixed,
         mobile,
     )
+    super = transform.apply(mobile)
     assert (
         struc.tm_score(fixed, super, fix_indices, mob_indices)
         >= ref_tm_score - SCORE_TOLERANCE
@@ -172,7 +174,7 @@ def test_short_structure():
     atoms = pdbx.get_structure(pdbx_file, model=1)
     atoms = atoms[atoms.res_id < 15]
 
-    _, _, fixed_i, mobile_i = struc.superimpose_structural_homologs(atoms, atoms)
+    _, fixed_i, mobile_i = struc.superimpose_structural_homologs(atoms, atoms)
     struc.tm_score(atoms, atoms, fixed_i, mobile_i)
 
 

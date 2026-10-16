@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import numpy as np
 import pytest
 import biotite.sequence as seq
@@ -32,8 +28,8 @@ def test_simple_alignment(gap_penalty, local, band_width):
     test_alignments = align.align_banded(
         seq1,
         seq2,
-        matrix,
         (-band_width, band_width),
+        matrix,
         gap_penalty=gap_penalty,
         local=local,
     )
@@ -64,7 +60,7 @@ def test_large_sequence_mapping(length, excerpt_length, seed):
     band = (diagonal - BAND_WIDTH, diagonal + BAND_WIDTH)
 
     matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
-    test_alignments = align.align_banded(excerpt, sequence, matrix, band=band)
+    test_alignments = align.align_banded(excerpt, sequence, band, matrix)
     # The excerpt should be uniquely mappable to a single location on
     # the long sequence
     assert len(test_alignments) == 1

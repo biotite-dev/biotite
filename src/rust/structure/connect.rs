@@ -341,7 +341,7 @@ pub fn connect_inter_residue<'py>(
 /// Parameters
 /// ----------
 /// elements
-///     The element of each atom in upper case.
+///     The element of each atom.
 /// bonds
 ///     The connectivity between the atoms.
 ///     The bond types are ignored.
@@ -408,7 +408,7 @@ pub fn infer_bond_types<'py>(
             if degrees[i] == 0 {
                 return vec![Valence::new(degrees[i], 0)];
             }
-            match allowed_valences(&elements[i], degrees[i]) {
+            match allowed_valences(&elements[i].to_ascii_uppercase(), degrees[i]) {
                 Some(allowed) => {
                     let valid: Vec<Valence> = allowed
                         .into_iter()

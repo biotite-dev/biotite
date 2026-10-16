@@ -54,7 +54,7 @@ seq_lengths = np.zeros(len(genes), dtype=int)
 multi_file = gb.MultiFile.read(file)
 # Iterate over each GenBank entry
 for i, gb_file in enumerate(multi_file):
-    _, length, _, _, _, _ = gb.get_locus(gb_file)
+    length = gb.get_locus(gb_file).length
     seq_lengths[i] = length
     annotation = gb.get_annotation(gb_file)
     # Find features, that represent a sigma factor domain

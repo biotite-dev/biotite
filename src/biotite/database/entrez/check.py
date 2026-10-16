@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 __name__ = "biotite.database.entrez"
 __author__ = "Patrick Kunzmann, Maximilian Dombrowsky"
 __all__ = ["check_for_errors"]

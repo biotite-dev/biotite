@@ -20,7 +20,7 @@ from biotite.structure.bonds import BondList, BondType
 from biotite.structure.chains import get_chain_starts
 from biotite.structure.error import BadStructureError
 from biotite.structure.filter import filter_amino_acids, filter_nucleotides
-from biotite.structure.info.masses import mass
+from biotite.structure.info.masses import masses
 from biotite.structure.residues import get_residue_starts
 from biotite.typing import XYZ, K, NDArray1, NDArray2
 
@@ -56,8 +56,8 @@ def to_system(
     """
     system = System()
 
-    for element in atoms.element.tolist():
-        system.addParticle(mass(element))
+    for atom_mass in masses(atoms).tolist():
+        system.addParticle(atom_mass)
 
     if atoms.box is not None:
         if isinstance(atoms, AtomArrayStack):

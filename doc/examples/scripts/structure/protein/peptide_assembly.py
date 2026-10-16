@@ -125,7 +125,7 @@ for i, res_name in enumerate(res_names):
     residue = info.residue(res_name)
 
     # Superimpose residue to corresponding backbone coordinates
-    _, transformation = struc.superimpose(
+    transformation = struc.superimpose(
         backbone_coord[3 * i : 3 * i + 3],
         residue.coord[np.isin(residue.atom_name, ["N", "CA", "C"])],
     )
@@ -142,7 +142,7 @@ for i, res_name in enumerate(res_names):
         n_i, h_i = [
             np.where(chain.atom_name == atom_name)[0][-1] for atom_name in ["N", "H"]
         ]
-        _, transformation = struc.superimpose(
+        transformation = struc.superimpose(
             chain.coord[[ca_i, c_i, n_i]], peptide_coord[:3]
         )
         chain.coord[[o_i, h_i]] = transformation.apply(peptide_coord[3:])

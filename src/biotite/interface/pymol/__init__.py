@@ -1,9 +1,5 @@
 # ruff: noqa: F401
 
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 This package enables the transfer of structures from *Biotite* to
 `PyMOL <https://pymol.org/>`_ for visualization and vice versa,

@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 import numpy as np
 import pytest
 import biotite.sequence as seq
@@ -34,6 +30,7 @@ BACKGROUND = (
                 "Y": 14488,
                 "B": 0,
                 "Z": 0,
+                "J": 0,
                 "X": 0,
                 "*": 0,
             }.values()
@@ -64,9 +61,9 @@ def test_distribution_param(matrix_name, gap_penalty, ref_lam, ref_k):
     alphabet = seq.ProteinSequence.alphabet
     matrix = align.SubstitutionMatrix(alphabet, alphabet, matrix_name)
 
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
     estimator = align.EValueEstimator.from_samples(
-        alphabet, matrix, gap_penalty, BACKGROUND, SAMPLE_LENGTH, SAMPLE_SIZE
+        alphabet, matrix, gap_penalty, BACKGROUND, SAMPLE_LENGTH, SAMPLE_SIZE, rng=rng
     )
 
     # Due to relatively low sample size, expect rather large deviation
@@ -87,14 +84,14 @@ def test_evalue():
     N_SAMPLES = 10000
     SEQ_LENGTH = 300
 
+    rng = np.random.default_rng(0)
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     estimator = align.EValueEstimator.from_samples(
-        seq.ProteinSequence.alphabet, matrix, GAP_PENALTY, BACKGROUND
+        seq.ProteinSequence.alphabet, matrix, GAP_PENALTY, BACKGROUND, rng=rng
     )
 
     # Generate large number of alignments of random sequences
-    np.random.seed(0)
-    random_sequence_code = np.random.choice(
+    random_sequence_code = rng.choice(
         len(seq.ProteinSequence.alphabet), size=(N_SAMPLES, 2, SEQ_LENGTH), p=BACKGROUND
     )
     sample_scores = np.zeros(N_SAMPLES, dtype=int)
@@ -129,9 +126,9 @@ def test_score_scaling(sequences):
 
     matrix = align.SubstitutionMatrix.std_protein_matrix()
 
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
     std_estimator = align.EValueEstimator.from_samples(
-        seq.ProteinSequence.alphabet, matrix, GAP_PENALTY, BACKGROUND
+        seq.ProteinSequence.alphabet, matrix, GAP_PENALTY, BACKGROUND, rng=rng
     )
     scores = [
         align.align_optimal(
@@ -156,7 +153,11 @@ def test_score_scaling(sequences):
         GAP_PENALTY[1] * SCALING_FACTOR,
     )
     scaled_estimator = align.EValueEstimator.from_samples(
-        seq.ProteinSequence.alphabet, scaled_matrix, scaled_gap_penalty, BACKGROUND
+        seq.ProteinSequence.alphabet,
+        scaled_matrix,
+        scaled_gap_penalty,
+        BACKGROUND,
+        rng=np.random.default_rng(0),
     )
     scores = [
         align.align_optimal(

@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 This module provides functions for calculation of characteristic values when
 comparing multiple structures with each other.
@@ -81,7 +77,8 @@ def rmsd(
 
     Calculate the RMSD of all models to the first model:
 
-    >>> superimposed, _ = superimpose(atom_array, atom_array_stack)
+    >>> transform = superimpose(atom_array, atom_array_stack)
+    >>> superimposed = transform.apply(atom_array_stack)
     >>> rms = rmsd(atom_array, superimposed)
     >>> print(np.around(rms, decimals=3))
     [0.000 1.928 2.103 2.209 1.806 2.172 2.704 1.360 2.337 1.818 1.879 2.471
@@ -242,7 +239,7 @@ def rmsf(
 
     >>> ca = atom_array_stack[:, atom_array_stack.atom_name == "CA"]
     >>> ca_average = average(ca)
-    >>> ca, _ = superimpose(ca_average, ca)
+    >>> ca = superimpose(ca_average, ca).apply(ca)
     >>> print(rmsf(ca_average, ca))
     [1.372 0.360 0.265 0.261 0.288 0.204 0.196 0.306 0.353 0.238 0.266 0.317
      0.358 0.448 0.586 0.369 0.332 0.396 0.410 0.968]

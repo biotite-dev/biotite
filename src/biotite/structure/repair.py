@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 This module contains functionalities for repairing malformed structures.
 """
@@ -19,6 +15,7 @@ from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.chains import get_chain_starts
 from biotite.structure.residues import get_residue_starts
 from biotite.typing import M, N, NDArray1
+from biotite.util import map_unique
 
 
 def create_continuous_res_ids(
@@ -108,8 +105,8 @@ def infer_elements(
     if isinstance(atoms, (AtomArray, AtomArrayStack)):
         atom_names = atoms.atom_name
     else:
-        atom_names = atoms
-    return np.array([_guess_element(name) for name in atom_names])
+        atom_names = np.asarray(atoms)
+    return map_unique(_guess_element, atom_names)
 
 
 def create_atom_names(

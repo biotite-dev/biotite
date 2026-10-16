@@ -1,7 +1,3 @@
-# This source code is part of the Biotite package and is distributed
-# under the 3-Clause BSD License. Please see 'LICENSE.rst' for further
-# information.
-
 """
 Utility functions for in internal use in `Bio.Structure` package.
 """
@@ -54,7 +50,7 @@ def norm_vector(v: np.ndarray) -> None:
         The array containing the vector(s).
         The vectors are represented by the last axis.
     """
-    factor = np.linalg.norm(v, axis=-1)
+    factor = np.linalg.vector_norm(v, axis=-1)
     if isinstance(factor, np.ndarray):
         v /= factor[..., np.newaxis]
     else:
