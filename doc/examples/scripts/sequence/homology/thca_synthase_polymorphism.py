@@ -92,8 +92,9 @@ def create_consensus(sequences):
         counts = np.bincount([sequence.code[seq_pos] for sequence in sequences])
         # The consensus amino acid is the most frequent amino acid
         consensus_code[seq_pos] = np.argmax(counts)
-    # Create empty ProteinSequence object...
-    consensus_sequence = seq.ProteinSequence()
+    # Create empty ProteinSequence object, whose alphabet comprises
+    # all symbols the consensus might contain...
+    consensus_sequence = seq.ProteinSequence(ambiguous=True)
     # ...and fill it with the sequence code containing the consensus
     # sequence
     consensus_sequence.code = consensus_code

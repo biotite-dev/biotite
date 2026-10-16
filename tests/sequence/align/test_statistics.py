@@ -58,7 +58,7 @@ def test_distribution_param(matrix_name, gap_penalty, ref_lam, ref_k):
     SAMPLE_LENGTH = 500
     SAMPLE_SIZE = 1000
 
-    alphabet = seq.ProteinSequence.alphabet
+    alphabet = seq.ProteinSequence.alphabet_ambiguous
     matrix = align.SubstitutionMatrix(alphabet, alphabet, matrix_name)
 
     rng = np.random.default_rng(0)
@@ -87,12 +87,14 @@ def test_evalue():
     rng = np.random.default_rng(0)
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     estimator = align.EValueEstimator.from_samples(
-        seq.ProteinSequence.alphabet, matrix, GAP_PENALTY, BACKGROUND, rng=rng
+        seq.ProteinSequence.alphabet_ambiguous, matrix, GAP_PENALTY, BACKGROUND, rng=rng
     )
 
     # Generate large number of alignments of random sequences
     random_sequence_code = rng.choice(
-        len(seq.ProteinSequence.alphabet), size=(N_SAMPLES, 2, SEQ_LENGTH), p=BACKGROUND
+        len(seq.ProteinSequence.alphabet_ambiguous),
+        size=(N_SAMPLES, 2, SEQ_LENGTH),
+        p=BACKGROUND,
     )
     sample_scores = np.zeros(N_SAMPLES, dtype=int)
     for i in range(N_SAMPLES):
@@ -128,7 +130,7 @@ def test_score_scaling(sequences):
 
     rng = np.random.default_rng(0)
     std_estimator = align.EValueEstimator.from_samples(
-        seq.ProteinSequence.alphabet, matrix, GAP_PENALTY, BACKGROUND, rng=rng
+        seq.ProteinSequence.alphabet_ambiguous, matrix, GAP_PENALTY, BACKGROUND, rng=rng
     )
     scores = [
         align.align_optimal(
@@ -144,8 +146,8 @@ def test_score_scaling(sequences):
     std_log_evalues = std_estimator.log_evalue(scores, SEQ_LENGTH, SEQ_LENGTH)
 
     scaled_matrix = align.SubstitutionMatrix(
-        seq.ProteinSequence.alphabet,
-        seq.ProteinSequence.alphabet,
+        seq.ProteinSequence.alphabet_ambiguous,
+        seq.ProteinSequence.alphabet_ambiguous,
         matrix.score_matrix() * SCALING_FACTOR,
     )
     scaled_gap_penalty = (
@@ -153,7 +155,7 @@ def test_score_scaling(sequences):
         GAP_PENALTY[1] * SCALING_FACTOR,
     )
     scaled_estimator = align.EValueEstimator.from_samples(
-        seq.ProteinSequence.alphabet,
+        seq.ProteinSequence.alphabet_ambiguous,
         scaled_matrix,
         scaled_gap_penalty,
         BACKGROUND,
@@ -183,7 +185,7 @@ def test_invalid_scoring_scheme():
     Check if `from_samples()` raises an exception when the expected
     similarity score between to random symbols is positive.
     """
-    alph = seq.ProteinSequence.alphabet
+    alph = seq.ProteinSequence.alphabet_ambiguous
     matrix = align.SubstitutionMatrix(
         alph, alph, np.ones((len(alph), len(alph)), dtype=int)
     )

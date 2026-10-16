@@ -250,8 +250,8 @@ acid/nucleotide composition in your sequence database.
 .. jupyter-execute::
 
     estimator = align.EValueEstimator.from_samples(
-        seq.ProteinSequence.alphabet, matrix, gap_penalty=-5,
-        frequencies=np.ones(len(seq.ProteinSequence.alphabet)),
+        seq.ProteinSequence.alphabet_unambiguous, matrix, gap_penalty=-5,
+        frequencies=np.ones(len(seq.ProteinSequence.alphabet_unambiguous)),
         # Trade accuracy for a shorter run time for this tutorial
         sample_length=200
     )

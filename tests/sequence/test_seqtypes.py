@@ -3,15 +3,43 @@ import pytest
 import biotite.sequence as seq
 
 
-def test_nucleotide_construction():
-    string = "AATGCGTTA"
-    string_amb = "ANNGCBRTAN"
-    dna = seq.NucleotideSequence(string)
-    assert dna.get_alphabet() == seq.NucleotideSequence.alphabet_unamb
-    assert str(dna) == string
-    dna = seq.NucleotideSequence(string_amb)
-    assert dna.get_alphabet() == seq.NucleotideSequence.alphabet_amb
-    assert str(dna) == string_amb
+@pytest.mark.parametrize("seed", range(10))
+@pytest.mark.parametrize("seq_type", [seq.NucleotideSequence, seq.ProteinSequence])
+def test_construction(seq_type, seed):
+    """
+    Check whether the unambiguous alphabet is chosen for a random sequence string
+    without ambiguous symbols and the ambiguous alphabet otherwise.
+    Furthermore, check that the alphabet is retained when the sequence is copied
+    or recreated from its ``repr()`` and that the alphabet can be enforced.
+    """
+    SEQ_LENGTH = 50
+
+    rng = np.random.default_rng(seed)
+    unamb_alph = seq_type.unambiguous_alphabet()
+    amb_alph = seq_type.ambiguous_alphabet()
+    assert amb_alph.extends(unamb_alph)
+    amb_only_symbols = amb_alph.get_symbols()[len(unamb_alph) :]
+    unamb_string = "".join(rng.choice(unamb_alph.get_symbols(), size=SEQ_LENGTH))
+    # Replace a random position with an ambiguous symbol
+    pos = rng.integers(SEQ_LENGTH)
+    amb_string = (
+        unamb_string[:pos] + rng.choice(amb_only_symbols) + unamb_string[pos + 1 :]
+    )
+
+    for string, ref_alph in [(unamb_string, unamb_alph), (amb_string, amb_alph)]:
+        for sequence in [
+            seq_type(string),
+            seq_type(string.lower()),
+            seq_type(list(string)),
+        ]:
+            assert sequence.get_alphabet() == ref_alph
+            assert str(sequence) == string
+            assert sequence.copy().get_alphabet() == ref_alph
+            assert eval(repr(sequence), vars(seq)) == sequence
+
+    assert seq_type(unamb_string, ambiguous=True).get_alphabet() == amb_alph
+    with pytest.raises(seq.AlphabetError):
+        seq_type(amb_string, ambiguous=False)
 
 
 def test_reverse_complement():
@@ -27,12 +55,18 @@ def test_stop_removal():
 
 
 @pytest.mark.parametrize(
-    ["dna_str", "protein_str"], [("CACATAGCATGA", "HIA*"), ("ATGTAGCTA", "M*L")]
+    ["dna_str", "protein_str"],
+    [("CACATAGCATGA", "HIA*"), ("ATGTAGCTA", "M*L"), ("CACATAGCA", "HIA")],
 )
 def test_full_translation(dna_str, protein_str):
+    """
+    Check the translated sequence against a reference.
+    This includes the alphabet, which should be unambiguous, if there is no stop
+    signal.
+    """
     dna = seq.NucleotideSequence(dna_str)
     protein = dna.translate(complete=True)
-    assert protein_str == str(protein)
+    assert protein == seq.ProteinSequence(protein_str)
 
 
 @pytest.mark.parametrize(
@@ -49,6 +83,9 @@ def test_frame_translation(dna_str, protein_str_list):
     proteins, pos = dna.translate(complete=False)
     assert len(proteins) == len(protein_str_list)
     assert set([str(protein) for protein in proteins]) == set(protein_str_list)
+    for protein in proteins:
+        # The alphabet should be unambiguous, if there is no stop signal
+        assert protein == seq.ProteinSequence(str(protein))
     # Test if the positions are also right
     # -> Get sequence slice and translate completely
     assert set(
@@ -68,7 +105,7 @@ def test_translation_met_start():
 
 
 def test_letter_conversion():
-    for symbol in seq.ProteinSequence.alphabet:
+    for symbol in seq.ProteinSequence.alphabet_ambiguous:
         three_letters = seq.ProteinSequence.convert_letter_1to3(symbol)
         single_letter = seq.ProteinSequence.convert_letter_3to1(three_letters)
         assert symbol == single_letter

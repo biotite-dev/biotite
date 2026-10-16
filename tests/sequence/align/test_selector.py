@@ -155,7 +155,7 @@ def test_syncmer_invalid_offset(offset, exception_type):
     with pytest.raises(exception_type):
         align.SyncmerSelector(
             # Any alphabet would work here
-            seq.NucleotideSequence.alphabet_unamb,
+            seq.NucleotideSequence.alphabet_unambiguous,
             K,
             S,
             offset=offset,
@@ -172,7 +172,7 @@ def test_mincode(use_permutation):
     K = 5
     COMPRESSION = 4
 
-    kmer_alph = align.KmerAlphabet(seq.NucleotideSequence.alphabet_unamb, K)
+    kmer_alph = align.KmerAlphabet(seq.NucleotideSequence.alphabet_unambiguous, K)
     kmers = np.arange(len(kmer_alph), dtype=np.int64)
 
     if use_permutation:

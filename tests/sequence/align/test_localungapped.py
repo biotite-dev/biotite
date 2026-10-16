@@ -137,11 +137,8 @@ def test_random_alignment(seed, uint8_code):
     # Create conserved regions
     conserved1 = ProteinSequence()
     conserved_len = rng.integers(MIN_CONSERVED_SIZE, MAX_CONSERVED_SIZE + 1)
-    conserved1.code = rng.integers(
-        # Do not include stop symbol for aesthetic reasons -> -1
-        len(conserved1.alphabet) - 1,
-        size=conserved_len,
-    )
+    # The unambiguous alphabet does not include the stop symbol
+    conserved1.code = rng.integers(len(conserved1.alphabet), size=conserved_len)
     conserved2 = ProteinSequence()
     # The second conserved regions is equal to the first one,
     # except a few point mutations
@@ -150,7 +147,7 @@ def test_random_alignment(seed, uint8_code):
         [False, True], size=conserved_len, p=[1 - MUTATION_PROB, MUTATION_PROB]
     )
     conserved2.code[mutation_mask] = rng.integers(
-        len(conserved2.alphabet) - 1, size=np.count_nonzero(mutation_mask)
+        len(conserved2.alphabet), size=np.count_nonzero(mutation_mask)
     )
     # Flank the conserved regions with equal termini to ensure
     # that the alignment extends from start to end of the region
@@ -163,7 +160,7 @@ def test_random_alignment(seed, uint8_code):
     offset = []
     for sequence, conserved in zip((seq1, seq2), (conserved1, conserved2)):
         sequence.code = rng.integers(
-            len(sequence.alphabet) - 1, size=rng.integers(MIN_SIZE, MAX_SIZE + 1)
+            len(sequence.alphabet), size=rng.integers(MIN_SIZE, MAX_SIZE + 1)
         )
         # Place conserved region randomly within the sequence
         conserved_pos = rng.integers(0, len(sequence) - len(conserved))

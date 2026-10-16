@@ -15,8 +15,8 @@ from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 from biotite.typing import C3, K, NDArray1, NDArray2
 
 # Abbreviations
-_NUC_ALPH = NucleotideSequence.alphabet_unamb
-_PROT_ALPH = ProteinSequence.alphabet
+_NUC_ALPH = NucleotideSequence.alphabet_unambiguous
+_PROT_ALPH = ProteinSequence.alphabet_ambiguous
 
 # Multiplier array that converts a codon in code representation
 # into a unique integer
@@ -188,6 +188,8 @@ class CodonTable(object):
         -------
         aa_codes : ndarray, dtype=int, shape=(n,)
             The amino acids as symbol codes.
+            The codes refer to the ambiguous alphabet of
+            :class:`ProteinSequence`, as they may include the stop signal.
 
         Examples
         --------
@@ -205,8 +207,9 @@ class CodonTable(object):
         >>> aa_codes = CodonTable.default_table().map_codon_codes(codon_codes)
         >>> print(aa_codes)
         [10 17 24]
-        >>> # Put into a protein sequence
-        >>> protein = ProteinSequence()
+        >>> # Put into a protein sequence, which must use the ambiguous alphabet
+        >>> # due to the stop signal
+        >>> protein = ProteinSequence(ambiguous=True)
         >>> protein.code = aa_codes
         >>> print(protein)
         MV*

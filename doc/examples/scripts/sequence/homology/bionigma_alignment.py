@@ -214,7 +214,7 @@ class ShapePlotter(graphics.SymbolPlotter):
             # Gaps are white
             return (1, 1, 1)
         code = alignment.sequences[seq_i].code[index]
-        return _colors[seq.ProteinSequence.alphabet.decode(code)]
+        return _colors[seq.ProteinSequence.alphabet_ambiguous.decode(code)]
 
     def _draw_circle(self, bbox, color):
         from matplotlib.patches import Circle

@@ -108,7 +108,7 @@ def sequence_loc_formatter(x, pos):
 
 COLOR_SCHEME = graphics.ColorScheme(
     "rbs",
-    seq.NucleotideSequence.alphabet_unamb,
+    seq.NucleotideSequence.alphabet_unambiguous,
     [
         biotite.colors["lightgreen"],  # A
         biotite.colors["orange"],  # C

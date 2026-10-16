@@ -67,7 +67,7 @@ alignment = alignment[:, order]
 alignment = alignment[220:300]
 
 # Get color scheme names
-alphabet = seq.ProteinSequence.alphabet
+alphabet = seq.ProteinSequence.alphabet_ambiguous
 schemes = [
     "flower",
     "blossom",

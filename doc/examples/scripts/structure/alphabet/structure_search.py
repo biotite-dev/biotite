@@ -33,7 +33,7 @@ import biotite.structure.alphabet as strucalph
 import biotite.structure.io.pdbx as pdbx
 
 # Amino acid background frequencies
-# Must have the same order as `ProteinSequence.alphabet`
+# Must have the same order as `ProteinSequence.alphabet_ambiguous`
 AA_FREQUENCY = {
     "A": 35155,
     "C": 8669,
@@ -140,7 +140,7 @@ background = np.array(list(AA_FREQUENCY.values()))
 # Normalize background frequencies
 background = background / background.sum()
 estimator = align.EValueEstimator.from_samples(
-    seq.ProteinSequence.alphabet,
+    seq.ProteinSequence.alphabet_ambiguous,
     align.SubstitutionMatrix.std_protein_matrix(),
     GAP_PENALTY,
     background,

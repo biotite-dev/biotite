@@ -9,16 +9,16 @@ K = 3
 
 @pytest.fixture(scope="module")
 def sequence():
-    sequence = seq.ProteinSequence()
+    sequence = seq.ProteinSequence(ambiguous=True)
     sequence.code = np.random.default_rng(0).integers(
-        len(seq.ProteinSequence.alphabet), size=SEQ_LENGTH
+        len(seq.ProteinSequence.alphabet_ambiguous), size=SEQ_LENGTH
     )
     return sequence
 
 
 @pytest.fixture(scope="module")
 def kmer_alphabet():
-    return align.KmerAlphabet(seq.ProteinSequence.alphabet, K)
+    return align.KmerAlphabet(seq.ProteinSequence.alphabet_ambiguous, K)
 
 
 @pytest.fixture(scope="module")

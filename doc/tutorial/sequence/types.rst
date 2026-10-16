@@ -49,14 +49,20 @@ The reverse complement of a DNA sequence is created by chaining the
 Protein sequences
 -----------------
 The other central :class:`Sequence` type is :class:`ProteinSequence`.
-It supports the letters for the 20 standard amino acids plus some
+Analogous to :class:`NucleotideSequence`, it may use two different
+alphabets - an unambiguous alphabet containing the letters for the 20
+standard amino acids and an ambiguous alphabet containing additionally
 letters for ambiguous amino acids and a letter for a stop signal.
 Furthermore, this class provides some utilities like
 3-letter to 1-letter translation (and vice versa).
 
 .. jupyter-execute::
 
+    prot_seq = seq.ProteinSequence("NIQTITE")
+    print(prot_seq.get_alphabet())
+    # 'B' is an ambiguous symbol, representing either 'D' or 'N'
     prot_seq = seq.ProteinSequence("BIQTITE")
+    print(prot_seq.get_alphabet())
     print("-".join([seq.ProteinSequence.convert_letter_1to3(symbol)
                     for symbol in prot_seq]))
 

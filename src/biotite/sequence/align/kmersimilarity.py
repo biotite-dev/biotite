@@ -99,7 +99,7 @@ class ScoreThresholdRule(SimilarityRule, Generic[S]):
     Examples
     --------
 
-    >>> kmer_alphabet = KmerAlphabet(ProteinSequence.alphabet, k=3)
+    >>> kmer_alphabet = KmerAlphabet(ProteinSequence.alphabet_ambiguous, k=3)
     >>> matrix = SubstitutionMatrix.std_protein_matrix()
     >>> rule = ScoreThresholdRule(matrix, threshold=15)
     >>> similars = rule.similar_kmers(kmer_alphabet, kmer_alphabet.encode("AIW"))

@@ -6,7 +6,7 @@ import biotite.sequence.align as align
 
 @pytest.fixture
 def kmer_alphabet():
-    return align.KmerAlphabet(seq.ProteinSequence.alphabet, 3)
+    return align.KmerAlphabet(seq.ProteinSequence.alphabet_ambiguous, 3)
 
 
 N = 10
@@ -24,13 +24,13 @@ def test_score_threshold_rule(kmer_alphabet, ref_kmer, threshold):
     """
     matrix = align.SubstitutionMatrix.std_protein_matrix()
 
-    ref_kmer_sequence = seq.ProteinSequence()
+    ref_kmer_sequence = seq.ProteinSequence(ambiguous=True)
     ref_kmer_sequence.code = kmer_alphabet.split(ref_kmer)
 
     ref_sim_kmer_set = set()
     # Iterate through all possible k-mers
     for kmer in range(len(kmer_alphabet)):
-        kmer_sequence = seq.ProteinSequence()
+        kmer_sequence = seq.ProteinSequence(ambiguous=True)
         kmer_sequence.code = kmer_alphabet.split(kmer)
         score = align.align_ungapped(
             ref_kmer_sequence, kmer_sequence, matrix, score_only=True
