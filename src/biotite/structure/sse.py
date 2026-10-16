@@ -7,14 +7,16 @@ from __future__ import annotations
 
 __name__ = "biotite.structure"
 __author__ = "Patrick Kunzmann"
-__all__ = ["PSeaElement", "annotate_sse"]
+__all__ = ["PSeaElement", "DsspElement", "annotate_sse", "annotate_dssp"]
 
+import functools
+from dataclasses import dataclass
 from enum import IntEnum
-from typing import TypeVar
+from typing import Any, TypeVar
 import numpy as np
 from numpy.typing import ArrayLike
-from biotite.rust.structure import CellList
 from biotite.structure.atoms import AtomArray
+from biotite.structure.celllist import CellList
 from biotite.structure.filter import filter_amino_acids
 from biotite.structure.geometry import angle, dihedral, distance
 from biotite.structure.integrity import check_res_id_continuity
@@ -32,6 +34,21 @@ _a_strand = (np.deg2rad(-180), np.deg2rad(-125), np.deg2rad(145), np.deg2rad(180
 _d2_strand = ((6.7 - 0.6), (6.7 + 0.6))
 _d3_strand = ((9.9 - 0.9), (9.9 + 0.9))
 _d4_strand = ((12.4 - 1.1), (12.4 + 1.1))
+
+# Parameters of the DSSP algorithm, taken from the reference implementation
+# H-bonds are only considered between residues with closer CA atoms
+_dssp_ca_cutoff = 9.0
+# Electrostatic coupling constant (-332 * 0.42 * 0.2) in kcal/mol*Å
+_dssp_coupling = -27.888
+_dssp_min_distance = 0.5
+_dssp_min_energy = -9.9
+_dssp_max_energy = -0.5
+# Larger C-N distances between consecutive residues indicate a chain break
+_dssp_peptide_bond_cutoff = 2.5
+_dssp_bend_angle = np.deg2rad(70)
+_dssp_ppii_phi = (np.deg2rad(-75 - 29), np.deg2rad(-75 + 29))
+_dssp_ppii_psi = (np.deg2rad(145 - 29), np.deg2rad(145 + 29))
+_dssp_ppii_length = 3
 
 
 _E = TypeVar("_E", bound=IntEnum)
@@ -145,6 +162,136 @@ _PSEA_SYMBOLS = {
     PSeaElement.COIL: "c",
     PSeaElement.HELIX: "a",
     PSeaElement.STRAND: "b",
+}
+
+
+class DsspElement(IntEnum):
+    r"""
+    The secondary structure elements assigned by *DSSP*, i.e.
+    :func:`annotate_dssp()` and :class:`biotite.application.dssp.DsspApp`.
+
+    Each element has a corresponding one-letter `symbol`, that is used
+    in the *DSSP* output.
+
+    - ``NONE`` (``''``): The residue is not an amino acid or has an
+      incomplete backbone.
+    - ``COIL`` (``'C'``): loop, coil or irregular
+    - ``ALPHA_HELIX`` (``'H'``): :math:`{\alpha}`-helix
+    - ``BRIDGE`` (``'B'``): isolated :math:`{\beta}`-bridge
+    - ``STRAND`` (``'E'``): extended strand, participation in
+      :math:`{\beta}`-ladder
+    - ``HELIX_3_10`` (``'G'``): 3 :sub:`10`-helix
+    - ``PI_HELIX`` (``'I'``): :math:`{\pi}`-helix
+    - ``TURN`` (``'T'``): hydrogen bonded turn
+    - ``BEND`` (``'S'``): bend
+    - ``POLYPROLINE_HELIX`` (``'P'``): polyproline II helix
+      (only assigned by *DSSP* 4 and later)
+
+    Examples
+    --------
+
+    >>> sse = DsspElement.from_symbols(["C", "H", "H", "E", "P"])
+    >>> print(sse)
+    [0 1 1 3 8]
+    >>> print(DsspElement.to_symbols(sse))
+    ['C' 'H' 'H' 'E' 'P']
+    >>> print(DsspElement.ALPHA_HELIX.symbol)
+    H
+    >>> print(DsspElement.from_symbol("E").name)
+    STRAND
+    """
+
+    NONE = -1
+    COIL = 0
+    ALPHA_HELIX = 1
+    BRIDGE = 2
+    STRAND = 3
+    HELIX_3_10 = 4
+    PI_HELIX = 5
+    TURN = 6
+    BEND = 7
+    POLYPROLINE_HELIX = 8
+
+    @property
+    def symbol(self) -> str:
+        """
+        The one-letter symbol of the secondary structure element.
+
+        Returns
+        -------
+        symbol : str
+            The one-letter symbol.
+        """
+        return _DSSP_SYMBOLS[self]
+
+    @classmethod
+    def from_symbol(cls, symbol: str) -> DsspElement:
+        """
+        Get the secondary structure element from its one-letter symbol.
+
+        Parameters
+        ----------
+        symbol : str
+            The symbol.
+
+        Returns
+        -------
+        sse : DsspElement
+            The corresponding secondary structure element.
+        """
+        for sse, sse_symbol in _DSSP_SYMBOLS.items():
+            if sse_symbol == symbol:
+                return sse
+        raise ValueError(f"Unknown secondary structure symbol '{symbol}'")
+
+    @classmethod
+    def from_symbols(cls, symbols: ArrayLike) -> NDArray1[K, np.int_]:
+        """
+        Convert an array of one-letter symbols into an array of
+        secondary structure elements.
+
+        Parameters
+        ----------
+        symbols : array-like, shape=(k,), dtype=str
+            The symbols.
+
+        Returns
+        -------
+        sse : ndarray, shape=(k,), dtype=int
+            The corresponding secondary structure elements.
+        """
+        return _symbols_to_values(_DSSP_SYMBOLS, symbols)
+
+    @classmethod
+    def to_symbols(cls, sse: ArrayLike) -> NDArray1[K, np.str_]:
+        """
+        Convert an array of secondary structure elements into an array
+        of one-letter symbols.
+
+        Parameters
+        ----------
+        sse : array-like, shape=(k,), dtype=int
+            The secondary structure elements.
+
+        Returns
+        -------
+        symbols : ndarray, shape=(k,), dtype=str
+            The corresponding symbols.
+        """
+        return _values_to_symbols(_DSSP_SYMBOLS, sse)
+
+
+_DSSP_SYMBOLS = {
+    DsspElement.NONE: "",
+    DsspElement.COIL: "C",
+    DsspElement.ALPHA_HELIX: "H",
+    DsspElement.BRIDGE: "B",
+    DsspElement.STRAND: "E",
+    DsspElement.HELIX_3_10: "G",
+    DsspElement.PI_HELIX: "I",
+    DsspElement.TURN: "T",
+    DsspElement.BEND: "S",
+    DsspElement.POLYPROLINE_HELIX: "P",
 }
 
 
@@ -470,3 +617,416 @@ def _mask_regions_with_contacts(
             output_mask[start:stop] = True
 
     return output_mask  # pyright: ignore[reportReturnType]
+
+
+def annotate_dssp(atom_array: AtomArray[N]) -> NDArray1[K, np.int_]:
+    r"""
+    Calculate the secondary structure elements (SSEs) of a protein
+    based on the `DSSP` algorithm.
+    :footcite:`Kabsch1983, Hekkelman2025`
+
+    The assignment is based on the backbone hydrogen bond pattern,
+    measured via an electrostatic energy criterion.
+    Chain breaks are detected by chain ID changes and by too large
+    distances between the ``C`` and ``N`` atom of consecutive residues.
+
+    Parameters
+    ----------
+    atom_array : AtomArray
+        The atom array to annotate for.
+        Non-peptide residues are also allowed and obtain
+        :attr:`DsspElement.NONE`.
+
+    Returns
+    -------
+    sse : ndarray, dtype=int
+        An array containing the secondary structure elements as
+        :class:`DsspElement` values,
+        where the index corresponds to a residue of `atom_array`
+        (see e.g. :func:`get_residues()`).
+        :attr:`DsspElement.NONE` indicates that a residue is not
+        an amino acid or it lacks one of the backbone atoms
+        ``N``, ``CA``, ``C`` or ``O``.
+
+    See Also
+    --------
+    annotate_sse : Faster, but less accurate, assignment based on ``CA`` atoms only.
+    biotite.application.dssp.DsspApp : Interface to the original *DSSP* software.
+
+    Notes
+    -----
+    This function implements the algorithm of *DSSP* 4, including
+    the assignment of polyproline II helices and the preference of
+    :math:`{\pi}`-helices over :math:`{\alpha}`-helices.
+    Hydrogen atoms in the input structure are ignored, instead the
+    amide hydrogen position is derived from the backbone, as in the
+    original *DSSP*.
+
+    In contrast to the original *DSSP* software, the first residue
+    after a chain break cannot act as hydrogen bond donor, as the
+    position of its amide hydrogen atom is undefined.
+    Hence, the assigned SSEs may differ in rare cases.
+
+    References
+    ----------
+
+    .. footbibliography::
+
+    Examples
+    --------
+
+    SSE of PDB 1L2Y:
+
+    >>> sse = annotate_dssp(atom_array)
+    >>> print(sse)
+    [0 1 1 1 1 1 1 1 6 6 4 4 4 4 6 0 8 8 8 0]
+    >>> print("".join(DsspElement.to_symbols(sse)))
+    CHHHHHHHTTGGGGTCPPPC
+    """
+    residue_starts = get_residue_starts(atom_array)
+    backbone_coord = _get_backbone_coord(atom_array, residue_starts)
+    # Only residues with complete backbone are considered by DSSP
+    is_complete = ~np.isnan(backbone_coord).any(axis=(1, 2))
+    sse = np.full(len(residue_starts), DsspElement.NONE, dtype=int)
+    if not is_complete.any():
+        return sse  # pyright: ignore[reportReturnType]
+
+    n, ca, c, o = backbone_coord[is_complete].transpose(1, 0, 2)
+    is_proline = atom_array.res_name[residue_starts][is_complete] == "PRO"
+    # Consecutive residues with the same segment ID are part of a continuous chain
+    chain_id = atom_array.chain_id[residue_starts][is_complete]
+    is_break = (chain_id[1:] != chain_id[:-1]) | (
+        distance(c[:-1], n[1:]) > _dssp_peptide_bond_cutoff
+    )
+    segment = np.concatenate([[0], np.cumsum(is_break)])
+
+    acceptors = _find_dssp_hbonds(n, ca, c, o, segment, is_proline)
+    sse[is_complete] = _assign_dssp_elements(acceptors, n, ca, c, segment)
+    return sse  # pyright: ignore[reportReturnType]
+
+
+def _get_backbone_coord(
+    atom_array: AtomArray, residue_starts: NDArray1[Any, np.integer]
+) -> NDArray2[Any, Any, np.floating]:
+    """
+    Get the coordinates of the ``N``, ``CA``, ``C`` and ``O`` atom
+    (in this order) for each residue.
+    Coordinates of missing atoms are NaN.
+    """
+    coord = np.full((len(residue_starts), 4, 3), np.nan, dtype=np.float32)
+    is_amino_acid = filter_amino_acids(atom_array)
+    for i, atom_name in enumerate(("N", "CA", "C", "O")):
+        indices = np.where(is_amino_acid & (atom_array.atom_name == atom_name))[0]
+        residue_indices = np.searchsorted(residue_starts, indices, "right") - 1
+        coord[residue_indices, i] = atom_array.coord[indices]
+    return coord  # pyright: ignore[reportReturnType]
+
+
+def _find_dssp_hbonds(
+    n: NDArray2[N, XYZ, np.floating],
+    ca: NDArray2[N, XYZ, np.floating],
+    c: NDArray2[N, XYZ, np.floating],
+    o: NDArray2[N, XYZ, np.floating],
+    segment: NDArray1[N, np.integer],
+    is_proline: NDArray1[N, np.bool_],
+) -> NDArray2[N, Any, np.integer]:
+    """
+    Find the backbone hydrogen bonds according to the DSSP energy criterion.
+
+    Returns
+    -------
+    acceptors : ndarray, shape=(n,2), dtype=int
+        For each residue as donor (N-H), the indices of the up to two
+        residues, whose C=O accepts the hydrogen bond.
+        As in DSSP, only the two energetically most favorable bonds are kept.
+        Missing bonds are indicated by ``-1``.
+    """
+    # The amide hydrogen is placed 1 Å from N, in the direction opposite to
+    # the C=O of the preceding residue
+    co = c[:-1] - o[:-1]
+    h = np.full_like(n, np.nan)
+    h[1:] = n[1:] + co / np.linalg.norm(co, axis=-1, keepdims=True)
+    # Proline has no amide hydrogen and at chain starts its position is undefined
+    can_donate = ~is_proline & ~np.isnan(h).any(axis=-1)
+    can_donate[1:] &= segment[1:] == segment[:-1]
+
+    donor, acceptor = _get_ca_pairs(ca).T
+    # Like the reference implementation, omit bonds from a residue to its predecessor
+    mask = can_donate[donor] & (donor != acceptor + 1)
+    donor, acceptor = donor[mask], acceptor[mask]
+    energy = _hbond_energy(n[donor], h[donor], c[acceptor], o[acceptor])
+
+    # Keep only the two lowest energy bonds for each donor
+    order = np.lexsort((acceptor, energy, donor))
+    donor, acceptor, energy = donor[order], acceptor[order], energy[order]
+    rank = np.arange(len(donor)) - np.searchsorted(donor, donor)
+    mask = (rank < 2) & (energy < _dssp_max_energy)
+    acceptors = np.full((len(n), 2), -1, dtype=int)
+    acceptors[donor[mask], rank[mask]] = acceptor[mask]
+    return acceptors  # pyright: ignore[reportReturnType]
+
+
+def _get_ca_pairs(ca: NDArray2[N, XYZ, np.floating]) -> NDArray2[Any, Any, np.integer]:
+    """
+    Get all pairs of distinct residue indices, whose ``CA`` atoms are within
+    the DSSP cutoff distance.
+    Each pair appears in both orders.
+    """
+    cell_list = CellList(ca, _dssp_ca_cutoff)
+    pairs = cell_list.get_atoms(
+        ca, _dssp_ca_cutoff, result_format=CellList.Result.PAIRS
+    )
+    return pairs[pairs[:, 0] != pairs[:, 1]]
+
+
+def _hbond_energy(
+    n: NDArray2[K, XYZ, np.floating],
+    h: NDArray2[K, XYZ, np.floating],
+    c: NDArray2[K, XYZ, np.floating],
+    o: NDArray2[K, XYZ, np.floating],
+) -> NDArray1[K, np.floating]:
+    """
+    Calculate the electrostatic energy of hydrogen bonds between
+    N-H donor and C=O acceptor groups.
+    """
+    distances = np.stack(
+        [distance(h, o), distance(h, c), distance(n, c), distance(n, o)]
+    ).astype(np.float64)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        d_ho, d_hc, d_nc, d_no = distances
+        energy = _dssp_coupling * (1 / d_ho - 1 / d_hc + 1 / d_nc - 1 / d_no)
+    energy[(distances < _dssp_min_distance).any(axis=0)] = _dssp_min_energy
+    # Rounding is part of the reference implementation
+    return np.maximum(np.round(energy, 3), _dssp_min_energy)
+
+
+def _assign_dssp_elements(
+    acceptors: NDArray2[N, Any, np.integer],
+    n: NDArray2[N, XYZ, np.floating],
+    ca: NDArray2[N, XYZ, np.floating],
+    c: NDArray2[N, XYZ, np.floating],
+    segment: NDArray1[N, np.integer],
+) -> NDArray1[N, np.int_]:
+    """
+    Assign the DSSP secondary structure elements based on the hydrogen bonds
+    and the backbone geometry.
+    The order of assignment establishes the priority of the elements.
+    """
+    length = len(segment)
+    sse = np.full(length, DsspElement.COIL, dtype=int)
+
+    strand_mask, bridge_mask = _find_beta_ladders(acceptors, ca, segment)
+    sse[strand_mask] = DsspElement.STRAND
+    sse[bridge_mask] = DsspElement.BRIDGE
+
+    # `n_turns[k][i]` is true, if residue `i` starts an n-turn of length `k`,
+    # i.e. the C=O of residue `i` is bonded to the N-H of residue `i + k`
+    n_turns = {}
+    for k in (3, 4, 5):
+        i = np.arange(length - k)
+        n_turns[k] = np.zeros(length, dtype=bool)
+        n_turns[k][i] = (segment[i] == segment[i + k]) & _has_hbond(acceptors, i + k, i)
+    # A minimal helix is defined by two consecutive n-turns
+    helix_starts = {k: n_turns[k] & _shift(n_turns[k], 1) for k in n_turns}
+
+    sse[_shift(helix_starts[4], range(4)).any(axis=0)] = DsspElement.ALPHA_HELIX
+    # 3-10 helices must not overwrite other elements
+    is_occupied = np.isin(
+        sse, [DsspElement.ALPHA_HELIX, DsspElement.STRAND, DsspElement.BRIDGE]
+    )
+    starts = helix_starts[3] & ~_shift(is_occupied, range(0, -3, -1)).any(axis=0)
+    sse[_shift(starts, range(3)).any(axis=0)] = DsspElement.HELIX_3_10
+    # Pi helices take precedence over alpha helices
+    is_occupied = np.isin(
+        sse, [DsspElement.HELIX_3_10, DsspElement.STRAND, DsspElement.BRIDGE]
+    )
+    starts = helix_starts[5] & ~_shift(is_occupied, range(0, -5, -1)).any(axis=0)
+    sse[_shift(starts, range(5)).any(axis=0)] = DsspElement.PI_HELIX
+
+    # Residues enclosed by any n-turn are part of a turn
+    turn_mask = np.zeros(length, dtype=bool)
+    for k, n_turn in n_turns.items():
+        turn_mask |= _shift(n_turn, range(1, k)).any(axis=0)
+    sse[turn_mask & (sse == DsspElement.COIL)] = DsspElement.TURN
+
+    # The bend angle is the angle between the CA(i-2)->CA(i) and CA(i)->CA(i+2)
+    bend_angle = np.full(length, np.nan)
+    i = np.arange(2, length - 2)
+    bend_angle[i] = np.pi - angle(ca[i - 2], ca[i], ca[i + 2])
+    bend_angle[i[segment[i - 2] != segment[i + 2]]] = np.nan
+    sse[(bend_angle > _dssp_bend_angle) & (sse == DsspElement.COIL)] = DsspElement.BEND
+
+    # Polyproline II helices are defined by consecutive residues with
+    # characteristic backbone dihedral angles
+    phi = np.full(length, np.nan)
+    psi = np.full(length, np.nan)
+    phi[1:] = dihedral(c[:-1], n[1:], ca[1:], c[1:])
+    psi[:-1] = dihedral(n[:-1], ca[:-1], c[:-1], n[1:])
+    is_continuous = segment[1:] == segment[:-1]
+    phi[1:][~is_continuous] = np.nan
+    psi[:-1][~is_continuous] = np.nan
+    is_ppii = (
+        (phi >= _dssp_ppii_phi[0])
+        & (phi <= _dssp_ppii_phi[1])
+        & (psi >= _dssp_ppii_psi[0])
+        & (psi <= _dssp_ppii_psi[1])
+    )
+    window = range(_dssp_ppii_length)
+    starts = _shift(is_ppii, [-k for k in window]).all(axis=0)
+    ppii_mask = _shift(starts, window).any(axis=0)  # pyright: ignore[reportArgumentType]
+    sse[ppii_mask & (sse == DsspElement.COIL)] = DsspElement.POLYPROLINE_HELIX
+
+    return sse  # pyright: ignore[reportReturnType]
+
+
+@dataclass
+class _Ladder:
+    """
+    A ladder of consecutive bridges between the residues `i` and `j`.
+    `i` and `j` are kept in ascending order, so for antiparallel ladders
+    ``i[k]`` is paired with ``j[-k-1]``.
+    """
+
+    is_parallel: bool
+    i: list[int]
+    j: list[int]
+
+
+def _find_beta_ladders(
+    acceptors: NDArray2[N, Any, np.integer],
+    ca: NDArray2[N, XYZ, np.floating],
+    segment: NDArray1[N, np.integer],
+) -> tuple[NDArray1[N, np.bool_], NDArray1[N, np.bool_]]:
+    """
+    Find the residues that are part of a ladder of multiple bridges (strand)
+    or of a ladder of only a single bridge (isolated bridge).
+    """
+    length = len(segment)
+    pairs = _get_ca_pairs(ca)
+    pairs = pairs[pairs[:, 0] < pairs[:, 1]]
+    # Process pairs in the same order as the reference implementation
+    i, j = pairs[np.lexsort((pairs[:, 1], pairs[:, 0]))].T
+    # A bridge requires the adjacent residues to exist without a chain break
+    mask = (i > 0) & (j < length - 1)
+    i, j = i[mask], j[mask]
+    mask = (segment[i - 1] == segment[i + 1]) & (segment[j - 1] == segment[j + 1])
+    i, j = i[mask], j[mask]
+
+    hbond = functools.partial(_has_hbond, acceptors)
+    is_parallel = (hbond(i + 1, j) & hbond(j, i - 1)) | (
+        hbond(j + 1, i) & hbond(i, j - 1)
+    )
+    is_antiparallel = ~is_parallel & (
+        (hbond(i + 1, j - 1) & hbond(j + 1, i - 1)) | (hbond(j, i) & hbond(i, j))
+    )
+    is_bridge = is_parallel | is_antiparallel
+
+    # Join consecutive bridges into ladders
+    ladders = []
+    # Maps the next bridge, that would continue a ladder, to that ladder
+    ladder_ends = {}
+    for bridge_i, bridge_j, parallel in zip(
+        i[is_bridge].tolist(), j[is_bridge].tolist(), is_parallel[is_bridge].tolist()
+    ):
+        ladder = ladder_ends.pop((bridge_i, bridge_j, parallel), None)
+        if ladder is None:
+            ladder = _Ladder(parallel, [bridge_i], [bridge_j])
+            ladders.append(ladder)
+        else:
+            ladder.i.append(bridge_i)
+            if parallel:
+                ladder.j.append(bridge_j)
+            else:
+                ladder.j.insert(0, bridge_j)
+        next_j = bridge_j + 1 if parallel else bridge_j - 1
+        ladder_ends[bridge_i + 1, next_j, parallel] = ladder
+
+    # Join ladders separated by a beta-bulge
+    ladders.sort(key=lambda ladder: ladder.i[0])
+    k = 0
+    while k < len(ladders):
+        ladder = ladders[k]
+        m = k + 1
+        while m < len(ladders):
+            if ladders[m].i[0] - ladder.i[-1] >= 6:
+                # As ladders are sorted, all following ladders are also too far
+                # away to be connected via a bulge (see `_is_bulge()`)
+                break
+            if _is_bulge(ladder, ladders[m], segment):
+                other = ladders.pop(m)
+                ladder.i = ladder.i + other.i
+                if ladder.is_parallel:
+                    ladder.j = ladder.j + other.j
+                else:
+                    ladder.j = other.j + ladder.j
+            else:
+                m += 1
+        k += 1
+
+    strand_mask = np.zeros(length, dtype=bool)
+    bridge_mask = np.zeros(length, dtype=bool)
+    for ladder in ladders:
+        mask = strand_mask if len(ladder.i) > 1 else bridge_mask
+        mask[ladder.i[0] : ladder.i[-1] + 1] = True
+        mask[ladder.j[0] : ladder.j[-1] + 1] = True
+    # Strands take precedence over isolated bridges
+    return strand_mask, bridge_mask & ~strand_mask  # pyright: ignore[reportReturnType]
+
+
+def _is_bulge(
+    ladder: _Ladder, other: _Ladder, segment: NDArray1[Any, np.integer]
+) -> bool:
+    """
+    Check whether the `other` ladder continues `ladder` after a beta-bulge,
+    i.e. a gap of at most 4 residues on one strand and at most 1 residue
+    on the other strand.
+    """
+    if ladder.is_parallel != other.is_parallel:
+        return False
+    # Both ladders must reside in the same continuous chains
+    if (
+        segment[min(ladder.i[0], other.i[0])] != segment[max(ladder.i[-1], other.i[-1])]
+        or segment[min(ladder.j[0], other.j[0])]
+        != segment[max(ladder.j[-1], other.j[-1])]
+    ):
+        return False
+    gap_i = other.i[0] - ladder.i[-1]
+    if ladder.is_parallel:
+        gap_j = other.j[0] - ladder.j[-1]
+    else:
+        gap_j = ladder.j[0] - other.j[-1]
+    if not 0 < gap_i < 6 or gap_j < 0:
+        return False
+    return (gap_j < 6 and gap_i < 3) or gap_j < 3
+
+
+def _has_hbond(
+    acceptors: NDArray2[Any, Any, np.integer],
+    donor: NDArray1[K, np.integer],
+    acceptor: NDArray1[K, np.integer],
+) -> NDArray1[K, np.bool_]:
+    """
+    Check for each given donor/acceptor residue pair, whether a hydrogen bond
+    exists.
+    """
+    return (acceptors[donor] == acceptor[:, np.newaxis]).any(axis=-1)
+
+
+def _shift(
+    mask: NDArray1[N, np.bool_], offsets: int | range | list[int]
+) -> NDArray2[Any, N, np.bool_]:
+    """
+    Shift the mask by the given offsets, i.e. ``shifted[k, i] = mask[i - offsets[k]]``.
+    Positions shifted in from outside the mask are ``False``.
+    If a single offset is given, a 1D array is returned.
+    """
+    if isinstance(offsets, int):
+        return _shift(mask, [offsets])[0]
+    length = len(mask)
+    shifted = np.zeros((len(offsets), length), dtype=bool)
+    for k, offset in enumerate(offsets):
+        if offset >= 0:
+            shifted[k, offset:] = mask[: max(length - offset, 0)]
+        else:
+            shifted[k, :offset] = mask[-offset:]
+    return shifted  # pyright: ignore[reportReturnType]

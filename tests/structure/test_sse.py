@@ -3,7 +3,8 @@ import pytest
 import biotite.sequence.io.fasta as fasta
 import biotite.structure as struc
 import biotite.structure.io.pdbx as pdbx
-from tests.util import data_dir
+from biotite.application.dssp import DsspApp
+from tests.util import data_dir, is_not_installed
 
 
 def test_sse():
@@ -111,18 +112,81 @@ def test_sse_non_peptide(file_name):
     assert np.all(sse[~peptide_mask] == struc.PSeaElement.NONE)
 
 
-def test_symbol_conversion():
+@pytest.mark.parametrize("element_class", [struc.PSeaElement, struc.DsspElement])
+def test_symbol_conversion(element_class):
     """
-    Converting :class:`PSeaElement` values to symbols and back
-    must restore the original values and unknown symbols must be
-    rejected.
+    Converting SSE values to symbols and back must restore the original
+    values and unknown symbols must be rejected.
     """
-    ref_sse = np.array([sse.value for sse in struc.PSeaElement] * 3)
-    symbols = struc.PSeaElement.to_symbols(ref_sse)
-    assert struc.PSeaElement.from_symbols(symbols).tolist() == ref_sse.tolist()
-    for sse in struc.PSeaElement:
-        assert struc.PSeaElement.from_symbol(sse.symbol) == sse
+    ref_sse = np.array([sse.value for sse in element_class] * 3)
+    symbols = element_class.to_symbols(ref_sse)
+    assert element_class.from_symbols(symbols).tolist() == ref_sse.tolist()
+    for sse in element_class:
+        assert element_class.from_symbol(sse.symbol) == sse
     with pytest.raises(ValueError):
-        struc.PSeaElement.from_symbols(["a", "x"])
+        element_class.from_symbols([element_class.COIL.symbol, "x"])
     with pytest.raises(ValueError):
-        struc.PSeaElement.from_symbol("x")
+        element_class.from_symbol("x")
+
+
+@pytest.mark.skipif(is_not_installed("mkdssp"), reason="DSSP is not installed")
+@pytest.mark.parametrize(
+    "file_name",
+    sorted((data_dir("structure") / "pdb").glob("*.bcif")),
+    ids=lambda path: path.name,
+)
+def test_dssp_consistency(file_name):
+    """
+    Check if :func:`annotate_dssp()` gives exactly the same result as the
+    original *DSSP* software.
+    The test structures cover multiple chains, chain gaps and
+    non-canonical amino acids.
+    """
+    atoms = pdbx.get_structure(pdbx.BinaryCIFFile.read(file_name), model=1)
+    atoms = atoms[struc.filter_amino_acids(atoms)]
+    if atoms.array_length() == 0:
+        pytest.skip("Structure contains no protein")
+
+    ref_sse = DsspApp().run(atoms).result()
+    test_sse = struc.annotate_dssp(atoms)
+
+    assert struc.DsspElement.to_symbols(test_sse).tolist() == (
+        struc.DsspElement.to_symbols(ref_sse).tolist()
+    )
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    sorted((data_dir("structure") / "pdb").glob("*.bcif")),
+    ids=lambda path: path.name,
+)
+def test_dssp_non_peptide(file_name):
+    """
+    Non-peptide residues must obtain :attr:`DsspElement.NONE` and must not
+    influence the SSE of the peptide residues.
+    """
+    atoms = pdbx.get_structure(pdbx.BinaryCIFFile.read(file_name), model=1)
+    peptide_mask = struc.filter_amino_acids(atoms)
+    ref_sse = struc.annotate_dssp(atoms[peptide_mask])
+
+    test_sse = struc.annotate_dssp(atoms)
+
+    peptide_mask = peptide_mask[struc.get_residue_starts(atoms)]
+    assert test_sse[peptide_mask].tolist() == ref_sse.tolist()
+    assert np.all(test_sse[~peptide_mask] == struc.DsspElement.NONE)
+
+
+@pytest.mark.parametrize("n_residues", range(4))
+def test_dssp_short_chain(n_residues):
+    """
+    Peptides too short to form even the shortest n-turn (4 residues)
+    should be annotated as coil.
+    """
+    atoms = pdbx.get_structure(
+        pdbx.BinaryCIFFile.read(data_dir("structure") / "pdb" / "1l2y.bcif"), model=1
+    )
+    atoms = atoms[atoms.res_id <= n_residues]
+
+    sse = struc.annotate_dssp(atoms)
+
+    assert sse.tolist() == [struc.DsspElement.COIL] * n_residues

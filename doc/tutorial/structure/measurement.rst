@@ -161,5 +161,18 @@ An ``'a'`` means alpha-helix, ``'b'`` beta-sheet, and ``'c'`` means coil.
     # Pretty print
     print("".join(struc.PSeaElement.to_symbols(sse)))
 
-Note that you can also use the popular *DSSP* program to measure the secondary
+The *P-SEA* algorithm used by :func:`annotate_sse()` is based on the ``CA``
+atoms only.
+A more detailed assignment based on the backbone hydrogen bonds is available via
+:func:`annotate_dssp()`, which implements the popular *DSSP* algorithm.
+It returns :class:`DsspElement` values, which distinguish, among others,
+alpha-, 3-10- and pi-helices (``'H'``, ``'G'``, ``'I'``), strands (``'E'``)
+and turns (``'T'``).
+
+.. jupyter-execute::
+
+    sse = struc.annotate_dssp(array)
+    print("".join(struc.DsspElement.to_symbols(sse)))
+
+Note that you can also use the original *DSSP* program to measure the secondary
 structure as explained in a :doc:`later chapter <../application/dssp>`.

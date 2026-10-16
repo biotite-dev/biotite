@@ -2,14 +2,12 @@ from __future__ import annotations
 
 __name__ = "biotite.application.dssp"
 __author__ = "Patrick Kunzmann"
-__all__ = ["DsspApp", "DsspElement"]
+__all__ = ["DsspApp"]
 
 import subprocess
-from enum import IntEnum
 from os import PathLike
 from tempfile import NamedTemporaryFile
 import numpy as np
-from numpy.typing import ArrayLike
 from biotite.application.localapp import (
     CLIArgument,
     CLIOption,
@@ -27,133 +25,8 @@ from biotite.structure.io.pdbx.component import MaskValue
 from biotite.structure.io.pdbx.convert import set_structure
 from biotite.structure.repair import create_continuous_res_ids
 from biotite.structure.residues import get_residue_starts
-from biotite.structure.sse import _symbols_to_values, _values_to_symbols
+from biotite.structure.sse import DsspElement
 from biotite.typing import K, N, NDArray1
-
-
-class DsspElement(IntEnum):
-    r"""
-    The secondary structure elements assigned by *DSSP*.
-
-    Each element has a corresponding one-letter `symbol`, that is used
-    in the *DSSP* output.
-
-    - ``COIL`` (``'C'``): loop, coil or irregular
-    - ``ALPHA_HELIX`` (``'H'``): :math:`{\alpha}`-helix
-    - ``BRIDGE`` (``'B'``): isolated :math:`{\beta}`-bridge
-    - ``STRAND`` (``'E'``): extended strand, participation in
-      :math:`{\beta}`-ladder
-    - ``HELIX_3_10`` (``'G'``): 3 :sub:`10`-helix
-    - ``PI_HELIX`` (``'I'``): :math:`{\pi}`-helix
-    - ``TURN`` (``'T'``): hydrogen bonded turn
-    - ``BEND`` (``'S'``): bend
-    - ``POLYPROLINE_HELIX`` (``'P'``): polyproline II helix
-      (only assigned by *DSSP* 4 and later)
-
-    Examples
-    --------
-
-    >>> sse = DsspElement.from_symbols(["C", "H", "H", "E", "P"])
-    >>> print(sse)
-    [0 1 1 3 8]
-    >>> print(DsspElement.to_symbols(sse))
-    ['C' 'H' 'H' 'E' 'P']
-    >>> print(DsspElement.ALPHA_HELIX.symbol)
-    H
-    >>> print(DsspElement.from_symbol("E").name)
-    STRAND
-    """
-
-    COIL = 0
-    ALPHA_HELIX = 1
-    BRIDGE = 2
-    STRAND = 3
-    HELIX_3_10 = 4
-    PI_HELIX = 5
-    TURN = 6
-    BEND = 7
-    POLYPROLINE_HELIX = 8
-
-    @property
-    def symbol(self) -> str:
-        """
-        The one-letter symbol of the secondary structure element.
-
-        Returns
-        -------
-        symbol : str
-            The one-letter symbol.
-        """
-        return _DSSP_SYMBOLS[self]
-
-    @classmethod
-    def from_symbol(cls, symbol: str) -> DsspElement:
-        """
-        Get the secondary structure element from its one-letter symbol.
-
-        Parameters
-        ----------
-        symbol : str
-            The symbol.
-
-        Returns
-        -------
-        sse : DsspElement
-            The corresponding secondary structure element.
-        """
-        for sse, sse_symbol in _DSSP_SYMBOLS.items():
-            if sse_symbol == symbol:
-                return sse
-        raise ValueError(f"Unknown secondary structure symbol '{symbol}'")
-
-    @classmethod
-    def from_symbols(cls, symbols: ArrayLike) -> NDArray1[K, np.int_]:
-        """
-        Convert an array of one-letter symbols into an array of
-        secondary structure elements.
-
-        Parameters
-        ----------
-        symbols : array-like, shape=(k,), dtype=str
-            The symbols.
-
-        Returns
-        -------
-        sse : ndarray, shape=(k,), dtype=int
-            The corresponding secondary structure elements.
-        """
-        return _symbols_to_values(_DSSP_SYMBOLS, symbols)
-
-    @classmethod
-    def to_symbols(cls, sse: ArrayLike) -> NDArray1[K, np.str_]:
-        """
-        Convert an array of secondary structure elements into an array
-        of one-letter symbols.
-
-        Parameters
-        ----------
-        sse : array-like, shape=(k,), dtype=int
-            The secondary structure elements.
-
-        Returns
-        -------
-        symbols : ndarray, shape=(k,), dtype=str
-            The corresponding symbols.
-        """
-        return _values_to_symbols(_DSSP_SYMBOLS, sse)
-
-
-_DSSP_SYMBOLS = {
-    DsspElement.COIL: "C",
-    DsspElement.ALPHA_HELIX: "H",
-    DsspElement.BRIDGE: "B",
-    DsspElement.STRAND: "E",
-    DsspElement.HELIX_3_10: "G",
-    DsspElement.PI_HELIX: "I",
-    DsspElement.TURN: "T",
-    DsspElement.BEND: "S",
-    DsspElement.POLYPROLINE_HELIX: "P",
-}
 
 
 class DsspApp(LocalApp):
@@ -161,7 +34,7 @@ class DsspApp(LocalApp):
     A handle to the *DSSP* software.
 
     *DSSP* differentiates between the secondary structure elements
-    listed in :class:`DsspElement`.
+    listed in :class:`biotite.structure.DsspElement`.
 
     Parameters
     ----------
@@ -196,7 +69,7 @@ class DsspApp(LocalApp):
         future : Future of ndarray, shape=(k,), dtype=int
             A handle to the running assignment.
             Call :meth:`Future.result()` to obtain the array of
-            :class:`DsspElement` values, one per residue in the input
+            :class:`biotite.structure.DsspElement` values, one per residue in the input
             atom array.
         """
         if not np.all(filter_amino_acids(atom_array)):

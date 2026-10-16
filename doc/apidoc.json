@@ -396,7 +396,9 @@
             "dihedral_backbone",
             "dihedral_side_chain",
             "PSeaElement",
-            "annotate_sse"
+            "annotate_sse",
+            "DsspElement",
+            "annotate_dssp"
         ],
         "Nucleic acids" : [
             "Edge",
