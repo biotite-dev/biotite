@@ -39,7 +39,7 @@ class ColorScheme:
     Examples
     --------
 
-    >>> alphabet = NucleotideSequence.alphabet_unamb
+    >>> alphabet = NucleotideSequence.alphabet_unambiguous
     >>> scheme = ColorScheme("example", alphabet, ["red", "green", None, "blue"])
     >>> print(scheme.fit(alphabet, default="black"))
     ['red', 'green', 'black', 'blue']
@@ -156,7 +156,7 @@ def get_color_scheme(
     Examples
     --------
 
-    >>> alphabet = NucleotideSequence.alphabet_unamb
+    >>> alphabet = NucleotideSequence.alphabet_unambiguous
     >>> color_scheme = get_color_scheme("rainbow", alphabet)
     >>> print(color_scheme)
     ['#3737f5', '#37f537', '#f5f537', '#f53737']

@@ -21,6 +21,7 @@ from typing import IO, Literal
 import numpy as np
 from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.align.matrix import SubstitutionMatrix
+from biotite.sequence.alphabet import common_alphabet
 from biotite.sequence.io.fasta.file import FastaFile
 from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 from biotite.sequence.sequence import Sequence
@@ -90,16 +91,17 @@ class MSAInput:
         sequences = list(sequences)
         if len(sequences) < 2:
             raise ValueError("At least two sequences are required")
-        alphabet = sequences[0].get_alphabet()
-        for sequence in sequences:
-            if sequence.get_alphabet() != alphabet:
-                raise ValueError("Alphabets of the sequences are not equal")
+        # Sequences may use different alphabets (e.g. ambiguous and
+        # unambiguous ones), as long as one alphabet extends all others
+        alphabet = common_alphabet(sequence.get_alphabet() for sequence in sequences)
+        if alphabet is None:
+            raise ValueError("There is no common alphabet within the sequences")
         if matrix is not None and not matrix.is_symmetric():
             raise ValueError(
                 "A symmetric matrix is required for multiple sequence alignments"
             )
 
-        if ProteinSequence.alphabet.extends(alphabet) and supports_protein:
+        if ProteinSequence.alphabet_ambiguous.extends(alphabet) and supports_protein:
             if matrix is not None and not supports_custom_protein_matrix:
                 raise TypeError(
                     "The software does not support custom substitution "
@@ -107,7 +109,10 @@ class MSAInput:
                 )
             return MSAInput("protein", sequences, matrix, sequences)
 
-        if NucleotideSequence.alphabet_amb.extends(alphabet) and supports_nucleotide:
+        if (
+            NucleotideSequence.alphabet_ambiguous.extends(alphabet)
+            and supports_nucleotide
+        ):
             if matrix is not None and not supports_custom_nucleotide_matrix:
                 raise TypeError(
                     "The software does not support custom substitution "
@@ -227,7 +232,7 @@ def _map_sequence(sequence: Sequence) -> ProteinSequence:
     mapped_sequence : ProteinSequence
         The mapped sequence.
     """
-    if len(sequence.alphabet) > len(ProteinSequence.alphabet):
+    if len(sequence.alphabet) > len(ProteinSequence.alphabet_ambiguous):
         # Cannot map into a protein sequence if the alphabet
         # has more symbols
         raise TypeError(
@@ -238,7 +243,7 @@ def _map_sequence(sequence: Sequence) -> ProteinSequence:
         )
     # Mapping is done by simply taking over the sequence
     # code of the original sequence
-    mapped_sequence = ProteinSequence()
+    mapped_sequence = ProteinSequence(ambiguous=True)
     mapped_sequence.code = sequence.code
     return mapped_sequence
 
@@ -268,9 +273,11 @@ def _map_matrix(matrix: SubstitutionMatrix | None) -> SubstitutionMatrix:
     # from the original matrix
     # All trailing symbols are filled with zeros
     old_length = len(matrix.get_alphabet1())
-    new_length = len(ProteinSequence.alphabet)
+    new_length = len(ProteinSequence.alphabet_ambiguous)
     new_score_matrix = np.zeros((new_length, new_length), dtype=np.int32)
     new_score_matrix[:old_length, :old_length] = matrix.score_matrix()
     return SubstitutionMatrix(
-        ProteinSequence.alphabet, ProteinSequence.alphabet, new_score_matrix
+        ProteinSequence.alphabet_ambiguous,
+        ProteinSequence.alphabet_ambiguous,
+        new_score_matrix,
     )

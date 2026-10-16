@@ -631,7 +631,7 @@ class MincodeSelector(Selector[S]):
     Examples
     --------
 
-    >>> kmer_alph = KmerAlphabet(NucleotideSequence.alphabet_unamb, k=2)
+    >>> kmer_alph = KmerAlphabet(NucleotideSequence.alphabet_unambiguous, k=2)
     >>> kmers = np.arange(len(kmer_alph))
     >>> print(["".join(kmer_alph.decode(kmer)) for kmer in kmers])
     ['AA', 'AC', 'AG', 'AT', 'CA', 'CC', 'CG', 'CT', 'GA', 'GC', 'GG', 'GT', 'TA', 'TC', 'TG', 'TT']

@@ -46,7 +46,7 @@ def test_match_mismatch_scores(scores):
     equivalent substitution matrix.
     """
     rng = np.random.default_rng(0)
-    alphabet = seq.NucleotideSequence.alphabet_unamb
+    alphabet = seq.NucleotideSequence.alphabet_unambiguous
     # Related sequences: random point mutations of a common ancestor
     ancestor = rng.choice(alphabet.get_symbols(), size=50)
     sequences = []

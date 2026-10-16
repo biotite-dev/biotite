@@ -105,9 +105,9 @@ class NucleotideSequence(Sequence[str]):
     Representation of a nucleotide sequence (DNA or RNA).
 
     This class may have one of two different alphabets:
-    :attr:`unambiguous_alphabet()` contains only the unambiguous DNA
+    :attr:`alphabet_unambiguous` contains only the unambiguous DNA
     letters 'A', 'C', 'G' and 'T'.
-    :attr:`ambiguous_alphabet()` uses an extended alphabet for ambiguous
+    :attr:`alphabet_ambiguous` uses an extended alphabet for ambiguous
     letters.
 
     Parameters
@@ -121,10 +121,18 @@ class NucleotideSequence(Sequence[str]):
         object tries to use the unambiguous alphabet. If this fails due
         ambiguous letters in the sequence, the ambiguous alphabet
         is used.
+
+    Attributes
+    ----------
+    alphabet_unambiguous : LetterAlphabet
+        The unambiguous nucleotide alphabet.
+    alphabet_ambiguous : LetterAlphabet
+        The ambiguous nucleotide alphabet.
+        It extends :attr:`alphabet_unambiguous`.
     """
 
-    alphabet_unamb: LetterAlphabet = LetterAlphabet(["A", "C", "G", "T"])
-    alphabet_amb: LetterAlphabet = LetterAlphabet(
+    alphabet_unambiguous: LetterAlphabet = LetterAlphabet(["A", "C", "G", "T"])
+    alphabet_ambiguous: LetterAlphabet = LetterAlphabet(
         ["A", "C", "G", "T", "R", "Y", "W", "S", "M", "K", "H", "B", "V", "D", "N"]
     )
 
@@ -147,10 +155,10 @@ class NucleotideSequence(Sequence[str]):
     }
     # List comprehension does not work in this scope
     _compl_symbols = []
-    for _symbol in alphabet_amb.get_symbols():
+    for _symbol in alphabet_ambiguous.get_symbols():
         _compl_symbols.append(compl_symbol_dict[_symbol])
-    _compl_alphabet_unamb = LetterAlphabet(_compl_symbols)
-    _compl_mapper = AlphabetMapper(_compl_alphabet_unamb, alphabet_amb)
+    _compl_alphabet = LetterAlphabet(_compl_symbols)
+    _compl_mapper = AlphabetMapper(_compl_alphabet, alphabet_ambiguous)
 
     def __init__(
         self,
@@ -163,30 +171,30 @@ class NucleotideSequence(Sequence[str]):
             sequence = [symbol.upper() for symbol in sequence]
         if ambiguous is None:
             try:
-                self._alphabet = NucleotideSequence.alphabet_unamb
+                self._alphabet = NucleotideSequence.alphabet_unambiguous
                 seq_code = self._alphabet.encode_multiple(sequence)
             except AlphabetError:
-                self._alphabet = NucleotideSequence.alphabet_amb
+                self._alphabet = NucleotideSequence.alphabet_ambiguous
                 seq_code = self._alphabet.encode_multiple(sequence)
         elif not ambiguous:
-            self._alphabet = NucleotideSequence.alphabet_unamb
+            self._alphabet = NucleotideSequence.alphabet_unambiguous
             seq_code = self._alphabet.encode_multiple(sequence)
         else:
-            self._alphabet = NucleotideSequence.alphabet_amb
+            self._alphabet = NucleotideSequence.alphabet_ambiguous
             seq_code = self._alphabet.encode_multiple(sequence)
         super().__init__()
         self.code = seq_code
 
     def __repr__(self) -> str:
         """Represent NucleotideSequence as a string for debugging."""
-        if self._alphabet == NucleotideSequence.alphabet_amb:
+        if self._alphabet == NucleotideSequence.alphabet_ambiguous:
             ambiguous = True
         else:
             ambiguous = False
         return f'NucleotideSequence("{"".join(self.symbols)}", ambiguous={ambiguous})'
 
     def __copy_create__(self) -> Self:
-        if self._alphabet == NucleotideSequence.alphabet_amb:
+        if self._alphabet == NucleotideSequence.alphabet_ambiguous:
             seq_copy = type(self)(ambiguous=True)
         else:
             seq_copy = type(self)(ambiguous=False)
@@ -276,6 +284,8 @@ class NucleotideSequence(Sequence[str]):
             only a single :class:`ProteinSequence` is returned. Otherwise
             a list of :class:`ProteinSequence` is returned, which contains
             every ORF.
+            Each protein sequence uses the unambiguous alphabet, unless
+            it contains a stop signal (``*``).
         pos : list of tuple (int, int)
             Is only returned if `complete` is false. The list contains
             a tuple for each ORF.
@@ -298,7 +308,7 @@ class NucleotideSequence(Sequence[str]):
         MML*
         ML*
         """
-        if self._alphabet != NucleotideSequence.alphabet_unamb:
+        if self._alphabet != NucleotideSequence.alphabet_unambiguous:
             raise AlphabetError("Translation requires unambiguous alphabet")
         # Determine codon_table
         if codon_table is None:
@@ -315,13 +325,11 @@ class NucleotideSequence(Sequence[str]):
                 )
             # Reshape code into (n,3), with n being the amount of codons
             codons = self.code.reshape(-1, 3)
-            protein_seq = ProteinSequence()
-            protein_seq.code = codon_table.map_codon_codes(codons)
-            return protein_seq
+            return ProteinSequence._from_code(codon_table.map_codon_codes(codons))
 
         else:
-            stop_code = ProteinSequence.alphabet.encode("*")
-            met_code = ProteinSequence.alphabet.encode("M")
+            stop_code = ProteinSequence.alphabet_ambiguous.encode("*")
+            met_code = ProteinSequence.alphabet_ambiguous.encode("M")
             protein_seqs = []
             pos = []
             code = self.code
@@ -347,14 +355,13 @@ class NucleotideSequence(Sequence[str]):
                     # Include stop -> stops[0] + 1
                     stop_i = stops[0] + 1 if len(stops) > 0 else len(code_from_start)
                     code_from_start_to_stop = code_from_start[:stop_i]
-                    prot_seq = ProteinSequence()
                     if met_start:
                         # Copy as the slice is edited
-                        prot_seq.code = code_from_start_to_stop.copy()
-                        prot_seq.code[0] = met_code
-                    else:
-                        prot_seq.code = code_from_start_to_stop
-                    protein_seqs.append(prot_seq)
+                        code_from_start_to_stop = code_from_start_to_stop.copy()
+                        code_from_start_to_stop[0] = met_code
+                    protein_seqs.append(
+                        ProteinSequence._from_code(code_from_start_to_stop)
+                    )
                     # Codon indices are transformed
                     # to nucleotide sequence indices
                     pos.append((shift + start_i * 3, shift + (start_i + stop_i) * 3))
@@ -375,7 +382,7 @@ class NucleotideSequence(Sequence[str]):
         alphabet : LetterAlphabet
             The unambiguous nucleotide alphabet.
         """
-        return NucleotideSequence.alphabet_unamb
+        return NucleotideSequence.alphabet_unambiguous
 
     @staticmethod
     def ambiguous_alphabet() -> LetterAlphabet:
@@ -389,12 +396,18 @@ class NucleotideSequence(Sequence[str]):
         alphabet : LetterAlphabet
             The ambiguous nucleotide alphabet.
         """
-        return NucleotideSequence.alphabet_amb
+        return NucleotideSequence.alphabet_ambiguous
 
 
 class ProteinSequence(Sequence[str]):
     """
     Representation of a protein sequence.
+
+    This class may have one of two different alphabets:
+    :attr:`alphabet_unambiguous` contains only the 20 canonical amino
+    acids.
+    :attr:`alphabet_ambiguous` extends this alphabet by the ambiguous
+    amino acids ``B``, ``Z``, ``J``, ``X`` and the *stop signal* ``*``.
 
     Furthermore this class offers a conversion of amino acids from
     3-letter code into 1-letter code and vice versa.
@@ -406,6 +419,19 @@ class ProteinSequence(Sequence[str]):
         string. May take upper or lower case letters. If a list is
         given, the list elements can be 1-letter or 3-letter amino acid
         representations. By default the sequence is empty.
+    ambiguous : bool, optional
+        If true, the ambiguous alphabet is used. By default the
+        object tries to use the unambiguous alphabet. If this fails due
+        ambiguous letters in the sequence, the ambiguous alphabet
+        is used.
+
+    Attributes
+    ----------
+    alphabet_unambiguous : LetterAlphabet
+        The unambiguous amino acid alphabet.
+    alphabet_ambiguous : LetterAlphabet
+        The ambiguous amino acid alphabet.
+        It extends :attr:`alphabet_unambiguous`.
 
     Notes
     -----
@@ -418,7 +444,7 @@ class ProteinSequence(Sequence[str]):
 
     _codon_table = None
 
-    alphabet: LetterAlphabet = LetterAlphabet(
+    alphabet_unambiguous: LetterAlphabet = LetterAlphabet(
         [
             "A",
             "C",
@@ -440,13 +466,16 @@ class ProteinSequence(Sequence[str]):
             "V",
             "W",
             "Y",
-            "B",
-            "Z",
-            "J",
-            "X",
-            "*",
         ]
     )
+    alphabet_ambiguous: LetterAlphabet = LetterAlphabet(
+        # The ambiguous alphabet extends the unambiguous one
+        [
+            "A", "C", "D", "E", "F", "G", "H", "I", "K", "L",
+            "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y",
+            "B", "Z", "J", "X", "*",
+        ]
+    )  # fmt: skip
 
     # Masses are taken from
     # https://web.expasy.org/findmod/findmod_masses.html#AA
@@ -545,22 +574,68 @@ class ProteinSequence(Sequence[str]):
     _dict_3to1["SEC"] = "C"
     _dict_3to1["MSE"] = "M"
 
-    def __init__(self, sequence: Iterable[str] = ()) -> None:
-        dict_3to1 = ProteinSequence._dict_3to1
-        # Convert 3-letter codes to single letter codes,
-        # if list contains 3-letter codes
-        sequence = [
-            dict_3to1[symbol.upper()] if len(symbol) == 3 else symbol.upper()
-            for symbol in sequence
-        ]
-        super().__init__(sequence)
+    def __init__(
+        self,
+        sequence: Iterable[str] | str = (),
+        ambiguous: bool | None = None,
+    ) -> None:
+        if isinstance(sequence, str):
+            sequence = sequence.upper()
+        else:
+            dict_3to1 = ProteinSequence._dict_3to1
+            # Convert 3-letter codes to single letter codes,
+            # if list contains 3-letter codes
+            sequence = [
+                dict_3to1[symbol.upper()] if len(symbol) == 3 else symbol.upper()
+                for symbol in sequence
+            ]
+        if ambiguous is None:
+            try:
+                self._alphabet = ProteinSequence.alphabet_unambiguous
+                seq_code = self._alphabet.encode_multiple(sequence)
+            except AlphabetError:
+                self._alphabet = ProteinSequence.alphabet_ambiguous
+                seq_code = self._alphabet.encode_multiple(sequence)
+        elif not ambiguous:
+            self._alphabet = ProteinSequence.alphabet_unambiguous
+            seq_code = self._alphabet.encode_multiple(sequence)
+        else:
+            self._alphabet = ProteinSequence.alphabet_ambiguous
+            seq_code = self._alphabet.encode_multiple(sequence)
+        super().__init__()
+        self.code = seq_code
 
     def __repr__(self) -> str:
         """Represent ProteinSequence as a string for debugging."""
-        return f'ProteinSequence("{"".join(self.symbols)}")'
+        if self._alphabet == ProteinSequence.alphabet_ambiguous:
+            ambiguous = True
+        else:
+            ambiguous = False
+        return f'ProteinSequence("{"".join(self.symbols)}", ambiguous={ambiguous})'
+
+    def __copy_create__(self) -> Self:
+        if self._alphabet == ProteinSequence.alphabet_ambiguous:
+            seq_copy = type(self)(ambiguous=True)
+        else:
+            seq_copy = type(self)(ambiguous=False)
+        return seq_copy
+
+    @staticmethod
+    def _from_code(code: np.ndarray) -> ProteinSequence:
+        """
+        Create a :class:`ProteinSequence` from a sequence code of the
+        ambiguous alphabet.
+
+        The unambiguous alphabet is used, if the sequence code contains
+        no ambiguous symbol.
+        """
+        ambiguous = bool(np.any(code >= len(ProteinSequence.alphabet_unambiguous)))
+        sequence = ProteinSequence(ambiguous=ambiguous)
+        sequence.code = code
+        return sequence
 
     def get_alphabet(self) -> LetterAlphabet:
-        return ProteinSequence.alphabet
+        return self._alphabet
 
     def remove_stops(self) -> Self:
         """
@@ -570,12 +645,40 @@ class ProteinSequence(Sequence[str]):
         -------
         no_stop : ProteinSequence
             A copy of this sequence without stop signals.
+            The alphabet of this sequence is retained.
         """
-        stop_code = ProteinSequence.alphabet.encode("*")
+        stop_code = ProteinSequence.alphabet_ambiguous.encode("*")
         no_stop = self.copy()
         seq_code = no_stop.code
         no_stop.code = seq_code[seq_code != stop_code]
         return no_stop
+
+    @staticmethod
+    def unambiguous_alphabet() -> LetterAlphabet:
+        """
+        Get the unambiguous amino acid alphabet containing the
+        symbols of the 20 canonical amino acids.
+
+        Returns
+        -------
+        alphabet : LetterAlphabet
+            The unambiguous amino acid alphabet.
+        """
+        return ProteinSequence.alphabet_unambiguous
+
+    @staticmethod
+    def ambiguous_alphabet() -> LetterAlphabet:
+        """
+        Get the ambiguous amino acid alphabet containing the symbols of
+        the 20 canonical amino acids, the ambiguous amino acids
+        ``B``, ``Z``, ``J``, ``X`` and the *stop signal* ``*``.
+
+        Returns
+        -------
+        alphabet : LetterAlphabet
+            The ambiguous amino acid alphabet.
+        """
+        return ProteinSequence.alphabet_ambiguous
 
     @staticmethod
     def convert_letter_3to1(symbol: str) -> str:

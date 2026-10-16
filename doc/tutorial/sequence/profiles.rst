@@ -145,7 +145,7 @@ sought length.
     positional_seq = seq.PositionalSequence(profile.to_consensus())
     matrix = align.SubstitutionMatrix(
         positional_seq.alphabet,
-        seq.ProteinSequence.alphabet,
+        profile.alphabet,
         # Substitution matrices require integer scores
         # Multiply by 10 to increase value range and convert to integer
         (log_odds * 10).astype(int)
@@ -189,7 +189,7 @@ a position-specific scoring matrix using :meth:`SubstitutionMatrix.as_positional
     )
     # Introduce bias for cysteine positions
     score_matrix = pos_matrix.score_matrix().copy()
-    cys_code = seq.ProteinSequence.alphabet.encode("C")
+    cys_code = seq.ProteinSequence.alphabet_unambiguous.encode("C")
     score_matrix[cyclotide_n.code == cys_code, cyclotide_c.code == cys_code] = 100
     disulfide_matrix = align.SubstitutionMatrix(
         pos_matrix.get_alphabet1(),

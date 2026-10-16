@@ -167,7 +167,7 @@ for symbol in gene_symbols[:20]:
 # number of buckets, but requires a bit more computation time for its
 # construction and matching.
 
-base_alph = seq.NucleotideSequence.alphabet_unamb
+base_alph = seq.NucleotideSequence.alphabet_unambiguous
 kmer_alph = align.KmerAlphabet(base_alph, K)
 min_selector = align.MinimizerSelector(kmer_alph, WINDOW, align.RandomPermutation())
 

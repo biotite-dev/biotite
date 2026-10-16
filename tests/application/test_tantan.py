@@ -8,7 +8,7 @@ from tests.util import is_not_installed
 
 @pytest.fixture
 def simple_matrix():
-    alph = seq.NucleotideSequence.alphabet_unamb
+    alph = seq.NucleotideSequence.alphabet_unambiguous
     return align.SubstitutionMatrix(
         alph,
         alph,

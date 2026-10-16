@@ -374,7 +374,9 @@ def set_a3m_alignments(
         a3m_string_array = np.zeros(len(query_code), dtype="S1")
         # Indicate gaps in the target sequence with '-'
         a3m_string_array[target_gaps] = "-"
-        alphabet = query.alphabet
+        # The target code must be decoded with the target alphabet, as it may
+        # differ from the query alphabet (e.g. ambiguous vs. unambiguous)
+        alphabet = alignment.sequences[1].alphabet
         if not isinstance(alphabet, LetterAlphabet):
             raise ValueError("A3M requires a letter sequence")
         # Keep gaps in the query sequence as lower case letters

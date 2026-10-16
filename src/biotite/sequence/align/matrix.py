@@ -182,7 +182,7 @@ class SubstitutionMatrix(Generic[S1, S2]):
 
     Creating an identity substitution matrix via the score matrix:
 
-    >>> alph = NucleotideSequence.alphabet_unamb
+    >>> alph = NucleotideSequence.alphabet_unambiguous
     >>> matrix = SubstitutionMatrix(alph, alph, np.identity(len(alph), dtype=int))
     >>> print(matrix)
         A   C   G   T
@@ -193,7 +193,7 @@ class SubstitutionMatrix(Generic[S1, S2]):
 
     Creating a matrix via database name:
 
-    >>> alph = ProteinSequence.alphabet
+    >>> alph = ProteinSequence.alphabet_ambiguous
     >>> matrix = SubstitutionMatrix(alph, alph, "BLOSUM50")
     """
 
@@ -594,7 +594,9 @@ class SubstitutionMatrix(Generic[S1, S2]):
             Default matrix.
         """
         return SubstitutionMatrix(
-            ProteinSequence.alphabet, ProteinSequence.alphabet, "BLOSUM62"
+            ProteinSequence.alphabet_ambiguous,
+            ProteinSequence.alphabet_ambiguous,
+            "BLOSUM62",
         )
 
     @staticmethod
@@ -610,7 +612,9 @@ class SubstitutionMatrix(Generic[S1, S2]):
             Default matrix.
         """
         return SubstitutionMatrix(
-            NucleotideSequence.alphabet_amb, NucleotideSequence.alphabet_amb, "NUC"
+            NucleotideSequence.alphabet_ambiguous,
+            NucleotideSequence.alphabet_ambiguous,
+            "NUC",
         )
 
     @staticmethod

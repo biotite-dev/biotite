@@ -193,11 +193,6 @@ BACKGROUND = (
                 "V": 29012,
                 "W": 5990,
                 "Y": 14488,
-                "B": 0,
-                "Z": 0,
-                "J": 0,
-                "X": 0,
-                "*": 0,
             }.values()
         )
     )
@@ -208,7 +203,7 @@ BACKGROUND = (
 # Generate the sequence code for random sequences
 np.random.seed(0)
 random_sequence_code = np.random.choice(
-    np.arange(len(seq.ProteinSequence.alphabet)),
+    np.arange(len(seq.ProteinSequence.alphabet_unambiguous)),
     size=(SAMPLE_SIZE, 2, SEQ_LENGTH),
     p=BACKGROUND,
 )
@@ -296,7 +291,7 @@ lam_series = np.zeros(LENGTH_SAMPLE_SIZE)
 for i, length in enumerate(length_samples):
     # The same procedure from above
     random_sequence_code = np.random.choice(
-        np.arange(len(seq.ProteinSequence.alphabet)),
+        np.arange(len(seq.ProteinSequence.alphabet_unambiguous)),
         size=(SAMPLE_SIZE_PER_LENGTH, 2, length),
         p=BACKGROUND,
     )

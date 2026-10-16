@@ -105,7 +105,7 @@ for amino_acid_code in range(20):
         codon_counter[codon_code] /= total
         # The rest of this code block prints the codon usage table
         # in human readable format
-        amino_acid = seq.ProteinSequence.alphabet.decode(amino_acid_code)
+        amino_acid = seq.ProteinSequence.alphabet_ambiguous.decode(amino_acid_code)
         # Convert the symbol codes for each codon into symbols...
         # ([0,3,2] -> ['A' 'T' 'G'])
         codon = k12_genome.sequence.alphabet.decode_multiple(codon_code)

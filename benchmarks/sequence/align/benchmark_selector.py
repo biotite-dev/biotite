@@ -7,7 +7,7 @@ SEQ_LENGTH = 10_000
 K = 8
 S = 4
 WINDOW = 10
-ALPHABET = seq.NucleotideSequence.alphabet_unamb
+ALPHABET = seq.NucleotideSequence.alphabet_unambiguous
 KMER_ALPHABET = align.KmerAlphabet(ALPHABET, K)
 
 

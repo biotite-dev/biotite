@@ -105,7 +105,7 @@ fig.tight_layout()
 
 # Use ambiguous DNA alphabet,
 # as ambiguous bases might occur in some sequencing datasets
-alphabet = seq.NucleotideSequence.alphabet_amb
+alphabet = seq.NucleotideSequence.alphabet_ambiguous
 
 counts = np.stack(
     [np.bincount(codes, minlength=len(alphabet)) for codes in sequence_codes.T], axis=-1

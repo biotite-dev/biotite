@@ -55,9 +55,9 @@ model_sequence = struc.to_sequence(model)[0][0]
 # This script does not rely on consistent residue numbering,
 # so a sequence alignment is done instead
 identity_matrix = align.SubstitutionMatrix(
-    seq.ProteinSequence.alphabet,
-    seq.ProteinSequence.alphabet,
-    np.eye(len(seq.ProteinSequence.alphabet), dtype=int),
+    seq.ProteinSequence.alphabet_ambiguous,
+    seq.ProteinSequence.alphabet_ambiguous,
+    np.eye(len(seq.ProteinSequence.alphabet_ambiguous), dtype=int),
 )
 alignment = align.align_optimal(
     reference_sequence,

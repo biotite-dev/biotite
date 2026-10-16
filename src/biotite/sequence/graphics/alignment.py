@@ -21,6 +21,7 @@ from matplotlib.axes import Axes
 from matplotlib.transforms import Bbox
 from biotite.sequence.align.alignment import Alignment
 from biotite.sequence.align.matrix import SubstitutionMatrix
+from biotite.sequence.alphabet import common_alphabet
 from biotite.sequence.graphics.colorschemes import ColorScheme, get_color_scheme
 from biotite.typing import K, M, MplColor, N, NDArray2
 from biotite.visualize import colors
@@ -926,7 +927,8 @@ def plot_alignment_type_based(
         A *Matplotlib* axes, that is used as plotting area.
     alignment : Alignment
         The pairwise or multiple sequence alignment to be plotted.
-        The alphabet of each sequence in the alignment must be the same.
+        The alphabet of one sequence must extend the alphabets of all
+        other sequences in the alignment.
     symbols_per_line : int, optional
         The amount of alignment columns that are diplayed per line.
     show_numbers : bool, optional
@@ -990,7 +992,9 @@ def plot_alignment_type_based(
     plot_alignment : Analogous functionality with a customizable :class:`SymbolPlotter`.
     LetterTypePlotter : The :class:`SymbolPlotter` used in this function.
     """
-    alphabet = alignment.sequences[0].get_alphabet()
+    alphabet = common_alphabet(seq.get_alphabet() for seq in alignment.sequences)
+    if alphabet is None:
+        raise ValueError("There is no common alphabet within the sequences")
     symbol_plotter = LetterTypePlotter(
         axes,
         alphabet,

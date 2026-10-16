@@ -392,7 +392,7 @@ def test_matrix_from_profile(mmseqs_app, seed):
     matrices = get_matrix_from_profile(mmseqs_app, profile_db)
     assert len(matrices) == 1
     matrix = matrices[0]
-    alphabet = seq.ProteinSequence.alphabet
+    alphabet = seq.ProteinSequence.alphabet_ambiguous
     assert matrix.shape == (SEQUENCE_LENGTH, len(alphabet))
     assert matrix.get_alphabet2() == alphabet
     scores = matrix.score_matrix()

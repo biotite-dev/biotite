@@ -1718,7 +1718,7 @@ impl KmerTable {
     /// --------
     ///
     /// >>> sequences = [ProteinSequence("BIQTITE"), ProteinSequence("NIQBITE")]
-    /// >>> kmer_alphabet = KmerAlphabet(ProteinSequence.alphabet, 3)
+    /// >>> kmer_alphabet = KmerAlphabet(ProteinSequence.alphabet_ambiguous, 3)
     /// >>> kmer_codes = [kmer_alphabet.create_kmers(s.code) for s in sequences]
     /// >>> for code in kmer_codes:
     /// ...     print(code)
@@ -1994,8 +1994,12 @@ impl KmerTable {
     /// QTI: (100, 2)
     /// TIT: (100, 3)
     /// BIQ: (100, 0)
+    /// >>> # 'TITANITE' alone would use the unambiguous alphabet
+    /// >>> # -> enforce the same alphabet as for the other table
     /// >>> sequence2 = ProteinSequence("TITANITE")
-    /// >>> table2 = KmerTable.from_sequences(3, [sequence2], ref_ids=[101])
+    /// >>> table2 = KmerTable.from_sequences(
+    /// ...     3, [sequence2], ref_ids=[101], alphabet=ProteinSequence.alphabet_ambiguous
+    /// ... )
     /// >>> print(table2)
     /// ANI: (101, 3)
     /// ITA: (101, 1)
@@ -2520,7 +2524,7 @@ impl BucketKmerTable {
     /// --------
     ///
     /// >>> sequences = [ProteinSequence("BIQTITE"), ProteinSequence("NIQBITE")]
-    /// >>> kmer_alphabet = KmerAlphabet(ProteinSequence.alphabet, 3)
+    /// >>> kmer_alphabet = KmerAlphabet(ProteinSequence.alphabet_ambiguous, 3)
     /// >>> kmer_codes = [kmer_alphabet.create_kmers(s.code) for s in sequences]
     /// >>> table = BucketKmerTable.from_kmers(kmer_alphabet, kmer_codes)
     /// >>> print(table)
