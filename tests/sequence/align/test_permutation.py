@@ -9,7 +9,7 @@ def _create_frequency_permutation(k):
     Convenience function to create FrequencyPermutation from *k* instead
     of a `KmerAlphabet`
     """
-    kmer_alph = align.KmerAlphabet(seq.NucleotideSequence.alphabet_unamb, k)
+    kmer_alph = align.KmerAlphabet(seq.NucleotideSequence.alphabet_unambiguous, k)
     return align.FrequencyPermutation(kmer_alph, np.arange(len(kmer_alph)))
 
 
@@ -65,7 +65,7 @@ def test_random_permutation_randomness():
 
 def test_frequency_permutation():
     K = 5
-    kmer_alphabet = align.KmerAlphabet(seq.NucleotideSequence.alphabet_unamb, K)
+    kmer_alphabet = align.KmerAlphabet(seq.NucleotideSequence.alphabet_unambiguous, K)
     rng = np.random.default_rng(0)
     # Generate a random count order for each k-mer
     # Use 'np.arange()' to generate a unique order,

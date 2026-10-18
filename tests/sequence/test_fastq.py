@@ -124,7 +124,9 @@ def test_write_iter(offset, chars_per_line, n_sequences):
     scores = []
     for i in range(n_sequences):
         seq_length = rng.integers(*LENGTH_RANGE)
-        code = rng.integers(len(seq.NucleotideSequence.alphabet_unamb), size=seq_length)
+        code = rng.integers(
+            len(seq.NucleotideSequence.alphabet_unambiguous), size=seq_length
+        )
         sequence = seq.NucleotideSequence()
         sequence.code = code
         sequences.append(sequence)

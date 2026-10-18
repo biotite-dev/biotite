@@ -22,9 +22,10 @@ __author__ = "Maximilian Greil"
 __all__ = ["SequenceProfile"]
 
 # Abbreviations
-_NUC_DNA_ALPH = NucleotideSequence.alphabet_unamb
+_NUC_DNA_ALPH = NucleotideSequence.alphabet_unambiguous
 _NUC_RNA_ALPH = LetterAlphabet(["A", "C", "G", "U"])
-_PROT_ALPH = ProteinSequence.alphabet
+_PROT_UNAMB_ALPH = ProteinSequence.alphabet_unambiguous
+_PROT_AMB_ALPH = ProteinSequence.alphabet_ambiguous
 
 
 def _determine_common_alphabet(
@@ -342,7 +343,7 @@ class SequenceProfile(Generic[S]):
             return NucleotideSequence(self._dna_to_consensus())  # pyright: ignore[reportReturnType]
         elif self.alphabet == _NUC_RNA_ALPH:
             return NucleotideSequence(self._rna_to_consensus())  # pyright: ignore[reportReturnType]
-        elif self.alphabet == _PROT_ALPH:
+        elif self.alphabet in (_PROT_UNAMB_ALPH, _PROT_AMB_ALPH):
             return self._prot_to_consensus()  # pyright: ignore[reportReturnType]
         return self._general_to_consensus()
 
@@ -400,12 +401,12 @@ class SequenceProfile(Generic[S]):
         occurrences, the alphabetically sorted first symbol will be
         taken for the consensus sequence.
         """
-        consensus = ProteinSequence()
-        consensus.code = np.argmax(self.symbols, axis=1)
-        consensus.code = np.where(
-            np.sum(self.symbols, axis=1) == 0, _PROT_ALPH.encode("X"), consensus.code
+        consensus_code = np.where(
+            np.sum(self.symbols, axis=1) == 0,
+            _PROT_AMB_ALPH.encode("X"),
+            np.argmax(self.symbols, axis=1),
         )
-        return consensus
+        return ProteinSequence._from_code(consensus_code)
 
     def _general_to_consensus(self) -> GeneralSequence:
         """

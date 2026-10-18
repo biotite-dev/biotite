@@ -116,7 +116,7 @@ def test_large_sequence_number(app_class):
 def test_custom_substitution_matrix(sequences, app_class):
     app = _app_or_skip(app_class)
 
-    alph = seq.ProteinSequence.alphabet
+    alph = seq.ProteinSequence.alphabet_ambiguous
     # Strong identity matrix
     score_matrix = np.identity(len(alph), dtype=int) * 1000
     matrix = align.SubstitutionMatrix(alph, alph, score_matrix)

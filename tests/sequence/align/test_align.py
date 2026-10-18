@@ -264,7 +264,7 @@ def test_default_scoring(seed):
     """
     LENGTH = 100
     rng = np.random.default_rng(seed)
-    alphabet = seq.NucleotideSequence.alphabet_unamb
+    alphabet = seq.NucleotideSequence.alphabet_unambiguous
     seq1 = seq.NucleotideSequence()
     seq1.code = rng.integers(len(alphabet), size=LENGTH)
     # Mutate the sequence to obtain a homologous second sequence

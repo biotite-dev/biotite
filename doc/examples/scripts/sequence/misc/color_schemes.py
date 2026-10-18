@@ -47,8 +47,8 @@ def plot_colors(ax, alphabet):
     ax.yaxis.set_ticks_position("none")
 
 
-nuc_alphabet = seq.NucleotideSequence.alphabet_amb
-prot_alphabet = seq.ProteinSequence.alphabet
+nuc_alphabet = seq.NucleotideSequence.alphabet_ambiguous
+prot_alphabet = seq.ProteinSequence.alphabet_ambiguous
 i3d_alphabet = strucalph.I3DSequence.alphabet
 pb_alphabet = strucalph.ProteinBlocksSequence.alphabet
 

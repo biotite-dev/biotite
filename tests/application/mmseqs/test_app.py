@@ -193,8 +193,8 @@ def test_search_formats_matrix_and_gap_penalty(seed, affine):
         database,
         database,
         matrix=SubstitutionMatrix(
-            ProteinSequence.alphabet,
-            ProteinSequence.alphabet,
+            ProteinSequence.alphabet_ambiguous,
+            ProteinSequence.alphabet_ambiguous,
             matrix_name,
         ),
         gap_penalty=gap_penalty,

@@ -50,7 +50,7 @@ alignments:
     import biotite.sequence.align as align
     import numpy as np
 
-    alph = seq.ProteinSequence.alphabet
+    alph = seq.ProteinSequence.alphabet_ambiguous
     # Load the standard protein substitution matrix, which is BLOSUM62
     matrix = align.SubstitutionMatrix.std_protein_matrix()
     print("\nBLOSUM62\n")

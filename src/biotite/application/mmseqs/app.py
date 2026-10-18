@@ -2291,10 +2291,10 @@ def _write_substitution_matrix(
         raise ValueError("MMseqs2 requires a symmetric substitution matrix")
     alphabet = matrix.get_alphabet1()
     include_mask = np.ones(len(alphabet), dtype=bool)
-    if ProteinSequence.alphabet.extends(alphabet):
+    if ProteinSequence.alphabet_ambiguous.extends(alphabet):
         # Ambiguous and stop amino-acid symbols are derived from canonical
         # residues and do not represent independent log-odds states.
-        include_mask[ProteinSequence.alphabet.encode("B") :] = False
+        include_mask[len(ProteinSequence.alphabet_unambiguous) :] = False
     indices = np.flatnonzero(include_mask)
     symbols = [
         str(matrix.get_alphabet1().decode(int(index))).upper() for index in indices

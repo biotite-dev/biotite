@@ -168,17 +168,32 @@ def test_alphabet_mapper(source_alph_symbols, target_alph_symbols):
     [
         (
             [
-                seq.NucleotideSequence.alphabet_amb,
-                seq.NucleotideSequence.alphabet_unamb,
+                seq.NucleotideSequence.alphabet_ambiguous,
+                seq.NucleotideSequence.alphabet_unambiguous,
             ],
-            seq.NucleotideSequence.alphabet_amb,
+            seq.NucleotideSequence.alphabet_ambiguous,
         ),
         (
             [
-                seq.NucleotideSequence.alphabet_unamb,
-                seq.NucleotideSequence.alphabet_amb,
+                seq.NucleotideSequence.alphabet_unambiguous,
+                seq.NucleotideSequence.alphabet_ambiguous,
             ],
-            seq.NucleotideSequence.alphabet_amb,
+            seq.NucleotideSequence.alphabet_ambiguous,
+        ),
+        (
+            [
+                seq.ProteinSequence.alphabet_unambiguous,
+                seq.ProteinSequence.alphabet_ambiguous,
+                seq.ProteinSequence.alphabet_unambiguous,
+            ],
+            seq.ProteinSequence.alphabet_ambiguous,
+        ),
+        (
+            [
+                seq.ProteinSequence.alphabet_unambiguous,
+                seq.ProteinSequence.alphabet_unambiguous,
+            ],
+            seq.ProteinSequence.alphabet_unambiguous,
         ),
     ],
 )
@@ -187,7 +202,7 @@ def test_common_alphabet(alphabets, common_alph):
     Check if :func:`common_alphabet()` correctly identifies the common
     alphabet in a simple known test cases
     """
-    seq.common_alphabet(alphabets) == common_alph
+    assert seq.common_alphabet(alphabets) == common_alph
 
 
 def test_common_alphabet_no_common():
@@ -197,7 +212,10 @@ def test_common_alphabet_no_common():
     """
     assert (
         seq.common_alphabet(
-            [seq.NucleotideSequence.alphabet_unamb, seq.ProteinSequence.alphabet]
+            [
+                seq.NucleotideSequence.alphabet_unambiguous,
+                seq.ProteinSequence.alphabet_unambiguous,
+            ]
         )
         is None
     )

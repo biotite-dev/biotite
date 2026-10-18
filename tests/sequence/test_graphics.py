@@ -15,8 +15,8 @@ def test_load(scheme_path):
     import biotite.sequence.graphics as graphics
 
     supported_alphabets = [
-        seq.NucleotideSequence.alphabet_amb,
-        seq.ProteinSequence.alphabet,
+        seq.NucleotideSequence.alphabet_ambiguous,
+        seq.ProteinSequence.alphabet_ambiguous,
         struc_alph.I3DSequence.alphabet,
         struc_alph.ProteinBlocksSequence.alphabet,
     ]
@@ -44,14 +44,14 @@ def test_color_scheme_fit():
     pytest.importorskip("matplotlib")
     import biotite.sequence.graphics as graphics
 
-    alphabet = seq.NucleotideSequence.alphabet_amb
+    alphabet = seq.NucleotideSequence.alphabet_ambiguous
     scheme = graphics.ColorScheme(
         "test", alphabet, [f"C{i}" for i in range(len(alphabet))]
     )
-    unamb_alphabet = seq.NucleotideSequence.alphabet_unamb
+    unamb_alphabet = seq.NucleotideSequence.alphabet_unambiguous
     assert scheme.fit(unamb_alphabet) == ["C0", "C1", "C2", "C3"]
     assert scheme.fit(alphabet) == scheme.colors
     with pytest.raises(ValueError):
-        scheme.fit(seq.ProteinSequence.alphabet)
+        scheme.fit(seq.ProteinSequence.alphabet_ambiguous)
     with pytest.raises(ValueError):
         graphics.ColorScheme("test", alphabet, ["C0"])

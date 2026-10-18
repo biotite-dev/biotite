@@ -6,7 +6,7 @@ SEQ_LENGTH = 10_000
 
 @pytest.fixture(scope="module")
 def alphabet():
-    return seq.ProteinSequence.alphabet
+    return seq.ProteinSequence.alphabet_ambiguous
 
 
 @pytest.fixture(scope="module")

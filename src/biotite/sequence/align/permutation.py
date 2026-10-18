@@ -101,7 +101,7 @@ class RandomPermutation(Permutation):
     Examples
     --------
 
-    >>> kmer_alph = KmerAlphabet(NucleotideSequence.alphabet_unamb, k=2)
+    >>> kmer_alph = KmerAlphabet(NucleotideSequence.alphabet_unambiguous, k=2)
     >>> permutation = RandomPermutation()
     >>> # k-mer codes representing the k-mers from 'AA' to 'TT'
     >>> # in lexicographic order

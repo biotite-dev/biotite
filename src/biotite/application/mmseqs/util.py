@@ -502,7 +502,7 @@ def get_matrix_from_profile(
     finally:
         pssm_file.close()
 
-    alphabet = ProteinSequence.alphabet
+    alphabet = ProteinSequence.alphabet_ambiguous
     matrices = []
     consensus: list[str] = []
     scores: list[list[int]] = []

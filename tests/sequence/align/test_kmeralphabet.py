@@ -8,12 +8,14 @@ K = 3
 
 @pytest.fixture
 def kmer_alphabet():
-    return align.KmerAlphabet(seq.ProteinSequence.alphabet, K)
+    return align.KmerAlphabet(seq.ProteinSequence.alphabet_ambiguous, K)
 
 
 @pytest.fixture
 def spaced_kmer_alphabet():
-    return align.KmerAlphabet(seq.ProteinSequence.alphabet, K, spacing=[0, 1, 2])
+    return align.KmerAlphabet(
+        seq.ProteinSequence.alphabet_ambiguous, K, spacing=[0, 1, 2]
+    )
 
 
 N = 10
@@ -24,10 +26,10 @@ _rng = np.random.default_rng(0)
 @pytest.mark.parametrize(
     "ref_split_kmer_code",
     # Test for single instances as input
-    list(_rng.integers(len(seq.ProteinSequence.alphabet), size=(N, K)))
+    list(_rng.integers(len(seq.ProteinSequence.alphabet_ambiguous), size=(N, K)))
     +
     # Test for multiple instances as input
-    list(_rng.integers(len(seq.ProteinSequence.alphabet), size=(N, L, K))),
+    list(_rng.integers(len(seq.ProteinSequence.alphabet_ambiguous), size=(N, L, K))),
 )
 def test_fuse_and_split(kmer_alphabet, ref_split_kmer_code):
     """
@@ -45,7 +47,9 @@ N = 10
 
 @pytest.mark.parametrize(
     "split_kmer_code",
-    np.random.default_rng(0).integers(len(seq.ProteinSequence.alphabet), size=(N, K)),
+    np.random.default_rng(0).integers(
+        len(seq.ProteinSequence.alphabet_ambiguous), size=(N, K)
+    ),
 )
 def test_encode_and_decode(kmer_alphabet, split_kmer_code):
     """
@@ -53,7 +57,7 @@ def test_encode_and_decode(kmer_alphabet, split_kmer_code):
     :meth:`decode()` work properly by using them back and forth on
     random input.
     """
-    alph = seq.ProteinSequence.alphabet
+    alph = seq.ProteinSequence.alphabet_ambiguous
     ref_kmer_symbol = alph.decode_multiple(split_kmer_code)
     kmer_code = kmer_alphabet.encode(ref_kmer_symbol)
     test_kmer_symbol = kmer_alphabet.decode(kmer_code)
@@ -70,7 +74,7 @@ def test_create_continuous_kmers(kmer_alphabet):
     LENGTH = 100
 
     seq_code = np.random.default_rng(0).integers(
-        len(seq.ProteinSequence.alphabet), size=LENGTH, dtype=np.uint8
+        len(seq.ProteinSequence.alphabet_ambiguous), size=LENGTH, dtype=np.uint8
     )
 
     ref_kmers = [
@@ -114,7 +118,7 @@ def test_invalid_spacing():
     Check if expected exceptions are raised if an invalid spacing is
     given.
     """
-    alphabet = seq.ProteinSequence.alphabet
+    alphabet = seq.ProteinSequence.alphabet_ambiguous
 
     with pytest.raises(ValueError):
         # Not enough informative positions for given k

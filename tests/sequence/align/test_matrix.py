@@ -24,7 +24,7 @@ def test_matrices(db_entry, ambiguous_symbol, member_symbols):
     standard amino acids lie between the scores of the amino acids they
     represent.
     """
-    alph = seq.ProteinSequence.alphabet
+    alph = seq.ProteinSequence.alphabet_ambiguous
     matrix = align.SubstitutionMatrix(alph, alph, db_entry)
 
     scores = matrix.score_matrix()
