@@ -76,7 +76,7 @@ def test_pdb_to_gro(path, model):
     # Read in data
     pdb_file = pdb.PDBFile.read(path)
     try:
-        a1 = pdb_file.get_structure(model=model)
+        a1 = pdb_file.get_structure(model=model, extra_fields=["atom_id"])
     except biotite.InvalidFileError:
         if model is None:
             # The file cannot be parsed into an AtomArrayStack,
@@ -100,7 +100,7 @@ def test_pdb_to_gro(path, model):
 
     assert a1.array_length() == a2.array_length()
 
-    for category in ["res_id", "res_name", "atom_name"]:
+    for category in ["res_id", "res_name", "atom_name", "atom_id"]:
         assert (
             a1.get_annotation(category).tolist() == a2.get_annotation(category).tolist()
         )
