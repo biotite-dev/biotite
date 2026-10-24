@@ -171,11 +171,13 @@ class GROFile(TextFile):
 
         # Replace empty strings for elements with guessed types
         # i is index in array, line_i is line index
+        array.set_annotation("atom_id", np.empty(length, dtype=int))
         for i, line_i in enumerate(annot_i):
             line = self.lines[line_i]
             array.res_id[i] = int(line[0:5])
             array.res_name[i] = line[5:10].strip()
             array.atom_name[i] = line[10:15].strip()
+            array.atom_id[i] = int(line[15:20])
         array.element = infer_elements(array.atom_name)
 
         # Fill in coordinates and boxes
