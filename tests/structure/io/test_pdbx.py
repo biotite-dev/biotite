@@ -8,6 +8,7 @@ import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
+from biotite.rust.structure.io.pdbx import split_one_line
 from biotite.structure.io.pdbx.bcif import _encode_numpy as encode_numpy
 from biotite.structure.io.pdbx.compress import _get_decimal_places as get_decimal_places
 from tests.util import data_dir
@@ -102,7 +103,7 @@ def test_split_one_line(cif_line, expected_fields):
     """
     Test whether values that have an embedded quote are properly escaped.
     """
-    assert list(pdbx.cif._split_one_line(cif_line)) == expected_fields
+    assert list(split_one_line(cif_line)) == expected_fields
 
 
 @pytest.mark.parametrize("model", [None, 1, -1])
