@@ -361,8 +361,9 @@ jobs:
       - name: Install pre-built wheel into the pixi environment
         run: pixi run -e test python -m pip install --no-deps ./dist/*.whl
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@v3
+        uses: CodSpeedHQ/action@v5
         with:
+          mode: simulation
           run: pixi run -e test pytest --codspeed benchmarks
 
 
