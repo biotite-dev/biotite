@@ -1363,7 +1363,7 @@ def stack(arrays: Sequence[AtomArray[N]]) -> AtomArrayStack[Any, N]:
     coord_list = [array._coord for array in arrays]
     array_stack._coord = np.stack(coord_list, axis=0)
     # Take bond list from first array
-    array_stack._bonds = ref_array._bonds
+    array_stack._bonds = None if ref_array._bonds is None else ref_array._bonds.copy()
     # When all atom arrays provide a box, copy the boxes
     if all([array.box is not None for array in arrays]):
         array_stack.box = np.array([array.box for array in arrays])
