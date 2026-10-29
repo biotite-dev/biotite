@@ -115,6 +115,12 @@ def test_invalid_creation():
             ),
         )
 
+    # Bond indices and types are discrete values and must not be truncated
+    with pytest.raises(TypeError):
+        struc.BondList(5, np.array([[0.2, 1.8]]))
+    with pytest.raises(TypeError):
+        struc.BondList(5, np.array([[0, 1, 1.8]]))
+
 
 def test_modification(bond_list):
     """
