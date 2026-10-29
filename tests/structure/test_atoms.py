@@ -60,6 +60,14 @@ def test_shape(array, stack):
     assert stack.shape == (3, 5)
 
 
+def test_stack_copies_annotations(array):
+    """Changing a stack must not mutate the source array annotations."""
+    stacked = struc.stack([array, array.copy()])
+    stacked.atom_name[0] = "XX"
+    assert array.atom_name[0] == "N"
+    assert stacked.atom_name[0] == "XX"
+
+
 def test_access(array):
     chain_id = ["A", "A", "B", "B", "B"]
     assert array.coord.shape == (5, 3)

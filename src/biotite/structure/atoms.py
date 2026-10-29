@@ -1359,7 +1359,9 @@ def stack(arrays: Sequence[AtomArray[N]]) -> AtomArrayStack[Any, N]:
             )
     array_stack = AtomArrayStack(array_count, ref_array.array_length())
     for name, annotation in ref_array._annot.items():
-        array_stack._annot[name] = annotation
+        # A stack is a newly constructed object; keep its annotations
+        # independent from the source array.
+        array_stack._annot[name] = np.copy(annotation)
     coord_list = [array._coord for array in arrays]
     array_stack._coord = np.stack(coord_list, axis=0)
     # Take bond list from first array
