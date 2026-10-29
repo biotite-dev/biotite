@@ -206,6 +206,19 @@ def test_stack_bonds_are_independent(array):
     assert array.bonds.as_array().tolist() == [[0, 1, struc.BondType.SINGLE]]
 
 
+def test_stack_rejects_unequal_bonds(array):
+    """A stack must not silently discard a frame's distinct bond topology."""
+    array.bonds = struc.BondList(
+        5, np.array([(0, 1, struc.BondType.SINGLE)])
+    )
+    other = array.copy()
+    other.bonds = struc.BondList(
+        5, np.array([(0, 1, struc.BondType.DOUBLE)])
+    )
+    with pytest.raises(ValueError, match="bonds.*not equal"):
+        struc.stack([array, other])
+
+
 
 def test_box(array, stack, array_box, stack_box):
     # Test attribute access
