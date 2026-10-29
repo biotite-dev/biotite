@@ -1357,13 +1357,18 @@ def stack(arrays: Sequence[AtomArray[N]]) -> AtomArrayStack[Any, N]:
                 f"The annotations of the atom array at index {i} are not "
                 f"equal to the annotations of the atom array at index 0"
             )
+        if array.bonds != ref_array.bonds:
+            raise ValueError(
+                f"The bonds of the atom array at index {i} are not "
+                f"equal to the bonds of the atom array at index 0"
+            )
     array_stack = AtomArrayStack(array_count, ref_array.array_length())
     for name, annotation in ref_array._annot.items():
         array_stack._annot[name] = annotation
     coord_list = [array._coord for array in arrays]
     array_stack._coord = np.stack(coord_list, axis=0)
     # Take bond list from first array
-    array_stack._bonds = ref_array._bonds
+    array_stack._bonds = None if ref_array._bonds is None else ref_array._bonds.copy()
     # When all atom arrays provide a box, copy the boxes
     if all([array.box is not None for array in arrays]):
         array_stack.box = np.array([array.box for array in arrays])
