@@ -305,6 +305,25 @@ def test_metal_coordination_bonds():
     assert np.all(conn_type_id == "metalc")
 
 
+def test_inter_residue_bond_order_roundtrip():
+    """The struct_conn bond order must survive a PDBx round-trip."""
+    atoms = struc.AtomArray(2)
+    atoms.coord[:] = [[0.0, 0.0, 0.0], [1.2, 0.0, 0.0]]
+    atoms.set_annotation("element", np.array(["C", "O"]))
+    atoms.set_annotation("atom_name", np.array(["C1", "O1"]))
+    atoms.set_annotation("res_name", np.array(["LIG", "LIG"]))
+    atoms.set_annotation("chain_id", np.array(["A", "A"]))
+    atoms.set_annotation("res_id", np.array([1, 2]))
+    atoms.set_annotation("ins_code", np.array(["", ""]))
+    atoms.bonds = struc.BondList(2, np.array([[0, 1, struc.BondType.DOUBLE]]))
+
+    file = pdbx.CIFFile()
+    pdbx.set_structure(file, atoms)
+    roundtrip = pdbx.get_structure(file, model=1, include_bonds=True)
+
+    assert roundtrip.bonds.as_array().tolist() == [[0, 1, struc.BondType.DOUBLE]]
+
+
 def test_bond_sparsity():
     """
     Ensure that only as much intra-residue bonds are written as necessary,

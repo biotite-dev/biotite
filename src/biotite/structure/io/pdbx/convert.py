@@ -111,6 +111,15 @@ PDBX_BOND_TYPE_TO_ORDER = {
     BondType.AROMATIC: "",
     BondType.COORDINATION: "",
 }
+# Bond order values used by ``struct_conn.pdbx_value_order``.  The
+# connection type still determines whether a bond is covalent or
+# coordination; this mapping only refines covalent bond orders.
+PDBX_BOND_ORDER_TO_TYPE = {
+    "sing": BondType.SINGLE,
+    "doub": BondType.DOUBLE,
+    "trip": BondType.TRIPLE,
+    "quad": BondType.QUADRUPLE,
+}
 # Map 'chem_comp_bond' bond orders and aromaticity to 'BondType'...
 COMP_BOND_ORDER_TO_TYPE = {
     ("SING", "N"): BondType.SINGLE,
@@ -759,6 +768,12 @@ def _parse_inter_residue_bonds(
     # The type ID is always present in the dictionary,
     # as it was used to filter the applicable bonds
     bond_types = map_unique(PDBX_BOND_TYPE_ID_TO_TYPE.__getitem__, bond_type_id)
+    if "pdbx_value_order" in struct_conn:
+        value_order = struct_conn["pdbx_value_order"].as_array(str)
+        value_order = value_order[covale_mask][mapping_exists_mask]
+        for i, (connection_type, order) in enumerate(zip(bond_type_id, value_order, strict=True)):
+            if connection_type != "metalc":
+                bond_types[i] = PDBX_BOND_ORDER_TO_TYPE.get(order.lower(), bond_types[i])
 
     return BondList(
         atom_count if atom_count is not None else atom_site.row_count,
