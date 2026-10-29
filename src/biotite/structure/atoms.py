@@ -1458,7 +1458,7 @@ def concatenate(
                     raise IndexError("The stack depths are not equal")
         common_categories &= set(element.get_annotation_categories())
         if element.box is not None and box is None:
-            box = element.box
+            box = np.copy(element.box)
         if element.bonds is not None:
             has_bonds = True
 

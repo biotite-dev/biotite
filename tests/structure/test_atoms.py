@@ -75,6 +75,11 @@ def test_stack_copies_annotations_and_bonds(array):
     assert array.bonds.get_bond_count() == 1
     assert stacked.bonds.get_bond_count() == 2
 
+    array.box = np.eye(3, dtype=np.float32)
+    concatenated = struc.concatenate([array, array.copy()])
+    concatenated.box[0, 0] = 9
+    assert array.box[0, 0] == 1
+
 
 def test_access(array):
     chain_id = ["A", "A", "B", "B", "B"]
