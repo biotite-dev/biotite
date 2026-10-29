@@ -324,6 +324,19 @@ impl BondList {
                 let np = PyModule::import(py, "numpy")?;
                 let array_obj = np.call_method1("asarray", (bonds_obj,))?;
 
+                // Bond atom indices and bond types are discrete values.  Do not
+                // silently truncate floating-point (or boolean) input when
+                // converting to the integer representation below.
+                let dtype_kind: String = array_obj
+                    .getattr("dtype")?
+                    .getattr("kind")?
+                    .extract()?;
+                if dtype_kind != "i" && dtype_kind != "u" {
+                    return Err(exceptions::PyTypeError::new_err(
+                        "Input array containing bonds must have an integer dtype",
+                    ));
+                }
+
                 // Get the shape
                 let shape_attr = array_obj.getattr("shape")?;
                 let shape: Vec<usize> = shape_attr.extract()?;
