@@ -69,6 +69,8 @@ def test_access(array):
     assert array.test1.tolist() == [0, 0, 0, 0, 0]
     with pytest.raises(IndexError):
         array.set_annotation("test2", np.array([0, 1, 2, 3]))
+    with pytest.raises(TypeError):
+        array.res_id = np.array([1.2] * array.array_length())
 
 
 def test_indexing_after_annotation_deletion(array, stack):

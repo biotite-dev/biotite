@@ -192,6 +192,8 @@ class _AtomArrayBase(Copyable, metaclass=abc.ABCMeta):
         that is able to represent the old and new array values.
         """
         array = np.asarray(array)
+        if category == "res_id" and not np.issubdtype(array.dtype, np.integer):
+            raise TypeError("The 'res_id' annotation must have an integer dtype")
         if len(array) != self._array_length:
             raise IndexError(
                 f"Expected array length {self._array_length}, but got {len(array)}"
