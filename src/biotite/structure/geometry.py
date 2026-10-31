@@ -1101,9 +1101,53 @@ def _call_non_index_function(
             f"Expected length {expected_amount} in the last dimension "
             f"of the indices, but got length {indices.shape[-1]}"
         )
-    coord_list = []
-    for i in range(expected_amount):
-        coord_list.append(coord(atoms)[..., indices[:, i], :])
+    # Keep conversion and indexing behavior for subclasses and unusual inputs.
+    if (
+        type(indices) is np.ndarray
+        and indices.ndim == 2
+        and indices.dtype == np.dtype(np.intp)
+        and expected_amount > 0
+        and (
+            (type(atoms) is np.ndarray and atoms.dtype == np.float32)
+            or type(atoms) in (AtomArray, AtomArrayStack)
+        )
+    ):
+        coordinates = coord(atoms)
+        if (
+            type(coordinates) is np.ndarray
+            and coordinates.ndim in (2, 3)
+            and (
+                indices.size == 0
+                or (
+                    indices.min() >= -coordinates.shape[-2]
+                    and indices.max() < coordinates.shape[-2]
+                )
+            )
+        ):
+            if coordinates.shape[-1] == 3:
+                # Keep coordinate components in separate planes for vector reductions.
+                coord_list = [
+                    np.take(
+                        coordinates.swapaxes(-1, -2),
+                        indices[:, i],
+                        axis=-1,
+                        mode="wrap",
+                    ).swapaxes(-1, -2)
+                    for i in range(expected_amount)
+                ]
+            else:
+                coord_list = [
+                    np.take(coordinates, indices[:, i], axis=-2, mode="wrap")
+                    for i in range(expected_amount)
+                ]
+        else:
+            coord_list = [
+                coord(atoms)[..., indices[:, i], :] for i in range(expected_amount)
+            ]
+    else:
+        coord_list = [
+            coord(atoms)[..., indices[:, i], :] for i in range(expected_amount)
+        ]
     if periodic:
         if box is None:
             if isinstance(atoms, (AtomArray, AtomArrayStack)):
