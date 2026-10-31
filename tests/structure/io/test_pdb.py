@@ -667,9 +667,9 @@ def _conect_pairs(pdb_file):
 )
 def test_conect_records(path):
     """
-    Writing a structure should give ``CONECT`` records for all
-    ``CONECT`` records in the original PDB file and for all inter-residue
-    bonds, including bonds between residues that only differ in their
+    Writing a structure should give exactly the ``CONECT`` records of the
+    original PDB file plus records for all inter-residue bonds,
+    including bonds between residues that only differ in their
     insertion code (e.g. in ``1igy``).
     """
     ref_file = pdb.PDBFile.read(path)
@@ -682,8 +682,6 @@ def test_conect_records(path):
     test_file.set_structure(atoms)
     test_pairs = _conect_pairs(test_file)
 
-    assert _conect_pairs(ref_file) <= test_pairs
-
     bonds = atoms.bonds.as_array()[:, :2]
     residue_starts = struc.get_residue_starts_for(atoms, bonds.flatten()).reshape(-1, 2)
     inter_residue_bonds = bonds[residue_starts[:, 0] != residue_starts[:, 1]]
@@ -694,7 +692,9 @@ def test_conect_records(path):
         )
         for i, j in inter_residue_bonds
     }
-    assert inter_residue_pairs <= test_pairs
+    # The original file has no 'CONECT' records for peptide and
+    # phosphodiester bonds, but the written file has them
+    assert test_pairs == _conect_pairs(ref_file) | inter_residue_pairs
 
 
 def test_multiple_atom_array():
