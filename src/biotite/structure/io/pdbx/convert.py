@@ -76,8 +76,7 @@ _Column: TypeAlias = CIFColumn | BinaryCIFColumn
 
 # Bond types in `struct_conn` category that refer to covalent bonds
 PDBX_BOND_TYPE_ID_TO_TYPE = {
-    # Although a covalent bond, could in theory have a higher bond order,
-    # practically inter-residue bonds are always single
+    # Default types when an explicit bond order is not given
     "covale": BondType.SINGLE,
     "covale_base": BondType.SINGLE,
     "covale_phosphate": BondType.SINGLE,
@@ -759,6 +758,18 @@ def _parse_inter_residue_bonds(
     # The type ID is always present in the dictionary,
     # as it was used to filter the applicable bonds
     bond_types = map_unique(PDBX_BOND_TYPE_ID_TO_TYPE.__getitem__, bond_type_id)
+    if "pdbx_value_order" in struct_conn:
+        orders = struct_conn["pdbx_value_order"].as_array(str, "sing")
+        orders = orders[covale_mask][mapping_exists_mask]
+        covalent_types = map_unique(
+            lambda order: COMP_BOND_ORDER_TO_TYPE.get(
+                (order.upper(), "N"), BondType.SINGLE
+            ),
+            orders,
+        )
+        bond_types = np.where(
+            bond_types == BondType.COORDINATION, bond_types, covalent_types
+        )
 
     return BondList(
         atom_count if atom_count is not None else atom_site.row_count,
