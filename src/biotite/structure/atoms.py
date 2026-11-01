@@ -1359,11 +1359,13 @@ def stack(arrays: Sequence[AtomArray[N]]) -> AtomArrayStack[Any, N]:
             )
     array_stack = AtomArrayStack(array_count, ref_array.array_length())
     for name, annotation in ref_array._annot.items():
-        array_stack._annot[name] = annotation
+        # A stack is a newly constructed object; keep its annotations
+        # independent from the source array.
+        array_stack._annot[name] = np.copy(annotation)
     coord_list = [array._coord for array in arrays]
     array_stack._coord = np.stack(coord_list, axis=0)
-    # Take bond list from first array
-    array_stack._bonds = ref_array._bonds
+    # Take an independent bond list from the first array
+    array_stack._bonds = None if ref_array._bonds is None else ref_array._bonds.copy()
     # When all atom arrays provide a box, copy the boxes
     if all([array.box is not None for array in arrays]):
         array_stack.box = np.array([array.box for array in arrays])
@@ -1456,7 +1458,7 @@ def concatenate(
                     raise IndexError("The stack depths are not equal")
         common_categories &= set(element.get_annotation_categories())
         if element.box is not None and box is None:
-            box = element.box
+            box = np.copy(element.box)
         if element.bonds is not None:
             has_bonds = True
 
