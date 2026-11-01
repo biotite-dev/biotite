@@ -106,8 +106,7 @@ pub fn deserialize_category<'py>(
 /// Split a line into its values.
 ///
 /// Supports embedded quotes (' or "), like ``'a dog's life'`` to ``a dog's life``.
-#[pyfunction]
-pub fn split_one_line(line: &str) -> Vec<&str> {
+fn split_one_line(line: &str) -> Vec<&str> {
     let mut values = Vec::new();
     split_values(line, |value| values.push(value));
     values

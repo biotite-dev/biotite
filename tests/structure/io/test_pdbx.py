@@ -8,7 +8,6 @@ import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
-from biotite.rust.structure.io.pdbx import split_one_line
 from biotite.structure.io.pdbx.bcif import _encode_numpy as encode_numpy
 from biotite.structure.io.pdbx.compress import _get_decimal_places as get_decimal_places
 from tests.util import data_dir
@@ -94,16 +93,18 @@ def test_escape_mixed(looped):
     ["cif_line", "expected_fields"],
     [
         ["'' 'embed'quote' ", ["", "embed'quote"]],
-        ['2 "embed"quote" "\t\n"', ["2", 'embed"quote', "\t\n"]],
+        ['2 "embed"quote" "\t"', ["2", 'embed"quote', "\t"]],
         [" 3 '' \"\" 'spac e' 'embed\"quote'", ["3", "", "", "spac e", 'embed"quote']],
         ["''' \"\"\" ''quoted''", ["'", '"', "'quoted'"]],
     ],
 )
 def test_split_one_line(cif_line, expected_fields):
     """
-    Test whether values that have an embedded quote are properly escaped.
+    Test whether values that have an embedded quote are properly escaped,
+    by deserializing a looped category with a single column.
     """
-    assert list(split_one_line(cif_line)) == expected_fields
+    category = pdbx.CIFCategory.deserialize(f"loop_\n_test.col\n{cif_line}\n")
+    assert category["col"].as_array(str).tolist() == expected_fields
 
 
 @pytest.mark.parametrize("line", ["_b.y", "loop_", "data_B"])
