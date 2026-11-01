@@ -6,6 +6,7 @@ import biotite.structure as struc
 import biotite.structure.info as info
 import biotite.structure.io.mol as mol
 import biotite.structure.io.pdbx as pdbx
+from biotite.file import InvalidFileError
 from biotite.structure.bonds import BondType
 from biotite.structure.io.mol.ctab import BOND_TYPE_MAPPING_REV
 from tests.util import data_dir
@@ -247,6 +248,19 @@ def test_multi_record_files():
     test_atom_arrays = [sdf_file[res_name].get_structure() for res_name in RES_NAMES]
 
     assert test_atom_arrays == ref_atom_arrays
+
+
+def test_duplicate_record_names_raise():
+    """
+    Two SDF records that share a molecule name should not quietly
+    drop the first one (GH#975).
+    """
+    first = mol.SDRecord(mol.Header(mol_name="duplicate"), metadata={"ID": "first"})
+    second = mol.SDRecord(mol.Header(mol_name="duplicate"), metadata={"ID": "second"})
+    sdf_text = first.serialize() + "$$$$\n" + second.serialize() + "$$$$\n"
+
+    with pytest.raises(InvalidFileError, match="more than one record named"):
+        mol.SDFile.deserialize(sdf_text)
 
 
 def test_metadata_parsing():
