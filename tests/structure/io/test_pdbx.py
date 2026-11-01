@@ -93,16 +93,39 @@ def test_escape_mixed(looped):
     ["cif_line", "expected_fields"],
     [
         ["'' 'embed'quote' ", ["", "embed'quote"]],
-        ['2 "embed"quote" "\t\n"', ["2", 'embed"quote', "\t\n"]],
+        ['2 "embed"quote" "\t"', ["2", 'embed"quote', "\t"]],
         [" 3 '' \"\" 'spac e' 'embed\"quote'", ["3", "", "", "spac e", 'embed"quote']],
         ["''' \"\"\" ''quoted''", ["'", '"', "'quoted'"]],
+        # Embedded quote of the same kind in a quoted value containing whitespace
+        [
+            "4 'embed'quote spac e' \"embed\"quote spac e\"",
+            ["4", "embed'quote spac e", 'embed"quote spac e'],
+        ],
+        # Tab as separator in a line containing quotes
+        ["5\t'spac e'\t''", ["5", "spac e", ""]],
+        # Comment after the values
+        ["6 'spac e' # comment", ["6", "spac e"]],
     ],
 )
 def test_split_one_line(cif_line, expected_fields):
     """
-    Test whether values that have an embedded quote are properly escaped.
+    Test whether values that have an embedded quote are properly escaped,
+    by deserializing a looped category with a single column.
     """
-    assert list(pdbx.cif._split_one_line(cif_line)) == expected_fields
+    category = pdbx.CIFCategory.deserialize(f"loop_\n_test.col\n{cif_line}\n")
+    assert category["col"].as_array(str).tolist() == expected_fields
+
+
+@pytest.mark.parametrize("line", ["_b.y", "loop_", "data_B"])
+def test_text_field_keyword(line):
+    """
+    Test whether a line in a text field that looks like the start of a category,
+    loop or data block is kept as part of the value.
+    """
+    file = pdbx.CIFFile.deserialize(f"data_A\n_a.x\n;text\n{line}\n;\n_c.z 1\n")
+    assert list(file.keys()) == ["A"]
+    assert list(file.block.keys()) == ["a", "c"]
+    assert file.block["a"]["x"].as_item() == f"text\n{line}"
 
 
 @pytest.mark.parametrize("model", [None, 1, -1])

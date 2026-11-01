@@ -4,7 +4,6 @@ __name__ = "biotite.structure.io.pdbx"
 __author__ = "Patrick Kunzmann"
 __all__ = ["CIFFile", "CIFBlock", "CIFCategory", "CIFColumn", "CIFData"]
 
-import itertools
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from os import PathLike
 from typing import IO, Any, Self, TypeAlias, overload
@@ -15,6 +14,11 @@ from biotite.file import (
     SerializationError,
     is_open_compatible,
     is_text,
+)
+from biotite.rust.structure.io.pdbx import (
+    deserialize_category,
+    split_blocks,
+    split_categories,
 )
 from biotite.structure.io.pdbx.component import MaskValue, _Component
 from biotite.typing import NDArray1
@@ -76,7 +80,7 @@ class CIFData:
         if np.issubdtype(self._array.dtype, np.object_):
             raise ValueError("Object arrays are not supported")
         if dtype is not None:
-            self._array = self._array.astype(dtype)
+            self._array = self._array.astype(dtype, copy=False)
 
     @property
     def array(self) -> NDArray1[Any, Any]:
@@ -386,24 +390,8 @@ class CIFCategory(_Component, MutableMapping[str, CIFColumn]):
 
     @classmethod
     def deserialize(cls, text: str) -> Self:
-        lines = [line.strip() for line in text.splitlines() if not _is_empty(line)]
-
-        if _is_loop_start(lines[0]):
-            is_looped = True
-            lines.pop(0)
-        else:
-            is_looped = False
-
-        category_name = _parse_category_name(lines[0])
-        if category_name is None:
-            raise DeserializationError("Failed to parse category name")
-
-        lines = _to_single(lines)
-        if is_looped:
-            category_dict = CIFCategory._deserialize_looped(lines)
-        else:
-            category_dict = CIFCategory._deserialize_single(lines)
-        return cls(category_dict, category_name)
+        category_name, columns = deserialize_category(text)
+        return cls(dict(columns), category_name)
 
     def serialize(self) -> str:
         if self._name is None:
@@ -467,79 +455,6 @@ class CIFCategory(_Component, MutableMapping[str, CIFColumn]):
             if self[col_name] != other[col_name]:
                 return False
         return True
-
-    @staticmethod
-    def _deserialize_single(lines: list[str]) -> dict[str, CIFColumn]:
-        """
-        Process a category where each field has a single value.
-        """
-        category_dict = {}
-        line_i = 0
-        while line_i < len(lines):
-            line = lines[line_i]
-            parts = list(_split_one_line(line))
-            if len(parts) == 2:
-                # Standard case -> name and value in one line
-                name_part, value_part = parts
-                line_i += 1
-            elif len(parts) == 1:
-                # Value is a multiline value on the next line
-                name_part = parts[0]
-                parts = list(_split_one_line(lines[line_i + 1]))
-                if len(parts) == 1:
-                    value_part = parts[0]
-                else:
-                    raise DeserializationError(f"Failed to parse line '{line}'")
-                line_i += 2
-            elif len(parts) == 0:
-                raise DeserializationError("Empty line within category")
-            else:
-                raise DeserializationError(f"Failed to parse line '{line}'")
-            category_dict[name_part.split(".")[1]] = CIFColumn(value_part)
-        return category_dict
-
-    @staticmethod
-    def _deserialize_looped(lines: list[str]) -> dict[str, CIFColumn]:
-        """
-        Process a category where each field has multiple values
-        (category is a table).
-        """
-        category_dict = {}
-        column_names = []
-        i = 0
-        for key_line in lines:
-            key_line = key_line.strip()
-            if key_line[0] == "_":
-                # Key line
-                key = key_line.split(".")[1]
-                column_names.append(key)
-                category_dict[key] = []
-                i += 1
-            else:
-                break
-
-        data_lines = lines[i:]
-        # Rows may be split over multiple lines -> do not rely on
-        # row-line-alignment at all and simply cycle through columns
-        column_indices = itertools.cycle(range(len(column_names)))
-        for data_line in data_lines:
-            values = _split_one_line(data_line)
-            for val in values:
-                column_index = next(column_indices)
-                column_name = column_names[column_index]
-                category_dict[column_name].append(val)
-
-        # Check if all columns have the same length
-        # Otherwise, this would indicate a parsing error or an invalid CIF file
-        column_index = next(column_indices)
-        if column_index != 0:
-            raise DeserializationError(
-                "Category contains columns with different lengths"
-            )
-
-        for key, column in category_dict.items():
-            category_dict[key] = CIFColumn(column)
-        return category_dict
 
     def _serialize_single(self) -> list[str]:
         if self._name is None:
@@ -665,29 +580,7 @@ class CIFBlock(_Component, MutableMapping[str, CIFCategory]):
 
     @classmethod
     def deserialize(cls, text: str) -> Self:
-        lines = text.splitlines()
-        current_category_name = None
-        category_starts = []
-        category_names = []
-        for i, line in enumerate(lines):
-            if not _is_empty(line):
-                is_loop_in_line = _is_loop_start(line)
-                category_name_in_line = _parse_category_name(line)
-                if is_loop_in_line or (
-                    category_name_in_line != current_category_name
-                    and category_name_in_line is not None
-                ):
-                    # Track the new category
-                    if is_loop_in_line:
-                        # In case of lines with "loop_" the category is
-                        # in the next line
-                        category_name_in_line = _parse_category_name(lines[i + 1])
-                    current_category_name = category_name_in_line
-                    category_starts.append(i)
-                    category_names.append(current_category_name)
-        return cls(
-            _create_element_dict(lines, category_names, category_starts)  # pyright: ignore[reportArgumentType]
-        )
+        return cls(dict(split_categories(text)))
 
     def serialize(self) -> str:
         if self._name is None:
@@ -858,18 +751,7 @@ class CIFFile(_Component, File, MutableMapping[str, CIFBlock]):
 
     @classmethod
     def deserialize(cls, text: str) -> Self:
-        lines = text.splitlines()
-        block_starts = []
-        block_names = []
-        for i, line in enumerate(lines):
-            if not _is_empty(line):
-                data_block_name = _parse_data_block_name(line)
-                if data_block_name is not None:
-                    block_starts.append(i)
-                    block_names.append(data_block_name)
-        return cls(
-            _create_element_dict(lines, block_names, block_starts)  # pyright: ignore[reportArgumentType]
-        )
+        return cls(dict(split_blocks(text)))
 
     def serialize(self) -> str:
         text_blocks = []
@@ -977,91 +859,6 @@ class CIFFile(_Component, File, MutableMapping[str, CIFBlock]):
         return True
 
 
-def _is_empty(line: str) -> bool:
-    return len(line.strip()) == 0 or line[0] == "#"
-
-
-def _create_element_dict(
-    lines: list[str], element_names: list[str], element_starts: list[int]
-) -> dict[str, str]:
-    """
-    Create a dict mapping the `element_names` to the corresponding
-    `lines`, which are located between ``element_starts[i]`` and
-    ``element_starts[i+1]``.
-    """
-    # Add exclusive stop to indices for easier slicing
-    element_starts.append(len(lines))
-    # Lazy deserialization
-    # -> keep as text for now and deserialize later if needed
-    return {
-        element_name: "\n".join(lines[element_starts[i] : element_starts[i + 1]]) + "\n"
-        for i, element_name in enumerate(element_names)
-    }
-
-
-def _parse_data_block_name(line: str) -> str | None:
-    """
-    If the line defines a data block, return this name.
-    Return ``None`` otherwise.
-    """
-    if line.startswith("data_"):
-        return line[5:]
-    else:
-        return None
-
-
-def _parse_category_name(line: str) -> str | None:
-    """
-    If the line defines a category, return this name.
-    Return ``None`` otherwise.
-    """
-    line = line.strip()
-    if line[0] != "_":
-        return None
-    else:
-        return line[1 : line.find(".")]
-
-
-def _is_loop_start(line: str) -> bool:
-    """
-    Return whether the line starts a looped category.
-    """
-    return line.startswith("loop_")
-
-
-def _to_single(lines: list[str]) -> list[str]:
-    r"""
-    Convert multiline values into singleline values
-    (in terms of 'lines' list elements).
-    Linebreaks are preserved as ``'\n'`` characters within a list element.
-    The initial ``';'`` character is also preserved, while the final ``';'`` character
-    is removed.
-    """
-    processed_lines = []
-    in_multi_line = False
-    mutli_line_value = []
-    for line in lines:
-        # Multiline value are enclosed by ';' at the start of the beginning and end line
-        if line[0] == ";":
-            if not in_multi_line:
-                # Start of multiline value
-                in_multi_line = True
-                mutli_line_value.append(line)
-            else:
-                # End of multiline value
-                in_multi_line = False
-                # The current line contains only the end character ';'
-                # Hence this line is not added to the processed lines
-                processed_lines.append("\n".join(mutli_line_value))
-                mutli_line_value = []
-        else:
-            if in_multi_line:
-                mutli_line_value.append(line)
-            else:
-                processed_lines.append(line)
-    return processed_lines
-
-
 def _escape(array: NDArray1[Any, np.str_]) -> NDArray1[Any, np.str_]:
     """
     Escape special characters in values to make them compatible with CIF.
@@ -1119,40 +916,6 @@ def _multiline(
     into CIF-compatible multiline string.
     """
     return "\n;" + value + "\n;\n"
-
-
-def _split_one_line(line: str) -> Iterator[str]:
-    """
-    Split a line into its fields.
-    Supporting embedded quotes (' or "), like `'a dog's life'` to  `a dog's life`
-    """
-    # Special case of multiline value, where the line starts with ';'
-    if line[0] == ";":
-        yield line[1:]
-    elif "'" in line or '"' in line:
-        # Quoted values in the line
-        while line:
-            # Strip leading whitespace(s)
-            stripped_line = line.lstrip()
-            # Split the line on whitespace
-            word, _, line = stripped_line.partition(" ")
-            # Handle the case where the word start with a quote
-            if word.startswith(("'", '"')):
-                # Set the separator to the quote found
-                separator = word[0]
-                # Handle the case of a quoted word without space
-                if word.endswith(separator) and len(word) > 1:
-                    # Yield the word without the opening and closing quotes
-                    yield word[1:-1]
-                    continue
-                # split the word on the separator
-                word, _, line = stripped_line[1:].partition(separator)
-
-            yield word
-    else:
-        # No quoted values in the line -> simple whitespace split
-        for line in line.split():
-            yield line
 
 
 def _arrayfy(data: Any) -> NDArray1[Any, Any]:
