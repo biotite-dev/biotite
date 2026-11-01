@@ -271,14 +271,15 @@ fn split_values(line: &str) -> impl Iterator<Item = &str> {
         if let Some(value) = text_field.take() {
             return Some(value);
         }
-        rest = rest.trim_start_matches(is_space);
+        rest = &rest[find_space(rest, false)..];
         let value;
-        match rest.chars().next()? {
-            '#' => {
+        match *rest.as_bytes().first()? {
+            b'#' => {
                 rest = "";
                 return None;
             }
-            quote @ ('\'' | '"') => {
+            quote @ (b'\'' | b'"') => {
+                let quote = quote as char;
                 let content = &rest[1..];
                 // If the quoted value is not closed, it extends to the end of the line
                 let end = content
@@ -290,7 +291,7 @@ fn split_values(line: &str) -> impl Iterator<Item = &str> {
                 rest = content.get(end + 1..).unwrap_or("");
             }
             _ => {
-                let end = rest.find(is_space).unwrap_or(rest.len());
+                let end = find_space(rest, true);
                 value = &rest[..end];
                 rest = &rest[end..];
             }
@@ -397,6 +398,26 @@ fn to_str<'a>(text: &'a Bound<'_, PyString>) -> PyResult<&'a str> {
 /// Equivalent to Python's ``str.isspace()`` for a single character.
 fn is_space(c: char) -> bool {
     c.is_whitespace() || ('\x1c'..='\x1f').contains(&c)
+}
+
+/// Return the byte index of the first character in `text` that is whitespace
+/// (if `is_whitespace` is true) or that is not whitespace (otherwise).
+/// Return the length of `text`, if there is no such character.
+fn find_space(text: &str, is_whitespace: bool) -> usize {
+    // Fast path for ASCII characters, which are the vast majority in CIF files
+    for (i, &byte) in text.as_bytes().iter().enumerate() {
+        if !byte.is_ascii() {
+            // All previous bytes are ASCII, so `i` is at a character boundary
+            return i + text[i..]
+                .find(|c| is_space(c) == is_whitespace)
+                .unwrap_or(text.len() - i);
+        }
+        let is_ascii_space = matches!(byte, b' ' | b'\t'..=b'\r' | b'\x1c'..=b'\x1f');
+        if is_ascii_space == is_whitespace {
+            return i;
+        }
+    }
+    text.len()
 }
 
 /// Equivalent to Python's ``str.splitlines()``.
