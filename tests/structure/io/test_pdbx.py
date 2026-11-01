@@ -330,6 +330,163 @@ def test_bond_sparsity():
 
 
 @pytest.mark.parametrize("format", ["cif", "bcif"])
+def test_component_categories(tmp_path, format):
+    """
+    Check if the ``chem_comp`` and ``chem_comp_atom`` categories are written alongside
+    ``chem_comp_bond``, as they are its parent categories:
+    Each atom referenced in ``chem_comp_bond`` (and ``atom_site``) must appear
+    exactly once in ``chem_comp_atom`` with the element of the atom, and each
+    component must appear exactly once in ``chem_comp`` with the type given in the
+    reference file.
+    """
+    File = pdbx.CIFFile if format == "cif" else pdbx.BinaryCIFFile
+    path = data_dir("structure") / "pdb" / f"1l2y.{format}"
+    ref_pdbx_file = File.read(path)
+    ref_chem_comp = ref_pdbx_file.block["chem_comp"]
+    # The component type is case-insensitive
+    ref_types = dict(
+        zip(
+            ref_chem_comp["id"].as_array(str),
+            np.char.lower(ref_chem_comp["type"].as_array(str)),
+        )
+    )
+    atoms = pdbx.get_structure(ref_pdbx_file, include_bonds=True)
+    ref_elements = {
+        (res_name, atom_name): element
+        for res_name, atom_name, element in zip(
+            atoms.res_name, atoms.atom_name, atoms.element
+        )
+    }
+
+    test_pdbx_file = File()
+    pdbx.set_structure(test_pdbx_file, atoms)
+    file_path = tmp_path / f"test.{format}"
+    test_pdbx_file.write(file_path)
+    block = File.read(file_path).block
+
+    chem_comp_atom = block["chem_comp_atom"]
+    comp_atoms = list(
+        zip(
+            chem_comp_atom["comp_id"].as_array(str),
+            chem_comp_atom["atom_id"].as_array(str),
+        )
+    )
+    # Each atom of a component is listed exactly once
+    assert len(comp_atoms) == len(set(comp_atoms))
+    assert chem_comp_atom["pdbx_ordinal"].as_array(int).tolist() == list(
+        range(1, len(comp_atoms) + 1)
+    )
+    for comp_atom, element in zip(
+        comp_atoms, chem_comp_atom["type_symbol"].as_array(str)
+    ):
+        assert element == ref_elements[comp_atom]
+
+    chem_comp_bond = block["chem_comp_bond"]
+    bond_comp_id = chem_comp_bond["comp_id"].as_array(str)
+    for column in ["atom_id_1", "atom_id_2"]:
+        bond_atom_id = chem_comp_bond[column].as_array(str)
+        assert set(zip(bond_comp_id, bond_atom_id)) <= set(comp_atoms)
+    atom_site = block["atom_site"]
+    assert set(
+        zip(
+            atom_site["label_comp_id"].as_array(str),
+            atom_site["label_atom_id"].as_array(str),
+        )
+    ) == set(comp_atoms)
+
+    chem_comp = block["chem_comp"]
+    comp_ids = chem_comp["id"].as_array(str).tolist()
+    # Each component is listed exactly once
+    assert len(comp_ids) == len(set(comp_ids))
+    assert set(comp_ids) == {comp_id for comp_id, _ in comp_atoms}
+    for comp_id, comp_type in zip(comp_ids, chem_comp["type"].as_array(str)):
+        assert comp_type.lower() == ref_types[comp_id]
+
+
+def test_unknown_component_type():
+    """
+    Check if a component that is unknown to the *Chemical Component Dictionary*
+    gets the type ``'other'`` in the ``chem_comp`` category.
+    """
+    # CCD identifiers never contain an underscore
+    UNKNOWN_RES_NAME = "MOL_1"
+
+    atoms = struc.AtomArray(4)
+    atoms.atom_name = ["C1", "C2", "N", "CA"]
+    atoms.res_id = [1, 1, 2, 2]
+    atoms.res_name = [UNKNOWN_RES_NAME, UNKNOWN_RES_NAME, "GLY", "GLY"]
+    atoms.element = ["C", "C", "N", "C"]
+    atoms.bonds = struc.BondList(4, np.array([[0, 1], [2, 3]]))
+
+    pdbx_file = pdbx.CIFFile()
+    pdbx.set_structure(pdbx_file, atoms)
+    chem_comp = pdbx_file.block["chem_comp"]
+
+    assert chem_comp["id"].as_array(str).tolist() == [UNKNOWN_RES_NAME, "GLY"]
+    assert np.char.lower(chem_comp["type"].as_array(str)).tolist() == [
+        "other",
+        "peptide linking",
+    ]
+
+
+@pytest.mark.parametrize("format", ["cif", "bcif"])
+def test_existing_components(format):
+    """
+    Check if an existing ``chem_comp`` category is kept as is, when a structure is
+    written into the file, and only the components missing in it are appended.
+    """
+    # CCD identifiers never contain an underscore
+    NEW_RES_NAME = "MOL_1"
+
+    File = pdbx.CIFFile if format == "cif" else pdbx.BinaryCIFFile
+    path = data_dir("structure") / "pdb" / f"1l2y.{format}"
+    pdbx_file = File.read(path)
+    ref_chem_comp = pdbx_file.block["chem_comp"]
+    ref_columns = {
+        key: (column.as_array(str), _get_mask(column))
+        for key, column in ref_chem_comp.items()
+    }
+    atoms = pdbx.get_structure(pdbx_file, model=1, include_bonds=True)
+
+    # All components are already present
+    pdbx.set_structure(pdbx_file, atoms)
+    assert pdbx_file.block["chem_comp"] is ref_chem_comp
+
+    new_residue = struc.AtomArray(2)
+    new_residue.atom_name = ["C1", "C2"]
+    new_residue.res_id = [atoms.res_id[-1] + 1] * 2
+    new_residue.res_name = [NEW_RES_NAME] * 2
+    new_residue.chain_id = [atoms.chain_id[-1]] * 2
+    new_residue.hetero = [True] * 2
+    new_residue.element = ["C"] * 2
+    new_residue.bonds = struc.BondList(2, np.array([[0, 1]]))
+    pdbx.set_structure(pdbx_file, atoms + new_residue)
+    test_chem_comp = pdbx_file.block["chem_comp"]
+
+    n_existing = ref_chem_comp.row_count
+    assert test_chem_comp.row_count == n_existing + 1
+    assert test_chem_comp.keys() == ref_chem_comp.keys()
+    for key, (ref_data, ref_mask) in ref_columns.items():
+        test_column = test_chem_comp[key]
+        # The existing rows are unchanged
+        assert test_column.as_array(str)[:n_existing].tolist() == ref_data.tolist()
+        assert _get_mask(test_column)[:n_existing].tolist() == ref_mask.tolist()
+        # Only the ID and type are known for the new component
+        if key == "id":
+            assert test_column.as_array(str)[-1] == NEW_RES_NAME
+        elif key == "type":
+            assert test_column.as_array(str)[-1] == "other"
+        else:
+            assert _get_mask(test_column)[-1] == pdbx.MaskValue.MISSING
+
+
+def _get_mask(column):
+    if column.mask is None:
+        return np.full(len(column), pdbx.MaskValue.PRESENT)
+    return column.mask.array
+
+
+@pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_extra_fields(tmp_path, format):
     EXTRA_FIELDS = ["atom_id", "b_factor", "occupancy", "charge", "entity_id"]
 
