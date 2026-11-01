@@ -13,6 +13,7 @@ __all__ = [
 
 from typing import Any, cast, overload
 import numpy as np
+from biotite.rust.structure import superimpose as rust_superimpose
 from biotite.sequence.align.alignment import get_codes, remove_gaps
 from biotite.sequence.align.matrix import SubstitutionMatrix
 from biotite.sequence.align.pairwise import align_optimal
@@ -21,7 +22,7 @@ from biotite.sequence.seqtypes import ProteinSequence
 from biotite.structure.atoms import AtomArray, AtomArrayStack, Coord, MultiCoord, coord
 from biotite.structure.chains import chain_iter
 from biotite.structure.filter import filter_amino_acids, filter_nucleotides
-from biotite.structure.geometry import centroid, distance
+from biotite.structure.geometry import distance
 from biotite.structure.sequence import to_sequence
 from biotite.structure.transform import RigidTransformation
 from biotite.typing import (
@@ -60,10 +61,11 @@ def superimpose(
     """
     Find the transformation that superimposes structures onto each other,
     minimizing the RMSD between them.
-    :footcite:`Kabsch1976, Kabsch1978`.
 
     More precisely, the `mobile` structure is rotated and translated onto
     the `fixed` structure.
+    The optimal rotation is found via the quaternion-based characteristic
+    polynomial (QCP) method :footcite:`Theobald2005, Liu2010`.
 
     Parameters
     ----------
@@ -150,23 +152,18 @@ def superimpose(
     fix_coord = _reshape_to_3d(coord(fixed))
 
     if atom_mask is not None:
-        # Implicitly this creates array copies
-        mob_filtered = mob_coord[:, atom_mask, :]
-        fix_filtered = fix_coord[:, atom_mask, :]
-    else:
-        mob_filtered = np.copy(mob_coord)
-        fix_filtered = np.copy(fix_coord)
+        atom_mask = np.ascontiguousarray(atom_mask)
+        if atom_mask.dtype != np.bool_:
+            # Index array instead of boolean mask
+            mob_coord = mob_coord[:, atom_mask, :]
+            fix_coord = fix_coord[:, atom_mask, :]
+            atom_mask = None
 
-    # Center coordinates at (0,0,0)
-    mob_centroid = centroid(mob_filtered)
-    fix_centroid = centroid(fix_filtered)
-    mob_centered_filtered = mob_filtered - mob_centroid[:, np.newaxis, :]
-    fix_centered_filtered = fix_filtered - fix_centroid[:, np.newaxis, :]
-
-    rotation = _get_rotation_matrices(fix_centered_filtered, mob_centered_filtered)
-    # The mobile centroid is moved to the origin, the rotation is applied
-    # and the coordinates are moved to the fixed centroid
-    translation = fix_centroid - (rotation @ mob_centroid[..., np.newaxis])[..., 0]
+    rotation, translation = rust_superimpose(
+        np.ascontiguousarray(fix_coord),
+        np.ascontiguousarray(mob_coord),
+        atom_mask,
+    )
     return RigidTransformation(rotation, translation)
 
 
@@ -447,27 +444,6 @@ def _reshape_to_3d(
         return coord  # pyright: ignore[reportReturnType]
     else:
         raise ValueError("Coordinates must be at most three-dimensional")
-
-
-def _get_rotation_matrices(
-    fixed: NDArray3[M, N, XYZ, np.floating],
-    mobile: NDArray3[M, N, XYZ, np.floating],
-) -> NDArray3[M, XYZ, XYZ, np.floating]:
-    """
-    Get the rotation matrices to superimpose the given mobile
-    coordinates into the given fixed coordinates, minimizing the RMSD.
-
-    Uses the *Kabsch* algorithm.
-    Both sets of coordinates must already be centered at origin.
-    """
-    # Calculate cross-covariance matrices
-    cov = fixed.mT @ mobile  # (M, XYZ, XYZ)
-    v, s, w = np.linalg.svd(cov)
-    # Remove possibility of reflected atom coordinates
-    reflected_mask = np.linalg.det(v) * np.linalg.det(w) < 0
-    v[reflected_mask, :, -1] *= -1
-    matrices = np.matmul(v, w)
-    return matrices
 
 
 def _get_backbone_anchor_indices(
