@@ -7,10 +7,13 @@ from tests.util import data_dir
 
 @pytest.mark.parametrize("seed", range(10))
 @pytest.mark.parametrize("multi_model", [False, True])
-def test_restoration(seed, multi_model):
+@pytest.mark.parametrize("dimensionality", [3, 2, 1])
+def test_restoration(seed, multi_model, dimensionality):
     """
     Check if randomly relocated coordinates can be restored to their
     original position by superimposition.
+    Planar and collinear coordinates are also tested, where the latter have no
+    unique optimal rotation.
     """
     N_MODELS = 10
     N_COORD = 100
@@ -20,6 +23,8 @@ def test_restoration(seed, multi_model):
         ref_coord = rng.random((N_MODELS, N_COORD, 3))
     else:
         ref_coord = rng.random((N_COORD, 3))
+    # Confine the coordinates to a plane or line
+    ref_coord[..., dimensionality:] = 0
     ref_coord = _transform_random_affine(ref_coord, rng)
 
     # Try to restore original coordinates after random relocation

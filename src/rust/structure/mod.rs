@@ -7,6 +7,7 @@ pub mod charges;
 pub mod connect;
 pub mod io;
 pub mod sasa;
+pub mod superimpose;
 pub mod util;
 
 pub fn module<'py>(parent_module: &Bound<'py, PyModule>) -> PyResult<Bound<'py, PyModule>> {
@@ -25,6 +26,7 @@ pub fn module<'py>(parent_module: &Bound<'py, PyModule>) -> PyResult<Bound<'py, 
     module.add_function(wrap_pyfunction!(connect::find_connected, &module)?)?;
     module.add_function(wrap_pyfunction!(connect::infer_bond_types, &module)?)?;
     module.add_function(wrap_pyfunction!(sasa::sasa, &module)?)?;
+    module.add_function(wrap_pyfunction!(superimpose::superimpose, &module)?)?;
     add_subpackage(&module, &io::module(&module)?, "biotite.rust.structure.io")?;
     Ok(module)
 }
