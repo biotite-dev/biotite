@@ -96,6 +96,15 @@ def test_escape_mixed(looped):
         ['2 "embed"quote" "\t"', ["2", 'embed"quote', "\t"]],
         [" 3 '' \"\" 'spac e' 'embed\"quote'", ["3", "", "", "spac e", 'embed"quote']],
         ["''' \"\"\" ''quoted''", ["'", '"', "'quoted'"]],
+        # Embedded quote of the same kind in a quoted value containing whitespace
+        [
+            "4 'embed'quote spac e' \"embed\"quote spac e\"",
+            ["4", "embed'quote spac e", 'embed"quote spac e'],
+        ],
+        # Tab as separator in a line containing quotes
+        ["5\t'spac e'\t''", ["5", "spac e", ""]],
+        # Comment after the values
+        ["6 'spac e' # comment", ["6", "spac e"]],
     ],
 )
 def test_split_one_line(cif_line, expected_fields):

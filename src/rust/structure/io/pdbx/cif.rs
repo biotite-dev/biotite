@@ -103,22 +103,13 @@ pub fn deserialize_category<'py>(
     Ok((category_name.to_string(), columns))
 }
 
-/// Split a line into its values.
-///
-/// Supports embedded quotes (' or "), like ``'a dog's life'`` to ``a dog's life``.
-fn split_one_line(line: &str) -> Vec<&str> {
-    let mut values = Vec::new();
-    split_values(line, |value| values.push(value));
-    values
-}
-
 /// Process a category where each field has a single value.
 fn deserialize_single<'py>(py: Python<'py>, lines: &[Cow<'_, str>]) -> PyResult<Columns<'py>> {
     let mut columns = Vec::new();
     let mut line_i = 0;
     while line_i < lines.len() {
         let line = &lines[line_i];
-        let parts = split_one_line(line);
+        let parts: Vec<&str> = split_values(line).collect();
         let (name_part, value_part) = match parts[..] {
             // Standard case -> name and value in one line
             [name_part, value_part] => {
@@ -132,7 +123,7 @@ fn deserialize_single<'py>(py: Python<'py>, lines: &[Cow<'_, str>]) -> PyResult<
                         "Missing value for data name '{name_part}'"
                     ))
                 })?;
-                let [value_part] = split_one_line(next_line)[..] else {
+                let [value_part] = split_values(next_line).collect::<Vec<_>>()[..] else {
                     return Err(parse_error(line));
                 };
                 line_i += 2;
@@ -176,17 +167,25 @@ fn deserialize_looped<'py>(py: Python<'py>, lines: &[Cow<'_, str>]) -> PyResult<
         column_of_key.push(column_i);
     }
     let data_lines = &lines[column_of_key.len()..];
+    // Rows may be split over multiple lines -> do not rely on
+    // row-line-alignment at all and simply cycle through columns
+    let values = || {
+        column_of_key
+            .iter()
+            .cycle()
+            .zip(data_lines.iter().flat_map(|line| split_values(line)))
+    };
 
     // First pass: count the values and find the widest value of each column
     let mut lengths = vec![0; column_names.len()];
     let mut widths = vec![1; column_names.len()];
-    let key_i = for_each_value(data_lines, &column_of_key, |column_i, value| {
+    for (&column_i, value) in values() {
         lengths[column_i] += 1;
         widths[column_i] = widths[column_i].max(value.chars().count());
-    });
+    }
     // Check if all columns have the same length
     // Otherwise, this would indicate a parsing error or an invalid CIF file
-    if key_i != 0 {
+    if lengths.iter().sum::<usize>() % column_of_key.len() != 0 {
         return Err(biotite::DeserializationError::new_err(
             "Category contains columns with different lengths",
         ));
@@ -200,14 +199,14 @@ fn deserialize_looped<'py>(py: Python<'py>, lines: &[Cow<'_, str>]) -> PyResult<
         .map(|(length, width)| vec![0; length * width])
         .collect();
     let mut row_counts = vec![0; column_names.len()];
-    for_each_value(data_lines, &column_of_key, |column_i, value| {
+    for (&column_i, value) in values() {
         let start = row_counts[column_i] * widths[column_i];
         write_code_points(
             &mut buffers[column_i][start..start + widths[column_i]],
             value,
         );
         row_counts[column_i] += 1;
-    });
+    }
 
     column_names
         .into_iter()
@@ -217,58 +216,46 @@ fn deserialize_looped<'py>(py: Python<'py>, lines: &[Cow<'_, str>]) -> PyResult<
         .collect()
 }
 
-/// Call `f(column_i, value)` for each value in the data lines of a looped category.
+/// Iterate over the values in a line.
 ///
-/// Rows may be split over multiple lines -> do not rely on
-/// row-line-alignment at all and simply cycle through columns.
-/// Return the key index after the last value, which is 0 if all rows are complete.
-fn for_each_value<'a>(
-    data_lines: &'a [Cow<'_, str>],
-    column_of_key: &[usize],
-    mut f: impl FnMut(usize, &'a str),
-) -> usize {
-    let mut key_i = 0;
-    for data_line in data_lines {
-        split_values(data_line, |value| {
-            f(column_of_key[key_i], value);
-            key_i = (key_i + 1) % column_of_key.len();
-        });
-    }
-    key_i
-}
-
-/// Call `emit` for each value in the line.
-fn split_values<'a>(line: &'a str, mut emit: impl FnMut(&'a str)) {
+/// Supports embedded quotes (' or "), like ``'a dog's life'`` to ``a dog's life``:
+/// a quote only closes a quoted value, if it is followed by whitespace or the end
+/// of the line.
+/// A comment, i.e. an unquoted ``#``, ends the line.
+fn split_values(line: &str) -> impl Iterator<Item = &str> {
     // Special case of multiline value, where the line starts with ';'
-    if let Some(value) = line.strip_prefix(';') {
-        emit(value);
-    } else if line.contains(['\'', '"']) {
-        // Quoted values in the line
-        let mut line = line;
-        while !line.is_empty() {
-            let stripped_line = line.trim_start_matches(is_space);
-            // Split the line on whitespace
-            let (mut word, mut rest) = partition(stripped_line, ' ');
-            // Handle the case where the word starts with a quote
-            if let Some(separator) = word.chars().next().filter(|&c| c == '\'' || c == '"') {
-                // Handle the case of a quoted word without space
-                if word.len() > 1 && word.ends_with(separator) {
-                    // Emit the word without the opening and closing quotes
-                    emit(&word[1..word.len() - 1]);
-                    line = rest;
-                    continue;
-                }
-                (word, rest) = partition(&stripped_line[1..], separator);
-            }
-            emit(word);
-            line = rest;
+    let mut text_field = line.strip_prefix(';');
+    let mut rest = if text_field.is_some() { "" } else { line };
+    std::iter::from_fn(move || {
+        if let Some(value) = text_field.take() {
+            return Some(value);
         }
-    } else {
-        // No quoted values in the line -> simple whitespace split
-        line.split(is_space)
-            .filter(|value| !value.is_empty())
-            .for_each(emit);
-    }
+        rest = rest.trim_start_matches(is_space);
+        let value;
+        match rest.chars().next()? {
+            '#' => {
+                rest = "";
+                return None;
+            }
+            quote @ ('\'' | '"') => {
+                let content = &rest[1..];
+                // If the quoted value is not closed, it extends to the end of the line
+                let end = content
+                    .match_indices(quote)
+                    .map(|(i, _)| i)
+                    .find(|&i| content[i + 1..].chars().next().is_none_or(is_space))
+                    .unwrap_or(content.len());
+                value = &content[..end];
+                rest = content.get(end + 1..).unwrap_or("");
+            }
+            _ => {
+                let end = rest.find(is_space).unwrap_or(rest.len());
+                value = &rest[..end];
+                rest = &rest[end..];
+            }
+        }
+        Some(value)
+    })
 }
 
 /// Convert multiline values into singleline values
@@ -402,16 +389,9 @@ fn split_lines(text: &str) -> Vec<&str> {
     lines
 }
 
-/// Equivalent to Python's ``str.partition()`` with a single character separator.
-fn partition(text: &str, separator: char) -> (&str, &str) {
-    match text.find(separator) {
-        Some(i) => (&text[..i], &text[i + separator.len_utf8()..]),
-        None => (text, ""),
-    }
-}
-
 fn is_empty(line: &str) -> bool {
-    line.trim_matches(is_space).is_empty() || line.starts_with('#')
+    let line = line.trim_start_matches(is_space);
+    line.is_empty() || line.starts_with('#')
 }
 
 /// If the line starts with a data name, return its category name.
