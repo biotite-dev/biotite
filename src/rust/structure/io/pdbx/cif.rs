@@ -136,13 +136,12 @@ fn deserialize_single<'py>(py: Python<'py>, lines: &[Cow<'_, str>]) -> PyResult<
             }
             _ => return Err(parse_error(line)),
         };
-        let width = value_part.chars().count().max(1);
-        let mut buffer = vec![0; width];
-        write_code_points(&mut buffer, value_part);
+        let mut column = UnicodeColumn::with_capacity(1);
+        column.push(value_part);
         // A repeated key is resolved by the `dict()` call on the Python side
         columns.push((
             split_data_name(name_part)?.1.to_string(),
-            unicode_array(py, buffer, width)?,
+            column.into_array(py)?,
         ));
     }
     Ok(columns)
@@ -176,44 +175,86 @@ fn deserialize_looped<'py>(py: Python<'py>, lines: &[Cow<'_, str>]) -> PyResult<
             .zip(data_lines.iter().flat_map(|line| split_values(line)))
     };
 
-    // First pass: count the values and find the widest value of each column
-    let mut lengths = vec![0; column_names.len()];
-    let mut widths = vec![1; column_names.len()];
+    // Usually each row is in a separate line
+    let mut columns: Vec<UnicodeColumn> = column_names
+        .iter()
+        .map(|_| UnicodeColumn::with_capacity(data_lines.len()))
+        .collect();
+    let mut n_values = 0;
     for (&column_i, value) in values() {
-        lengths[column_i] += 1;
-        widths[column_i] = widths[column_i].max(value.chars().count());
+        columns[column_i].push(value);
+        n_values += 1;
     }
     // Check if all columns have the same length
     // Otherwise, this would indicate a parsing error or an invalid CIF file
-    if lengths.iter().sum::<usize>() % column_of_key.len() != 0 {
+    if n_values % column_of_key.len() != 0 {
         return Err(biotite::DeserializationError::new_err(
             "Category contains columns with different lengths",
         ));
     }
 
-    // Second pass: write each value directly into its array,
-    // so the values do not need to be kept until all widths are known
-    let mut buffers: Vec<Vec<u32>> = lengths
-        .iter()
-        .zip(&widths)
-        .map(|(length, width)| vec![0; length * width])
-        .collect();
-    let mut row_counts = vec![0; column_names.len()];
-    for (&column_i, value) in values() {
-        let start = row_counts[column_i] * widths[column_i];
-        write_code_points(
-            &mut buffers[column_i][start..start + widths[column_i]],
-            value,
-        );
-        row_counts[column_i] += 1;
-    }
-
     column_names
         .into_iter()
-        .zip(buffers)
-        .zip(widths)
-        .map(|((name, buffer), width)| Ok((name.to_string(), unicode_array(py, buffer, width)?)))
+        .zip(columns)
+        .map(|(name, column)| Ok((name.to_string(), column.into_array(py)?)))
         .collect()
+}
+
+/// The UCS4 code points of a NumPy unicode array that is filled value by value.
+///
+/// As the width of the array is only known after all values are added, the array is
+/// widened each time a value is wider than the current width.
+struct UnicodeColumn {
+    code_points: Vec<u32>,
+    width: usize,
+    length: usize,
+    expected_length: usize,
+}
+
+impl UnicodeColumn {
+    /// Create an empty column with space for `expected_length` values of width 1.
+    fn with_capacity(expected_length: usize) -> Self {
+        Self {
+            code_points: Vec::with_capacity(expected_length),
+            width: 1,
+            length: 0,
+            expected_length,
+        }
+    }
+
+    fn push(&mut self, value: &str) {
+        let value_width = value.chars().count();
+        if value_width > self.width {
+            self.widen(value_width);
+        }
+        let start = self.code_points.len();
+        self.code_points.resize(start + self.width, 0);
+        write_code_points(&mut self.code_points[start..], value);
+        self.length += 1;
+    }
+
+    /// Pad the values added so far to the given width.
+    fn widen(&mut self, width: usize) {
+        let old_width = self.width;
+        let capacity = self.expected_length.max(self.length + 1) * width;
+        self.code_points
+            .reserve(capacity.saturating_sub(self.code_points.len()));
+        self.code_points.resize(self.length * width, 0);
+        // Move the values from back to front,
+        // so that no value is overwritten before it is moved
+        for i in (0..self.length).rev() {
+            self.code_points
+                .copy_within(i * old_width..(i + 1) * old_width, i * width);
+            self.code_points[i * width + old_width..(i + 1) * width].fill(0);
+        }
+        self.width = width;
+    }
+
+    fn into_array(mut self, py: Python<'_>) -> PyResult<Bound<'_, PyAny>> {
+        // The capacity would be kept alive by the array otherwise
+        self.code_points.shrink_to_fit();
+        unicode_array(py, self.code_points, self.width)
+    }
 }
 
 /// Iterate over the values in a line.
