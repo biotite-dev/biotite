@@ -19,7 +19,11 @@ pub fn split_blocks(text: &Bound<'_, PyString>) -> PyResult<Vec<(String, String)
     let lines = split_lines(to_str(text)?);
     let mut block_names = Vec::new();
     let mut block_starts = Vec::new();
+    let mut text_fields = TextFieldTracker::default();
     for (i, line) in lines.iter().enumerate() {
+        if text_fields.is_within(line) {
+            continue;
+        }
         if let Some(block_name) = line.strip_prefix("data_") {
             block_starts.push(i);
             block_names.push(block_name.to_string());
@@ -37,8 +41,9 @@ pub fn split_categories(text: &Bound<'_, PyString>) -> PyResult<Vec<(String, Str
     let mut current_category_name = None;
     let mut category_names = Vec::new();
     let mut category_starts = Vec::new();
+    let mut text_fields = TextFieldTracker::default();
     for (i, line) in lines.iter().enumerate() {
-        if is_empty(line) {
+        if text_fields.is_within(line) || is_empty(line) {
             continue;
         }
         let category_name = if line.starts_with("loop_") {
@@ -293,6 +298,28 @@ fn to_single<'a>(lines: &[&'a str]) -> Vec<Cow<'a, str>> {
         }
     }
     processed_lines
+}
+
+/// Tracks whether a line is part of a text field, i.e. a value delimited by
+/// ``;`` at the start of a line.
+#[derive(Default)]
+struct TextFieldTracker {
+    is_open: bool,
+}
+
+impl TextFieldTracker {
+    /// Return whether the line is a delimiter or the content of a text field.
+    ///
+    /// Must be called for each line in order.
+    /// As a text field may not contain a ``;`` at the start of a line,
+    /// each such line toggles between the start and the end of a text field.
+    fn is_within(&mut self, line: &str) -> bool {
+        if line.starts_with(';') {
+            self.is_open = !self.is_open;
+            return true;
+        }
+        self.is_open
+    }
 }
 
 /// Join the lines of each element (block or category) into its text, where element `i`

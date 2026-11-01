@@ -106,6 +106,18 @@ def test_split_one_line(cif_line, expected_fields):
     assert list(split_one_line(cif_line)) == expected_fields
 
 
+@pytest.mark.parametrize("line", ["_b.y", "loop_", "data_B"])
+def test_text_field_keyword(line):
+    """
+    Test whether a line in a text field that looks like the start of a category,
+    loop or data block is kept as part of the value.
+    """
+    file = pdbx.CIFFile.deserialize(f"data_A\n_a.x\n;text\n{line}\n;\n_c.z 1\n")
+    assert list(file.keys()) == ["A"]
+    assert list(file.block.keys()) == ["a", "c"]
+    assert file.block["a"]["x"].as_item() == f"text\n{line}"
+
+
 @pytest.mark.parametrize("model", [None, 1, -1])
 @pytest.mark.parametrize(
     "path",
