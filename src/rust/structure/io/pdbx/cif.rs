@@ -1,5 +1,4 @@
 use numpy::{IntoPyArray, PyArrayDescr};
-use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
 use pyo3::types::PyString;
 use std::borrow::Cow;
@@ -33,7 +32,7 @@ pub fn split_blocks(text: &Bound<'_, PyString>) -> PyResult<Vec<(String, String)
 ///
 /// Return the name and text of each category, in the order of the block.
 #[pyfunction]
-pub fn split_categories(text: &Bound<'_, PyString>) -> PyResult<Vec<(Option<String>, String)>> {
+pub fn split_categories(text: &Bound<'_, PyString>) -> PyResult<Vec<(String, String)>> {
     let lines = split_lines(to_str(text)?);
     let mut current_category_name = None;
     let mut category_names = Vec::new();
@@ -42,25 +41,24 @@ pub fn split_categories(text: &Bound<'_, PyString>) -> PyResult<Vec<(Option<Stri
         if is_empty(line) {
             continue;
         }
-        let is_loop_in_line = line.starts_with("loop_");
-        let mut category_name_in_line = parse_category_name(line);
-        if is_loop_in_line
-            || (category_name_in_line != current_category_name && category_name_in_line.is_some())
-        {
-            // Track the new category
-            if is_loop_in_line {
-                // In case of lines with "loop_" the category is
-                // in the next line
-                let next_line = lines.get(i + 1).ok_or_else(index_error)?;
-                if next_line.trim_matches(is_space).is_empty() {
-                    return Err(PyIndexError::new_err("string index out of range"));
-                }
-                category_name_in_line = parse_category_name(next_line);
+        let category_name = if line.starts_with("loop_") {
+            // In case of lines with "loop_" the category is
+            // in the next data name, which may follow after comments
+            let name_line = lines[i + 1..]
+                .iter()
+                .find(|line| !is_empty(line))
+                .ok_or_else(missing_loop_data_name)?;
+            parse_category_name(name_line)?.ok_or_else(missing_loop_data_name)?
+        } else {
+            match parse_category_name(line)? {
+                Some(name) if Some(name) != current_category_name => name,
+                _ => continue,
             }
-            current_category_name = category_name_in_line;
-            category_starts.push(i);
-            category_names.push(current_category_name.map(str::to_string));
-        }
+        };
+        // Track the new category
+        current_category_name = Some(category_name);
+        category_starts.push(i);
+        category_names.push(category_name.to_string());
     }
     Ok(join_elements(&lines, category_names, &category_starts))
 }
@@ -80,12 +78,15 @@ pub fn deserialize_category<'py>(
         .map(|line| line.trim_matches(is_space))
         .filter(|line| !line.is_empty())
         .collect();
-    let first_line = *lines.first().ok_or_else(index_error)?;
+    let first_line = *lines
+        .first()
+        .ok_or_else(|| biotite::DeserializationError::new_err("Category is empty"))?;
     let is_looped = first_line.starts_with("loop_");
     if is_looped {
         lines.remove(0);
     }
-    let category_name = parse_category_name(lines.first().ok_or_else(index_error)?)
+    let name_line = lines.first().ok_or_else(missing_loop_data_name)?;
+    let category_name = parse_category_name(name_line)?
         .ok_or_else(|| biotite::DeserializationError::new_err("Failed to parse category name"))?;
 
     let lines = to_single(&lines);
@@ -122,7 +123,11 @@ fn deserialize_single<'py>(py: Python<'py>, lines: &[Cow<'_, str>]) -> PyResult<
             }
             // Value is a multiline value on the next line
             [name_part] => {
-                let next_line = lines.get(line_i + 1).ok_or_else(index_error)?;
+                let next_line = lines.get(line_i + 1).ok_or_else(|| {
+                    biotite::DeserializationError::new_err(format!(
+                        "Missing value for data name '{name_part}'"
+                    ))
+                })?;
                 let [value_part] = split_one_line(next_line)[..] else {
                     return Err(parse_error(line));
                 };
@@ -141,7 +146,7 @@ fn deserialize_single<'py>(py: Python<'py>, lines: &[Cow<'_, str>]) -> PyResult<
         write_code_points(&mut buffer, value_part);
         // A repeated key is resolved by the `dict()` call on the Python side
         columns.push((
-            column_name(name_part)?.to_string(),
+            split_data_name(name_part)?.1.to_string(),
             unicode_array(py, buffer, width)?,
         ));
     }
@@ -156,7 +161,7 @@ fn deserialize_looped<'py>(py: Python<'py>, lines: &[Cow<'_, str>]) -> PyResult<
     // which differ only if a column name is repeated
     let mut column_of_key = Vec::new();
     for key_line in lines.iter().take_while(|line| line.starts_with('_')) {
-        let key = column_name(key_line)?;
+        let (_, key) = split_data_name(key_line)?;
         let column_i = match column_names.iter().position(|name| *name == key) {
             Some(i) => i,
             None => {
@@ -383,31 +388,34 @@ fn is_empty(line: &str) -> bool {
     line.trim_matches(is_space).is_empty() || line.starts_with('#')
 }
 
-/// If the line defines a category, return this name.
+/// If the line starts with a data name, return its category name.
 /// Return ``None`` otherwise.
-fn parse_category_name(line: &str) -> Option<&str> {
+fn parse_category_name(line: &str) -> PyResult<Option<&str>> {
     // Leading whitespace is allowed, e.g. in YASARA files
-    let line = line.trim_matches(is_space);
+    let line = line.trim_start_matches(is_space);
     if !line.starts_with('_') {
-        return None;
+        return Ok(None);
     }
-    // Like ``line[1 : line.find(".")]`` in Python, where a missing '.' gives -1
-    let end = line
-        .find('.')
-        .unwrap_or_else(|| line.char_indices().last().map_or(0, |(i, _)| i));
-    Some(line.get(1..end).unwrap_or(""))
+    let data_name = line.split(is_space).next().unwrap_or(line);
+    split_data_name(data_name).map(|(category_name, _)| Some(category_name))
 }
 
-/// The part of ``_category.column`` after the first '.'.
-fn column_name(name_part: &str) -> PyResult<&str> {
-    name_part.split('.').nth(1).ok_or_else(index_error)
+/// Split a data name of the form ``_category.column`` into the category and column name.
+fn split_data_name(data_name: &str) -> PyResult<(&str, &str)> {
+    data_name
+        .strip_prefix('_')
+        .and_then(|name| name.split_once('.'))
+        .ok_or_else(|| {
+            biotite::DeserializationError::new_err(format!(
+                "'{data_name}' is not a data name of the form '_category.column'"
+            ))
+        })
 }
 
 fn parse_error(line: &str) -> PyErr {
     biotite::DeserializationError::new_err(format!("Failed to parse line '{line}'"))
 }
 
-/// The error Python raises for an index beyond the end of a list.
-fn index_error() -> PyErr {
-    PyIndexError::new_err("list index out of range")
+fn missing_loop_data_name() -> PyErr {
+    biotite::DeserializationError::new_err("'loop_' is not followed by a data name")
 }
