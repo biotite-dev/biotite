@@ -799,6 +799,16 @@ class SDFile(File, MutableMapping[str, SDRecord]):
         # Records in the middle start directly after the delimiter
         record_starts = np.concatenate(([0], record_ends[:-1] + 1), dtype=int)
         record_names = [lines[start].strip() for start in record_starts]
+        # SDFile is a name -> record map. Two records with the same
+        # molecule name used to collapse into one, last write winning,
+        # so a ligand just vanished. Fail instead (GH#975).
+        seen_names: set[str] = set()
+        for name in record_names:
+            if name in seen_names:
+                raise InvalidFileError(
+                    f"SD file has more than one record named {name!r}"
+                )
+            seen_names.add(name)
         return cls(
             {
                 # Do not include the delimiter
