@@ -80,7 +80,7 @@ class CIFData:
         if np.issubdtype(self._array.dtype, np.object_):
             raise ValueError("Object arrays are not supported")
         if dtype is not None:
-            self._array = self._array.astype(dtype)
+            self._array = self._array.astype(dtype, copy=False)
 
     @property
     def array(self) -> NDArray1[Any, Any]:

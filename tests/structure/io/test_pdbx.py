@@ -8,7 +8,6 @@ import biotite.sequence as seq
 import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
-from biotite.rust.structure.io.pdbx import split_one_line
 from biotite.structure.io.pdbx.bcif import _encode_numpy as encode_numpy
 from biotite.structure.io.pdbx.compress import _get_decimal_places as get_decimal_places
 from tests.util import data_dir
@@ -94,16 +93,39 @@ def test_escape_mixed(looped):
     ["cif_line", "expected_fields"],
     [
         ["'' 'embed'quote' ", ["", "embed'quote"]],
-        ['2 "embed"quote" "\t\n"', ["2", 'embed"quote', "\t\n"]],
+        ['2 "embed"quote" "\t"', ["2", 'embed"quote', "\t"]],
         [" 3 '' \"\" 'spac e' 'embed\"quote'", ["3", "", "", "spac e", 'embed"quote']],
         ["''' \"\"\" ''quoted''", ["'", '"', "'quoted'"]],
+        # Embedded quote of the same kind in a quoted value containing whitespace
+        [
+            "4 'embed'quote spac e' \"embed\"quote spac e\"",
+            ["4", "embed'quote spac e", 'embed"quote spac e'],
+        ],
+        # Tab as separator in a line containing quotes
+        ["5\t'spac e'\t''", ["5", "spac e", ""]],
+        # Comment after the values
+        ["6 'spac e' # comment", ["6", "spac e"]],
     ],
 )
 def test_split_one_line(cif_line, expected_fields):
     """
-    Test whether values that have an embedded quote are properly escaped.
+    Test whether values that have an embedded quote are properly escaped,
+    by deserializing a looped category with a single column.
     """
-    assert list(split_one_line(cif_line)) == expected_fields
+    category = pdbx.CIFCategory.deserialize(f"loop_\n_test.col\n{cif_line}\n")
+    assert category["col"].as_array(str).tolist() == expected_fields
+
+
+@pytest.mark.parametrize("line", ["_b.y", "loop_", "data_B"])
+def test_text_field_keyword(line):
+    """
+    Test whether a line in a text field that looks like the start of a category,
+    loop or data block is kept as part of the value.
+    """
+    file = pdbx.CIFFile.deserialize(f"data_A\n_a.x\n;text\n{line}\n;\n_c.z 1\n")
+    assert list(file.keys()) == ["A"]
+    assert list(file.block.keys()) == ["a", "c"]
+    assert file.block["a"]["x"].as_item() == f"text\n{line}"
 
 
 @pytest.mark.parametrize("model", [None, 1, -1])
@@ -902,12 +924,8 @@ def test_bcif_cif_consistency():
     Check if the decoded data from a BinaryCIF file is consistent with
     the equivalent data from the original CIF file.
     """
-    BLACKLIST = [
-        # Has value '15.' in CIF,
-        # which cannot be converted to into of BCIF
-        ("reflns", "d_resolution_low")
-    ]
-    PDB_ID = "1aki"
+    # Contains a multiline value with an empty line
+    PDB_ID = "5zng"
 
     base_path = data_dir("structure") / "pdb" / PDB_ID
     cif_file = pdbx.CIFFile.read(base_path.with_suffix(".cif"))
@@ -923,8 +941,6 @@ def test_bcif_cif_consistency():
         assert set(cif_category.keys()) == set(bcif_category.keys())
 
         for column_name in cif_category.keys():
-            if (category_name, column_name) in BLACKLIST:
-                continue
             try:
                 cif_column = cif_category[column_name]
                 bcif_column = bcif_category[column_name]
