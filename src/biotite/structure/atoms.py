@@ -1357,10 +1357,17 @@ def stack(arrays: Sequence[AtomArray[N]]) -> AtomArrayStack[Any, N]:
                 f"The annotations of the atom array at index {i} are not "
                 f"equal to the annotations of the atom array at index 0"
             )
-        if array.bonds != ref_array.bonds:
+        if (array.bonds is None) != (ref_array.bonds is None):
             raise ValueError(
-                f"The bonds of the atom array at index {i} are not "
-                f"equal to the bonds of the atom array at index 0"
+                f"The presence of bonds in the atom array at index {i} differs "
+                f"from the atom array at index 0"
+            )
+        if array.bonds is not None and (
+            array.bonds.get_bond_count() != ref_array.bonds.get_bond_count()
+        ):
+            raise ValueError(
+                f"The number of bonds in the atom array at index {i} differs "
+                f"from the atom array at index 0"
             )
     array_stack = AtomArrayStack(array_count, ref_array.array_length())
     for name, annotation in ref_array._annot.items():
