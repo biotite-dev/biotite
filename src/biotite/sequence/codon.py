@@ -245,18 +245,22 @@ class CodonTable(object):
         codon_dict : dict
             The dictionary mapping codons to amino acids.
         """
+        codon_codes = CodonTable._to_codon(np.arange(len(self._codons)))
         if code:
             return {  # pyright: ignore[reportReturnType]
-                tuple(CodonTable._to_codon(codon_number)): aa_code
-                for codon_number, aa_code in enumerate(self._codons)
+                tuple(codon_code): aa_code
+                for codon_code, aa_code in zip(codon_codes, self._codons)
             }
         else:
-            return {
-                "".join(_NUC_ALPH.decode_multiple(codon_code)): _PROT_ALPH.decode(
-                    aa_code
+            codon_str = _NUC_ALPH.decode_multiple_into_bytes(codon_codes.flatten())
+            codons = codon_str.tobytes().decode("ASCII")
+            amino_acids = _PROT_ALPH.decode_multiple_into_bytes(self._codons)
+            return dict(
+                zip(
+                    [codons[i : i + 3] for i in range(0, len(codons), 3)],
+                    amino_acids.tobytes().decode("ASCII"),
                 )
-                for codon_code, aa_code in self.codon_dict(code=True).items()
-            }
+            )
 
     def is_start_codon(
         self, codon_codes: NDArray2[K, C3, np.integer]
