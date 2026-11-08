@@ -354,7 +354,7 @@ class LetterAlphabet(Alphabet[str]):
             return super().extends(alphabet)
 
     def get_symbols(self) -> tuple[str, ...]:
-        return tuple([symbol.decode("ASCII") for symbol in self._symbols_as_bytes()])
+        return tuple(self._symbols.tobytes().decode("ASCII"))
 
     def encode(self, symbol: str | bytes) -> int:
         if not isinstance(symbol, (str, bytes)) or len(symbol) > 1:
@@ -489,12 +489,6 @@ class LetterAlphabet(Alphabet[str]):
 
     def __len__(self) -> int:
         return len(self._symbols)
-
-    def _symbols_as_bytes(self) -> NDArray1[Any, np.bytes_]:
-        """
-        Properly convert from dtype 'np.ubyte' to '|S1'
-        """
-        return np.frombuffer(self._symbols, dtype="|S1")
 
 
 class AlphabetMapper(object):
