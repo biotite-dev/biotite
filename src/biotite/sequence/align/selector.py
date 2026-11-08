@@ -426,21 +426,25 @@ class SyncmerSelector(Selector[S]):
     def select_from_kmers(
         self, kmers: NDArray1[N, np.int64]
     ) -> tuple[NDArray1[M, np.uint32], NDArray1[M, np.int64]]:
-        symbol_codes_for_each_kmer = self._kmer_alph.split(kmers)
+        symbol_codes_for_each_kmer = self._kmer_alph.split(kmers).astype(np.int64)
 
-        min_pos = np.zeros(len(symbol_codes_for_each_kmer), dtype=np.int64)
-        for i in range(symbol_codes_for_each_kmer.shape[0]):
-            smers = self._smer_alph.create_kmers(symbol_codes_for_each_kmer[i])
-            if self._permutation is None:
-                ordering = smers
-            else:
-                ordering = self._permutation.permute(smers)
-                if len(ordering) != len(smers):
-                    raise IndexError(
-                        f"The Permutation is defective, it gave {len(ordering)} "
-                        f"sort keys for {len(smers)} s-mers"
-                    )
-            min_pos[i] = np.argmin(ordering)
+        # Compute the s-mer codes for all k-mers at once:
+        # Each row contains the s-mers at each position within the k-mer
+        base = len(self._alphabet)
+        smers = np.zeros((len(kmers), self._window), dtype=np.int64)
+        for i in range(self._smer_alph.k):
+            smers = smers * base + symbol_codes_for_each_kmer[:, i : i + self._window]
+        if self._permutation is None:
+            ordering = smers
+        else:
+            ordering = self._permutation.permute(smers.flatten())
+            if len(ordering) != smers.size:
+                raise IndexError(
+                    f"The Permutation is defective, it gave {len(ordering)} "
+                    f"sort keys for {smers.size} s-mers"
+                )
+            ordering = ordering.reshape(smers.shape)
+        min_pos = np.argmin(ordering, axis=-1)
 
         syncmer_pos = self._filter_syncmer_pos(min_pos)
         return syncmer_pos, kmers[syncmer_pos]
