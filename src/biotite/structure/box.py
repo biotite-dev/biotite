@@ -542,7 +542,8 @@ def move_inside_box(
      [6 8 6]]
     """
     fractions = coord_to_fraction(coord, box)  # pyright: ignore[reportCallIssue, reportArgumentType]
-    fractions_rem = fractions % 1
+    # Equivalent to `fractions % 1`, but much faster
+    fractions_rem = fractions - np.floor(fractions)
     return fraction_to_coord(fractions_rem, box)  # pyright: ignore[reportCallIssue, reportArgumentType]
 
 
