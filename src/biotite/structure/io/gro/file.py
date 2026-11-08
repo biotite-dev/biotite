@@ -172,23 +172,18 @@ class GROFile(TextFile):
         # Replace empty strings for elements with guessed types
         # i is index in array, line_i is line index
         array.set_annotation("atom_id", np.empty(length, dtype=int))
-        for i, line_i in enumerate(annot_i):
-            line = self.lines[line_i]
-            array.res_id[i] = int(line[0:5])
-            array.res_name[i] = line[5:10].strip()
-            array.atom_name[i] = line[10:15].strip()
-            array.atom_id[i] = int(line[15:20])
+        annot_lines = [self.lines[i] for i in annot_i]
+        array.res_id[:] = [int(line[0:5]) for line in annot_lines]
+        array.res_name[:] = [line[5:10].strip() for line in annot_lines]
+        array.atom_name[:] = [line[10:15].strip() for line in annot_lines]
+        array.atom_id[:] = [int(line[15:20]) for line in annot_lines]
         array.element = infer_elements(array.atom_name)
 
         # Fill in coordinates and boxes
         if isinstance(array, AtomArray):
             atom_i = annot_i
-            for i, line_i in enumerate(atom_i):
-                line = self.lines[line_i]
-                # gro files use nm instead of A
-                array.coord[i, 0] = float(line[20:28]) * 10
-                array.coord[i, 1] = float(line[28:36]) * 10
-                array.coord[i, 2] = float(line[36:44]) * 10
+            # gro files use nm instead of A
+            array.coord[:] = self._parse_coord(atom_i) * 10
             # Box is stored in last line (after coordinates)
             box_i = atom_i[-1] + 1
             box_param = [float(e) * 10 for e in self.lines[box_i].split()]
@@ -197,11 +192,7 @@ class GROFile(TextFile):
         elif isinstance(array, AtomArrayStack):
             for m in range(len(model_start_i)):
                 atom_i = _get_atom_line_i(model_start_i[m], model_atom_counts[m])
-                for i, line_i in enumerate(atom_i):
-                    line = self.lines[line_i]
-                    array.coord[m, i, 0] = float(line[20:28]) * 10
-                    array.coord[m, i, 1] = float(line[28:36]) * 10
-                    array.coord[m, i, 2] = float(line[36:44]) * 10
+                array.coord[m] = self._parse_coord(atom_i) * 10
                 # Box is stored in last line (after coordinates)
                 box_i = atom_i[-1] + 1
                 box_param = [float(e) * 10 for e in self.lines[box_i].split()]
@@ -214,6 +205,18 @@ class GROFile(TextFile):
                     array.box[m] = box
 
         return array
+
+    def _parse_coord(
+        self, line_i: NDArray1[Any, np.integer]
+    ) -> NDArray2[Any, XYZ, np.floating]:
+        """
+        Parse the coordinates from the given atom lines.
+        """
+        coord = [
+            (float(line[20:28]), float(line[28:36]), float(line[36:44]))
+            for line in (self.lines[i] for i in line_i)
+        ]
+        return np.array(coord, dtype=float).reshape(-1, 3)  # pyright: ignore[reportReturnType]
 
     def set_structure(
         self,
@@ -332,6 +335,10 @@ def _is_int(string: str) -> bool:
     """
     Return ``True`, if the string can be parsed to an int.
     """
+    # Fast path for atom and box lines, which always contain decimal points:
+    # Avoid the costly exception handling
+    if "." in string:
+        return False
     try:
         int(string)
         return True
