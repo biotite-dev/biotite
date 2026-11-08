@@ -499,6 +499,9 @@ def _remove_pseudoknots(regions: set[_Region]) -> np.ndarray:
                 left_highest = dp_matrix_solutions_stops[i, j - 1]
                 bottom_lowest = dp_matrix_solutions_starts[i + 1, j]
 
+                # The positions at which subsolutions are combined
+                # (collected first, as many solution pairs share the same ones)
+                split_positions = set()
                 # For each pair of solutions check if solutions are
                 # disjoint
                 for solution1, highest in zip(left, left_highest):
@@ -509,17 +512,18 @@ def _remove_pseudoknots(regions: set[_Region]) -> np.ndarray:
                         else:
                             # Both solutions are not disjoint
                             # Add subsolutions
-                            for k in range(
-                                np.where(start_stops == lowest)[0][0] - 1,
-                                np.where(start_stops == highest)[0][0] + 1,
-                            ):
-                                cell1 = dp_matrix[i, k]
-                                cell2 = dp_matrix[k + 1, j]
-                                for subsolution1 in cell1:
-                                    for subsolution2 in cell2:
-                                        solution_candidates.add(
-                                            subsolution1 | subsolution2
-                                        )
+                            split_positions.update(
+                                range(
+                                    np.where(start_stops == lowest)[0][0] - 1,
+                                    np.where(start_stops == highest)[0][0] + 1,
+                                )
+                            )
+                for k in sorted(split_positions):
+                    cell1 = dp_matrix[i, k]
+                    cell2 = dp_matrix[k + 1, j]
+                    for subsolution1 in cell1:
+                        for subsolution2 in cell2:
+                            solution_candidates.add(subsolution1 | subsolution2)
 
             # Make solution candidates ``ndarray`` array of sets
             solution_candidates = np.array(list(solution_candidates))
@@ -561,6 +565,7 @@ def _get_results(
     results: list[np.ndarray],
     max_pseudoknot_order: int | None,
     order: int = 0,
+    solution_cache: dict[frozenset[_Region], np.ndarray] | None = None,
 ) -> list[np.ndarray]:
     """
     Use the dynamic programming algorithm to get the pseudoknot order
@@ -580,6 +585,8 @@ def _get_results(
         is given, all base pairs are evaluated.
     order : int
         The order that is currently evaluated.
+    solution_cache : dict {frozenset {_region, ...} : ndarray}, optional
+        The optimal solutions for each clique that was already evaluated.
 
     Returns
     -------
@@ -603,12 +610,18 @@ def _get_results(
         return results
 
     # Get the optimal solutions for given regions. Evaluate each clique
-    # of mutually conflicting regions separately
-    cliques = [component for component in nx.connected_components(regions)]
-    solutions = [
-        set(chain(*e))
-        for e in product(*[_remove_pseudoknots(clique) for clique in cliques])
-    ]
+    # of mutually conflicting regions separately.
+    # The same clique reappears for many solutions of the lower orders
+    # -> compute its optimal solutions only once
+    if solution_cache is None:
+        solution_cache = {}
+    clique_solutions = []
+    for clique in nx.connected_components(regions):
+        key = frozenset(clique)
+        if key not in solution_cache:
+            solution_cache[key] = _remove_pseudoknots(clique)
+        clique_solutions.append(solution_cache[key])
+    solutions = [set(chain(*e)) for e in product(*clique_solutions)]
 
     # Get a copy of the current results for each optimal solution
     results_list = [
@@ -640,6 +653,7 @@ def _get_results(
             results_list[i],
             max_pseudoknot_order,
             order=order + 1,
+            solution_cache=solution_cache,
         )
 
     # Flatten the results

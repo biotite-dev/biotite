@@ -140,14 +140,20 @@ def dot_bracket(
 
     # Each optimal pseudoknot order solution is represented in
     # dot-bracket-notation
-    notations = [bytearray((b"." * length)) for _ in range(len(pseudoknot_order))]
-    for s, solution in enumerate(pseudoknot_order):
-        for basepair, order in zip(basepairs, solution):
-            if order == -1:
-                continue
-            notations[s][basepair[0]] = _OPENING_BRACKETS_BYTES[order]
-            notations[s][basepair[1]] = _CLOSING_BRACKETS_BYTES[order]
-    return [notation.decode() for notation in notations]
+    notations = np.full((len(pseudoknot_order), length), ord("."), dtype=np.uint8)
+    brackets = np.stack(
+        [
+            np.frombuffer(_OPENING_BRACKETS_BYTES, dtype=np.uint8),
+            np.frombuffer(_CLOSING_BRACKETS_BYTES, dtype=np.uint8),
+        ],
+        axis=-1,
+    )
+    for notation, solution in zip(notations, pseudoknot_order):
+        is_paired = solution != -1
+        # Interleave opening and closing positions, so that the last base pair
+        # takes precedence for bases that appear in multiple base pairs
+        notation[basepairs[is_paired].ravel()] = brackets[solution[is_paired]].ravel()
+    return [notation.tobytes().decode() for notation in notations]
 
 
 def base_pairs_from_dot_bracket(
