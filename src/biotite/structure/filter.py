@@ -24,7 +24,6 @@ __all__ = [
 ]
 
 
-import itertools
 from collections.abc import Iterable, Sequence
 from typing import Any
 import numpy as np
@@ -35,7 +34,8 @@ from biotite.structure.info.groups import (
     ion_names,
     nucleotide_names,
 )
-from biotite.structure.residues import get_residue_count, get_residue_starts
+from biotite.structure.residues import get_residue_starts
+from biotite.structure.segments import get_all_segment_positions, spread_segment_wise
 from biotite.typing import M, N, NDArray1
 
 _canonical_aa_list = [
@@ -377,7 +377,7 @@ def filter_linear_bond_continuity(
     return np.append(mask, True)  # pyright: ignore[reportReturnType]
 
 
-def _is_polymer(array: AtomArray, min_size: int, pol_type: str) -> bool:
+def _polymer_type_mask(array: AtomArray, pol_type: str) -> NDArray1[Any, np.bool_]:
     if pol_type.startswith("p"):
         filt_fn = filter_amino_acids
     elif pol_type.startswith("n"):
@@ -386,9 +386,7 @@ def _is_polymer(array: AtomArray, min_size: int, pol_type: str) -> bool:
         filt_fn = filter_carbohydrates
     else:
         raise ValueError(f"Unsupported polymer type {pol_type}")
-
-    mask = filt_fn(array)
-    return get_residue_count(array[mask]) >= min_size
+    return filt_fn(array)
 
 
 def filter_polymer(
@@ -422,14 +420,18 @@ def filter_polymer(
     if isinstance(array, AtomArrayStack):
         array = array[0]
 
-    mask = np.zeros(len(array), dtype=bool)
-    discontinuity_idx = check_res_id_continuity(array)
-    for start, stop in itertools.pairwise(
-        itertools.chain([0], discontinuity_idx, [len(array)])
-    ):
-        segment = array[..., start:stop]
-        mask[start:stop] = _is_polymer(segment, min_size, pol_type)
-    return mask  # pyright: ignore[reportReturnType]
+    type_mask = _polymer_type_mask(array, pol_type)
+    segment_starts = np.concatenate(([0], check_res_id_continuity(array), [len(array)]))
+    segment_ids = get_all_segment_positions(segment_starts, len(array))[type_mask]
+    # Count the residues of the selected atoms in each segment,
+    # residues are also separated at segment borders
+    is_residue_start = np.zeros(len(segment_ids), dtype=bool)
+    is_residue_start[get_residue_starts(array[type_mask])] = True
+    is_residue_start[1:] |= segment_ids[1:] != segment_ids[:-1]
+    residue_counts = np.bincount(
+        segment_ids[is_residue_start], minlength=len(segment_starts) - 1
+    )
+    return spread_segment_wise(segment_starts, residue_counts >= min_size)  # pyright: ignore[reportReturnType]
 
 
 def filter_intersection(
