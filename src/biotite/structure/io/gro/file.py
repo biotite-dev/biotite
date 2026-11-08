@@ -247,19 +247,18 @@ class GROFile(TextFile):
                 header += f", model={model_i + 1}"
             self.lines.append(header)
             self.lines.append(str(model.array_length()))
-            for i in range(model.array_length()):
-                # gro format is in nm -> multiply coords by 10
-                self.lines.append(
-                    fmt.format(
-                        gro_res_id[i],
-                        model.res_name[i],
-                        model.atom_name[i],
-                        gro_atom_id[i],
-                        model.coord[i, 0] / 10,
-                        model.coord[i, 1] / 10,
-                        model.coord[i, 2] / 10,
-                    )
+            # Convert to Python objects up front, as indexing NumPy arrays is slow
+            self.lines.extend(
+                fmt.format(res_id, res_name, atom_name, atom_id, *coord)
+                for res_id, res_name, atom_name, atom_id, coord in zip(
+                    gro_res_id.tolist(),
+                    model.res_name.tolist(),
+                    model.atom_name.tolist(),
+                    gro_atom_id.tolist(),
+                    # gro format is in nm -> divide coords by 10
+                    (model.coord / 10).tolist(),
                 )
+            )
             self.lines.append(_get_box_dimen(model))
         # Add terminal newline, since PyMOL requires it
         self.lines.append("")
