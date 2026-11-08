@@ -10,7 +10,6 @@ __all__ = [
     "infer_bond_types",
 ]
 
-import itertools
 import warnings
 from collections.abc import Mapping
 from typing import Any
@@ -270,30 +269,33 @@ def _connect_via_distances_periodic(
     """
     from biotite.structure.geometry import distance
 
-    box = atoms.box
-    coord = atoms.coord
-    bt_int = int(default_bond_type)
+    # Enumerate all intra-residue atom pairs (i, j) with j < i,
+    # ordered by i first and j second
+    n_atoms = atoms.array_length()
+    res_start_of_atom = np.repeat(residue_starts[:-1], np.diff(residue_starts))
+    n_partners = np.arange(n_atoms) - res_start_of_atom
+    index1 = np.repeat(np.arange(n_atoms), n_partners)
+    pair_starts = np.cumsum(n_partners) - n_partners
+    index2 = (
+        np.arange(len(index1))
+        - np.repeat(pair_starts, n_partners)
+        + res_start_of_atom[index1]
+    )
 
-    bonds = []
-    for start, stop in itertools.pairwise(residue_starts):
-        radii_in_res = radii[start:stop]
-        coord_in_res = coord[start:stop]
-        distances = distance(
-            coord_in_res[:, np.newaxis, :], coord_in_res[np.newaxis, :, :], box
-        )
-        for atom_index1 in range(len(radii_in_res)):
-            for atom_index2 in range(atom_index1):
-                max_distance = (
-                    radii_in_res[atom_index1] + radii_in_res[atom_index2] + tolerance
-                )
-                dist = distances[atom_index1, atom_index2]  # pyright: ignore[reportIndexIssue]
-                # The comparison is false for atoms with unknown radius (NaN)
-                if dist <= max_distance:
-                    bonds.append((start + atom_index1, start + atom_index2, bt_int))
-
-    if bonds:
-        return BondList(atoms.array_length(), np.stack(bonds, axis=0, dtype=np.int64))
-    return BondList(atoms.array_length())
+    distances = distance(atoms.coord[index1], atoms.coord[index2], atoms.box)
+    # The comparison is false for atoms with unknown radius (NaN)
+    is_bonded = distances <= radii[index1] + radii[index2] + tolerance
+    bonds = np.stack(
+        [
+            index1[is_bonded],
+            index2[is_bonded],
+            np.full(np.count_nonzero(is_bonded), int(default_bond_type)),
+        ],
+        axis=-1,
+    ).astype(np.int64)
+    if len(bonds) > 0:
+        return BondList(n_atoms, bonds)
+    return BondList(n_atoms)
 
 
 def connect_via_residue_names(
