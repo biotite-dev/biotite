@@ -30,7 +30,8 @@ def test_from_alignment():
     assert alphabet == profile.alphabet
 
 
-def test_to_consensus_nuc():
+@pytest.mark.parametrize("last_symbol", ["T", "U"])
+def test_to_consensus_nuc(last_symbol):
     symbols = np.array(
         [
             [0, 1, 0, 0],
@@ -44,13 +45,14 @@ def test_to_consensus_nuc():
         ]
     )
     gaps = np.array([1, 1, 0, 0, 0, 0, 1, 1])
-    alphabet = seq.Alphabet(["A", "C", "G", "T"])
+    alphabet = seq.Alphabet(["A", "C", "G", last_symbol])
     profile = seq.SequenceProfile(symbols, gaps, alphabet)
 
     assert seq.NucleotideSequence("CGTCATGC") == profile.to_consensus()
 
 
-def test_to_consensus_nuc_ambiguous():
+@pytest.mark.parametrize("last_symbol", ["T", "U"])
+def test_to_consensus_nuc_ambiguous(last_symbol):
     symbols = np.array(
         [
             [1, 1, 0, 0],
@@ -64,7 +66,7 @@ def test_to_consensus_nuc_ambiguous():
         ]
     )
     gaps = np.array([1, 1, 0, 0, 0, 0, 1, 1])
-    alphabet = seq.Alphabet(["A", "C", "G", "T"])
+    alphabet = seq.Alphabet(["A", "C", "G", last_symbol])
     profile = seq.SequenceProfile(symbols, gaps, alphabet)
 
     assert seq.NucleotideSequence("MGTCATGC") == profile.to_consensus()
