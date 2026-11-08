@@ -448,14 +448,10 @@ def get_sequence_identity(
     """
     codes = get_codes(alignment)
 
-    # Count matches
-    matches = 0
-    for i in range(codes.shape[1]):
-        column = codes[:, i]
-        # One unique value -> all symbols match
-        unique_symbols = np.unique(column)
-        if len(unique_symbols) == 1 and unique_symbols[0] != -1:
-            matches += 1
+    # Count matches: columns where all symbols are equal and not a gap
+    matches = int(
+        np.count_nonzero(np.all(codes == codes[0], axis=0) & (codes[0] != -1))
+    )
 
     # Calculate length
     if mode == "all":
@@ -530,24 +526,22 @@ def get_pairwise_sequence_identity(
     if mode == "all":
         length = len(alignment)
     elif mode == "not_terminal":
-        length = np.zeros((n_seq, n_seq))
-        for i in range(n_seq):
-            for j in range(n_seq):
-                # Find latest start and earliest stop of all sequences
-                start, stop = find_terminal_gaps(alignment[:, [i, j]])
-                if stop <= start:
-                    raise ValueError(
-                        "Cannot calculate non-terminal identity, "
-                        "as the two sequences have no overlap"
-                    )
-                length[i, j] = stop - start
+        # Find start and stop of each sequence in the alignment
+        starts, stops = np.array(
+            [find_terminal_gaps(alignment[:, [i]]) for i in range(n_seq)]
+        ).T
+        # Find latest start and earliest stop of each sequence pair
+        start = np.maximum(starts[:, np.newaxis], starts[np.newaxis, :])
+        stop = np.minimum(stops[:, np.newaxis], stops[np.newaxis, :])
+        if np.any(stop <= start):
+            raise ValueError(
+                "Cannot calculate non-terminal identity, "
+                "as the two sequences have no overlap"
+            )
+        length = stop - start
     elif mode == "shortest":
-        length = np.zeros((n_seq, n_seq))
-        for i in range(n_seq):
-            for j in range(n_seq):
-                length[i, j] = min(
-                    [len(alignment.sequences[i]), len(alignment.sequences[j])]
-                )
+        seq_lengths = np.array([len(seq) for seq in alignment.sequences])
+        length = np.minimum(seq_lengths[:, np.newaxis], seq_lengths[np.newaxis, :])
     else:
         raise ValueError(f"'{mode}' is an invalid calculation mode")
 
