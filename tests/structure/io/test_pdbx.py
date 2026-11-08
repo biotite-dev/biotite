@@ -410,6 +410,37 @@ def test_dynamic_dtype():
 
 
 @pytest.mark.parametrize("format", ["cif", "bcif"])
+@pytest.mark.parametrize(
+    "bond_type",
+    [
+        struc.BondType.SINGLE,
+        struc.BondType.DOUBLE,
+        struc.BondType.TRIPLE,
+        struc.BondType.QUADRUPLE,
+    ],
+)
+def test_inter_residue_bond_order(tmp_path, format, bond_type):
+    """Preserve explicit bond order between different residues."""
+    atoms = struc.AtomArray(2)
+    atoms.coord[:] = [[0.0, 0.0, 0.0], [1.2, 0.0, 0.0]]
+    atoms.element[:] = ["C", "O"]
+    atoms.atom_name[:] = ["C1", "O1"]
+    atoms.res_name[:] = "LIG"
+    atoms.chain_id[:] = "A"
+    atoms.res_id[:] = [1, 2]
+    atoms.bonds = struc.BondList(2, np.array([[0, 1, bond_type]]))
+
+    File = pdbx.CIFFile if format == "cif" else pdbx.BinaryCIFFile
+    pdbx_file = File()
+    pdbx.set_structure(pdbx_file, atoms)
+    file_path = tmp_path / f"test.{format}"
+    pdbx_file.write(file_path)
+    test_atoms = pdbx.get_structure(File.read(file_path), model=1, include_bonds=True)
+
+    assert test_atoms.bonds == atoms.bonds
+
+
+@pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_any_bonds(tmp_path, format):
     """
     Check if ``BondType.ANY`` bonds can be written and read from a PDBx
