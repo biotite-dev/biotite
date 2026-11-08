@@ -537,7 +537,8 @@ class SubstitutionMatrix(Generic[S1, S2]):
         lines = [line for line in lines if len(line) != 0 and line[0] != "#"]
         symbols1 = [line.split()[0] for line in lines[1:]]
         symbols2 = [e for e in lines[0].split()]
-        scores = np.array([line.split()[1:] for line in lines[1:]]).astype(int)
+        # Converting via 'int()' is much faster than NumPy's string conversion
+        scores = np.array([[int(e) for e in line.split()[1:]] for line in lines[1:]])
         scores = np.transpose(scores)
 
         matrix_dict = {}
@@ -725,12 +726,12 @@ class SubstitutionMatrix(Generic[S1, S2]):
         )
 
     def _fill_with_matrix_dict(self, matrix_dict: dict[tuple[Any, Any], int]) -> None:
-        self._matrix = np.zeros((len(self._alph1), len(self._alph2)), dtype=np.int32)
-        for i in range(len(self._alph1)):
-            for j in range(len(self._alph2)):
-                sym1 = self._alph1.decode(i)
-                sym2 = self._alph2.decode(j)
-                self._matrix[i, j] = int(matrix_dict[sym1, sym2])
+        symbols1 = [self._alph1.decode(i) for i in range(len(self._alph1))]
+        symbols2 = [self._alph2.decode(j) for j in range(len(self._alph2))]
+        self._matrix = np.array(
+            [[int(matrix_dict[sym1, sym2]) for sym2 in symbols2] for sym1 in symbols1],
+            dtype=np.int32,
+        ).reshape(len(symbols1), len(symbols2))
 
 
 def _cartesian_product(
