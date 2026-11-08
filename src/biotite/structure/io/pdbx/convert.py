@@ -1137,19 +1137,13 @@ def _get_or_create_block(pdbx_component: _PDBxFile, block_name: str | None) -> _
 def _determine_entity_id(
     chain_id: NDArray1[N, np.str_],
 ) -> NDArray1[N, np.integer]:
-    entity_id = np.zeros(len(chain_id), dtype=int)
-    # Dictionary that translates chain_id to entity_id
-    id_translation = {}
-    id = 1
-    for i in range(len(chain_id)):
-        try:
-            entity_id[i] = id_translation[chain_id[i]]
-        except KeyError:
-            # chain_id is not in dictionary -> new entry
-            id_translation[chain_id[i]] = id
-            entity_id[i] = id_translation[chain_id[i]]
-            id += 1
-    return entity_id  # pyright: ignore[reportReturnType]
+    # Number the chain IDs in the order of their first appearance, starting at 1
+    _, first_indices, inverse = np.unique(
+        chain_id, return_index=True, return_inverse=True
+    )
+    entity_ids = np.zeros(len(first_indices), dtype=int)
+    entity_ids[np.argsort(first_indices)] = np.arange(1, len(first_indices) + 1)
+    return entity_ids[inverse]  # pyright: ignore[reportReturnType]
 
 
 def _repeat(category: _Category, repetitions: int) -> _Category:
@@ -1220,10 +1214,14 @@ def _set_intra_residue_bonds(
     # Take the residue name from the first atom index, as the residue
     # name is the same for both atoms, since we have only intra bonds
     comp_id = array.res_name[bond_array[:, 0]]
-    _, unique_indices = np.unique(
-        np.stack([comp_id, atom_id_1, atom_id_2], axis=-1), axis=0, return_index=True
-    )
-    unique_indices.sort()
+    # A dict is much faster than 'np.unique(..., axis=0)' on string arrays
+    first_indices: dict[tuple[str, str, str], int] = {}
+    for i, key in enumerate(
+        zip(comp_id.tolist(), atom_id_1.tolist(), atom_id_2.tolist())
+    ):
+        first_indices.setdefault(key, i)
+    # Insertion order of the dict is the order of first appearance
+    unique_indices = np.fromiter(first_indices.values(), dtype=int)
 
     chem_comp_bond = Category()
     n_bonds = len(unique_indices)
