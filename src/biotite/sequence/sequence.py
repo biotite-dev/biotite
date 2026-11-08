@@ -316,11 +316,11 @@ class Sequence(Copyable, Generic[S], metaclass=abc.ABCMeta):
         return len(self._seq_code)
 
     def __iter__(self) -> Iterator[S]:
-        alph = self.get_alphabet()
-        i = 0
-        while i < len(self):
-            yield alph.decode(self._seq_code[i])
-            i += 1
+        symbols = self.symbols
+        if isinstance(symbols, np.ndarray):
+            # Convert e.g. 'np.str_' into built-in 'str' symbols
+            symbols = symbols.tolist()
+        return iter(symbols)
 
     def __eq__(self, item: object) -> bool:
         if not isinstance(item, type(self)):
