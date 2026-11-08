@@ -449,7 +449,13 @@ def _get_edge_matrix(
         The edge matrix.
     """
     # Get the hydrogen bonds between the residues
-    hbonds = hbond(atom_array, base_masks[0], base_masks[1])
+    # Only the atoms of both bases are relevant -> restrict `hbond()` to them
+    pair_indices = np.where(base_masks[0] | base_masks[1])[0]
+    hbonds = hbond(
+        atom_array[pair_indices],
+        base_masks[0][pair_indices],
+        base_masks[1][pair_indices],
+    )
     if len(hbonds) == 0:
         raise BadStructureError(
             f"No hydrogen bonds between nucleotides with residue start "
@@ -458,7 +464,7 @@ def _get_edge_matrix(
         )
     # filter out donor/acceptor heteroatoms and flatten for easy
     # iteration
-    hbonds = hbonds[:, (0, 2)].flatten()
+    hbonds = pair_indices[hbonds[:, (0, 2)].flatten()]
 
     # ``ndarray`` with one row for each base and the number of
     # bonded edge heteroatoms as in ``_edge`` as columns
