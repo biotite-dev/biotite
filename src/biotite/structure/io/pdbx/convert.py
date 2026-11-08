@@ -155,6 +155,11 @@ def _filter(
     Column: Any = Category.subcomponent_class()
     Data: Any = Column.subcomponent_class()
 
+    if isinstance(index, np.ndarray) and index.dtype == bool:
+        # Evaluate the mask only once instead of for every column,
+        # which is especially beneficial for sparse masks on large categories
+        index = np.nonzero(index)[0]
+
     return Category(
         {
             key: Column(
