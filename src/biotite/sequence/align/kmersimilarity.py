@@ -10,6 +10,7 @@ import numpy as np
 from biotite.rust.sequence.align import similar_kmers as rust_similar_kmers
 from biotite.sequence.align.kmeralphabet import KmerAlphabet
 from biotite.sequence.align.matrix import SubstitutionMatrix
+from biotite.sequence.alphabet import AlphabetError
 from biotite.typing import N, NDArray1, S
 
 
@@ -143,14 +144,13 @@ class ScoreThresholdRule(SimilarityRule, Generic[S]):
                 "Substitution matrix is incompatible with k-mer base alphabet"
             )
 
-        # Split the k-mer code into the individual symbol codes
-        split_kmer = kmer_alphabet.split(kmer).astype(np.int64)
-        similar_split_kmers = rust_similar_kmers(
+        if not 0 <= kmer < len(kmer_alphabet):
+            raise AlphabetError("Given k-mer symbol code is invalid for this alphabet")
+        return rust_similar_kmers(
             self._score_matrix,
             self._max_scores,
-            split_kmer,
+            int(kmer),
+            kmer_alphabet.k,
             len(kmer_alphabet.base_alphabet),
             self._threshold,
         )
-        # Convert the split k-mers back to k-mer codes
-        return kmer_alphabet.fuse(similar_split_kmers)
