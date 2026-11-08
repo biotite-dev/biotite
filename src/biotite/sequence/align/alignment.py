@@ -598,22 +598,22 @@ def score(
 
     # Sum similarity scores (without gaps)
     score: int = 0
-    # Iterate over all positions
-    for pos in range(codes.shape[1]):
-        column = codes[:, pos]
-        # Iterate over all possible pairs
-        # Do not count self-similarity
-        # and do not count similarity twice (not S(i,j) and S(j,i))
-        for i in range(codes.shape[0]):
-            for j in range(i + 1, codes.shape[0]):
-                code_i = column[i]
-                code_j = column[j]
-                # Ignore gaps
-                if code_i != -1 and code_j != -1:
-                    if score_matrix is None:
-                        score += match_score if code_i == code_j else mismatch_score
-                    else:
-                        score += int(score_matrix[code_i, code_j])
+    # Iterate over all possible pairs
+    # Do not count self-similarity
+    # and do not count similarity twice (not S(i,j) and S(j,i))
+    for i in range(codes.shape[0] - 1):
+        codes_j = codes[i + 1 :]
+        codes_i = np.broadcast_to(codes[i], codes_j.shape)
+        # Ignore gaps
+        non_gap_mask = (codes_i != -1) & (codes_j != -1)
+        codes_i = codes_i[non_gap_mask]
+        codes_j = codes_j[non_gap_mask]
+        if score_matrix is None:
+            score += (
+                np.where(codes_i == codes_j, match_score, mismatch_score).sum().item()
+            )
+        else:
+            score += score_matrix[codes_i, codes_j].sum().item()
 
     # Sum gap penalties
     gap_open: int
@@ -626,24 +626,19 @@ def score(
         gap_ext = int(gap_penalty)
     else:
         raise TypeError("Gap penalty must be either integer or tuple")
-    # Iterate over all sequences
-    for seq_code in codes:
-        in_gap = False
-        if terminal_penalty:
-            start_index = 0
-            stop_index = len(seq_code)
-        else:
-            # Find a start and stop index excluding terminal gaps
-            start_index, stop_index = find_terminal_gaps(alignment)
-        for i in range(start_index, stop_index):
-            if seq_code[i] == -1:
-                if in_gap:
-                    score += gap_ext
-                else:
-                    score += gap_open
-                in_gap = True
-            else:
-                in_gap = False
+    if terminal_penalty:
+        gaps = codes == -1
+    else:
+        # Find a start and stop index excluding terminal gaps
+        start_index, stop_index = find_terminal_gaps(alignment)
+        gaps = codes[:, start_index:stop_index] == -1
+    # A gap in the first column is always an opening,
+    # afterwards a gap is an extension if the previous column is also a gap
+    gap_open_count = np.count_nonzero(gaps[:, :1]) + np.count_nonzero(
+        gaps[:, 1:] & ~gaps[:, :-1]
+    )
+    gap_ext_count = np.count_nonzero(gaps[:, 1:] & gaps[:, :-1])
+    score += int(gap_open_count) * gap_open + int(gap_ext_count) * gap_ext
     return score
 
 
