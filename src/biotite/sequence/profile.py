@@ -309,15 +309,16 @@ class SequenceProfile(Generic[S]):
                         "The given alphabet is incompatible with a least one "
                         "alphabet of the given sequences"
                     )
-        symbols = np.zeros((len(sequences[0]), len(alphabet)), dtype=int)
-        gaps = np.zeros(len(sequences[0]), dtype=int)
-        sequences = np.transpose(sequences)
-        for i in range(len(sequences)):
-            row = np.where(sequences[i,] == -1, len(alphabet), sequences[i,])
-            count = np.bincount(row, minlength=len(alphabet) + 1)
-            symbols[i,] = count[0 : len(alphabet)]
-            gaps[i] = count[-1]
-        return SequenceProfile(symbols, gaps, alphabet)
+        # Gaps are counted as an additional symbol after the alphabet symbols
+        n_columns = len(sequences[0])
+        n_symbols = len(alphabet) + 1
+        sequences = np.where(sequences == -1, len(alphabet), sequences)
+        # Count all columns at once by giving each column its own range of bins
+        counts = np.bincount(
+            (sequences + np.arange(n_columns) * n_symbols).flatten(),
+            minlength=n_columns * n_symbols,
+        ).reshape(n_columns, n_symbols)
+        return SequenceProfile(counts[:, :-1], counts[:, -1], alphabet)
 
     def to_consensus(self, as_general: bool = False) -> Sequence[S]:
         """
