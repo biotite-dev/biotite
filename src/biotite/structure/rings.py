@@ -198,12 +198,7 @@ def find_stacking_interactions(
     if len(rings) == 0:
         return []
 
-    ring_centroids = np.array(
-        [atoms.coord[atom_indices].mean(axis=0) for atom_indices in rings]
-    )
-    ring_normals = np.array(
-        [_get_ring_normal(atoms.coord[atom_indices]) for atom_indices in rings]
-    )
+    ring_centroids, ring_normals = _get_ring_geometry(atoms.coord, rings)
 
     # Create an index array that contains the Cartesian product of all rings
     indices = np.stack(
@@ -355,12 +350,7 @@ def find_pi_cation_interactions(
         return []
 
     # Calculate ring centroids and normals
-    ring_centroids = np.array(
-        [atoms.coord[atom_indices].mean(axis=0) for atom_indices in rings]
-    )
-    ring_normals = np.array(
-        [_get_ring_normal(atoms.coord[atom_indices]) for atom_indices in rings]
-    )
+    ring_centroids, ring_normals = _get_ring_geometry(atoms.coord, rings)
 
     cation_coords = atoms.coord[cation_indices]
 
@@ -395,28 +385,46 @@ def find_pi_cation_interactions(
     return [(rings[ring_i], cation_indices[cation_j]) for ring_i, cation_j in indices]
 
 
-def _get_ring_normal(
-    ring_coord: NDArray2[N, XYZ, np.floating],
-) -> NDArray1[XYZ, np.floating]:
+def _get_ring_geometry(
+    coord: NDArray2[N, XYZ, np.floating],
+    rings: list[NDArray1[Any, np.integer]],
+) -> tuple[NDArray2[Any, XYZ, np.floating], NDArray2[Any, XYZ, np.floating]]:
     """
-    Get the normal vector perpendicular to the ring plane.
+    Get the centroid and the normal vector perpendicular to the ring plane
+    for each ring.
 
     Parameters
     ----------
-    ring_coord : ndarray
-        The coordinates of the atoms in the ring.
+    coord : ndarray, shape=(n,3)
+        The coordinates of all atoms.
+    rings : list of ndarray
+        The atom indices of each ring.
 
     Returns
     -------
-    normal : ndarray
-        The normal vector of the ring plane.
+    centroids : ndarray, shape=(r,3)
+        The centroid of each ring.
+    normals : ndarray, shape=(r,3)
+        The normal vector of each ring plane.
     """
+    ring_sizes = np.array([len(ring) for ring in rings])
+    ring_starts = np.cumsum(ring_sizes) - ring_sizes
+    ring_coord = coord[np.concatenate(rings)]
+    # In contrast to 'np.add.reduceat()', 'np.add.at()' sums in the same order as
+    # 'mean()' on each ring, which gives bitwise identical results
+    centroids = np.zeros((len(rings), 3), dtype=coord.dtype)
+    np.add.at(centroids, np.repeat(np.arange(len(rings)), ring_sizes), ring_coord)
+    centroids /= ring_sizes[:, np.newaxis].astype(centroids.dtype)
     # Simply use any three atoms in the ring to calculate the normal vector
     # We can also safely assume that there are at least three atoms in the ring,
     # as otherwise it would not be a ring
-    normal = np.cross(ring_coord[1] - ring_coord[0], ring_coord[2] - ring_coord[0])
-    norm_vector(normal)
-    return normal
+    first_coord = ring_coord[ring_starts]
+    normals = np.cross(
+        ring_coord[ring_starts + 1] - first_coord,
+        ring_coord[ring_starts + 2] - first_coord,
+    )
+    norm_vector(normals)
+    return centroids, normals  # pyright: ignore[reportReturnType]
 
 
 def _minimum_angle(
