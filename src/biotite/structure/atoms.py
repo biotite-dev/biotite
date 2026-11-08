@@ -1596,10 +1596,7 @@ def repeat(
         annot = np.tile(atoms.get_annotation(category), repetitions)
         repeated.set_annotation(category, annot)
     if atoms.bonds is not None:
-        repeated_bonds = atoms.bonds.copy()
-        for _ in range(repetitions - 1):
-            repeated_bonds += atoms.bonds
-        repeated.bonds = repeated_bonds
+        repeated.bonds = BondList.concatenate([atoms.bonds] * repetitions)
     if atoms.box is not None:
         repeated.box = atoms.box.copy()
 
