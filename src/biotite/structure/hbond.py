@@ -378,17 +378,16 @@ def _get_bonded_h(
     donor_hydrogen_mask = np.zeros(len(array), dtype=bool)
     associated_donor_indices = np.full(len(array), -1, dtype=int)
 
-    all_bond_indices, _ = bonds.get_all_bonds()
-    donor_indices = np.where(donor_mask)[0]
-
-    for donor_i in donor_indices:
-        bonded_indices = all_bond_indices[donor_i]
-        # Remove padding values
-        bonded_indices = bonded_indices[bonded_indices != -1]
-        # Filter hydrogen atoms
-        bonded_indices = bonded_indices[hydrogen_mask[bonded_indices]]
-        donor_hydrogen_mask[bonded_indices] = True
-        associated_donor_indices[bonded_indices] = donor_i
+    bond_array = bonds.as_array()
+    # Consider both directions of each bond
+    donor_i = np.concatenate((bond_array[:, 0], bond_array[:, 1])).astype(int)
+    hydrogen_i = np.concatenate((bond_array[:, 1], bond_array[:, 0])).astype(int)
+    is_donor_h = donor_mask[donor_i] & hydrogen_mask[hydrogen_i]
+    donor_i = donor_i[is_donor_h]
+    hydrogen_i = hydrogen_i[is_donor_h]
+    donor_hydrogen_mask[hydrogen_i] = True
+    # If a hydrogen is bonded to multiple donors, the one with the highest index wins
+    np.maximum.at(associated_donor_indices, hydrogen_i, donor_i)
 
     return (
         donor_hydrogen_mask,
