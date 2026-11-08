@@ -291,10 +291,17 @@ class PDBFile(RustPDBFile):
                     line[_SEQRES_RES_NAMES].split()
                 )
 
+        # Set lookup is much faster than 'np.isin()' with the large CCD name lists
+        aa_names = set(amino_acid_names())
+        nuc_names = set(nucleotide_names())
         sequence_dict: dict[str, Sequence] = {}
         for chain_id, chain_res_names in res_names.items():
-            aa_count = np.count_nonzero(np.isin(chain_res_names, amino_acid_names()))
-            nuc_count = np.count_nonzero(np.isin(chain_res_names, nucleotide_names()))
+            is_aa = np.array([name in aa_names for name in chain_res_names], dtype=bool)
+            is_nuc = np.array(
+                [name in nuc_names for name in chain_res_names], dtype=bool
+            )
+            aa_count = np.count_nonzero(is_aa)
+            nuc_count = np.count_nonzero(is_nuc)
             if aa_count == 0 and nuc_count == 0:
                 # The chain is neither a peptide nor a nucleic acid,
                 # e.g. a saccharide
@@ -308,7 +315,7 @@ class PDBFile(RustPDBFile):
             hetero_mask = one_letter_symbols == HETERO_PLACEHOLDER
             if aa_count > nuc_count:
                 # Chain is a peptide
-                hetero_mask |= ~np.isin(chain_res_names, amino_acid_names())
+                hetero_mask |= ~is_aa
                 one_letter_symbols[hetero_mask] = "X"
                 # Replace selenocysteine and pyrrolysine
                 one_letter_symbols[one_letter_symbols == "U"] = "C"
@@ -316,7 +323,7 @@ class PDBFile(RustPDBFile):
                 sequence_dict[chain_id] = ProteinSequence("".join(one_letter_symbols))
             else:
                 # Chain is a nucleic acid
-                hetero_mask |= ~np.isin(chain_res_names, nucleotide_names())
+                hetero_mask |= ~is_nuc
                 one_letter_symbols[hetero_mask] = "N"
                 # Replace uracil
                 one_letter_symbols[one_letter_symbols == "U"] = "T"
