@@ -1023,15 +1023,18 @@ class AtomArrayStack(_AtomArrayBase, Sequence[AtomArray], Generic[M, N]):
         array : AtomArray
             AtomArray at position `index`.
         """
-        array = AtomArray(self.array_length())
-        for name in self._annot:
-            array._annot[name] = self._annot[name]
-        array._coord = self._coord[index]
-        if self._bonds is not None:
-            array._bonds = self._bonds.copy()
-        if self._box is not None:
-            array._box = self._box[index]
-
+        array = AtomArray.__new__(AtomArray)
+        # `__init__()` is deliberately not called for performance reasons,
+        # as all attributes are set below (see also `_subarray()`)
+        object.__setattr__(array, "_annot", dict(self._annot))
+        object.__setattr__(array, "_array_length", self._array_length)
+        object.__setattr__(array, "_coord", self._coord[index])
+        object.__setattr__(
+            array, "_bonds", None if self._bonds is None else self._bonds.copy()
+        )
+        object.__setattr__(
+            array, "_box", None if self._box is None else self._box[index]
+        )
         return array
 
     def stack_depth(self) -> M:
