@@ -41,6 +41,15 @@ def test_apply_chain_wise(array):
     ]
 
 
+def test_apply_chain_wise_empty(array):
+    """
+    For an empty atom array, an empty array should be returned.
+    """
+    data = struc.apply_chain_wise(array[:0], np.ones(0), np.sum)
+    assert isinstance(data, np.ndarray)
+    assert data.shape == (0,)
+
+
 def test_spread_chain_wise(array):
     input_data = np.unique(array.chain_id)
     output_data = struc.spread_chain_wise(array, input_data)

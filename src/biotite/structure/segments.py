@@ -111,6 +111,13 @@ def apply_segment_wise(
         The size of the first dimension of this array is equal to the amount of
         residues.
     """
+    if len(starts) <= 1:
+        # There are no segments (e.g. an empty atom array), so `function` is never
+        # called and the shape and dtype of its return value are unknown
+        # -> use the dtype of `data` and its shape without the reduced axis
+        value_shape = () if axis is None else np.delete(data.shape, axis)
+        return np.zeros((0, *value_shape), dtype=data.dtype)
+
     # The result array
     processed_data = None
     for i in range(len(starts) - 1):
@@ -134,8 +141,6 @@ def apply_segment_wise(
                 processed_data = np.zeros(len(starts) - 1, dtype=type(value))
         # Write values into result arrays
         processed_data[i] = value
-    # Callers always pass `starts` with an exclusive stop appended,
-    # so the loop runs at least once
     return processed_data  # pyright: ignore[reportReturnType]
 
 
@@ -276,6 +281,9 @@ def get_segment_positions(
         Similar to this function, but for all atoms in the :class:`struc.AtomArray`.
     """
     indices = np.asarray(indices)
+    if indices.size == 0:
+        # An empty sequence would become a float array, which cannot be used as index
+        return np.zeros(0, dtype=int)
     length = starts[-1]
 
     if (indices < 0).any():
