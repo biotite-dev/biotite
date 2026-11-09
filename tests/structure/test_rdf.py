@@ -183,3 +183,49 @@ def test_rdf_normalized():
 
     bins, g_r = rdf(oxygen.coord, oxygen, interval=interval, bins=n_bins, periodic=True)
     assert np.allclose(g_r[-10:], np.ones(10), atol=0.1)
+
+
+def test_rdf_use_cell_list_equivalence():
+    """
+    The RDF result must not depend on whether a cell list is used for
+    finding the considered atom pairs.
+    """
+    stack = gro.GROFile.read(TEST_FILE).get_structure()
+    oxygen = stack[:, stack.atom_name == "OW"]
+
+    for periodic in (False, True):
+        bins_cl, g_r_cl = rdf(
+            oxygen.coord,
+            oxygen,
+            interval=(0, 5),
+            bins=50,
+            periodic=periodic,
+            use_cell_list=True,
+        )
+        bins_bf, g_r_bf = rdf(
+            oxygen.coord,
+            oxygen,
+            interval=(0, 5),
+            bins=50,
+            periodic=periodic,
+            use_cell_list=False,
+        )
+        assert np.array_equal(bins_cl, bins_bf)
+        assert np.array_equal(g_r_cl, g_r_bf)
+
+
+def test_rdf_small_system_heuristic():
+    """
+    For a small number of centers, the RDF is computed without a cell
+    list, while for a large number of centers a cell list is used.
+    """
+    stack = gro.GROFile.read(TEST_FILE).get_structure()
+    oxygen = stack[:, stack.atom_name == "OW"]
+
+    # The heuristic must choose a valid path in any case, i.e. the
+    # result is the same as with an explicitly chosen path
+    _, g_r_auto = rdf(oxygen[:, 0].coord, oxygen, interval=(0, 5), bins=50)
+    _, g_r_bf = rdf(
+        oxygen[:, 0].coord, oxygen, interval=(0, 5), bins=50, use_cell_list=False
+    )
+    assert np.array_equal(g_r_auto, g_r_bf)
