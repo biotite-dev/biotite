@@ -91,7 +91,7 @@ jobs:
               | jq -nRc '{"dist": inputs, "os": "ubuntu-latest"}' \
               && cibuildwheel --print-build-identifiers --platform linux --archs aarch64 \
               | jq -nRc '{"dist": inputs, "os": "ubuntu-24.04-arm"}' \
-              && cibuildwheel --print-build-identifiers --platform macos \
+              && cibuildwheel --print-build-identifiers --platform macos --archs arm64 \
               | jq -nRc '{"dist": inputs, "os": "macos-latest"}' \
               && cibuildwheel --print-build-identifiers --platform windows --archs AMD64 \
               | jq -nRc '{"dist": inputs, "os": "windows-latest"}' \
@@ -101,8 +101,6 @@ jobs:
           )
           echo "include=$MATRIX" | tee -a $GITHUB_OUTPUT
         env:
-          CIBW_ARCHS_LINUX: "x86_64 aarch64"
-          CIBW_ARCHS_MACOS: "arm64"
           # Skip musllinux because it takes too long to compile on GHA
           # since it is emulated. (6+ hours)
           # *note* most of the build time is actually numpy for musllinux
