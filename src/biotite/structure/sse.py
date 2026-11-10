@@ -436,23 +436,17 @@ def _mask_regions_with_contacts(
     cell_list = CellList(potential_contact_coord, max_distance)
     # For each candidate position,
     # get all contacts within maximum distance
-    all_within_max_dist_indices = cell_list.get_atoms(
-        coord[candidate_mask], max_distance
+    pairs = cell_list.get_atoms(
+        coord[candidate_mask], max_distance, result_format=CellList.Result.PAIRS
     )
-
-    contacts = np.zeros(len(coord), dtype=int)
-    for i, atom_index in enumerate(np.where(candidate_mask)[0]):
-        within_max_dist_indices = all_within_max_dist_indices[i]
-        # Remove padding values
-        within_max_dist_indices = within_max_dist_indices[within_max_dist_indices != -1]
-        # Now count all contacts within maximum distance
-        # that also satisfy the minimum distance
-        contacts[atom_index] = np.count_nonzero(
-            distance(
-                coord[atom_index], potential_contact_coord[within_max_dist_indices]
-            )
-            > min_distance
-        )
+    candidate_indices = np.where(candidate_mask)[0][pairs[:, 0]]
+    # Now count all contacts within maximum distance
+    # that also satisfy the minimum distance
+    is_contact = (
+        distance(coord[candidate_indices], potential_contact_coord[pairs[:, 1]])
+        > min_distance
+    )
+    contacts = np.bincount(candidate_indices[is_contact], minlength=len(coord))
 
     # Count the number of contacts per region
     # These indices mark the start of either a 'True' or 'False' region
