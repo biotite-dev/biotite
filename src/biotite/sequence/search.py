@@ -42,13 +42,13 @@ def find_subsequence(
     """
     if not sequence.get_alphabet().extends(query.get_alphabet()):
         raise ValueError("The sequences alphabets are not equal")
-    match_indices = []
-    frame_size = len(query)
-    for i in range(len(sequence) - frame_size + 1):
-        sub_seq_code = sequence.code[i : i + frame_size]
-        if np.array_equal(query.code, sub_seq_code):
-            match_indices.append(i)
-    return np.array(match_indices)
+    n_frames = max(len(sequence) - len(query) + 1, 0)
+    is_match = np.ones(n_frames, dtype=bool)
+    # Compare each query position with all sequence frames at once
+    for i, symbol_code in enumerate(query.code):
+        is_match &= sequence.code[i : i + n_frames] == symbol_code
+    # Conversion via list retains the dtype of the original implementation
+    return np.array(np.nonzero(is_match)[0].tolist())
 
 
 def find_symbol(sequence: Sequence[S], symbol: S) -> NDArray1[K, np.integer]:
