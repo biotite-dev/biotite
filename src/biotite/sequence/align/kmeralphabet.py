@@ -207,13 +207,16 @@ class KmerAlphabet(Alphabet[tuple[S, ...]]):
         for large base alphabets or large *k* values, as the list needs
         to be created first.
         """
+        split_codes = self.split(np.arange(len(self)))
         if isinstance(self._base_alph, LetterAlphabet):
-            return tuple(
-                # For a `LetterAlphabet` the decoded symbols are single characters
-                ["".join(self.decode(code)) for code in range(len(self))]  # pyright: ignore[reportCallIssue, reportArgumentType]
-            )
+            # For a `LetterAlphabet` the decoded symbols are single characters
+            # -> join the characters of each k-mer by viewing them as one string
+            chars = self._base_alph.decode_multiple(split_codes.ravel())
+            return tuple(chars.view(f"U{self._k}").tolist())
         else:
-            return tuple([list(self.decode(code)) for code in range(len(self))])
+            return tuple(
+                [list(self._base_alph.decode_multiple(codes)) for codes in split_codes]
+            )
 
     def extends(self, alphabet: Alphabet[Any]) -> bool:
         # A KmerAlphabet cannot really extend another KmerAlphabet:
