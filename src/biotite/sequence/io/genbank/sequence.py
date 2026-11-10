@@ -14,7 +14,6 @@ __all__ = [
     "set_annotated_sequence",
 ]
 
-import re
 from collections.abc import Iterable
 from typing import Literal, overload
 from biotite.file import InvalidFileError
@@ -26,6 +25,8 @@ from biotite.sequence.seqtypes import NucleotideSequence, ProteinSequence
 _SYMBOLS_PER_CHUNK = 10
 _SEQ_CHUNKS_PER_LINE = 6
 _SYMBOLS_PER_LINE = _SYMBOLS_PER_CHUNK * _SEQ_CHUNKS_PER_LINE
+# Translation table that deletes digits and spaces
+_NUMBERS_AND_SPACES = str.maketrans("", "", "0123456789 ")
 
 
 def get_raw_sequence(gb_file: GenBankFile) -> str:
@@ -119,11 +120,8 @@ def get_annotated_sequence(
 
 
 def _field_to_seq_string(origin_content: list[str]) -> str:
-    seq_str = "".join(origin_content)
     # Remove numbers and emtpy spaces
-    regex = re.compile("[0-9]| ")
-    seq_str = regex.sub("", seq_str)
-    return seq_str
+    return "".join(origin_content).translate(_NUMBERS_AND_SPACES)
 
 
 def _convert_seq_str(
