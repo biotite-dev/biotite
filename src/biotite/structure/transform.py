@@ -714,7 +714,8 @@ def orient_principal_components(
     MAX_ITER = 50
     for _ in range(MAX_ITER):
         # PCA, W is the component matrix, s ~ explained variance
-        _, sigma, components = np.linalg.svd(centered)
+        # The (n,n) left singular vectors are not needed
+        _, sigma, components = np.linalg.svd(centered, full_matrices=False)
 
         # sort 1st, 2nd, 3rd pca compontents along x, y, z
         idx = sigma.argsort()[::-1][order]
