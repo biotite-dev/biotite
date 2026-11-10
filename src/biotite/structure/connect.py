@@ -597,37 +597,38 @@ def find_rotatable_bonds(bonds: BondList[N]) -> BondList[N]:
     CB CG
     CZ OH
     """
-    bond_graph = bonds.as_graph()
+    bonds_array = bonds.as_array()
+    # The bond types are not needed for the cycles
+    # -> creating the graph from plain edges is faster than 'as_graph()'
+    bond_graph = nx.Graph(bonds_array[:, :2].tolist())
     cycles = nx.algorithms.cycles.cycle_basis(bond_graph)  # pyright: ignore[reportAttributeAccessIssue]
+    # Map each atom to the indices of the cycles it is part of
+    atom_cycles: dict[int, set[int]] = {}
+    for cycle_i, cycle in enumerate(cycles):
+        for atom_i in cycle:
+            atom_cycles.setdefault(atom_i, set()).add(cycle_i)
 
     number_of_partners = np.count_nonzero(bonds.get_all_bonds()[0] != -1, axis=1)
 
-    rotatable_bonds = []
-    bonds_array = bonds.as_array()
-    for i, j, bond_type in bonds_array:
-        # Can only rotate about single bonds
-        # Furthermore, it makes no sense to rotate about a bond,
-        # that leads to a single atom
-        if (
-            bond_type == BondType.SINGLE
-            and number_of_partners[i] > 1
-            and number_of_partners[j] > 1
-        ):
-            # Cannot rotate about a bond, if the two connected atoms
-            # are in a cycle
-            in_same_cycle = False
-            for cycle in cycles:
-                if i in cycle and j in cycle:
-                    in_same_cycle = True
-                    break
-            if not in_same_cycle:
-                rotatable_bonds.append((i, j, int(bond_type)))
-    if rotatable_bonds:
-        return BondList(
-            bonds.get_atom_count(), np.array(rotatable_bonds, dtype=np.int64)
-        )
-    else:
-        return BondList(bonds.get_atom_count())
+    # Can only rotate about single bonds
+    # Furthermore, it makes no sense to rotate about a bond,
+    # that leads to a single atom
+    candidates = bonds_array[
+        (bonds_array[:, 2] == BondType.SINGLE)
+        & (number_of_partners[bonds_array[:, 0]] > 1)
+        & (number_of_partners[bonds_array[:, 1]] > 1)
+    ]
+    # Cannot rotate about a bond, if the two connected atoms
+    # are in the same cycle
+    no_cycle: set[int] = set()
+    is_rotatable = np.array(
+        [
+            atom_cycles.get(i, no_cycle).isdisjoint(atom_cycles.get(j, no_cycle))
+            for i, j in candidates[:, :2].tolist()
+        ],
+        dtype=bool,
+    )
+    return BondList(bonds.get_atom_count(), candidates[is_rotatable])
 
 
 def _connect_inter_residue(
