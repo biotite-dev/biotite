@@ -899,8 +899,6 @@ def set_structure(
     and the atoms of each residue in the ``chem_comp_atom`` category,
     and inter-residue bonds will be written into the ``struct_conn``
     category.
-    If the file already contains a ``chem_comp`` category, its rows are
-    kept and only the residues missing in it are added.
 
     Parameters
     ----------
@@ -928,11 +926,6 @@ def set_structure(
     due to ambiguity to which atoms the bond refers.
     This is the case, when two equal residues in the same chain have
     the same (or a masked) `res_id`.
-
-    The type of each residue added to the ``chem_comp`` category is
-    taken from the PDB *Chemical Component Dictionary* based on its
-    residue name.
-    Residues unknown to the dictionary get the type ``'other'``.
 
     Examples
     --------
@@ -1043,9 +1036,7 @@ def set_structure(
         if chem_comp_bond is not None:
             # 'chem_comp' and 'chem_comp_atom' are the parent categories of
             # 'chem_comp_bond' -> without them the file would be invalid
-            block["chem_comp"] = _set_components(  # pyright: ignore[reportArgumentType]
-                array, atom_site, block.get("chem_comp")
-            )
+            block["chem_comp"] = _set_components(array, atom_site)  # pyright: ignore[reportArgumentType]
             block["chem_comp_atom"] = _set_component_atoms(array, atom_site)  # pyright: ignore[reportArgumentType]
             block["chem_comp_bond"] = chem_comp_bond  # pyright: ignore[reportArgumentType]
 
@@ -1256,67 +1247,26 @@ def _set_intra_residue_bonds(
 
 
 def _set_components(
-    array: AtomArray[Any] | AtomArrayStack[Any, Any],
-    atom_site: _Category,
-    existing_chem_comp: _Category | None = None,
+    array: AtomArray[Any] | AtomArrayStack[Any, Any], atom_site: _Category
 ) -> _Category:
     """
     Create the ``chem_comp`` category containing each unique residue name in the
     structure.
-    If an ``existing_chem_comp`` category is given, it is kept as is and only the
-    residues missing in it are appended.
-    The type of each added component is taken from the
-    *Chemical Component Dictionary*; components unknown to it get the type
-    ``'other'``.
+    The component type is taken from the *Chemical Component Dictionary*;
+    components unknown to it get the type ``'other'``.
     ``atom_site`` is only used to infer the right :class:`Category` type
     (either :class:`CIFCategory` or :class:`BinaryCIFCategory`).
     """
     Category: Any = type(atom_site)
-    Column: Any = Category.subcomponent_class()
 
-    _, unique_indices = np.unique(array.res_name, return_index=True)
-    unique_indices.sort()
-    comp_id = array.res_name[unique_indices]
-    if existing_chem_comp is not None:
-        comp_id = comp_id[~np.isin(comp_id, existing_chem_comp["id"].as_array(str))]
-        if len(comp_id) == 0:
-            return existing_chem_comp
-    added_columns = {
-        "id": comp_id,
-        "type": np.array([link_type(res_name) or "other" for res_name in comp_id]),
-    }
+    # Sorted by residue name, like the 'chem_comp_atom' category
+    comp_id = np.unique(array.res_name)
 
     chem_comp = Category()
-    if existing_chem_comp is None:
-        for key, values in added_columns.items():
-            chem_comp[key] = values
-        return chem_comp
-
-    # Append the added components to the existing rows,
-    # leaving the values of all other columns missing for the added components
-    n_existing = existing_chem_comp.row_count
-    n_added = len(comp_id)
-    for key in dict.fromkeys([*existing_chem_comp.keys(), *added_columns.keys()]):
-        if key in existing_chem_comp:
-            column = existing_chem_comp[key]
-            data = column.data.array
-            mask = (
-                column.mask.array
-                if column.mask is not None
-                else np.full(n_existing, MaskValue.PRESENT)
-            )
-        else:
-            data = np.zeros(n_existing, dtype=added_columns[key].dtype)
-            mask = np.full(n_existing, MaskValue.MISSING)
-        if key in added_columns:
-            added_data = added_columns[key]
-            added_mask = np.full(n_added, MaskValue.PRESENT)
-        else:
-            added_data = np.zeros(n_added, dtype=data.dtype)
-            added_mask = np.full(n_added, MaskValue.MISSING)
-        chem_comp[key] = Column(
-            np.concatenate([data, added_data]), np.concatenate([mask, added_mask])
-        )
+    chem_comp["id"] = comp_id
+    chem_comp["type"] = np.array(
+        [link_type(res_name) or "other" for res_name in comp_id]
+    )
     return chem_comp
 
 
@@ -1340,6 +1290,12 @@ def _set_component_atoms(
         return_index=True,
     )
     unique_indices.sort()
+    # List the atoms component by component, but keep the atom order within each
+    # component, even if a later occurrence of a residue has atoms that the first
+    # occurrence is missing
+    unique_indices = unique_indices[
+        np.argsort(array.res_name[unique_indices], kind="stable")
+    ]
     element = array.element[unique_indices]
 
     chem_comp_atom = Category()
