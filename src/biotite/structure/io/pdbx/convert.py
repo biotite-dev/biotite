@@ -1879,10 +1879,14 @@ def get_assembly(
     assembly = concatenate(sub_assemblies)
 
     # Sort AtomArray or AtomArrayStack by 'sym_id'
-    max_sym_id = assembly.sym_id.max()
-    assembly = concatenate(
-        [assembly[..., assembly.sym_id == sym_id] for sym_id in range(max_sym_id + 1)]
-    )
+    assembly = assembly[..., np.argsort(assembly.sym_id, kind="stable")]
+    if assembly.bonds is not None:
+        # Only keep bonds within the same copy
+        bonds = assembly.bonds.as_array()
+        sym_id = assembly.sym_id
+        assembly.bonds = BondList(
+            assembly.array_length(), bonds[sym_id[bonds[:, 0]] == sym_id[bonds[:, 1]]]
+        )
 
     # Remove 'label_asym_id', if it was not included in the original
     # user-supplied 'extra_fields'
