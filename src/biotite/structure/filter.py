@@ -25,7 +25,6 @@ __all__ = [
 
 
 from collections.abc import Iterable, Sequence
-from typing import Any
 import numpy as np
 from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.info.groups import (
@@ -492,14 +491,21 @@ def filter_intersection(
             if category not in intersect.get_annotation_categories():
                 raise ValueError(f"Category {category} does not exist in 'intersect'")
 
-    # Implicitly expect that the annotation array dtypes are the same for both
-    structured_dtype = np.dtype(
-        [(name, array.get_annotation(name).dtype) for name in categories]
-    )
-    array_annotations = _annotations_to_structured(array, structured_dtype)
-    intersect_annotations = _annotations_to_structured(intersect, structured_dtype)
+    # Combine the annotations of each atom into a single integer key,
+    # which is much faster to compare than a structured array
+    n_atoms = array.array_length()
+    keys = np.zeros(n_atoms + intersect.array_length(), dtype=np.int64)
+    for name in categories:
+        annotation = array.get_annotation(name)
+        # Implicitly expect that the annotation array dtypes are the same for both
+        values = np.concatenate(
+            [annotation, intersect.get_annotation(name).astype(annotation.dtype)]
+        )
+        _, codes = np.unique(values, return_inverse=True, equal_nan=False)
+        # Compress the keys again, to avoid an integer overflow
+        _, keys = np.unique(keys * len(values) + codes, return_inverse=True)
     # Identify the intersection of the two annotation arrays
-    return np.isin(array_annotations, intersect_annotations)
+    return np.isin(keys[:n_atoms], keys[n_atoms:])
 
 
 def filter_first_altloc(
@@ -664,30 +670,3 @@ def filter_highest_occupancy_altloc(
             pass
 
     return altloc_filter
-
-
-def _annotations_to_structured(
-    atoms: AtomArray[N] | AtomArrayStack[Any, N], structured_dtype: np.dtype
-) -> NDArray1[N, np.void]:
-    """
-    Convert atom annotations into a single structured `ndarray`.
-
-    Parameters
-    ----------
-    atoms : AtomArray, shape=(n,) or AtomArrayStack, shape=(m,n)
-        The annotation arrays are taken from this structure.
-    structured_dtype : dtype
-        The dtype of the structured array to be created.
-        The fields of the dtype determine which annotations are taken from `atoms`.
-
-    Returns
-    -------
-    structured : ndarray, shape=(n,), dtype=structured_dtype
-        The structured array.
-    """
-    if structured_dtype.fields is None:
-        raise TypeError("dtype must be structured")
-    structured = np.zeros(atoms.array_length(), dtype=structured_dtype)
-    for field in structured_dtype.fields:
-        structured[field] = atoms.get_annotation(field)
-    return structured  # pyright: ignore[reportReturnType]
