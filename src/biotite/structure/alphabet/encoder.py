@@ -224,14 +224,25 @@ class PartnerIndexEncoder(_BaseEncoder):
         self,
         x: numpy.ma.MaskedArray,
     ) -> numpy.ndarray:
+        # Operate on plain arrays, as masked array operations are slow
+        mask = numpy.ma.getmaskarray(x)[:, 0]
+        coord = numpy.ma.filled(x, 0)
         # compute pairwise squared distance matrix
-        r = numpy.sum(x * x, axis=-1).reshape(-1, 1)
+        r = numpy.sum(coord * coord, axis=-1).reshape(-1, 1)
         r[0] = r[-1] = numpy.nan
-        D = r - 2 * numpy.ma.dot(x, x.T) + r.T
+        # copy prevents a switch to a different BLAS routine (bit-identical results)
+        D = r - 2 * numpy.dot(coord, coord.T.copy("K")) + r.T
+        # masked residues cannot be partners (NaN becomes infinity below)
+        D[mask] = numpy.nan
+        D[:, mask] = numpy.nan
         # avoid selecting residue itself as the best
         D[numpy.diag_indices_from(D)] = numpy.inf
         # get the closest non-masked residue
-        return numpy.nan_to_num(D, copy=False, nan=numpy.inf).argmin(axis=1)
+        # (same as 'nan_to_num(D, nan=inf)', but faster)
+        max_float = numpy.finfo(D.dtype).max
+        numpy.clip(D, -max_float, max_float, out=D)
+        D[numpy.isnan(D)] = numpy.inf
+        return D.argmin(axis=1)
 
     def encode(
         self,
