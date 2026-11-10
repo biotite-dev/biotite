@@ -12,9 +12,9 @@ __all__ = ["get_molecule_indices", "get_molecule_masks", "molecule_iter"]
 from collections.abc import Iterator
 from typing import Any, overload
 import numpy as np
+from biotite.rust.structure import molecule_labels
 from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.bonds import BondList
-from biotite.structure.connect import find_connected
 from biotite.typing import M, N, NDArray1, NDArray2
 
 
@@ -123,14 +123,11 @@ def get_molecule_indices(
             f"not '{type(array).__name__}'"
         )
 
-    molecule_indices = []
-    visited_mask = np.zeros(bonds.get_atom_count(), dtype=bool)
-    while not visited_mask.all():
-        root = np.argmin(visited_mask)
-        connected = find_connected(bonds, root)
-        visited_mask[connected] = True
-        molecule_indices.append(connected)
-    return molecule_indices
+    labels = molecule_labels(bonds)
+    # Stable sort keeps the atom indices within each molecule in ascending order
+    order = np.argsort(labels, kind="stable")
+    bounds = np.concatenate(([0], np.cumsum(np.bincount(labels))))
+    return [order[start:stop] for start, stop in zip(bounds[:-1], bounds[1:])]
 
 
 def get_molecule_masks(
@@ -338,14 +335,5 @@ def molecule_iter(
     HET         0  ATP H2     H         0.166   -2.014    8.490
     <BLANKLINE>
     """
-    if array.bonds is None:
-        raise ValueError("An associated BondList is required")
-    bonds = array.bonds
-
-    visited_mask = np.zeros(bonds.get_atom_count(), dtype=bool)
-    while not visited_mask.all():
-        # Take the first atom that has not been considered yet as root
-        root = np.argmin(visited_mask)
-        connected = find_connected(bonds, root)
-        visited_mask[connected] = True
-        yield array[..., connected]
+    for indices in get_molecule_indices(array):
+        yield array[..., indices]

@@ -822,7 +822,6 @@ pub fn find_connected(
     as_mask: bool,
 ) -> PyResult<Py<PyAny>> {
     let atom_count = bond_list.get_atom_count();
-    let bonds = bond_list.get_bonds_ref();
 
     if root >= atom_count {
         return Err(exceptions::PyValueError::new_err(format!(
@@ -831,12 +830,7 @@ pub fn find_connected(
         )));
     }
 
-    // Build adjacency list
-    let mut adj: Vec<Vec<usize>> = vec![Vec::new(); atom_count];
-    for bond in bonds {
-        adj[bond.atom1].push(bond.atom2);
-        adj[bond.atom2].push(bond.atom1);
-    }
+    let adj = adjacency_list(bond_list);
 
     // Iterative breadth-first search
     let mut visited = vec![false; atom_count];
@@ -866,6 +860,49 @@ pub fn find_connected(
         let arr = Array1::from_vec(indices);
         Ok(arr.into_pyarray(py).into_any().unbind())
     }
+}
+
+/// Assign each atom the index of the molecule it belongs to.
+///
+/// Molecules are numbered in ascending order of their first atom.
+/// Used internally by ``get_molecule_indices()``.
+#[pyfunction]
+pub fn molecule_labels(py: Python<'_>, bond_list: &BondList) -> Py<PyAny> {
+    let atom_count = bond_list.get_atom_count();
+    let adj = adjacency_list(bond_list);
+    let mut labels = vec![-1i64; atom_count];
+    let mut n_molecules = 0;
+    let mut queue = VecDeque::new();
+    for root in 0..atom_count {
+        if labels[root] != -1 {
+            continue;
+        }
+        labels[root] = n_molecules;
+        queue.push_back(root);
+        while let Some(current) = queue.pop_front() {
+            for &neighbor in &adj[current] {
+                if labels[neighbor] == -1 {
+                    labels[neighbor] = n_molecules;
+                    queue.push_back(neighbor);
+                }
+            }
+        }
+        n_molecules += 1;
+    }
+    Array1::from_vec(labels)
+        .into_pyarray(py)
+        .into_any()
+        .unbind()
+}
+
+/// For each atom, the indices of the atoms bonded to it.
+fn adjacency_list(bond_list: &BondList) -> Vec<Vec<usize>> {
+    let mut adj: Vec<Vec<usize>> = vec![Vec::new(); bond_list.get_atom_count()];
+    for bond in bond_list.get_bonds_ref() {
+        adj[bond.atom1].push(bond.atom2);
+        adj[bond.atom2].push(bond.atom1);
+    }
+    adj
 }
 
 /// Squared Euclidean distance between two atoms in an Nx3 coordinate array.
