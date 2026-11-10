@@ -394,6 +394,29 @@ def test_align_vectors(input_atoms, as_list, use_support, random_seed):
     assert np.allclose(struc.coord(restored), struc.coord(input_atoms), atol=1e-5)
 
 
+@pytest.mark.parametrize(
+    "direction",
+    [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0],
+        [1.0, 2.0, -3.0],
+    ],
+)
+def test_align_vectors_opposite(direction):
+    """
+    Ensure ``align_vectors`` correctly handles opposite direction vectors.
+    """
+    v1 = np.array(direction, dtype=float)
+    v2 = -v1
+    transform = struc.align_vectors(v1, v2)
+    aligned = transform.apply(v1)
+    expected = v2 / np.linalg.norm(v2) * np.linalg.norm(v1)
+    assert np.allclose(aligned, expected, atol=1e-5)
+    # Rotation matrix must be proper SO(3)
+    assert np.allclose(transform.rotation[0] @ transform.rotation[0].T, np.eye(3), atol=1e-5)
+    assert np.isclose(np.linalg.det(transform.rotation[0]), 1.0, atol=1e-5)
+
 def test_align_vectors_non_vector_inputs():
     """
     Ensure input vectors to ``struct.align_vectors`` have the correct shape.
