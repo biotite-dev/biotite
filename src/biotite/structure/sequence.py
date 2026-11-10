@@ -62,6 +62,9 @@ def to_sequence(
     [ProteinSequence("NLYIQWLKDGGPSSGRPPPS", ambiguous=False)]
     """
     sequences = []
+    # Sets allow much faster membership checks than `np.isin()` with the long lists
+    amino_acids = frozenset(amino_acid_names())
+    nucleotides = frozenset(nucleotide_names())
     chain_start_indices = get_chain_starts(atoms, add_exclusive_stop=True)
     for i in range(len(chain_start_indices) - 1):
         start = chain_start_indices[i]
@@ -73,8 +76,10 @@ def to_sequence(
         )
         hetero_mask = one_letter_symbols == HETERO_PLACEHOLDER
 
-        aa_count = np.count_nonzero(np.isin(residues, amino_acid_names()))
-        nuc_count = np.count_nonzero(np.isin(residues, nucleotide_names()))
+        is_amino_acid = np.array([res in amino_acids for res in residues], dtype=bool)
+        is_nucleotide = np.array([res in nucleotides for res in residues], dtype=bool)
+        aa_count = np.count_nonzero(is_amino_acid)
+        nuc_count = np.count_nonzero(is_nucleotide)
         if aa_count == 0 and nuc_count == 0:
             raise BadStructureError(
                 f"Chain {chain.chain_id[0]} contains neither amino acids "
@@ -82,7 +87,7 @@ def to_sequence(
             )
         elif aa_count > nuc_count:
             # Chain is a peptide
-            hetero_mask |= ~np.isin(residues, amino_acid_names())
+            hetero_mask |= ~is_amino_acid
             if not allow_hetero and np.any(hetero_mask):
                 hetero_indices = np.where(hetero_mask)[0]
                 raise BadStructureError(
@@ -96,7 +101,7 @@ def to_sequence(
             sequences.append(ProteinSequence("".join(one_letter_symbols)))
         else:
             # Chain is a nucleic acid
-            hetero_mask |= ~np.isin(residues, nucleotide_names())
+            hetero_mask |= ~is_nucleotide
             if not allow_hetero and np.any(hetero_mask):
                 hetero_indices = np.where(hetero_mask)[0]
                 raise BadStructureError(
