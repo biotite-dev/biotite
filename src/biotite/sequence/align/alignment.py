@@ -215,14 +215,18 @@ class Alignment(object):
         )
 
     def _gapped_str(self, seq_index: int) -> str:
-        seq_str = ""
-        for i in range(len(self.trace)):
-            j = self.trace[i][seq_index]
-            if j != -1:
-                seq_str += str(self.sequences[seq_index][j])
-            else:
-                seq_str += "-"
-        return seq_str
+        sequence = self.sequences[seq_index]
+        trace = self.trace[:, seq_index]
+        non_gap_mask = trace != -1
+        decoded = sequence.get_alphabet().decode_multiple(
+            sequence.code[trace[non_gap_mask]]
+        )
+        if not isinstance(decoded, np.ndarray):
+            # Prevent NumPy from unpacking symbols that are sequences themselves
+            decoded = np.fromiter(decoded, dtype=object, count=len(decoded))
+        symbols = np.full(len(trace), "-", dtype=object)
+        symbols[non_gap_mask] = decoded
+        return "".join(map(str, symbols))
 
     def get_gapped_sequences(self) -> list[str]:
         """
