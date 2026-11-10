@@ -793,36 +793,33 @@ def dihedral_side_chain(
     Pro19: [ 0.561 -0.602    nan    nan]
     Ser20: [-1.055    nan    nan    nan]
     """
-    is_multi_model = isinstance(atoms, AtomArrayStack)
-
     chi_atoms = _all_chi_atoms()
     res_names = atoms.res_name[get_residue_starts(atoms)]
     chi_atom_coord = coord_for_atom_name_per_residue(
         atoms, chi_atoms, filter_canonical_amino_acids(atoms)
     )
-    chi_atoms_to_coord_index = {atom_name: i for i, atom_name in enumerate(chi_atoms)}
+    # Move the atom name dimension next to the XYZ dimension
+    # and append NaN coordinates, which are used for undefined chi angles
+    chi_atom_coord = np.moveaxis(chi_atom_coord, 0, -2)
+    chi_atom_coord = np.concatenate(
+        [chi_atom_coord, np.full_like(chi_atom_coord[..., :1, :], np.nan)], axis=-2
+    )
 
-    if is_multi_model:
-        shape = (atoms.stack_depth(), len(res_names), 4)
-    else:
-        shape = (len(res_names), 4)
-    chi_angles = np.full(shape, np.nan, dtype=np.float32)
-    for res_name, chi_atom_names_for_all_angles in _CHI_ATOMS.items():
-        res_mask = res_names == res_name
-        for chi_i, chi_atom_names in enumerate(chi_atom_names_for_all_angles):
-            dihedrals = dihedral(
-                *(
-                    chi_atom_coord[
-                        chi_atoms_to_coord_index[atom_name], ..., res_mask, :
-                    ]
-                    for atom_name in chi_atom_names
-                )
-            )
-            if is_multi_model:
-                # Swap dimensions due to NumPy's behavior when using advanced indexing
-                # (https://numpy.org/devdocs/user/basics.indexing.html#combining-advanced-and-basic-indexing)
-                dihedrals = dihedrals.T
-            chi_angles[..., res_mask, chi_i] = dihedrals
+    chi_atom_indices = _chi_atom_indices()
+    undefined_indices = np.full((4, 4), len(chi_atoms))
+    unique_res_names, res_name_indices = np.unique(res_names, return_inverse=True)
+    # Index into `chi_atoms` for each residue, chi angle and dihedral atom
+    atom_indices = np.array(
+        [chi_atom_indices.get(name, undefined_indices) for name in unique_res_names],
+        dtype=int,
+    ).reshape(-1, 4, 4)[res_name_indices]
+    residue_indices = np.arange(len(res_names))[:, np.newaxis]
+    chi_angles = dihedral(
+        *(
+            chi_atom_coord[..., residue_indices, atom_indices[..., i], :]
+            for i in range(4)
+        )
+    )
     return chi_angles  # pyright: ignore[reportReturnType]
 
 
@@ -1190,3 +1187,20 @@ def _all_chi_atoms() -> list[str]:
         for angle in angles:
             atom_names.update(angle)
     return sorted(atom_names)
+
+
+@functools.cache
+def _chi_atom_indices() -> dict[str, NDArray2[C4, C4, np.integer]]:
+    """
+    Get the indices into :func:`_all_chi_atoms()` of the atoms participating in
+    each chi angle for each amino acid.
+    Undefined chi angles point to the index after the last atom.
+    """
+    chi_atoms = _all_chi_atoms()
+    indices = {}
+    for res_name, angles in _CHI_ATOMS.items():
+        res_indices = np.full((4, 4), len(chi_atoms))
+        for chi_i, atom_names in enumerate(angles):
+            res_indices[chi_i] = [chi_atoms.index(name) for name in atom_names]
+        indices[res_name] = res_indices
+    return indices
