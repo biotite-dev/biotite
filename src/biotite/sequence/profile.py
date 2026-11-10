@@ -48,23 +48,25 @@ def _determine_common_alphabet(
 
 
 def _codes_to_iupac(
-    frequency: NDArray1[K, np.integer],
+    symbols: NDArray2[N, K, np.integer],
     codes: dict[tuple[int, ...], str],
-    maxes: np.integer,
-    row: int,
 ) -> str:
     """
-    Returns IUPAC code for a row of 'symbols' with none, one or
+    Returns IUPAC codes for each row of 'symbols' with none, one or
     multiple maximum positions.
     """
-    if np.sum(frequency) == 0:
+    empty_rows = np.where(np.sum(symbols, axis=1) == 0)[0]
+    if len(empty_rows) > 0:
         raise ValueError(
             f"There is an empty column in the 'symbols' frequency table. "
             f"This doesn't make sense in context of an alignment. "
-            f"Please check the 'symbols' frequency table in row {row}."
+            f"Please check the 'symbols' frequency table in row {empty_rows[0]}."
         )
-    key = tuple(np.where(frequency == maxes)[0])
-    return codes[key]
+    # Encode the positions of the maximum in each row as bit mask
+    is_max = symbols == np.max(symbols, axis=1, keepdims=True)
+    masks = is_max.astype(int) @ (1 << np.arange(symbols.shape[1]))
+    mask_to_code = {sum(1 << i for i in key): code for key, code in codes.items()}
+    return "".join([mask_to_code[mask] for mask in masks.tolist()])
 
 
 class SequenceProfile(Generic[S]):
@@ -366,11 +368,7 @@ class SequenceProfile(Generic[S]):
             (0, 1, 2): "V",
             (0, 1, 2, 3): "N",
         }
-        consensus = ""
-        maxes = np.max(self.symbols, axis=1)
-        for i in range(len(self.symbols)):
-            consensus += _codes_to_iupac(self.symbols[i, :], codes, maxes[i], i)
-        return consensus
+        return _codes_to_iupac(self.symbols, codes)
 
     def _rna_to_consensus(self) -> str:
         codes = {
@@ -390,11 +388,7 @@ class SequenceProfile(Generic[S]):
             (0, 1, 2): "V",
             (0, 1, 2, 3): "N",
         }
-        consensus = ""
-        maxes = np.max(self.symbols, axis=1)
-        for i in range(len(self.symbols)):
-            consensus += _codes_to_iupac(self.symbols[i, :], codes, maxes[i], i)
-        return consensus
+        return _codes_to_iupac(self.symbols, codes)
 
     def _prot_to_consensus(self) -> ProteinSequence:
         """
