@@ -313,25 +313,30 @@ def _write_structure_to_ctab_v2000(
                 f"5 pre-decimal columns for {coord_name}-coordinates are "
                 f"available, but array would require {n_coord_digits}"
             )
+    # Iterating over Python lists is much faster than indexing NumPy arrays
+    charge = charge.tolist()
+    mass_difference = f"{0:>2}"  # Mass difference -> unused
+    unused_fields = f"{0:>3d}" * 10
     atom_lines = [
-        f"{atoms.coord[i, 0]:>10.4f}"
-        f"{atoms.coord[i, 1]:>10.4f}"
-        f"{atoms.coord[i, 2]:>10.4f}"
-        f" {atoms.element[i].capitalize():3}"
-        f"{0:>2}"  # Mass difference -> unused
-        f"{CHARGE_MAPPING_REV.get(charge[i], 0):>3d}"
-        + f"{0:>3d}"
-        * 10  # More unused fields
-        for i in range(atoms.array_length())
+        f"{x:>10.4f}"
+        f"{y:>10.4f}"
+        f"{z:>10.4f}"
+        f" {element.capitalize():3}"
+        f"{mass_difference}"
+        f"{CHARGE_MAPPING_REV.get(c, 0):>3d}"
+        f"{unused_fields}"
+        for (x, y, z), element, c in zip(
+            atoms.coord.tolist(), atoms.element.tolist(), charge
+        )
     ]
 
     default_bond_value = BOND_TYPE_MAPPING_REV[default_bond_type]
+    unused_fields = f"{0:>3d}" * 4
     bond_lines = [
         f"{i + 1:>3d}{j + 1:>3d}"
-        f"{BOND_TYPE_MAPPING_REV.get(bond_type, default_bond_value):>3d}"
-        + f"{0:>3d}"
-        * 4
-        for i, j, bond_type in bonds.as_array()
+        f"{BOND_TYPE_MAPPING_REV.get(bond_type, default_bond_value):>3d}"  # pyright: ignore[reportCallIssue, reportArgumentType]
+        f"{unused_fields}"
+        for i, j, bond_type in bonds.as_array().tolist()
     ]
 
     # V2000 files introduce charge annotations in the property block
@@ -371,23 +376,26 @@ def _write_structure_to_ctab_v3000(
             )
     atom_lines = [
         f"{i + 1}"
-        f" {_quote(atoms.element[i].capitalize())}"
-        f" {atoms.coord[i, 0]:.4f}"
-        f" {atoms.coord[i, 1]:.4f}"
-        f" {atoms.coord[i, 2]:.4f}"
+        f" {_quote(element.capitalize())}"
+        f" {x:.4f}"
+        f" {y:.4f}"
+        f" {z:.4f}"
         # 'aamap' is unused
         f" 0"
-        f" {_to_property(charges[i])}"
-        for i in range(atoms.array_length())
+        f" {_to_property(charge)}"
+        # Iterating over Python lists is much faster than indexing NumPy arrays
+        for i, ((x, y, z), element, charge) in enumerate(
+            zip(atoms.coord.tolist(), atoms.element.tolist(), charges.tolist())
+        )
     ]
 
     default_bond_value = BOND_TYPE_MAPPING_REV[default_bond_type]
     bond_lines = [
         f"{k + 1}"
-        f" {BOND_TYPE_MAPPING_REV.get(bond_type, default_bond_value)}"
+        f" {BOND_TYPE_MAPPING_REV.get(bond_type, default_bond_value)}"  # pyright: ignore[reportCallIssue, reportArgumentType]
         f" {i + 1}"
         f" {j + 1}"
-        for k, (i, j, bond_type) in enumerate(bonds.as_array())
+        for k, (i, j, bond_type) in enumerate(bonds.as_array().tolist())
     ]
 
     lines = (
