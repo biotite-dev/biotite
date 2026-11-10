@@ -176,25 +176,22 @@ def check_duplicate_atoms(
         Contains the indices of duplicate atoms.
         The first occurrence of an atom is not counted as duplicate.
     """
-    duplicates = []
-    annots = [
-        array.get_annotation(category) for category in array.get_annotation_categories()
-    ]
-    for i in range(1, array.array_length()):
-        # Start with assumption that all atoms in the array
-        # until index i are duplicates of the atom at index i
-        is_duplicate = np.full(i, True, dtype=bool)
-        for annot in annots:
-            # For each annotation array filter out the atoms until
-            # index i that have an unequal annotation
-            # to the atom at index i
-            is_duplicate &= annot[:i] == annot[i]
-        # After checking all annotation arrays,
-        # if there still is any duplicate to the atom at index i,
-        # add i the the list of duplicate atom indices
-        if is_duplicate.any():
-            duplicates.append(i)
-    return np.array(duplicates)
+    # Map each annotation to integer codes and find the first occurrence of each
+    # unique combination of codes; all other atoms are duplicates
+    # `equal_nan=False`: `NaN` annotations are never equal to each other
+    codes = np.stack(
+        [
+            np.unique(
+                array.get_annotation(category), return_inverse=True, equal_nan=False
+            )[1]
+            for category in array.get_annotation_categories()
+        ],
+        axis=-1,
+    )
+    _, first_indices = np.unique(codes, axis=0, return_index=True)
+    is_duplicate = np.ones(array.array_length(), dtype=bool)
+    is_duplicate[first_indices] = False
+    return np.where(is_duplicate)[0]
 
 
 def check_in_box(array: AtomArray[N]) -> NDArray1[K, np.integer]:
