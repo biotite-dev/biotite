@@ -222,8 +222,9 @@ class Feature(Copyable):
         last : int
             The maximum last base/residue of all locations.
         """
-        first = np.min([loc.first for loc in self._locs])
-        last = np.max([loc.last for loc in self._locs])
+        # Built-in min()/max() are much faster than NumPy for these few locations
+        first = min([loc.first for loc in self._locs])
+        last = max([loc.last for loc in self._locs])
         return first, last
 
     def __eq__(self, item: object) -> bool:
