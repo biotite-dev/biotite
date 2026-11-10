@@ -179,7 +179,8 @@ def displacement(
         # for faster calculation laster on
         fractions = coord_to_fraction(diff, box)
         # Move vectors into box
-        fractions = fractions % 1
+        # (equivalent to `fractions % 1`, but much faster)
+        fractions = fractions - np.floor(fractions)
         # Check for each model if the box vectors are orthogonal
         orthogonality = is_orthogonal(box)
         disp = np.zeros(fractions.shape, dtype=diff.dtype)
@@ -1129,7 +1130,7 @@ def _displacement_orthogonal_box(
     # Fraction components are guaranteed to be positive
     # Use fraction vector components with lower absolute
     # -> new_vec[i] = vec[i] - 1 if vec[i] > 0.5 else vec[i]
-    fractions[fractions > 0.5] -= 1
+    fractions -= fractions > 0.5
     disp[:] = fraction_to_coord(fractions, box)
 
 
@@ -1158,15 +1159,24 @@ def _displacement_triclinic_box(
                 periodic_shift.append([x, y, z])
     periodic_shift = np.array(periodic_shift, dtype=disp.dtype)
     # Create 8 periodically shifted variants for each atom
-    shifted_diffs = diffs[:, np.newaxis, :] + periodic_shift[np.newaxis, :, :]
+    # (shape: 8 x XYZ x K, as operations along the long, contiguous last axis
+    # are much faster than along a short XYZ axis)
+    shifted_diffs = (
+        np.ascontiguousarray(diffs.T)[np.newaxis, :, :]
+        + periodic_shift[:, :, np.newaxis]
+    )
     # Find for each atom the periodically shifted variant with lowest
     # distance
     # Lowest squared distance -> lowest distance
-    sq_distance = vector_dot(shifted_diffs, shifted_diffs)
+    sq_distance = (
+        shifted_diffs[:, 0] * shifted_diffs[:, 0]
+        + shifted_diffs[:, 1] * shifted_diffs[:, 1]
+        + shifted_diffs[:, 2] * shifted_diffs[:, 2]
+    )
     # for each given non-PBC-aware displacement find the PBC-aware
     # displacement with the lowest distance
     disp[:] = shifted_diffs[
-        np.arange(len(shifted_diffs)), np.argmin(sq_distance, axis=1)
+        np.argmin(sq_distance, axis=0), :, np.arange(shifted_diffs.shape[-1])
     ]
 
 
