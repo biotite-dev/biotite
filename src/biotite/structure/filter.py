@@ -25,6 +25,7 @@ __all__ = [
 
 
 from collections.abc import Iterable, Sequence
+from typing import Any
 import numpy as np
 from biotite.structure.atoms import AtomArray, AtomArrayStack
 from biotite.structure.info.groups import (
