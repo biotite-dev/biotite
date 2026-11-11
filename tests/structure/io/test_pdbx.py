@@ -330,6 +330,71 @@ def test_bond_sparsity():
 
 
 @pytest.mark.parametrize("format", ["cif", "bcif"])
+def test_component_categories(format):
+    """
+    Check if the ``chem_comp``, ``chem_comp_atom`` and ``chem_comp_bond`` categories
+    written by :func:`set_structure()` agree with the ones in the original file.
+    As the original ``chem_comp_atom`` and ``chem_comp_bond`` categories also contain
+    atoms that are absent in the structure (e.g. hydrogen atoms), the written rows
+    only need to be a subset of the original ones.
+    However, each atom in the structure must appear exactly once in
+    ``chem_comp_atom``.
+    """
+    COLUMNS = {
+        "chem_comp": ["id", "type"],
+        "chem_comp_atom": ["comp_id", "atom_id", "type_symbol"],
+        "chem_comp_bond": [
+            "comp_id",
+            "atom_id_1",
+            "atom_id_2",
+            "value_order",
+            "pdbx_aromatic_flag",
+        ],
+    }
+
+    File = pdbx.CIFFile if format == "cif" else pdbx.BinaryCIFFile
+    path = data_dir("structure") / "pdb" / f"1aki.{format}"
+    ref_block = File.read(path).block
+    atoms = pdbx.get_structure(ref_block, model=1, include_bonds=True)
+    test_file = File()
+    pdbx.set_structure(test_file, atoms)
+    test_block = test_file.block
+
+    for category, columns in COLUMNS.items():
+        ref_rows = _get_rows(ref_block[category], columns)
+        test_rows = _get_rows(test_block[category], columns)
+        if category == "chem_comp":
+            assert test_rows == ref_rows
+        else:
+            assert test_rows <= ref_rows
+
+    chem_comp_atom = test_block["chem_comp_atom"]
+    test_atoms = list(
+        zip(
+            chem_comp_atom["comp_id"].as_array(str).tolist(),
+            chem_comp_atom["atom_id"].as_array(str).tolist(),
+        )
+    )
+    ref_atoms = set(zip(atoms.res_name.tolist(), atoms.atom_name.tolist()))
+    assert sorted(test_atoms) == sorted(ref_atoms)
+
+
+def _get_rows(category, columns):
+    """
+    Get the rows of the given columns as set of tuples.
+    The values are case-insensitive and the order of the two bonded atoms is
+    irrelevant.
+    """
+    rows = set()
+    for row in zip(*[np.char.lower(category[col].as_array(str)) for col in columns]):
+        if "atom_id_1" in columns:
+            i = columns.index("atom_id_1")
+            row = row[:i] + tuple(sorted(row[i : i + 2])) + row[i + 2 :]
+        rows.add(row)
+    return rows
+
+
+@pytest.mark.parametrize("format", ["cif", "bcif"])
 def test_extra_fields(tmp_path, format):
     EXTRA_FIELDS = ["atom_id", "b_factor", "occupancy", "charge", "entity_id"]
 

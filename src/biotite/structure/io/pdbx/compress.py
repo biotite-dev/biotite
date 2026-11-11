@@ -70,14 +70,14 @@ def compress(
     >>> pdbx_file.write(uncompressed_file)
     >>> _ = uncompressed_file.seek(0)
     >>> print(f"{len(uncompressed_file.read()) // 1000} KB")
-    937 KB
+    943 KB
     >>> # Write compressed file
     >>> pdbx_file = compress(pdbx_file)
     >>> compressed_file = BytesIO()
     >>> pdbx_file.write(compressed_file)
     >>> _ = compressed_file.seek(0)
     >>> print(f"{len(compressed_file.read()) // 1000} KB")
-    114 KB
+    116 KB
     """
     if isinstance(data, bcif.BinaryCIFFile):
         return _compress_file(data, rtol, atol)
