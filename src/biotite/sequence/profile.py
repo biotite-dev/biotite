@@ -338,14 +338,14 @@ class SequenceProfile(Generic[S]):
         -------
         consensus: Sequence
             The calculated consensus sequence.
+            For a DNA or RNA alphabet, this is a :class:`NucleotideSequence`,
+            which represents uracil as ``'T'``.
         """
         # https://en.wikipedia.org/wiki/International_Union_of_Pure_and_Applied_Chemistry#Amino_acid_and_nucleotide_base_codes
         if as_general:
             return self._general_to_consensus()
-        elif self.alphabet == _NUC_DNA_ALPH:
+        elif self.alphabet in (_NUC_DNA_ALPH, _NUC_RNA_ALPH):
             return NucleotideSequence(self._dna_to_consensus())  # pyright: ignore[reportReturnType]
-        elif self.alphabet == _NUC_RNA_ALPH:
-            return NucleotideSequence(self._rna_to_consensus())  # pyright: ignore[reportReturnType]
         elif self.alphabet in (_PROT_UNAMB_ALPH, _PROT_AMB_ALPH):
             return self._prot_to_consensus()  # pyright: ignore[reportReturnType]
         return self._general_to_consensus()
@@ -356,26 +356,6 @@ class SequenceProfile(Generic[S]):
             (1,): "C",
             (2,): "G",
             (3,): "T",
-            (0, 2): "R",
-            (1, 3): "Y",
-            (1, 2): "S",
-            (0, 3): "W",
-            (2, 3): "K",
-            (0, 1): "M",
-            (1, 2, 3): "B",
-            (0, 2, 3): "D",
-            (0, 1, 3): "H",
-            (0, 1, 2): "V",
-            (0, 1, 2, 3): "N",
-        }
-        return _codes_to_iupac(self.symbols, codes)
-
-    def _rna_to_consensus(self) -> str:
-        codes = {
-            (0,): "A",
-            (1,): "C",
-            (2,): "G",
-            (3,): "U",
             (0, 2): "R",
             (1, 3): "Y",
             (1, 2): "S",
