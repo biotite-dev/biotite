@@ -106,6 +106,18 @@ def test_read_iter(file_name):
         assert (test_sc == ref_sc).all()
 
 
+@pytest.mark.parametrize("reader", [fastq.FastqFile.read, fastq.FastqFile.read_iter])
+@pytest.mark.parametrize("prefix", ["", "@complete\nACGT\n+\n!!!!\n"])
+@pytest.mark.parametrize(
+    "incomplete_entry",
+    ["@seq", "@seq\nACGT", "@seq\nACGT\n+", "@seq\nACGT\n+\n!!"],
+)
+def test_incomplete_last_entry(reader, prefix, incomplete_entry):
+    file = io.StringIO(prefix + incomplete_entry)
+    with pytest.raises(biotite.InvalidFileError, match="last entry.*incomplete"):
+        dict(reader(file, offset=33))
+
+
 @pytest.mark.parametrize("offset", [33, 42, fastq.FastqFile.Offset.SOLEXA])
 @pytest.mark.parametrize("chars_per_line", [None, 80])
 @pytest.mark.parametrize("n_sequences", [1, 10])

@@ -450,6 +450,9 @@ class FastqFile(TextFile, MutableMapping[str, tuple[str, np.ndarray]]):
             else:
                 raise InvalidFileError("FASTQ file is invalid")
 
+        if in_sequence or in_scores:
+            raise InvalidFileError("The last entry in the file is incomplete")
+
     @staticmethod
     def write_iter(
         file: PathLike[str] | str | IO[str],
