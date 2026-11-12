@@ -113,6 +113,10 @@ def test_read_iter(file_name):
     ["@seq", "@seq\nACGT", "@seq\nACGT\n+", "@seq\nACGT\n+\n!!"],
 )
 def test_incomplete_last_entry(reader, prefix, incomplete_entry):
+    """
+    Test whether both readers reject an incomplete final FASTQ entry,
+    with or without a preceding complete entry.
+    """
     file = io.StringIO(prefix + incomplete_entry)
     with pytest.raises(biotite.InvalidFileError, match="last entry.*incomplete"):
         dict(reader(file, offset=33))
