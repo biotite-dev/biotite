@@ -414,8 +414,11 @@ def test_align_vectors_opposite(direction):
     expected = v2 / np.linalg.norm(v2) * np.linalg.norm(v1)
     assert np.allclose(aligned, expected, atol=1e-5)
     # Rotation matrix must be proper SO(3)
-    assert np.allclose(transform.rotation[0] @ transform.rotation[0].T, np.eye(3), atol=1e-5)
+    assert np.allclose(
+        transform.rotation[0] @ transform.rotation[0].T, np.eye(3), atol=1e-5
+    )
     assert np.isclose(np.linalg.det(transform.rotation[0]), 1.0, atol=1e-5)
+
 
 def test_align_vectors_non_vector_inputs():
     """
