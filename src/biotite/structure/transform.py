@@ -866,16 +866,20 @@ def align_vectors(
     norm_vector(target_direction)
     # Formula is taken from
     # https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d/476311#476311
-    vx, vy, vz = np.cross(origin_direction, target_direction)
-    v_c = np.array([[0, -vz, vy], [vz, 0, -vx], [-vy, vx, 0]], dtype=float)
-    cos_a = vector_dot(origin_direction, target_direction)
-    if np.all(cos_a == -1):
-        raise ValueError(
-            "Direction vectors are point into opposite directions, "
-            "cannot calculate rotation matrix"
-        )
-    rot_matrix = np.identity(3) + v_c + (v_c @ v_c) / (1 + cos_a)
-
+    cos_a = float(vector_dot(origin_direction, target_direction))
+    if cos_a <= -1.0 + 1e-6:
+        # Opposite directions: 180 degree rotation around any perpendicular axis
+        if abs(origin_direction[0]) < 0.6:
+            perp = np.array([1.0, 0.0, 0.0], dtype=float)
+        else:
+            perp = np.array([0.0, 1.0, 0.0], dtype=float)
+        axis = np.cross(origin_direction, perp)
+        norm_vector(axis)
+        rot_matrix = 2.0 * np.outer(axis, axis) - np.identity(3)
+    else:
+        vx, vy, vz = np.cross(origin_direction, target_direction)
+        v_c = np.array([[0, -vz, vy], [vz, 0, -vx], [-vy, vx, 0]], dtype=float)
+        rot_matrix = np.identity(3) + v_c + (v_c @ v_c) / (1 + cos_a)
     # The origin position is moved to (0,0,0), then the rotation is applied
     # and finally the coordinates are moved to the target position
     translation = target_position - rot_matrix @ origin_position
