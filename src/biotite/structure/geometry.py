@@ -432,12 +432,18 @@ def angle(
     See Also
     --------
     index_angle : The same calculation, but using atom indices.
+
+    Notes
+    -----
+    The cosine is clipped to the interval [-1, 1] to account for
+    floating-point rounding for collinear atoms.
+
     """
     v1 = displacement(atoms1, atoms2, box)
     v2 = displacement(atoms3, atoms2, box)
     norm_vector(v1)
     norm_vector(v2)
-    return np.arccos(vector_dot(v1, v2))
+    return np.arccos(np.clip(vector_dot(v1, v2), -1, 1))
 
 
 def index_angle(

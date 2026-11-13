@@ -24,6 +24,24 @@ def test_angle():
     assert struc.angle(coord1, coord2, coord3) == pytest.approx(0.25 * np.pi)
 
 
+@pytest.mark.parametrize("sign", [1, -1])
+@pytest.mark.parametrize("multi_model", [False, True])
+@pytest.mark.parametrize("indexed", [False, True])
+def test_angle_collinear(sign, multi_model, indexed):
+    """Rounding of normalized vectors must not produce an invalid cosine."""
+    vector = np.array([1, 1, 4], dtype=np.float32)
+    if multi_model:
+        vector = np.broadcast_to(vector, (2, 3))
+    origin = np.zeros_like(vector)
+    if indexed:
+        atoms = np.stack([vector, origin, sign * vector], axis=-2)
+        angles = struc.index_angle(atoms, np.array([[0, 1, 2]]))
+    else:
+        angles = struc.angle(vector, origin, sign * vector)
+    assert np.all(np.isfinite(angles))
+    assert angles == pytest.approx(0 if sign == 1 else np.pi)
+
+
 def test_dihedral():
     coord1 = struc.coord([-0.5, -1, 0])
     coord2 = struc.coord([0, 0, 0])
