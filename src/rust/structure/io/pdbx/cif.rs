@@ -161,7 +161,7 @@ fn deserialize_looped<'py>(py: Python<'py>, lines: &[Cow<'_, str>]) -> PyResult<
     // which differ only if a column name is repeated
     let mut column_of_key = Vec::new();
     for key_line in lines.iter().take_while(|line| line.starts_with('_')) {
-        let (_, key) = split_data_name(key_line)?;
+        let (_, key) = split_data_name(key_line.split(is_space).next().unwrap_or_default())?;
         let column_i = match column_names.iter().position(|name| *name == key) {
             Some(i) => i,
             None => {
@@ -190,6 +190,11 @@ fn deserialize_looped<'py>(py: Python<'py>, lines: &[Cow<'_, str>]) -> PyResult<
     for (&column_i, value) in values() {
         columns[column_i].push(value);
         n_values += 1;
+    }
+    if n_values == 0 {
+        return Err(biotite::DeserializationError::new_err(
+            "Loop contains no values",
+        ));
     }
     // Check if all columns have the same length
     // Otherwise, this would indicate a parsing error or an invalid CIF file

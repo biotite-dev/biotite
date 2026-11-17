@@ -128,6 +128,22 @@ def test_text_field_keyword(line):
     assert file.block["a"]["x"].as_item() == f"text\n{line}"
 
 
+def test_loop_header_comment():
+    """
+    Test whether a comment after a data name in a loop header is ignored.
+    """
+    category = pdbx.CIFCategory.deserialize("loop_\n_a.x # comment\n_a.y\n1 2\n")
+    assert list(category.keys()) == ["x", "y"]
+
+
+def test_empty_loop():
+    """
+    Test whether a loop without values raises a :class:`DeserializationError`.
+    """
+    with pytest.raises(biotite.DeserializationError, match="no values"):
+        pdbx.CIFCategory.deserialize("loop_\n_a.x\n_a.y\n")
+
+
 @pytest.mark.parametrize("model", [None, 1, -1])
 @pytest.mark.parametrize(
     "path",
@@ -919,17 +935,18 @@ def test_bcif_quantization_encoding():
     assert test_data.tolist() == pytest.approx(ref_data.tolist())
 
 
-def test_bcif_cif_consistency():
+@pytest.mark.parametrize(
+    "path",
+    sorted((data_dir("structure") / "pdb").glob("*.bcif")),
+    ids=lambda path: path.stem,
+)
+def test_bcif_cif_consistency(path):
     """
     Check if the decoded data from a BinaryCIF file is consistent with
     the equivalent data from the original CIF file.
     """
-    # Contains a multiline value with an empty line
-    PDB_ID = "5zng"
-
-    base_path = data_dir("structure") / "pdb" / PDB_ID
-    cif_file = pdbx.CIFFile.read(base_path.with_suffix(".cif"))
-    bcif_file = pdbx.BinaryCIFFile.read(base_path.with_suffix(".bcif"))
+    cif_file = pdbx.CIFFile.read(path.with_suffix(".cif"))
+    bcif_file = pdbx.BinaryCIFFile.read(path)
 
     cif_block = cif_file.block
     bcif_block = bcif_file.block
