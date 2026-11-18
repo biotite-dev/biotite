@@ -140,7 +140,7 @@ class GROFile(TextFile):
 
         if model is None:
             # Check if all models have the same length
-            if np.all(model_atom_counts != model_atom_counts[0]):
+            if np.any(model_atom_counts != model_atom_counts[0]):
                 raise BadStructureError(
                     "The models in the file have unequal "
                     "amount of atoms, give an explicit "

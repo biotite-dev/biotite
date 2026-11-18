@@ -1,11 +1,36 @@
+from io import StringIO
 from tempfile import TemporaryFile
 import numpy as np
 import pytest
 import biotite
 import biotite.structure.io.gro as gro
 import biotite.structure.io.pdb as pdb
-from biotite.structure import Atom, array
+from biotite.structure import Atom, BadStructureError, array
 from tests.util import data_dir
+
+
+@pytest.mark.parametrize("counts", [(2, 1), (1, 2), (2, 3), (3, 2), (2, 2, 1)])
+def test_unequal_model_lengths(counts):
+    lines = []
+    expected_coord = []
+    for model, count in enumerate(counts):
+        lines.extend([f"Frame {model}", str(count)])
+        coords = []
+        for atom in range(count):
+            x = model + atom + 0.1
+            lines.append(
+                f"{1:5d}{'ALA':<5}{'CA':>5}{atom + 1:5d}{x:8.3f}{0.2:8.3f}{0.3:8.3f}"
+            )
+            coords.append([x * 10, 2, 3])
+        expected_coord.append(coords)
+        lines.append("1.0 1.0 1.0")
+    gro_file = gro.GROFile.read(StringIO("\n".join(lines) + "\n"))
+
+    # Each model is valid on its own, with the coordinates stored in the file.
+    for model, coords in enumerate(expected_coord, start=1):
+        np.testing.assert_allclose(gro_file.get_structure(model=model).coord, coords)
+    with pytest.raises(BadStructureError, match="unequal"):
+        gro_file.get_structure()
 
 
 def test_get_model_count():
