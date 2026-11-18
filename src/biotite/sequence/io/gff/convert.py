@@ -32,33 +32,23 @@ def get_annotation(gff_file: GFFFile) -> Annotation:
     annotation : Annotation
         The extracted annotation.
     """
-    annot = Annotation()
-    current_key: str | None = None
-    current_locs: list[Location] = []
-    current_qual: dict[str, str | None] = {}
-    current_id = None
+    features: list[tuple[GFFRecord, list[Location]]] = []
+    id_to_index: dict[str, int] = {}
     for record in gff_file:
         strand = record.strand
         if strand is None:
             strand = Location.Strand.FORWARD
         id = record.attributes.get("ID")
-        if id != current_id or id is None:
-            # current_key is None, when there is no previous feature
-            # (beginning of the file)
-            if current_key is not None:
-                # Beginning of new feature -> Save previous feature
-                annot.add_feature(Feature(current_key, current_locs, current_qual))
-            # Track new feature
-            current_key = record.type
-            current_locs = [Location(record.start, record.end, strand)]
-            current_qual = dict(record.attributes)
+        location = Location(record.start, record.end, strand)
+        if id is None or id not in id_to_index:
+            if id is not None:
+                id_to_index[id] = len(features)
+            features.append((record, [location]))
         else:
-            current_locs.append(Location(record.start, record.end, strand))
-        current_id = id
-    # Save last feature
-    if current_key is not None:
-        annot.add_feature(Feature(current_key, current_locs, current_qual))
-    return annot
+            features[id_to_index[id]][1].append(location)
+    return Annotation(
+        Feature(record.type, locs, record.attributes) for record, locs in features
+    )
 
 
 def set_annotation(
