@@ -69,7 +69,7 @@ def to_sequence(
     for i in range(len(chain_start_indices) - 1):
         start = chain_start_indices[i]
         stop = chain_start_indices[i + 1]
-        chain = atoms[start:stop]
+        chain = atoms[..., start:stop]
         _, residues = get_residues(chain)
         one_letter_symbols = np.array(
             [one_letter_code(res) or HETERO_PLACEHOLDER for res in residues]

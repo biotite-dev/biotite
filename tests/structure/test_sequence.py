@@ -6,6 +6,33 @@ import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
 
+@pytest.mark.parametrize("depth", [None, 0, 1, 2])
+@pytest.mark.parametrize("allow_hetero", [False, True])
+@pytest.mark.parametrize("nucleotide_chain", [False, True])
+def test_to_sequence_multiple_chains(depth, allow_hetero, nucleotide_chain):
+    atoms = struc.AtomArray(6)
+    atoms.chain_id = ["A"] * 3 + ["B"] * 3
+    atoms.res_id = [1, 2, 3, 1, 2, 3]
+    atoms.res_name = ["ALA", "GLY", "SER"] + (
+        ["DA", "DC", "DG"] if nucleotide_chain else ["SER", "GLY", "ALA"]
+    )
+    atoms.coord = np.zeros((6, 3))
+    if depth is not None:
+        stack = struc.AtomArrayStack(depth, atoms.array_length())
+        for category in atoms.get_annotation_categories():
+            stack.set_annotation(category, atoms.get_annotation(category))
+        stack.coord = np.zeros((depth, 6, 3))
+        atoms = stack
+
+    sequences, starts = struc.to_sequence(atoms, allow_hetero=allow_hetero)
+
+    assert [str(sequence) for sequence in sequences] == [
+        "AGS",
+        "ACG" if nucleotide_chain else "SGA",
+    ]
+    np.testing.assert_array_equal(starts, [0, 3])
+
+
 @pytest.mark.parametrize(
     "path",
     sorted((data_dir("structure") / "pdb").glob("*.bcif")),
