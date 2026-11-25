@@ -38,32 +38,36 @@ def random_atoms():
 
 
 @pytest.mark.benchmark
-def benchmark_rdf_few_centers(atoms):
+@pytest.mark.parametrize("use_cell_list", [False, True])
+def benchmark_rdf_few_centers(atoms, use_cell_list):
     """
     Compute the RDF for a few centers in a small system.
     """
-    rdf(atoms.coord[:1], atoms, interval=(0, 10), bins=100)
+    rdf(atoms.coord[:1], atoms, interval=(0, 10), bins=100, use_cell_list=use_cell_list)
 
 
 @pytest.mark.benchmark
-def benchmark_rdf_many_centers(atoms):
+@pytest.mark.parametrize("use_cell_list", [False, True])
+def benchmark_rdf_many_centers(atoms, use_cell_list):
     """
     Compute the RDF for many centers in a small system.
     """
-    rdf(atoms.coord, atoms, interval=(0, 10), bins=100)
+    rdf(atoms.coord, atoms, interval=(0, 10), bins=100, use_cell_list=use_cell_list)
 
 
 @pytest.mark.benchmark
-def benchmark_rdf_large_system(large_atoms):
+@pytest.mark.parametrize("use_cell_list", [False, True])
+def benchmark_rdf_large_system(large_atoms, use_cell_list):
     """
     Compute the RDF for many centers in a large system.
     """
-    rdf(large_atoms.coord, large_atoms, interval=(0, 10), bins=100)
+    rdf(large_atoms.coord, large_atoms, interval=(0, 10), bins=100, use_cell_list=use_cell_list)
 
 
 @pytest.mark.benchmark
-def benchmark_rdf_sparse_system(random_atoms):
+@pytest.mark.parametrize("use_cell_list", [False, True])
+def benchmark_rdf_sparse_system(random_atoms, use_cell_list):
     """
     Compute the RDF for few centers in a sparsely populated system.
     """
-    rdf(random_atoms.coord[:10], random_atoms, interval=(0, 10), bins=100)
+    rdf(random_atoms.coord[:10], random_atoms, interval=(0, 10), bins=100, use_cell_list=use_cell_list)

@@ -218,6 +218,12 @@ def test_rdf_small_system_heuristic():
     """
     For a small number of centers, the RDF is computed without a cell
     list, while for a large number of centers a cell list is used.
+
+    Unlike ``test_rdf_use_cell_list_equivalence``, which pins the two
+    explicitly chosen paths against each other, this test pins the
+    automatic choice: the system is small enough that the heuristic
+    must take the brute-force path, giving the same result as calling
+    it with ``use_cell_list=False``.
     """
     stack = gro.GROFile.read(TEST_FILE).get_structure()
     oxygen = stack[:, stack.atom_name == "OW"]

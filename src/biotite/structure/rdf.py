@@ -312,6 +312,12 @@ def rdf(
                 # displacement for each image, leading to spurious
                 # counts, hence the duplicates are removed after
                 # mapping the image indices back to the original atoms
+                # Each original atom is then counted at most once per
+                # center, at its minimum-image distance: a farther
+                # periodic copy of the same atom is dropped in favor of
+                # the nearer one, so the histogram does not undercount
+                # atoms at large distances but attributes each to its
+                # closest image
                 near_atom_pairs[:, 1] %= n_atoms
                 unique_pairs = np.unique(near_atom_pairs, axis=0)
                 disp.append(
