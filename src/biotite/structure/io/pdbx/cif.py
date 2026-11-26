@@ -319,6 +319,9 @@ class CIFCategory(_Component, MutableMapping[str, CIFColumn]):
     row_count : int
         The number of rows in the category, i.e. the length of each
         column.
+        The row count is determined when the first column is added and
+        cannot be changed afterwards:
+        Setting a column with a deviating length raises an exception.
 
     Notes
     -----
@@ -362,7 +365,10 @@ class CIFCategory(_Component, MutableMapping[str, CIFColumn]):
                 for key, col in columns.items()
             }
 
-        self._row_count: int | None = None
+        # The first column determines the row count
+        self._row_count: int | None = (
+            len(next(iter(self._columns.values()))) if self._columns else None
+        )
 
     @property
     def name(self) -> str | None:
@@ -429,6 +435,13 @@ class CIFCategory(_Component, MutableMapping[str, CIFColumn]):
     ) -> None:
         if not isinstance(column, CIFColumn):
             column = CIFColumn(column)
+        if self._row_count is None:
+            self._row_count = len(column)
+        elif len(column) != self._row_count:
+            raise ValueError(
+                f"Column '{key}' has length {len(column)}, "
+                f"but the category has {self._row_count} rows"
+            )
         self._columns[key] = column
 
     def __delitem__(self, key: str) -> None:
