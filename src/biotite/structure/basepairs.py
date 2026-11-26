@@ -1056,8 +1056,10 @@ def _check_dssr_criteria(
         return -1
 
     # Criterion 3: Angle between normal vectors <=65°
+    # The direction of the normal vectors is irrelevant
     if not (
-        np.arccos(np.dot(normal_vectors[0], normal_vectors[1])) >= ((115 * np.pi) / 180)
+        np.arccos(np.abs(np.dot(normal_vectors[0], normal_vectors[1])))
+        <= np.deg2rad(65)
     ):
         return -1
 
