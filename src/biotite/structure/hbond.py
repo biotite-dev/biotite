@@ -293,8 +293,8 @@ def _hbond(
     box: NDArray3[M, XYZ, XYZ, np.floating] | None,
 ) -> tuple[NDArray2[K, C3, np.integer], NDArray2[M, K, np.bool_]]:
     # Filter donor/acceptor elements
-    donor_mask &= donor_element_mask
-    acceptor_mask &= acceptor_element_mask
+    donor_mask = donor_mask & donor_element_mask
+    acceptor_mask = acceptor_mask & acceptor_element_mask
 
     first_model_box = box[0] if box is not None else None
     if atoms.bonds is not None:
