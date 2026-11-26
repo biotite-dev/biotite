@@ -196,7 +196,8 @@ libcifpp = "*"
 mafft = "*"
 sra-tools = "3.*"
 tantan = "*"
-viennarna = ">=2.5.0"
+# 2.7.x: `RNAsubopt` aborts for structure constraints given via stdin
+viennarna = ">=2.5.0,!=2.7.*"
 muscle = "3.*"
 
 [tool.pixi.feature.mmseqs.dependencies]
