@@ -496,9 +496,10 @@ def _as_global(alignment: Alignment) -> Alignment:
         )
         trace_prefix[:, seq_index_with_missing_start] = np.arange(len(trace_prefix))
         trace_parts.insert(0, trace_prefix)
-    if not (end_positions == sequence_lengths).all():
+    is_missing_end = end_positions != sequence_lengths - 1
+    if is_missing_end.any():
         # The same needs to be done for the end of the alignment
-        seq_index_with_missing_end = np.where(end_positions != sequence_lengths)[0][0]
+        seq_index_with_missing_end = np.where(is_missing_end)[0][0]
         end_position = end_positions[seq_index_with_missing_end].item()
         seq_length = sequence_lengths[seq_index_with_missing_end]
         trace_suffix = np.full(
