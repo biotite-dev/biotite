@@ -24,38 +24,39 @@ def test_pseudoknots(nuc_sample_array):
     Check the output of :func:`pseudoknots()`.
     """
     # Known base pairs with pseudoknot-order = 1:
-    pseudoknot_order_one = [{2, 74}, {58, 72}, {59, 71}, {60, 70}]
-    # Known base pairs that can either be of order one or two
-    pseudoknot_order_one_or_two = [{9, 48}, {10, 49}]
-    order_one_count = len(pseudoknot_order_one) + (len(pseudoknot_order_one_or_two) / 2)
-    order_two_count = len(pseudoknot_order_one_or_two) / 2
+    pseudoknot_order_one = [{2, 74}, {8, 52}, {58, 72}, {59, 71}, {60, 70}]
+    # Known base pairs that can be of order one, two or three
+    pseudoknot_order_one_to_three = [{9, 48}, {10, 49}, {12, 50}]
+    # Known base pairs, where only one of them is part of a pseudoknot:
+    # Either the first one is of order two or the second one is of order one
+    pseudoknot_alternatives = ({63, 83}, {82, 84})
 
     base_pairs = struc.base_pairs(nuc_sample_array)
     pseudoknot_order = struc.pseudoknots(base_pairs)
+    res_ids = [set(base_pair) for base_pair in nuc_sample_array[base_pairs].res_id]
 
-    # Sample structure should have two optimal solutions with default
+    # Sample structure should have twelve optimal solutions with default
     # scoring parameters
-    assert len(pseudoknot_order) == 2
+    assert len(pseudoknot_order) == 12
+    assert len(np.unique(pseudoknot_order, axis=0)) == 12
 
     for optimal_solution in pseudoknot_order:
-        # Assert that the right number of pseudoknots is present for
-        # each order
         assert len(base_pairs) == len(optimal_solution)
-        assert np.count_nonzero(optimal_solution == 1) == order_one_count
-        assert np.count_nonzero(optimal_solution == 2) == order_two_count
-        assert np.max(optimal_solution) == 2
 
         # Assert that the each base pair has the right pseudoknot order
-        for base_pair, order in zip(
-            nuc_sample_array[base_pairs].res_id, optimal_solution
-        ):
-            if order == 1:
-                assert (
-                    set(base_pair) in pseudoknot_order_one
-                    or set(base_pair) in pseudoknot_order_one_or_two
-                )
-            elif order == 2:
-                assert set(base_pair) in pseudoknot_order_one_or_two
+        for pair in pseudoknot_order_one:
+            assert optimal_solution[res_ids.index(pair)] == 1
+        assert sorted(
+            optimal_solution[res_ids.index(pair)]
+            for pair in pseudoknot_order_one_to_three
+        ) == [1, 2, 3]
+        assert tuple(
+            optimal_solution[res_ids.index(pair)] for pair in pseudoknot_alternatives
+        ) in [(2, 0), (0, 1)]
+        # Assert that all other base pairs are not part of a pseudoknot
+        assert np.count_nonzero(optimal_solution) == (
+            len(pseudoknot_order_one) + len(pseudoknot_order_one_to_three) + 1
+        )
 
 
 def load_test(name):
