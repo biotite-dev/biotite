@@ -272,6 +272,13 @@ def _convert_to_loc_string(locs: Iterable[Location]) -> str:
         if loc.strand == Location.Strand.REVERSE:
             loc_string = f"complement({loc_string})"
     else:
+        # The order within 'join()' defines the order in which the segments
+        # are concatenated: Use the same order as 'AnnotatedSequence' does
+        # for indexing with a feature
+        if all(loc.strand == Location.Strand.REVERSE for loc in locs):
+            locs = sorted(locs, key=lambda loc: loc.last, reverse=True)
+        else:
+            locs = sorted(locs, key=lambda loc: loc.first)
         loc_string = ",".join([_convert_to_loc_string([loc]) for loc in locs])
         loc_string = f"join({loc_string})"
     return loc_string
