@@ -852,7 +852,8 @@ def base_pairs(
     limited as the hydrogen bonds can be only checked be checked for
     plausibility.
     A hydrogen bond is considered as plausible if a cutoff of 3.6 Å
-    between N/O atom pairs is met. 3.6Å was chosen as hydrogen bonds are
+    between N/O atom pairs, where at least one atom is a base atom, is
+    met. 3.6Å was chosen as hydrogen bonds are
     typically 1.5-2.5Å in length. N-H and O-H bonds have a length of
     1.00Å and 0.96Å respectively. Thus, including some buffer, a 3.6Å
     cutoff should cover all hydrogen bonds.
@@ -904,8 +905,9 @@ def base_pairs(
     # where each base is identified as the first index of its respective
     # residue
     n_o_mask = np.isin(nucleosides.element, ["N", "O"])
+    # A hydrogen bond between two sugars does not make a base pair
     basepair_candidates, n_o_matches = _get_proximate_residues(
-        nucleosides, n_o_mask, 3.6
+        nucleosides, n_o_mask, 3.6, _filter_base_atoms(nucleosides)
     )
 
     # Contains the plausible base pairs
@@ -1075,12 +1077,16 @@ def _check_dssr_criteria(
         # Generate input atom array for ``hbond``
         potential_basepair = basepair[0] + basepair[1]
 
-        # Get the number of hydrogen bonds
-        bonds = len(
-            hbond(
-                potential_basepair,
-                np.ones_like(potential_basepair, dtype=bool),
-                np.ones_like(potential_basepair, dtype=bool),
+        # Get the number of hydrogen bonds involving a base atom
+        triplets = hbond(
+            potential_basepair,
+            np.ones_like(potential_basepair, dtype=bool),
+            np.ones_like(potential_basepair, dtype=bool),
+        )
+        base_atom_mask = _filter_base_atoms(potential_basepair)
+        bonds = int(
+            np.count_nonzero(
+                base_atom_mask[triplets[:, 0]] | base_atom_mask[triplets[:, 2]]
             )
         )
 
@@ -1369,10 +1375,30 @@ def map_nucleotide(
     return best_base, False
 
 
+def _filter_base_atoms(atom_array: AtomArray[N]) -> NDArray1[N, np.bool_]:
+    """
+    Filter for the atoms of a nucleoside that are part of the base, i.e.
+    not part of the sugar.
+
+    Parameters
+    ----------
+    atom_array : AtomArray, shape=(n,)
+        The nucleoside atoms, i.e. the phosphate must be already removed.
+
+    Returns
+    -------
+    filter : ndarray, dtype=bool, shape=(n,)
+        ``True`` for all base atoms.
+    """
+    # The names of sugar atoms end with a prime
+    return ~np.char.endswith(atom_array.atom_name, "'")
+
+
 def _get_proximate_residues(
     atom_array: AtomArray[N],
     boolean_mask: NDArray1[N, np.bool_],
     cutoff: float,
+    required_mask: NDArray1[N, np.bool_] | None = None,
 ) -> tuple[NDArray2[K, C2, np.integer], NDArray1[K, np.integer]]:
     """
     Filter for residue pairs based on the distance between selected
@@ -1386,6 +1412,9 @@ def _get_proximate_residues(
         The selection of atoms.
     cutoff : integer
         The maximum distance between the atoms of the two residues.
+    required_mask : ndarray, dtype=bool, shape=(n,), optional
+        If given, only atom pairs are considered, where at least one of
+        the two atoms is selected by this mask.
 
     Returns
     -------
@@ -1408,7 +1437,11 @@ def _get_proximate_residues(
     pairs = []
     for candidate, partners in zip(np.argwhere(boolean_mask)[:, 0], indices):
         for partner in partners:
-            if partner != -1:
+            if partner != -1 and (
+                required_mask is None
+                or required_mask[candidate]
+                or required_mask[partner]
+            ):
                 pairs.append((candidate, partner))
 
     # Get the residue starts for the indices of the candidate/partner
