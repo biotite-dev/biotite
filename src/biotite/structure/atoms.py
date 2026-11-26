@@ -1588,7 +1588,10 @@ def repeat(
                 f"Expected 4 dimensions for the coordinate array, but got {coord.ndim}"
             )
         repeated = AtomArrayStack(atoms.stack_depth(), new_length)
-        repeated.coord = coord.reshape((atoms.stack_depth(), new_length, 3))
+        # Move the repetition axis behind the model axis: (k,m,n,3) -> (m,k,n,3)
+        repeated.coord = np.swapaxes(coord, 0, 1).reshape(
+            (atoms.stack_depth(), new_length, 3)
+        )
 
     else:
         raise TypeError(
