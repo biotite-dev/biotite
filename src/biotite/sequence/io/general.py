@@ -108,11 +108,13 @@ def save_sequence(file_path: PathLike[str] | str, sequence: Sequence) -> None:
         )
 
         file = GenBankFile()
-        set_locus(file, GenBankLocus("sequence", len(sequence)))
         if not isinstance(sequence, (NucleotideSequence, ProteinSequence)):
             raise TypeError(
                 "GenBank files require a NucleotideSequence or ProteinSequence"
             )
+        # The molecule type determines the unit of the sequence length
+        mol_type = "DNA" if isinstance(sequence, NucleotideSequence) else None
+        set_locus(file, GenBankLocus("sequence", len(sequence), mol_type))
         set_sequence(file, sequence)
         file.write(file_path)
     else:
