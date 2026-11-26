@@ -870,7 +870,15 @@ def _escape(array: NDArray1[Any, np.str_]) -> NDArray1[Any, np.str_]:
         np.strings.find(array, "\t") != -1
     )
     is_empty = np.strings.str_len(array) == 0
-    starts_with_underscore = np.strings.startswith(array, "_")
+    # Unquoted values must not start with these characters or be reserved words
+    lower = np.strings.lower(array)
+    is_reserved = (
+        np.isin(lower, ["loop_", "stop_", "global_"])
+        | np.strings.startswith(lower, "data_")
+        | np.strings.startswith(lower, "save_")
+    )
+    for char in "_#$[];":
+        is_reserved |= np.strings.startswith(array, char)
 
     # A value with linebreaks or with both quote types must be represented
     # as multiline value, as neither quote type can be used for escaping
@@ -878,16 +886,12 @@ def _escape(array: NDArray1[Any, np.str_]) -> NDArray1[Any, np.str_]:
     empty_mask = ~multiline_mask & is_empty
     # Values with an embedded single quote are escaped with double quotes,
     # all other values that require escaping use single quotes
-    double_quote_mask = (
-        ~multiline_mask & ~is_empty & ~starts_with_underscore & has_single_quote
-    )
+    double_quote_mask = ~multiline_mask & ~is_empty & has_single_quote
     single_quote_mask = (
         ~multiline_mask
         & ~is_empty
-        & (
-            starts_with_underscore
-            | (~has_single_quote & (has_double_quote | has_whitespace))
-        )
+        & ~has_single_quote
+        & (is_reserved | has_double_quote | has_whitespace)
     )
 
     # Quoting adds two characters

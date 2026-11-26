@@ -27,6 +27,18 @@ ESCAPE_STRINGS = [
     "\t",
     """single"anddouble"marks""",
     """single' and double" marks with whitespace""",
+    # Reserved characters and words
+    "#text",
+    ";text",
+    "$text",
+    "[text",
+    "]text",
+    "loop_",
+    "stop_",
+    "global_",
+    "data_text",
+    "save_text",
+    "_te' xt",
 ]
 
 
@@ -52,12 +64,15 @@ def test_escape(string, looped):
     """
     Test whether values that need to be escaped are properly escaped.
     The confirmation is done by deserialize the serialized value.
+    The value is written as part of a file, as reserved words are only
+    misinterpreted in the context of a file.
     """
     LENGTH = 5
     ref_value = np.full(LENGTH, string).tolist() if looped else string
     ref_category = pdbx.CIFCategory({"test_col": ref_value}, "test_cat")
+    ref_file = pdbx.CIFFile({"test_block": pdbx.CIFBlock({"test_cat": ref_category})})
 
-    test_category = pdbx.CIFCategory.deserialize(ref_category.serialize())
+    test_category = pdbx.CIFFile.deserialize(ref_file.serialize()).block["test_cat"]
     if looped:
         test_value = test_category["test_col"].as_array(str).tolist()
     else:
