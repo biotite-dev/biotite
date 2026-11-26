@@ -101,6 +101,54 @@ def test_scoring(sequences, param):
     )
 
 
+@pytest.mark.parametrize(
+    "method, seq1, seq2, kwargs",
+    [
+        # The optimal path leaves the edge of the band with a penalized gap,
+        # i.e. the first alignment column is a gap
+        ("align_banded", "GAAAA", "TAAAAC", {"band": (0, 2), "gap_penalty": -2}),
+        ("align_banded", "TAAAAC", "GAAAA", {"band": (-2, 0), "gap_penalty": -2}),
+        ("align_banded", "GAAAA", "TAAAAC", {"band": (0, 2), "gap_penalty": (-2, -1)}),
+        # The same path in the full table
+        (
+            "align_optimal",
+            "GAAAA",
+            "TAAAAC",
+            {"gap_penalty": -2, "terminal_penalty": False},
+        ),
+    ],
+)
+def test_scoring_edge_cases(method, seq1, seq2, kwargs):
+    """
+    Same as :func:`test_scoring()`, but for manually created minimal edge cases:
+    The score of each returned alignment must be reproduced by the standalone
+    :func:`score()` function and by the ``score_only`` mode.
+    """
+    align_function = getattr(align, method)
+    seq1 = seq.NucleotideSequence(seq1)
+    seq2 = seq.NucleotideSequence(seq2)
+    matrix = align.SubstitutionMatrix.std_nucleotide_matrix()
+
+    alignments = align_function(seq1, seq2, matrix=matrix, **kwargs)
+
+    for alignment in alignments:
+        # align_banded() omits the columns of the unpenalized terminal gaps,
+        # so each gap that remains in its alignments is penalized
+        assert (
+            align.score(
+                alignment,
+                matrix,
+                kwargs["gap_penalty"],
+                terminal_penalty=kwargs.get("terminal_penalty", True),
+            )
+            == alignment.score
+        )
+    assert (
+        align_function(seq1, seq2, matrix=matrix, score_only=True, **kwargs)
+        == alignments[0].score
+    )
+
+
 @pytest.mark.parametrize("param", _PARAMS, ids=_IDS)
 def test_match_mismatch(sequences, param):
     """
