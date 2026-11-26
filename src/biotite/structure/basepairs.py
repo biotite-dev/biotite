@@ -1218,8 +1218,9 @@ def _match_base(
             IncompleteStructureWarning,
         )
         return None
-    # Reorder the atoms of the nucleotide to obtain the standard RCSB
-    # PDB atom order.
+    # Reorder the atoms of the nucleotide to obtain the atom order of the
+    # standard base (modified nucleotides may have a different order)
+    nucleotide_matched.res_name[:] = std_base.res_name[0]
     nucleotide_matched = nucleotide_matched[standardize_order(nucleotide_matched)]
 
     # Match the selected std_base to the base.
