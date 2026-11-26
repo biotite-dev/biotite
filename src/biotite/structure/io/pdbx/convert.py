@@ -2265,6 +2265,14 @@ def get_sse(
             chains = category["beg_label_asym_id"].as_array(str)
             start_positions = category["beg_label_seq_id"].as_array(int)
             end_positions = category["end_label_seq_id"].as_array(int)
+            if category_name == "struct_conf":
+                # 'struct_conf' may also contain turns, bends and strands
+                is_helix = np.strings.startswith(
+                    category["conf_type_id"].as_array(str), "HELX"
+                )
+                chains = chains[is_helix]
+                start_positions = start_positions[is_helix]
+                end_positions = end_positions[is_helix]
 
             # set alpha helix positions
             for chain, start, end in zip(chains, start_positions, end_positions):
