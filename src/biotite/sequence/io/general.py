@@ -204,7 +204,7 @@ def save_sequences(
         for identifier, sequence in sequences.items():
             # Scores are set to 0 since no score information is supplied
             scores = np.zeros(len(sequence))
-            file["identifer"] = str(sequence), scores
+            file[identifier] = str(sequence), scores
         file.write(file_path)
     elif suffix in [".gb", ".gbk", ".gp"]:
         raise NotImplementedError(
