@@ -412,6 +412,8 @@ impl CellList {
                     }
                 }
             }
+            // The box may have any float dtype
+            let box_object = np.call_method1("asarray", (&box_object, np.getattr("float32")?))?;
 
             orig_length = coord_object.call_method0("__len__")?.extract()?;
             coord_object = struc
