@@ -154,15 +154,15 @@ def get_locus(gb_file: GenBankFile) -> GenBankLocus:
     else:
         is_circular = False
 
-    # The next field should be the division
-    if fields[next_idx] in divisions:
+    # The next field should be the division, but it may be missing
+    if next_idx < len(fields) and fields[next_idx] in divisions:
         division = fields[next_idx]
         next_idx += 1
     else:
         division = None
 
-    # The last field is a date in the format DD-M-YYYY
-    date = fields[next_idx]
+    # The last field is a date in the format DD-M-YYYY, but it may be missing
+    date = fields[next_idx] if next_idx < len(fields) else None
 
     return GenBankLocus(name, length, mol_type, is_circular, division, date)
 
