@@ -757,6 +757,10 @@ def base_stacking(
 
             transformed_std_vectors[i] = base_tuple
 
+        if any(vectors is None for vectors in transformed_std_vectors):
+            # At least one of the bases could not be mapped
+            continue
+
         normal_vectors = np.vstack(
             (transformed_std_vectors[0][1], transformed_std_vectors[1][1])  # pyright: ignore[reportOptionalSubscript]
         )
