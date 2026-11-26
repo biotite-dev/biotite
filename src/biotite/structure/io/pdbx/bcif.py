@@ -15,7 +15,13 @@ from os import PathLike
 from typing import IO, Any, Self, TypeAlias
 import msgpack
 import numpy as np
-from biotite.file import File, SerializationError, is_binary, is_open_compatible
+from biotite.file import (
+    DeserializationError,
+    File,
+    SerializationError,
+    is_binary,
+    is_open_compatible,
+)
 from biotite.structure.io.pdbx.component import (
     MaskValue,
     _Component,
@@ -375,6 +381,8 @@ class BinaryCIFCategory(_HierarchicalContainer[BinaryCIFColumn]):
         The number of rows in the category, i.e. the length of each
         column.
         By default, the row count is determined when the first column is added.
+        It cannot be changed afterwards:
+        Setting a column with a deviating length raises an exception.
 
     Examples
     --------
@@ -411,6 +419,9 @@ class BinaryCIFCategory(_HierarchicalContainer[BinaryCIFColumn]):
 
         self._row_count = row_count
         super().__init__(columns)
+        if self._row_count is None and len(columns) > 0:
+            # The first column determines the row count
+            self._row_count = len(next(iter(self.values())))
 
     @property
     def row_count(self) -> int:
@@ -459,8 +470,21 @@ class BinaryCIFCategory(_HierarchicalContainer[BinaryCIFColumn]):
         key: str,
         element: BinaryCIFColumn | NDArray1[Any, Any] | Sequence[Any],
     ) -> None:
-        if not isinstance(element, (BinaryCIFColumn, dict)):
+        if isinstance(element, dict):
+            # The length of a serialized column is only known after deserialization
+            try:
+                element = BinaryCIFColumn.deserialize(element)
+            except Exception:
+                raise DeserializationError("Failed to deserialize given value")
+        elif not isinstance(element, BinaryCIFColumn):
             element = BinaryCIFColumn(element)
+        if self._row_count is None:
+            self._row_count = len(element)
+        elif len(element) != self._row_count:
+            raise ValueError(
+                f"Column '{key}' has length {len(element)}, "
+                f"but the category has {self._row_count} rows"
+            )
         super().__setitem__(key, element)
 
 
