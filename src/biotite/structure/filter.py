@@ -28,6 +28,7 @@ from collections.abc import Iterable, Sequence
 from typing import Any
 import numpy as np
 from biotite.structure.atoms import AtomArray, AtomArrayStack
+from biotite.structure.chains import get_chain_starts
 from biotite.structure.info.groups import (
     amino_acid_names,
     carbohydrate_names,
@@ -421,7 +422,19 @@ def filter_polymer(
         array = array[0]
 
     type_mask = _polymer_type_mask(array, pol_type)
-    segment_starts = np.concatenate(([0], check_res_id_continuity(array), [len(array)]))
+    # A polymer is interrupted by a residue ID discontinuity, a new chain
+    # or a residue that is not of the given polymer type
+    segment_starts = np.unique(
+        np.concatenate(
+            (
+                [0],
+                check_res_id_continuity(array),
+                get_chain_starts(array),
+                np.flatnonzero(type_mask[1:] != type_mask[:-1]) + 1,
+            )
+        )
+    )
+    segment_starts = np.append(segment_starts, len(array))
     segment_ids = get_all_segment_positions(segment_starts, len(array))[type_mask]
     # Count the residues of the selected atoms in each segment,
     # residues are also separated at segment borders
@@ -431,7 +444,7 @@ def filter_polymer(
     residue_counts = np.bincount(
         segment_ids[is_residue_start], minlength=len(segment_starts) - 1
     )
-    return spread_segment_wise(segment_starts, residue_counts >= min_size)  # pyright: ignore[reportReturnType]
+    return type_mask & spread_segment_wise(segment_starts, residue_counts >= min_size)
 
 
 def filter_intersection(

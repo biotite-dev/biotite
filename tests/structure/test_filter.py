@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import biotite.structure as struc
+import biotite.structure.info as info
 import biotite.structure.io.pdbx as pdbx
 from tests.util import data_dir
 
@@ -212,6 +213,40 @@ def test_polymer_filter(canonical_sample_nucleotide, sample_carbohydrate, as_sta
     a_carb = a[..., struc.filter_polymer(a, min_size=4, pol_type="carb")]
     assert set(a_carb.chain_id) == {"B"}
     assert struc.get_residue_count(a_carb) == 5
+
+
+@pytest.mark.parametrize(
+    "res_names, chain_ids, ref_selected",
+    [
+        # Genuine dipeptide
+        (["ALA", "GLY"], ["A", "A"], [True, True]),
+        # Dipeptide followed by water
+        (["ALA", "GLY", "HOH"], ["A", "A", "A"], [True, True, False]),
+        # Single residues in different chains
+        (["ALA", "GLY"], ["A", "B"], [False, False]),
+        # Single residues interrupted by another residue type
+        (["ALA", "HOH", "GLY"], ["A", "A", "A"], [False, False, False]),
+        # Single residue next to a dipeptide in another chain
+        (["ALA", "GLY", "ALA"], ["A", "B", "B"], [False, True, True]),
+        # Peptide directly followed by a nucleotide chain
+        (["ALA", "GLY", "DA", "DT"], ["A", "A", "B", "B"], [True, True, False, False]),
+    ],
+)
+def test_polymer_filter_segments(res_names, chain_ids, ref_selected):
+    """
+    Only residues of the requested polymer type, that form a segment of at least
+    `min_size` residues within the same chain, should be selected, even if the
+    residue IDs of all residues are continuous.
+    Test this on small structures assembled from single residues.
+    """
+    atoms = struc.concatenate([info.residue(res_name) for res_name in res_names])
+    residue_lengths = [info.residue(res_name).array_length() for res_name in res_names]
+    atoms.res_id = np.repeat(np.arange(1, len(res_names) + 1), residue_lengths)
+    atoms.chain_id = np.repeat(chain_ids, residue_lengths)
+
+    mask = struc.filter_polymer(atoms, min_size=2, pol_type="peptide")
+
+    assert mask.tolist() == np.repeat(ref_selected, residue_lengths).tolist()
 
 
 def test_intersection_filter(canonical_sample_protein):
