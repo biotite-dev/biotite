@@ -68,7 +68,8 @@ def get_annotation(
     ### Process only relevant features and put them into an Annotation
     annotation = Annotation()
     # Regex to separate qualifiers from each other
-    regex = re.compile(r"""(".*?"|/.*?=)""")
+    # Quotes inside a qualifier value are escaped by doubling them
+    regex = re.compile(r"""("(?:[^"]|"")*"|/.*?=)""")
     for key, val in feature_list:
         if include_only is None or key in include_only:
             qual_dict = {}
@@ -127,11 +128,15 @@ def get_annotation(
                             qual_key = subpart[1:-1]
                 else:
                     # This is a qualifier value
-                    # -> remove potential quotes
+                    # -> remove potential quotes and unescape inner quotes
                     if part[0] == '"':
-                        qual_val = part[1:-1]
+                        qual_val = part[1:-1].replace('""', '"')
                     else:
                         qual_val = part
+                    if qual_key == "translation":
+                        # Line breaks within the amino acid sequence
+                        # do not represent spaces
+                        qual_val = qual_val.replace(" ", "")
                     # Store qualifier pair
                     _set_qual(qual_dict, qual_key, qual_val)
                     qual_key = None
@@ -242,7 +247,9 @@ def set_annotation(gb_file: GenBankFile, annotation: Annotation) -> None:
             else:
                 for val in values.split("\n"):
                     line = " " * _QUAL_START
-                    line += f'/{key}="{val}"'
+                    # Quotes inside a qualifier value are escaped by doubling them
+                    escaped_val = val.replace('"', '""')
+                    line += f'/{key}="{escaped_val}"'
                     lines.append(line)
     gb_file.set_field(GenBankRecord("FEATURES", lines))
 

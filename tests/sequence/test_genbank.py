@@ -1,4 +1,6 @@
+import io
 from tempfile import TemporaryFile
+import numpy as np
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.io.genbank as gb
@@ -230,3 +232,110 @@ def test_parse_locus(locus_content, expected_result):
     gb_file = gb.GenBankFile()
     gb_file.append(gb.GenBankRecord("LOCUS", [locus_content]))
     assert gb.get_locus(gb_file) == expected_result
+
+
+def _random_qualifier_value(seed):
+    """
+    Create a random qualifier value that is rich in characters with a special
+    meaning in the feature table.
+    """
+    rng = np.random.default_rng(seed)
+    return "".join(rng.choice(list('ab"/= '), size=rng.integers(1, 30))).strip()
+
+
+@pytest.mark.parametrize(
+    "qual",
+    [
+        {"note": 'the "abc" gene'},
+        {"note": '"quoted from start to end"'},
+        {"note": '"'},
+        {"note": '""'},
+        {"note": ""},
+        {"note": 'first "value"\nsecond "value"'},
+        {"note": 'not a /gene="abc" qualifier'},
+        {"pseudo": None, "note": 'the "abc" gene', "gene": "abc"},
+        {"translation": "MATLTAKNLAKAYKGRRVVEDVSLTVNSGEIVGLLGPNGAGKTT"},
+    ]
+    + [{"note": _random_qualifier_value(seed)} for seed in range(20)],
+)
+def test_qualifier_roundtrip(qual):
+    """
+    Writing an annotation into a GenBank file and reading it again should
+    restore the original qualifiers, including values that require escaping.
+    """
+    ref_annotation = seq.Annotation(
+        [seq.Feature("CDS", [seq.Location(1, 10)], qual)],
+    )
+
+    gb_file = gb.GenBankFile()
+    gb.set_annotation(gb_file, ref_annotation)
+    temp = io.StringIO()
+    gb_file.write(temp)
+    temp.seek(0)
+    test_annotation = gb.get_annotation(gb.GenBankFile.read(temp))
+
+    assert test_annotation == ref_annotation
+
+
+@pytest.mark.parametrize(
+    ["qualifier_lines", "expected_qual"],
+    [
+        # Escaped quotes
+        (['/note="the ""abc"" gene"'], {"note": 'the "abc" gene'}),
+        (['/note="""abc"""'], {"note": '"abc"'}),
+        (['/note=""""'], {"note": '"'}),
+        # Escaped quotes in a value spanning multiple lines
+        (['/note="the ""abc""', 'gene ""def"""'], {"note": 'the "abc" gene "def"'}),
+        # Escaped quotes in combination with other qualifiers
+        (
+            ["/pseudo", '/note="the ""abc"" gene"', '/gene="abc"', "/codon_start=1"],
+            {
+                "pseudo": None,
+                "note": 'the "abc" gene',
+                "gene": "abc",
+                "codon_start": "1",
+            },
+        ),
+        # Qualifier-like text within a value
+        (
+            ['/note="not a /gene=""abc"" qualifier"'],
+            {"note": 'not a /gene="abc" qualifier'},
+        ),
+        # Line breaks in free text represent spaces...
+        (['/note="some free', 'text"'], {"note": "some free text"}),
+        # ...but not in amino acid sequences
+        (
+            [
+                '/translation="MATLTAKNLAKAYKGRRVVEDVSLTVNSGEIVGLLGPNGAGKTT',
+                "TFYMVVGIVPRDAGNIIIDDDDISLLPLHARARRGIGYLPQEASIFRRLSVYDNLMAV",
+                'KLA"',
+            ],
+            {
+                "translation": "MATLTAKNLAKAYKGRRVVEDVSLTVNSGEIVGLLGPNGAGKTT"
+                "TFYMVVGIVPRDAGNIIIDDDDISLLPLHARARRGIGYLPQEASIFRRLSVYDNLMAV"
+                "KLA"
+            },
+        ),
+    ],
+)
+def test_parse_qualifiers(qualifier_lines, expected_qual):
+    """
+    Check whether qualifiers in the content of a GenBank file are parsed into
+    the expected qualifier values.
+    """
+    content = (
+        "LOCUS       X                         10 bp    DNA     linear   BCT 01-JAN-2000\n"
+        "FEATURES             Location/Qualifiers\n"
+        "     CDS             1..10\n"
+        + "".join(" " * 21 + line + "\n" for line in qualifier_lines)
+        + "ORIGIN\n"
+        "        1 acgtacgtac\n"
+        "//\n"
+    )
+    gb_file = gb.GenBankFile.read(io.StringIO(content))
+
+    annotation = gb.get_annotation(gb_file)
+
+    assert list(annotation) == [
+        seq.Feature("CDS", [seq.Location(1, 10)], expected_qual)
+    ]
