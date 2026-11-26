@@ -213,11 +213,11 @@ fn hybridization_from_partner_count(element: &str, n_partners: usize) -> Hybridi
             1 => Hybridization::Sp3,
             _ => Hybridization::None,
         },
-        "Cl" => match n_partners {
+        "CL" => match n_partners {
             1 => Hybridization::Sp3,
             _ => Hybridization::None,
         },
-        "Br" => match n_partners {
+        "BR" => match n_partners {
             1 => Hybridization::Sp3,
             _ => Hybridization::None,
         },
@@ -232,6 +232,7 @@ fn hybridization_from_partner_count(element: &str, n_partners: usize) -> Hybridi
 /// Look up electronegativity parameters for a given element and
 /// hybridization state.
 fn lookup_electronegativity(element: &str, hybridization: Hybridization) -> LookupResult {
+    // Element symbols are matched in upper case, as they appear in the `element` annotation
     let (a, b, c) = match element {
         "H" => match hybridization {
             // Hydrogen is always treated as s-orbital
@@ -263,11 +264,11 @@ fn lookup_electronegativity(element: &str, hybridization: Hybridization) -> Look
             Hybridization::Sp3 => (14.66, 13.85, 2.31),
             _ => return LookupResult::UnknownHybridization,
         },
-        "Cl" => match hybridization {
+        "CL" => match hybridization {
             Hybridization::Sp3 => (11.00, 9.69, 1.35),
             _ => return LookupResult::UnknownHybridization,
         },
-        "Br" => match hybridization {
+        "BR" => match hybridization {
             Hybridization::Sp3 => (10.08, 8.47, 1.16),
             _ => return LookupResult::UnknownHybridization,
         },
