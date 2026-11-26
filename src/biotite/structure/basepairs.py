@@ -773,7 +773,7 @@ def base_stacking(
         if stacked:
             stacked_bases.append((base1_index, base2_index))
 
-    return np.array(stacked_bases)
+    return np.array(stacked_bases, dtype=int).reshape(-1, 2)  # pyright: ignore[reportReturnType]
 
 
 def base_pairs(
@@ -942,7 +942,7 @@ def base_pairs(
             if unique:
                 basepairs_hbonds.append(hbonds)
 
-    basepair_array = np.array(basepairs)
+    basepair_array = np.array(basepairs, dtype=int).reshape(-1, 2)
 
     if unique:
         # Contains all non-unique base pairs that are flagged to be
@@ -973,7 +973,7 @@ def base_pairs(
         basepair_array = np.where(boolean_mask)[0][basepair_array]
         for i, row in enumerate(basepair_array):
             basepair_array[i] = get_residue_starts_for(atom_array, row)
-    return basepair_array
+    return basepair_array  # pyright: ignore[reportReturnType]
 
 
 def _check_dssr_criteria(
@@ -1398,6 +1398,10 @@ def _get_proximate_residues(
         specified cutoff
     """
 
+    if not np.any(boolean_mask):
+        # No atoms are selected -> there are no candidates
+        return np.zeros((0, 2), dtype=int), np.zeros(0, dtype=int)  # pyright: ignore[reportReturnType]
+
     # Get the indices of the atoms that are within the maximum cutoff
     # of each other
     indices = CellList(atom_array, cutoff, selection=boolean_mask).get_atoms(
@@ -1413,7 +1417,7 @@ def _get_proximate_residues(
 
     # Get the residue starts for the indices of the candidate/partner
     # indices.
-    pairs = np.array(pairs)
+    pairs = np.array(pairs, dtype=int).reshape(-1, 2)
     basepair_candidates_shape = pairs.shape
     pairs = get_residue_starts_for(atom_array, pairs.flatten()).reshape(
         basepair_candidates_shape
