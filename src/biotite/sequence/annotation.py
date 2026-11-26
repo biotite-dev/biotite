@@ -562,7 +562,8 @@ class AnnotatedSequence(Copyable):
     When using a :class:`Feature` for setting an
     :class:`AnnotatedSequence` with a sequence, the new sequence is
     replacing the locations of the
-    :class:`Feature`.
+    :class:`Feature`, i.e. it is the inverse operation of getting the
+    sequence with a :class:`Feature`.
     Note the the replacing sequence must have the same length as the
     sequence of the :class:`Feature` index.
 
@@ -753,27 +754,8 @@ class AnnotatedSequence(Copyable):
                 raise ValueError("Feature does not contain any locations")
             # Start by creating an empty sequence
             sub_seq = self._sequence.copy(new_seq_code=np.array([]))
-            # Locations need to be sorted, as otherwise the locations
-            # chunks would be merged in the wrong order
-            # The order depends on whether the locs are on the forward
-            # or reverse strand
-            strand = None
-            for loc in locs:
-                if loc.strand == strand:
-                    pass
-                elif strand is None:
-                    strand = loc.strand
-                else:  # loc.strand != strand
-                    raise ValueError(
-                        "All locations of the feature must have the same "
-                        "strand direction"
-                    )
-            if strand == Location.Strand.FORWARD:
-                sorted_locs = sorted(locs, key=lambda loc: loc.first)
-            else:
-                sorted_locs = sorted(locs, key=lambda loc: loc.last, reverse=True)
             # Merge the sequences corresponding to the ordered locations
-            for loc in sorted_locs:
+            for loc in _sort_locs(locs):
                 slice_start = loc.first - self._seqstart
                 # +1 due to exclusive stop
                 slice_stop = loc.last - self._seqstart + 1
@@ -827,14 +809,21 @@ class AnnotatedSequence(Copyable):
             # with length equal to sum of location lengths
             sub_seq = item
             sub_seq_i = 0
-            for loc in index.locs:
+            # Use the same location order as in '__getitem__()'
+            for loc in _sort_locs(index.locs):
                 slice_start = loc.first - self._seqstart
                 # +1 due to exclusive stop
                 slice_stop = loc.last - self._seqstart + 1
                 interval_size = slice_stop - slice_start
-                self._sequence[slice_start:slice_stop] = sub_seq[
-                    sub_seq_i : sub_seq_i + interval_size
-                ]
+                new_seq = sub_seq[sub_seq_i : sub_seq_i + interval_size]
+                if loc.strand == Location.Strand.REVERSE:
+                    if not isinstance(new_seq, NucleotideSequence):
+                        raise ValueError(
+                            "The reverse complement is only defined for "
+                            "nucleotide sequences"
+                        )
+                    new_seq = new_seq.reverse().complement()
+                self._sequence[slice_start:slice_stop] = new_seq
                 sub_seq_i += interval_size
         elif isinstance(index, slice):
             # Sequence start correction
@@ -862,3 +851,27 @@ class AnnotatedSequence(Copyable):
             and self.sequence == item.sequence
             and self._seqstart == item._seqstart
         )
+
+
+def _sort_locs(locs: Iterable[Location]) -> list[Location]:
+    """
+    Sort the locations of a feature in the order, in which the corresponding
+    subsequences are concatenated.
+
+    The order depends on whether the locations are on the forward or reverse
+    strand.
+    """
+    strand = None
+    for loc in locs:
+        if loc.strand == strand:
+            pass
+        elif strand is None:
+            strand = loc.strand
+        else:  # loc.strand != strand
+            raise ValueError(
+                "All locations of the feature must have the same strand direction"
+            )
+    if strand == Location.Strand.FORWARD:
+        return sorted(locs, key=lambda loc: loc.first)
+    else:
+        return sorted(locs, key=lambda loc: loc.last, reverse=True)
