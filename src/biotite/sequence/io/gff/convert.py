@@ -16,6 +16,8 @@ def get_annotation(gff_file: GFFFile) -> Annotation:
     the locations (``loc``) are taken from the *start*, *end* and
     *strand* columns and  the *attributes* column is parsed into the
     :attr:`Feature.qual` attribute.
+    Multiple values of an attribute are separated by a line break in the
+    qualifier value.
     Multiple entries with the same ``ID`` attribute are interpreted
     as the same feature.
     Thus, for entries with the same ``ID``, the *type* and *attributes*
@@ -51,7 +53,11 @@ def get_annotation(gff_file: GFFFile) -> Annotation:
             # Track new feature
             current_key = record.type
             current_locs = [Location(record.start, record.end, strand)]
-            current_qual = dict(record.attributes)
+            # A qualifier with multiple values is separated by line breaks
+            current_qual = {
+                key: "\n".join(val) if isinstance(val, list) else val
+                for key, val in record.attributes.items()
+            }
         else:
             current_locs.append(Location(record.start, record.end, strand))
         current_id = id
@@ -74,6 +80,8 @@ def set_annotation(
     Each feature will get one entry for each location it has.
     :class:`Feature` objects with multiple locations require the ``ID``
     qualifier in its :attr:`Feature.qual` attribute.
+    A qualifier value containing line breaks is written as attribute
+    with multiple values.
 
     Parameters
     ----------
@@ -107,7 +115,11 @@ def set_annotation(
         ## score ##
         score = None
         ## attributes ##
-        attributes = feature.qual
+        # A qualifier with multiple values is separated by line breaks
+        attributes = {
+            key: val.split("\n") if val is not None and "\n" in val else val
+            for key, val in feature.qual.items()
+        }
         # The previous properties are shared by all entries
         # for this feature
         # The following loop handles properties that change with each
