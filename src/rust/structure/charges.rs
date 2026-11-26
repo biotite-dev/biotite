@@ -240,7 +240,7 @@ fn lookup_electronegativity(element: &str, hybridization: Hybridization) -> Look
         },
         "C" => match hybridization {
             Hybridization::Sp3 => (7.98, 9.18, 1.88),
-            Hybridization::Sp2 => (8.79, 9.18, 1.88),
+            Hybridization::Sp2 => (8.79, 9.32, 1.51),
             Hybridization::Sp => (10.39, 9.45, 0.73),
             _ => return LookupResult::UnknownHybridization,
         },
