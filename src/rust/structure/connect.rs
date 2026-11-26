@@ -914,15 +914,18 @@ fn squared_distance(coord: &ArrayView2<f32>, a1: usize, a2: usize) -> f32 {
     dx * dx + dy * dy + dz * dz
 }
 
+// The link types are compared case-insensitively,
+// as their capitalization is not consistent in the CCD
 fn is_peptide_link(link_type: &str) -> bool {
-    matches!(
-        link_type,
-        "PEPTIDE LINKING" | "L-PEPTIDE LINKING" | "D-PEPTIDE LINKING"
-    )
+    ["PEPTIDE LINKING", "L-PEPTIDE LINKING", "D-PEPTIDE LINKING"]
+        .iter()
+        .any(|peptide_link| link_type.eq_ignore_ascii_case(peptide_link))
 }
 
 fn is_nucleic_link(link_type: &str) -> bool {
-    matches!(link_type, "RNA LINKING" | "DNA LINKING")
+    ["RNA LINKING", "DNA LINKING"]
+        .iter()
+        .any(|nucleic_link| link_type.eq_ignore_ascii_case(nucleic_link))
 }
 
 /// Find all indices where a value occurs in an array.
