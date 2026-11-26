@@ -692,7 +692,13 @@ def convert_atoms(
                 )
         elif element == "C":
             if np.isin(
-                all_bond_types[i], [BondType.AROMATIC_SINGLE, BondType.AROMATIC_DOUBLE]
+                all_bond_types[i],
+                [
+                    BondType.AROMATIC_SINGLE,
+                    BondType.AROMATIC_DOUBLE,
+                    BondType.AROMATIC_TRIPLE,
+                    BondType.AROMATIC,
+                ],
             ).any():
                 # Aromatic carbon
                 atom_types[i] = "A"
