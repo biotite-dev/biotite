@@ -48,8 +48,10 @@ class GFFRecord:
         Strand of the feature, ``None`` if feature is not stranded.
     phase : int or None, optional
         Reading frame shift, ``None`` for non-CDS features.
-    attributes : dict of str -> (str or None), optional
+    attributes : dict of str -> (str or list of str or None), optional
         Additional properties of the feature.
+        An attribute with multiple values (separated by ``,`` in the
+        file) is represented by a list of strings.
         ``None`` values are written as empty values.
     """
 
@@ -61,7 +63,7 @@ class GFFRecord:
     score: float | None = None
     strand: Location.Strand | None = None
     phase: int | None = None
-    attributes: dict[str, str | None] = field(default_factory=dict)
+    attributes: dict[str, str | list[str] | None] = field(default_factory=dict)
 
 
 class GFFFile(TextFile):
@@ -400,7 +402,11 @@ class GFFFile(TextFile):
                 [
                     quote(key, safe=_NOT_QUOTED)
                     + "="
-                    + quote(val if val is not None else "", safe=_NOT_QUOTED)
+                    # Multiple values are separated by unescaped commas
+                    + ",".join(
+                        quote(v, safe=_NOT_QUOTED)
+                        for v in (val if isinstance(val, list) else [val or ""])
+                    )
                     for key, val in attributes.items()
                 ]
             )
@@ -423,19 +429,22 @@ class GFFFile(TextFile):
         )
 
     @staticmethod
-    def _parse_attributes(attributes: str) -> dict[str, str | None]:
+    def _parse_attributes(attributes: str) -> dict[str, str | list[str] | None]:
         """
         Parse the *attributes* string into a dictionary.
         """
         if attributes == ".":
             return {}
 
-        attrib_dict: dict[str, str | None] = {}
+        attrib_dict: dict[str, str | list[str] | None] = {}
         attrib_entries = attributes.split(";")
         for entry in attrib_entries:
             compounds = entry.split("=")
             if len(compounds) != 2:
                 raise InvalidFileError(f"Attribute entry '{entry}' is invalid")
             key, val = compounds
-            attrib_dict[unquote(key)] = unquote(val)
+            # Multiple values are separated by unescaped commas
+            # -> split before decoding, as a value may contain escaped commas
+            values = [unquote(v) for v in val.split(",")]
+            attrib_dict[unquote(key)] = values[0] if len(values) == 1 else values
         return attrib_dict
