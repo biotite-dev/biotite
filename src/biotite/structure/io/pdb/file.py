@@ -507,6 +507,9 @@ class PDBFile(RustPDBFile):
         # Add exclusive stop at end of records
         chain_set_start_indices.append(len(assembly_lines))
         assembly = None
+        # Each transformation gives a separate copy
+        # -> the 'sym_id' is continued across the sets of chains
+        sym_id_offset = 0
         for i in range(len(chain_set_start_indices) - 1):
             start = chain_set_start_indices[i]
             stop = chain_set_start_indices[i + 1]
@@ -546,6 +549,10 @@ class PDBFile(RustPDBFile):
             sub_assembly = _apply_transformations(
                 sub_structure, rotations, translations
             )
+            sub_assembly.set_annotation(
+                "sym_id", sub_assembly.get_annotation("sym_id") + sym_id_offset
+            )
+            sym_id_offset += len(rotations)
             # Merge the chains with IDs for this transformation
             # with chains from other transformations
             if assembly is None:

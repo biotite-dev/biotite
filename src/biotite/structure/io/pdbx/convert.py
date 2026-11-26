@@ -15,7 +15,6 @@ __all__ = [
 
 import itertools
 import warnings
-from collections import Counter
 from collections.abc import Iterable
 from typing import Any, Literal, TypeAlias, overload
 import numpy as np
@@ -1844,7 +1843,7 @@ def get_assembly(
 
     ### Get transformations and apply them to the affected asym IDs
     sub_assemblies = []
-    sym_id_counter = Counter()
+    sym_id_for_operation = {}
     for id, op_expr, asym_id_expr in zip(
         assembly_gen_category["assembly_id"].as_array(str),
         assembly_gen_category["oper_expression"].as_array(str),
@@ -1861,35 +1860,21 @@ def get_assembly(
                 sub_structure, transformations, operations
             )
 
-            # Add 'sym_id' annotation, that should increment for each 'oper_expression'
+            # The 'sym_id' identifies the operation: chains transformed by the same
+            # operation belong to the same copy, also across 'oper_expression's
+            sym_ids = [
+                sym_id_for_operation.setdefault(op, len(sym_id_for_operation))
+                for op in operations
+            ]
             sub_assembly.set_annotation(
-                "sym_id",
-                np.repeat(np.arange(len(operations)), sub_structure.array_length()),
+                "sym_id", np.repeat(sym_ids, sub_structure.array_length())
             )
-            # As different 'oper_expression's may comprise different chains
-            # increment the 'sym_id' individually for each chain
-            sub_assembly_asym = sub_assembly.get_annotation("label_asym_id")
-            sub_assembly_sym = sub_assembly.get_annotation("sym_id")
-            for chain_id in chain_ids:
-                chain_mask = sub_assembly_asym == chain_id
-                sub_assembly_sym[chain_mask] = (
-                    sub_assembly_sym[chain_mask] + sym_id_counter[chain_id]
-                )
-                sym_id_counter[chain_id] += len(operations)
-            sub_assembly.set_annotation("sym_id", sub_assembly_sym)
 
             sub_assemblies.append(sub_assembly)
     assembly = concatenate(sub_assemblies)
 
     # Sort AtomArray or AtomArrayStack by 'sym_id'
     assembly = assembly[..., np.argsort(assembly.sym_id, kind="stable")]
-    if assembly.bonds is not None:
-        # Only keep bonds within the same copy
-        bonds = assembly.bonds.as_array()
-        sym_id = assembly.sym_id
-        assembly.bonds = BondList(
-            assembly.array_length(), bonds[sym_id[bonds[:, 0]] == sym_id[bonds[:, 1]]]
-        )
 
     # Remove 'label_asym_id', if it was not included in the original
     # user-supplied 'extra_fields'
