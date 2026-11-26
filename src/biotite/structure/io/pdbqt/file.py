@@ -70,15 +70,15 @@ class PDBQTFile(TextFile):
     HET         0  BTN H4     H        -2.451   -0.038   -2.252
     >>> print(file)
     ROOT
-    HETATM    1 C11  BTN     0       5.089  -0.280   0.173  1.00  0.00     0.258 C
-    HETATM    2 O11  BTN     0       4.956  -1.473   0.030  1.00  0.00    -0.264 OA
+    HETATM    1 C11  BTN     0       5.089  -0.280   0.173  1.00  0.00     0.260 C
+    HETATM    2 O11  BTN     0       4.956  -1.473   0.030  1.00  0.00    -0.265 OA
     ENDROOT
     BRANCH   1   3
     HETATM    3 O12  BTN     0       6.299   0.233   0.444  1.00  0.00    -0.331 OA
-    HETATM   17 HO2  BTN     0       7.034  -0.391   0.517  1.00  0.00     0.221 HD
+    HETATM   17 HO2  BTN     0       7.034  -0.391   0.517  1.00  0.00     0.220 HD
     ENDBRANCH   1   3
     BRANCH   1   4
-    HETATM    4 C10  BTN     0       3.896   0.631   0.039  1.00  0.00     0.105 C
+    HETATM    4 C10  BTN     0       3.896   0.631   0.039  1.00  0.00     0.106 C
     BRANCH   4   5
     HETATM    5 C9   BTN     0       2.651  -0.200  -0.276  1.00  0.00     0.010 C
     BRANCH   5   6
@@ -89,10 +89,10 @@ class PDBQTFile(TextFile):
     HETATM    8 C2   BTN     0      -1.015   0.819  -0.863  1.00  0.00     0.065 C
     HETATM    9 S1   BTN     0      -1.419   1.604   0.751  1.00  0.00    -0.154 SA
     HETATM   10 C6   BTN     0      -3.205   1.827   0.371  1.00  0.00     0.090 C
-    HETATM   11 C5   BTN     0      -3.530   0.581  -0.476  1.00  0.00     0.091 C
+    HETATM   11 C5   BTN     0      -3.530   0.581  -0.476  1.00  0.00     0.090 C
     HETATM   12 N1   BTN     0      -3.970  -0.507   0.412  1.00  0.00    -0.239 NA
-    HETATM   13 C3   BTN     0      -3.141  -1.549   0.271  1.00  0.00     0.272 C
-    HETATM   14 O3   BTN     0      -3.271  -2.589   0.888  1.00  0.00    -0.259 OA
+    HETATM   13 C3   BTN     0      -3.141  -1.549   0.271  1.00  0.00     0.273 C
+    HETATM   14 O3   BTN     0      -3.271  -2.589   0.888  1.00  0.00    -0.261 OA
     HETATM   15 N2   BTN     0      -2.154  -1.343  -0.612  1.00  0.00    -0.239 NA
     HETATM   16 C4   BTN     0      -2.289   0.010  -1.175  1.00  0.00     0.093 C
     HETATM   18 HN1  BTN     0      -4.738  -0.474   1.004  1.00  0.00     0.132 HD
