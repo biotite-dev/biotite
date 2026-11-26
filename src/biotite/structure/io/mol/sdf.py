@@ -231,15 +231,19 @@ class Metadata(MutableMapping):
         metadata = {}
         current_key = None
         current_value = None
+        # A value is terminated by an empty line, so only then a new key may follow
+        # (a line of a value itself may start with '>')
+        expect_key = True
         for line in text.splitlines():
             line = line.strip()
             if len(line) == 0:
-                # Skip empty lines
+                expect_key = True
                 continue
-            if line.startswith(">"):
+            if expect_key and line.startswith(">"):
                 _add_key_value_pair(metadata, current_key, current_value)
                 current_key = Metadata.Key.deserialize(line)
                 current_value = None
+                expect_key = False
             else:
                 if current_key is None:
                     raise DeserializationError("Value found before metadata key")
