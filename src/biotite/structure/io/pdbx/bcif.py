@@ -296,6 +296,12 @@ class BinaryCIFColumn(_Component):
                 array[self._mask.array == MaskValue.INAPPLICABLE] = "."
                 array[self._mask.array == MaskValue.MISSING] = "?"
             else:
+                # Widen the string dtype, so that 'masked_value' is not truncated
+                # No copy is made, if the dtype is already wide enough
+                array = array.astype(
+                    np.result_type(array, np.array(masked_value, dtype=str)),
+                    copy=False,
+                )
                 array[self._mask.array == MaskValue.INAPPLICABLE] = masked_value
                 array[self._mask.array == MaskValue.MISSING] = masked_value
             return array
