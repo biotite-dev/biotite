@@ -8,6 +8,10 @@ use std::collections::HashSet;
 /// Walk the trace table from a start index, collecting one or more optimal
 /// traces (each a path of table indices, in end-to-start order).
 ///
+/// The last index of each path is the cell where the trace terminates.
+/// This cell is not part of the alignment itself, but it is required to tell
+/// whether the first alignment column is a gap (see [`path_to_trace`]).
+///
 /// `offset` maps a [`TraceDirection`] to the [`TableOffset`] step to take in the
 /// table. For an ordinary rectangular table the diagonal moves by
 /// `index_offset((-1, -1))`, etc.; banded alignments supply a different
@@ -61,12 +65,12 @@ fn follow_trace_inner<C, Off>(
     loop {
         let cell = table[index];
         let steps = cell.traceback(state);
+        path.push(index);
         if steps.is_empty() {
             // No further direction -> the trace ends here (this cell is not
             // part of the alignment).
             break;
         }
-        path.push(index);
         // Spawn a branch for every additional direction (a tie).
         for &(dir, next_state) in steps.iter().skip(1) {
             if *count < max_count {
@@ -94,12 +98,18 @@ fn follow_trace_inner<C, Off>(
 /// Convert a trace path (table indices, end-to-start order) into an alignment
 /// trace array of shape `(length, 2)` with `-1` marking gaps.
 ///
+/// The last index of the path is expected to be the cell where the trace
+/// terminates, as returned by [`follow_trace`]: it gets no row in the trace
+/// array.
+///
 /// `to_seq` maps a table index to the `(seq1_index, seq2_index)` it represents
 /// (before gap filtering). For non-banded alignment this is `(i - 1, j - 1)`.
 ///
 /// After reversing the path to start-to-end order, the first occurrence of each
 /// sequence index is kept and any repeats become `-1` (a gap): a run of equal
 /// indices in one sequence corresponds to a stretch of gaps in that sequence.
+/// This includes the indices of the terminating cell, so a gap in the first
+/// alignment column is detected as well.
 pub fn path_to_trace<F>(path: &[TableIndex], to_seq: F) -> Array2<i64>
 where
     F: Fn(TableIndex) -> (i64, i64),
@@ -118,8 +128,9 @@ where
 
     // Drop rows that became a gap in both sequences (defensive; should not
     // normally happen, as every step advances at least one sequence).
+    // The first row is skipped, as it represents the terminating cell.
     let mut rows: Vec<[i64; 2]> = Vec::with_capacity(len);
-    for k in 0..len {
+    for k in 1..len {
         if col0[k] == -1 && col1[k] == -1 {
             continue;
         }
