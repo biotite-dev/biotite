@@ -1172,6 +1172,8 @@ class AtomArrayStack(_AtomArrayBase, Sequence[AtomArray], Generic[M, N]):
         """
         if isinstance(index, numbers.Integral):
             self._coord = np.delete(self._coord, index, axis=0)
+            if self._box is not None:
+                self._box = np.delete(self._box, index, axis=0)
         else:
             raise TypeError(f"Index must be integer, not '{type(index).__name__}'")
 
