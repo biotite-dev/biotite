@@ -472,7 +472,10 @@ def _get_edge_matrix(
 
     # Iterate through the atoms and corresponding atoms indices
     # that are part of the hydrogen bonds
-    for atom, atom_index in zip(atom_array[hbonds], hbonds):
+    for atom_index in hbonds:
+        # Index each atom separately, as `hbonds` may contain duplicate indices,
+        # which are not supported for atom arrays with bonds
+        atom = atom_array[atom_index]
         if atom.res_name not in _REFERENCE_NUCLEOTIDE_NAMES:
             continue
 
