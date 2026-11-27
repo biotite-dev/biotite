@@ -76,6 +76,13 @@ def test_duplicate_atoms_check(duplicate_sample_array):
     "selection", [slice(None), slice(0, 2), slice(2, 5), slice(0, 0)]
 )
 def test_check_in_box(box, selection):
+    """
+    Test whether :func:`check_in_box()` returns exactly the atoms outside
+    the box.
+    The atoms are placed at known fractional coordinates of an orthogonal
+    and a triclinic box, so the expected indices are known from the
+    fractions alone, also for subsets of the atom array.
+    """
     fractions = np.array(
         [[0, 0, 0], [0.25, 0.5, 0.75], [-0.25, 0.5, 0.5], [1.25, 0.5, 0.5], [1, 0, 0]]
     )
@@ -89,5 +96,9 @@ def test_check_in_box(box, selection):
 
 
 def test_check_in_box_missing_box():
+    """
+    Test whether :func:`check_in_box()` raises an exception for a
+    structure without a box.
+    """
     with pytest.raises(TypeError, match="Structure has no box"):
         struc.check_in_box(struc.AtomArray(1))
