@@ -718,10 +718,11 @@ class ProteinSequence(Sequence[str]):
         """
         Calculate the molecular weight of this protein.
 
-        Average protein molecular weight is calculated by the addition
-        of average isotopic masses of the amino acids
-        in the protein and the average isotopic mass of one water
-        molecule.
+        The protein molecular weight is calculated by the addition
+        of the isotopic masses of the amino acid residues
+        in the protein and the isotopic mass of one water
+        molecule (monoisotopic or average, depending on
+        `monoisotopic`).
 
         Parameters
         ----------
@@ -735,9 +736,9 @@ class ProteinSequence(Sequence[str]):
             Molecular weight values are given in Dalton (Da).
         """
         if monoisotopic:
-            weight = np.sum(self._mol_weight_monoisotopic[self.code]) + 18.015
+            weight = np.sum(self._mol_weight_monoisotopic[self.code]) + 18.01056
         else:
-            weight = np.sum(self._mol_weight_average[self.code]) + 18.015
+            weight = np.sum(self._mol_weight_average[self.code]) + 18.01528
 
         if np.isnan(weight):
             raise ValueError(

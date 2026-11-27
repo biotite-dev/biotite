@@ -126,6 +126,28 @@ def test_get_molecular_weight(monoisotopic, expected_mol_weight_protein):
     assert mol_weight_protein == pytest.approx(expected_mol_weight_protein, abs=1e-2)
 
 
+@pytest.mark.parametrize(
+    ["sequence", "monoisotopic", "expected_weight"],
+    [
+        # Reference masses from ExPASy FindMod (residue + H2O: 18.01056 mono, 18.01528 avg)
+        ("G", True, 75.03202),
+        ("G", False, 75.06718),
+        ("A", True, 89.04767),
+        ("ACDEFGHIKLMNPQRSTVW", True, 2231.06155),
+        ("ACDEFGHIKLMNPQRSTVW", False, 2232.55988),
+    ],
+)
+def test_get_molecular_weight_precision(sequence, monoisotopic, expected_weight):
+    """
+    Check monoisotopic and average protein molecular weights against high-precision
+    reference values, ensuring monoisotopic water mass is used for monoisotopic weights.
+    """
+    protein = seq.ProteinSequence(sequence)
+    assert protein.get_molecular_weight(monoisotopic=monoisotopic) == pytest.approx(
+        expected_weight, abs=1e-4
+    )
+
+
 def test_positional_sequence():
     """
     Check whether the original sequence symbols can be reconstructed from a
