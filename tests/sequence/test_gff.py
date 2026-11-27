@@ -10,6 +10,14 @@ from tests.util import data_dir
 @pytest.mark.parametrize("order", [(0, 1, 2), (0, 2, 1), (2, 1, 0)])
 @pytest.mark.parametrize("strand", ["+", "-"])
 def test_discontinuous_feature(order, strand):
+    """
+    Test whether the lines of a discontinuous feature, i.e. lines that share
+    the same ID, are merged into one feature, even if another feature lies
+    between them.
+    For this purpose a small GFF3 file is created with the lines in
+    different orders and on both strands, and the resulting locations and
+    strands are compared to the expected ones.
+    """
     lines = [
         f"chr1\t.\tCDS\t1\t3\t.\t{strand}\t0\tID=cds1",
         f"chr1\t.\tgene\t4\t6\t.\t{strand}\t.\tID=other",
@@ -31,6 +39,10 @@ def test_discontinuous_feature(order, strand):
 
 
 def test_independent_features_without_id():
+    """
+    Test whether lines without an ID are kept as separate features, instead
+    of being merged into one feature.
+    """
     gff_file = gff.GFFFile.read(
         StringIO(
             "##gff-version 3\n"
