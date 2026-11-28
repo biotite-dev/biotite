@@ -17,6 +17,23 @@ def test_apply_residue_wise(array):
     assert data.tolist() == [len(array[array.res_id == i]) for i in range(1, 21)]
 
 
+def test_apply_residue_wise_empty(array):
+    """
+    For an empty atom array, an empty array should be returned, with the same
+    trailing shape as for a non-empty atom array.
+    """
+    empty = array[:0]
+
+    data = struc.apply_residue_wise(empty, np.ones(0), np.sum)
+    assert isinstance(data, np.ndarray)
+    assert data.shape == (0,)
+
+    ref_coord = struc.apply_residue_wise(array, array.coord, np.mean, axis=0)
+    coord = struc.apply_residue_wise(empty, empty.coord, np.mean, axis=0)
+    assert isinstance(coord, np.ndarray)
+    assert coord.shape == (0,) + ref_coord.shape[1:]
+
+
 def test_spread_residue_wise(array):
     input_data = np.arange(1, 21)
     output_data = struc.spread_residue_wise(array, input_data)
@@ -96,6 +113,16 @@ def test_get_residue_positions(array, seed, sample_size):
     test_positions = struc.get_residue_positions(array, indices)
 
     assert test_positions.tolist() == ref_positions.tolist()
+
+
+def test_get_residue_positions_empty(array):
+    """
+    An empty sequence of indices should give empty positions and starts,
+    also for an empty atom array.
+    """
+    for atoms in (array, array[:0]):
+        assert struc.get_residue_positions(atoms, []).tolist() == []
+        assert struc.get_residue_starts_for(atoms, []).tolist() == []
 
 
 def test_residue_iter(array):
