@@ -34,6 +34,21 @@ PARAMETRIZED_ELEMENTS = [
     "Zn",
 ]
 
+# AutoDock atom types that are not equal to the symbol of their element
+_ATOM_TYPE_TO_ELEMENT = {
+    # Aromatic carbon
+    "A": "C",
+    # Hydrogen bond donor hydrogen
+    "HD": "H",
+    "HS": "H",
+    # Hydrogen bond acceptors
+    "NA": "N",
+    "NS": "N",
+    "OA": "O",
+    "OS": "O",
+    "SA": "S",
+}
+
 
 class PDBQTFile(TextFile):
     """
@@ -293,7 +308,9 @@ class PDBQTFile(TextFile):
             res_name[i] = line[17:20].strip()
             hetero[i] = False if line[0:4] == "ATOM" else True
             atom_name[i] = line[12:16].strip()
-            element[i] = line[76:78].strip()
+            # In contrast to PDB, the columns 78-79 contain the AutoDock atom type
+            atom_type = line[77:79].strip()
+            element[i] = _ATOM_TYPE_TO_ELEMENT.get(atom_type, atom_type.upper())
 
         # Add annotation arrays to atom array (stack)
         array.chain_id = chain_id
