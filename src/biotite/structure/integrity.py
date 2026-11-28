@@ -201,7 +201,7 @@ def check_in_box(array: AtomArray[N]) -> NDArray1[K, np.integer]:
 
     Coordinates are outside the box, when they cannot be represented by
     a linear combination of the box vectors with scalar factors
-    :math:`0 \le a_i \le 1`.
+    :math:`0 \le a_i < 1`.
 
     Parameters
     ----------
@@ -217,4 +217,4 @@ def check_in_box(array: AtomArray[N]) -> NDArray1[K, np.integer]:
         raise TypeError("Structure has no box")
     box = array.box
     fractions = coord_to_fraction(array.coord, box)
-    return np.where(((fractions >= 0) & (fractions < 1)).all(axis=-1))[0]
+    return np.where(~((fractions >= 0) & (fractions < 1)).all(axis=-1))[0]

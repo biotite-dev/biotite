@@ -67,3 +67,38 @@ def test_bond_continuity_check(gapped_sample_array):
 def test_duplicate_atoms_check(duplicate_sample_array):
     discon = struc.check_duplicate_atoms(duplicate_sample_array)
     assert discon.tolist() == [42, 234]
+
+
+@pytest.mark.parametrize(
+    "box", [np.diag([10, 10, 10]), [[10, 0, 0], [2, 10, 0], [1, 2, 10]]]
+)
+@pytest.mark.parametrize(
+    "selection", [slice(None), slice(0, 2), slice(2, 5), slice(0, 0)]
+)
+def test_check_in_box(box, selection):
+    """
+    Test whether :func:`check_in_box()` returns exactly the atoms outside
+    the box.
+    The atoms are placed at known fractional coordinates of an orthogonal
+    and a triclinic box, so the expected indices are known from the
+    fractions alone, also for subsets of the atom array.
+    """
+    fractions = np.array(
+        [[0, 0, 0], [0.25, 0.5, 0.75], [-0.25, 0.5, 0.5], [1.25, 0.5, 0.5], [1, 0, 0]]
+    )
+    atoms = struc.AtomArray(len(fractions))
+    atoms.box = np.asarray(box)
+    atoms.coord = fractions @ box
+    expected_outside = np.array([False, False, True, True, True])[selection]
+    np.testing.assert_array_equal(
+        struc.check_in_box(atoms[selection]), np.flatnonzero(expected_outside)
+    )
+
+
+def test_check_in_box_missing_box():
+    """
+    Test whether :func:`check_in_box()` raises an exception for a
+    structure without a box.
+    """
+    with pytest.raises(TypeError, match="Structure has no box"):
+        struc.check_in_box(struc.AtomArray(1))
