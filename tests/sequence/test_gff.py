@@ -1,9 +1,58 @@
+from io import StringIO
 from tempfile import TemporaryFile
 import pytest
 import biotite.sequence as seq
 import biotite.sequence.io.genbank as gb
 import biotite.sequence.io.gff as gff
 from tests.util import data_dir
+
+
+@pytest.mark.parametrize("order", [(0, 1, 2), (0, 2, 1), (2, 1, 0)])
+@pytest.mark.parametrize("strand", ["+", "-"])
+def test_discontinuous_feature(order, strand):
+    """
+    Test whether the lines of a discontinuous feature, i.e. lines that share
+    the same ID, are merged into one feature, even if another feature lies
+    between them.
+    For this purpose a small GFF3 file is created with the lines in
+    different orders and on both strands, and the resulting locations and
+    strands are compared to the expected ones.
+    """
+    lines = [
+        f"chr1\t.\tCDS\t1\t3\t.\t{strand}\t0\tID=cds1",
+        f"chr1\t.\tgene\t4\t6\t.\t{strand}\t.\tID=other",
+        f"chr1\t.\tCDS\t7\t9\t.\t{strand}\t0\tID=cds1",
+    ]
+    gff_file = gff.GFFFile.read(
+        StringIO("##gff-version 3\n" + "\n".join(lines[i] for i in order) + "\n")
+    )
+    annotation = gff.get_annotation(gff_file)
+    assert len(annotation) == 2
+    features = {feature.qual["ID"]: feature for feature in annotation}
+    assert features["cds1"].key == "CDS"
+    assert {(loc.first, loc.last) for loc in features["cds1"].locs} == {(1, 3), (7, 9)}
+    assert {(loc.first, loc.last) for loc in features["other"].locs} == {(4, 6)}
+    expected_strand = (
+        seq.Location.Strand.FORWARD if strand == "+" else seq.Location.Strand.REVERSE
+    )
+    assert all(loc.strand == expected_strand for loc in features["cds1"].locs)
+
+
+def test_independent_features_without_id():
+    """
+    Test whether lines without an ID are kept as separate features, instead
+    of being merged into one feature.
+    """
+    gff_file = gff.GFFFile.read(
+        StringIO(
+            "##gff-version 3\n"
+            "chr1\t.\tgene\t1\t3\t.\t+\t.\t.\n"
+            "chr1\t.\tgene\t4\t6\t.\t+\t.\t.\n"
+        )
+    )
+    annotation = gff.get_annotation(gff_file)
+    assert len(annotation) == 2
+    assert all(feature.qual == {} for feature in annotation)
 
 
 @pytest.mark.parametrize(
